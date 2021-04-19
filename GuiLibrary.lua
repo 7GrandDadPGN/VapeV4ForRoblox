@@ -1,5 +1,5 @@
 local api = {
-	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "KeypadSeven", ["Color"] = 0.44}},
+	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}},
 	["FriendsObject"] = {["Color"] = 0.44, ["Friends"] = {}},
 	["ObjectsThatCanBeSaved"] = {},
 }
