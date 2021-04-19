@@ -27,7 +27,7 @@ local function isAlive(plr)
 end
 
 local function isPlayerTargetable(plr, target, friend)
-    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and (friend == true and friendCheck(plr) or friend == false) and isAlive(plr) and targetCheck(plr, target) and teamCheck()
+    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and (friend == true and friendCheck(plr) or friend == false) and isAlive(plr) and targetCheck(plr, target) and teamCheck(plr)
 end
 
 local function vischeck(char, part)
