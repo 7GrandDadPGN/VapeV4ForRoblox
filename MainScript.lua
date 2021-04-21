@@ -30,13 +30,15 @@ local TextGui = GuiLibrary.CreateCustomWindow("Text GUI", "📄", UDim2.new(0, 1
 
 local rainbowval = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 1))})
 local rainbowval2 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0.42)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 0.42))})
+local rainbowval3 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 1))})
 local guicolorslider = {["RainbowValue"] = false}
 spawn(function()
 	local counter = 0
 	local w = math.pi / 12
 	local CS = {}
 	local CS2 = {}
-	--3
+	local CS3 = {}
+	--4
 	local num = 4 
 	local frames = 0
 	repeat
@@ -47,18 +49,23 @@ spawn(function()
 					local c = Color3.fromRGB(127 * math.sin(w*i + counter) + 128, 127 * math.sin(w*i + 2 * math.pi/3 + counter) + 128, 127*math.sin(w*i + 4*math.pi/3 + counter) + 128)
 					table.insert(CS, i+1, ColorSequenceKeypoint.new(i/num, c))
 					local h, s, v = c:ToHSV()
-					table.insert(CS2, i+1, ColorSequenceKeypoint.new(i/num, Color3.fromHSV(h, s, 0.42)))
+					local str = tostring(h + 0.12)
+					local newcol = tonumber("0"..string.sub(str, 2, string.len(str)))
+					table.insert(CS2, i+1, ColorSequenceKeypoint.new(i/num, Color3.fromHSV(newcol, s, 0.42)))
+					table.insert(CS3, i+1, ColorSequenceKeypoint.new(i/num, Color3.fromHSV(newcol, s, v)))
 				end
 				rainbowval = ColorSequence.new(CS)
 				rainbowval2 = ColorSequence.new(CS2)
+				rainbowval3 = ColorSequence.new(CS3)
 				pcall(function()
 					TextGui.GetCustomChildren().Logo.Gradient.Color = rainbowval
 					TextGui.GetCustomChildren().Logo.ImageLabel.Gradient.Color = rainbowval
-					TextGui.GetCustomChildren().TextLabel.Gradient.Color = rainbowval
+					TextGui.GetCustomChildren().TextLabel.Gradient.Color = rainbowval3
 					TextGui.GetCustomChildren().TextLabel.TextLabel.Gradient.Color = rainbowval2
 				end)
 				CS = {}
 				CS2 = {}
+				CS3 = {}
 				counter = counter + math.pi/40
 				if (counter >= math.pi * 2) then
 					counter = 0
@@ -124,8 +131,6 @@ for i2,v2 in pairs(TextGui.GetCustomChildren():GetDescendants()) do
 	gradient.Name = "Gradient"
 	gradient.Parent = v2
 end
-onetext.Gradient.Offset = Vector2.new(0, -32)
-onetext2.Gradient.Offset = Vector2.new(0, -32)
 TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(function()
 	if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
 		onetext.TextXAlignment = Enum.TextXAlignment.Right
@@ -258,12 +263,24 @@ GuiLibrary["UpdateUI"] = function()
 		end
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "Button" and v["Api"]["Enabled"] then
-				v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+				if guicolorslider["RainbowValue"] then
+					local str = tostring(GuiLibrary["Settings"]["GUIObject"]["Color"] + (0.015 * v["Object"].LayoutOrder))
+					local newcol = tonumber("0"..string.sub(str, 2, string.len(str)))
+					v["Object"].BackgroundColor3 = Color3.fromHSV(newcol, 1, 1)
+				else
+					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+				end
 				v["Object"].TextColor3 = GuiLibrary["Settings"]["GUIObject"]["Color"] < 0.5 and Color3.new(0, 0, 0) or Color3.fromRGB(255, 255, 255)
 			end
 			if v["Type"] == "OptionsButton" then
 				if v["Api"]["Enabled"] then
-					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+					if guicolorslider["RainbowValue"] then
+						local str = tostring(GuiLibrary["Settings"]["GUIObject"]["Color"] + (0.015 * v["Object"].LayoutOrder))
+						local newcol = tonumber("0"..string.sub(str, 2, string.len(str)))
+						v["Object"].BackgroundColor3 = Color3.fromHSV(newcol, 1, 1)
+					else
+						v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+					end
 					v["Object"].TextColor3 = GuiLibrary["Settings"]["GUIObject"]["Color"] < 0.5 and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
 				end
 			end
