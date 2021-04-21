@@ -1,12 +1,12 @@
+local VERSION = "v4.00"
+local rainbowvalue = 0
+
 local api = {
 	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}},
 	["FriendsObject"] = {["Color"] = 0.44, ["Friends"] = {}},
 	["ObjectsThatCanBeSaved"] = {},
 }
 
-local VERSION = "v4.00"
-
-local rainbowvalue = 0
 coroutine.resume(coroutine.create(function()
 	repeat
 		for i = 0, 1, 0.01 do
