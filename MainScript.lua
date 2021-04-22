@@ -344,24 +344,30 @@ GuiLibrary["UpdateUI"] = function()
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "Button" and v["Api"]["Enabled"] then
 				if guicolorslider["RainbowValue"] then
-					local str = tostring(GuiLibrary["Settings"]["GUIObject"]["Color"] + (-0.015 * v["Object"].LayoutOrder))
-					local newcol = tonumber("0"..string.sub(str, 2, string.len(str)))
+					local rainbowsub = 2
+					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (-0.015 * v["Object"].LayoutOrder)
+					if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
+					local str = tostring(rainbowcolor)
+					local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
 					v["Object"].BackgroundColor3 = Color3.fromHSV(newcol, 1, 1)
 				else
 					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
 				end
-				v["Object"].TextColor3 = GuiLibrary["Settings"]["GUIObject"]["Color"] < 0.5 and Color3.new(0, 0, 0) or Color3.fromRGB(255, 255, 255)
+				v["Object"].TextColor3 = Color3.new(0, 0, 0)
 			end
 			if v["Type"] == "OptionsButton" then
 				if v["Api"]["Enabled"] then
 					if guicolorslider["RainbowValue"] then
-						local str = tostring(GuiLibrary["Settings"]["GUIObject"]["Color"] + (-0.015 * v["Object"].LayoutOrder))
-						local newcol = tonumber("0"..string.sub(str, 2, string.len(str)))
+						local rainbowsub = 2
+						local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (-0.015 * v["Object"].LayoutOrder)
+						if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
+						local str = tostring(rainbowcolor)
+						local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
 						v["Object"].BackgroundColor3 = Color3.fromHSV(newcol, 1, 1)
 					else
 						v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
 					end
-					v["Object"].TextColor3 = GuiLibrary["Settings"]["GUIObject"]["Color"] < 0.5 and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
+					v["Object"].TextColor3 = Color3.new(0, 0, 0)
 				end
 			end
 			if (v["Type"] == "Toggle" or v["Type"] == "NewToggle") and v["Api"]["Enabled"] then
