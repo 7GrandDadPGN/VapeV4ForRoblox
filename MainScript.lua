@@ -264,7 +264,7 @@ GuiLibrary["UpdateUI"] = function()
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "Button" and v["Api"]["Enabled"] then
 				if guicolorslider["RainbowValue"] then
-					local str = tostring(GuiLibrary["Settings"]["GUIObject"]["Color"] + (0.015 * v["Object"].LayoutOrder))
+					local str = tostring(GuiLibrary["Settings"]["GUIObject"]["Color"] + (-0.015 * v["Object"].LayoutOrder))
 					local newcol = tonumber("0"..string.sub(str, 2, string.len(str)))
 					v["Object"].BackgroundColor3 = Color3.fromHSV(newcol, 1, 1)
 				else
@@ -275,7 +275,7 @@ GuiLibrary["UpdateUI"] = function()
 			if v["Type"] == "OptionsButton" then
 				if v["Api"]["Enabled"] then
 					if guicolorslider["RainbowValue"] then
-						local str = tostring(GuiLibrary["Settings"]["GUIObject"]["Color"] + (0.015 * v["Object"].LayoutOrder))
+						local str = tostring(GuiLibrary["Settings"]["GUIObject"]["Color"] + (-0.015 * v["Object"].LayoutOrder))
 						local newcol = tonumber("0"..string.sub(str, 2, string.len(str)))
 						v["Object"].BackgroundColor3 = Color3.fromHSV(newcol, 1, 1)
 					else
