@@ -245,7 +245,7 @@ local searchRefresh = function()
 	end
 end
 local searchTextList = {["RefreshValues"] = function() end}
-searchColor = Search.CreateColorSlider("new block color", function(val)
+searchColor = Search.CreateColorSlider("new part color", function(val)
 	for i,v in pairs(searchFolder:GetChildren()) do
 		v.Color3 = Color3.fromHSV(val, 1, 1)
 	end
