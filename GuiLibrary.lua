@@ -2,7 +2,7 @@ local VERSION = "v4.00"
 local rainbowvalue = 0
 
 local api = {
-	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}},
+	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
 	["FriendsObject"] = {["Color"] = 0.44, ["Friends"] = {}},
 	["ObjectsThatCanBeSaved"] = {},
 }
@@ -94,7 +94,7 @@ if not is_sirhurt_closure and syn and syn.protect_gui then
     local gui = Instance.new("ScreenGui")
     gui.Name = randomString()
     gui.DisplayOrder = 999
-    syn.protect_gui(gui)
+  --  syn.protect_gui(gui)
     gui.Parent = game:GetService("CoreGui")
     api["MainGui"] = gui
 	shared.gui = gui
@@ -364,13 +364,12 @@ api["SaveFriends"] = function()
 end
 
 api["LoadFriends"] = function()
-
-		local success, result = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/friends.vapefriends"))
-		end)
-		if success and type(result) == "table" then
-			api["FriendsObject"] = result
-		end
+	local success, result = pcall(function()
+		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/friends.vapefriends"))
+	end)
+	if success and type(result) == "table" then
+		api["FriendsObject"] = result
+	end
 end
 
 api["SaveSettings"] = function()
@@ -417,6 +416,9 @@ api["LoadSettings"] = function()
 					api["ObjectsThatCanBeSaved"][i]["Api"]["ExpandToggle"]()
 				end
 			end
+			if v["Type"] == "Custom" and api["findObjectInTable"](api["Settings"], i) then
+				api["Settings"][i] = v
+			end
 			if v["Type"] == "CustomWindow" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 				api["ObjectsThatCanBeSaved"][i]["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
 				api["ObjectsThatCanBeSaved"][i]["Object"].Visible = v["Visible"]
@@ -424,9 +426,6 @@ api["LoadSettings"] = function()
 					api["ObjectsThatCanBeSaved"][i]["Api"]["PinnedToggle"]()
 				end
 				api["ObjectsThatCanBeSaved"][i]["Api"]["CheckVis"]()
-			end
-			if v["Type"] == "Custom" and api["findObjectInTable"](api["Settings"], i) then
-				api["Settings"][i] = v
 			end
 			if (v["Type"] == "Button" or v["Type"] == "Toggle") and v["Enabled"] and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 				api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)

@@ -582,3 +582,26 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 end, function() game:GetService("RunService"):UnbindFromRenderStep("Tracers") TracersFolder:ClearAllChildren() end, true)
 TracersColor = Tracers.CreateColorSlider("Player Color", function(val) end)
 
+local Panic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("Panic", function()
+	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
+		if v["Type"] == "Button" or v["Type"] == "OptionsButton" then
+			if v["Api"]["Enabled"] then
+				v["Api"]["ToggleButton"]()
+			end
+		end
+	end
+end, function() end, false) 
+
+local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("Xray", function() 
+	for i, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+			v.LocalTransparencyModifier = 0.5
+		end
+	end
+end, function()
+	for i, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+			v.LocalTransparencyModifier = 0
+		end
+	end
+end, false)

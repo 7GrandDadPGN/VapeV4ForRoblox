@@ -26,6 +26,7 @@ local World = GuiLibrary.CreateWindow("World", "🌎", UDim2.new(0, 177, 0, 6), 
 local Other = GuiLibrary.CreateWindow("Other", "❔", UDim2.new(0, 177, 0, 6), false)
 local Settings = GuiLibrary.CreateWindow("Settings", "⚙", UDim2.new(0, 177, 0, 6), false)
 local Friends = GuiLibrary.CreateWindow("Friends", "👨‍👦", UDim2.new(0, 177, 0, 6), false)
+local Search = GuiLibrary.CreateWindow("Search", "🔍", UDim2.new(0, 177, 0, 6), false)
 local TextGui = GuiLibrary.CreateCustomWindow("Text GUI", "📄", UDim2.new(0, 177, 0, 6), false)
 
 local rainbowval = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 1))})
@@ -196,6 +197,7 @@ GUI.CreateButton("World", function() World.SetVisible(true) end, function() Worl
 GUI.CreateButton("Other", function() Other.SetVisible(true) end, function() Other.SetVisible(false) end)
 GUI.CreateButton("Settings", function() Settings.SetVisible(true) end, function() Settings.SetVisible(false) end)
 GUI.CreateButton("Friends", function() Friends.SetVisible(true) end, function() Friends.SetVisible(false) end)
+GUI.CreateButton("Search", function() Search.SetVisible(true) end, function() Search.SetVisible(false) end)
 Friends.CreateColorSlider("Friends Color", function(val) GuiLibrary["FriendsObject"]["Color"] = val end)
 Friends.CreateToggle("Use color", function() end, function() end)
 Friends.CreateToggle("Use Friends", function() end, function() end)	
@@ -208,6 +210,84 @@ end, function(num)
 	table.remove(GuiLibrary["FriendsObject"]["Friends"], num) 
 	FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
 	GuiLibrary["SaveFriends"]()
+end)
+local searchColor = {["Value"] = 0.44}
+local searchModule = {["Enabled"] = false}
+local searchFolder = Instance.new("Folder")
+searchFolder.Name = "SearchFolder"
+searchFolder.Parent = GuiLibrary["MainGui"]
+local function searchFindBoxHandle(part)
+	for i,v in pairs(searchFolder:GetChildren()) do
+		if v.Adornee == part then
+			return v
+		end
+	end
+	return nil
+end
+local searchAdd
+local searchRemove
+local searchRefresh = function()
+	searchFolder:ClearAllChildren()
+	if searchModule["Enabled"] then
+		for i,v in pairs(workspace:GetDescendants()) do
+			if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
+				local boxhandle = Instance.new("BoxHandleAdornment")
+				boxhandle.Name = v.Name
+				boxhandle.AlwaysOnTop = true
+				boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
+				boxhandle.Adornee = v
+				boxhandle.ZIndex = 10
+				boxhandle.Size = v.Size
+				boxhandle.Transparency = 0.5
+				boxhandle.Parent = searchFolder
+			end
+		end
+	end
+end
+local searchTextList = {["RefreshValues"] = function() end}
+searchColor = Search.CreateColorSlider("new block color", function(val)
+	for i,v in pairs(searchFolder:GetChildren()) do
+		v.Color3 = Color3.fromHSV(val, 1, 1)
+	end
+end)
+searchModule = Search.CreateOptionsButton("Search", function() 
+	searchRefresh()
+	searchAdd = workspace.DescendantAdded:connect(function(v)
+		if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
+			local boxhandle = Instance.new("BoxHandleAdornment")
+			boxhandle.Name = v.Name
+			boxhandle.AlwaysOnTop = true
+			boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
+			boxhandle.Adornee = v
+			boxhandle.ZIndex = 10
+			boxhandle.Size = v.Size
+			boxhandle.Transparency = 0.5
+			boxhandle.Parent = searchFolder
+		end
+	end)
+	searchRemove = workspace.DescendantRemoving:connect(function(v)
+		if v:IsA("BasePart") then
+			local boxhandle = searchFindBoxHandle(v)
+			if boxhandle then
+				boxhandle:Remove()
+			end
+		end
+	end)
+end, function() 
+	pcall(function()
+		searchFolder:ClearAllChildren()
+		searchAdd:Disconnect()
+		searchRemove:Disconnect()
+	end)
+end, false)
+SearchTextList = Search.CreateTextList("SearchList", "<part name>", function(user)
+	table.insert(GuiLibrary["Settings"]["SearchObject"]["List"], user)
+	SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
+	searchRefresh()
+end, function(num) 
+	table.remove(GuiLibrary["Settings"]["SearchObject"]["List"], num) 
+	SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
+	searchRefresh()
 end)
 local TextGUI = GUI.CreateOptionsButton("Text GUI", function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, true)
 TextGUI.CreateDropdown("Mode", {"Alphabetical", "Random"}, function(val) sortingmethod = val UpdateHud() end)
@@ -319,6 +399,7 @@ else
 end
 
 GuiLibrary["LoadSettings"]()
+SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
 GuiLibrary["LoadFriends"]()
 FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
 GuiLibrary["UpdateUI"]()
