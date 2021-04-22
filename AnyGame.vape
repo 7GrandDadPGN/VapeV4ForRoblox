@@ -177,6 +177,12 @@ kek = function()
     end)
 end
 
+local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Blink", function() 
+	settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
+end, function()
+	settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+end, false)
+
 local speedval = {["Value"] = 1}
 local speedmethod = {["Value"] = "BodyVelocity"}
 local speedjump = {["Enabled"] = false}
@@ -240,6 +246,7 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 				end
 				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyval["Value"] - 30, 1, 150) * delta))
 				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 			end
 		end
 	end)
