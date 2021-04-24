@@ -211,6 +211,17 @@ end, function(num)
 	FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
 	GuiLibrary["SaveFriends"]()
 end)
+GuiLibrary["FriendsObject"]["MiddleClickFunc"] = function(user)
+	if table.find(GuiLibrary["FriendsObject"]["Friends"], user) == nil then
+		table.insert(GuiLibrary["FriendsObject"]["Friends"], user)
+		FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
+		GuiLibrary["SaveFriends"]()
+	else
+		table.remove(GuiLibrary["FriendsObject"]["Friends"], table.find(GuiLibrary["FriendsObject"]["Friends"], user)) 
+		FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
+		GuiLibrary["SaveFriends"]()
+	end
+end
 local searchColor = {["Value"] = 0.44}
 local searchModule = {["Enabled"] = false}
 local searchFolder = Instance.new("Folder")
@@ -319,6 +330,7 @@ SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function()
 	selfdestruct = true
 	SelfDestructButton["ToggleButton"](false)
 	GuiLibrary["SaveSettings"]()
+	GuiLibrary["SaveFriends"]()
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 		if (v["Type"] == "Button" or v["Type"] == "OptionsButton") and v["Api"]["Enabled"] then
 			v["Api"]["ToggleButton"](false)
@@ -385,7 +397,7 @@ local npctoggle = Settings.CreateToggle("NPCs", function() end, function() end)
 local nakedtoggle = Settings.CreateToggle("Ignore naked", function() end, function() end)
 local teamsbyservertoggle = Settings.CreateToggle("Teams by server", function() end, function() end)
 local teamsbycolortoggle = Settings.CreateToggle("Teams by color", function() end, function() end)
-local middleclickfriendstoggle = Settings.CreateToggle("MiddleClick friends", function() end, function() end)
+local middleclickfriendstoggle = Settings.CreateToggle("MiddleClick friends", function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = true end, function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = false end)
 local blatanttoggle = Settings.CreateToggle("Blatant mode", function() end, function() end)
 
 if isfolder("vape") == false then
