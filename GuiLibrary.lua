@@ -1,9 +1,10 @@
 local VERSION = "v4.00"
 local rainbowvalue = 0
-
+local cam = game:GetService("Workspace").CurrentCamera
+local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 local api = {
 	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
-	["FriendsObject"] = {["Color"] = 0.44, ["Friends"] = {}},
+	["FriendsObject"] = {["Color"] = 0.44, ["Friends"] = {}, ["MiddleClickFriends"] = false, ["MiddleClickFunc"] = function(plr) end},
 	["ObjectsThatCanBeSaved"] = {},
 }
 
@@ -360,7 +361,7 @@ vapeoptionsbutton.MouseButton1Click:connect(function()
 end)
 
 api["SaveFriends"] = function()
-	writefile("vape/Profiles/friends.vapefriends", game:GetService("HttpService"):JSONEncode(api["FriendsObject"]))
+	writefile("vape/Profiles/friends.vapefriends", game:GetService("HttpService"):JSONEncode(api["FriendsObject"]["Friends"]))
 end
 
 api["LoadFriends"] = function()
@@ -368,7 +369,7 @@ api["LoadFriends"] = function()
 		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/friends.vapefriends"))
 	end)
 	if success and type(result) == "table" then
-		api["FriendsObject"] = result
+		api["FriendsObject"]["Friends"] = result
 	end
 end
 
@@ -719,7 +720,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 				if buttonapi["Enabled"] then
 					button.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
 					button.BackgroundTransparency = 0
-					button.TextColor3 = api["Settings"]["GUIObject"]["Color"] < 0.5 and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
+					button.TextColor3 = Color3.new(0, 0, 0)
 					temporaryfunction()
 				else
 					button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -832,7 +833,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 				if buttonapi["Enabled"] then
 					button.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
 					button.BackgroundTransparency = 0
-					button.TextColor3 = api["Settings"]["GUIObject"]["Color"] < 0.5 and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
+					button.TextColor3 = Color3.new(0, 0, 0)
 					temporaryfunction()
 				else
 					button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -1560,12 +1561,12 @@ api["UpdateUI"] = function()
 	for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
 		if v["Type"] == "Button" and v["Api"]["Enabled"] then
 			v["Object"].BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
-			v["Object"].TextColor3 = api["Settings"]["GUIObject"]["Color"] < 0.5 and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
+			v["Object"].TextColor3 = Color3.new(0, 0, 0)
 		end
 		if v["Type"] == "OptionsButton" then
 			if v["Api"]["Enabled"] then
 				v["Object"].BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
-				v["Object"].TextColor3 = api["Settings"]["GUIObject"]["Color"] < 0.5 and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
+				v["Object"].TextColor3 = Color3.new(0, 0, 0)
 			end
 		end
 		if v["Type"] == "Toggle" and v["Api"]["Enabled"] then
@@ -1582,10 +1583,21 @@ api["MainBlur"] = Instance.new("BlurEffect")
 api["MainBlur"].Size = 0
 api["MainBlur"].Parent = game:GetService("Lighting")
 api["MainBlur"].Enabled = false
+api["MainRescale"] = Instance.new("UIScale")
+api["MainRescale"].Parent = clickgui
 
 CreateTopBarOption("Toggle", "Auto-load module states", function() end, function() end, false)
 CreateTopBarOption("Toggle", "Blur Background", function() api["MainBlur"].Size = 25 end, function() api["MainBlur"].Size = 0 end, true)
-CreateTopBarOption("Toggle", "Rescale", function() end, function() end, true)
+local rescale = CreateTopBarOption("Toggle", "Rescale", function() 
+	api["MainRescale"].Scale = cam.ViewportSize.X / 1920
+end, function()
+	api["MainRescale"].Scale = 1 
+end, true)
+cam:GetPropertyChangedSignal("ViewportSize"):connect(function()
+	if rescale["Enabled"] then
+		api["MainRescale"].Scale = cam.ViewportSize.X / 1920
+	end
+end)
 CreateTopBarOption("Toggle", "Enable Multi-Keybinding", function() end, function() end, false)
 local welcomemsg = CreateTopBarOption("Toggle", "GUI bind indicator", function() end, function() end, true)
 CreateTopBarOption("Toggle", "Smooth font", function()
@@ -1797,6 +1809,11 @@ api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(
 		end
 		if input1.KeyCode == Enum.KeyCode.LeftControl then
 			holdingcontrol = true
+		end
+		if input1.UserInputType == Enum.UserInputType.MouseButton3 and api["FriendsObject"]["MiddleClickFriends"] then
+			if mouse.Target.Parent:FindFirstChild("HumanoidRootPart") or mouse.Target.Parent:IsA("Accessory") and mouse.Target.Parent.Parent:FindFirstChild("HumanoidRootPart") then
+				api["FriendsObject"]["MiddleClickFunc"](mouse.Target.Parent:IsA("Accessory") and mouse.Target.Parent.Parent.Name or mouse.Target.Parent.Name)
+			end
 		end
 		if holdingcontrol and (input1.KeyCode == Enum.KeyCode.Left or input1.KeyCode == Enum.KeyCode.Right) and capturedslider ~= nil then
 			if capturedslider["Type"] == "Slider" then

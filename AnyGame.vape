@@ -1,3 +1,4 @@
+-- Credits to Inf Yield & all the other scripts that helped me make bypasses
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
 local lplr = players.LocalPlayer
@@ -203,7 +204,7 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 				if (bodyvelo ~= nil) then
 					bodyvelo:Remove()
 				end
-				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (math.clamp(speedval["Value"] - 30, 1, 150) * delta))
+				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (math.clamp(speedval["Value"] - 16, 1, 150) * delta))
 			end
 			if speedjump["Enabled"] then
 				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
@@ -223,13 +224,36 @@ speedval = speed.CreateSlider("Speed", 1, 150, function(val) end)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
 local flyval = {["Value"] = 1}
+local flyupanddown = {["Enabled"] = false}
 local flymethod = {["Value"] = "BodyVelocity"}
 local flyposy = 0
+local flyup = false
+local flydown = false
+local flypress
+local flyendpress
 local bodyvelofly
 local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
 	if isAlive() then
 		flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
 	end
+	flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
+		if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+			if input1.KeyCode == Enum.KeyCode.Space then
+				flyup = true
+			end
+			if input1.KeyCode == Enum.KeyCode.LeftControl then
+				flydown = true
+			end
+		end
+	end)
+	flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
+		if input1.KeyCode == Enum.KeyCode.Space then
+			flyup = false
+		end
+		if input1.KeyCode == Enum.KeyCode.LeftControl then
+			flydown = false
+		end
+	end)
 	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
 		if isAlive() then
 			if flymethod["Value"] == "BodyVelocity" then
@@ -238,13 +262,19 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 					bodyvelofly.Parent = lplr.Character.HumanoidRootPart
 					bodyvelofly.MaxForce = Vector3.new(100000, 100000, 100000)
 				else
-					bodyvelofly.Velocity = lplr.Character.Humanoid.MoveDirection * flyval["Value"]
+					bodyvelofly.Velocity = (lplr.Character.Humanoid.MoveDirection * flyval["Value"]) + Vector3.new(0, (flyup and flyval["Value"] or 0) + (flydown and -flyval["Value"] or 0), 0)
 				end
 			elseif flymethod["Value"] == "CFrame" then
 				if (bodyvelofly ~= nil) then
 					bodyvelofly:Remove()
 				end
-				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyval["Value"] - 30, 1, 150) * delta))
+				if flyup then
+					flyposy = flyposy + (math.clamp(flyval["Value"] - 16, 1, 150) * 0.01)
+				end
+				if flydown then
+					flyposy = flyposy - (math.clamp(flyval["Value"] - 16, 1, 150) * 0.01)
+				end
+				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
 				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 			end
@@ -254,10 +284,24 @@ end, function()
 	if bodyvelofly then
 		bodyvelofly:Remove()
 	end
+	flyup = false
+	flydown = false
+	flypress:Disconnect()
+	flyendpress:Disconnect()
 	game:GetService("RunService"):UnbindFromRenderStep("Fly")
 end, true)
 flymethod = fly.CreateDropdown("Method", {"BodyVelocity", "CFrame"}, function(val) end)
 flyval = fly.CreateSlider("Fly Speed", 1, 150, function(val) end)
+flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
+
+local function findTouchInterest(tool)
+	for i,v in pairs(tool:GetDescendants()) do
+		if v:IsA("TouchTransmitter") then
+			return v
+		end
+	end
+	return nil
+end
 
 local killaurarange = {["Value"] = 1}
 local Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
@@ -265,17 +309,17 @@ local Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Cre
 		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
 		local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], false)
 		if tool then
-			local touch = tool:FindFirstChild("Handle") and tool.Handle:FindFirstChildWhichIsA("TouchTransmitter")
+			local touch = findTouchInterest(tool)
 			if touch then
 				for i,v in pairs(plr) do
-					firetouchinterest(tool.Handle, v.Character.Head, 1)
-					firetouchinterest(tool.Handle, v.Character.Head, 0)
+					firetouchinterest(touch.Parent, v.Character.Head, 1)
+					firetouchinterest(touch.Parent, v.Character.Head, 0)
 				end
 			end
 		end
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("Killaura") end, true)
-killaurarange = Killaura.CreateSlider("Attack range", 1, 1000, function(val) end)
+killaurarange = Killaura.CreateSlider("Attack range", 1, 150, function(val) end)
 
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPFolder"
@@ -472,6 +516,7 @@ players.PlayerRemoving:connect(function(plr)
 end)
 local NameTagsColor = {["Value"] = 0.44}
 local NameTagsHealth = {["Enabled"] = false}
+local NameTagsDistance = {["Enabled"] = false}
 local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("NameTags", function() 
 	game:GetService("RunService"):BindToRenderStep("NameTags", 500, function()
 		for i,plr in pairs(players:GetChildren()) do
@@ -495,10 +540,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 							rawText = plr.Name.." "..math.floor(plr.Character.Humanoid.Health)
 						end
 						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-						local modifiedText = plr.Name
-						if NameTagsHealth["Enabled"] then
-							modifiedText = plr.Name..' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>"
-						end
+						local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..plr.Name..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 						thing.Text = modifiedText
@@ -515,15 +557,9 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 					local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
 					
 					if headVis then
-						local rawText = plr.Name
-						if NameTagsHealth["Enabled"] then
-							rawText = plr.Name.." "..math.floor(plr.Character.Humanoid.Health)
-						end
+						local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..plr.Name..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-						local modifiedText = plr.Name
-						if NameTagsHealth["Enabled"] then
-							modifiedText = plr.Name..' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>"
-						end
+						local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..plr.Name..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 						thing.Text = modifiedText
@@ -538,6 +574,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 end, function() game:GetService("RunService"):UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
 NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
 NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end)
+NameTagsDistance = NameTags.CreateToggle("Distance", function() end, function() end)
 local TracersFolder = Instance.new("Folder")
 TracersFolder.Name = "TracersFolder"
 TracersFolder.Parent = GuiLibrary["MainGui"]
