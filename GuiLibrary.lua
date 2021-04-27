@@ -737,7 +737,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 		return buttonapi
 	end
 
-	windowapi["CreateOptionsButton"] = function(naame, temporaryfunction, temporaryfunction2, expandedmenu)
+	windowapi["CreateOptionsButton"] = function(naame, temporaryfunction, temporaryfunction2, expandedmenu, temporaryfunction3)
 		local buttonapi = {}
 		local amount = #children:GetChildren()
 		local button = Instance.new("TextButton")
@@ -804,6 +804,8 @@ api["CreateWindow"] = function(name, icon, position, visible)
 		buttonapi["Bindable"] = true
 		buttonapi["Name"] = naame
 		buttonapi["Expanded"] = false
+		buttonapi["HasExtraText"] = type(temporaryfunction3) == "function"
+		buttonapi["GetExtraText"] = (buttonapi["HasExtraText"] and temporaryfunction3 or function() return "" end)
 		buttonapi["ToggleButton"] = function(clicked)
 			if clicked and holdingshift and buttonapi["Bindable"] then
 				if captured == false then
@@ -1118,6 +1120,9 @@ api["CreateWindow"] = function(name, icon, position, visible)
 							dropframe.Visible = false
 							temporaryfunction(listobj)
 							dropapi["UpdateList"](list)
+							if buttonapi["HasExtraText"] then
+								api["UpdateHudEvent"]:Fire()
+							end
 						end)
 						placeholder = placeholder + 13
 					end
@@ -1129,8 +1134,14 @@ api["CreateWindow"] = function(name, icon, position, visible)
 				dropframe.Visible = false
 				temporaryfunction(listobj)
 				dropapi["UpdateList"](list)
+				if buttonapi["HasExtraText"] then
+					api["UpdateHudEvent"]:Fire()
+				end
 			end
 			dropapi["UpdateList"](list)
+			if buttonapi["HasExtraText"] then
+				api["UpdateHudEvent"]:Fire()
+			end
 			api["ObjectsThatCanBeSaved"][naame..name.."Dropdown"] = {["Type"] = "Dropdown", ["Object"] = frame, ["Api"] = dropapi}
 
 			return dropapi

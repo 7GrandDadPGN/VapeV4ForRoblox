@@ -89,6 +89,7 @@ local aimfov = {["Value"] = 1}
 local aimvischeck = {["Enabled"] = false}
 local aimheadshotchance = {["Value"] = 1}
 local aimhitchance = {["Value"] = 1}
+local aimmethod = {["Value"] = "FindPartOnRayWithIgnoreList"}
 local kek = function() end
 local kek2 = function() end
 local tar = nil
@@ -103,8 +104,14 @@ local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].Cre
 	meta.__namecall = old
 	meta.__index = old2
 	tar = nil 
-end, true)
-local aimmethod = AimAssist.CreateDropdown("Method", {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay", "Mouse"}, function(val) end)
+end, true, function() 
+	if aimmethod["Value"]:match("FindPartOnRay") then
+		return " Ray"
+	else
+		return " "..string.gsub(aimmethod["Value"], "PointToRay", "") 
+	end
+end)
+aimmethod = AimAssist.CreateDropdown("Method", {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay", "Mouse"}, function(val) end)
 local aimtable = {["FindPartOnRayWithIgnoreList"] = 1, ["FindPartOnRayWithWhitelist"] = 1, ["Raycast"] = 2, ["FindPartOnRay"] = 1, ["ScreenPointToRay"] = 3, ["ViewportPointToRay"] = 3, ["Mouse"] = 4}
 aimvischeck = AimAssist.CreateToggle("Wall Check", function() end, function() end)
 aimfov = AimAssist.CreateSlider("FOV", 1, 1000, function(val) end)
@@ -179,9 +186,9 @@ kek = function()
 end
 
 local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Blink", function() 
-	settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
+	--settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
 end, function()
-	settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+	--settings():GetService("NetworkSettings").IncomingReplicationLag = 0
 end, false)
 
 local speedval = {["Value"] = 1}
@@ -218,7 +225,7 @@ end, function()
 		bodyvelo:Remove()
 	end
 	game:GetService("RunService"):UnbindFromRenderStep("Speed")
-end, true)
+end, true, function() return " "..speedmethod["Value"] end)
 speedmethod = speed.CreateDropdown("Method", {"BodyVelocity", "CFrame"}, function(val) end)
 speedval = speed.CreateSlider("Speed", 1, 150, function(val) end)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
@@ -289,7 +296,7 @@ end, function()
 	flypress:Disconnect()
 	flyendpress:Disconnect()
 	game:GetService("RunService"):UnbindFromRenderStep("Fly")
-end, true)
+end, true, function() return " "..flymethod["Value"] end)
 flymethod = fly.CreateDropdown("Method", {"BodyVelocity", "CFrame"}, function(val) end)
 flyval = fly.CreateSlider("Fly Speed", 1, 150, function(val) end)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
@@ -330,11 +337,11 @@ players.PlayerRemoving:connect(function(plr)
 	end
 end)
 local ESPColor = {["Value"] = 0.44}
-local ESPMethod = "2D"
+local ESPMethod = {["Value"] = "2D"}
 local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("ESP", function() 
 	game:GetService("RunService"):BindToRenderStep("ESP", 500, function()
 		for i,plr in pairs(players:GetChildren()) do
-			if ESPMethod == "2D" then
+			if ESPMethod["Value"] == "2D" then
 				local thing
 				if ESPFolder:FindFirstChild(plr.Name) then
 					thing = ESPFolder[plr.Name]
@@ -395,7 +402,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("ESP") ESPFolder:ClearAllChildren() end, true)
 ESPColor = ESP.CreateColorSlider("Player Color", function(val) end)
-ESP.CreateDropdown("Mode", {"2D", "3D"}, function(val) ESPMethod = val end)
+ESPMethod = ESP.CreateDropdown("Mode", {"2D", "3D"}, function(val) end)
 --[[local ChamsFolder = Instance.new("Folder")
 ChamsFolder.Name = "ChamsFolder"
 ChamsFolder.Parent = GuiLibrary["MainGui"]
@@ -635,17 +642,3 @@ local Panic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].Create
 		end
 	end
 end, function() end, false) 
-
-local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("Xray", function() 
-	for i, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
-			v.LocalTransparencyModifier = 0.5
-		end
-	end
-end, function()
-	for i, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
-			v.LocalTransparencyModifier = 0
-		end
-	end
-end, false)

@@ -112,6 +112,7 @@ onetext.Font = Enum.Font.SourceSans
 onetext.Text = ""
 onetext.TextSize = 20
 local onetext2 = Instance.new("TextLabel")
+onetext2.Name = "ExtraText"
 onetext2.Parent = onetext
 onetext2.Size = UDim2.new(1, 0, 1, 0)
 onetext2.Position = UDim2.new(0, 1, 0, 1)
@@ -120,67 +121,96 @@ onetext2.Visible = false
 onetext2.ZIndex = 0
 onetext2.Text = ""
 onetext2.BackgroundTransparency = 1
+onetext2.TextTransparency = 0.5
 onetext2.TextXAlignment = Enum.TextXAlignment.Left
 onetext2.TextYAlignment = Enum.TextYAlignment.Top
-onetext2.TextColor3 = Color3.new(1, 1, 1)
+onetext2.TextColor3 = Color3.new(0, 0, 0)
 onetext2.Font = Enum.Font.SourceSans
 onetext:GetPropertyChangedSignal("Text"):connect(function() onetext2.Text = onetext.Text end)
 onetext2.TextSize = 20
+local onetext3 = onetext:Clone()
+onetext3.Name = "ExtraText"
+onetext3.Position = UDim2.new(0, 0, 0, 0)
+onetext3.TextColor3 = Color3.new(0.65, 0.65, 0.65)
+onetext3.Parent = onetext
+local onetext4 = onetext3.ExtraText
+onetext4.TextColor3 = Color3.new(0, 0, 0)
+onetext4.TextTransparency = 0.5
+onetext3:GetPropertyChangedSignal("Text"):connect(function() onetext4.Text = onetext3.Text end)
 for i2,v2 in pairs(TextGui.GetCustomChildren():GetDescendants()) do
-	local gradient = Instance.new("UIGradient")
-	gradient.Rotation = 270
-	gradient.Name = "Gradient"
-	gradient.Parent = v2
+	if v2.Name ~= "ExtraText" then
+		local gradient = Instance.new("UIGradient")
+		gradient.Rotation = 270
+		gradient.Name = "Gradient"
+		gradient.Parent = v2
+	end
 end
 TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(function()
 	if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
 		onetext.TextXAlignment = Enum.TextXAlignment.Right
 		onetext2.TextXAlignment = Enum.TextXAlignment.Right
+		onetext3.TextXAlignment = Enum.TextXAlignment.Right
+		onetext4.TextXAlignment = Enum.TextXAlignment.Right
 		onething.Position = UDim2.new(1, -154, 0, 3)
 		onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 3))
 	else
 		onetext.TextXAlignment = Enum.TextXAlignment.Left
 		onetext2.TextXAlignment = Enum.TextXAlignment.Left
+		onetext3.TextXAlignment = Enum.TextXAlignment.Left
+		onetext4.TextXAlignment = Enum.TextXAlignment.Left
 		onething.Position = UDim2.new(0, 3, 0, 3)
 		onetext.Position = UDim2.new(0, 3, 0, (onething.Visible and 35 or 3))
 	end
 end)
 
 local sortingmethod = "Alphabetical"
+local function getSpaces(str)
+	local strSize = game:GetService("TextService"):GetTextSize(str, 20, Enum.Font.SourceSans, Vector2.new(10000, 10000))
+	return math.ceil(strSize.X / 3)
+end
 local function UpdateHud()
 	local text = ""
+	local text2 = ""
 	local tableofmodules = {}
 	local first = true
 	
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 		if v["Type"] == "OptionsButton" and v["Api"]["Name"] ~= "Text GUI" then
 			if v["Api"]["Enabled"] then
-				table.insert(tableofmodules, v["Api"]["Name"])
+				table.insert(tableofmodules, {["Text"] = v["Api"]["Name"], ["ExtraText"] = v["Api"]["GetExtraText"]})
 			end
 		end
 	end
 	if sortingmethod == "Alphabetical" then
-		table.sort(tableofmodules, function(a, b) return a:lower() < b:lower() end)
+		table.sort(tableofmodules, function(a, b) return a["Text"]:lower() < b["Text"]:lower() end)
 	end
 	for i2,v2 in pairs(tableofmodules) do
 		if first then
-			text = v2
+			text = v2["Text"]..string.rep(" ", getSpaces(v2["ExtraText"]()))
+			text2 = string.rep(" ", getSpaces(v2["Text"]))..v2["ExtraText"]()
 			first = false
 		else
-			text = text..'\n'..v2
+			text = text..'\n'..v2["Text"]..string.rep(" ", getSpaces(v2["ExtraText"]()))
+			text2 = text2..'\n'..string.rep(" ", getSpaces(v2["Text"]))..v2["ExtraText"]()
 		end
 	end
 	onetext.Text = text
+	onetext3.Text = text2
 	local newsize = game:GetService("TextService"):GetTextSize(text, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
 	onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
+	onetext3.Size = UDim2.new(0, 154, 0, newsize.Y)
 	if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
 		onetext.TextXAlignment = Enum.TextXAlignment.Right
 		onetext2.TextXAlignment = Enum.TextXAlignment.Right
+		onetext3.TextXAlignment = Enum.TextXAlignment.Right
+		onetext4.TextXAlignment = Enum.TextXAlignment.Right
 		onething.Position = UDim2.new(1, -154, 0, 3)
 		onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 3))
 	else
 		onetext.TextXAlignment = Enum.TextXAlignment.Left
 		onetext2.TextXAlignment = Enum.TextXAlignment.Left
+		onetext3.TextXAlignment = Enum.TextXAlignment.Left
+		onetext4.TextXAlignment = Enum.TextXAlignment.Left
 		onething.Position = UDim2.new(0, 3, 0, 3)
 		onetext.Position = UDim2.new(0, 3, 0, (onething.Visible and 35 or 3))
 	end
@@ -300,10 +330,30 @@ end, function(num)
 	SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
 	searchRefresh()
 end)
+local XrayAdd
+local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("Xray", function() 
+	searchAdd = workspace.DescendantAdded:connect(function(v)
+		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+			v.LocalTransparencyModifier = 0.5
+		end
+	end)
+	for i, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+			v.LocalTransparencyModifier = 0.5
+		end
+	end
+end, function()
+	for i, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+			v.LocalTransparencyModifier = 0
+		end
+	end
+	XrayAdd:Disconnect()
+end, false)
 local TextGUI = GUI.CreateOptionsButton("Text GUI", function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, true)
 TextGUI.CreateDropdown("Mode", {"Alphabetical", "Random"}, function(val) sortingmethod = val UpdateHud() end)
 TextGUI.CreateToggle("Watermark", function() onething.Visible = true onetext.Position = UDim2.new(0, 0, 0, 35) end, function() onething.Visible = false onetext.Position = UDim2.new(0, 0, 0, 0) end)
-TextGUI.CreateToggle("Shadow", function() onetext2.Visible = true end, function() onetext2.Visible = false end)
+TextGUI.CreateToggle("Shadow", function() onetext2.Visible = true onetext4.Visible = true end, function() onetext2.Visible = false onetext4.Visible = false end)
 TextGUI.CreateToggle("Render background", function() 
 	onething.BackgroundTransparency = 0.5 
 	onething2.BackgroundTransparency = 0.5 
