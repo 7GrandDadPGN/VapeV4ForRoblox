@@ -35,14 +35,16 @@ local function vischeck(char, part)
 	return not unpack(cam:GetPartsObscuringTarget({lplr.Character[part].Position, char[part].Position}, {lplr.Character, char}))
 end
 
-local function GetAllNearestHumanoidToPosition(distance)
+local function GetAllNearestHumanoidToPosition(distance, amount)
 	local returnedplayer = {}
+	local currentamount = 0
     if isAlive() then
         for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable(v, true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") then
+            if isPlayerTargetable(v, true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and currentamount < amount then
                 local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= distance then
                     table.insert(returnedplayer, v)
+					currentamount = currentamount + 1
                 end
             end
         end
@@ -215,7 +217,7 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 			end
 			if speedjump["Enabled"] then
 				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-					lplr.Character.Humanoid:ChangeState(3)
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
 				end
 			end
 		end
@@ -276,10 +278,10 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 					bodyvelofly:Remove()
 				end
 				if flyup then
-					flyposy = flyposy + (math.clamp(flyval["Value"] - 16, 1, 150) * 0.01)
+					flyposy = flyposy + (1 * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
 				end
 				if flydown then
-					flyposy = flyposy - (math.clamp(flyval["Value"] - 16, 1, 150) * 0.01)
+					flyposy = flyposy - (1 * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
 				end
 				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
 				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
@@ -297,9 +299,32 @@ end, function()
 	flyendpress:Disconnect()
 	game:GetService("RunService"):UnbindFromRenderStep("Fly")
 end, true, function() return " "..flymethod["Value"] end)
-flymethod = fly.CreateDropdown("Method", {"BodyVelocity", "CFrame"}, function(val) end)
+flymethod = fly.CreateDropdown("Method", {"BodyVelocity", "CFrame"}, function(val)
+	if isAlive() then
+		flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+	end
+end)
 flyval = fly.CreateSlider("Fly Speed", 1, 150, function(val) end)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
+
+local hitboxexpand = {["Value"] = 1}
+local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("HitBoxes", function()
+	game:GetService("RunService"):BindToRenderStep("HitBoxes", 1, function() 
+		for i,plr in pairs(players:GetChildren()) do
+			if isPlayerTargetable(plr, true, true) and isAlive(plr) then
+				plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.2), 2 + (hitboxexpand["Value"] * 0.2), 1 + (hitboxexpand["Value"] * 0.2))
+			end
+		end
+	end)
+end, function() 
+	game:GetService("RunService"):UnbindFromRenderStep("HitBoxes") 
+	for i,plr in pairs(players:GetChildren()) do
+		if isAlive(plr) then
+			plr.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+		end
+	end
+end, true)
+hitboxexpand = Hitbox.CreateSlider("Expand amount", 1, 10, function(val) end)
 
 local function findTouchInterest(tool)
 	for i,v in pairs(tool:GetDescendants()) do
@@ -311,22 +336,31 @@ local function findTouchInterest(tool)
 end
 
 local killaurarange = {["Value"] = 1}
+local killauraangle = {["Value"] = 90}
+local killauratarget = {["Value"] = 1}
 local Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
 	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
 		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-		local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], false)
-		if tool then
+		local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratarget["Value"])
+		if tool and isAlive() then
 			local touch = findTouchInterest(tool)
 			if touch then
 				for i,v in pairs(plr) do
-					firetouchinterest(touch.Parent, v.Character.Head, 1)
-					firetouchinterest(touch.Parent, v.Character.Head, 0)
+					local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
+					local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
+					local angle = math.acos(localfacing:Dot(vec))
+					if angle <= (killauraangle["Value"] / 115) then
+						firetouchinterest(touch.Parent, v.Character.Head, 1)
+						firetouchinterest(touch.Parent, v.Character.Head, 0)
+					end
 				end
 			end
 		end
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("Killaura") end, true)
-killaurarange = Killaura.CreateSlider("Attack range", 1, 150, function(val) end)
+killaurarange = Killaura.CreateSlider("Attack range", 1, 20, function(val) end)
+killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
+killauratarget = Killaura.CreateSlider("Max targets", 1, 6, function(val) end)
 
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPFolder"
