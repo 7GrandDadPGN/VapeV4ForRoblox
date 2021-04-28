@@ -95,7 +95,7 @@ if not is_sirhurt_closure and syn and syn.protect_gui then
     local gui = Instance.new("ScreenGui")
     gui.Name = randomString()
     gui.DisplayOrder = 999
-  --  syn.protect_gui(gui)
+    syn.protect_gui(gui)
     gui.Parent = game:GetService("CoreGui")
     api["MainGui"] = gui
 	shared.gui = gui
@@ -959,7 +959,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 
 			return sliderapi
 		end
-		buttonapi["CreateSlider"] = function(name, min, max, temporaryfunction)
+		buttonapi["CreateSlider"] = function(name, min, max, temporaryfunction, defaultvalue)
 			local def = math.floor((min + max) / 2)
 			local defsca = (def - min)/(max - min)
 			local sliderapi = {}
@@ -986,7 +986,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 			textlabel2.Font = Enum.Font.SourceSans
 			textlabel2.TextSize = 16
 			textlabel2.TextColor3 = Color3.new(1, 1, 1)
-			textlabel2.Text = "0".." "
+			textlabel2.Text = tostring((defaultvalue or min)) .. " "
 			textlabel2.TextXAlignment = Enum.TextXAlignment.Right
 			textlabel2.Parent = frame
 			local slider1 = Instance.new("Frame")
@@ -999,7 +999,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 			uicorner.CornerRadius = UDim.new(0, 32)
 			uicorner.Parent = slider1
 			local slider2 = Instance.new("Frame")
-			slider2.Size = UDim2.new(0, 0, 1, 0)
+			slider2.Size = UDim2.new(((defaultvalue or min) / max), 0, 1, 0)
 			slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
 			slider2.Name = "FillSlider"
 			slider2.Parent = slider1
@@ -1017,7 +1017,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 			local uicorner3 = Instance.new("UICorner")
 			uicorner3.CornerRadius = UDim.new(0, 32)
 			uicorner3.Parent = slider3
-			sliderapi["Value"] = 0
+			sliderapi["Value"] = (defaultvalue or min)
 			sliderapi["Max"] = max
 			sliderapi["SetValue"] = function(val)
 				sliderapi["Value"] = val
