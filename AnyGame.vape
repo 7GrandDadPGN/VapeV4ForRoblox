@@ -87,6 +87,15 @@ local function GetNearestHumanoidToMouse(distance, checkvis)
     return returnedplayer
 end
 
+local function findTouchInterest(tool)
+	for i,v in pairs(tool:GetDescendants()) do
+		if v:IsA("TouchTransmitter") then
+			return v
+		end
+	end
+	return nil
+end
+
 local aimfov = {["Value"] = 1}
 local aimvischeck = {["Enabled"] = false}
 local aimheadshotchance = {["Value"] = 1}
@@ -187,10 +196,52 @@ kek = function()
     end)
 end
 
+local reachrange = {["Value"] = 1}
+local oldsize = {}
+local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Reach", function()
+	game:GetService("RunService"):BindToRenderStep("Reach", 1, function() 
+		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
+		if tool and isAlive() then
+			local touch = findTouchInterest(tool)
+			if touch then
+				local size = rawget(oldsize, tool.Name)
+				if size then
+					touch.Parent.Size = Vector3.new(size.X + reachrange["Value"], size.Y, size.Z + reachrange["Value"])
+					touch.Parent.Massless = true
+				else
+					oldsize[tool.Name] = touch.Parent.Size
+				end
+			end
+		end
+	end)
+end, function() 
+	game:GetService("RunService"):UnbindFromRenderStep("Reach")
+	for i2,v2 in pairs(lplr.Character:GetChildren()) do
+		if v2:IsA("Tool") and rawget(oldsize, tool.Name) then
+			local touch = findTouchInterest(tool)
+			if touch then
+				touch.Parent.Size = rawget(oldsize, tool.Name)
+				touch.Parent.Massless = false
+			end
+		end
+	end
+	for i2,v2 in pairs(lplr.Backpack:GetChildren()) do
+		if v2:IsA("Tool") and rawget(oldsize, tool.Name) then
+			local touch = findTouchInterest(tool)
+			if touch then
+				touch.Parent.Size = rawget(oldsize, tool.Name)
+				touch.Parent.Massless = false
+			end
+		end
+	end
+	oldsize = {}
+end, true)
+reachrange = Reach.CreateSlider("Size", 1, 20, function(val) end)
+
 local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Blink", function() 
-	--settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
+	settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
 end, function()
-	--settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+	settings():GetService("NetworkSettings").IncomingReplicationLag = 0
 end, false)
 
 local speedval = {["Value"] = 1}
@@ -325,15 +376,6 @@ end, function()
 	end
 end, true)
 hitboxexpand = Hitbox.CreateSlider("Expand amount", 1, 10, function(val) end)
-
-local function findTouchInterest(tool)
-	for i,v in pairs(tool:GetDescendants()) do
-		if v:IsA("TouchTransmitter") then
-			return v
-		end
-	end
-	return nil
-end
 
 local killaurarange = {["Value"] = 1}
 local killauraangle = {["Value"] = 90}
