@@ -13,6 +13,30 @@ local function GetURL(scripturl)
 	end
 end
 
+local function getcustomassetfunc(path)
+	if not isfile(path) then
+		local req = syn.request({
+			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
+			Method = "GET"
+		})
+		writefile(path, req.Body)
+	end
+	return getsynasset(path)
+end
+
+if isfolder("vape") == false then
+	makefolder("vape")
+end
+if isfolder("vape/CustomModules") == false then
+	makefolder("vape/CustomModules")
+end
+if isfolder("vape/Profiles") == false then
+	makefolder("vape/Profiles")
+end
+if isfolder("vape/assets") == false then
+	makefolder("vape/assets")
+end
+
 local GuiLibrary = loadstring(GetURL("NewGuiLibrary.lua"))()
 shared.GuiLibrary = GuiLibrary
 local workspace = game:GetService("Workspace")
@@ -54,7 +78,7 @@ onething.BackgroundColor3 = Color3.new(0, 0, 0)
 onething.BorderSizePixel = 0
 onething.BackgroundTransparency = 1
 onething.Visible = false
-onething.Image = getsynasset("vape/assets/VapeLogo3.png")
+onething.Image = getcustomassetfunc("vape/assets/VapeLogo3.png")
 local onething2 = Instance.new("ImageLabel")
 onething2.Parent = onething
 onething2.Size = UDim2.new(0, 40, 0, 27)
@@ -63,7 +87,7 @@ onething2.Position = UDim2.new(1, 0, 0, 0)
 onething2.BorderSizePixel = 0
 onething2.BackgroundColor3 = Color3.new(0, 0, 0)
 onething2.BackgroundTransparency = 1
-onething2.Image = getsynasset("vape/assets/VapeLogo4.png")
+onething2.Image = getcustomassetfunc("vape/assets/VapeLogo4.png")
 local onething3 = onething:Clone()
 onething3.ImageColor3 = Color3.new(0, 0, 0)
 onething3.ImageTransparency = 0.5
