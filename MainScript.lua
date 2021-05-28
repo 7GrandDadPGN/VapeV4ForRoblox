@@ -332,7 +332,7 @@ end, function(num)
 end)
 local XrayAdd
 local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("Xray", function() 
-	searchAdd = workspace.DescendantAdded:connect(function(v)
+	XrayAdd = workspace.DescendantAdded:connect(function(v)
 		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
 			v.LocalTransparencyModifier = 0.5
 		end
@@ -448,7 +448,24 @@ local nakedtoggle = Settings.CreateToggle("Ignore naked", function() end, functi
 local teamsbyservertoggle = Settings.CreateToggle("Teams by server", function() end, function() end)
 local teamsbycolortoggle = Settings.CreateToggle("Teams by color", function() end, function() end)
 local middleclickfriendstoggle = Settings.CreateToggle("MiddleClick friends", function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = true end, function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = false end)
-local blatanttoggle = Settings.CreateToggle("Blatant mode", function() end, function() end)
+local blatanttoggle = Settings.CreateToggle("Blatant mode", function()
+	GuiLibrary["Settings"]["GUIObject"]["BlatantMode"] = true
+	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
+		if v["Type"] == "OptionsButton" and v["Api"]["Blatant"] then
+			v["Object"].TextColor3 = Color3.fromRGB(255, 255, 255)
+		end
+	end
+end, function()
+	GuiLibrary["Settings"]["GUIObject"]["BlatantMode"] = false
+	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
+		if v["Type"] == "OptionsButton" and v["Api"]["Blatant"] then
+			if v["Api"]["Enabled"] then
+				v["Api"]["ToggleButton"](false, true)
+			end
+			v["Object"].TextColor3 = Color3.fromRGB(128, 128, 128)
+		end
+	end
+end)
 
 if isfolder("vape") == false then
 	makefolder("vape")

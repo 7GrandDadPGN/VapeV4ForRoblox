@@ -196,6 +196,20 @@ kek = function()
     end)
 end
 
+local autoclickercps = {["Value"] = 1}
+local autoclicker = {["Enabled"] = false}
+local autoclickertick = tick()
+autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
+	game:GetService("RunService"):BindToRenderStep("AutoClicker", 1, function() 
+		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
+		if tool and isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() then
+			tool:Activate()
+			autoclickertick = tick() + (1 / autoclickercps["Value"]) * Random.new().NextNumber(Random.new(), 0.75, 1)
+		end
+	end)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker") end, true)
+autoclickercps = autoclicker.CreateSlider("CPS", 1, 20, function(val) end)
+
 local reachrange = {["Value"] = 1}
 local oldsize = {}
 local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Reach", function()
@@ -244,48 +258,10 @@ end, function()
 	settings():GetService("NetworkSettings").IncomingReplicationLag = 0
 end, false)
 
-local speedval = {["Value"] = 1}
-local speedmethod = {["Value"] = "BodyVelocity"}
-local speedjump = {["Enabled"] = false}
-local bodyvelo
-
-local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
-	game:GetService("RunService"):BindToRenderStep("Speed", 1, function(delta)
-		if isAlive() then
-			if speedmethod["Value"] == "BodyVelocity" then
-				if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
-					bodyvelo = Instance.new("BodyVelocity")
-					bodyvelo.Parent = lplr.Character.HumanoidRootPart
-					bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
-				else
-					bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
-				end
-			elseif speedmethod["Value"] == "CFrame" then
-				if (bodyvelo ~= nil) then
-					bodyvelo:Remove()
-				end
-				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (math.clamp(speedval["Value"] - 16, 1, 150) * delta))
-			end
-			if speedjump["Enabled"] then
-				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
-				end
-			end
-		end
-	end)
-end, function() 
-	if bodyvelo then
-		bodyvelo:Remove()
-	end
-	game:GetService("RunService"):UnbindFromRenderStep("Speed")
-end, true, function() return " "..speedmethod["Value"] end)
-speedmethod = speed.CreateDropdown("Method", {"BodyVelocity", "CFrame"}, function(val) end)
-speedval = speed.CreateSlider("Speed", 1, 150, function(val) end)
-speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
-
-local flyval = {["Value"] = 1}
+local flyspeed = {["Value"] = 1}
+local flyverticalspeed = {["Value"] = 1}
 local flyupanddown = {["Enabled"] = false}
-local flymethod = {["Value"] = "BodyVelocity"}
+local flymethod = {["Value"] = "Normal"}
 local flyposy = 0
 local flyup = false
 local flydown = false
@@ -316,25 +292,25 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 	end)
 	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
 		if isAlive() then
-			if flymethod["Value"] == "BodyVelocity" then
+			if flymethod["Value"] == "Normal" then
 				if (bodyvelofly == nil or bodyvelofly ~= nil and bodyvelofly.Parent ~= lplr.Character.HumanoidRootPart) then
 					bodyvelofly = Instance.new("BodyVelocity")
 					bodyvelofly.Parent = lplr.Character.HumanoidRootPart
 					bodyvelofly.MaxForce = Vector3.new(100000, 100000, 100000)
 				else
-					bodyvelofly.Velocity = (lplr.Character.Humanoid.MoveDirection * flyval["Value"]) + Vector3.new(0, (flyup and flyval["Value"] or 0) + (flydown and -flyval["Value"] or 0), 0)
+					bodyvelofly.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
 				end
-			elseif flymethod["Value"] == "CFrame" then
+			elseif flymethod["Value"] == "AntiCheat" then
 				if (bodyvelofly ~= nil) then
 					bodyvelofly:Remove()
 				end
 				if flyup then
-					flyposy = flyposy + (1 * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
+					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
 				end
 				if flydown then
-					flyposy = flyposy - (1 * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
+					flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
 				end
-				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
+				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
 				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 			end
@@ -349,13 +325,14 @@ end, function()
 	flypress:Disconnect()
 	flyendpress:Disconnect()
 	game:GetService("RunService"):UnbindFromRenderStep("Fly")
-end, true, function() return " "..flymethod["Value"] end)
-flymethod = fly.CreateDropdown("Method", {"BodyVelocity", "CFrame"}, function(val)
+end, true, function() return " "..flymethod["Value"] end, true)
+flymethod = fly.CreateDropdown("Mode", {"Normal", "AntiCheat"}, function(val)
 	if isAlive() then
 		flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
 	end
 end)
-flyval = fly.CreateSlider("Fly Speed", 1, 150, function(val) end)
+flyspeed = fly.CreateSlider("Speed", 1, 150, function(val) end)
+flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 150, function(val) end)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
 
 local hitboxexpand = {["Value"] = 1}
@@ -377,14 +354,18 @@ end, function()
 end, true)
 hitboxexpand = Hitbox.CreateSlider("Expand amount", 1, 10, function(val) end)
 
+local killauraaps = {["Value"] = 1}
 local killaurarange = {["Value"] = 1}
 local killauraangle = {["Value"] = 90}
 local killauratarget = {["Value"] = 1}
-local Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
+local Killauramouse = false
+local Killaura = {["Enabled"] = false}
+local killauratick = tick()
+Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
 	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
 		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
 		local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratarget["Value"])
-		if tool and isAlive() then
+		if tool and isAlive() and (Killauramouse and uis:IsMouseButtonPressed(0) or Killauramouse == false) then
 			local touch = findTouchInterest(tool)
 			if touch then
 				for i,v in pairs(plr) do
@@ -392,6 +373,10 @@ local Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Cre
 					local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
 					local angle = math.acos(localfacing:Dot(vec))
 					if angle <= (killauraangle["Value"] / 115) then
+						if killauratick <= tick() then
+							tool:Activate()
+							killauratick = tick() + (1 / killauraaps["Value"]) * Random.new().NextNumber(Random.new(), 0.75, 1)
+						end
 						firetouchinterest(touch.Parent, v.Character.Head, 1)
 						firetouchinterest(touch.Parent, v.Character.Head, 0)
 					end
@@ -400,9 +385,66 @@ local Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Cre
 		end
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("Killaura") end, true)
+killauraaps = Killaura.CreateSlider("Attacks per second", 1, 20, function(val) end)
 killaurarange = Killaura.CreateSlider("Attack range", 1, 20, function(val) end)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
-killauratarget = Killaura.CreateSlider("Max targets", 1, 6, function(val) end)
+killauratarget = Killaura.CreateSlider("Max targets", 1, 6, function(val) end)	
+Killaura.CreateToggle("Require mouse down", function() Killauramouse = true end, function() Killauramouse = false end)
+
+local longjumpboost = {["Value"] = 1}
+local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("LongJump", function()
+	game:GetService("RunService"):BindToRenderStep("LongJump", 1, function() 
+		if isAlive() then
+			if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+				lplr.Character.HumanoidRootPart.Velocity = lplr.Character.HumanoidRootPart.Velocity + lplr.Character.Humanoid.MoveDirection * (longjumpboost["Value"] / 2.5)
+			end
+		end
+	end)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("LongJump") end, true, function() return "" end, true)
+longjumpboost = longjump.CreateSlider("Boost", 1, 5, function(val) end)
+
+local speedval = {["Value"] = 1}
+local speedmethod = {["Value"] = "AntiCheat A"}
+local speedjump = {["Enabled"] = false}
+local bodyvelo
+
+local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
+	game:GetService("RunService"):BindToRenderStep("Speed", 1, function(delta)
+		if isAlive() then
+			if speedmethod["Value"] == "AntiCheat A" then
+				if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
+					bodyvelo = Instance.new("BodyVelocity")
+					bodyvelo.Parent = lplr.Character.HumanoidRootPart
+					bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+				else
+					bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
+				end
+			elseif speedmethod["Value"] == "AntiCheat B" then
+				if (bodyvelo ~= nil) then
+					bodyvelo:Remove()
+				end
+				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
+			end
+			if speedjump["Enabled"] then
+				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+					if speedmethod["Value"] == "AntiCheat A" then
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
+					elseif speedmethod["Value"] == "AntiCheat B" then
+						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0.2, 0)
+					end
+				end
+			end
+		end
+	end)
+end, function() 
+	if bodyvelo then
+		bodyvelo:Remove()
+	end
+	game:GetService("RunService"):UnbindFromRenderStep("Speed")
+end, true, function() return " "..speedmethod["Value"] end, true)
+speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, function(val) end)
+speedval = speed.CreateSlider("Speed", 1, 150, function(val) end)
+speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPFolder"
