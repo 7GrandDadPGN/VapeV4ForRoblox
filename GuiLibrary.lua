@@ -3,7 +3,7 @@ local rainbowvalue = 0
 local cam = game:GetService("Workspace").CurrentCamera
 local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 local api = {
-	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
+	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["BlatantMode"] = false, ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
 	["FriendsObject"] = {["Color"] = 0.44, ["Friends"] = {}, ["MiddleClickFriends"] = false, ["MiddleClickFunc"] = function(plr) end},
 	["ObjectsThatCanBeSaved"] = {},
 }
@@ -408,6 +408,7 @@ api["LoadSettings"] = function()
 		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..game.PlaceId..".vapeprofile"))
 	end)
 	if success and type(result) == "table" then
+		api["Settings"]["GUIObject"]["BlatantMode"] = result["GUIObject"]["BlatantMode"]
 		for i,v in pairs(result) do
 			if v["Type"] == "Window" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 				api["ObjectsThatCanBeSaved"][i]["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
@@ -427,6 +428,9 @@ api["LoadSettings"] = function()
 					api["ObjectsThatCanBeSaved"][i]["Api"]["PinnedToggle"]()
 				end
 				api["ObjectsThatCanBeSaved"][i]["Api"]["CheckVis"]()
+			end
+			if v["Type"] == "Button" and i:match("VapeOptions") and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
+				v["Type"] = "NewToggle"
 			end
 			if (v["Type"] == "Button" or v["Type"] == "Toggle") and v["Enabled"] and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 				api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
@@ -737,7 +741,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 		return buttonapi
 	end
 
-	windowapi["CreateOptionsButton"] = function(naame, temporaryfunction, temporaryfunction2, expandedmenu, temporaryfunction3)
+	windowapi["CreateOptionsButton"] = function(naame, temporaryfunction, temporaryfunction2, expandedmenu, temporaryfunction3, blatantmode)
 		local buttonapi = {}
 		local amount = #children:GetChildren()
 		local button = Instance.new("TextButton")
@@ -750,7 +754,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 		button.Font = Enum.Font.SourceSans
 		button.Size = UDim2.new(0, 145, 0, 30)
 		button.Text = naame
-		button.TextColor3 = Color3.fromRGB(255, 255, 255)
+		button.TextColor3 = (blatantmode and Color3.fromRGB(128, 128, 128) or Color3.fromRGB(255, 255, 255))
 		button.Name = naame
 		button.Visible = true
 		button.Parent = children
@@ -804,44 +808,47 @@ api["CreateWindow"] = function(name, icon, position, visible)
 		buttonapi["Bindable"] = true
 		buttonapi["Name"] = naame
 		buttonapi["Expanded"] = false
+		buttonapi["Blatant"] = blatantmode
 		buttonapi["HasExtraText"] = type(temporaryfunction3) == "function"
 		buttonapi["GetExtraText"] = (buttonapi["HasExtraText"] and temporaryfunction3 or function() return "" end)
-		buttonapi["ToggleButton"] = function(clicked)
-			if clicked and holdingshift and buttonapi["Bindable"] then
-				if captured == false then
-					captured = true
-					spawn(function()
-						if buttonapi["Keybind"] ~= "" then
-							button.Text = "Unbound"
-							buttonapi["Keybind"] = ""
-							captured = false
-							wait(1)
-							button.Text = naame
-						else
-							button.Text = "Press a key"
-							repeat wait() until pressedkey ~= ""
-							buttonapi["Keybind"] = pressedkey
-							pressedkey = ""
-							button.Text = "Bound to "..buttonapi["Keybind"]
-							captured = false
-							wait(1)
-							button.Text = naame
-						end
-					end)
-				end
-			else
-				buttonapi["Enabled"] = not buttonapi["Enabled"]
-				api["UpdateHudEvent"]:Fire()
-				if buttonapi["Enabled"] then
-					button.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
-					button.BackgroundTransparency = 0
-					button.TextColor3 = Color3.new(0, 0, 0)
-					temporaryfunction()
+		buttonapi["ToggleButton"] = function(clicked, force)
+			if ((blatantmode and api["Settings"]["GUIObject"]["BlatantMode"] or force) or (not blatantmode)) then
+				if clicked and holdingshift and buttonapi["Bindable"] then
+					if captured == false then
+						captured = true
+						spawn(function()
+							if buttonapi["Keybind"] ~= "" then
+								button.Text = "Unbound"
+								buttonapi["Keybind"] = ""
+								captured = false
+								wait(1)
+								button.Text = naame
+							else
+								button.Text = "Press a key"
+								repeat wait() until pressedkey ~= ""
+								buttonapi["Keybind"] = pressedkey
+								pressedkey = ""
+								button.Text = "Bound to "..buttonapi["Keybind"]
+								captured = false
+								wait(1)
+								button.Text = naame
+							end
+						end)
+					end
 				else
-					button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-					button.BackgroundTransparency = 0.275
-					button.TextColor3 = Color3.new(1, 1, 1)
-					temporaryfunction2()
+					buttonapi["Enabled"] = not buttonapi["Enabled"]
+					api["UpdateHudEvent"]:Fire()
+					if buttonapi["Enabled"] then
+						button.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
+						button.BackgroundTransparency = 0
+						button.TextColor3 = Color3.new(0, 0, 0)
+						temporaryfunction()
+					else
+						button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+						button.BackgroundTransparency = 0.275
+						button.TextColor3 = Color3.new(1, 1, 1)
+						temporaryfunction2()
+					end
 				end
 			end
 		end
@@ -907,6 +914,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 			sliderapi["Value"] = 0.44
 			sliderapi["RainbowValue"] = false
 			sliderapi["SetValue"] = function(val)
+				val = math.clamp(val, min, max)
 				sliderapi["Value"] = val
 				slider3.Position = UDim2.new(val, -1, 0, 0)
 				temporaryfunction(val)
@@ -1020,6 +1028,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 			sliderapi["Value"] = (defaultvalue or min)
 			sliderapi["Max"] = max
 			sliderapi["SetValue"] = function(val)
+				val = math.clamp(val, min, max)
 				sliderapi["Value"] = val
 				textlabel2.Text = sliderapi["Value"].." "
 				temporaryfunction(val)
@@ -1275,6 +1284,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 		uicorner3.Parent = slider3
 		sliderapi["Value"] = 0
 		sliderapi["SetValue"] = function(val)
+			val = math.clamp(val, min, max)
 			sliderapi["Value"] = val
 			textlabel2.Text = sliderapi["Value"].." "
 			temporaryfunction(val)
@@ -1354,6 +1364,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 		sliderapi["Value"] = 0.44
 		sliderapi["RainbowValue"] = false
 		sliderapi["SetValue"] = function(val)
+			val = math.clamp(val, min, max)
 			sliderapi["Value"] = val
 			slider3.Position = UDim2.new(val, -1, 0, 0)
 			temporaryfunction(val)
@@ -1500,7 +1511,7 @@ api["CreateWindow"] = function(name, icon, position, visible)
 		return textapi
 	end
 
-	windowapi["CreateToggle"] = function(name, temporaryfunction, temporaryfunction2)
+	windowapi["CreateToggle"] = function(name, temporaryfunction, temporaryfunction2, goback)
 		local buttonapi = {}
 		local amount = #children:GetChildren()
 		local frame = Instance.new("Frame")
@@ -1548,15 +1559,17 @@ api["CreateWindow"] = function(name, icon, position, visible)
 		buttonapi["Enabled"] = false
 		buttonapi["Keybind"] = ""
 		buttonapi["ToggleButton"] = function()
-			buttonapi["Enabled"] = not buttonapi["Enabled"]
-			if buttonapi["Enabled"] then
-				button.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
-				frame2.Position = UDim2.new(0, 9, 0, 1)
-				temporaryfunction()
-			else
-				button.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
-				frame2.Position = UDim2.new(0, 1, 0, 1)
-				temporaryfunction2()
+			if goback and buttonapi["Enabled"] == false or (not goback) then
+				buttonapi["Enabled"] = not buttonapi["Enabled"]
+				if buttonapi["Enabled"] then
+					button.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
+					frame2.Position = UDim2.new(0, 9, 0, 1)
+					temporaryfunction()
+				else
+					button.BackgroundColor3 = Color3.fromRGB(89, 89, 89)
+					frame2.Position = UDim2.new(0, 1, 0, 1)
+					temporaryfunction2()
+				end
 			end
 		end
 		button.MouseButton1Click:connect(buttonapi["ToggleButton"])

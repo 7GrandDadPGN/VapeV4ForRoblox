@@ -1,4 +1,3 @@
--- Credits to Inf Yield & all the other scripts that helped me make bypasses
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
 local lplr = players.LocalPlayer
@@ -7,6 +6,13 @@ local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
 local uis = game:GetService("UserInputService")
 local mouse = lplr:GetMouse()
+local jailbreak = {}
+
+for i,v in pairs(getgc(true)) do
+    if type(v) == "table" and rawget(v, "ProjectMouseLocationToWorld") then
+       jailbreak["MouseLocation"] = v 
+    end
+end
 
 local function friendCheck(plr)
 	return (GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) == nil or GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] == false)
@@ -103,112 +109,32 @@ local aimhitchance = {["Value"] = 1}
 local aimmethod = {["Value"] = "FindPartOnRayWithIgnoreList"}
 local kek = function() end
 local kek2 = function() end
-local tar = nil
-local meta = getrawmetatable(game)
-setreadonly(meta, false)
-local old = meta.__namecall
-local old2 = meta.__index
-local hook
-
-local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AimAssist", function() kek() end, function() 
-	game:GetService("RunService"):UnbindFromRenderStep("AimAssist") 
-	meta.__namecall = old
-	meta.__index = old2
-	tar = nil 
-end, true, function() 
-	if aimmethod["Value"]:match("FindPartOnRay") then
-		return " Ray"
+local old = jailbreak["MouseLocation"]["ProjectMouseLocationToWorld"]
+local function getTarget()
+	local plr = GetNearestHumanoidToMouse(aimfov["Value"], GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false and aimvischeck["Enabled"])
+	if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
+		return (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
 	else
-		return " "..string.gsub(aimmethod["Value"], "PointToRay", "") 
+		return nil
 	end
+end
+local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AimAssist", function()
+	jailbreak["MouseLocation"]["ProjectMouseLocationToWorld"] = function(...)
+		local tar = getTarget()
+		if tar then
+			return tar.Position
+		end
+		return old(...)
+	end
+end, function() 
+	jailbreak["MouseLocation"]["ProjectMouseLocationToWorld"] = old
+end, true, function() 
+	return " Jailbreak"
 end)
-aimmethod = AimAssist.CreateDropdown("Method", {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay", "Mouse"}, function(val) end)
-local aimtable = {["FindPartOnRayWithIgnoreList"] = 1, ["FindPartOnRayWithWhitelist"] = 1, ["Raycast"] = 2, ["FindPartOnRay"] = 1, ["ScreenPointToRay"] = 3, ["ViewportPointToRay"] = 3, ["Mouse"] = 4}
 aimvischeck = AimAssist.CreateToggle("Wall Check", function() end, function() end)
 aimfov = AimAssist.CreateSlider("FOV", 1, 1000, function(val) end)
 aimhitchance = AimAssist.CreateSlider("Hit Chance", 1, 100, function(val) end)
 aimheadshotchance = AimAssist.CreateSlider("Headshot Chance", 1, 100, function(val) end)
-
-hook = hookfunction(workspace.FindPartOnRayWithIgnoreList, function(...) 
-    local scriptname = getcallingscript()
-	local Args = {...}
-	
-	if tar and not checkcaller() and (scriptname and not scriptname.Name:match("Camera")) and aimtable[aimmethod["Value"]] == 1 then
-       Args[2] = Ray.new(Args[2].Origin, (tar.Position + Vector3.new(0, (Args[2].Origin - tar.Position).magnitude/10000, 0) - Args[2].Origin).unit * 10000)
-	   if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant ModeToggle"]["Api"]["Enabled"] then
-			return tar, tar.Position, (tar.Position + Vector3.new(0, (Args[2].Origin - tar.Position).magnitude/10000, 0) - Args[2].Origin).unit * 10000, tar.Material
-	   end
-    end
-	
-    return hook(unpack(Args))
-end)
-
-kek = function()
-	meta.__namecall = newcclosure(function(...)
-		local Namecallaimmethod = getnamecallmethod()
-		local Args = {...}
-		local scriptname = getcallingscript()
-
-		if tar then
-			if not checkcaller() and (scriptname and not scriptname.Name:match("Camera")) and Namecallaimmethod == aimmethod["Value"] then
-				if aimtable[aimmethod["Value"]] == 1 then
-				   Args[2] = Ray.new(Args[2].Origin, (tar.Position + Vector3.new(0, (Args[2].Origin - tar.Position).magnitude/10000, 0) - Args[2].Origin).unit * 10000)
-				   if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
-						return tar, tar.Position, (tar.Position + Vector3.new(0, (Args[2].Origin - tar.Position).magnitude/10000, 0) - Args[2].Origin).unit * 10000, tar.Material
-				   end
-				end
-				if aimtable[aimmethod["Value"]] == 2 then
-				   Args[3] = (tar.Position + Vector3.new(0, (Args[2] - tar.Position).magnitude/10000, 0) - Args[2]).unit * 10000
-				   if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
-						local haha = RaycastParams.new()
-						haha.FilterType = Enum.RaycastFilterType.Whitelist
-						haha.FilterDescendantsInstances = {tar}
-						Args[4] = haha
-				   end
-				end
-				if aimtable[aimmethod["Value"]] == 3 then
-					return Ray.new(cam.CFrame.p, (tar.Position + Vector3.new(0, (cam.CFrame.p - tar.Position).magnitude/10000, 0) - cam.CFrame.p).unit * 10000)
-				end
-			end
-		end
-
-		return old(unpack(Args))
-	end)
-	meta.__index = newcclosure(function(lol, lol2)
-		if tar and not checkcaller() and lol == mouse and aimmethod["Value"] == "Mouse" then
-			if tostring(lol2) == "Hit" then
-				return tar.CFrame
-			elseif tostring(lol2) == "Target" then
-				return tar
-			elseif tostring(lol2) == "UnitRay" then
-				return Ray.new(cam.CFrame.p, (tar.Position + Vector3.new(0, (cam.CFrame.p - tar.Position).magnitude/10000, 0) - cam.CFrame.p).unit * 10000)
-			end
-		end
-		return old2(lol, lol2)
-	end)
-    game:GetService("RunService"):BindToRenderStep("AimAssist", 1, function() 
-		local plr = GetNearestHumanoidToMouse(aimfov["Value"], GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false and aimvischeck["Enabled"])
-		if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
-			tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
-		else
-			tar = nil
-		end
-    end)
-end
-
-local autoclickercps = {["Value"] = 1}
-local autoclicker = {["Enabled"] = false}
-local autoclickertick = tick()
-autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
-	game:GetService("RunService"):BindToRenderStep("AutoClicker", 1, function() 
-		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-		if tool and isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() then
-			tool:Activate()
-			autoclickertick = tick() + (1 / autoclickercps["Value"]) * Random.new().NextNumber(Random.new(), 0.75, 1)
-		end
-	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker") end, true)
-autoclickercps = autoclicker.CreateSlider("CPS", 1, 20, function(val) end)
 
 local reachrange = {["Value"] = 1}
 local oldsize = {}
@@ -258,10 +184,48 @@ end, function()
 	settings():GetService("NetworkSettings").IncomingReplicationLag = 0
 end, false)
 
-local flyspeed = {["Value"] = 1}
-local flyverticalspeed = {["Value"] = 1}
+local speedval = {["Value"] = 1}
+local speedmethod = {["Value"] = "BodyVelocity"}
+local speedjump = {["Enabled"] = false}
+local bodyvelo
+
+local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
+	game:GetService("RunService"):BindToRenderStep("Speed", 1, function(delta)
+		if isAlive() then
+			if speedmethod["Value"] == "BodyVelocity" then
+				if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
+					bodyvelo = Instance.new("BodyVelocity")
+					bodyvelo.Parent = lplr.Character.HumanoidRootPart
+					bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+				else
+					bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
+				end
+			elseif speedmethod["Value"] == "CFrame" then
+				if (bodyvelo ~= nil) then
+					bodyvelo:Remove()
+				end
+				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (math.clamp(speedval["Value"] - 16, 1, 150) * delta))
+			end
+			if speedjump["Enabled"] then
+				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
+				end
+			end
+		end
+	end)
+end, function() 
+	if bodyvelo then
+		bodyvelo:Remove()
+	end
+	game:GetService("RunService"):UnbindFromRenderStep("Speed")
+end, true, function() return " "..speedmethod["Value"] end)
+speedmethod = speed.CreateDropdown("Method", {"BodyVelocity", "CFrame"}, function(val) end)
+speedval = speed.CreateSlider("Speed", 1, 150, function(val) end)
+speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
+
+local flyval = {["Value"] = 1}
 local flyupanddown = {["Enabled"] = false}
-local flymethod = {["Value"] = "Normal"}
+local flymethod = {["Value"] = "BodyVelocity"}
 local flyposy = 0
 local flyup = false
 local flydown = false
@@ -292,25 +256,25 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 	end)
 	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
 		if isAlive() then
-			if flymethod["Value"] == "Normal" then
+			if flymethod["Value"] == "BodyVelocity" then
 				if (bodyvelofly == nil or bodyvelofly ~= nil and bodyvelofly.Parent ~= lplr.Character.HumanoidRootPart) then
 					bodyvelofly = Instance.new("BodyVelocity")
 					bodyvelofly.Parent = lplr.Character.HumanoidRootPart
 					bodyvelofly.MaxForce = Vector3.new(100000, 100000, 100000)
 				else
-					bodyvelofly.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+					bodyvelofly.Velocity = (lplr.Character.Humanoid.MoveDirection * flyval["Value"]) + Vector3.new(0, (flyup and flyval["Value"] or 0) + (flydown and -flyval["Value"] or 0), 0)
 				end
-			elseif flymethod["Value"] == "AntiCheat" then
+			elseif flymethod["Value"] == "CFrame" then
 				if (bodyvelofly ~= nil) then
 					bodyvelofly:Remove()
 				end
 				if flyup then
-					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+					flyposy = flyposy + (1 * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
 				end
 				if flydown then
-					flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+					flyposy = flyposy - (1 * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
 				end
-				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
+				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyval["Value"] - 16, 1, 150) * delta))
 				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 			end
@@ -325,14 +289,13 @@ end, function()
 	flypress:Disconnect()
 	flyendpress:Disconnect()
 	game:GetService("RunService"):UnbindFromRenderStep("Fly")
-end, true, function() return " "..flymethod["Value"] end, true)
-flymethod = fly.CreateDropdown("Mode", {"Normal", "AntiCheat"}, function(val)
+end, true, function() return " "..flymethod["Value"] end)
+flymethod = fly.CreateDropdown("Method", {"BodyVelocity", "CFrame"}, function(val)
 	if isAlive() then
 		flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
 	end
 end)
-flyspeed = fly.CreateSlider("Speed", 1, 150, function(val) end)
-flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 150, function(val) end)
+flyval = fly.CreateSlider("Fly Speed", 1, 150, function(val) end)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
 
 local hitboxexpand = {["Value"] = 1}
@@ -354,18 +317,14 @@ end, function()
 end, true)
 hitboxexpand = Hitbox.CreateSlider("Expand amount", 1, 10, function(val) end)
 
-local killauraaps = {["Value"] = 1}
 local killaurarange = {["Value"] = 1}
 local killauraangle = {["Value"] = 90}
 local killauratarget = {["Value"] = 1}
-local Killauramouse = false
-local Killaura = {["Enabled"] = false}
-local killauratick = tick()
-Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
+local Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
 	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
 		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
 		local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratarget["Value"])
-		if tool and isAlive() and (Killauramouse and uis:IsMouseButtonPressed(0) or Killauramouse == false) then
+		if tool and isAlive() then
 			local touch = findTouchInterest(tool)
 			if touch then
 				for i,v in pairs(plr) do
@@ -373,10 +332,6 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
 					local angle = math.acos(localfacing:Dot(vec))
 					if angle <= (killauraangle["Value"] / 115) then
-						if killauratick <= tick() then
-							tool:Activate()
-							killauratick = tick() + (1 / killauraaps["Value"]) * Random.new().NextNumber(Random.new(), 0.75, 1)
-						end
 						firetouchinterest(touch.Parent, v.Character.Head, 1)
 						firetouchinterest(touch.Parent, v.Character.Head, 0)
 					end
@@ -385,66 +340,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		end
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("Killaura") end, true)
-killauraaps = Killaura.CreateSlider("Attacks per second", 1, 20, function(val) end)
 killaurarange = Killaura.CreateSlider("Attack range", 1, 20, function(val) end)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
-killauratarget = Killaura.CreateSlider("Max targets", 1, 6, function(val) end)	
-Killaura.CreateToggle("Require mouse down", function() Killauramouse = true end, function() Killauramouse = false end)
-
-local longjumpboost = {["Value"] = 1}
-local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("LongJump", function()
-	game:GetService("RunService"):BindToRenderStep("LongJump", 1, function() 
-		if isAlive() then
-			if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-				lplr.Character.HumanoidRootPart.Velocity = lplr.Character.HumanoidRootPart.Velocity + lplr.Character.Humanoid.MoveDirection * (longjumpboost["Value"] / 2.5)
-			end
-		end
-	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("LongJump") end, true, function() return "" end, true)
-longjumpboost = longjump.CreateSlider("Boost", 1, 5, function(val) end)
-
-local speedval = {["Value"] = 1}
-local speedmethod = {["Value"] = "AntiCheat A"}
-local speedjump = {["Enabled"] = false}
-local bodyvelo
-
-local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
-	game:GetService("RunService"):BindToRenderStep("Speed", 1, function(delta)
-		if isAlive() then
-			if speedmethod["Value"] == "AntiCheat A" then
-				if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
-					bodyvelo = Instance.new("BodyVelocity")
-					bodyvelo.Parent = lplr.Character.HumanoidRootPart
-					bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
-				else
-					bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
-				end
-			elseif speedmethod["Value"] == "AntiCheat B" then
-				if (bodyvelo ~= nil) then
-					bodyvelo:Remove()
-				end
-				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
-			end
-			if speedjump["Enabled"] then
-				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-					if speedmethod["Value"] == "AntiCheat A" then
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
-					elseif speedmethod["Value"] == "AntiCheat B" then
-						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0.2, 0)
-					end
-				end
-			end
-		end
-	end)
-end, function() 
-	if bodyvelo then
-		bodyvelo:Remove()
-	end
-	game:GetService("RunService"):UnbindFromRenderStep("Speed")
-end, true, function() return " "..speedmethod["Value"] end, true)
-speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, function(val) end)
-speedval = speed.CreateSlider("Speed", 1, 150, function(val) end)
-speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
+killauratarget = Killaura.CreateSlider("Max targets", 1, 6, function(val) end)
 
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPFolder"
