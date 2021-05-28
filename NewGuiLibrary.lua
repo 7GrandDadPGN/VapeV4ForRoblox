@@ -8,17 +8,15 @@ local api = {
 	["ObjectsThatCanBeSaved"] = {},
 }
 
-if isfolder("vape") == false then
-	makefolder("vape")
-end
-if isfolder("vape/CustomModules") == false then
-	makefolder("vape/CustomModules")
-end
-if isfolder("vape/Profiles") == false then
-	makefolder("vape/Profiles")
-end
-if isfolder("vape/assets") == false then
-	makefolder("vape/assets")
+local function getcustomassetfunc(path)
+	if not isfile(path) then
+		local req = syn.request({
+			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
+			Method = "GET"
+		})
+		writefile(path, req.Body)
+	end
+	return getsynasset(path)
 end
 
 coroutine.resume(coroutine.create(function()
@@ -304,7 +302,7 @@ api["CreateMainWindow"] = function()
 	windowlogo1.Active = false
 	windowlogo1.Position = UDim2.new(0, 11, 0, 12)
 	windowlogo1.BackgroundTransparency = 1
-	windowlogo1.Image = getsynasset("vape/assets/VapeLogo1.png")
+	windowlogo1.Image = getcustomassetfunc("vape/assets/VapeLogo1.png")
 	windowlogo1.Name = "Logo1"
 	windowlogo1.Parent = windowtitle
 	local windowlogo2 = Instance.new("ImageLabel")
@@ -313,14 +311,14 @@ api["CreateMainWindow"] = function()
 	windowlogo2.Position = UDim2.new(1, 1, 0, 1)
 	windowlogo2.BackgroundTransparency = 1
 	windowlogo2.ImageColor3 = Color3.fromHSV(0.44, 1, 1)
-	windowlogo2.Image = getsynasset("vape/assets/VapeLogo2.png")
+	windowlogo2.Image = getcustomassetfunc("vape/assets/VapeLogo2.png")
 	windowlogo2.Name = "Logo2"
 	windowlogo2.Parent = windowlogo1
 	local settingsicon = Instance.new("ImageLabel")
 	settingsicon.Name = "SettingsWindowIcon"
 	settingsicon.Size = UDim2.new(0, 16, 0, 16)
 	settingsicon.Visible = false
-	settingsicon.Image = getsynasset("vape/assets/SettingsWheel2.png")
+	settingsicon.Image = getcustomassetfunc("vape/assets/SettingsWheel2.png")
 	settingsicon.BackgroundTransparency = 1
 	settingsicon.Position = UDim2.new(0, 10, 0, 13)
 	settingsicon.Parent = windowtitle
@@ -339,14 +337,14 @@ api["CreateMainWindow"] = function()
 	local settingswheel = Instance.new("ImageButton")
 	settingswheel.Name = "SettingsWheel"
 	settingswheel.Size = UDim2.new(0, 14, 0, 14)
-	settingswheel.Image = getsynasset("vape/assets/SettingsWheel1.png")
+	settingswheel.Image = getcustomassetfunc("vape/assets/SettingsWheel1.png")
 	settingswheel.Position = UDim2.new(1, -25, 0, 14)
 	settingswheel.BackgroundTransparency = 1
 	settingswheel.Parent = windowtitle
 	local settingsexit = Instance.new("ImageButton")
 	settingsexit.Name = "SettingsExit"
 	settingsexit.Size = UDim2.new(0, 16, 0, 16)
-	settingsexit.Image = getsynasset("vape/assets/ExitIcon1.png")
+	settingsexit.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
 	settingsexit.Visible = false
 	settingsexit.Position = UDim2.new(1, -26, 0, 13)
 	settingsexit.BackgroundTransparency = 1
@@ -464,7 +462,7 @@ api["CreateMainWindow"] = function()
 		buttonimage.Size = UDim2.new(0, 14, 0, 14)
 		buttonimage.Position = pos
 		buttonimage.AutoButtonColor = false
-		buttonimage.Image = getsynasset(image)
+		buttonimage.Image = getcustomassetfunc(image)
 		buttonimage.BackgroundTransparency = 1
 		buttonimage.Parent = extraframe
 		buttonapi["Enabled"] = false
@@ -726,7 +724,7 @@ api["CreateMainWindow"] = function()
 		arrow.BackgroundTransparency = 1
 		arrow.Name = "RightArrow"
 		arrow.Position = UDim2.new(1, -20, 0, 16)
-		arrow.Image = getsynasset("vape/assets/RightArrow.png")
+		arrow.Image = getcustomassetfunc("vape/assets/RightArrow.png")
 		arrow.Active = false
 		arrow.Parent = button
 		local buttonicon
@@ -736,7 +734,7 @@ api["CreateMainWindow"] = function()
 			buttonicon.Size = UDim2.new(0, iconsize, 0, 16)
 			buttonicon.BackgroundTransparency = 1
 			buttonicon.Position = UDim2.new(0, 10, 0, 12)
-			buttonicon.Image = getsynasset(icon)
+			buttonicon.Image = getcustomassetfunc(icon)
 			buttonicon.Name = "ButtonIcon"
 			buttonicon.Parent = button
 		end
@@ -797,7 +795,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 	windowtitle.Parent = hudgui
 	local windowicon = Instance.new("ImageLabel")
 	windowicon.Size = UDim2.new(0, iconsize, 0, 16)
-	windowicon.Image = getsynasset(icon)
+	windowicon.Image = getcustomassetfunc(icon)
 	windowicon.Name = "WindowIcon"
 	windowicon.BackgroundTransparency = 1
 	windowicon.Position = UDim2.new(0, 10, 0, 13)
@@ -816,7 +814,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 	local expandbutton = Instance.new("ImageButton")
 	expandbutton.AutoButtonColor = false
 	expandbutton.Size = UDim2.new(0, 16, 0, 16)
-	expandbutton.Image = getsynasset("vape/assets/PinButton.png")
+	expandbutton.Image = getcustomassetfunc("vape/assets/PinButton.png")
 	expandbutton.ImageTransparency = 0.2
 	expandbutton.BackgroundTransparency = 1
 	expandbutton.Name = "PinButton" 
@@ -828,7 +826,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 	optionsbutton.Position = UDim2.new(1, -16, 0, 11)
 	optionsbutton.Name = "OptionsButton"
 	optionsbutton.BackgroundTransparency = 1
-	optionsbutton.Image = getsynasset("vape/assets/MoreButton3.png")
+	optionsbutton.Image = getcustomassetfunc("vape/assets/MoreButton3.png")
 	optionsbutton.Parent = windowtitle
 	local children = Instance.new("Frame")
 	children.BackgroundTransparency = 1
@@ -1012,7 +1010,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	windowtitle.Parent = clickgui
 	local windowicon = Instance.new("ImageLabel")
 	windowicon.Size = UDim2.new(0, iconsize, 0, 16)
-	windowicon.Image = getsynasset(icon)
+	windowicon.Image = getcustomassetfunc(icon)
 	windowicon.Name = "WindowIcon"
 	windowicon.BackgroundTransparency = 1
 	windowicon.Position = UDim2.new(0, 10, 0, 13)
@@ -1031,7 +1029,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	local expandbutton = Instance.new("ImageButton")
 	expandbutton.Active = true
 	expandbutton.Size = UDim2.new(0, 9, 0, 4)
-	expandbutton.Image = getsynasset("vape/assets/UpArrow.png")
+	expandbutton.Image = getcustomassetfunc("vape/assets/UpArrow.png")
 	expandbutton.Position = UDim2.new(1, -20, 0, 19)
 	expandbutton.Name = "ExpandButton"
 	expandbutton.BackgroundTransparency = 1
@@ -1102,7 +1100,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		button2.Size = UDim2.new(0, 3, 0, 16)
 		button2.Position = UDim2.new(1, -21, 0, 12)
 		button2.Name = "OptionsButton"
-		button2.Image = getsynasset("vape/assets/MoreButton1.png")
+		button2.Image = getcustomassetfunc("vape/assets/MoreButton1.png")
 		button2.Parent = button
 		local buttontext = Instance.new("TextLabel")
 		buttontext.BackgroundTransparency = 1
@@ -1140,7 +1138,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		bindbkg.Visible = false
 		bindbkg.Parent = button
 		local bindimg = Instance.new("ImageLabel")
-		bindimg.Image = getsynasset("vape/assets/KeybindIcon.png")
+		bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
 		bindimg.BackgroundTransparency = 1
 		bindimg.Size = UDim2.new(0, 16, 0, 16)
 		bindimg.Position = UDim2.new(0.5, -8, 0.5, -8)
@@ -1204,13 +1202,13 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			if buttonapi["Enabled"] then
 				button.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
 				buttonactiveborder.Visible = true
-				button2.Image = getsynasset("vape/assets/MoreButton2.png")
+				button2.Image = getcustomassetfunc("vape/assets/MoreButton2.png")
 				buttontext.TextColor3 = Color3.new(0, 0, 0)
 				temporaryfunction()
 			else
 				button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				buttonactiveborder.Visible = false
-				button2.Image = getsynasset("vape/assets/MoreButton1.png")
+				button2.Image = getcustomassetfunc("vape/assets/MoreButton1.png")
 				buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 				temporaryfunction2()
 			end
@@ -1527,7 +1525,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			slider3.Size = UDim2.new(0, 23, 0, 17)
 			slider3.BackgroundColor3 = Color3.fromRGB(25, 26, 25)
 			slider3.BorderSizePixel = 0
-			slider3.Image = getsynasset("vape/assets/SliderButton1.png")
+			slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
 			slider3.Position = UDim2.new(1, -11, 0, -7)
 			slider3.Parent = slider2
 			slider3.Name = "ButtonSlider"
@@ -1668,14 +1666,14 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			end
 		end)
 		bindbkg.MouseEnter:connect(function() 
-			bindimg.Image = getsynasset("vape/assets/PencilIcon.png") 
+			bindimg.Image = getcustomassetfunc("vape/assets/PencilIcon.png") 
 			bindimg.Visible = true
 			bindtext.Visible = false
 			bindbkg.Size = UDim2.new(0, 24, 0, 24)
 			bindbkg.Position = UDim2.new(1, -56, 0, 8)
 		end)
 		bindbkg.MouseLeave:connect(function() 
-			bindimg.Image = getsynasset("vape/assets/KeybindIcon.png")
+			bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
 			if buttonapi["Keybind"] ~= "" then
 				bindimg.Visible = false
 				bindtext.Visible = true
