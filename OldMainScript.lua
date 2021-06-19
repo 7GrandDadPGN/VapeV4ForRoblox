@@ -396,12 +396,12 @@ SelfDestructButton["Bindable"] = false
 
 guicolorslider = Settings.CreateColorSlider("Gui Color", function(val) GuiLibrary["Settings"]["GUIObject"]["Color"] = val GuiLibrary["UpdateUI"]() end)
 GuiLibrary["UpdateUI"] = function()
-	pcall(function()
+	--pcall(function()
 		if not guicolorslider["RainbowValue"] then
 			onething.Gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1))})
 			onething2.Gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1))})
 			onetext.Gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1))})
-			onetext2.Gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 0.42)), ColorSequenceKeypoint.new(1, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 0.42))})
+		--	onetext2.Gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 0.42)), ColorSequenceKeypoint.new(1, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 0.42))})
 		end
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "Button" and v["Api"]["Enabled"] then
@@ -439,7 +439,7 @@ GuiLibrary["UpdateUI"] = function()
 				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
 			end
 		end
-	end)
+--	end)
 end
 
 local playertoggle = Settings.CreateToggle("Players", function() end, function() end)
