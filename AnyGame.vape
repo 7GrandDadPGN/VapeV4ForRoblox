@@ -7,9 +7,16 @@ local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
 local uis = game:GetService("UserInputService")
 local mouse = lplr:GetMouse()
+local robloxfriends = {}
 
 local function friendCheck(plr)
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) == nil or GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] == false)
+	if not robloxfriends[plr.UserId] then
+		if lplr:IsFriendsWith(plr.UserId) then
+			table.insert(robloxfriends, plr.Name)
+			robloxfriends[plr.UserId] = true
+		end
+	end
+	return (GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and ((GuiLibrary["ObjectsThatCanBeSaved"]["Use Roblox FriendsToggle"]["Api"]["Enabled"] and table.find(robloxfriends, plr.Name) == nil) and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) == nil) or GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] == false)
 end
 
 local function teamCheck(plr)
@@ -144,7 +151,7 @@ hook = hookfunction(workspace.FindPartOnRayWithIgnoreList, function(...)
 end)
 
 kek = function()
-	meta.__namecall = newcclosure(function(...)
+	hookmetamethod(game, "__namecall", function(...)
 		local Namecallaimmethod = getnamecallmethod()
 		local Args = {...}
 		local scriptname = getcallingscript()
@@ -174,7 +181,7 @@ kek = function()
 
 		return old(unpack(Args))
 	end)
-	meta.__index = newcclosure(function(lol, lol2)
+	hookmetamethod(game, "__index", function(lol, lol2)
 		if tar and not checkcaller() and lol == mouse and aimmethod["Value"] == "Mouse" then
 			if tostring(lol2) == "Hit" then
 				return tar.CFrame
@@ -231,19 +238,19 @@ local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 end, function() 
 	game:GetService("RunService"):UnbindFromRenderStep("Reach")
 	for i2,v2 in pairs(lplr.Character:GetChildren()) do
-		if v2:IsA("Tool") and rawget(oldsize, tool.Name) then
-			local touch = findTouchInterest(tool)
+		if v2:IsA("Tool") and rawget(oldsize, v2.Name) then
+			local touch = findTouchInterest(v2)
 			if touch then
-				touch.Parent.Size = rawget(oldsize, tool.Name)
+				touch.Parent.Size = rawget(oldsize, v2.Name)
 				touch.Parent.Massless = false
 			end
 		end
 	end
 	for i2,v2 in pairs(lplr.Backpack:GetChildren()) do
-		if v2:IsA("Tool") and rawget(oldsize, tool.Name) then
-			local touch = findTouchInterest(tool)
+		if v2:IsA("Tool") and rawget(oldsize, v2.Name) then
+			local touch = findTouchInterest(v2)
 			if touch then
-				touch.Parent.Size = rawget(oldsize, tool.Name)
+				touch.Parent.Size = rawget(oldsize, v2.Name)
 				touch.Parent.Massless = false
 			end
 		end
@@ -358,14 +365,15 @@ local killauraaps = {["GetRandomValue"] = function() return 1 end}
 local killaurarange = {["Value"] = 1}
 local killauraangle = {["Value"] = 90}
 local killauratarget = {["Value"] = 1}
-local Killauramouse = false
+local killauramouse = {["Enabled"] = false}
+local killauracframe = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauratick = tick()
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
 	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
 		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
 		local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratarget["Value"])
-		if tool and isAlive() and (Killauramouse and uis:IsMouseButtonPressed(0) or Killauramouse == false) then
+		if tool and isAlive() and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or killauramouse["Enabled"] == false) then
 			local touch = findTouchInterest(tool)
 			if touch then
 				for i,v in pairs(plr) do
@@ -373,6 +381,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
 					local angle = math.acos(localfacing:Dot(vec))
 					if angle <= (killauraangle["Value"] / 115) then
+						if killauracframe["Enabled"] then
+							lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(v.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, v.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+						end
 						if killauratick <= tick() then
 							tool:Activate()
 							killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
@@ -388,8 +399,8 @@ end, function() game:GetService("RunService"):UnbindFromRenderStep("Killaura") e
 killauraaps = Killaura.CreateTwoSlider("Attacks per second", 1, 20, function(val) end, false, 8, 12)
 killaurarange = Killaura.CreateSlider("Attack range", 1, 20, function(val) end)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
-killauratarget = Killaura.CreateSlider("Max targets", 1, 6, function(val) end)	
-Killaura.CreateToggle("Require mouse down", function() Killauramouse = true end, function() Killauramouse = false end)
+killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end)
+killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
 
 local longjumpboost = {["Value"] = 1}
 local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("LongJump", function()
@@ -702,6 +713,107 @@ NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
 NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end)
 NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end)
 NameTagsDistance = NameTags.CreateToggle("Distance", function() end, function() end)
+
+local searchColor = {["Value"] = 0.44}
+local searchModule = {["Enabled"] = false}
+local searchFolder = Instance.new("Folder")
+searchFolder.Name = "SearchFolder"
+searchFolder.Parent = GuiLibrary["MainGui"]
+local function searchFindBoxHandle(part)
+	for i,v in pairs(searchFolder:GetChildren()) do
+		if v.Adornee == part then
+			return v
+		end
+	end
+	return nil
+end
+local searchAdd
+local searchRemove
+local searchRefresh = function()
+	searchFolder:ClearAllChildren()
+	if searchModule["Enabled"] then
+		for i,v in pairs(workspace:GetDescendants()) do
+			if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
+				local boxhandle = Instance.new("BoxHandleAdornment")
+				boxhandle.Name = v.Name
+				boxhandle.AlwaysOnTop = true
+				boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
+				boxhandle.Adornee = v
+				boxhandle.ZIndex = 10
+				boxhandle.Size = v.Size
+				boxhandle.Transparency = 0.5
+				boxhandle.Parent = searchFolder
+			end
+		end
+	end
+end
+local searchTextList = {["RefreshValues"] = function() end}
+searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Search", function() 
+	searchRefresh()
+	searchAdd = workspace.DescendantAdded:connect(function(v)
+		if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
+			local boxhandle = Instance.new("BoxHandleAdornment")
+			boxhandle.Name = v.Name
+			boxhandle.AlwaysOnTop = true
+			boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
+			boxhandle.Adornee = v
+			boxhandle.ZIndex = 10
+			boxhandle.Size = v.Size
+			boxhandle.Transparency = 0.5
+			boxhandle.Parent = searchFolder
+		end
+	end)
+	searchRemove = workspace.DescendantRemoving:connect(function(v)
+		if v:IsA("BasePart") then
+			local boxhandle = searchFindBoxHandle(v)
+			if boxhandle then
+				boxhandle:Remove()
+			end
+		end
+	end)
+end, function() 
+	pcall(function()
+		searchFolder:ClearAllChildren()
+		searchAdd:Disconnect()
+		searchRemove:Disconnect()
+	end)
+end, false)
+searchColor = searchModule.CreateColorSlider("new part color", function(val)
+	for i,v in pairs(searchFolder:GetChildren()) do
+		v.Color3 = Color3.fromHSV(val, 1, 1)
+	end
+end)
+SearchTextList = searchModule.CreateTextList("SearchList", "part name", function(user)
+	table.insert(GuiLibrary["Settings"]["SearchObject"]["List"], user)
+	SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
+	searchRefresh()
+end, function(num) 
+	table.remove(GuiLibrary["Settings"]["SearchObject"]["List"], num) 
+	SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
+	searchRefresh()
+end)
+
+local XrayAdd
+local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("Xray", function() 
+	XrayAdd = workspace.DescendantAdded:connect(function(v)
+		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+			v.LocalTransparencyModifier = 0.5
+		end
+	end)
+	for i, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+			v.LocalTransparencyModifier = 0.5
+		end
+	end
+end, function()
+	for i, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+			v.LocalTransparencyModifier = 0
+		end
+	end
+	XrayAdd:Disconnect()
+end, false)
+
 local TracersFolder = Instance.new("Folder")
 TracersFolder.Name = "TracersFolder"
 TracersFolder.Parent = GuiLibrary["MainGui"]
@@ -991,7 +1103,7 @@ end, function()
 	game:GetService("RunService"):UnbindFromRenderStep("Freecam")
 	PlayerState.Pop()
 end, true, function() return "" end, true)
-freecamspeed = Freecam.CreateSlider("Speed", 1, 150, function(val) NAV_KEYBOARD_SPEED = Vector3.new(val / 75,  val / 75, val / 75) end)
+freecamspeed = Freecam.CreateSlider("Speed", 1, 150, function(val) NAV_KEYBOARD_SPEED = Vector3.new(val / 75,  val / 75, val / 75) end, 75)
 
 local Panic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("Panic", function()
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
