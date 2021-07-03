@@ -84,7 +84,9 @@ end, function(obj)
 end)
 Friends.CreateColorSlider("Friends Color", function(val) 
 	GuiLibrary["FriendsObject"]["Color"] = val 
-	FriendsTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(GuiLibrary["FriendsObject"]["Color"], 1, 1)
+	pcall(function()
+		FriendsTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(GuiLibrary["FriendsObject"]["Color"], 1, 1)
+	end)
 	for i, v in pairs(FriendsTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
 		pcall(function()
 			if v:IsA("Frame") then
@@ -93,8 +95,9 @@ Friends.CreateColorSlider("Friends Color", function(val)
 		end)
 	end
 end)
-Friends.CreateToggle("Use color", function() end, function() end, false, "")
 Friends.CreateToggle("Use Friends", function() end, function() end, false, "")	
+Friends.CreateToggle("Use Roblox Friends", function() end, function() end, false, "")
+Friends.CreateToggle("Use color", function() end, function() end, false, "")
 GuiLibrary["FriendsObject"]["MiddleClickFunc"] = function(user)
 	if table.find(GuiLibrary["FriendsObject"]["Friends"], user) == nil then
 		table.insert(GuiLibrary["FriendsObject"]["Friends"], user)
@@ -107,10 +110,11 @@ GuiLibrary["FriendsObject"]["MiddleClickFunc"] = function(user)
 	end
 end
 GUI.CreateDivider()
-GUI.CreateCustomButton("Favorites", "vape/assets/FavoritesListIcon.png", UDim2.new(0, 17, 0, 14), function() end, function() end)
-GUI.CreateCustomButton("Text GUIVertical", "vape/assets/TextGUIIcon3.png", UDim2.new(1, -56, 0, 15), function() end, function() end)
+---GUI.CreateCustomButton("Favorites", "vape/assets/FavoritesListIcon.png", UDim2.new(0, 17, 0, 14), function() end, function() end)
+--GUI.CreateCustomButton("Text GUIVertical", "vape/assets/TextGUIIcon3.png", UDim2.new(1, -56, 0, 15), function() end, function() end)
 local TextGui = GuiLibrary.CreateCustomWindow("Text GUI", "vape/assets/TextGUIIcon1.png", 21, UDim2.new(0, 177, 0, 6), false)
-GUI.CreateCustomButton("Text GUI", "vape/assets/TextGUIIcon2.png", UDim2.new(1, -23, 0, 15), function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, "OptionsButton")
+--GUI.CreateCustomButton("Text GUI", "vape/assets/TextGUIIcon2.png", UDim2.new(1, -23, 0, 15), function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, "OptionsButton")
+GUI.CreateCustomToggle("Text GUI", "vape/assets/TextGUIIcon3.png", function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, "OptionsButton")
 
 local rainbowval = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 1))})
 local rainbowval2 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0.42)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 0.42))})
@@ -326,12 +330,17 @@ GUI.CreateToggle("Ignore naked", function() end, function() end, false, "")
 GUI.CreateToggle("Teams by server", function() end, function() end, false, "")
 GUI.CreateToggle("Teams by color", function() end, function() end, false, "")
 GUI.CreateToggle("MiddleClick friends", function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = true end, function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = false end, false, "")
-GUI.CreateToggle("Blatant mode", function() end, function() end, false, "")
+local blatantmode = GUI.CreateToggle("Blatant mode", function()
+
+end, function()
+
+end, false, "")
 GUI.CreateDivider2("GENERAL SETTINGS")
 guicolorslider = GUI.CreateColorSlider("GUI Theme", function(val) GuiLibrary["Settings"]["GUIObject"]["Color"] = val GuiLibrary["UpdateUI"]() end)
 
 GuiLibrary["UpdateUI"] = function()
 	pcall(function()
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1) or Color3.fromRGB(199, 199, 199))
 		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
 		onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
 		onetext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
@@ -430,106 +439,7 @@ end, function()
 end, true, "VapeOptions")
 GUI.CreateToggle("Show Tooltips", function() end, function() end, true, "VapeOptions")
 GUI.CreateToggle("Discord integration", function() end, function() end, false, "VapeOptions")
-GUI.CreateToggle("Notifications", function() end, function() end, true, "VapeOptions")
-
-local searchColor = {["Value"] = 0.44}
-local searchModule = {["Enabled"] = false}
-local searchFolder = Instance.new("Folder")
-searchFolder.Name = "SearchFolder"
-searchFolder.Parent = GuiLibrary["MainGui"]
-local function searchFindBoxHandle(part)
-	for i,v in pairs(searchFolder:GetChildren()) do
-		if v.Adornee == part then
-			return v
-		end
-	end
-	return nil
-end
-local searchAdd
-local searchRemove
-local searchRefresh = function()
-	searchFolder:ClearAllChildren()
-	if searchModule["Enabled"] then
-		for i,v in pairs(workspace:GetDescendants()) do
-			if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
-				local boxhandle = Instance.new("BoxHandleAdornment")
-				boxhandle.Name = v.Name
-				boxhandle.AlwaysOnTop = true
-				boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
-				boxhandle.Adornee = v
-				boxhandle.ZIndex = 10
-				boxhandle.Size = v.Size
-				boxhandle.Transparency = 0.5
-				boxhandle.Parent = searchFolder
-			end
-		end
-	end
-end
-local searchTextList = {["RefreshValues"] = function() end}
-searchModule = Render.CreateOptionsButton("Search", function() 
-	searchRefresh()
-	searchAdd = workspace.DescendantAdded:connect(function(v)
-		if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
-			local boxhandle = Instance.new("BoxHandleAdornment")
-			boxhandle.Name = v.Name
-			boxhandle.AlwaysOnTop = true
-			boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
-			boxhandle.Adornee = v
-			boxhandle.ZIndex = 10
-			boxhandle.Size = v.Size
-			boxhandle.Transparency = 0.5
-			boxhandle.Parent = searchFolder
-		end
-	end)
-	searchRemove = workspace.DescendantRemoving:connect(function(v)
-		if v:IsA("BasePart") then
-			local boxhandle = searchFindBoxHandle(v)
-			if boxhandle then
-				boxhandle:Remove()
-			end
-		end
-	end)
-end, function() 
-	pcall(function()
-		searchFolder:ClearAllChildren()
-		searchAdd:Disconnect()
-		searchRemove:Disconnect()
-	end)
-end, false)
-searchColor = searchModule.CreateColorSlider("new part color", function(val)
-	for i,v in pairs(searchFolder:GetChildren()) do
-		v.Color3 = Color3.fromHSV(val, 1, 1)
-	end
-end)
-SearchTextList = searchModule.CreateTextList("SearchList", "<part name>", function(user)
-	table.insert(GuiLibrary["Settings"]["SearchObject"]["List"], user)
-	SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
-	searchRefresh()
-end, function(num) 
-	table.remove(GuiLibrary["Settings"]["SearchObject"]["List"], num) 
-	SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
-	searchRefresh()
-end)
-local XrayAdd
-local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("Xray", function() 
-	XrayAdd = workspace.DescendantAdded:connect(function(v)
-		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
-			v.LocalTransparencyModifier = 0.5
-		end
-	end)
-	for i, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
-			v.LocalTransparencyModifier = 0.5
-		end
-	end
-end, function()
-	for i, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
-			v.LocalTransparencyModifier = 0
-		end
-	end
-	XrayAdd:Disconnect()
-end, false)
+GUI.CreateToggle("Notifications", function() GuiLibrary["ToggleNotifications"] = true end, function() GuiLibrary["ToggleNotifications"] = false end, true, "VapeOptions")
 
 local SelfDestructButton = {["ToggleButton"] = function() end}
 SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function() 
@@ -560,6 +470,13 @@ GuiLibrary["LoadSettings"]()
 GuiLibrary["LoadFriends"]()
 FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
 GuiLibrary["UpdateUI"]()
+if blatantmode["Enabled"] then
+	pcall(function()
+		local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 4, "⚠️")
+		frame.Frame.BackgroundColor3 = Color3.fromRGB(218, 134, 75)
+		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(218, 134, 75)
+	end)
+end
 GuiLibrary["LoadedAnimation"](welcomemsg["Enabled"])
 
 spawn(function()

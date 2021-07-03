@@ -5,6 +5,7 @@ local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 local api = {
 	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
 	["FriendsObject"] = {["Color"] = 0.44, ["Friends"] = {}, ["MiddleClickFriends"] = false, ["MiddleClickFunc"] = function(plr) end},
+	["ToggleNotifications"] = false,
 	["ObjectsThatCanBeSaved"] = {},
 }
 
@@ -145,6 +146,11 @@ clickgui.BorderSizePixel = 0
 clickgui.BackgroundColor3 = Color3.fromRGB(79, 83, 166)
 clickgui.Visible = false
 clickgui.Parent = api["MainGui"]
+local notificationwindow = Instance.new("Frame")
+notificationwindow.BackgroundTransparency = 1
+notificationwindow.Active = false
+notificationwindow.Size = UDim2.new(1, 0, 1, 0)
+notificationwindow.Parent = api["MainGui"]
 local vertext = Instance.new("TextLabel")
 vertext.Name = "Version"
 vertext.Size = UDim2.new(0, 45, 0, 20)
@@ -305,6 +311,7 @@ end
 
 api["CreateMainWindow"] = function()
 	local windowapi = {}
+	local visibleicons = 0
 	local windowtitle = Instance.new("Frame")
 	windowtitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	windowtitle.Size = UDim2.new(0, 220, 0, 45)
@@ -376,6 +383,63 @@ api["CreateMainWindow"] = function()
 	extraframe.LayoutOrder = 99999
 	extraframe.Name = "Extras"
 	extraframe.Parent = children
+	local overlaysicons = Instance.new("Frame")
+	overlaysicons.Size = UDim2.new(0, 145, 0, 18)
+	overlaysicons.Position = UDim2.new(0, 33, 0, 13)
+	overlaysicons.BackgroundTransparency = 1
+	overlaysicons.Parent = extraframe
+	local overlaysbkg = Instance.new("Frame")
+	overlaysbkg.BackgroundTransparency = 0.5
+	overlaysbkg.BackgroundColor3 = Color3.new(0, 0, 0)
+	overlaysbkg.BorderSizePixel = 0
+	overlaysbkg.Visible = false
+	overlaysbkg.Parent = windowtitle
+	local overlaystitle = Instance.new("Frame")
+	overlaystitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	overlaystitle.Size = UDim2.new(0, 220, 0, 45)
+	overlaystitle.Position = UDim2.new(0, 0, 1, -45)
+	overlaystitle.Parent = overlaysbkg
+	local overlaysicon = Instance.new("ImageLabel")
+	overlaysicon.Name = "OverlaysWindowIcon"
+	overlaysicon.Size = UDim2.new(0, 14, 0, 12)
+	overlaysicon.Visible = true
+	overlaysicon.Image = getcustomassetfunc("vape/assets/TextGUIIcon4.png")
+	overlaysicon.BackgroundTransparency = 1
+	overlaysicon.Position = UDim2.new(0, 10, 0, 15)
+	overlaysicon.Parent = overlaystitle
+	local overlaysexit = Instance.new("ImageButton")
+	overlaysexit.Name = "OverlaysExit"
+	overlaysexit.Size = UDim2.new(0, 16, 0, 16)
+	overlaysexit.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
+	overlaysexit.Position = UDim2.new(1, -26, 0, 13)
+	overlaysexit.BackgroundTransparency = 1
+	overlaysexit.Parent = overlaystitle
+	local overlaysbutton = Instance.new("ImageButton")
+	overlaysbutton.Size = UDim2.new(0, 14, 0, 14)
+	overlaysbutton.Name = "MainButton"
+	overlaysbutton.Position = UDim2.new(1, -23, 0, 15)
+	overlaysbutton.BackgroundTransparency = 1
+	overlaysbutton.AutoButtonColor = false
+	overlaysbutton.Image = getcustomassetfunc("vape/assets/TextGUIIcon2.png")
+	overlaysbutton.Parent = extraframe
+	local overlaystext = Instance.new("TextLabel")
+	overlaystext.Size = UDim2.new(0, 155, 0, 39)
+	overlaystext.BackgroundTransparency = 1
+	overlaystext.Name = "OverlaysTitle"
+	overlaystext.Position = UDim2.new(0, 36, 0, 0)
+	overlaystext.TextXAlignment = Enum.TextXAlignment.Left
+	overlaystext.Font = Enum.Font.SourceSans
+	overlaystext.TextSize = 17
+	overlaystext.Text = "Overlays"
+	overlaystext.TextColor3 = Color3.fromRGB(201, 201, 201)
+	overlaystext.Parent = overlaystitle
+	local overlayschildren = Instance.new("Frame")
+	overlayschildren.BackgroundTransparency = 1
+	overlayschildren.Size = UDim2.new(0, 220, 1, -4)
+	overlayschildren.Name = "OverlaysChildren"
+	overlayschildren.Position = UDim2.new(0, 0, 0, 41)
+	overlayschildren.Parent = overlaystitle
+	overlayschildren.Visible = true
 	local children2 = Instance.new("Frame")
 	children2.BackgroundTransparency = 1
 	children2.Size = UDim2.new(0, 220, 1, -4)
@@ -386,6 +450,12 @@ api["CreateMainWindow"] = function()
 	local windowcorner = Instance.new("UICorner")
 	windowcorner.CornerRadius = UDim.new(0, 4)
 	windowcorner.Parent = windowtitle
+	local overlayscorner = Instance.new("UICorner")
+	overlayscorner.CornerRadius = UDim.new(0, 4)
+	overlayscorner.Parent = overlaystitle
+	local overlayscorner2 = Instance.new("UICorner")
+	overlayscorner2.CornerRadius = UDim.new(0, 4)
+	overlayscorner2.Parent = overlaysbkg
 	local uilistlayout = Instance.new("UIListLayout")
 	uilistlayout.SortOrder = Enum.SortOrder.LayoutOrder
 	uilistlayout.Parent = children
@@ -394,7 +464,20 @@ api["CreateMainWindow"] = function()
 	uilistlayout2.Parent = children2
 	uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
 		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
+		overlaysbkg.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 	end)
+	local uilistlayout3 = Instance.new("UIListLayout")
+	uilistlayout3.SortOrder = Enum.SortOrder.LayoutOrder
+	uilistlayout3.Parent = overlayschildren
+	uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+		overlaystitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout3.AbsoluteContentSize.Y)
+		overlaystitle.Position = UDim2.new(0, 0, 1, -(45 + uilistlayout3.AbsoluteContentSize.Y))
+	end)
+	local uilistlayout4 = Instance.new("UIListLayout")
+	uilistlayout4.SortOrder = Enum.SortOrder.LayoutOrder
+	uilistlayout4.VerticalAlignment = Enum.VerticalAlignment.Center
+	uilistlayout4.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	uilistlayout4.Parent = overlaysicons
 	dragGUI(windowtitle)
 	windowapi["ExpandToggle"] = function() end
 	api["ObjectsThatCanBeSaved"]["GUIWindow"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "Window", ["Api"] = windowapi}
@@ -420,6 +503,100 @@ api["CreateMainWindow"] = function()
 		settingsexit.Visible = false
 		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 	end)
+
+	overlaysbutton.MouseButton1Click:connect(function()
+		overlaysbkg.Visible = true
+	end)
+	overlaysexit.MouseButton1Click:connect(function()
+		overlaysbkg.Visible = false
+	end)
+
+	windowapi["GetVisibleIcons"] = function()
+		return visibleicons
+	end
+
+	windowapi["CreateCustomToggle"] = function(name, icon, temporaryfunction, temporaryfunction2, default, compatability)
+		local buttonapi = {}
+		local amount = #overlayschildren:GetChildren()
+		local buttontext = Instance.new("TextLabel")
+		buttontext.BackgroundTransparency = 1
+		buttontext.Name = "ButtonText"
+		buttontext.Text = "   "..name
+		buttontext.Name = name
+		buttontext.LayoutOrder = amount
+		buttontext.Size = UDim2.new(1, 0, 0, 40)
+		buttontext.Active = false
+		buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
+		buttontext.TextSize = 17
+		buttontext.Font = Enum.Font.SourceSans
+		buttontext.TextXAlignment = Enum.TextXAlignment.Left
+		buttontext.Position = UDim2.new(0, (icon and 36 or 10), 0, 0)
+		buttontext.Parent = overlayschildren
+		local toggleframe1 = Instance.new("TextButton")
+		toggleframe1.AutoButtonColor = false
+		toggleframe1.Size = UDim2.new(0, 22, 0, 12)
+		toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		toggleframe1.BorderSizePixel = 0
+		toggleframe1.Text = ""
+		toggleframe1.Name = "ToggleFrame1"
+		toggleframe1.Position = UDim2.new(1, -32, 0, 14)
+		toggleframe1.Parent = buttontext
+		local toggleframe2 = Instance.new("Frame")
+		toggleframe2.Size = UDim2.new(0, 8, 0, 8)
+		toggleframe2.Active = false
+		toggleframe2.Position = UDim2.new(0, 2, 0, 2)
+		toggleframe2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		toggleframe2.BorderSizePixel = 0
+		toggleframe2.Parent = toggleframe1
+		local uicorner = Instance.new("UICorner")
+		uicorner.CornerRadius = UDim.new(0, 16)
+		uicorner.Parent = toggleframe1
+		local uicorner2 = Instance.new("UICorner")
+		uicorner2.CornerRadius = UDim.new(0, 16)
+		uicorner2.Parent = toggleframe2
+		local toggleicon = Instance.new("ImageLabel")
+		toggleicon.Size = UDim2.new(0, 14, 0, 14)
+		toggleicon.BackgroundTransparency = 1
+		toggleicon.Visible = false
+		toggleicon.ImageColor3 = Color3.fromRGB(199, 199, 199)
+		toggleicon.Image = getcustomassetfunc(icon)
+		toggleicon.Parent = overlaysicons
+
+		buttonapi["Enabled"] = false
+		buttonapi["Keybind"] = ""
+		buttonapi["Default"] = default
+		buttonapi["ToggleButton"] = function(toggle, first)
+			buttonapi["Enabled"] = toggle
+			toggleicon.Visible = toggle
+			if buttonapi["Enabled"] then
+				visibleicons = visibleicons + 1
+				if not first then
+					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)}):Play()
+				else
+					toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
+				end
+			--	toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
+				toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
+				temporaryfunction()
+			else
+				visibleicons = visibleicons - 1
+				if not first then
+					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+				else
+					toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+				end
+			--	toggleframe1.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
+				toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
+				temporaryfunction2()
+			end
+		end
+		buttonapi["ToggleButton"](default, true)
+		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+
+		
+		api["ObjectsThatCanBeSaved"][(compatability or "VapeSettings")..name.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
+		return buttonapi
+	end
 
 	windowapi["CreateDivider"] = function(text)
 		local amount = #children:GetChildren()
@@ -468,34 +645,6 @@ api["CreateMainWindow"] = function()
 			dividerlabel.LayoutOrder = amount + 1
 			dividerlabel.Parent = children2
 		end
-	end
-
-	windowapi["CreateCustomButton"] = function(name, image, pos, temporaryfunction, temporaryfunction2, customname)
-		local buttonapi = {}
-		local buttonimage = Instance.new("ImageButton")
-		buttonimage.Size = UDim2.new(0, 14, 0, 14)
-		buttonimage.Position = pos
-		buttonimage.AutoButtonColor = false
-		buttonimage.Image = getcustomassetfunc(image)
-		buttonimage.BackgroundTransparency = 1
-		buttonimage.Parent = extraframe
-		buttonapi["Enabled"] = false
-		buttonapi["Expanded"] = false
-		buttonapi["Keybind"] = ""
-		buttonapi["SetKeybind"] = function() end
-		buttonapi["ToggleButton"] = function(clicked)
-			buttonapi["Enabled"] = not buttonapi["Enabled"]
-			if buttonapi["Enabled"] then
-				buttonimage.ImageColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
-				temporaryfunction()
-			else
-				buttonimage.ImageColor3 = Color3.new(1, 1, 1)
-				temporaryfunction2()
-			end
-		end
-
-		buttonimage.MouseButton1Click:connect(function() buttonapi["ToggleButton"](true) end)
-		api["ObjectsThatCanBeSaved"][name..(customname ~= nil and customname or "Button")] = {["Type"] = "ExtrasButton", ["Object"] = buttonimage, ["Api"] = buttonapi}
 	end
 
 	windowapi["CreateColorSlider"] = function(name, temporaryfunction)
@@ -1671,7 +1820,6 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 				sliderapi["SetValue"](math.floor(min + ((max - min) * xscale)))
 				text2.Text = sliderapi["Value"] .. ".0 "..(percent and "%" or " ").." "
 				slider2.Size = UDim2.new(xscale2,0,1,0)
-				print(xscale2)
 				local move
 				local kill
 				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
@@ -1785,7 +1933,8 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 				val = math.clamp(val, min, max)
 				sliderapi["Value"] = val
 				--slider2.Size = UDim2.new(math.clamp((val / max), 0.02, 0.97), 0, 1, 0)
-				slider3.Position = UDim2.new((val / max), -8, 1, -9)
+				--slider3.Position = UDim2.new((val / max), -8, 1, -9)
+				slider3:TweenPosition(UDim2.new((val / max), -8, 1, -9), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
 				local stringthing = tostring(sliderapi["Value"] / 10)
 				text3.Text = (decimal and (stringthing:len() > 1 and stringthing or stringthing..".0") or sliderapi["Value"] .. ".0")
 				temporaryfunction(val)
@@ -1794,7 +1943,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 				val = math.clamp(val, min, max)
 				sliderapi["Value2"] = val
 				--slider2.Size = UDim2.new(math.clamp((val / max), 0.02, 0.97), 0, 1, 0)
-				slider4.Position = UDim2.new((val / max), -8, 1, -9)
+				--slider4.Position = UDim2.new((val / max), -8, 1, -9)
 				local stringthing = tostring(sliderapi["Value2"] / 10)
 				text2.Text = (decimal and (stringthing:len() > 1 and stringthing or stringthing..".0").."   " or sliderapi["Value2"] .. ".0   ")
 				temporaryfunction(val)
@@ -1812,7 +1961,8 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
 						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
 						sliderapi["SetValue"](math.floor(min + ((max - min) * xscale)))
-						slider3.Position = UDim2.new(xscale2, -8, 1, -9)
+					--	slider3.Position = UDim2.new(xscale2, -8, 1, -9)
+						slider3:TweenPosition(UDim2.new(xscale2, -8, 1, -9), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
 					end
 				end)
 				kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
@@ -1833,7 +1983,8 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
 						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
 						sliderapi["SetValue2"](math.floor(min + ((max - min) * xscale)))
-						slider4.Position = UDim2.new(xscale2, -8, 1, -9)
+						--slider4.Position = UDim2.new(xscale2, -8, 1, -9)
+						slider4:TweenPosition(UDim2.new(xscale2, -8, 1, -9), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
 					end
 				end)
 				kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
@@ -2413,6 +2564,72 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 	return windowapi
 end
 
+notificationwindow.ChildRemoved:connect(function()
+	for i,v in pairs(notificationwindow:GetChildren()) do
+		v.Position = UDim2.new(1, v.Position.X.Offset, 1, -(150 + 80 * (i - 1)))
+	end
+end)
+
+
+api["CreateNotification"] = function(top, bottom, duration, customicon)
+		local offset = #notificationwindow:GetChildren()
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(0, 260, 0, 75)
+		frame.Position = UDim2.new(1, -260, 1, -(150 + 80 * offset))
+		frame.BackgroundTransparency = 0.5
+		frame.BackgroundColor3 = Color3.new(0, 0,0)
+		frame.BorderSizePixel = 0
+		frame.Parent = notificationwindow
+		local uicorner = Instance.new("UICorner")
+		uicorner.CornerRadius = UDim.new(0, 4)
+		uicorner.Parent = frame
+		local frame2 = Instance.new("Frame")
+		frame2.BackgroundColor3 = Color3.new(1, 1, 1)
+		frame2.Size = UDim2.new(1, 0, 0, 4)
+		frame2.Position = UDim2.new(0, 0, 1, -4)
+		frame2.BorderSizePixel = 0
+		frame2.Parent = frame
+		local frame3 = frame2:Clone()
+		frame3.Size = UDim2.new(1, 0, 0, 2)
+		frame3.Position = UDim2.new(0, 0, 0, 0)
+		frame3.Parent = frame2
+		local uicorner2 = Instance.new("UICorner")
+		uicorner2.CornerRadius = UDim.new(0, 4)
+		uicorner2.Parent = frame2
+		local icon = Instance.new("TextLabel")
+		icon.Text = (customicon or "ℹ️")
+		icon.Name = "IconLabel"
+		icon.TextSize = 14
+		icon.Position = UDim2.new(0, 23, 0, 23)
+		icon.Parent = frame
+		local textlabel1 = Instance.new("TextLabel")
+		textlabel1.Font = Enum.Font.SourceSans
+		textlabel1.TextSize = 18
+		textlabel1.TextColor3 = Color3.new(1, 1, 1)
+		textlabel1.BackgroundTransparency = 1
+		textlabel1.Position = UDim2.new(0, 46, 0, 12)
+		textlabel1.TextXAlignment = Enum.TextXAlignment.Left
+		textlabel1.TextYAlignment = Enum.TextYAlignment.Top
+		textlabel1.Text = top
+		textlabel1.Parent = frame
+		local textlabel2 = textlabel1:Clone()
+		textlabel2.Position = UDim2.new(0, 46, 0, 40)
+		textlabel2.TextColor3 = Color3.new(0.5, 0.5, 0.5)
+		textlabel2.RichText = true
+		textlabel2.Text = bottom
+		textlabel2.Parent = frame
+		spawn(function()
+			pcall(function()
+				frame2:TweenSize(UDim2.new(0, 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, duration, true)
+				wait(duration)
+				frame:TweenPosition(UDim2.new(1, 0, 1, frame.Position.Y.Offset), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
+				wait(0.1)
+				frame:Remove()
+			end)
+		end)
+		return frame
+end
+
 api["LoadedAnimation"] = function(enabled)
 	if enabled then
 		local welcomeguitext = Instance.new("TextLabel")
@@ -2433,60 +2650,13 @@ api["LoadedAnimation"] = function(enabled)
 			welcomeguitext.TextTransparency = welcomeguitext2.TextTransparency
 		end)
 		welcomeguitext2.Parent = welcomeguitext
-		local welcomeframe = Instance.new("Frame")
-		welcomeframe.Name = "WelcomeFrame"
-		welcomeframe.Size = UDim2.new(0, 232, 0, 41)
-		welcomeframe.BackgroundTransparency = 0.1
-		welcomeframe.BackgroundColor3 = Color3.fromRGB(34, 35, 38)
-		welcomeframe.BorderSizePixel = 0
-		welcomeframe.Position = UDim2.new(1, 0, 0.9, -40)
-		welcomeframe.Parent = api["MainGui"]
-		local welcomeicon = Instance.new("TextLabel")
-		welcomeicon.Name = "WelcomeIcon"
-		welcomeicon.BackgroundTransparency = 1
-		welcomeicon.TextSize = 28
-		welcomeicon.Text = "ℹ️"
-		welcomeicon.Position = UDim2.new(0, 1, 0, 2)
-		welcomeicon.Size = UDim2.new(0, 30, 0, 36)
-		welcomeicon.Font = Enum.Font.SourceSans
-		welcomeicon.Parent = welcomeframe
-		local welcometext = Instance.new("TextLabel")
-		welcometext.Name = "WelcomeText"
-		welcometext.BackgroundTransparency = 1
-		welcometext.TextSize = 21 - (api["Settings"]["GUIObject"]["GUIKeybind"]:len() > 5 and 4 or 0)
-		welcometext.Text = "Finished Loading\nPress "..string.upper(api["Settings"]["GUIObject"]["GUIKeybind"]).." to open GUI"
-		welcometext.Position = UDim2.new(0, 32, 0, (api["Settings"]["GUIObject"]["GUIKeybind"]:len() > 5 and -1 or -3))
-		welcometext.Size = UDim2.new(0, 232, 0, 39)
-		welcometext.Font = Enum.Font.SourceSans
-		welcometext.TextXAlignment = Enum.TextXAlignment.Left
-		welcometext.TextYAlignment = Enum.TextYAlignment.Top
-		welcometext.TextColor3 = Color3.new(1, 1, 1)
-		welcometext.Parent = welcomeframe
-		local welcomebar = Instance.new("Frame")
-		welcomebar.Name = "WelcomeTimeBar"
-		welcomebar.Size = UDim2.new(1, 0, 0, 2)
-		welcomebar.Position = UDim2.new(0, 0, 1, -2)
-		welcomebar.BorderSizePixel = 0
-		welcomebar.BackgroundColor3 = Color3.new(1, 1, 1)
-		welcomebar.BackgroundTransparency = 0.1
-		welcomebar.Parent = welcomeframe
+		api["CreateNotification"]("Finished Loading", "Press "..string.upper(api["Settings"]["GUIObject"]["GUIKeybind"]).." to open GUI", 4)
 		spawn(function()
 			pcall(function()
 				wait(2.5)
 				game:GetService("TweenService"):Create(welcomeguitext2, TweenInfo.new(2), {TextTransparency = 1}):Play()
 				wait(2)
 				welcomeguitext:Remove()
-			end)
-		end)
-		spawn(function()
-			pcall(function()
-				welcomeframe:TweenPosition(UDim2.new(1, -232, 0.9, -40), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.5)
-				wait(0.5)
-				welcomebar:TweenSize(UDim2.new(0, 0, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 4)
-				wait(4)
-				welcomeframe:TweenPosition(UDim2.new(1, 0, 0.9, -40), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.5)
-				wait(0.5)
-				welcomeframe:Remove()
 			end)
 		end)
 	end
@@ -2527,6 +2697,9 @@ api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(
 			if (aapi["Type"] == "OptionsButton" or aapi["Type"] == "Button") and (aapi["Api"]["Keybind"] ~= nil and aapi["Api"]["Keybind"] ~= "") and captured == false then
 				if input1.KeyCode == Enum.KeyCode[aapi["Api"]["Keybind"]] and aapi["Api"]["Keybind"] ~= api["Settings"]["GUIObject"]["GUIKeybind"] then
 					aapi["Api"]["ToggleButton"](false)
+					if api["ToggleNotifications"] then
+						api["CreateNotification"]("Module Toggled", aapi["Api"]["Name"]..' <font color="#FFFFFF">has been</font> <font color="'..(aapi["Api"]["Enabled"] and '#32CD32' or '#E60000')..'">'..(aapi["Api"]["Enabled"] and "Enabled" or "Disabled")..'</font><font color="#FFFFFF">!</font>', 1)
+					end
 				end
 			end
 		end
