@@ -65,43 +65,6 @@ local function RelativeXY(GuiObject, location)
 	return x, y, x/xm, y/ym, x2/xm
 end
 
-local function dragGUI(gui, tab)
-	spawn(function()
-		local dragging
-		local dragInput
-		local dragStart = Vector3.new(0,0,0)
-		local startPos
-		local function update(input)
-			local delta = input.Position - dragStart
-			local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			game:GetService("TweenService"):Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
-		end
-		gui.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and dragging == false then
-					dragging = clickgui.Visible
-					dragStart = input.Position
-					startPos = gui.Position
-					
-					input.Changed:Connect(function()
-						if input.UserInputState == Enum.UserInputState.End then
-							dragging = false
-						end
-					end)
-				end
-		end)
-		gui.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				dragInput = input
-			end
-		end)
-		game:GetService("UserInputService").InputChanged:Connect(function(input)
-			if input == dragInput and dragging then
-				update(input)
-			end
-		end)
-	end)
-end
-
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
@@ -186,7 +149,44 @@ api["MainBlur"].Size = 25
 api["MainBlur"].Parent = game:GetService("Lighting")
 api["MainBlur"].Enabled = false
 api["MainRescale"] = Instance.new("UIScale")
-api["MainRescale"].Parent = clickgui
+api["MainRescale"].Parent = api["MainGui"]
+
+local function dragGUI(gui, tab)
+	spawn(function()
+		local dragging
+		local dragInput
+		local dragStart = Vector3.new(0,0,0)
+		local startPos
+		local function update(input)
+			local delta = input.Position - dragStart
+			local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (delta.X * (1 / api["MainRescale"].Scale)), startPos.Y.Scale, startPos.Y.Offset + (delta.Y * (1 / api["MainRescale"].Scale)))
+			game:GetService("TweenService"):Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
+		end
+		gui.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and dragging == false then
+					dragging = clickgui.Visible
+					dragStart = input.Position
+					startPos = gui.Position
+					
+					input.Changed:Connect(function()
+						if input.UserInputState == Enum.UserInputState.End then
+							dragging = false
+						end
+					end)
+				end
+		end)
+		gui.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				dragInput = input
+			end
+		end)
+		game:GetService("UserInputService").InputChanged:Connect(function(input)
+			if input == dragInput and dragging then
+				update(input)
+			end
+		end)
+	end)
+end
 
 api["SaveFriends"] = function()
 	writefile("vape/Profiles/friends.vapefriends", game:GetService("HttpService"):JSONEncode(api["FriendsObject"]["Friends"]))
@@ -463,15 +463,15 @@ api["CreateMainWindow"] = function()
 	uilistlayout2.SortOrder = Enum.SortOrder.LayoutOrder
 	uilistlayout2.Parent = children2
 	uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
-		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
-		overlaysbkg.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
+		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+		overlaysbkg.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 	end)
 	local uilistlayout3 = Instance.new("UIListLayout")
 	uilistlayout3.SortOrder = Enum.SortOrder.LayoutOrder
 	uilistlayout3.Parent = overlayschildren
 	uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
-		overlaystitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout3.AbsoluteContentSize.Y)
-		overlaystitle.Position = UDim2.new(0, 0, 1, -(45 + uilistlayout3.AbsoluteContentSize.Y))
+		overlaystitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+		overlaystitle.Position = UDim2.new(0, 0, 1, -(45 + (uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))))
 	end)
 	local uilistlayout4 = Instance.new("UIListLayout")
 	uilistlayout4.SortOrder = Enum.SortOrder.LayoutOrder
@@ -490,7 +490,7 @@ api["CreateMainWindow"] = function()
 		settingsicon.Visible = true
 		settingstext.Visible = true
 		settingsexit.Visible = true
-		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout2.AbsoluteContentSize.Y)
+		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 	end)
 
 	settingsexit.MouseButton1Click:connect(function()
@@ -501,7 +501,7 @@ api["CreateMainWindow"] = function()
 		settingsicon.Visible = false
 		settingstext.Visible = false
 		settingsexit.Visible = false
-		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
+		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 	end)
 
 	overlaysbutton.MouseButton1Click:connect(function()
@@ -1291,7 +1291,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		uilistlayout2.SortOrder = Enum.SortOrder.LayoutOrder
 		uilistlayout2.Parent = children2
 		uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
-			children2.Size = UDim2.new(0, 220, 0, uilistlayout2.AbsoluteContentSize.Y)
+			children2.Size = UDim2.new(0, 220, 0, uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 		end)
 		local bindbkg = Instance.new("TextButton")
 		bindbkg.Text = ""
@@ -1400,7 +1400,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 				button.Visible = true
 				children2.Visible = true
 				noexpand = true
-				windowtitle.Size = UDim2.new(0, 220, 0, 85 + uilistlayout2.AbsoluteContentSize.Y)
+				windowtitle.Size = UDim2.new(0, 220, 0, 85 + uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			end
 		end
 
