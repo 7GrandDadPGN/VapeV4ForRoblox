@@ -114,7 +114,7 @@ GUI.CreateDivider()
 --GUI.CreateCustomButton("Text GUIVertical", "vape/assets/TextGUIIcon3.png", UDim2.new(1, -56, 0, 15), function() end, function() end)
 local TextGui = GuiLibrary.CreateCustomWindow("Text GUI", "vape/assets/TextGUIIcon1.png", 21, UDim2.new(0, 177, 0, 6), false)
 --GUI.CreateCustomButton("Text GUI", "vape/assets/TextGUIIcon2.png", UDim2.new(1, -23, 0, 15), function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, "OptionsButton")
-GUI.CreateCustomToggle("Text GUI", "vape/assets/TextGUIIcon3.png", function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, "OptionsButton")
+GUI.CreateCustomToggle("Text GUI", "vape/assets/TextGUIIcon3.png", function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, false, "OptionsButton")
 
 local rainbowval = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 1))})
 local rainbowval2 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0.42)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 0.42))})
@@ -322,6 +322,103 @@ end, function()
 	onething2.BackgroundTransparency = 1
 	onetext.BackgroundTransparency = 1
 end)
+
+local TargetInfo = GuiLibrary.CreateCustomWindow("Target Info", "vape/assets/TargetInfoIcon1.png", 16, UDim2.new(0, 177, 0, 6), false)
+local targetinfobkg1 = Instance.new("Frame")
+targetinfobkg1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+targetinfobkg1.BorderSizePixel = 0
+targetinfobkg1.Size = UDim2.new(0, 220, 0, 72)
+targetinfobkg1.Position = UDim2.new(0, 0, 0, 0)
+targetinfobkg1.Parent = TargetInfo.GetCustomChildren()
+local targetinfobkg2 = targetinfobkg1:Clone()
+targetinfobkg2.ZIndex = 0
+targetinfobkg2.Position = UDim2.new(0, 0, 0, -6)
+targetinfobkg2.Size = UDim2.new(0, 220, 0, 86)
+targetinfobkg2.Parent = targetinfobkg1
+local targetinfobkg3 = Instance.new("Frame")
+targetinfobkg3.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+targetinfobkg3.Size = UDim2.new(0, 220, 0, 80)
+targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
+targetinfobkg3.Parent = targetinfobkg1
+local targetname = Instance.new("TextLabel")
+targetname.TextSize = 17
+targetname.Font = Enum.Font.SourceSans
+targetname.TextColor3 = Color3.new(1, 1, 1)
+targetname.Position = UDim2.new(0, 72, 0, 6)
+targetname.BackgroundTransparency = 1
+targetname.Size = UDim2.new(0, 80, 0, 14)
+targetname.TextScaled = true
+targetname.Text = "Target name"
+targetname.ZIndex = 2
+targetname.TextXAlignment = Enum.TextXAlignment.Left
+targetname.TextYAlignment = Enum.TextYAlignment.Top
+targetname.Parent = targetinfobkg3
+local targethealth = Instance.new("TextLabel")
+targethealth.TextColor3 = Color3.fromRGB(95, 94, 95)
+targethealth.Font = Enum.Font.SourceSans
+targethealth.Size = UDim2.new(0, 0, 0, 0)
+targethealth.TextSize = 17
+targethealth.Position = UDim2.new(0, 210, 0, 6)
+targethealth.BackgroundTransparency = 1
+targethealth.Text = '20'..' hp'
+targethealth.TextScaled = false
+targethealth.ZIndex = 2
+targethealth.TextXAlignment = Enum.TextXAlignment.Right
+targethealth.TextYAlignment = Enum.TextYAlignment.Top
+targethealth.Parent = targetinfobkg3
+local targethealthbkg = Instance.new("Frame")
+targethealthbkg.BackgroundColor3 = Color3.fromRGB(43, 42, 43)
+targethealthbkg.Size = UDim2.new(0, 138, 0, 4)
+targethealthbkg.Position = UDim2.new(0, 72, 0, 29)
+targethealthbkg.Parent = targetinfobkg3
+local targethealthgreen = Instance.new("Frame")
+targethealthgreen.BackgroundColor3 = Color3.fromRGB(40, 137, 109)
+targethealthgreen.Size = UDim2.new(1, 0, 0, 4)
+targethealthgreen.Parent = targethealthbkg
+local targetimage = Instance.new("ImageLabel")
+targetimage.Size = UDim2.new(0, 61, 0, 61)
+targetimage.BackgroundTransparency = 1
+targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..game:GetService("Players").LocalPlayer.UserId..'&w=420&h=420'
+targetimage.Position = UDim2.new(0, 5, 0, 10)
+targetimage.Parent = targetinfobkg3
+local round1 = Instance.new("UICorner")
+round1.CornerRadius = UDim.new(0, 4)
+round1.Parent = targetinfobkg2
+local round2 = Instance.new("UICorner")
+round2.CornerRadius = UDim.new(0, 4)
+round2.Parent = targetinfobkg3
+local round3 = Instance.new("UICorner")
+round3.CornerRadius = UDim.new(0, 4)
+round3.Parent = targethealthbkg
+local round4 = Instance.new("UICorner")
+round4.CornerRadius = UDim.new(0, 4)
+round4.Parent = targethealthgreen
+local round5 = Instance.new("UICorner")
+round5.CornerRadius = UDim.new(0, 4)
+round5.Parent = targetimage
+TargetInfo.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):connect(function()
+	if TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.new(0, 220, 0, 0) then
+		targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
+		targetinfobkg2.BackgroundTransparency = 0
+		targetinfobkg1.BackgroundTransparency = 0
+	else
+		targetinfobkg3.Position = UDim2.new(0, 0, 0, 0)
+		targetinfobkg2.BackgroundTransparency = 1
+		targetinfobkg1.BackgroundTransparency = 1
+	end
+end)
+shared.VapeTargetInfo = {
+	["UpdateInfo"] = function(tab, targetsize)
+		targetinfobkg3.Visible = (targetsize > 0) or (TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.new(0, 220, 0, 0))
+		for i,v in pairs(tab) do
+			targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
+			targethealthgreen:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
+			targethealth.Text = math.floor(v["Health"]).." hp"
+			targetname.Text = i
+		end
+	end
+}
+GUI.CreateCustomToggle("Target Info", "vape/assets/TextGUIIcon3.png", function() TargetInfo.SetVisible(true) end, function() TargetInfo.SetVisible(false) end, false, "OptionsButton")
 
 GUI.CreateDivider2("MODULE SETTINGS")
 GUI.CreateToggle("Players", function() end, function() end, false, "")

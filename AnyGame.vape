@@ -5,6 +5,7 @@ local lplr = players.LocalPlayer
 local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
+local targetinfo = shared.VapeTargetInfo
 local uis = game:GetService("UserInputService")
 local mouse = lplr:GetMouse()
 local robloxfriends = {}
@@ -136,22 +137,9 @@ aimfov = AimAssist.CreateSlider("FOV", 1, 1000, function(val) end)
 aimhitchance = AimAssist.CreateSlider("Hit Chance", 1, 100, function(val) end)
 aimheadshotchance = AimAssist.CreateSlider("Headshot Chance", 1, 100, function(val) end)
 
-hook = hookfunction(workspace.FindPartOnRayWithIgnoreList, function(...) 
-    local scriptname = getcallingscript()
-	local Args = {...}
-	
-	if tar and not checkcaller() and (scriptname and not scriptname.Name:match("Camera")) and aimtable[aimmethod["Value"]] == 1 then
-       Args[2] = Ray.new(Args[2].Origin, (tar.Position + Vector3.new(0, (Args[2].Origin - tar.Position).magnitude/10000, 0) - Args[2].Origin).unit * 10000)
-	   if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant ModeToggle"]["Api"]["Enabled"] then
-			return tar, tar.Position, (tar.Position + Vector3.new(0, (Args[2].Origin - tar.Position).magnitude/10000, 0) - Args[2].Origin).unit * 10000, tar.Material
-	   end
-    end
-	
-    return hook(unpack(Args))
-end)
-
 kek = function()
-	hookmetamethod(game, "__namecall", function(...)
+	local old3
+	old3 = hookmetamethod(game, "__namecall", function(...)
 		local Namecallaimmethod = getnamecallmethod()
 		local Args = {...}
 		local scriptname = getcallingscript()
@@ -179,26 +167,24 @@ kek = function()
 			end
 		end
 
-		return old(unpack(Args))
-	end)
-	hookmetamethod(game, "__index", function(lol, lol2)
-		if tar and not checkcaller() and lol == mouse and aimmethod["Value"] == "Mouse" then
-			if tostring(lol2) == "Hit" then
-				return tar.CFrame
-			elseif tostring(lol2) == "Target" then
-				return tar
-			elseif tostring(lol2) == "UnitRay" then
-				return Ray.new(cam.CFrame.p, (tar.Position + Vector3.new(0, (cam.CFrame.p - tar.Position).magnitude/10000, 0) - cam.CFrame.p).unit * 10000)
-			end
-		end
-		return old2(lol, lol2)
+		return old3(unpack(Args))
 	end)
     game:GetService("RunService"):BindToRenderStep("AimAssist", 1, function() 
 		local plr = GetNearestHumanoidToMouse(aimfov["Value"], GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false and aimvischeck["Enabled"])
+		local targettable = {}
+		local targetsize = 0
 		if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
+			targettable[plr.Name] = {
+				["UserId"] = plr.UserId,
+				["Health"] = plr.Character.Humanoid.Health,
+				["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+			}
+			targetsize = targetsize + 1
 			tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
+			targetinfo.UpdateInfo(targettable, targetsize)
 		else
 			tar = nil
+			targetinfo.UpdateInfo({}, 0)
 		end
     end)
 end
@@ -376,11 +362,19 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		if tool and isAlive() and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or killauramouse["Enabled"] == false) then
 			local touch = findTouchInterest(tool)
 			if touch then
+				local targettable = {}
+				local targetsize = 0
 				for i,v in pairs(plr) do
 					local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
 					local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
 					local angle = math.acos(localfacing:Dot(vec))
 					if angle <= (killauraangle["Value"] / 115) then
+						targettable[v.Name] = {
+							["UserId"] = v.UserId,
+							["Health"] = v.Character.Humanoid.Health,
+							["MaxHealth"] = v.Character.Humanoid.MaxHealth
+						}
+						targetsize = targetsize + 1
 						if killauracframe["Enabled"] then
 							lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(v.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, v.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
 						end
@@ -392,6 +386,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						firetouchinterest(touch.Parent, v.Character.Head, 0)
 					end
 				end
+				targetinfo.UpdateInfo(targettable, targetsize)
 			end
 		end
 	end)
@@ -519,7 +514,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 					local rootSize = plr.Character.HumanoidRootPart.Size.X * 1500
 					local headPos, headVis = cam:WorldToViewportPoint(plr.Character.Head.Position + Vector3.new(0, 1, 0))
 					local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 4 + plr.Character.Humanoid.HipHeight, 0))
-					
+					rootPos = rootPos * (1 / GuiLibrary["MainRescale"].Scale)
 					if rootVis then
 						thing.Visible = rootVis
 						thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
@@ -692,6 +687,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 				
 				if isPlayerTargetable(plr, false, false) then
 					local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
+					headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
 					
 					if headVis then
 						local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
@@ -854,6 +850,8 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 					local startVector = Vector2.new(screensize.X / 2, screensize.Y / 2)
 					local endVector = Vector2.new(tracerPos.X, tracerPos.Y)
 					local Distance = (startVector - endVector).Magnitude
+					startVector = startVector * (1 / GuiLibrary["MainRescale"].Scale)
+					endVector = endVector * (1 / GuiLibrary["MainRescale"].Scale)
 					thing.Visible = true
 					thing.BackgroundColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(TracersColor["Value"], 1, 1)
 					thing.Size = UDim2.new(0, Distance, 0, 2)
