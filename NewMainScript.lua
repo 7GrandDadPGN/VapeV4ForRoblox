@@ -1,3 +1,4 @@
+repeat wait() until game:IsLoaded() == true
 if shared.VapeExecuted then
 	error("Vape Already Injected")
 	return
@@ -22,6 +23,17 @@ local function getcustomassetfunc(path)
 		writefile(path, req.Body)
 	end
 	return getsynasset(path)
+end
+
+local function checkpublicrepo(id)
+	local req = syn.request({
+		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".vape",
+		Method = "GET"
+	})
+	if req.StatusCode == 200 then
+		return req.Body
+	end
+	return nil
 end
 
 if isfolder("vape") == false then
@@ -114,7 +126,7 @@ GUI.CreateDivider()
 --GUI.CreateCustomButton("Text GUIVertical", "vape/assets/TextGUIIcon3.png", UDim2.new(1, -56, 0, 15), function() end, function() end)
 local TextGui = GuiLibrary.CreateCustomWindow("Text GUI", "vape/assets/TextGUIIcon1.png", 21, UDim2.new(0, 177, 0, 6), false)
 --GUI.CreateCustomButton("Text GUI", "vape/assets/TextGUIIcon2.png", UDim2.new(1, -23, 0, 15), function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, "OptionsButton")
-GUI.CreateCustomToggle("Text GUI", "vape/assets/TextGUIIcon3.png", function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, false, "OptionsButton")
+GUI.CreateCustomToggle("Text GUI", "vape/assets/TextGUIIcon3.png", function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, false, "OptionsButton", 2)
 
 local rainbowval = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 1))})
 local rainbowval2 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0.42)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 0.42))})
@@ -418,7 +430,7 @@ shared.VapeTargetInfo = {
 		end
 	end
 }
-GUI.CreateCustomToggle("Target Info", "vape/assets/TextGUIIcon3.png", function() TargetInfo.SetVisible(true) end, function() TargetInfo.SetVisible(false) end, false, "OptionsButton")
+GUI.CreateCustomToggle("Target Info", "vape/assets/TargetInfoIcon2.png", function() TargetInfo.SetVisible(true) end, function() TargetInfo.SetVisible(false) end, false, "OptionsButton", 1)
 
 GUI.CreateDivider2("MODULE SETTINGS")
 GUI.CreateToggle("Players", function() end, function() end, false, "")
@@ -560,7 +572,12 @@ end, function() end, false)
 if pcall(function() readfile("vape/CustomModules/"..game.PlaceId..".vape") end) then
 	loadstring(readfile("vape/CustomModules/"..game.PlaceId..".vape"))()
 else
-	loadstring(GetURL("AnyGame.vape"))()
+	local publicrepo = checkpublicrepo(game.PlaceId)
+	if publicrepo then
+		loadstring(publicrepo)()
+	else
+		loadstring(GetURL("AnyGame.vape"))()
+	end
 end
 
 GuiLibrary["LoadSettings"]()
@@ -574,7 +591,17 @@ if blatantmode["Enabled"] then
 		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(218, 134, 75)
 	end)
 end
-GuiLibrary["LoadedAnimation"](welcomemsg["Enabled"])
+if not shared.VapeSwitchServers then
+	GuiLibrary["LoadedAnimation"](welcomemsg["Enabled"])
+else
+	shared.VapeSwitchServers = nil
+end
+
+game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+    if State == Enum.TeleportState.Started then
+        syn.queue_on_teleport('shared.VapeSwitchServers = true if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end')
+    end
+end)
 
 spawn(function()
 	while wait(10) do
