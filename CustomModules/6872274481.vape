@@ -517,7 +517,7 @@ BowAura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpti
 						targetsize = targetsize + 1
 						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
 						pcall(function()
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["f4b51851-1d85-44b5-83b7-216356764299"]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
+							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["ed6af8d6-0758-484c-a404-6897b1a95c5e"]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
 								["part"] = v.Character.Head,
 								["velocity"] = Vector3.new(1, 0, 0),
 								["hitCFrame"] =  v.Character.Head.CFrame,
@@ -571,7 +571,7 @@ BowExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 						targetsize = targetsize + 1
 						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
 						pcall(function()
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["f4b51851-1d85-44b5-83b7-216356764299"]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
+							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["ed6af8d6-0758-484c-a404-6897b1a95c5e"]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
 								["part"] = v.Character.Head,
 								["velocity"] = Vector3.new(1, 0, 0),
 								["hitCFrame"] =  v.Character.Head.CFrame,
