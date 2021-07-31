@@ -25,6 +25,11 @@ getfunctions = function()
 			        end
 			    end
 			end
+			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
+				bedwars["raiseShield"] = function()
+					getmetatable(v["ShieldController"])["raiseShield"](v["ShieldController"])
+				end
+			end
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
 			end
@@ -321,6 +326,7 @@ local killaurarange = {["Value"] = 1}
 local killauraangle = {["Value"] = 90}
 local killauramouse = {["Enabled"] = false}
 local killauracframe = {["Enabled"] = false}
+local killauraautoblock = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauradelay = 0
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
@@ -330,6 +336,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		if (killauradelay <= tick()) then
 			local plr = GetNearestHumanoidToPosition(killaurarange["Value"], false)
 			if isAlive() and plr and plr.Character.PrimaryPart and lplr.Character.PrimaryPart and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or killauramouse["Enabled"] == false) then
+				if killauraautoblock["Enabled"] then
+					bedwars["raiseShield"]()
+				end
 				if killauracframe["Enabled"] then
 					lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
 				end
@@ -354,6 +363,7 @@ killaurarange = Killaura.CreateSlider("Attack range", 1, 25, function(val) end)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
 killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end, false)
 killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
+killauraautoblock = Killaura.CreateToggle("AutoBlock", function() end, function() end)
 
 local bednukerrange = {["Value"] = 1}
 local BedNuker = {["Enabled"] = false}
@@ -365,7 +375,7 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			for i = 1, #tab do
 				local obj = tab[i]
 				pcall(function()
-					if obj.Name == "bed" and (obj.Name:match(lplr.Team.Name:lower()) == nil) and (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
+					if obj.Name == "bed" and (not obj.Name:match(lplr.Team.Name:lower())) and (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
 						bedwars["breakBlock"](obj.Position)
 					end
 				end)
@@ -441,7 +451,7 @@ end, function()
 	game:GetService("RunService"):UnbindFromRenderStep("Speed")
 end, true, function() return " "..speedmethod["Value"] end, true)
 speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, function(val) end)
-speedval = speed.CreateSlider("Speed", 1, 150, function(val) end)
+speedval = speed.CreateSlider("Speed", 1, 30, function(val) end)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
 local Scaffold = {["Enabled"] = false}
