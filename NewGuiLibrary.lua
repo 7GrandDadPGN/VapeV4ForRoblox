@@ -76,7 +76,6 @@ if not is_sirhurt_closure and syn and syn.protect_gui then
     syn.protect_gui(gui)
     gui.Parent = game:GetService("CoreGui")
     api["MainGui"] = gui
-	shared.gui = gui
 elseif PROTOSMASHER_LOADED and get_hidden_gui then
     local gui = Instance.new("ScreenGui")
     gui.Name = randomString()
@@ -311,7 +310,6 @@ end
 
 api["CreateMainWindow"] = function()
 	local windowapi = {}
-	local visibleicons = 0
 	local windowtitle = Instance.new("Frame")
 	windowtitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	windowtitle.Size = UDim2.new(0, 220, 0, 45)
@@ -385,7 +383,7 @@ api["CreateMainWindow"] = function()
 	extraframe.Parent = children
 	local overlaysicons = Instance.new("Frame")
 	overlaysicons.Size = UDim2.new(0, 145, 0, 18)
-	overlaysicons.Position = UDim2.new(0, 33, 0, 13)
+	overlaysicons.Position = UDim2.new(0, 33, 0, 11)
 	overlaysicons.BackgroundTransparency = 1
 	overlaysicons.Parent = extraframe
 	local overlaysbkg = Instance.new("Frame")
@@ -475,6 +473,8 @@ api["CreateMainWindow"] = function()
 	end)
 	local uilistlayout4 = Instance.new("UIListLayout")
 	uilistlayout4.SortOrder = Enum.SortOrder.LayoutOrder
+	uilistlayout4.FillDirection = Enum.FillDirection.Horizontal
+	uilistlayout4.Padding = UDim.new(0, 5)
 	uilistlayout4.VerticalAlignment = Enum.VerticalAlignment.Center
 	uilistlayout4.HorizontalAlignment = Enum.HorizontalAlignment.Right
 	uilistlayout4.Parent = overlaysicons
@@ -512,10 +512,17 @@ api["CreateMainWindow"] = function()
 	end)
 
 	windowapi["GetVisibleIcons"] = function()
+		local currenticons = overlaysicons:GetChildren()
+		local visibleicons = 0
+		for i = 1, #currenticons do
+			if currenticons[i]:IsA("ImageLabel") and currenticons[i].Visible == true then
+				visibleicons = visibleicons + 1
+			end
+		end
 		return visibleicons
 	end
 
-	windowapi["CreateCustomToggle"] = function(name, icon, temporaryfunction, temporaryfunction2, default, compatability)
+	windowapi["CreateCustomToggle"] = function(name, icon, temporaryfunction, temporaryfunction2, default, compatability, priority)
 		local buttonapi = {}
 		local amount = #overlayschildren:GetChildren()
 		local buttontext = Instance.new("TextLabel")
@@ -555,10 +562,10 @@ api["CreateMainWindow"] = function()
 		uicorner2.CornerRadius = UDim.new(0, 16)
 		uicorner2.Parent = toggleframe2
 		local toggleicon = Instance.new("ImageLabel")
-		toggleicon.Size = UDim2.new(0, 14, 0, 14)
+		toggleicon.Size = UDim2.new(0, 16, 0, 16)
 		toggleicon.BackgroundTransparency = 1
 		toggleicon.Visible = false
-		toggleicon.ImageColor3 = Color3.fromRGB(199, 199, 199)
+		toggleicon.LayoutOrder = priority
 		toggleicon.Image = getcustomassetfunc(icon)
 		toggleicon.Parent = overlaysicons
 
@@ -569,7 +576,6 @@ api["CreateMainWindow"] = function()
 			buttonapi["Enabled"] = toggle
 			toggleicon.Visible = toggle
 			if buttonapi["Enabled"] then
-				visibleicons = visibleicons + 1
 				if not first then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)}):Play()
 				else
@@ -579,7 +585,6 @@ api["CreateMainWindow"] = function()
 				toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
 				temporaryfunction()
 			else
-				visibleicons = visibleicons - 1
 				if not first then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 				else
@@ -718,7 +723,7 @@ api["CreateMainWindow"] = function()
 						else
 							coroutine.yield(heh)
 						end
-					until sliderapi["RainbowValue"] == false
+					until sliderapi["RainbowValue"] == false or shared.VapeExecuted == nil
 				end))
 			end
 		end
@@ -903,36 +908,42 @@ api["CreateMainWindow"] = function()
 		buttonapi["Enabled"] = false
 		buttonapi["Keybind"] = ""
 		buttonapi["ToggleButton"] = function(clicked)
-			buttonapi["Enabled"] = not buttonapi["Enabled"]
-			if buttonapi["Enabled"] then
-				button.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
-				buttontext.TextColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
-				arrow:TweenPosition(UDim2.new(1, -14, 0, 16), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				if buttonicon then
-					buttonicon.ImageColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
+			if overlaysbkg.Visible == false then
+				buttonapi["Enabled"] = not buttonapi["Enabled"]
+				if buttonapi["Enabled"] then
+					button.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+					buttontext.TextColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
+					arrow:TweenPosition(UDim2.new(1, -14, 0, 16), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
+					if buttonicon then
+						buttonicon.ImageColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 1, 1)
+					end
+					temporaryfunction()
+				else
+					button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+					buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
+					arrow:TweenPosition(UDim2.new(1, -20, 0, 16), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
+					if buttonicon then
+						buttonicon.ImageColor3 = Color3.new(1, 1, 1)
+					end
+					temporaryfunction2()
 				end
-				temporaryfunction()
-			else
-				button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
-				buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
-				arrow:TweenPosition(UDim2.new(1, -20, 0, 16), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				if buttonicon then
-					buttonicon.ImageColor3 = Color3.new(1, 1, 1)
-				end
-				temporaryfunction2()
+				api["UpdateHudEvent"]:Fire()
 			end
-			api["UpdateHudEvent"]:Fire()
 		end
 
 		button.MouseButton1Click:connect(function() buttonapi["ToggleButton"](true) end)
 		button.MouseEnter:connect(function() 
-			if not buttonapi["Enabled"] then
-				game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
+			if overlaysbkg.Visible == false then
+				if not buttonapi["Enabled"] then
+					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
+				end
 			end
 		end)
 		button.MouseLeave:connect(function() 
-			if not buttonapi["Enabled"] then
-				game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+			if overlaysbkg.Visible == false then
+				if not buttonapi["Enabled"] then
+					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+				end
 			end
 		end)
 		api["ObjectsThatCanBeSaved"][name.."Button"] = {["Type"] = "Button", ["Object"] = button, ["Api"] = buttonapi}
@@ -1690,7 +1701,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 							else
 								coroutine.yield(heh)
 							end
-						until sliderapi["RainbowValue"] == false
+						until sliderapi["RainbowValue"] == false or shared.VapeExecuted == nil
 					end))
 				end
 			end
@@ -2309,7 +2320,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 						else
 							coroutine.yield(heh)
 						end
-					until sliderapi["RainbowValue"] == false
+					until sliderapi["RainbowValue"] == false or shared.VapeExecuted == nil
 				end))
 			end
 		end
