@@ -11,11 +11,24 @@ local mouse = lplr:GetMouse()
 local robloxfriends = {}
 local bedwars = {}
 local getfunctions
+
+local function getItem(itemName)
+	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
+		if v5["itemType"] == itemName then
+			return v5
+		end
+	end
+	return nil
+end
+
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
 		if type(v) == "table" then
 			if rawget(v, "blocksFolder") then
 				bedwars["BlockController"] = v
+			end
+			if rawget(v, "getInventory") then
+				bedwars["getInventory"] = v["getInventory"]
 			end
 			if rawget(v, "launchProjectile") then
 			    local bowtable1 = debug.getconstants(debug.getupvalues(v["launchProjectile"])[2])
@@ -45,18 +58,20 @@ getfunctions = function()
 				  end
 				if tostring(i2):match("placeBlock") then
 					bedwars["placeBlock"] = function(newpos)
-						v2(bedwars["BlockController"], "wool_"..lplr.Team.Name:lower(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3), {["skipCulling"] = true, ["player"] = lplr})
-						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.PlaceBlock:InvokeServer({
-							["position"] = Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3),
-							["blockType"] = "wool_"..lplr.Team.Name:lower()
-						})
+						if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, "wool_"..lplr.Team.Name:lower(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem("wool_"..lplr.Team.Name:lower()) then
+							v2(bedwars["BlockController"], "wool_"..lplr.Team.Name:lower(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3), {["skipCulling"] = true, ["player"] = lplr})
+							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.PlaceBlock:InvokeServer({
+								["position"] = Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3),
+								["blockType"] = "wool_"..lplr.Team.Name:lower()
+							})
+						end
 					end
 				end
 			end
 		end
 	end
 
-	if bedwars["FireProjectile"] and bedwars["BlockController"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
+	if bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
 
 	else
 		wait(1)
