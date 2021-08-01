@@ -40,7 +40,9 @@ getfunctions = function()
 			end
 			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
 				bedwars["raiseShield"] = function()
-					getmetatable(v["ShieldController"])["raiseShield"](v["ShieldController"])
+					game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["79887c17-0d88-416b-9aec-4e53c9e87269"]:FireServer({
+						["raised"] = true
+					})
 				end
 			end
 			if rawget(v, "SwordController") then
