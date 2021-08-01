@@ -433,11 +433,11 @@ shared.VapeTargetInfo = {
 GUI.CreateCustomToggle("Target Info", "vape/assets/TargetInfoIcon2.png", function() TargetInfo.SetVisible(true) end, function() TargetInfo.SetVisible(false) end, false, "OptionsButton", 1)
 
 GUI.CreateDivider2("MODULE SETTINGS")
-GUI.CreateToggle("Players", function() end, function() end, false, "")
+GUI.CreateToggle("Players", function() end, function() end, true, "")
 GUI.CreateToggle("NPCs", function() end, function() end, false, "")
 GUI.CreateToggle("Ignore naked", function() end, function() end, false, "")
 GUI.CreateToggle("Teams by server", function() end, function() end, false, "")
-GUI.CreateToggle("Teams by color", function() end, function() end, false, "")
+GUI.CreateToggle("Teams by color", function() end, function() end, true, "")
 GUI.CreateToggle("MiddleClick friends", function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = true end, function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = false end, false, "")
 local blatantmode = GUI.CreateToggle("Blatant mode", function()
 
