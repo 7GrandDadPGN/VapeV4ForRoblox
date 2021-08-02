@@ -479,6 +479,20 @@ speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, funct
 speedval = speed.CreateSlider("Speed", 1, 30, function(val) end)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
+local function getziplinepos()
+	local tab = game.Workspace:GetChildren()
+	local pos2 = Vector3.new(0, 0, 0)
+			for i = 1, #tab do
+				local obj = tab[i]
+				pcall(function()
+					if obj.Name:match("line")  then
+						pos2 = obj.Position
+					end
+				end)
+			end
+			return pos2 / 3
+end
+
 local flyspeed = {["Value"] = 1}
 local flyverticalspeed = {["Value"] = 1}
 local flyupanddown = {["Enabled"] = false}
@@ -489,7 +503,13 @@ local flypress
 local flyendpress
 local bodyvelofly
 local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
+	local ohTable1 = {
+		["ziplineBasePosition"] = getziplinepos()
+	}
+	
+	game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.MountZipline:InvokeServer(ohTable1)
 	if isAlive() and lplr.Character.Humanoid.SeatPart then
+		print("check")
 		flyposy = lplr.Character.Humanoid.SeatPart.CFrame.p.Y
 	end
 	game:GetService("ContextActionService"):BindActionAtPriority("LockSeat", function()
