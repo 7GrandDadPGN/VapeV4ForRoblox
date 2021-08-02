@@ -503,13 +503,22 @@ local flypress
 local flyendpress
 local bodyvelofly
 local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
-	local ohTable1 = {
-		["ziplineBasePosition"] = getziplinepos()
-	}
-	
-	game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.MountZipline:InvokeServer(ohTable1)
+	local characterpos = Vector3.new(0, 0, 0)
+	if isAlive() then
+		characterpos = lplr.Character.HumanoidRootPart.CFrame.p
+		local ohTable1 = {
+			["ziplineBasePosition"] = getziplinepos()
+		}
+		
+		game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.MountZipline:InvokeServer(ohTable1)
+	end
 	if isAlive() and lplr.Character.Humanoid.SeatPart then
-		print("check")
+		for i3,v3 in pairs(lplr.Character.Humanoid.SeatPart:GetChildren()) do
+			if v3:IsA("BodyVelocity") then
+				v3:Remove()
+			end
+		end
+		lplr.Character.Humanoid.SeatPart.CFrame = CFrame.new(characterpos)
 		flyposy = lplr.Character.Humanoid.SeatPart.CFrame.p.Y
 	end
 	game:GetService("ContextActionService"):BindActionAtPriority("LockSeat", function()
