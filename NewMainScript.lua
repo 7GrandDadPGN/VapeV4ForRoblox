@@ -351,6 +351,7 @@ local targetinfobkg3 = Instance.new("Frame")
 targetinfobkg3.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 targetinfobkg3.Size = UDim2.new(0, 220, 0, 80)
 targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
+targetinfobkg3.Name = "MainInfo"
 targetinfobkg3.Parent = targetinfobkg1
 local targetname = Instance.new("TextLabel")
 targetname.TextSize = 17
@@ -428,7 +429,8 @@ shared.VapeTargetInfo = {
 			targethealth.Text = math.floor(v["Health"]).." hp"
 			targetname.Text = i
 		end
-	end
+	end,
+	["Object"] = TargetInfo
 }
 GUI.CreateCustomToggle("Target Info", "vape/assets/TargetInfoIcon2.png", function() TargetInfo.SetVisible(true) end, function() TargetInfo.SetVisible(false) end, false, "OptionsButton", 1)
 

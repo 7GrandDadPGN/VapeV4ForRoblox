@@ -31,12 +31,14 @@ getfunctions = function()
 				bedwars["getInventory"] = v["getInventory"]
 			end
 			if rawget(v, "launchProjectile") then
-			    local bowtable1 = debug.getconstants(debug.getupvalues(v["launchProjectile"])[2])
+				bedwars["FireProjectile"] = ""
+			  --[[  local bowtable1 = debug.getconstants(debug.getupvalues(v["launchProjectile"])[2])
 			    for i3 = 1, #bowtable1 do
 			        if tostring(bowtable1[i3]):match("-") then
-			            bedwars["FireProjectile"] = bowtable1[i3]
+			      --      bedwars["FireProjectile"] = bowtable1[i3]
+				  bedwars["FireProjectile"] = ""
 			        end
-			    end
+			    end]]
 			end
 			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
 				bedwars["raiseShield"] = function()
@@ -44,6 +46,9 @@ getfunctions = function()
 						["raised"] = true
 					})
 				end
+			end
+			if rawget(v, "ViewmodelController") then
+				bedwars["assetTable"] = debug.getupvalues(debug.getupvalues(getrawmetatable(v["ViewmodelController"])["playAnimation"])[1])[2]
 			end
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
@@ -73,10 +78,11 @@ getfunctions = function()
 		end
 	end
 
-	if bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
+	if bedwars["assetTable"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
 
 	else
 		wait(1)
+		--print(bedwars["assetTable"], bedwars["FireProjectile"], bedwars["getInventory"], bedwars["raiseShield"], bedwars["BlockController"], bedwars["SwordController"], bedwars["attackEntity"], bedwars["damageTable"], bedwars["sprintTable"])
 		getfunctions()
 	end
 end
@@ -373,7 +379,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			end
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("Killaura") end, true, function()
+end, function() 
+	game:GetService("RunService"):UnbindFromRenderStep("Killaura") 
+end, true, function()
 	return " BedWars"
 end)
 killaurarange = Killaura.CreateSlider("Attack range", 1, 25, function(val) end)
@@ -471,6 +479,69 @@ speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, funct
 speedval = speed.CreateSlider("Speed", 1, 30, function(val) end)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
+local flyspeed = {["Value"] = 1}
+local flyverticalspeed = {["Value"] = 1}
+local flyupanddown = {["Enabled"] = false}
+local flyposy = 0
+local flyup = false
+local flydown = false
+local flypress
+local flyendpress
+local bodyvelofly
+local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
+	if isAlive() and lplr.Character.Humanoid.SeatPart then
+		flyposy = lplr.Character.Humanoid.SeatPart.CFrame.p.Y
+	end
+	game:GetService("ContextActionService"):BindActionAtPriority("LockSeat", function()
+		return Enum.ContextActionResult.Sink
+	end, false, Enum.ContextActionPriority.High.Value, Enum.PlayerActions.CharacterJump)
+	flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
+		if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+			if input1.KeyCode == Enum.KeyCode.Space then
+				flyup = true
+			end
+			if input1.KeyCode == Enum.KeyCode.LeftShift then
+				flydown = true
+			end
+		end
+	end)
+	flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
+		if input1.KeyCode == Enum.KeyCode.Space then
+			flyup = false
+		end
+		if input1.KeyCode == Enum.KeyCode.LeftShift then
+			flydown = false
+		end
+	end)
+	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
+		if isAlive() and lplr.Character.Humanoid.SeatPart then
+			if flyup then
+				flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+			end
+			if flydown then
+				flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+			end
+			local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
+			lplr.Character.Humanoid.SeatPart.Transparency = 1
+			lplr.Character.Humanoid.SeatPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+			lplr.Character.Humanoid.SeatPart.Velocity = Vector3.new(0, 0, 0)
+		end
+	end)
+end, function() 
+	if bodyvelofly then
+		bodyvelofly:Remove()
+	end
+	flyup = false
+	flydown = false
+	flypress:Disconnect()
+	flyendpress:Disconnect()
+	game:GetService("RunService"):UnbindFromRenderStep("Fly")
+	game:GetService("ContextActionService"):UnbindAction("LockSeat")
+end, true, function() return " BedWars" end, true)
+flyspeed = fly.CreateSlider("Speed", 1, 150, function(val) end)
+flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 150, function(val) end)
+flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
+
 local Scaffold = {["Enabled"] = false}
 local oldpos = Vector3.new(0, 0, 0)
 Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Scaffold", function()
@@ -542,7 +613,7 @@ BowAura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpti
 							["MaxHealth"] = v.Character.Humanoid.MaxHealth
 						}
 						targetsize = targetsize + 1
-						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
+					--	game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
 						pcall(function()
 							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["ed6af8d6-0758-484c-a404-6897b1a95c5e"]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
 								["part"] = v.Character.Head,
@@ -596,7 +667,7 @@ BowExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 							["MaxHealth"] = v.Character.Humanoid.MaxHealth
 						}
 						targetsize = targetsize + 1
-						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
+					--	game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
 						pcall(function()
 							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["ed6af8d6-0758-484c-a404-6897b1a95c5e"]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
 								["part"] = v.Character.Head,
