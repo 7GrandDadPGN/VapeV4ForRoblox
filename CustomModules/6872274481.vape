@@ -346,7 +346,7 @@ local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Crea
 	game:GetService("RunService"):BindToRenderStep("HitBoxes", 1, function() 
 		for i,plr in pairs(players:GetChildren()) do
 			if isPlayerTargetable(plr, true, true) and isAlive(plr) then
-				plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.2), 2 + (hitboxexpand["Value"] * 0.2), 1 + (hitboxexpand["Value"] * 0.2))
+				plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.6), 2 + (hitboxexpand["Value"] * 0.6), 1 + (hitboxexpand["Value"] * 0.6))
 			end
 		end
 	end)
