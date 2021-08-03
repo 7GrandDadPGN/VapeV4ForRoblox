@@ -36,6 +36,15 @@ getfunctions = function()
 			if rawget(v, "getInventory") then
 				bedwars["getInventory"] = v["getInventory"]
 			end
+			if rawget(v, "Client") and bedwars["Client"] == nil then
+				bedwars["Client"] = v.Client
+			end
+			if rawget(v, "ClientStore") and bedwars["ClientStore"] == nil then
+				bedwars["ClientStore"] = v.ClientStore
+			end
+			if rawget(v, "VictorySection") then
+				bedwars["VictoryScreen"] = v["VictorySection"]
+			end
 			if rawget(v, "launchProjectile") then
 				bedwars["FireProjectile"] = ""
 				bedwars["HitProjectile"] = ""
@@ -53,12 +62,16 @@ getfunctions = function()
 			    end
 			end
 			if rawget(v, "ZiplineController") then
-				local ziptable1 = debug.getconstants(debug.getprotos(debug.getprotos(getmetatable(v["ZiplineController"])["KnitStart"])[1])[1])
-				for i3 = 1, #ziptable1 do
-			        if tostring(ziptable1[i3]):match("-") then
-				  		bedwars["ZiplineRemote"] = ziptable1[i3]
-			        end
-			    end
+				if getmetatable(v["ZiplineController"]) and getmetatable(v["ZiplineController"])["KnitStart"] then
+					local ziptable1 = debug.getconstants(debug.getprotos(debug.getprotos(getmetatable(v["ZiplineController"])["KnitStart"])[1])[1])
+					for i3 = 1, #ziptable1 do
+						if tostring(ziptable1[i3]):match("-") then
+							bedwars["ZiplineRemote"] = ziptable1[i3]
+						end
+					end
+				else
+					bedwars["ZiplineRemote"] = ""
+				end
 			end
 			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
 				bedwars["raiseShield"] = function()
@@ -606,35 +619,40 @@ end, function()
 end, true)
 
 local AutoToxic = {["Enabled"] = false}
-local autotoxicconnection
-AutoToxic = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoToxic", function()
-	autotoxicconnection = lplr.PlayerGui.ChildAdded:connect(function(obj)
-		spawn(function()
-			if obj:IsA("ScreenGui") and obj.Name:match("1") then
-				for i2,v2 in pairs(obj:GetChildren()) do
-					if v2.Name:match("2") then
-						for i3,v3 in pairs(v2:GetChildren()) do
-							if v3.Name:match("3") then
-								for i4,v4 in pairs(v3:GetChildren()) do
-									if v4:IsA("ImageLabel") then
-										v4:GetPropertyChangedSignal("Image"):connect(function()
-											if v4.Image:match(lplr.UserId) then
-												game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
-												game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("EZ L TRASH KIDS", "All")
-											end
-										end)
-									end
-								end
-							end
-						end
-					end
+local AutoToxicGG = {["Enabled"] = false}
+local AutoToxicWin = {["Enabled"] = false}
+local AutoToxicFinalKill = {["Enabled"] = false}
+local AutoToxicWinStreak = {["Enabled"] = false}
+local AutoToxicOldWin = bedwars["VictoryScreen"].render
+bedwars["VictoryScreen"].render = function(winstuff)
+    local myTeam = bedwars["ClientStore"]:getState().Game.myTeam;
+    if myTeam and myTeam.id == winstuff.props.WinningTeamId then
+		if AutoToxicGG["Enabled"] then
+			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
+		end
+		if AutoToxicWin["Enabled"] then
+			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("EZ L TRASH KIDS", "All")
+		end
+    end
+    return AutoToxicOldWin(winstuff)
+end
+bedwars["Client"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
+	p6:Connect(function(p7)
+		if AutoToxicFinalKill["Enabled"] then
+			if p7.fromEntity and p7.fromEntity == game.Players.LocalPlayer.Character then
+				local plr = game.Players:GetPlayerFromCharacter(p7.entityInstance)
+				if plr and plr.leaderstats.Bed.Value ~= "✅" then
+					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("L "..(plr.DisplayName or plr.Name)..(AutoToxicWinStreak["Enabled"] and " : "..game.Players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak").." winstreak" or ""), "All")
 				end
 			end
-		end)
-	end)	
-end, function()
-	autotoxicconnection:Disconnect()
-end, true)
+		end
+	end)
+end)
+AutoToxic = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoToxic", function() end, function() end, true)
+AutoToxicGG = AutoToxic.CreateToggle("AutoGG", function() end, function() end, true)
+AutoToxicWin = AutoToxic.CreateToggle("Win", function() end, function() end, true)
+AutoToxicFinalKill = AutoToxic.CreateToggle("Final Kill", function() end, function() end, true)
+AutoToxicWinStreak = AutoToxic.CreateToggle("WinStreak", function() end, function() end, false)
 
 local BuyArrows = {["Enabled"] = false}
 local BowAura = {["Enabled"] = false}
