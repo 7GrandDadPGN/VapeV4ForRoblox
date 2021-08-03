@@ -73,6 +73,9 @@ getfunctions = function()
 					bedwars["ZiplineRemote"] = ""
 				end
 			end
+			if rawget(v, "kbDirectionStrength") then
+				bedwars["KnockbackTable"] = v
+			end
 			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
 				bedwars["raiseShield"] = function()
 					game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["79887c17-0d88-416b-9aec-4e53c9e87269"]:FireServer({
@@ -332,6 +335,21 @@ end, function()
 	oldsize = {}
 end, true)
 reachrange = Reach.CreateSlider("Range", 1, 20, function(val) end)
+
+local velohorizontal = {["Value"] = 100}
+local velovertical = {["Value"] = 100}
+local oldhori = bedwars["KnockbackTable"]["kbDirectionStrength"]
+local oldvert = bedwars["KnockbackTable"]["kbUpwardStrength"]
+local Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Velocity", function()
+	bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (velohorizontal["Value"] / 100)
+	bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (velovertical["Value"] / 100)
+end, function() 
+	bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori
+	bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert
+end, true)
+velohorizontal = Velocity.CreateSlider("Horizontal", 0, 100, function(val) bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (val / 100) end, 100)
+velovertical = Velocity.CreateSlider("Vertical", 0, 100, function(val) bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (val / 100) end, 100)
+
 local Sprint = {["Enabled"] = false}
 Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Sprint", function()
 	spawn(function()
@@ -626,7 +644,7 @@ local AutoToxicWinStreak = {["Enabled"] = false}
 local AutoToxicOldWin = bedwars["VictoryScreen"].render
 bedwars["VictoryScreen"].render = function(winstuff)
     local myTeam = bedwars["ClientStore"]:getState().Game.myTeam;
-    if myTeam and myTeam.id == winstuff.props.WinningTeamId then
+    if myTeam and myTeam.id == winstuff.props.WinningTeamId and AutoToxic["Enabled"] then
 		if AutoToxicGG["Enabled"] then
 			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
 		end
@@ -638,10 +656,10 @@ bedwars["VictoryScreen"].render = function(winstuff)
 end
 bedwars["Client"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 	p6:Connect(function(p7)
-		if AutoToxicFinalKill["Enabled"] then
+		if AutoToxic["Enabled"] then
 			if p7.fromEntity and p7.fromEntity == game.Players.LocalPlayer.Character then
 				local plr = game.Players:GetPlayerFromCharacter(p7.entityInstance)
-				if plr and plr.leaderstats.Bed.Value ~= "✅" then
+				if plr and plr.leaderstats.Bed.Value ~= "✅" and AutoToxicFinalKill["Enabled"] then
 					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("L "..(plr.DisplayName or plr.Name)..(AutoToxicWinStreak["Enabled"] and " : "..game.Players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak").." winstreak" or ""), "All")
 				end
 			end
