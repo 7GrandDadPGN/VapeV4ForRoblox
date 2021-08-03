@@ -27,18 +27,38 @@ getfunctions = function()
 			if rawget(v, "blocksFolder") then
 				bedwars["BlockController"] = v
 			end
+			if rawget(v, "ClientBlockEngine") then
+				bedwars["BlockEngine"] = v["ClientBlockEngine"]
+			end
+			if rawget(v, "BlockPlacer") then
+				bedwars["BlockController2"] = v["BlockPlacer"]
+			end
 			if rawget(v, "getInventory") then
 				bedwars["getInventory"] = v["getInventory"]
 			end
 			if rawget(v, "launchProjectile") then
 				bedwars["FireProjectile"] = ""
-			  --[[  local bowtable1 = debug.getconstants(debug.getupvalues(v["launchProjectile"])[2])
+				bedwars["HitProjectile"] = ""
+			    local bowtable1 = debug.getconstants(debug.getupvalues(v["launchProjectile"])[2])
+				local bowtable2 = debug.getconstants(debug.getprotos(debug.getprotos(debug.getupvalues(v["launchProjectile"])[2])[4])[1])
 			    for i3 = 1, #bowtable1 do
 			        if tostring(bowtable1[i3]):match("-") then
-			      --      bedwars["FireProjectile"] = bowtable1[i3]
-				  bedwars["FireProjectile"] = ""
+			            bedwars["FireProjectile"] = bowtable1[i3]
 			        end
-			    end]]
+			    end
+				for i4 = 1, #bowtable2 do
+			        if tostring(bowtable2[i4]):match("-") then
+			            bedwars["HitProjectile"] = bowtable2[i4]
+			        end
+			    end
+			end
+			if rawget(v, "ZiplineController") then
+				local ziptable1 = debug.getconstants(debug.getprotos(debug.getprotos(getmetatable(v["ZiplineController"])["KnitStart"])[1])[1])
+				for i3 = 1, #ziptable1 do
+			        if tostring(ziptable1[i3]):match("-") then
+				  		bedwars["ZiplineRemote"] = ziptable1[i3]
+			        end
+			    end
 			end
 			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
 				bedwars["raiseShield"] = function()
@@ -63,23 +83,17 @@ getfunctions = function()
 				if tostring(i2):match("sprinting") and type(v2) == "boolean" then
 					bedwars["sprintTable"] = v
 				  end
-				if tostring(i2):match("placeBlock") then
-					bedwars["placeBlock"] = function(newpos)
-						if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, "wool_"..lplr.Team.Name:lower(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem("wool_"..lplr.Team.Name:lower()) then
-							v2(bedwars["BlockController"], "wool_"..lplr.Team.Name:lower(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3), {["skipCulling"] = true, ["player"] = lplr})
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.PlaceBlock:InvokeServer({
-								["position"] = Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3),
-								["blockType"] = "wool_"..lplr.Team.Name:lower()
-							})
-						end
-					end
-				end
 			end
 		end
 	end
 
-	if bedwars["assetTable"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
-
+	if bedwars["assetTable"] and bedwars["ZiplineRemote"] and bedwars["HitProjectile"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
+		local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], "wool_"..lplr.Team.Name:lower())
+		bedwars["placeBlock"] = function(newpos)
+			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, "wool_"..lplr.Team.Name:lower(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem("wool_"..lplr.Team.Name:lower()) then
+				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
+			end
+		end
 	else
 		wait(1)
 		--print(bedwars["assetTable"], bedwars["FireProjectile"], bedwars["getInventory"], bedwars["raiseShield"], bedwars["BlockController"], bedwars["SwordController"], bedwars["attackEntity"], bedwars["damageTable"], bedwars["sprintTable"])
@@ -510,7 +524,7 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 			["ziplineBasePosition"] = getziplinepos()
 		}
 		
-		game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.MountZipline:InvokeServer(ohTable1)
+		game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["ZiplineRemote"]]:InvokeServer(ohTable1)
 	end
 	if isAlive() and lplr.Character.Humanoid.SeatPart then
 		lplr.Character.Humanoid.SeatPart.CFrame = CFrame.new(characterpos)
@@ -640,9 +654,9 @@ BowAura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpti
 							["MaxHealth"] = v.Character.Humanoid.MaxHealth
 						}
 						targetsize = targetsize + 1
-					--	game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
+						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
 						pcall(function()
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["ed6af8d6-0758-484c-a404-6897b1a95c5e"]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
+							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["HitProjectile"]]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
 								["part"] = v.Character.Head,
 								["velocity"] = Vector3.new(1, 0, 0),
 								["hitCFrame"] =  v.Character.Head.CFrame,
@@ -694,9 +708,9 @@ BowExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 							["MaxHealth"] = v.Character.Humanoid.MaxHealth
 						}
 						targetsize = targetsize + 1
-					--	game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
+						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
 						pcall(function()
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged["ed6af8d6-0758-484c-a404-6897b1a95c5e"]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
+							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["HitProjectile"]]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
 								["part"] = v.Character.Head,
 								["velocity"] = Vector3.new(1, 0, 0),
 								["hitCFrame"] =  v.Character.Head.CFrame,
