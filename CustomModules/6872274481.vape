@@ -517,7 +517,7 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 		flyposy = lplr.Character.Humanoid.SeatPart.CFrame.p.Y
 	end
 	game:GetService("ContextActionService"):BindActionAtPriority("LockSeat", function()
-		return Enum.ContextActionResult.Sink
+		return (lplr.Character.Humanoid.SeatPart and Enum.ContextActionResult.Sink or Enum.ContextActionResult.Pass)
 	end, false, Enum.ContextActionPriority.High.Value, Enum.PlayerActions.CharacterJump)
 	flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
 		if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
