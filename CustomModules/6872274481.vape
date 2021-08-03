@@ -95,6 +95,10 @@ getfunctions = function()
 				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
+		local injectionhandler = getscriptclosure(game.Players.LocalPlayer.PlayerScripts.TS.controllers.global.exploit["injection-controller"])
+		for i,v in pairs(debug.getprotos(injectionhandler)) do
+			debug.setproto(injectionhandler, i, function() end)
+		end
 	else
 		wait(1)
 		--print(bedwars["assetTable"], bedwars["FireProjectile"], bedwars["getInventory"], bedwars["raiseShield"], bedwars["BlockController"], bedwars["SwordController"], bedwars["attackEntity"], bedwars["damageTable"], bedwars["sprintTable"])
