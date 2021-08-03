@@ -418,11 +418,11 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			local tab = game.Workspace.Map.Blocks:GetChildren()
 			for i = 1, #tab do
 				local obj = tab[i]
-				pcall(function()
+				if isAlive() then
 					if obj.Name == "bed" and (not obj.Name:match(lplr.Team.Name:lower())) and (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
 						bedwars["breakBlock"](obj.Position)
 					end
-				end)
+				end
 			end
 		until BedNuker["Enabled"] == false
 	end)
@@ -503,11 +503,11 @@ local function getziplinepos()
 	local pos2 = Vector3.new(0, 0, 0)
 			for i = 1, #tab do
 				local obj = tab[i]
-				pcall(function()
+				
 					if obj.Name:match("line")  then
 						pos2 = obj.Position
 					end
-				end)
+
 			end
 			return pos2 / 3
 end
@@ -660,14 +660,15 @@ BowAura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpti
 						}
 						targetsize = targetsize + 1
 						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
-						pcall(function()
+						wait(0.01)
+						if game.Workspace:FindFirstChild(bowcheck) then
 							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["HitProjectile"]]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
 								["part"] = v.Character.Head,
 								["velocity"] = Vector3.new(1, 0, 0),
 								["hitCFrame"] =  v.Character.Head.CFrame,
 								["velocityMultiplier"] = 1
 							})
-						end)
+						end
 					end
 				end
 				targetinfo.UpdateInfo(targettable, targetsize)
@@ -714,14 +715,15 @@ BowExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 						}
 						targetsize = targetsize + 1
 						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
-						pcall(function()
+						wait(0.01)
+						if game.Workspace:FindFirstChild(bowcheck) then
 							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["HitProjectile"]]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
 								["part"] = v.Character.Head,
 								["velocity"] = Vector3.new(1, 0, 0),
 								["hitCFrame"] =  v.Character.Head.CFrame,
 								["velocityMultiplier"] = 1
 							})
-						end)
+						end
 					end
 				end
 				targetinfo.UpdateInfo(targettable, targetsize)
