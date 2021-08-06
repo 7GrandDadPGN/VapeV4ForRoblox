@@ -93,6 +93,15 @@ getfunctions = function()
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
 			end
+			if rawget(v, "swingSwordAtMouse") then
+				bedwars["SwingSword"] = v["swingSwordAtMouse"]
+			end
+			if rawget(v, "swingSwordInRegion") then
+				bedwars["SwingSwordRegion"] = v["swingSwordInRegion"]
+			end
+			if rawget(v, "CombatConstant") then
+				bedwars["CombatConstant"] = v["CombatConstant"]
+			end
 			if rawget(v, "attackEntity") then
 				bedwars["attackEntity"] = v["attackEntity"]
 			end
@@ -107,7 +116,7 @@ getfunctions = function()
 		end
 	end
 
-	if bedwars["assetTable"] and bedwars["ZiplineRemote"] and bedwars["HitProjectile"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
+	if bedwars["assetTable"] and bedwars["ZiplineRemote"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["HitProjectile"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
 		repeat wait() until lplr.Team ~= nil
 		local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], "wool_"..lplr.Team.Name:lower())
 		bedwars["placeBlock"] = function(newpos)
@@ -289,9 +298,8 @@ local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
 	game:GetService("RunService"):BindToRenderStep("AutoClicker", 1, function() 
-		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-		if tool and isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() then
-			tool:Activate()
+		if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and getEquipped()["Type"] == "sword" then
+			bedwars["SwingSword"](bedwars["SwordController"])
 			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
 		end
 	end)
@@ -299,46 +307,18 @@ end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker"
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
 
 local reachrange = {["Value"] = 1}
-local oldsize = {}
+local oldreach1 = bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE
 local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Reach", function()
-	game:GetService("RunService"):BindToRenderStep("Reach", 1, function() 
-		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-		if tool and isAlive() then
-			local touch = findTouchInterest(tool)
-			if touch then
-				local size = rawget(oldsize, tool.Name)
-				if size then
-					touch.Parent.Size = Vector3.new(size.X + reachrange["Value"], size.Y, size.Z + reachrange["Value"])
-					touch.Parent.Massless = true
-				else
-					oldsize[tool.Name] = touch.Parent.Size
-				end
-			end
-		end
-	end)
+	debug.setupvalue(bedwars["SwingSwordRegion"], 3, reachrange["Value"])
+	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1 * (reachrange["Value"] / 3)
 end, function() 
-	game:GetService("RunService"):UnbindFromRenderStep("Reach")
-	for i2,v2 in pairs(lplr.Character:GetChildren()) do
-		if v2:IsA("Tool") and rawget(oldsize, v2.Name) then
-			local touch = findTouchInterest(v2)
-			if touch then
-				touch.Parent.Size = rawget(oldsize, v2.Name)
-				touch.Parent.Massless = false
-			end
-		end
-	end
-	for i2,v2 in pairs(lplr.Backpack:GetChildren()) do
-		if v2:IsA("Tool") and rawget(oldsize, v2.Name) then
-			local touch = findTouchInterest(v2)
-			if touch then
-				touch.Parent.Size = rawget(oldsize, v2.Name)
-				touch.Parent.Massless = false
-			end
-		end
-	end
-	oldsize = {}
+	debug.setupvalue(bedwars["SwingSwordRegion"], 3, 3)
+	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1
 end, true)
-reachrange = Reach.CreateSlider("Range", 1, 20, function(val) end)
+reachrange = Reach.CreateSlider("Range", 3, 6, function(val) 
+	debug.setupvalue(bedwars["SwingSwordRegion"], 3, val)
+	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1 * (val / 3)
+end)
 
 local velohorizontal = {["Value"] = 100}
 local velovertical = {["Value"] = 100}
@@ -418,6 +398,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				end
 				if killauracframe["Enabled"] then
 					lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+				end
+				if lplr.Character.Humanoid.SeatPart then
+					lplr.Character.Humanoid.SeatPart.CFrame = CFrame.new(lplr.Character.Humanoid.SeatPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.Humanoid.SeatPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
 				end
 				targettable[plr.Name] = {
 					["UserId"] = plr.UserId,
