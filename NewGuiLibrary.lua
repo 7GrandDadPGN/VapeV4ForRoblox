@@ -1,4 +1,4 @@
-local VERSION = "v4.05"
+local VERSION = "v4.06"
 local rainbowvalue = 0
 local cam = game:GetService("Workspace").CurrentCamera
 local mouse = game:GetService("Players").LocalPlayer:GetMouse()
@@ -113,6 +113,19 @@ notificationwindow.BackgroundTransparency = 1
 notificationwindow.Active = false
 notificationwindow.Size = UDim2.new(1, 0, 1, 0)
 notificationwindow.Parent = api["MainGui"]
+local hoverbox = Instance.new("TextLabel")
+hoverbox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+hoverbox.Active = false
+hoverbox.Text = "Placeholder"
+hoverbox.ZIndex = 5
+hoverbox.TextColor3 = Color3.fromRGB(200, 200, 200)
+hoverbox.Font = Enum.Font.SourceSans
+hoverbox.TextSize = 16
+hoverbox.Visible = false
+hoverbox.Parent = clickgui
+local hoverround = Instance.new("UICorner")
+hoverround.CornerRadius = UDim.new(0, 4)
+hoverround.Parent = hoverbox
 local vertext = Instance.new("TextLabel")
 vertext.Name = "Version"
 vertext.Size = UDim2.new(0, 45, 0, 20)
@@ -362,12 +375,23 @@ api["CreateMainWindow"] = function()
 	settingswheel.Parent = windowtitle
 	local settingsexit = Instance.new("ImageButton")
 	settingsexit.Name = "SettingsExit"
-	settingsexit.Size = UDim2.new(0, 16, 0, 16)
+	settingsexit.ImageColor3 = Color3.fromRGB(121, 121, 121)
+	settingsexit.Size = UDim2.new(0, 24, 0, 24)
+	settingsexit.AutoButtonColor = false
 	settingsexit.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
 	settingsexit.Visible = false
-	settingsexit.Position = UDim2.new(1, -26, 0, 13)
-	settingsexit.BackgroundTransparency = 1
+	settingsexit.Position = UDim2.new(1, -32, 0, 9)
+	settingsexit.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	settingsexit.Parent = windowtitle
+	local settingsexitround = Instance.new("UICorner")
+	settingsexitround.CornerRadius = UDim.new(0, 16)
+	settingsexitround.Parent = settingsexit
+	settingsexit.MouseEnter:connect(function()
+		game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+	end)
+	settingsexit.MouseLeave:connect(function()
+		game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(20, 20, 20), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+	end)
 	local children = Instance.new("Frame")
 	children.BackgroundTransparency = 1
 	children.Name = "Children"
@@ -407,11 +431,22 @@ api["CreateMainWindow"] = function()
 	overlaysicon.Parent = overlaystitle
 	local overlaysexit = Instance.new("ImageButton")
 	overlaysexit.Name = "OverlaysExit"
-	overlaysexit.Size = UDim2.new(0, 16, 0, 16)
+	overlaysexit.ImageColor3 = Color3.fromRGB(121, 121, 121)
+	overlaysexit.Size = UDim2.new(0, 24, 0, 24)
+	overlaysexit.AutoButtonColor = false
 	overlaysexit.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
-	overlaysexit.Position = UDim2.new(1, -26, 0, 13)
-	overlaysexit.BackgroundTransparency = 1
+	overlaysexit.Position = UDim2.new(1, -32, 0, 9)
+	overlaysexit.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	overlaysexit.Parent = overlaystitle
+	local overlaysexitround = Instance.new("UICorner")
+	overlaysexitround.CornerRadius = UDim.new(0, 16)
+	overlaysexitround.Parent = overlaysexit
+	overlaysexit.MouseEnter:connect(function()
+		game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+	end)
+	overlaysexit.MouseLeave:connect(function()
+		game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(20, 20, 20), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+	end)
 	local overlaysbutton = Instance.new("ImageButton")
 	overlaysbutton.Size = UDim2.new(0, 14, 0, 14)
 	overlaysbutton.Name = "MainButton"
@@ -597,6 +632,16 @@ api["CreateMainWindow"] = function()
 		end
 		buttonapi["ToggleButton"](default, true)
 		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+		toggleframe1.MouseEnter:connect(function()
+			if buttonapi["Enabled"] == false then
+				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+			end
+		end)
+		toggleframe1.MouseLeave:connect(function()
+			if buttonapi["Enabled"] == false then
+				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+			end
+		end)
 
 		
 		api["ObjectsThatCanBeSaved"][(compatability or "VapeSettings")..name.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
@@ -791,6 +836,7 @@ api["CreateMainWindow"] = function()
 
 	windowapi["CreateToggle"] = function(name, temporaryfunction, temporaryfunction2, default, compatability)
 		local buttonapi = {}
+		local currentanim
 		local amount = #children2:GetChildren()
 		local buttontext = Instance.new("TextLabel")
 		buttontext.BackgroundTransparency = 1
@@ -856,7 +902,16 @@ api["CreateMainWindow"] = function()
 		end
 		buttonapi["ToggleButton"](default, true)
 		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
-
+		toggleframe1.MouseEnter:connect(function()
+			if buttonapi["Enabled"] == false then
+				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+			end
+		end)
+		toggleframe1.MouseLeave:connect(function()
+			if buttonapi["Enabled"] == false then
+				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+			end
+		end)
 		
 		api["ObjectsThatCanBeSaved"][(compatability or "VapeSettings")..name.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
 		return buttonapi
@@ -1140,6 +1195,16 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 		end
 		buttonapi["ToggleButton"](default, true)
 		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+		toggleframe1.MouseEnter:connect(function()
+			if buttonapi["Enabled"] == false then
+				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+			end
+		end)
+		toggleframe1.MouseLeave:connect(function()
+			if buttonapi["Enabled"] == false then
+				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+			end
+		end)
 
 		api["ObjectsThatCanBeSaved"][name..naame.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
 		return buttonapi
@@ -1170,6 +1235,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 end
 
 api["CreateWindow"] = function(name, icon, iconsize, position, visible)
+	local currentexpandedbutton = nil
 	local windowapi = {}
 	local windowtitle = Instance.new("TextButton")
 	windowtitle.Text = ""
@@ -1188,6 +1254,18 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	windowicon.BackgroundTransparency = 1
 	windowicon.Position = UDim2.new(0, 10, 0, 13)
 	windowicon.Parent = windowtitle
+	local windowbackbutton = Instance.new("ImageButton")
+	windowbackbutton.Size = UDim2.new(0, 16, 0, 16)
+	windowbackbutton.Position = UDim2.new(0, 15, 0, 13)
+	windowbackbutton.Visible = false
+	windowbackbutton.BackgroundTransparency = 1
+	windowbackbutton.MouseButton1Click:connect(function()
+		if currentexpandedbutton then
+			currentexpandedbutton["ExpandToggle"]()
+		end
+	end)
+	windowbackbutton.Image = getcustomassetfunc("vape/assets/BackIcon.png")
+	windowbackbutton.Parent = windowtitle
 	local windowtext = Instance.new("TextLabel")
 	windowtext.Size = UDim2.new(0, 155, 0, 41)
 	windowtext.BackgroundTransparency = 1
@@ -1251,7 +1329,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	expandbutton.MouseButton1Click:connect(windowapi["ExpandToggle"])
 	expandbutton.MouseButton2Click:connect(windowapi["ExpandToggle"])
 
-	windowapi["CreateOptionsButton"] = function(naame, temporaryfunction, temporaryfunction2, expandedmenu, temporaryfunction3)
+	windowapi["CreateOptionsButton"] = function(naame, temporaryfunction, temporaryfunction2, expandedmenu, temporaryfunction3, hovertext)
 		local buttonapi = {}
 		local amount = #children:GetChildren()
 		local button = Instance.new("TextButton")
@@ -1343,6 +1421,18 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		local bindround = Instance.new("UICorner")
 		bindround.CornerRadius = UDim.new(0, 4)
 		bindround.Parent = bindbkg
+		if hovertext and type(hovertext) == "string" then
+			button.MouseEnter:connect(function() 
+				hoverbox.Visible = true
+				local textsize = game:GetService("TextService"):GetTextSize(hovertext, 16, hoverbox.Font, Vector2.new(99999, 99999))
+				hoverbox.Text = hovertext
+				hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
+			end)
+			button.MouseMoved:connect(function(x, y)
+				hoverbox.Visible = true
+				hoverbox.Position = UDim2.new(0, x + 16, 0, y - (hoverbox.Size.Y.Offset / 2) - 26)
+			end)
+		end
 		buttonapi["Enabled"] = false
 		buttonapi["Keybind"] = ""
 		buttonapi["Name"] = naame
@@ -1399,6 +1489,8 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 						v.Visible = true
 					end
 				end
+				windowicon.Visible = true
+				windowbackbutton.Visible = false
 				children2.Visible = false
 				noexpand = false
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
@@ -1408,10 +1500,13 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 						v.Visible = false
 					end
 				end
+				windowicon.Visible = false
+				windowbackbutton.Visible = true
 				button.Visible = true
 				children2.Visible = true
 				noexpand = true
 				windowtitle.Size = UDim2.new(0, 220, 0, 85 + uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+				currentexpandedbutton = buttonapi
 			end
 		end
 
@@ -2076,6 +2171,16 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			end
 			buttonapi["ToggleButton"](default, true)
 			toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+			toggleframe1.MouseEnter:connect(function()
+				if buttonapi["Enabled"] == false then
+					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+				end
+			end)
+			toggleframe1.MouseLeave:connect(function()
+				if buttonapi["Enabled"] == false then
+					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+				end
+			end)
 	
 			api["ObjectsThatCanBeSaved"][naame..name.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
 			return buttonapi
@@ -2090,6 +2195,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			end
 		end)
 		button.MouseLeave:connect(function() 
+			hoverbox.Visible = false
 			if buttonapi["Keybind"] == "" then
 				bindbkg.Visible = false 
 			end
@@ -2453,6 +2559,16 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 		end
 		buttonapi["ToggleButton"](default, true)
 		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+		toggleframe1.MouseEnter:connect(function()
+			if buttonapi["Enabled"] == false then
+				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+			end
+		end)
+		toggleframe1.MouseLeave:connect(function()
+			if buttonapi["Enabled"] == false then
+				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+			end
+		end)
 
 		
 		api["ObjectsThatCanBeSaved"][(compatability or "VapeSettings")..name.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}

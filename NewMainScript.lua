@@ -552,6 +552,12 @@ GUI.CreateToggle("Show Tooltips", function() end, function() end, true, "VapeOpt
 GUI.CreateToggle("Discord integration", function() end, function() end, false, "VapeOptions")
 GUI.CreateToggle("Notifications", function() GuiLibrary["ToggleNotifications"] = true end, function() GuiLibrary["ToggleNotifications"] = false end, true, "VapeOptions")
 
+local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+    if State == Enum.TeleportState.Started then
+        syn.queue_on_teleport('shared.VapeSwitchServers = true if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end')
+    end
+end)
+
 local SelfDestructButton = {["ToggleButton"] = function() end}
 SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function() 
 	selfdestruct = true
@@ -567,6 +573,7 @@ SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function()
 	shared.GuiLibrary = nil
 	GuiLibrary["KeyInputHandler"]:Disconnect()
 	GuiLibrary["KeyInputHandler2"]:Disconnect()
+	teleportfunc:Disconnect()
 	GuiLibrary["MainGui"]:Remove()
 	GuiLibrary["MainBlur"]:Remove()
 end, function() end, false)
@@ -598,12 +605,6 @@ if not shared.VapeSwitchServers then
 else
 	shared.VapeSwitchServers = nil
 end
-
-game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
-    if State == Enum.TeleportState.Started then
-        syn.queue_on_teleport('shared.VapeSwitchServers = true if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end')
-    end
-end)
 
 spawn(function()
 	while wait(10) do
