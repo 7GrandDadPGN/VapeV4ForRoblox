@@ -303,7 +303,7 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker") end, true)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker") end, true, function() return "" end, "Clicks for you")
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
 
 local reachrange = {["Value"] = 1}
@@ -314,7 +314,7 @@ local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 end, function() 
 	debug.setupvalue(bedwars["SwingSwordRegion"], 3, 3)
 	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1
-end, true)
+end, true, function() return "" end, "Extends attack reach")
 reachrange = Reach.CreateSlider("Range", 3, 6, function(val) 
 	debug.setupvalue(bedwars["SwingSwordRegion"], 3, val)
 	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1 * (val / 3)
@@ -330,7 +330,7 @@ local Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].Crea
 end, function() 
 	bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori
 	bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert
-end, true)
+end, true, function() return "" end, "Reduces knockback taken")
 velohorizontal = Velocity.CreateSlider("Horizontal", 0, 100, function(val) bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (val / 100) end, 100)
 velovertical = Velocity.CreateSlider("Vertical", 0, 100, function(val) bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (val / 100) end, 100)
 
@@ -376,7 +376,7 @@ end, function()
 			plr.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
 		end
 	end
-end, true)
+end, true, function() end, "Extends entities hitboxes")
 hitboxexpand = Hitbox.CreateSlider("Expand amount", 1, 10, function(val) end)
 
 local killaurarange = {["Value"] = 1}
@@ -420,7 +420,7 @@ end, function()
 	game:GetService("RunService"):UnbindFromRenderStep("Killaura") 
 end, true, function()
 	return " BedWars"
-end)
+end, "Attack players around you\nwithout aiming at them.")
 killaurarange = Killaura.CreateSlider("Attack range", 1, 25, function(val) end)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
 killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end, false)
@@ -511,7 +511,7 @@ end, function()
 		bodyvelo:Remove()
 	end
 	game:GetService("RunService"):UnbindFromRenderStep("Speed")
-end, true, function() return " "..speedmethod["Value"] end, true)
+end, true, function() return " "..speedmethod["Value"] end, "Makes you go zoom")
 speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, function(val) end)
 speedval = speed.CreateSlider("Speed", 1, 30, function(val) end)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
@@ -601,7 +601,7 @@ end, function()
 	if isAlive() then
 		lplr.Character.Humanoid.Sit = false
 	end
-end, true, function() return " BedWars" end, true)
+end, true, function() return " BedWars" end, "Makes you go zoom (Zipline Required)")
 flyspeed = fly.CreateSlider("Speed", 1, 150, function(val) end)
 flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 150, function(val) end)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
@@ -763,7 +763,7 @@ local NoFall = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Creat
 	bedwars["damageTable"]["requestSelfDamage"] = function() end
 end, function()
 	bedwars["damageTable"]["requestSelfDamage"] = OldNoFallFunction
-end, true)
+end, true, function() end, "Prevents taking fall damage.")
 
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPFolder"
@@ -797,29 +797,59 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 					local line1 = Instance.new("Frame")
 					line1.BorderSizePixel = 0
 					line1.Name = "Line1"
-					line1.Size = UDim2.new(1, 0, 0, 3)
+					line1.ZIndex = 2
+					line1.Size = UDim2.new(1, -2, 0, 1)
+					line1.Position = UDim2.new(0, 1, 0, 1)
 					line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
 					line1.Parent = thing
 					local line2 = Instance.new("Frame")
 					line2.BorderSizePixel = 0
 					line2.Name = "Line2"
-					line2.Size = UDim2.new(1, 0, 0, 3)
-					line2.Position = UDim2.new(0, 0, 1, -3)
+					line2.Size = UDim2.new(1, -2, 0, 1)
+					line2.ZIndex = 2
+					line2.Position = UDim2.new(0, 1, 1, -2)
 					line2.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
 					line2.Parent = thing
 					local line3 = Instance.new("Frame")
 					line3.BorderSizePixel = 0
 					line3.Name = "Line3"
-					line3.Size = UDim2.new(0, 3, 1, 0)
+					line3.Size = UDim2.new(0, 1, 1, -2)
+					line3.Position = UDim2.new(0, 1, 0, 1)
+					line3.ZIndex = 2
 					line3.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
 					line3.Parent = thing
 					local line4 = Instance.new("Frame")
 					line4.BorderSizePixel = 0
 					line4.Name = "Line4"
-					line4.Size = UDim2.new(0, 3, 1, 0)
-					line4.Position = UDim2.new(1, -3, 0, 0)
+					line4.Size = UDim2.new(0, 1, 1, -2)
+					line4.Position = UDim2.new(1, -2, 0, 1)
+					line4.ZIndex = 2
 					line4.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
 					line4.Parent = thing
+					local line1clone = line1:Clone()
+					line1clone.ZIndex = 1
+					line1clone.Size = UDim2.new(1, 0, 0, 3)
+					line1clone.Position = UDim2.new(0, 0, 0, 0)
+					line1clone.BackgroundColor3 = Color3.new(0, 0, 0)
+					line1clone.Parent = thing
+					local line2clone = line2:Clone()
+					line2clone.ZIndex = 1
+					line2clone.Size = UDim2.new(1, 0, 0, 3)
+					line2clone.Position = UDim2.new(0, 0, 1, -3)
+					line2clone.BackgroundColor3 = Color3.new(0, 0, 0)
+					line2clone.Parent = thing
+					local line3clone = line3:Clone()
+					line3clone.ZIndex = 1
+					line3clone.Size = UDim2.new(0, 3, 1, 0)
+					line3clone.Position = UDim2.new(0, 0, 0, 0)
+					line3clone.BackgroundColor3 = Color3.new(0, 0, 0)
+					line3clone.Parent = thing
+					local line4clone = line4:Clone()
+					line4clone.ZIndex = 1
+					line4clone.Size = UDim2.new(0, 3, 1, 0)
+					line4clone.Position = UDim2.new(1, -3, 0, 0)
+					line4clone.BackgroundColor3 = Color3.new(0, 0, 0)
+					line4clone.Parent = thing
 				end
 				
 				if isPlayerTargetable(plr, false, false) then
@@ -838,7 +868,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 			end
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("ESP") ESPFolder:ClearAllChildren() end, true)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("ESP") ESPFolder:ClearAllChildren() end, true, function() return "" end, "Extra Sensory Perception\n Renders an ESP on players.")
 ESPColor = ESP.CreateColorSlider("Player Color", function(val) end)
 ESPMethod = ESP.CreateDropdown("Mode", {"2D", "3D"}, function(val) end)
 --[[local ChamsFolder = Instance.new("Folder")
@@ -1018,7 +1048,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 			end
 
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true, function() return "" end, "Extra Sensory Perception\n Renders an NameTag on players.")
 NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
 NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end)
 NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end)
@@ -1174,7 +1204,7 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 				end
 			end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("Tracers") TracersFolder:ClearAllChildren() end, true)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("Tracers") TracersFolder:ClearAllChildren() end, true, function() return "" end, "Extra Sensory Perception\n Renders an Tracer on players.")
 TracersColor = Tracers.CreateColorSlider("Player Color", function(val) end)
 
 Spring = {} do
