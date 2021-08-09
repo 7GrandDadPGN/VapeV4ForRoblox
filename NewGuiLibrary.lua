@@ -6,6 +6,7 @@ local api = {
 	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
 	["FriendsObject"] = {["Color"] = 0.44, ["Friends"] = {}, ["MiddleClickFriends"] = false, ["MiddleClickFunc"] = function(plr) end},
 	["ToggleNotifications"] = false,
+	["ToggleTooltips"] = false,
 	["ObjectsThatCanBeSaved"] = {},
 }
 
@@ -319,6 +320,11 @@ api["LoadSettings"] = function()
 			end
 		end
 	end
+end
+
+api["RemoveObject"] = function(objname)
+	api["ObjectsThatCanBeSaved"][objname]["Object"]:Remove()
+	api["ObjectsThatCanBeSaved"][objname] = nil
 end
 
 api["CreateMainWindow"] = function()
@@ -1423,13 +1429,13 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		bindround.Parent = bindbkg
 		if hovertext and type(hovertext) == "string" then
 			button.MouseEnter:connect(function() 
-				hoverbox.Visible = true
+				hoverbox.Visible = api["ToggleTooltips"]
 				local textsize = game:GetService("TextService"):GetTextSize(hovertext, 16, hoverbox.Font, Vector2.new(99999, 99999))
 				hoverbox.Text = hovertext
 				hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 			end)
 			button.MouseMoved:connect(function(x, y)
-				hoverbox.Visible = true
+				hoverbox.Visible = api["ToggleTooltips"]
 				hoverbox.Position = UDim2.new(0, x + 16, 0, y - (hoverbox.Size.Y.Offset / 2) - 26)
 			end)
 		end
@@ -2146,6 +2152,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 
 			buttonapi["Enabled"] = false
 			buttonapi["Keybind"] = ""
+			buttonapi["Object"] = buttontext
 			buttonapi["Default"] = default
 			buttonapi["ToggleButton"] = function(toggle, first)
 				buttonapi["Enabled"] = toggle
