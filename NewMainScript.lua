@@ -226,8 +226,8 @@ onething.Visible = true onetext.Position = UDim2.new(0, 0, 0, 35)
 local sortingmethod = "Alphabetical"
 local textwithoutthing = ""
 local function getSpaces(str)
-	local strSize = game:GetService("TextService"):GetTextSize(str, 20, Enum.Font.SourceSans, Vector2.new(10000, 10000))
-	return math.ceil(strSize.X / 3)
+		local strSize = game:GetService("TextService"):GetTextSize(str, 20, Enum.Font.SourceSans, Vector2.new(10000, 10000))
+		return math.ceil(strSize.X / 3)
 end
 local function UpdateHud()
 	local text = ""
@@ -548,7 +548,7 @@ end, function()
 		end
 	end
 end, true, "VapeOptions")
-GUI.CreateToggle("Show Tooltips", function() end, function() end, true, "VapeOptions")
+GUI.CreateToggle("Show Tooltips", function() GuiLibrary["ToggleTooltips"] = true end, function() GuiLibrary["ToggleTooltips"] = false end, true, "VapeOptions")
 GUI.CreateToggle("Discord integration", function() end, function() end, false, "VapeOptions")
 GUI.CreateToggle("Notifications", function() GuiLibrary["ToggleNotifications"] = true end, function() GuiLibrary["ToggleNotifications"] = false end, true, "VapeOptions")
 
@@ -578,14 +578,13 @@ SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function()
 	GuiLibrary["MainBlur"]:Remove()
 end, function() end, false)
 
+loadstring(GetURL("AnyGame.vape"))()
 if pcall(function() readfile("vape/CustomModules/"..game.PlaceId..".vape") end) then
 	loadstring(readfile("vape/CustomModules/"..game.PlaceId..".vape"))()
 else
 	local publicrepo = checkpublicrepo(game.PlaceId)
 	if publicrepo then
 		loadstring(publicrepo)()
-	else
-		loadstring(GetURL("AnyGame.vape"))()
 	end
 end
 
