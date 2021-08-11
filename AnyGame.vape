@@ -20,7 +20,7 @@ local function friendCheck(plr)
 	return (GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and ((GuiLibrary["ObjectsThatCanBeSaved"]["Use Roblox FriendsToggle"]["Api"]["Enabled"] and table.find(robloxfriends, plr.Name) == nil) and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) == nil) or GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] == false)
 end
 
-local function teamCheck(plr)
+shared.vapeteamcheck = function(plr)
 	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and (plr.Team ~= lplr.Team or (lplr.Team == nil or #lplr.Team:GetPlayers() == #game:GetService("Players"):GetChildren())) or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
 end
 
@@ -36,7 +36,7 @@ local function isAlive(plr)
 end
 
 local function isPlayerTargetable(plr, target, friend)
-    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and (friend == true and friendCheck(plr) or friend == false) and isAlive(plr) and targetCheck(plr, target) and teamCheck(plr)
+    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and (friend == true and friendCheck(plr) or friend == false) and isAlive(plr) and targetCheck(plr, target) and shared.vapeteamcheck(plr)
 end
 
 local function vischeck(char, part)
@@ -115,6 +115,100 @@ local function findTouchInterest(tool)
 	end
 	return nil
 end
+
+local radarcam = Instance.new("Camera")
+radarcam.FieldOfView = 45
+local Radar = GuiLibrary.CreateCustomWindow("Radar", "vape/assets/TargetInfoIcon1.png", 16, UDim2.new(0, 177, 0, 6), false)
+local RadarColor = Radar.CreateColorSlider("Player Color", function(val) end)
+local RadarFrame = Instance.new("Frame")
+RadarFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+RadarFrame.BorderSizePixel = 0
+RadarFrame.BackgroundTransparency = 0.5
+RadarFrame.Size = UDim2.new(0, 250, 0, 250)
+RadarFrame.Parent = Radar.GetCustomChildren()
+local RadarBorder1 = RadarFrame:Clone()
+RadarBorder1.Size = UDim2.new(0, 6, 0, 250)
+RadarBorder1.Parent = RadarFrame
+local RadarBorder2 = RadarBorder1:Clone()
+RadarBorder2.Position = UDim2.new(0, 6, 0, 0)
+RadarBorder2.Size = UDim2.new(0, 238, 0, 6)
+RadarBorder2.Parent = RadarFrame
+local RadarBorder3 = RadarBorder1:Clone()
+RadarBorder3.Position = UDim2.new(1, -6, 0, 0)
+RadarBorder3.Size = UDim2.new(0, 6, 0, 250)
+RadarBorder3.Parent = RadarFrame
+local RadarBorder4 = RadarBorder1:Clone()
+RadarBorder4.Position = UDim2.new(0, 6, 1, -6)
+RadarBorder4.Size = UDim2.new(0, 238, 0, 6)
+RadarBorder4.Parent = RadarFrame
+local RadarBorder5 = RadarBorder1:Clone()
+RadarBorder5.Position = UDim2.new(0, 0, 0.5, -1)
+RadarBorder5.BackgroundColor3 = Color3.new(1, 1, 1)
+RadarBorder5.Size = UDim2.new(0, 250, 0, 2)
+RadarBorder5.Parent = RadarFrame
+local RadarBorder6 = RadarBorder1:Clone()
+RadarBorder6.Position = UDim2.new(0.5, -1, 0, 0)
+RadarBorder6.BackgroundColor3 = Color3.new(1, 1, 1)
+RadarBorder6.Size = UDim2.new(0, 2, 0, 124)
+RadarBorder6.Parent = RadarFrame
+local RadarBorder7 = RadarBorder1:Clone()
+RadarBorder7.Position = UDim2.new(0.5, -1, 0, 126)
+RadarBorder7.BackgroundColor3 = Color3.new(1, 1, 1)
+RadarBorder7.Size = UDim2.new(0, 2, 0, 124)
+RadarBorder7.Parent = RadarFrame
+local RadarMainFrame = Instance.new("Frame")
+RadarMainFrame.BackgroundTransparency = 1
+RadarMainFrame.Size = UDim2.new(0, 250, 0, 250)
+RadarMainFrame.Parent = RadarFrame
+Radar.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):connect(function()
+	RadarFrame.Position = UDim2.new(0, 0, 0, (Radar.GetCustomChildren().Parent.Size.Y.Offset == 0 and 45 or 0))
+end)
+players.PlayerRemoving:connect(function(plr)
+	if RadarMainFrame:FindFirstChild(plr.Name) then
+		RadarMainFrame[plr.Name]:Remove()
+	end
+end)
+GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle("Radar", "vape/assets/TargetInfoIcon1.png", function()
+	Radar.SetVisible(true) 
+	game:GetService("RunService"):BindToRenderStep("Radar", 1, function() 
+		local v278 = (CFrame.new(0, 0, 0):inverse() * cam.CFrame).p * 0.2 * Vector3.new(1, 1, 1);
+		local v279, v280, v281 = cam.CFrame:ToOrientation();
+		local u90 = v280 * 180 / math.pi;
+		local v277 = 0 - u90;
+		local v276 = v278 + Vector3.new(0, 0, 0);
+		radarcam.CFrame = CFrame.new(v276 + Vector3.new(0, 50, 0)) * CFrame.Angles(0, -v277 * (math.pi / 180), 0) * CFrame.Angles(-90 * (math.pi / 180), 0, 0)
+		for i,plr in pairs(players:GetChildren()) do
+			local thing
+			if RadarMainFrame:FindFirstChild(plr.Name) then
+				thing = RadarMainFrame[plr.Name]
+				if thing.Visible then
+					thing.Visible = false
+				end
+			else
+				thing = Instance.new("Frame")
+				thing.BackgroundTransparency = 0
+				thing.Size = UDim2.new(0, 4, 0, 4)
+				thing.BorderSizePixel = 1
+				thing.BorderColor3 = Color3.new(0, 0, 0)
+				thing.BackgroundColor3 = Color3.new(0, 0, 0)
+				thing.Visible = false
+				thing.Name = plr.Name
+				thing.Parent = RadarMainFrame
+			end
+			
+			if isPlayerTargetable(plr, false, false) then
+				local v238, v239 = radarcam:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * plr.Character.HumanoidRootPart.CFrame).p * 0.2)
+				thing.Visible = true
+				thing.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(RadarColor["Value"], 1, 1)
+				thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
+			end
+		end
+	end)
+end, function() 
+	Radar.SetVisible(false) 
+	game:GetService("RunService"):UnbindFromRenderStep("Radar")
+	RadarMainFrame:ClearAllChildren()
+end, false, "OptionsButton", 1)
 
 local aimfov = {["Value"] = 1}
 local aimvischeck = {["Enabled"] = false}

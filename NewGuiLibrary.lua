@@ -1134,6 +1134,143 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 		end
 	end
 
+	windowapi["CreateColorSlider"] = function(name, temporaryfunction)
+		local min, max = 0, 1
+		local def = math.floor((min + max) / 2)
+		local defsca = (def - min)/(max - min)
+		local sliderapi = {}
+		local amount2 = #children2:GetChildren()
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(0, 220, 0, 50)
+		frame.BackgroundTransparency = 1
+		frame.LayoutOrder = amount2
+		frame.Name = name
+		frame.Parent = children2
+		local text1 = Instance.new("TextLabel")
+		text1.Font = Enum.Font.SourceSans
+		text1.TextXAlignment = Enum.TextXAlignment.Left
+		text1.Text = "   "..name
+		text1.Size = UDim2.new(1, 0, 0, 25)
+		text1.TextColor3 = Color3.fromRGB(162, 162, 162)
+		text1.BackgroundTransparency = 1
+		text1.TextSize = 16
+		text1.Parent = frame
+		local text2 = Instance.new("Frame")
+		text2.Size = UDim2.new(0, 12, 0, 12)
+		text2.Position = UDim2.new(1, -22, 0, 9)
+		text2.BackgroundColor3 = Color3.fromHSV(0.44, 1, 1)
+		text2.Parent = frame
+		local uicorner4 = Instance.new("UICorner")
+		uicorner4.CornerRadius = UDim.new(0, 4)
+		uicorner4.Parent = text2
+		local slider1 = Instance.new("TextButton")
+		slider1.AutoButtonColor = false
+		slider1.Text = ""
+		slider1.Size = UDim2.new(0, 200, 0, 2)
+		slider1.BorderSizePixel = 0
+		slider1.BackgroundColor3 = Color3.new(1, 1, 1)
+		slider1.Position = UDim2.new(0, 10, 0, 32)
+		slider1.Name = "Slider"
+		slider1.Parent = frame
+		local uigradient = Instance.new("UIGradient")
+		uigradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)), ColorSequenceKeypoint.new(0.1, Color3.fromHSV(0.1, 1, 1)), ColorSequenceKeypoint.new(0.2, Color3.fromHSV(0.2, 1, 1)), ColorSequenceKeypoint.new(0.3, Color3.fromHSV(0.3, 1, 1)), ColorSequenceKeypoint.new(0.4, Color3.fromHSV(0.4, 1, 1)), ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 1, 1)), ColorSequenceKeypoint.new(0.6, Color3.fromHSV(0.6, 1, 1)), ColorSequenceKeypoint.new(0.7, Color3.fromHSV(0.7, 1, 1)), ColorSequenceKeypoint.new(0.8, Color3.fromHSV(0.8, 1, 1)), ColorSequenceKeypoint.new(0.9, Color3.fromHSV(0.9, 1, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))})
+		uigradient.Parent = slider1
+		local slider3 = Instance.new("ImageButton")
+		slider3.AutoButtonColor = false
+		slider3.Size = UDim2.new(0, 24, 0, 16)
+		slider3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		slider3.BorderSizePixel = 0
+		slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
+		slider3.Position = UDim2.new(0.44, -11, 0, -7)
+		slider3.Parent = slider1
+		slider3.Name = "ButtonSlider"
+		sliderapi["Value"] = 0.44
+		sliderapi["RainbowValue"] = false
+		sliderapi["SetValue"] = function(val)
+			val = math.clamp(val, min, max)
+			text2.BackgroundColor3 = Color3.fromHSV(val, 1, 1)
+			sliderapi["Value"] = val
+			slider3.Position = UDim2.new(math.clamp(val, 0.02, 0.95), -9, 0, -7)
+			temporaryfunction(val)
+		end
+		sliderapi["SetRainbow"] = function(val)
+			sliderapi["RainbowValue"] = val
+			if sliderapi["RainbowValue"] then
+				local heh
+				heh = coroutine.resume(coroutine.create(function()
+					repeat
+						wait()
+						if sliderapi["RainbowValue"] then
+							sliderapi["SetValue"](rainbowvalue)
+						else
+							coroutine.yield(heh)
+						end
+					until sliderapi["RainbowValue"] == false or shared.VapeExecuted == nil
+				end))
+			end
+		end
+		slider1.MouseButton1Down:Connect(function()
+			spawn(function()
+				click = true
+				wait(0.3)
+				click = false
+			end)
+			if click then
+				sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
+			end
+			local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+			sliderapi["SetValue"](min + ((max - min) * xscale))
+			slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
+			local move
+			local kill
+			move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseMovement then
+					local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+					sliderapi["SetValue"](min + ((max - min) * xscale))
+					slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
+				end
+			end)
+			kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					capturedslider = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
+					move:Disconnect()
+					kill:Disconnect()
+				end
+			end)
+		end)
+		slider3.MouseButton1Down:Connect(function()
+			spawn(function()
+				click = true
+				wait(0.3)
+				click = false
+			end)
+			if click then
+				sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
+			end
+			local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+			sliderapi["SetValue"](min + ((max - min) * xscale))
+			slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
+			local move
+			local kill
+			move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseMovement then
+					local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+					sliderapi["SetValue"](min + ((max - min) * xscale))
+					slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
+				end
+			end)
+			kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					capturedslider = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
+					move:Disconnect()
+					kill:Disconnect()
+				end
+			end)
+		end)
+		api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
+		return sliderapi
+	end
+
 	windowapi["CreateToggle"] = function(naame, temporaryfunction, temporaryfunction2, default)
 		local buttonapi = {}
 		local amount = #children2:GetChildren()

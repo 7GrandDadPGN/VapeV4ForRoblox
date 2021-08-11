@@ -21,6 +21,15 @@ local function getItem(itemName)
 	return nil
 end
 
+local function getwool()
+	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
+		if v5["itemType"]:match("wool") then
+			return v5["itemType"]
+		end
+	end
+	return "wool"
+end
+
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
 		if type(v) == "table" then
@@ -87,6 +96,13 @@ getfunctions = function()
 					end
 				end
 			end
+			if rawget(v, "performHeal") then
+				for i2,v2 in pairs(debug.getconstants(v["performHeal"])) do
+					if tostring(v2):match("-") or tostring(v2):match("PlayGuitar") then
+						bedwars["GuitarRemote"] = v2
+					end
+				end
+			end
 			if rawget(v, "ViewmodelController") then
 				bedwars["assetTable"] = debug.getupvalues(debug.getupvalues(getrawmetatable(v["ViewmodelController"])["playAnimation"])[1])[2]
 			end
@@ -108,6 +124,9 @@ getfunctions = function()
 			if rawget(v, "requestSelfDamage") then
 				bedwars["damageTable"] = v
 			end
+			if rawget(v, "GamePlayerUtil") then
+				bedwars["PlayerUtil"] = v["GamePlayerUtil"]
+			end
 			for i2,v2 in pairs(v) do
 				if tostring(i2):match("sprinting") and type(v2) == "boolean" then
 					bedwars["sprintTable"] = v
@@ -116,11 +135,12 @@ getfunctions = function()
 		end
 	end
 
-	if bedwars["assetTable"] and bedwars["ZiplineRemote"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["HitProjectile"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
+	if bedwars["assetTable"] and bedwars["PlayerUtil"] and bedwars["GuitarRemote"] and bedwars["ZiplineRemote"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["HitProjectile"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
 		repeat wait() until lplr.Team ~= nil
-		local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], "wool_"..lplr.Team.Name:lower())
 		bedwars["placeBlock"] = function(newpos)
-			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, "wool_"..lplr.Team.Name:lower(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem("wool_"..lplr.Team.Name:lower()) then
+			print(getwool())
+			local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
+			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
 				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
@@ -155,8 +175,8 @@ local function friendCheck(plr)
 	return (GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and ((GuiLibrary["ObjectsThatCanBeSaved"]["Use Roblox FriendsToggle"]["Api"]["Enabled"] and table.find(robloxfriends, plr.Name) == nil) and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) == nil) or GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] == false)
 end
 
-local function teamCheck(plr)
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and (plr.Team ~= lplr.Team or (lplr.Team == nil or #lplr.Team:GetPlayers() == #game:GetService("Players"):GetChildren())) or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
+shared.vapeteamcheck = function(plr)
+	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and (bedwars["PlayerUtil"].getGamePlayer(lplr):getTeamId() ~= bedwars["PlayerUtil"].getGamePlayer(plr):getTeamId() or (lplr.Team == nil or #lplr.Team:GetPlayers() == #game:GetService("Players"):GetChildren())) or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
 end
 
 local function targetCheck(plr, check)
@@ -187,20 +207,20 @@ local function getEquipped()
     return {["Object"] = obj, ["Type"] = type}
 end
 
-local function isPlayerTargetable(plr, target, friend)
-    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and isAlive(plr) and targetCheck(plr, target) and teamCheck(plr)
+local function isPlayerTargetable(plr, target, friend, team)
+    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and isAlive(plr) and targetCheck(plr, target) and ((team and plr.Team == lplr.Team) or (team == nil and shared.vapeteamcheck(plr)))
 end
 
 local function vischeck(char, part)
 	return not unpack(cam:GetPartsObscuringTarget({lplr.Character[part].Position, char[part].Position}, {lplr.Character, char}))
 end
 
-local function GetAllNearestHumanoidToPosition(distance, amount)
+local function GetAllNearestHumanoidToPosition(distance, amount, noteamcheck)
 	local returnedplayer = {}
 	local currentamount = 0
     if isAlive() then
         for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable(v, true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and currentamount < amount then
+            if isPlayerTargetable(v, true, true, noteamcheck) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and currentamount < amount then
                 local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= distance then
                     table.insert(returnedplayer, v)
@@ -309,6 +329,25 @@ end
 local function scaffoldBlock(newpos)
     bedwars["placeBlock"](newpos)
 end
+
+local autohealdelay = 0
+local autoheal = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoHeal", function()
+	game:GetService("RunService"):BindToRenderStep("AutoHeal", 1, function() 
+		if (autohealdelay <= tick()) then
+			local plrs = GetAllNearestHumanoidToPosition(60, 100, true)
+			for i, v in pairs(plrs) do
+				game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["GuitarRemote"]]:FireServer({
+					["healTarget"] = v.Character
+				})
+			end
+			autohealdelay = tick() + 0.5
+		end
+	end)
+end, function() 
+	game:GetService("RunService"):UnbindFromRenderStep("AutoHeal") 
+end, true, function()
+	return ""
+end, "AutoHeal players around you (guitar needed)")
 
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 local killaurarange = {["Value"] = 1}
@@ -443,7 +482,7 @@ local function getziplinepos()
 			for i = 1, #tab do
 				local obj = tab[i]
 				
-					if obj.Name:match("line")  then
+					if obj.Name:match("zipline") and obj.Name:match("base") and obj:FindFirstChild("ZiplineDestination")  then
 						pos2 = obj.Position
 					end
 
@@ -635,25 +674,20 @@ BowExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 		repeat
 			wait(BowDelay["Value"] / 10)
 			if isAlive() and getEquipped()["Type"] == "bow" then
-				if BuyArrows["Enabled"] then
-					local args = {
-						[1] = {
-							["shopItem"] = {
-								["price"] = 16,
-								["currency"] = "iron",
-								["itemType"] = "arrow",
-								["amount"] = 8
-							}
-						}
-					}
-					
-					game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.BedwarsPurchaseItem:InvokeServer(unpack(args))
-					game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.BedwarsPurchaseItem:InvokeServer(unpack(args))
-				end
 				local targettable = {}
 				local targetsize = 0
 				for i,v in pairs(players:GetChildren()) do
 					if isPlayerTargetable(v, true, true) and v.Character and v.Character:FindFirstChild("Head") then
+						if getItem("arrow") == nil and BuyArrows["Enabled"] then
+							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.BedwarsPurchaseItem:InvokeServer({
+								["shopItem"] = {
+									["price"] = 16,
+									["currency"] = "iron",
+									["itemType"] = "arrow",
+									["amount"] = 8
+								}
+							})
+						end
 						local bowcheck = (getEquipped()["Object"].Name:match("crossbow") and "crossbow_arrow" or "arrow")
 						targettable[v.Name] = {
 							["UserId"] = v.UserId,
