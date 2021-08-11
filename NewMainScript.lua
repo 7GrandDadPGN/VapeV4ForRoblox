@@ -14,15 +14,17 @@ local function GetURL(scripturl)
 	end
 end
 
+local getasset = getsynasset or getcustomasset
+local request = syn and syn.request or http and http.request
 local function getcustomassetfunc(path)
 	if not isfile(path) then
-		local req = syn.request({
+		local req = request({
 			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
 			Method = "GET"
 		})
 		writefile(path, req.Body)
 	end
-	return getsynasset(path)
+	return getasset(path) 
 end
 
 local function checkpublicrepo(id)
@@ -34,6 +36,11 @@ local function checkpublicrepo(id)
 		return req.Body
 	end
 	return nil
+end
+
+if not (getasset and request) then
+	print("Vape not supported with your exploit.")
+	return
 end
 
 if isfolder("vape") == false then
