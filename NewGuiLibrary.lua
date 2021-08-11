@@ -1,6 +1,8 @@
 local VERSION = "v4.06"
 local rainbowvalue = 0
 local cam = game:GetService("Workspace").CurrentCamera
+local getasset = getsynasset or getcustomasset
+local request = syn and syn.request or http and http.request
 local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 local api = {
 	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
@@ -12,13 +14,13 @@ local api = {
 
 local function getcustomassetfunc(path)
 	if not isfile(path) then
-		local req = syn.request({
+		local req = request({
 			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
 			Method = "GET"
 		})
 		writefile(path, req.Body)
 	end
-	return getsynasset(path)
+	return getasset(path) 
 end
 
 coroutine.resume(coroutine.create(function()
@@ -77,13 +79,7 @@ if not is_sirhurt_closure and syn and syn.protect_gui then
     syn.protect_gui(gui)
     gui.Parent = game:GetService("CoreGui")
     api["MainGui"] = gui
-elseif PROTOSMASHER_LOADED and get_hidden_gui then
-    local gui = Instance.new("ScreenGui")
-    gui.Name = randomString()
-    gui.DisplayOrder = 999
-    gui.Parent = get_hidden_gui()
-    api["MainGui"] = gui
-elseif elysianexecute and gethui then
+elseif gethui then
     local gui = Instance.new("ScreenGui")
     gui.Name = randomString()
     gui.DisplayOrder = 999
@@ -91,12 +87,6 @@ elseif elysianexecute and gethui then
     api["MainGui"] = gui
 elseif game:GetService("CoreGui"):FindFirstChild('RobloxGui') then
     api["MainGui"] = game:GetService("CoreGui").RobloxGui
-else
-    local gui = Instance.new("ScreenGui")
-    gui.Name = randomString()
-    gui.DisplayOrder = 999
-    gui.Parent = game:GetService("ScreenGui")
-    api["MainGui"] = gui
 end
 
 api["UpdateHudEvent"] = Instance.new("BindableEvent")
@@ -1134,7 +1124,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 		end
 	end
 
-	windowapi["CreateColorSlider"] = function(name, temporaryfunction)
+	windowapi["CreateColorSlider"] = function(naame, temporaryfunction)
 		local min, max = 0, 1
 		local def = math.floor((min + max) / 2)
 		local defsca = (def - min)/(max - min)
@@ -1149,7 +1139,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 		local text1 = Instance.new("TextLabel")
 		text1.Font = Enum.Font.SourceSans
 		text1.TextXAlignment = Enum.TextXAlignment.Left
-		text1.Text = "   "..name
+		text1.Text = "   "..naame
 		text1.Size = UDim2.new(1, 0, 0, 25)
 		text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 		text1.BackgroundTransparency = 1
@@ -1267,7 +1257,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 				end
 			end)
 		end)
-		api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
+		api["ObjectsThatCanBeSaved"][name..naame.."SliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
 		return sliderapi
 	end
 

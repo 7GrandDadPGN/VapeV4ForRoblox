@@ -138,7 +138,6 @@ getfunctions = function()
 	if bedwars["assetTable"] and bedwars["PlayerUtil"] and bedwars["GuitarRemote"] and bedwars["ZiplineRemote"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["HitProjectile"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
 		repeat wait() until lplr.Team ~= nil
 		bedwars["placeBlock"] = function(newpos)
-			print(getwool())
 			local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
 			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
 				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
