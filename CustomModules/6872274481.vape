@@ -566,8 +566,8 @@ end, function()
 	bedwars["BalloonController"]["deflateBalloon"] = olddeflate
 	olddeflate = nil
 end, true, function() return " BedWars" end, "Makes you go zoom (Can Automatically Buy) (Balloon Required)")
-flyspeed = fly.CreateSlider("Speed", 1, 50, function(val) end)
-flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 50, function(val) end)
+flyspeed = fly.CreateSlider("Speed", 1, 40, function(val) end)
+flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 40, function(val) end)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
 flybuyballoon = fly.CreateToggle("Buy Balloons", function() end, function() end)
 
