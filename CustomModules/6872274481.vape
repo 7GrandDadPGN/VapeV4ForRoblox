@@ -378,7 +378,7 @@ end, true, function()
 end, "Attack players around you\nwithout aiming at them.")
 killaurarange = Killaura.CreateSlider("Attack range", 1, 25, function(val) end)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
-killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end, false)
+killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end)
 killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
 killauraautoblock = Killaura.CreateToggle("AutoBlock", function() end, function() end)
 
@@ -538,7 +538,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 	end)
 	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
 		if isAlive() then
-			if lplr.Character:GetAttribute("InflatedBalloons") > 0 then
+			if lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0 then
 				if flyup then
 					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
 				end
@@ -558,7 +558,7 @@ end, function()
 	flypress:Disconnect()
 	flyendpress:Disconnect()
 	game:GetService("RunService"):UnbindFromRenderStep("Fly")
-	if isAlive() then
+	if isAlive() and lplr.Character:GetAttribute("InflatedBalloons") then
 		for i = 1, lplr.Character:GetAttribute("InflatedBalloons") do
 			olddeflate()
 		end
