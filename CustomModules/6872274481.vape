@@ -56,31 +56,13 @@ getfunctions = function()
 			end
 			if rawget(v, "launchProjectile") then
 				bedwars["FireProjectile"] = ""
-				bedwars["HitProjectile"] = ""
+				bedwars["ProjectilePosition"] = v["getLaunchPosition"]
 			    local bowtable1 = debug.getconstants(debug.getupvalues(v["launchProjectile"])[2])
-				local bowtable2 = debug.getconstants(debug.getprotos(debug.getprotos(debug.getupvalues(v["launchProjectile"])[2])[4])[1])
 			    for i3 = 1, #bowtable1 do
 			        if tostring(bowtable1[i3]):match("-") or tostring(bowtable1[i3]):match("ProjectileLaunch") then
 			            bedwars["FireProjectile"] = bowtable1[i3]
 			        end
 			    end
-				for i4 = 1, #bowtable2 do
-			        if tostring(bowtable2[i4]):match("-") or tostring(bowtable2[i4]):match("ProjectileImpact") then
-			            bedwars["HitProjectile"] = bowtable2[i4]
-			        end
-			    end
-			end
-			if rawget(v, "ZiplineController") then
-				if getmetatable(v["ZiplineController"]) and getmetatable(v["ZiplineController"])["KnitStart"] then
-					local ziptable1 = debug.getconstants(debug.getprotos(debug.getprotos(getmetatable(v["ZiplineController"])["KnitStart"])[1])[1])
-					for i3 = 1, #ziptable1 do
-						if tostring(ziptable1[i3]):match("-") or tostring(ziptable1[i3]):match("MountZipline") then
-							bedwars["ZiplineRemote"] = ziptable1[i3]
-						end
-					end
-				else
-					bedwars["ZiplineRemote"] = ""
-				end
 			end
 			if rawget(v, "kbDirectionStrength") then
 				bedwars["KnockbackTable"] = v
@@ -109,6 +91,9 @@ getfunctions = function()
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
 			end
+			if rawget(v, "BalloonController") then
+				bedwars["BalloonController"] = v["BalloonController"]
+			end
 			if rawget(v, "swingSwordAtMouse") then
 				bedwars["SwingSword"] = v["swingSwordAtMouse"]
 			end
@@ -135,7 +120,7 @@ getfunctions = function()
 		end
 	end
 
-	if bedwars["assetTable"] and bedwars["PlayerUtil"] and bedwars["GuitarRemote"] and bedwars["ZiplineRemote"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["HitProjectile"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
+	if bedwars["assetTable"] and bedwars["PlayerUtil"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
 		repeat wait() until lplr.Team ~= nil
 		bedwars["placeBlock"] = function(newpos)
 			local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
@@ -210,8 +195,8 @@ local function isPlayerTargetable(plr, target, friend, team)
     return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and isAlive(plr) and targetCheck(plr, target) and ((team and plr.Team == lplr.Team) or (team == nil and shared.vapeteamcheck(plr)))
 end
 
-local function vischeck(char, part)
-	return not unpack(cam:GetPartsObscuringTarget({lplr.Character[part].Position, char[part].Position}, {lplr.Character, char}))
+local function vischeck(pos, pos2, ignore)
+	return not unpack(cam:GetPartsObscuringTarget({pos, pos2}, ignore))
 end
 
 local function GetAllNearestHumanoidToPosition(distance, amount, noteamcheck)
@@ -490,32 +475,49 @@ local function getziplinepos()
 end
 
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
+local fly = {["Enabled"] = false}
 local flyspeed = {["Value"] = 1}
 local flyverticalspeed = {["Value"] = 1}
 local flyupanddown = {["Enabled"] = false}
+local flybuyballoon = {["Enabled"] = false}
+local olddeflate
 local flyposy = 0
 local flyup = false
 local flydown = false
 local flypress
 local flyendpress
-local bodyvelofly
-local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
-	local characterpos = Vector3.new(0, 0, 0)
+
+local function buyballoons()
+	if isAlive() and fly["Enabled"] then
+		if getItem("balloon") == nil and flybuyballoon["Enabled"] then
+			game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.BedwarsPurchaseItem:InvokeServer({
+				["shopItem"] = {
+					["currency"] = "emerald",
+					["itemType"] = "balloon",
+					["amount"] = 3,
+					["price"] = 2,
+					["limitedTimeItem"] = true
+				}
+			})
+		end
+		if getItem("balloon") then
+			bedwars["BalloonController"]["inflateBalloon"]()
+		end
+	end
+end
+
+bedwars["Client"]:WaitFor("BalloonPopped"):andThen(function(p6)
+	p6:Connect(function(p7)
+		buyballoons()
+	end)
+end)
+fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
+	olddeflate = bedwars["BalloonController"]["deflateBalloon"]
+	bedwars["BalloonController"]["deflateBalloon"] = function() end
 	if isAlive() then
-		characterpos = lplr.Character.HumanoidRootPart.CFrame.p
-		local ohTable1 = {
-			["ziplineBasePosition"] = getziplinepos()
-		}
-		
-		game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["ZiplineRemote"]]:InvokeServer(ohTable1)
+		flyposy = lplr.Character.HumanoidRootPart.Position.Y
+		buyballoons()
 	end
-	if isAlive() and lplr.Character.Humanoid.SeatPart then
-		lplr.Character.Humanoid.SeatPart.CFrame = CFrame.new(characterpos)
-		flyposy = lplr.Character.Humanoid.SeatPart.CFrame.p.Y
-	end
-	game:GetService("ContextActionService"):BindActionAtPriority("LockSeat", function()
-		return (lplr.Character.Humanoid.SeatPart and Enum.ContextActionResult.Sink or Enum.ContextActionResult.Pass)
-	end, false, Enum.ContextActionPriority.High.Value, Enum.PlayerActions.CharacterJump)
 	flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
 		if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
 			if input1.KeyCode == Enum.KeyCode.Space then
@@ -535,36 +537,39 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 		end
 	end)
 	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
-		if isAlive() and lplr.Character.Humanoid.SeatPart then
-			if flyup then
-				flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+		if isAlive() then
+			if lplr.Character:GetAttribute("InflatedBalloons") > 0 then
+				if flyup then
+					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+				end
+				if flydown then
+					flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+				end
+				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
+				lplr.Character.HumanoidRootPart.Transparency = 1
+				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 			end
-			if flydown then
-				flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
-			end
-			local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
-			lplr.Character.Humanoid.SeatPart.Transparency = 1
-			lplr.Character.Humanoid.SeatPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
-			lplr.Character.Humanoid.SeatPart.Velocity = Vector3.new(0, 0, 0)
 		end
 	end)
 end, function() 
-	if bodyvelofly then
-		bodyvelofly:Remove()
-	end
 	flyup = false
 	flydown = false
 	flypress:Disconnect()
 	flyendpress:Disconnect()
 	game:GetService("RunService"):UnbindFromRenderStep("Fly")
-	game:GetService("ContextActionService"):UnbindAction("LockSeat")
 	if isAlive() then
-		lplr.Character.Humanoid.Sit = false
+		for i = 1, lplr.Character:GetAttribute("InflatedBalloons") do
+			olddeflate()
+		end
 	end
-end, true, function() return " BedWars" end, "Makes you go zoom (Zipline Required)")
-flyspeed = fly.CreateSlider("Speed", 1, 150, function(val) end)
-flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 150, function(val) end)
+	bedwars["BalloonController"]["deflateBalloon"] = olddeflate
+	olddeflate = nil
+end, true, function() return " BedWars" end, "Makes you go zoom (Can Automatically Buy) (Balloon Required)")
+flyspeed = fly.CreateSlider("Speed", 1, 50, function(val) end)
+flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 50, function(val) end)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
+flybuyballoon = fly.CreateToggle("Buy Balloons", function() end, function() end)
 
 local Scaffold = {["Enabled"] = false}
 local oldpos = Vector3.new(0, 0, 0)
@@ -621,98 +626,40 @@ AutoToxicWin = AutoToxic.CreateToggle("Win", function() end, function() end, tru
 AutoToxicFinalKill = AutoToxic.CreateToggle("Final Kill", function() end, function() end, true)
 AutoToxicWinStreak = AutoToxic.CreateToggle("WinStreak", function() end, function() end, false)
 
-local BuyArrows = {["Enabled"] = false}
-local BowAura = {["Enabled"] = false}
-local bowaurarange = {["Value"] = 50}
-local BowDelay2 = {["Value"] = 5}
-local BowTargets = {["Value"] = 1}
-BowAura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BowAura", function()
-	spawn(function()
-		repeat
-			wait(BowDelay2["Value"] / 10)
-			if isAlive() and getEquipped()["Type"] == "bow" then
-				local targettable = {}
-				local targetsize = 0
-				local plrs = GetAllNearestHumanoidToPosition(bowaurarange["Value"], BowTargets["Value"])
-				for i,v in pairs(plrs) do
-					wait(0.03)
-					if isPlayerTargetable(v, true, true) and v.Character and v.Character:FindFirstChild("Head") then
-						local bowcheck = (getEquipped()["Object"].Name:match("crossbow") and "crossbow_arrow" or "arrow")
-						targettable[v.Name] = {
-							["UserId"] = v.UserId,
-							["Health"] = v.Character.Humanoid.Health,
-							["MaxHealth"] = v.Character.Humanoid.MaxHealth
-						}
-						targetsize = targetsize + 1
-						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
-						wait(0.01)
-						if game.Workspace:FindFirstChild(bowcheck) then
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["HitProjectile"]]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
-								["part"] = v.Character.Head,
-								["velocity"] = Vector3.new(1, 0, 0),
-								["hitCFrame"] =  v.Character.Head.CFrame,
-								["velocityMultiplier"] = 1
-							})
-						end
-					end
-				end
-				targetinfo.UpdateInfo(targettable, targetsize)
-			end
-		until BowAura["Enabled"] == false
-	end)
-end, function() end, true)
-bowaurarange = BowAura.CreateSlider("Bow Range", 1, 70, function(val) end, 70)
-BowDelay2 = BowAura.CreateSlider("Bow Delay", 1, 20, function(val) end, 5)
-BowTargets = BowAura.CreateSlider("Bow Targets", 1, 20, function(val) end, 1)
-
-local BuyArrows = {["Enabled"] = false}
-local BowExploit = {["Enabled"] = false}
-local BowDelay = {["Value"] = 10}
-BowExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BowExploit", function()
-	spawn(function()
-		repeat
-			wait(BowDelay["Value"] / 10)
-			if isAlive() and getEquipped()["Type"] == "bow" then
-				local targettable = {}
-				local targetsize = 0
-				for i,v in pairs(players:GetChildren()) do
-					if isPlayerTargetable(v, true, true) and v.Character and v.Character:FindFirstChild("Head") then
-						if getItem("arrow") == nil and BuyArrows["Enabled"] then
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.BedwarsPurchaseItem:InvokeServer({
-								["shopItem"] = {
-									["price"] = 16,
-									["currency"] = "iron",
-									["itemType"] = "arrow",
-									["amount"] = 8
-								}
-							})
-						end
-						local bowcheck = (getEquipped()["Object"].Name:match("crossbow") and "crossbow_arrow" or "arrow")
-						targettable[v.Name] = {
-							["UserId"] = v.UserId,
-							["Health"] = v.Character.Humanoid.Health,
-							["MaxHealth"] = v.Character.Humanoid.MaxHealth
-						}
-						targetsize = targetsize + 1
-						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"])
-						wait(0.01)
-						if game.Workspace:FindFirstChild(bowcheck) then
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["HitProjectile"]]:InvokeServer(bowcheck, game.Workspace[bowcheck], {
-								["part"] = v.Character.Head,
-								["velocity"] = Vector3.new(1, 0, 0),
-								["hitCFrame"] =  v.Character.Head.CFrame,
-								["velocityMultiplier"] = 1
-							})
-						end
-					end
-				end
-				targetinfo.UpdateInfo(targettable, targetsize)
-			end
-		until BowExploit["Enabled"] == false
-	end)
-end, function() end, true)
-BowDelay = BowExploit.CreateSlider("Bow Delay", 1, 20, function(val) end, 10)
-BuyArrows = BowExploit.CreateToggle("Buy Arrows", function() end, function() end, true)
+--local BuyArrows = {["Enabled"] = false}
+--local BowAura = {["Enabled"] = false}
+--local bowaurarange = {["Value"] = 50}
+--local BowDelay2 = {["Value"] = 5}
+--local BowTargets = {["Value"] = 1}
+--BowAura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BowAura", function()
+	--spawn(function()
+		--repeat
+		--	wait(BowDelay2["Value"] / 10)
+		--	if isAlive() and getEquipped()["Type"] == "bow" then
+			--	local targettable = {}
+			--	local targetsize = 0
+			--	local plrs = GetAllNearestHumanoidToPosition(bowaurarange["Value"], BowTargets["Value"])
+			--	for i,v in pairs(plrs) do
+			--		wait(0.03)
+			--		local bowpos = bedwars["ProjectilePosition"]()
+				--	if isPlayerTargetable(v, true, true) and v.Character and v.Character:FindFirstChild("Head") and vischeck(bowpos, v.Character.Head.Position, {lplr.Character, v.Character}) then
+			--			targettable[v.Name] = {
+				--			["UserId"] = v.UserId,
+				--			["Health"] = v.Character.Humanoid.Health,
+				--			["MaxHealth"] = v.Character.Humanoid.MaxHealth
+					--	}
+					--	targetsize = targetsize + 1
+					--	game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[bedwars["FireProjectile"]]:InvokeServer(getEquipped()["Object"], bowpos, (bowpos - v.Character.Head.Position))
+				--	end
+			--	end
+			--	targetinfo.UpdateInfo(targettable, targetsize)
+		--	end
+		--until BowAura["Enabled"] == false
+--	end)
+--end, function() end, true)
+--bowaurarange = BowAura.CreateSlider("Bow Range", 1, 70, function(val) end, 70)
+--BowDelay2 = BowAura.CreateSlider("Bow Delay", 1, 20, function(val) end, 5)
+--BowTargets = BowAura.CreateSlider("Bow Targets", 1, 20, function(val) end, 1)]]
 
 local OldNoFallFunction
 local NoFall = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("NoFall", function()
