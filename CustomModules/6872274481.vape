@@ -57,15 +57,8 @@ getfunctions = function()
 			if rawget(v, "VictorySection") then
 				bedwars["VictoryScreen"] = v["VictorySection"]
 			end
-			if rawget(v, "launchProjectile") then
-				bedwars["FireProjectile"] = ""
-				bedwars["ProjectilePosition"] = v["getLaunchPosition"]
-			    local bowtable1 = debug.getconstants(debug.getupvalues(v["launchProjectile"])[2])
-			    for i3 = 1, #bowtable1 do
-			        if tostring(bowtable1[i3]):match("-") or tostring(bowtable1[i3]):match("ProjectileLaunch") then
-			            bedwars["FireProjectile"] = bowtable1[i3]
-			        end
-			    end
+			if rawget(v, "calculateImportantLaunchValues") then
+				bedwars["BowTable"] = v
 			end
 			if rawget(v, "kbDirectionStrength") then
 				bedwars["KnockbackTable"] = v
@@ -123,7 +116,7 @@ getfunctions = function()
 		end
 	end
 
-	if bedwars["assetTable"] and bedwars["PlayerUtil"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
+	if bedwars["assetTable"] and bedwars["PlayerUtil"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
 		repeat wait() until lplr.Team ~= nil
 		bedwars["placeBlock"] = function(newpos)
 			local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
@@ -203,7 +196,11 @@ local function isPlayerTargetable(plr, target, friend, team)
 end
 
 local function vischeck(pos, pos2, ignore)
-	return not unpack(cam:GetPartsObscuringTarget({pos, pos2}, ignore))
+	local vistab = cam:GetPartsObscuringTarget({pos, pos2}, ignore)
+	for i,v in pairs(vistab) do
+		print(i,v:GetFullName())
+	end
+	return not unpack(vistab)
 end
 
 local function GetAllNearestHumanoidToPosition(distance, amount, noteamcheck)
@@ -257,6 +254,70 @@ local function GetNearestHumanoidToMouse(distance, checkvis)
     end
     return returnedplayer
 end
+
+GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
+local aimfov = {["Value"] = 1}
+local aimvischeck = {["Enabled"] = false}
+local aimheadshotchance = {["Value"] = 1}
+local aimhitchance = {["Value"] = 1}
+local tar = nil
+local hook
+local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AimAssist", function() 
+	hook = bedwars["BowTable"]["calculateImportantLaunchValues"]
+	bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta)
+		local plr = GetNearestHumanoidToMouse(aimfov["Value"], false)
+		if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
+			tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
+		else
+			tar = nil
+		end
+		if tar then
+				local launchPosition = bowtable:getLaunchPosition()
+				if not launchPosition then
+					return nil
+				end
+				local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
+				local proj = projmeta:getProjectileMeta();
+				if p26 then
+					local v58 = proj.predictionLifetimeSec;
+				else
+					v58 = proj.lifetimeSec;
+				end;
+				local v59 = v58;
+				if v59 == nil then
+					v59 = 3;
+				end;
+				local v60 = proj.launchVelocity;
+				if v60 == nil then
+					v60 = 100;
+				end;
+				local projGravity = proj.gravitationalAcceleration;
+				if projGravity == nil then
+					projGravity = 196.2;
+				end;
+				local realTargetPosition = tar.Position + ((Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, 0, plr.Character.HumanoidRootPart.Velocity.Z) / 5) * ((realLaunchPosition - tar.Position).magnitude / v60))
+				local l__CFrame__62 = workspace.CurrentCamera.CFrame;
+				local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(-1, (realLaunchPosition - realTargetPosition).magnitude / ((v60 * projmeta.velocityMultiplier) / 10), 0) - realLaunchPosition).unit)
+				return {
+					initialVelocity = (realLaunchPosition + (v65.Unit.Direction).Unit * ((l__CFrame__62.Position - realLaunchPosition).Magnitude * 5) - realLaunchPosition).Unit * (v60 * projmeta.velocityMultiplier), 
+					positionFrom = realLaunchPosition, 
+					deltaT = v59, 
+					gravitationalAcceleration = projGravity * projmeta.gravityMultiplier
+				};
+		else
+			return hook(bowtable, projmeta, worldmeta)
+		end
+	end
+end, function() 
+	bedwars["BowTable"]["calculateImportantLaunchValues"] = hook
+	tar = nil 
+	hook = nil
+end, true, function() 
+	return " BedWars"
+end)
+aimfov = AimAssist.CreateSlider("FOV", 1, 1000, function(val) end)
+aimhitchance = AimAssist.CreateSlider("Hit Chance", 1, 100, function(val) end)
+aimheadshotchance = AimAssist.CreateSlider("Headshot Chance", 1, 100, function(val) end)
 
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
 local autoclickercps = {["GetRandomValue"] = function() return 1 end}
@@ -371,7 +432,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				}
 				targetsize = targetsize + 1
 				killauradelay = tick() + 0.1
-				bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end})	
+				bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(lplr.Character.Head.Position, plr.Character.Head.Position).Unit.Direction)	
 			end
 			if getEquipped()["Type"] ~= "bow" then
 				targetinfo.UpdateInfo(targettable, targetsize)
@@ -383,7 +444,7 @@ end, function()
 end, true, function()
 	return " BedWars"
 end, "Attack players around you\nwithout aiming at them.")
-killaurarange = Killaura.CreateSlider("Attack range", 1, 25, function(val) end)
+killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
 killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end)
 killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
