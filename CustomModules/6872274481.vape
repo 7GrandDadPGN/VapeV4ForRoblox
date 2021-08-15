@@ -42,6 +42,9 @@ getfunctions = function()
 			if rawget(v, "BlockPlacer") then
 				bedwars["BlockController2"] = v["BlockPlacer"]
 			end
+			if rawget(v, "BlockBreaker") then
+				bedwars["BlockController3"] = v["BlockBreaker"]
+			end
 			if rawget(v, "getInventory") then
 				bedwars["getInventory"] = v["getInventory"]
 			end
@@ -120,7 +123,7 @@ getfunctions = function()
 		end
 	end
 
-	if bedwars["assetTable"] and bedwars["PlayerUtil"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
+	if bedwars["assetTable"] and bedwars["PlayerUtil"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["FireProjectile"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
 		repeat wait() until lplr.Team ~= nil
 		bedwars["placeBlock"] = function(newpos)
 			local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
@@ -351,7 +354,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		local targetsize = 0
 		if (killauradelay <= tick()) then
 			local plr = GetNearestHumanoidToPosition(killaurarange["Value"], false)
-			if isAlive() and plr and plr.Character.PrimaryPart and lplr.Character.PrimaryPart and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or killauramouse["Enabled"] == false) then
+			if isAlive() and plr and plr.Character.PrimaryPart and lplr.Character.PrimaryPart and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
 				if killauraautoblock["Enabled"] then
 					bedwars["raiseShield"]()
 				end
@@ -412,18 +415,17 @@ end, function() end, true)
 bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end)
 
 local fastbreak = {["Enabled"] = false}
+local oldbreakfunction
 fastbreak = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastBreak", function()
-	spawn(function()
-		repeat
-			wait()
-			local tab = game.Workspace.Map.Blocks:GetChildren()
-			for i = 1, #tab do
-				local obj = tab[i]
-				obj:SetAttribute("Health", 0)
-			end
-		until fastbreak["Enabled"] == false
-	end)
-end, function() end, true)
+	oldbreakfunction = bedwars["BlockController3"]["hitBlock"] 
+	bedwars["BlockController3"]["hitBlock"] = function(block, maid, ray)
+		block.blockHealth = 0
+		return oldbreakfunction(block, maid, ray)
+	end
+end, function()
+	bedwars["BlockController3"]["hitBlock"] = oldbreakfunction
+	oldbreakfunction = nil
+end, true)
 
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 local speedval = {["Value"] = 1}
