@@ -128,10 +128,14 @@ getfunctions = function()
 				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
-		local injectionhandler = getscriptclosure(game.Players.LocalPlayer.PlayerScripts.TS.controllers.global.exploit["injection-controller"])
-		for i,v in pairs(debug.getprotos(injectionhandler)) do
-			debug.setproto(injectionhandler, i, function() end)
-		end
+		local blocktab = game.Workspace.Map.Blocks:GetChildren()
+		bedwars["BedTable"] = {}
+		for i = 1, #blocktab do
+			local obj = blocktab[i]
+			if obj.Name == "bed" and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
+				bedwars["BedTable"][#bedwars["BedTable"] + 1] = obj
+			end
+		end  
 	else
 		wait(1)
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
@@ -388,12 +392,17 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	spawn(function()
 		repeat
 			wait(0.2)
-			local tab = game.Workspace.Map.Blocks:GetChildren()
+			local tab = bedwars["BedTable"]
 			for i = 1, #tab do
 				local obj = tab[i]
 				if isAlive() then
-					if obj.Name == "bed" and (not obj.Name:match(lplr.Team.Name:lower())) and (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
-						bedwars["breakBlock"](obj.Position)
+					if obj then
+						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
+							print(obj.Covers.BrickColor)
+							bedwars["breakBlock"](obj.Position)
+						end
+					else
+						tab[i] = nil
 					end
 				end
 			end
