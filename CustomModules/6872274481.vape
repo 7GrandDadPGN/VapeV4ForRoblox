@@ -74,6 +74,15 @@ getfunctions = function()
 			if rawget(v, "kbDirectionStrength") then
 				bedwars["KnockbackTable"] = v
 			end
+			if rawget(v, "getItemMeta") then
+				bedwars["getIcon"] = function(item, showinv)
+					local itemmeta = v["getItemMeta"](item["itemType"])
+					if itemmeta and showinv then
+						return itemmeta.image
+					end
+					return ""
+				end
+			end
 			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
 				for i2,v2 in pairs(debug.getconstants(debug.getprotos(getmetatable(v["ShieldController"])["raiseShield"])[1])) do
 					if tostring(v2):match("-") or tostring(v2):match("UseShield") then
@@ -750,3 +759,152 @@ local NoFall = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Creat
 end, function()
 	bedwars["damageTable"]["requestSelfDamage"] = OldNoFallFunction
 end, true, function() return "" end, "Prevents taking fall damage.")
+
+local healthColorToPosition = {
+	[Vector3.new(Color3.fromRGB(255, 28, 0).r,
+  Color3.fromRGB(255, 28, 0).g,
+  Color3.fromRGB(255, 28, 0).b)] = 0.1;
+	[Vector3.new(Color3.fromRGB(250, 235, 0).r,
+  Color3.fromRGB(250, 235, 0).g,
+  Color3.fromRGB(250, 235, 0).b)] = 0.5;
+	[Vector3.new(Color3.fromRGB(27, 252, 107).r,
+  Color3.fromRGB(27, 252, 107).g,
+  Color3.fromRGB(27, 252, 107).b)] = 0.8;
+}
+local min = 0.1
+local minColor = Color3.fromRGB(255, 28, 0)
+local max = 0.8
+local maxColor = Color3.fromRGB(27, 252, 107)
+
+local function HealthbarColorTransferFunction(healthPercent)
+	if healthPercent < min then
+		return minColor
+	elseif healthPercent > max then
+		return maxColor
+	end
+
+
+	local numeratorSum = Vector3.new(0,0,0)
+	local denominatorSum = 0
+	for colorSampleValue, samplePoint in pairs(healthColorToPosition) do
+		local distance = healthPercent - samplePoint
+		if distance == 0 then
+			
+			return Color3.new(colorSampleValue.x, colorSampleValue.y, colorSampleValue.z)
+		else
+			local wi = 1 / (distance*distance)
+			numeratorSum = numeratorSum + wi * colorSampleValue
+			denominatorSum = denominatorSum + wi
+		end
+	end
+	local result = numeratorSum / denominatorSum
+	return Color3.new(result.x, result.y, result.z)
+end
+
+GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
+local NameTagsFolder = Instance.new("Folder")
+NameTagsFolder.Name = "NameTagsFolder"
+NameTagsFolder.Parent = GuiLibrary["MainGui"]
+players.PlayerRemoving:connect(function(plr)
+	if NameTagsFolder:FindFirstChild(plr.Name) then
+		NameTagsFolder[plr.Name]:Remove()
+	end
+end)
+local NameTagsColor = {["Value"] = 0.44}
+local NameTagsDisplayName = {["Enabled"] = false}
+local NameTagsHealth = {["Enabled"] = false}
+local NameTagsDistance = {["Enabled"] = false}
+local NameTagsShowInventory = {["Enabled"] = false}
+local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("NameTags", function() 
+	game:GetService("RunService"):BindToRenderStep("NameTags", 500, function()
+		for i,plr in pairs(players:GetChildren()) do
+				local thing
+				if NameTagsFolder:FindFirstChild(plr.Name) then
+					thing = NameTagsFolder[plr.Name]
+					thing.Visible = false
+				else
+					thing = Instance.new("TextLabel")
+					thing.BackgroundTransparency = 0.5
+					thing.BackgroundColor3 = Color3.new(0, 0, 0)
+					thing.BorderSizePixel = 0
+					thing.Visible = false
+					thing.RichText = true
+					thing.Name = plr.Name
+					thing.Font = (GuiLibrary["ObjectsThatCanBeSaved"]["VapeOptionsSmooth fontToggle"]["Api"]["Enabled"] and Enum.Font.SourceSans or Enum.Font.Sarpanch)
+					thing.TextSize = 14
+					if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
+						local rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+						if NameTagsHealth["Enabled"] then
+							rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name).." "..math.floor(plr.Character.Humanoid.Health)
+						end
+						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
+						local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+						thing.Text = modifiedText
+					else
+						local nametagSize = game:GetService("TextService"):GetTextSize(plr.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+						thing.Text = plr.Name
+					end
+					thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+					thing.Parent = NameTagsFolder
+					local hand = Instance.new("ImageLabel")
+					hand.Size = UDim2.new(0, 30, 0, 30)
+					hand.Name = "Hand"
+					hand.BackgroundTransparency = 1
+					hand.Position = UDim2.new(0, -30, 0, -30)
+					hand.Image = ""
+					hand.Parent = thing
+					local helmet = hand:Clone()
+					helmet.Name = "Helmet"
+					helmet.Position = UDim2.new(0, 5, 0, -30)
+					helmet.Parent = thing
+					local chest = hand:Clone()
+					chest.Name = "Chestplate"
+					chest.Position = UDim2.new(0, 35, 0, -30)
+					chest.Parent = thing
+					local boots = hand:Clone()
+					boots.Name = "Boots"
+					boots.Position = UDim2.new(0, 65, 0, -30)
+					boots.Parent = thing
+				end
+				
+				if isPlayerTargetable(plr, false, false) then
+					local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
+					headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
+					
+					if headVis then
+						local inventory = bedwars["getInventory"](plr)
+						local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
+						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
+						local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+						thing.Text = modifiedText
+						thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+						thing.Visible = headVis
+						thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
+						if inventory.hand then
+							thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
+						end
+						if inventory.armor[4] then
+							thing.Helmet.Image = bedwars["getIcon"](inventory.armor[4], NameTagsShowInventory["Enabled"])
+						end
+						if inventory.armor[5] then
+							thing.Chestplate.Image = bedwars["getIcon"](inventory.armor[5], NameTagsShowInventory["Enabled"])
+						end
+						if inventory.armor[6] then
+							thing.Boots.Image = bedwars["getIcon"](inventory.armor[6], NameTagsShowInventory["Enabled"])
+						end
+					end
+				end
+			end
+
+	end)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
+NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
+NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end)
+NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end)
+NameTagsDistance = NameTags.CreateToggle("Distance", function() end, function() end)
+NameTagsShowInventory = NameTags.CreateToggle("Show Inventory", function() end, function() end)
