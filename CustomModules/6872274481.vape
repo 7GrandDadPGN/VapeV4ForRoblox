@@ -30,6 +30,17 @@ local function getwool()
 	return "wool"
 end
 
+local function scanforbeds()
+	local blocktab = game.Workspace.Map.Blocks:GetChildren()
+	bedwars["BedTable"] = {}
+	for i = 1, #blocktab do
+		local obj = blocktab[i]
+		if obj.Name == "bed" and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
+			bedwars["BedTable"][#bedwars["BedTable"] + 1] = obj
+		end
+	end  
+end
+
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
 		if type(v) == "table" then
@@ -124,14 +135,10 @@ getfunctions = function()
 				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
-		local blocktab = game.Workspace.Map.Blocks:GetChildren()
-		bedwars["BedTable"] = {}
-		for i = 1, #blocktab do
-			local obj = blocktab[i]
-			if obj.Name == "bed" and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
-				bedwars["BedTable"][#bedwars["BedTable"] + 1] = obj
-			end
-		end  
+		spawn(function()
+			scanforbeds()
+			repeat wait(1) scanforbeds() until #bedwars["BedTable"] == (#game.Teams:GetChildren() - 2)
+		end)
 	else
 		wait(1)
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
@@ -409,6 +416,7 @@ local killauracframe = {["Enabled"] = false}
 local killauraautoblock = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauradelay = 0
+local Killauranear = false
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
 	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
 		local targettable = {}
@@ -416,6 +424,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		if (killauradelay <= tick()) then
 			local plr = GetNearestHumanoidToPosition(killaurarange["Value"], false)
 			if isAlive() and plr and plr.Character.PrimaryPart and lplr.Character.PrimaryPart and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
+				killauranear = true
 				if killauraautoblock["Enabled"] then
 					bedwars["raiseShield"]()
 				end
@@ -433,6 +442,8 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				targetsize = targetsize + 1
 				killauradelay = tick() + 0.1
 				bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(lplr.Character.Head.Position, plr.Character.Head.Position).Unit.Direction)	
+			else
+				killauranear = false
 			end
 			if getEquipped()["Type"] ~= "bow" then
 				targetinfo.UpdateInfo(targettable, targetsize)
@@ -493,7 +504,7 @@ local speedval = {["Value"] = 1}
 local speedmethod = {["Value"] = "AntiCheat A"}
 local speedjump = {["Enabled"] = false}
 local bodyvelo
-
+local Scaffold = {["Enabled"] = false}
 local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
 	game:GetService("RunService"):BindToRenderStep("Speed", 1, function(delta)
 		if isAlive() then
@@ -511,7 +522,7 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 				end
 				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
 			end
-			if speedjump["Enabled"] then
+			if speedjump["Enabled"] and killauranear and (not Scaffold["Enabled"]) then
 				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 					if speedmethod["Value"] == "AntiCheat A" then
 						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
@@ -643,7 +654,6 @@ flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 40, function(val) end)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
 flybuyballoon = fly.CreateToggle("Buy Balloons", function() end, function() end)
 
-local Scaffold = {["Enabled"] = false}
 local oldpos = Vector3.new(0, 0, 0)
 Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Scaffold", function()
 	game:GetService("RunService"):BindToRenderStep("Scaffold", 1, function(delta)

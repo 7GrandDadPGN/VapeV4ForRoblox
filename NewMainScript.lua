@@ -577,6 +577,7 @@ SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function()
 		end
 	end
 	shared.VapeExecuted = nil
+	shared.VapeSwitchServers = nil
 	shared.GuiLibrary = nil
 	GuiLibrary["KeyInputHandler"]:Disconnect()
 	GuiLibrary["KeyInputHandler2"]:Disconnect()
