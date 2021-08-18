@@ -416,33 +416,33 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			if #plrs <= 0 then
 				killauranear = false
 			end
-			if isAlive() and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
 				for i,plr in pairs(plrs) do
-					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
-						killauranear = true
-						if killauraautoblock["Enabled"] then
-							bedwars["raiseShield"]()
+					if isAlive() and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
+						if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
+							killauranear = true
+							if killauraautoblock["Enabled"] then
+								bedwars["raiseShield"]()
+							end
+							if killauracframe["Enabled"] then
+								lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+							end
+							if lplr.Character.Humanoid.SeatPart then
+								lplr.Character.Humanoid.SeatPart.CFrame = CFrame.new(lplr.Character.Humanoid.SeatPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.Humanoid.SeatPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
+							end
+							targettable[plr.Name] = {
+								["UserId"] = plr.UserId,
+								["Health"] = plr.Character.Humanoid.Health,
+								["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+							}
+							targetsize = targetsize + 1
+							killauradelay = tick() + 0.1
+							bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(lplr.Character.Head.Position, plr.Character.Head.Position).Unit.Direction)	
 						end
-						if killauracframe["Enabled"] then
-							lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
-						end
-						if lplr.Character.Humanoid.SeatPart then
-							lplr.Character.Humanoid.SeatPart.CFrame = CFrame.new(lplr.Character.Humanoid.SeatPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.Humanoid.SeatPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-						end
-						targettable[plr.Name] = {
-							["UserId"] = plr.UserId,
-							["Health"] = plr.Character.Humanoid.Health,
-							["MaxHealth"] = plr.Character.Humanoid.MaxHealth
-						}
-						targetsize = targetsize + 1
-						killauradelay = tick() + 0.1
-						bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(lplr.Character.Head.Position, plr.Character.Head.Position).Unit.Direction)	
 					end
 				end
 				if getEquipped()["Type"] ~= "bow" then
 					targetinfo.UpdateInfo(targettable, targetsize)
 				end
-			end
 		end
 	end)
 end, function() 
