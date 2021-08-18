@@ -412,31 +412,36 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		local targettable = {}
 		local targetsize = 0
 		if (killauradelay <= tick()) then
-			local plr = GetNearestHumanoidToPosition(killaurarange["Value"], false)
-			if isAlive() and plr and plr.Character.PrimaryPart and lplr.Character.PrimaryPart and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
-				killauranear = true
-				if killauraautoblock["Enabled"] then
-					bedwars["raiseShield"]()
-				end
-				if killauracframe["Enabled"] then
-					lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
-				end
-				if lplr.Character.Humanoid.SeatPart then
-					lplr.Character.Humanoid.SeatPart.CFrame = CFrame.new(lplr.Character.Humanoid.SeatPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.Humanoid.SeatPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-				end
-				targettable[plr.Name] = {
-					["UserId"] = plr.UserId,
-					["Health"] = plr.Character.Humanoid.Health,
-					["MaxHealth"] = plr.Character.Humanoid.MaxHealth
-				}
-				targetsize = targetsize + 1
-				killauradelay = tick() + 0.1
-				bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(lplr.Character.Head.Position, plr.Character.Head.Position).Unit.Direction)	
-			else
+			local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"], 100)
+			if #plrs <= 0 then
 				killauranear = false
 			end
-			if getEquipped()["Type"] ~= "bow" then
-				targetinfo.UpdateInfo(targettable, targetsize)
+			if isAlive() and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
+				for i,plr in pairs(plrs) do
+					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
+						killauranear = true
+						if killauraautoblock["Enabled"] then
+							bedwars["raiseShield"]()
+						end
+						if killauracframe["Enabled"] then
+							lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+						end
+						if lplr.Character.Humanoid.SeatPart then
+							lplr.Character.Humanoid.SeatPart.CFrame = CFrame.new(lplr.Character.Humanoid.SeatPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.Humanoid.SeatPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
+						end
+						targettable[plr.Name] = {
+							["UserId"] = plr.UserId,
+							["Health"] = plr.Character.Humanoid.Health,
+							["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+						}
+						targetsize = targetsize + 1
+						killauradelay = tick() + 0.1
+						bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(lplr.Character.Head.Position, plr.Character.Head.Position).Unit.Direction)	
+					end
+				end
+				if getEquipped()["Type"] ~= "bow" then
+					targetinfo.UpdateInfo(targettable, targetsize)
+				end
 			end
 		end
 	end)
@@ -558,6 +563,8 @@ local flybuyballoon = {["Enabled"] = false}
 local olddeflate
 local flyposy = 0
 local flyrequests = 0
+local flytime = 60
+local flylimit = false
 local flyup = false
 local flydown = false
 local flypress
@@ -587,30 +594,51 @@ bedwars["Client"]:WaitFor("BalloonPopped"):andThen(function(p6)
 		buyballoons()
 	end)
 end)
+
 fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
 	if flymethod["Value"] == "Balloons" then
 		olddeflate = bedwars["BalloonController"]["deflateBalloon"]
 		bedwars["BalloonController"]["deflateBalloon"] = function() end
 	end
 	if flymethod["Value"] == "Damage" then
-		flyrequests = 0
 		spawn(function()
+			if flylimit == false then
+				spawn(function()
+					flylimit = true
+					repeat
+						for i3 = 60, 1, -1 do
+							flytime = i3
+							wait(1)
+						end
+						flyrequests = 0
+					until true == false or shared.VapeExecuted == nil
+				end)
+			end
 			repeat
-				wait(0.7)
-				flyrequests = flyrequests + 1
-				if OldNoFallFunction then
-					OldNoFallFunction(bedwars["damageTable"], 1, 1, "mullet")
-				else
-					bedwars["damageTable"]["requestSelfDamage"](bedwars["damageTable"], 1, 1, "mullet")
-				end
-				if flyrequests >= 20 then
+				if flyrequests >= 30 then
 					pcall(function()
-						local frame = GuiLibrary["CreateNotification"]("Fly Stopped", "Request limit reached!", 4, "⚠️")
+						local frame = GuiLibrary["CreateNotification"]("Fly Stopped", "Please wait "..flytime.." seconds.", 4, "⚠️")
 						frame.Frame.BackgroundColor3 = Color3.fromRGB(218, 134, 75)
 						frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(218, 134, 75)
 					end)
 				end
-			until flyrequests >= 20 or (not fly["Enabled"])
+				wait(0.7)
+				if flyrequests < 30 then
+					flyrequests = flyrequests + 1
+					if OldNoFallFunction then
+						OldNoFallFunction(bedwars["damageTable"], 1, 1, "mullet")
+					else
+						bedwars["damageTable"]["requestSelfDamage"](bedwars["damageTable"], 1, 1, "mullet")
+					end
+					if flyrequests >= 30 then
+						pcall(function()
+							local frame = GuiLibrary["CreateNotification"]("Fly Stopped", "Please wait "..flytime.." seconds.", 4, "⚠️")
+							frame.Frame.BackgroundColor3 = Color3.fromRGB(218, 134, 75)
+							frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(218, 134, 75)
+						end)
+					end
+				end
+			until flyrequests >= 30 or (not fly["Enabled"])
 		end)
 	end
 	if isAlive() then
@@ -637,14 +665,14 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 	end)
 	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
 		if isAlive() then
-			if (flymethod["Value"] == "Balloons" and (lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0)) or (flymethod["Value"] == "Damage" and flyrequests < 20) then
+			if (flymethod["Value"] == "Balloons" and (lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0)) or (flymethod["Value"] == "Damage") then
 				if flyup then
-					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta * (flymethod["Value"] == "Damage" and ((flyrequests < 30 and 1.2 or 0) or 1))))
 				end
 				if flydown then
-					flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+					flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta * (flymethod["Value"] == "Damage" and ((flyrequests < 30 and 1.2 or 0) or 1))))
 				end
-				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta * (flymethod["Value"] == "Damage" and 1.2 or 1)))
+				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta * (flymethod["Value"] == "Damage" and ((flyrequests < 30 and 1.4 or 0) or 1))))
 				lplr.Character.HumanoidRootPart.Transparency = 1
 				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
@@ -666,7 +694,7 @@ end, function()
 		bedwars["BalloonController"]["deflateBalloon"] = olddeflate
 		olddeflate = nil
 	else
-		flyrequests = 0
+
 	end
 end, true, function() return " BedWars" end, "Makes you go zoom (Can Automatically Buy) (Balloon Required)")
 flymethod = fly.CreateDropdown("Mode", {"Balloons", "Damage"}, function(val)
