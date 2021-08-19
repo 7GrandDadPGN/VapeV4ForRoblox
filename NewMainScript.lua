@@ -15,7 +15,8 @@ local function GetURL(scripturl)
 end
 
 local getasset = getsynasset or getcustomasset
-local request = syn and syn.request or http and http.request
+local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport
+local request = syn and syn.request or http and http.request or http_request
 local function getcustomassetfunc(path)
 	if not isfile(path) then
 		local req = request({
@@ -28,7 +29,7 @@ local function getcustomassetfunc(path)
 end
 
 local function checkpublicrepo(id)
-	local req = syn.request({
+	local req = request({
 		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".vape",
 		Method = "GET"
 	})
@@ -38,7 +39,7 @@ local function checkpublicrepo(id)
 	return nil
 end
 
-if not (getasset and request) then
+if not (getasset and request and queueteleport) then
 	print("Vape not supported with your exploit.")
 	return
 end
@@ -561,7 +562,7 @@ GUI.CreateToggle("Notifications", function() GuiLibrary["ToggleNotifications"] =
 
 local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
-        syn.queue_on_teleport('shared.VapeSwitchServers = true if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end')
+        queueteleport('shared.VapeSwitchServers = true if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end')
     end
 end)
 
