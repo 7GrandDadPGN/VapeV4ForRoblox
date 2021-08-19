@@ -438,6 +438,8 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							killauradelay = tick() + 0.1
 							bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(lplr.Character.Head.Position, plr.Character.Head.Position).Unit.Direction)	
 						end
+					else
+						killauranear = false
 					end
 				end
 				if getEquipped()["Type"] ~= "bow" then
