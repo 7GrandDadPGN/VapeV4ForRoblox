@@ -2,7 +2,7 @@ local VERSION = "v4.06"
 local rainbowvalue = 0
 local cam = game:GetService("Workspace").CurrentCamera
 local getasset = getsynasset or getcustomasset
-local request = syn and syn.request or http and http.request
+local request = syn and syn.request or http and http.request or http_request
 local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 local api = {
 	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
