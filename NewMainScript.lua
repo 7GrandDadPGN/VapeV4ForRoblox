@@ -1,10 +1,4 @@
 repeat wait() until game:IsLoaded() == true
-if shared.VapeExecuted then
-	error("Vape Already Injected")
-	return
-else
-	shared.VapeExecuted = true
-end
 
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
@@ -42,6 +36,13 @@ end
 if not (getasset and request and queueteleport) then
 	print("Vape not supported with your exploit.")
 	return
+end
+
+if shared.VapeExecuted then
+	error("Vape Already Injected")
+	return
+else
+	shared.VapeExecuted = true
 end
 
 if isfolder("vape") == false then
