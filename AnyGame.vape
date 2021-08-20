@@ -508,12 +508,12 @@ local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Cre
 	game:GetService("RunService"):BindToRenderStep("LongJump", 1, function() 
 		if isAlive() then
 			if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-				lplr.Character.HumanoidRootPart.Velocity = lplr.Character.HumanoidRootPart.Velocity + lplr.Character.Humanoid.MoveDirection * (longjumpboost["Value"] / 2.5)
+				lplr.Character.HumanoidRootPart.Velocity = lplr.Character.HumanoidRootPart.Velocity + lplr.Character.Humanoid.MoveDirection * (longjumpboost["Value"])
 			end
 		end
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("LongJump") end, true, function() return "" end, true)
-longjumpboost = longjump.CreateSlider("Boost", 1, 5, function(val) end)
+longjumpboost = longjump.CreateSlider("Boost", 1, 150, function(val) end)
 
 local speedval = {["Value"] = 1}
 local speedmethod = {["Value"] = "AntiCheat A"}

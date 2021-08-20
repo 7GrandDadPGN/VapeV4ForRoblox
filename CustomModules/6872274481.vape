@@ -398,6 +398,7 @@ local function scaffoldBlock(newpos)
     bedwars["placeBlock"](newpos)
 end
 
+GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 local killaurarange = {["Value"] = 1}
 local killauraangle = {["Value"] = 90}
