@@ -11,6 +11,7 @@ local mouse = lplr:GetMouse()
 local robloxfriends = {}
 local bedwars = {}
 local getfunctions
+local origC0 = nil
 
 local function getItem(itemName)
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
@@ -74,6 +75,9 @@ getfunctions = function()
 			if rawget(v, "kbDirectionStrength") then
 				bedwars["KnockbackTable"] = v
 			end
+			if rawget(v, "ViewmodelController") then
+				bedwars["ViewmodelController"] = v["ViewmodelController"]
+			end
 			if rawget(v, "getItemMeta") then
 				bedwars["getIcon"] = function(item, showinv)
 					local itemmeta = v["getItemMeta"](item["itemType"])
@@ -100,9 +104,6 @@ getfunctions = function()
 						bedwars["GuitarRemote"] = v2
 					end
 				end
-			end
-			if rawget(v, "ViewmodelController") then
-				bedwars["assetTable"] = debug.getupvalues(debug.getupvalues(getrawmetatable(v["ViewmodelController"])["playAnimation"])[1])[2]
 			end
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
@@ -136,7 +137,7 @@ getfunctions = function()
 		end
 	end
 
-	if bedwars["assetTable"] and bedwars["PlayerUtil"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"] then
+	if (bedwars["PlayerUtil"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or shared.VapeExecuted == false then
 		repeat wait() until lplr.Team ~= nil
 		bedwars["placeBlock"] = function(newpos)
 			local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
@@ -408,7 +409,30 @@ local killauraautoblock = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauradelay = 0
 local Killauranear = false
+local killauraplaying = false
+local oldplay = function() end
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
+	oldplay = bedwars["ViewmodelController"]["playAnimation"]
+	bedwars["ViewmodelController"]["playAnimation"] = function(Self, id, ...)
+		if id == 5 and killauranear and killauraautoblock["Enabled"] and isAlive() then
+			pcall(function()
+				if origC0 == nil then
+					origC0 = cam.Viewmodel.RightHand.RightWrist.C0
+				end
+				if killauraplaying == false then
+					killauraplaying = true
+					game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(55), -math.rad(70))}):Play()
+					wait(0.05)
+					game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(105), -math.rad(70))}):Play()
+					wait(0.05)
+					killauraplaying = false
+				end
+			end)
+			return nil
+		else
+			return oldplay(Self, id, ...)
+		end
+	end
 	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
 		local targettable = {}
 		local targetsize = 0
@@ -416,6 +440,12 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"], 100)
 			if #plrs <= 0 then
 				killauranear = false
+				pcall(function()
+					if origC0 == nil then
+						origC0 = cam.Viewmodel.RightHand.RightWrist.C0
+					end
+					cam.Viewmodel.RightHand.RightWrist.C0 = origC0
+				end)
 			end
 				for i,plr in pairs(plrs) do
 					if isAlive() and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
@@ -441,6 +471,12 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						end
 					else
 						killauranear = false
+						pcall(function()
+							if origC0 == nil then
+								origC0 = cam.Viewmodel.RightHand.RightWrist.C0
+							end
+							cam.Viewmodel.RightHand.RightWrist.C0 = origC0
+						end)
 					end
 				end
 				if getEquipped()["Type"] ~= "bow" then
@@ -449,6 +485,12 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		end
 	end)
 end, function() 
+	killauranear = false
+	bedwars["ViewmodelController"]["playAnimation"] = oldplay
+	oldplay = nil
+	pcall(function()
+		cam.Viewmodel.RightHand.RightWrist.C0 = origC0
+	end)
 	game:GetService("RunService"):UnbindFromRenderStep("Killaura") 
 end, true, function()
 	return " BedWars"
@@ -471,7 +513,6 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				if isAlive() then
 					if obj then
 						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
-							print(obj.Covers.BrickColor)
 							bedwars["breakBlock"](obj.Position)
 						end
 					else
