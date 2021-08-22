@@ -406,6 +406,7 @@ local killauraangle = {["Value"] = 90}
 local killauramouse = {["Enabled"] = false}
 local killauracframe = {["Enabled"] = false}
 local killauraautoblock = {["Enabled"] = false}
+local killauragui = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauradelay = 0
 local Killauranear = false
@@ -448,7 +449,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				end)
 			end
 				for i,plr in pairs(plrs) do
-					if isAlive() and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
+					if isAlive() and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 						if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 							killauranear = true
 							if killauraautoblock["Enabled"] then
@@ -495,11 +496,12 @@ end, function()
 end, true, function()
 	return " BedWars"
 end, "Attack players around you\nwithout aiming at them.")
-killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end)
-killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
-killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end)
-killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
+killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 14)
+killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 360)
 killauraautoblock = Killaura.CreateToggle("AutoBlock", function() end, function() end)
+killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end)
+killauragui = Killaura.CreateToggle("GUI Check", function() end, function() end)
+killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
 
 local bednukerrange = {["Value"] = 1}
 local BedNuker = {["Enabled"] = false}
@@ -512,7 +514,7 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				local obj = tab[i]
 				if isAlive() then
 					if obj then
-						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
+						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
 							bedwars["breakBlock"](obj.Position)
 						end
 					else
