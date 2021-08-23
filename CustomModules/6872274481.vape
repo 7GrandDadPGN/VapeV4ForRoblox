@@ -450,7 +450,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					if origC0 == nil then
 						origC0 = cam.Viewmodel.RightHand.RightWrist.C0
 					end
-					cam.Viewmodel.RightHand.RightWrist.C0 = origC0
+					if cam.Viewmodel.RightHand.RightWrist.C0 ~= origC0 then
+						game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0}):Play()
+					end
 				end)
 			end
 				for i,plr in pairs(plrs) do
@@ -458,7 +460,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 							killauranear = true
 							if killauraautoblock["Enabled"] then
-								bedwars["raiseShield"]()
+								spawn(bedwars["raiseShield"])
 							end
 							if killauracframe["Enabled"] then
 								lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
@@ -481,7 +483,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							if origC0 == nil then
 								origC0 = cam.Viewmodel.RightHand.RightWrist.C0
 							end
-							cam.Viewmodel.RightHand.RightWrist.C0 = origC0
+							if cam.Viewmodel.RightHand.RightWrist.C0 ~= origC0 then
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0}):Play()
+							end
 						end)
 					end
 				end
