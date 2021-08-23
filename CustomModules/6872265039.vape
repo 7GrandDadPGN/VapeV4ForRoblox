@@ -1,0 +1,66 @@
+-- Credits to Inf Yield & all the other scripts that helped me make bypasses
+local GuiLibrary = shared.GuiLibrary
+local players = game:GetService("Players")
+local lplr = players.LocalPlayer
+local workspace = game:GetService("Workspace")
+local lighting = game:GetService("Lighting")
+local cam = workspace.CurrentCamera
+local targetinfo = shared.VapeTargetInfo
+local uis = game:GetService("UserInputService")
+local mouse = lplr:GetMouse()
+local robloxfriends = {}
+local bedwars = {}
+local getfunctions
+local origC0 = nil
+
+getfunctions = function()
+	for i,v in pairs(getgc(true)) do
+		if type(v) == "table" then
+			if rawget(v, "Client") and bedwars["Client"] == nil then
+				bedwars["Client"] = v.Client
+			end
+			if rawget(v, "ClientStore") and bedwars["ClientStore"] == nil then
+				bedwars["ClientStore"] = v.ClientStore
+			end
+			for i2,v2 in pairs(v) do
+				if tostring(i2):match("sprinting") and type(v2) == "boolean" then
+					bedwars["sprintTable"] = v
+				  end
+			end
+		end
+	end
+
+	if (bedwars["Client"] and bedwars["ClientStore"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
+
+	else
+		wait(1)
+	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
+		getfunctions()
+	end
+end
+getfunctions()
+
+local Sprint = {["Enabled"] = false}
+Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Sprint", function()
+	spawn(function()
+		repeat
+			wait()
+			if bedwars["sprintTable"].sprinting == false then
+				getmetatable(bedwars["sprintTable"])["startSprinting"](bedwars["sprintTable"])
+			end
+		until Sprint["Enabled"] == false
+	end)
+end, function() end, true, function() return "" end, "Sets your sprinting to true")
+
+local QueueTypes = {}
+for i,v in pairs(workspace.Lobby.Queues:GetChildren()) do table.insert(QueueTypes, v.Name) end
+local JoinQueue = {["Enabled"] = false}
+local JoinQueueTypes = {["Value"] = QueueTypes[1]}
+JoinQueue = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoQueue", function()
+	if bedwars["ClientStore"]:getState().Party.leader.userId == lplr.UserId and bedwars["Client"]:Get("JoinQueue"):CallServer({
+		queueType = JoinQueueTypes["Value"]
+	}) then end
+end, function()
+	bedwars["Client"]:Get("LeaveQueue"):CallServer();
+end, true)
+JoinQueueTypes = JoinQueue.CreateDropdown("Mode", QueueTypes, function(val) end)
