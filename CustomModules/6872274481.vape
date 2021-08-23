@@ -12,6 +12,7 @@ local robloxfriends = {}
 local bedwars = {}
 local getfunctions
 local origC0 = nil
+local matchState = 0
 
 local function getItem(itemName)
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
@@ -154,6 +155,14 @@ getfunctions = function()
 			scanforbeds()
 			repeat wait(1) scanforbeds() until #bedwars["BedTable"] == (#game.Teams:GetChildren() - 2)
 		end)
+		bedwars["ClientStore"].changed:connect(function(p3, p4)
+			if p3.Game ~= p4.Game then
+				if p3.Game.matchState ~= p4.Game.matchState then
+					matchState = p3.Game.matchState
+				end
+			end
+		end)
+		matchState = bedwars["ClientStore"]:getState().Game.matchState
 	else
 		wait(1)
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
@@ -347,7 +356,7 @@ local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
 	game:GetService("RunService"):BindToRenderStep("AutoClicker", 1, function() 
-		if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and getEquipped()["Type"] == "sword" and bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false then
+		if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and getEquipped()["Type"] == "sword" and bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
 			bedwars["SwingSword"](bedwars["SwordController"])
 			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
 		end
@@ -442,7 +451,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
 		local targettable = {}
 		local targetsize = 0
-		if (killauradelay <= tick()) then
+		if (killauradelay <= tick()) and matchState ~= 0 then
 			local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"], 100)
 			if #plrs <= 0 then
 				killauranear = false
@@ -557,7 +566,7 @@ local bodyvelo
 local Scaffold = {["Enabled"] = false}
 local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
 	game:GetService("RunService"):BindToRenderStep("Speed", 1, function(delta)
-		if isAlive() then
+		if isAlive() and matchState ~= 0 then
 			if speedmethod["Value"] == "AntiCheat A" then
 				if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
 					bodyvelo = Instance.new("BodyVelocity")
@@ -719,7 +728,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 		end
 	end)
 	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
-		if isAlive() then
+		if isAlive() and matchState ~= 0 then
 			if (flymethod["Value"] == "Balloons" and (lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0)) or (flymethod["Value"] == "Damage") then
 				if flyup then
 					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta * (flymethod["Value"] == "Damage" and ((flyrequests < 30 and 1.2 or 0) or 1))))
