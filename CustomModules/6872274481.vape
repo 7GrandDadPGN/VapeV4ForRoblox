@@ -28,7 +28,7 @@ local function getwool()
 			return v5["itemType"]
 		end
 	end
-	return "wool"
+	return nil
 end
 
 local function scanforbeds()
@@ -139,10 +139,15 @@ getfunctions = function()
 
 	if (bedwars["PlayerUtil"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or shared.VapeExecuted == false then
 		repeat wait() until lplr.Team ~= nil
+		local blocktable
 		bedwars["placeBlock"] = function(newpos)
-			local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
-			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
-				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
+			if blocktable == nil and getwool() then
+				blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
+			end
+			if blocktable then
+				if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
+					bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
+				end
 			end
 		end
 		spawn(function()
@@ -753,20 +758,48 @@ flybuyballoon = fly.CreateToggle("Buy Balloons", function() end, function() end)
 
 
 local oldpos = Vector3.new(0, 0, 0)
+local oldpos2 = Vector3.new(0, 0, 0)
+local ScaffoldExpand = {["Value"] = 1}
+local ScaffoldBuyBlocks = {["Enabled"] = false}
+local scaffoldallowed = true
+
+local function buyblocks()
+	if ScaffoldBuyBlocks["Enabled"] and getwool() == nil and scaffoldallowed == true then
+		scaffoldallowed = false
+		bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+			shopItem = {
+				["currency"] = "iron",
+				["itemType"] = "wool_white",
+				["amount"] = 16,
+				["price"] = 8,
+			}
+		}):andThen(function(p11)
+			scaffoldallowed = true
+		end)
+	end
+end
+
 Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Scaffold", function()
 	game:GetService("RunService"):BindToRenderStep("Scaffold", 1, function(delta)
 		if isAlive() then
-			local newpos = getScaffold((lplr.Character.Head.Position + (lplr.Character.Humanoid.MoveDirection * 3.5)) + Vector3.new(0, -6, 0))
-			if newpos ~= oldpos then
-				local block = scaffoldBlock(newpos)
-				oldpos = newpos
+			for i = 1, ScaffoldExpand["Value"] do
+				local newpos = getScaffold((lplr.Character.Head.Position + (lplr.Character.Humanoid.MoveDirection * (i * 3.5))) + Vector3.new(0, -6, 0))
+				if newpos ~= oldpos then
+					buyblocks()
+					scaffoldBlock(newpos)
+					oldpos = newpos
+				end
 			end
 		end
 	end)
 end, function()
 	game:GetService("RunService"):UnbindFromRenderStep("Scaffold")
+	scaffoldallowed = true
 	oldpos = Vector3.new(0, 0, 0)
+	oldpos2 = Vector3.new(0, 0, 0)
 end, true)
+ScaffoldExpand = Scaffold.CreateSlider("Expand", 1, 8, function(val) end, 1)
+ScaffoldBuyBlocks = Scaffold.CreateToggle("Buy Blocks", function() end, function() end)
 
 local AutoToxic = {["Enabled"] = false}
 local AutoToxicGG = {["Enabled"] = false}
