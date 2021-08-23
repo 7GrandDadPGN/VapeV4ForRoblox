@@ -674,7 +674,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 					end)
 				end
 				wait(0.7)
-				if flyrequests < 30 then
+				if flyrequests < 30 and fly["Enabled"] then
 					flyrequests = flyrequests + 1
 					if OldNoFallFunction then
 						OldNoFallFunction(bedwars["damageTable"], 1, 1, "mullet")
@@ -763,29 +763,25 @@ local ScaffoldExpand = {["Value"] = 1}
 local ScaffoldBuyBlocks = {["Enabled"] = false}
 local scaffoldallowed = true
 
-local function buyblocks()
-	if ScaffoldBuyBlocks["Enabled"] and getwool() == nil and scaffoldallowed == true then
-		scaffoldallowed = false
-		bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-			shopItem = {
-				["currency"] = "iron",
-				["itemType"] = "wool_white",
-				["amount"] = 16,
-				["price"] = 8,
-			}
-		}):andThen(function(p11)
-			scaffoldallowed = true
-		end)
-	end
-end
-
 Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Scaffold", function()
 	game:GetService("RunService"):BindToRenderStep("Scaffold", 1, function(delta)
 		if isAlive() then
 			for i = 1, ScaffoldExpand["Value"] do
 				local newpos = getScaffold((lplr.Character.Head.Position + (lplr.Character.Humanoid.MoveDirection * (i * 3.5))) + Vector3.new(0, -6, 0))
 				if newpos ~= oldpos then
-					buyblocks()
+					if ScaffoldBuyBlocks["Enabled"] and getwool() == nil and scaffoldallowed == true then
+						scaffoldallowed = false
+						bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+							shopItem = {
+								["currency"] = "iron",
+								["itemType"] = "wool_white",
+								["amount"] = 16,
+								["price"] = 8,
+							}
+						}):andThen(function(p11)
+							scaffoldallowed = true
+						end)
+					end
 					scaffoldBlock(newpos)
 					oldpos = newpos
 				end
