@@ -254,8 +254,13 @@ local function getEquipped()
     return {["Object"] = obj, ["Type"] = type}
 end
 
+local function nakedcheck(plr)
+	local inventory = bedwars["getInventory"](plr)
+	return inventory["armor"][4] ~= nil and inventory["armor"][5] ~= nil and inventory["armor"][6] ~= nil
+end
+
 local function isPlayerTargetable(plr, target, friend, team)
-    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and isAlive(plr) and targetCheck(plr, target) and ((team and plr.Team == lplr.Team) or (team == nil and shared.vapeteamcheck(plr)))
+    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and isAlive(plr) and targetCheck(plr, target) and (GuiLibrary["ObjectsThatCanBeSaved"]["Ignore nakedToggle"]["Api"]["Enabled"] and nakedcheck(plr) or GuiLibrary["ObjectsThatCanBeSaved"]["Ignore nakedToggle"]["Api"]["Enabled"] == false) and ((team and plr.Team == lplr.Team) or (team == nil and shared.vapeteamcheck(plr)))
 end
 
 local function vischeck(pos, pos2, ignore)
