@@ -194,6 +194,10 @@ textlabel.BackgroundTransparency = 1
 textlabel.TextColor3 = Color3.new(1, 1, 1)
 textlabel.TextStrokeTransparency = 0
 textlabel.Parent = GuiLibrary["MainGui"]
+spawn(function()
+	wait(10)
+	textlabel:Remove()
+end)
 
 local function friendCheck(plr)
 	if not robloxfriends[plr.UserId] then
