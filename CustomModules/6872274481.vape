@@ -447,16 +447,6 @@ local function scaffoldBlock(newpos)
     bedwars["placeBlock"](newpos)
 end
 
-local swords = {
-	["wood_sword"] = "stone_sword",
-	["stone_sword"] = "iron_sword",
-	["iron_sword"] = "diamond_sword",
-	["diamond_sword"] = "emerald_sword"
-}
-local AutoBuy = {["Enabled"] = false}
-local AutoBuyArmor = {["Enabled"] = false}
-local AutoBuySword = {["Enabled"] = false}
-
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 local killaurarange = {["Value"] = 1}
