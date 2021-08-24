@@ -444,10 +444,9 @@ local AutoBuySword = {["Enabled"] = false}
 bedwars["Client"]:Get("PickupItemEvent"):Connect(function(p6)
 	if AutoBuy["Enabled"] then
 		local ExecuteInventory = bedwars["getInventory"](lplr)
-		local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or "LEATHER_CHESTPLATE"
+		local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (ExecuteInventory.armor[5] == nil and "leather_chestplate")
 		local NextSword = getSword() and swords[getSword().itemType]
-		print(getSword().itemType)
-		if AutoBuyArmor["Enabled"] and ExecuteInventory.armor[5] ~= "EMERALD_CHESTPLATE" then
+		if AutoBuyArmor["Enabled"] and NextArmor then
 			local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
 			local NextArmorCurrency = getItem(NextArmorTable["currency"])
 			if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
