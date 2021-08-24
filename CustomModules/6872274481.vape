@@ -23,6 +23,16 @@ local function getItem(itemName)
 	return nil
 end
 
+local function getSword()
+	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
+		if v5["itemType"]:find("sword") or v5["itemType"]:find("blade") then
+			return v5
+		end
+	end
+	return nil
+end
+
+
 local function getwool()
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
 		if v5["itemType"]:match("wool") then
@@ -42,6 +52,16 @@ local function scanforbeds()
 		end
 	end  
 end
+
+local textlabel = Instance.new("TextLabel")
+textlabel.Text = 'Vape has been "fixed", please report any bans to the discord.\nMake sure to use alts'
+textlabel.Size = UDim2.new(1, 0, 0, 36)
+textlabel.Position = UDim2.new(0, 0, 0, -36)
+textlabel.TextSize = 20
+textlabel.BackgroundTransparency = 1
+textlabel.TextColor3 = Color3.new(1, 1, 1)
+textlabel.TextStrokeTransparency = 0
+textlabel.Parent = GuiLibrary["MainGui"]
 
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
@@ -78,6 +98,9 @@ getfunctions = function()
 			end
 			if rawget(v, "ViewmodelController") then
 				bedwars["ViewmodelController"] = v["ViewmodelController"]
+			end
+			if rawget(v, "BedwarsShop") then
+				bedwars["Shop"] = v["BedwarsShop"]
 			end
 			if rawget(v, "getItemMeta") then
 				bedwars["getIcon"] = function(item, showinv)
@@ -138,7 +161,7 @@ getfunctions = function()
 		end
 	end
 
-	if (bedwars["PlayerUtil"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
+	if (bedwars["PlayerUtil"] and bedwars["Shop"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
 		repeat wait() until lplr.Team ~= nil
 		local blocktable
 		bedwars["placeBlock"] = function(newpos)
@@ -159,6 +182,9 @@ getfunctions = function()
 			if p3.Game ~= p4.Game then
 				if p3.Game.matchState ~= p4.Game.matchState then
 					matchState = p3.Game.matchState
+					if textlabel and matchState ~= 1 then
+						textlabel:Remove()
+					end
 				end
 			end
 		end)
@@ -184,20 +210,6 @@ bedwars["breakBlock"] = function(pos)
         ["hitNormal"] = Vector3.new(1, 0, 0)
     })
 end	
-
-local textlabel = Instance.new("TextLabel")
-textlabel.Text = 'Vape has been "fixed", please report any bans to the discord.\nMake sure to use alts'
-textlabel.Size = UDim2.new(1, 0, 0, 36)
-textlabel.Position = UDim2.new(0, 0, 0, -36)
-textlabel.TextSize = 20
-textlabel.BackgroundTransparency = 1
-textlabel.TextColor3 = Color3.new(1, 1, 1)
-textlabel.TextStrokeTransparency = 0
-textlabel.Parent = GuiLibrary["MainGui"]
-spawn(function()
-	wait(10)
-	textlabel:Remove()
-end)
 
 local function friendCheck(plr)
 	if not robloxfriends[plr.UserId] then
@@ -228,13 +240,13 @@ local function getEquipped()
 	local type = ""
 	local obj = (isAlive() and lplr.Character:FindFirstChild("HandInvItem") and lplr.Character.HandInvItem.Value or nil)
 	if obj then
-		if obj.Name:match("sword") then
+		if obj.Name:find("sword") or obj.Name:find("blade") then
 			type = "sword"
 		end
-		if obj.Name:match("wool") then
+		if obj.Name:find("wool") then
 			type = "block"
 		end
-		if obj.Name:match("bow") then
+		if obj.Name:find("bow") then
 			type = "bow"
 		end
 	end
@@ -431,6 +443,49 @@ end
 local function scaffoldBlock(newpos)
     bedwars["placeBlock"](newpos)
 end
+
+local swords = {
+	["wood_sword"] = "stone_sword",
+	["stone_sword"] = "iron_sword",
+	["iron_sword"] = "diamond_sword",
+	["diamond_sword"] = "emerald_sword"
+}
+local AutoBuy = {["Enabled"] = false}
+local AutoBuyArmor = {["Enabled"] = false}
+local AutoBuySword = {["Enabled"] = false}
+bedwars["Client"]:Get("PickupItemEvent"):Connect(function(p6)
+	if AutoBuy["Enabled"] then
+		local ExecuteInventory = bedwars["getInventory"](lplr)
+		local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or "LEATHER_CHESTPLATE"
+		local NextSword = getSword() and swords[getSword().itemType]
+		print(getSword().itemType)
+		if AutoBuyArmor["Enabled"] and ExecuteInventory.armor[5] ~= "EMERALD_CHESTPLATE" then
+			local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
+			local NextArmorCurrency = getItem(NextArmorTable["currency"])
+			if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
+				bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+					shopItem = bedwars["Shop"].getShopItem(NextArmor)
+				}):andThen(function(p11)
+					NextArmor = NextArmorTable["nextTier"]
+				end)
+			end
+		end
+		if AutoBuySword["Enabled"] and NextSword then
+			local NextSwordTable = bedwars["Shop"].getShopItem(NextSword)
+			local NextSwordCurrency = getItem(NextSwordTable["currency"])
+			if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
+				bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+					shopItem = bedwars["Shop"].getShopItem(NextSword)
+				}):andThen(function(p11)
+					NextSword = swords[NextSwordTable["itemType"]]
+				end)
+			end
+		end
+	end
+end)
+AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", function() end, function() end, true)
+AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
+AutoBuySword = AutoBuy.CreateToggle("Buy Sword", function() end, function() end, true)
 
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
@@ -657,14 +712,8 @@ local flyendpress
 local function buyballoons()
 	if isAlive() and fly["Enabled"] and flymethod["Value"] == "Balloons" then
 		if getItem("balloon") == nil and flybuyballoon["Enabled"] then
-			game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.BedwarsPurchaseItem:InvokeServer({
-				["shopItem"] = {
-					["currency"] = "emerald",
-					["itemType"] = "balloon",
-					["amount"] = 3,
-					["price"] = 2,
-					["limitedTimeItem"] = true
-				}
+			bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+				shopItem = bedwars["Shop"].getShopItem("balloon")
 			})
 		end
 		if getItem("balloon") then
@@ -764,12 +813,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					if ScaffoldBuyBlocks["Enabled"] and getwool() == nil and scaffoldallowed == true then
 						scaffoldallowed = false
 						bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-							shopItem = {
-								["currency"] = "iron",
-								["itemType"] = "wool_white",
-								["amount"] = 16,
-								["price"] = 8,
-							}
+							shopItem = bedwars["Shop"].getShopItem("WOOL_WHITE")
 						}):andThen(function(p11)
 							scaffoldallowed = true
 						end)
@@ -985,9 +1029,10 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 					
 					if headVis then
 						local inventory = bedwars["getInventory"](plr)
-						local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
+						local blocksaway = math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude / 3)
+						local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..blocksaway.."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-						local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+						local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..blocksaway..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 						thing.Text = modifiedText
