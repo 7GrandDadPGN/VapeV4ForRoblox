@@ -760,7 +760,7 @@ end, function()
 	else
 
 	end
-end, true, function() return " BedWars" end, "Makes you go zoom (Can Automatically Buy) (Balloon Required)")
+end, true, function() return " BedWars" end, "Makes you go zoom\nMake sure to turn off speed (hotkeys can help)")
 flymethod = fly.CreateDropdown("Mode", {"Balloons", "Damage"}, function(val)
 
 end)
