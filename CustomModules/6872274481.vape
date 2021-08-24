@@ -186,7 +186,7 @@ bedwars["breakBlock"] = function(pos)
 end	
 
 local textlabel = Instance.new("TextLabel")
-textlabel.Text = 'Vape has been "fixed", please report any bans to 7GrandDad#6656\nMake sure to use alts'
+textlabel.Text = 'Vape has been "fixed", please report any bans to the discord.\nMake sure to use alts'
 textlabel.Size = UDim2.new(1, 0, 0, 36)
 textlabel.Position = UDim2.new(0, 0, 0, -36)
 textlabel.TextSize = 20
