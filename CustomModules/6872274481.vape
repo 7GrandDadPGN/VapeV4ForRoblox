@@ -548,7 +548,11 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				if isAlive() then
 					if obj then
 						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
-							bedwars["breakBlock"](obj.Position)
+							spawn(function()
+								bedwars["breakBlock"](obj.Position + Vector3.new(0, 3, 0))
+								wait(0.1)
+								bedwars["breakBlock"](obj.Position)
+							end)
 						end
 					else
 						tab[i] = nil
