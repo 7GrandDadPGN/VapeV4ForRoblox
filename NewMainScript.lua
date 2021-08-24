@@ -563,6 +563,7 @@ GUI.CreateToggle("Notifications", function() GuiLibrary["ToggleNotifications"] =
 
 local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
+		GuiLibrary["SaveSettings"]()
         queueteleport('shared.VapeSwitchServers = true if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end')
     end
 end)
