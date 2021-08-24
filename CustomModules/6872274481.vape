@@ -441,7 +441,8 @@ local swords = {
 local AutoBuy = {["Enabled"] = false}
 local AutoBuyArmor = {["Enabled"] = false}
 local AutoBuySword = {["Enabled"] = false}
-bedwars["Client"]:Get("PickupItemEvent"):Connect(function(p6)
+
+local function BuyCheck()
 	if AutoBuy["Enabled"] then
 		local ExecuteInventory = bedwars["getInventory"](lplr)
 		local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (ExecuteInventory.armor[5] == nil and "leather_chestplate")
@@ -469,8 +470,10 @@ bedwars["Client"]:Get("PickupItemEvent"):Connect(function(p6)
 			end
 		end
 	end
-end)
-AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", function() end, function() end, true)
+end
+
+bedwars["Client"]:Get("PickupItemEvent"):Connect(BuyCheck)
+AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true)
 AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
 AutoBuySword = AutoBuy.CreateToggle("Buy Sword", function() end, function() end, true)
 
