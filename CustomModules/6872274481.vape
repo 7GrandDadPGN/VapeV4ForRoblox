@@ -481,6 +481,7 @@ GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 local killaurarange = {["Value"] = 1}
 local killauraangle = {["Value"] = 90}
+local killauratargets = {["Value"] = 10}
 local killauramouse = {["Enabled"] = false}
 local killauracframe = {["Enabled"] = false}
 local killauraautoblock = {["Enabled"] = false}
@@ -516,7 +517,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		local targettable = {}
 		local targetsize = 0
 		if (killauradelay <= tick()) and matchState ~= 0 then
-			local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"], 100)
+			local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratargets["Value"])
 			if #plrs <= 0 then
 				killauranear = false
 				pcall(function()
@@ -580,6 +581,7 @@ end, true, function()
 end, "Attack players around you\nwithout aiming at them.")
 killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 14)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 360)
+killauratargets = Killaura.CreateSlider("Max targets", 1, 10, function(val) end, 10)
 killauraautoblock = Killaura.CreateToggle("AutoBlock", function() end, function() end)
 killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end)
 killauragui = Killaura.CreateToggle("GUI Check", function() end, function() end)
@@ -803,7 +805,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					if ScaffoldBuyBlocks["Enabled"] and getwool() == nil and scaffoldallowed == true then
 						scaffoldallowed = false
 						bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-							shopItem = bedwars["Shop"].getShopItem("WOOL_WHITE")
+							shopItem = bedwars["Shop"].getShopItem("wool_white")
 						}):andThen(function(p11)
 							scaffoldallowed = true
 						end)
