@@ -397,19 +397,6 @@ end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker"
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
 
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
-local reachrange = {["Value"] = 1}
-local oldreach1 = bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE
-local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Reach", function()
-	debug.setupvalue(bedwars["SwingSwordRegion"], 3, reachrange["Value"])
-	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1 * (reachrange["Value"] / 3)
-end, function() 
-	debug.setupvalue(bedwars["SwingSwordRegion"], 3, 3)
-	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1
-end, true, function() return "" end, "Extends attack reach")
-reachrange = Reach.CreateSlider("Range", 3, 6, function(val) 
-	debug.setupvalue(bedwars["SwingSwordRegion"], 3, val)
-	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1 * (val / 3)
-end)
 
 local velohorizontal = {["Value"] = 100}
 local velovertical = {["Value"] = 100}
@@ -444,6 +431,49 @@ end
 local function scaffoldBlock(newpos)
     bedwars["placeBlock"](newpos)
 end
+
+local swords = {
+	["wood_sword"] = "stone_sword",
+	["stone_sword"] = "iron_sword",
+	["iron_sword"] = "diamond_sword",
+	["diamond_sword"] = "emerald_sword"
+}
+local AutoBuy = {["Enabled"] = false}
+local AutoBuyArmor = {["Enabled"] = false}
+local AutoBuySword = {["Enabled"] = false}
+bedwars["Client"]:Get("PickupItemEvent"):Connect(function(p6)
+	if AutoBuy["Enabled"] then
+		local ExecuteInventory = bedwars["getInventory"](lplr)
+		local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or "LEATHER_CHESTPLATE"
+		local NextSword = getSword() and swords[getSword().itemType]
+		print(getSword().itemType)
+		if AutoBuyArmor["Enabled"] and ExecuteInventory.armor[5] ~= "EMERALD_CHESTPLATE" then
+			local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
+			local NextArmorCurrency = getItem(NextArmorTable["currency"])
+			if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
+				bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+					shopItem = bedwars["Shop"].getShopItem(NextArmor)
+				}):andThen(function(p11)
+					NextArmor = NextArmorTable["nextTier"]
+				end)
+			end
+		end
+		if AutoBuySword["Enabled"] and NextSword then
+			local NextSwordTable = bedwars["Shop"].getShopItem(NextSword)
+			local NextSwordCurrency = getItem(NextSwordTable["currency"])
+			if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
+				bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+					shopItem = bedwars["Shop"].getShopItem(NextSword)
+				}):andThen(function(p11)
+					NextSword = swords[NextSwordTable["itemType"]]
+				end)
+			end
+		end
+	end
+end)
+AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", function() end, function() end, true)
+AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
+AutoBuySword = AutoBuy.CreateToggle("Buy Sword", function() end, function() end, true)
 
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
