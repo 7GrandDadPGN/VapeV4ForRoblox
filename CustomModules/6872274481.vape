@@ -676,7 +676,7 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			for i = 1, #tab do
 				local obj = tab[i]
 				if isAlive() then
-					if obj then
+					if obj and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
 						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
 							bedwars["breakBlock"](obj.Position + Vector3.new(0, 3, 0))
 							bedwars["breakBlock"](obj.Position)
