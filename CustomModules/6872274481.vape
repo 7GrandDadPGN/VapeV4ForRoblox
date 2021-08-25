@@ -809,10 +809,12 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				if newpos ~= oldpos then
 					if ScaffoldBuyBlocks["Enabled"] and getwool() == nil and scaffoldallowed == true then
 						scaffoldallowed = false
+						lplr.Character.HumanoidRootPart.Anchored = true
 						bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 							shopItem = bedwars["Shop"].getShopItem("wool_white")
 						}):andThen(function(p11)
 							scaffoldallowed = true
+							lplr.Character.HumanoidRootPart.Anchored = true
 						end)
 					end
 					scaffoldBlock(newpos)
