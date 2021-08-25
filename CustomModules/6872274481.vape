@@ -461,7 +461,8 @@ local AutoBuyArmor = {["Enabled"] = false}
 local AutoBuySword = {["Enabled"] = false}
 local AutoBuyUpgrades = {["Enabled"] = false}
 
-local function BuyCheck()
+local BuyCheck = function() end
+BuyCheck = function()
 	if AutoBuy["Enabled"] then
 		local ExecuteInventory = bedwars["getInventory"](lplr)
 		local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (ExecuteInventory.armor[5] == nil and "leather_chestplate")
@@ -483,6 +484,9 @@ local function BuyCheck()
 						});
 					end
 					NextSword = swords[NextSwordTable["itemType"]]
+					if p11 then
+						BuyCheck()
+					end
 				end)
 			end
 		end
@@ -518,6 +522,9 @@ local function BuyCheck()
 						end
 					end
 					NextArmor = NextArmorTable["nextTier"]
+					if p11 then
+						BuyCheck()
+					end
 				end)
 			end
 		end
@@ -530,7 +537,7 @@ local function BuyCheck()
 				print("yes")
 				bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 					upgradeId = "armor", 
-					tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 1
+					tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 0
 				}):andThen(function()
 					bedwars["SoundManager"]:playSound(11)
 				end)
@@ -694,7 +701,7 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		until BedNuker["Enabled"] == false
 	end)
 end, function() end, true)
-bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end)
+bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
 
 local fastbreak = {["Enabled"] = false}
 local oldbreakfunction
@@ -789,7 +796,7 @@ local function buyballoons()
 	if isAlive() and fly["Enabled"] and flymethod["Value"] == "Balloons" then
 		if getItem("balloon") == nil and flybuyballoon["Enabled"] then
 			bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-				shopItem = bedwars["Shop"].getShopItem("balloon")
+				shopItem = bedwars["Shop"].getShopItem("balloons")
 			})
 		end
 		if getItem("balloon") then
