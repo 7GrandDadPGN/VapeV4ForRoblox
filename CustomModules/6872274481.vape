@@ -106,6 +106,12 @@ getfunctions = function()
 			if rawget(v, "BedwarsShop") then
 				bedwars["Shop"] = v["BedwarsShop"]
 			end
+			if rawget(v, "SoundManager") then
+				bedwars["SoundManager"] = v["SoundManager"]
+			end
+			if rawget(v, "SetSelectedShopItem") then
+				bedwars["SetSelectedShopItem"] = v["SetSelectedShopItem"]
+			end
 			if rawget(v, "getItemMeta") then
 				bedwars["getIcon"] = function(item, showinv)
 					local itemmeta = v["getItemMeta"](item["itemType"])
@@ -165,7 +171,7 @@ getfunctions = function()
 		end
 	end
 
-	if (bedwars["PlayerUtil"] and bedwars["Shop"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
+	if (bedwars["PlayerUtil"] and bedwars["Shop"] and bedwars["SoundManager"] and bedwars["SetSelectedShopItem"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
 		repeat wait() until lplr.Team ~= nil
 		local blocktable
 		bedwars["placeBlock"] = function(newpos)
@@ -464,8 +470,32 @@ local function BuyCheck()
 			local NextArmorCurrency = getItem(NextArmorTable["currency"])
 			if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
 				bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-					shopItem = bedwars["Shop"].getShopItem(NextArmor)
+					shopItem = NextArmorTable
 				}):andThen(function(p11)
+					if p11 then
+						bedwars["SoundManager"]:playSound(12)
+						bedwars["ClientStore"]:dispatch({
+							type = "BedwarsAddItemPurchased", 
+							itemType = NextArmorTable.itemType
+						});
+						if NextArmorTable.nextTier then
+							local l__ShopItems__5 = bedwars["Shop"].ShopItems;
+							local function v6(p12)
+								return p12.itemType == NextArmorTable.nextTier;
+							end;
+							local v7 = nil;
+							for v8, v9 in ipairs(l__ShopItems__5) do
+								if v6(v9, v8 - 1, l__ShopItems__5) == true then
+									v7 = v9;
+									break;
+								end;
+							end;
+							bedwars["SetSelectedShopItem"](v7);
+							return;
+						elseif NextArmorTable.tiered or NextArmorTable.lockAfterPurchase then
+		
+						end
+					end
 					NextArmor = NextArmorTable["nextTier"]
 				end)
 			end
@@ -484,6 +514,11 @@ local function BuyCheck()
 	end
 end
 
+bedwars["ClientStore"].changed:connect(function(p3, p4)
+	if p3.Inventory.observedPlayer == lplr and p3.Inventory.observedPlayer ~= p4.Inventory.observedPlayer then
+		BuyCheck()
+	end
+end)
 bedwars["Client"]:Get("PickupItemEvent"):Connect(BuyCheck)
 AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true)
 AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
@@ -805,12 +840,13 @@ flybuyballoon = fly.CreateToggle("Buy Balloons", function() end, function() end)
 local oldpos = Vector3.new(0, 0, 0)
 local oldpos2 = Vector3.new(0, 0, 0)
 local ScaffoldExpand = {["Value"] = 1}
+local ScaffoldHandCheck = {["Enabled"] = false}
 local ScaffoldBuyBlocks = {["Enabled"] = false}
 local scaffoldallowed = true
 
 Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Scaffold", function()
 	game:GetService("RunService"):BindToRenderStep("Scaffold", 1, function(delta)
-		if isAlive() then
+		if isAlive() and (ScaffoldHandCheck["Enabled"] and getEquipped()["Type"] == "block" or (not ScaffoldHandCheck["Enabled"])) then
 			for i = 1, ScaffoldExpand["Value"] do
 				local newpos = getScaffold((lplr.Character.Head.Position + (lplr.Character.Humanoid.MoveDirection * (i * 3.5))) + Vector3.new(0, -6, 0))
 				if newpos ~= oldpos then
@@ -821,11 +857,13 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							shopItem = bedwars["Shop"].getShopItem("wool_white")
 						}):andThen(function(p11)
 							scaffoldallowed = true
-							lplr.Character.HumanoidRootPart.Anchored = true
 						end)
 					end
-					scaffoldBlock(newpos)
-					oldpos = newpos
+					if getwool() then
+						lplr.Character.HumanoidRootPart.Anchored = false
+						scaffoldBlock(newpos)
+						oldpos = newpos
+					end
 				end
 			end
 		end
@@ -835,9 +873,13 @@ end, function()
 	scaffoldallowed = true
 	oldpos = Vector3.new(0, 0, 0)
 	oldpos2 = Vector3.new(0, 0, 0)
+	if isAlive() then
+		lplr.Character.HumanoidRootPart.Anchored = false
+	end
 end, true)
 ScaffoldExpand = Scaffold.CreateSlider("Expand", 1, 8, function(val) end, 1)
 ScaffoldBuyBlocks = Scaffold.CreateToggle("Buy Blocks", function() end, function() end)
+ScaffoldHandCheck = Scaffold.CreateToggle("Hand Check", function() end, function() end)
 
 local AutoToxic = {["Enabled"] = false}
 local AutoToxicGG = {["Enabled"] = false}
