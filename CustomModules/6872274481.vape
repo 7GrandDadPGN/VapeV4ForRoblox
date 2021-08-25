@@ -13,6 +13,7 @@ local bedwars = {}
 local getfunctions
 local origC0 = nil
 local matchState = 0
+local kit = ""
 
 local function getItem(itemName)
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
@@ -183,6 +184,7 @@ getfunctions = function()
 			end
 		end)
 		matchState = bedwars["ClientStore"]:getState().Game.matchState
+		kit = bedwars["ClientStore"]:getState()["Bedwars"]["kit"]
 	else
 		wait(1)
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
@@ -571,7 +573,7 @@ local oldplay = function() end
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
 	oldplay = bedwars["ViewmodelController"]["playAnimation"]
 	bedwars["ViewmodelController"]["playAnimation"] = function(Self, id, ...)
-		if id == 5 and killauranear and killauraautoblock["Enabled"] and isAlive() then
+		if id == 5 and killauranear and killauraautoblock["Enabled"] and isAlive() and kit == "shielder" then
 			pcall(function()
 				if origC0 == nil then
 					origC0 = cam.Viewmodel.RightHand.RightWrist.C0
