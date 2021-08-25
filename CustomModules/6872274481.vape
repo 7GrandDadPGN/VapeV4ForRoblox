@@ -320,6 +320,7 @@ local aimfov = {["Value"] = 1}
 local aimvischeck = {["Enabled"] = false}
 local aimheadshotchance = {["Value"] = 1}
 local aimhitchance = {["Value"] = 1}
+local aimonlybow = {["Enabled"] = false}
 local tar = nil
 local hook
 local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AimAssist", function() 
@@ -331,7 +332,7 @@ local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].Cre
 		else
 			tar = nil
 		end
-		if tar then
+		if tar and (aimonlybow["Enabled"] and getEquipped()["Type"] == "bow" or (not aimonlybow["Enabled"])) then
 				local launchPosition = bowtable:getLaunchPosition()
 				if not launchPosition then
 					return nil
@@ -374,10 +375,11 @@ end, function()
 	hook = nil
 end, true, function() 
 	return " BedWars"
-end)
-aimfov = AimAssist.CreateSlider("FOV", 1, 1000, function(val) end)
-aimhitchance = AimAssist.CreateSlider("Hit Chance", 1, 100, function(val) end)
-aimheadshotchance = AimAssist.CreateSlider("Headshot Chance", 1, 100, function(val) end)
+end, "Auto Aims bow at closest player.")
+aimfov = AimAssist.CreateSlider("FOV", 1, 1000, function(val) end, 1000)
+aimhitchance = AimAssist.CreateSlider("Hit Chance", 1, 100, function(val) end, 100)
+aimheadshotchance = AimAssist.CreateSlider("Headshot Chance", 1, 100, function(val) end, 100)
+aimonlybow = AimAssist.CreateToggle("Only Bow", function() end, function() end, true)
 
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
 local autoclickercps = {["GetRandomValue"] = function() return 1 end}
