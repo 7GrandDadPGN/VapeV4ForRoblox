@@ -402,6 +402,13 @@ end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker"
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
 
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
+local oldreach1 = bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE
+local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Reach", function()
+	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1 * 3
+end, function() 
+	debug.setupvalue(bedwars["SwingSwordRegion"], 3, 3)
+	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1
+end, true, function() return "" end, "Extends attack reach")
 
 local velohorizontal = {["Value"] = 100}
 local velovertical = {["Value"] = 100}
