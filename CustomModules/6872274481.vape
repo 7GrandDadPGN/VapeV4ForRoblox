@@ -53,20 +53,6 @@ local function scanforbeds()
 	end  
 end
 
-local textlabel = Instance.new("TextLabel")
-textlabel.Text = 'Vape has been "fixed", please report any bans to the discord.\nMake sure to use alts'
-textlabel.Size = UDim2.new(1, 0, 0, 36)
-textlabel.Position = UDim2.new(0, 0, 0, -36)
-textlabel.TextSize = 20
-textlabel.BackgroundTransparency = 1
-textlabel.TextColor3 = Color3.new(1, 1, 1)
-textlabel.TextStrokeTransparency = 0
-textlabel.Parent = GuiLibrary["MainGui"]
-spawn(function()
-	repeat wait() until matchState ~= 0
-	textlabel:Remove()
-end)
-
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
 		if type(v) == "table" then
