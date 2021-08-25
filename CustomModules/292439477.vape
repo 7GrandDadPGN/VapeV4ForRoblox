@@ -1,0 +1,588 @@
+-- Credits to Inf Yield & all the other scripts that helped me make bypasses
+local GuiLibrary = shared.GuiLibrary
+local players = game:GetService("Players")
+local lplr = players.LocalPlayer
+local workspace = game:GetService("Workspace")
+local lighting = game:GetService("Lighting")
+local cam = workspace.CurrentCamera
+local targetinfo = shared.VapeTargetInfo
+local uis = game:GetService("UserInputService")
+local mouse = lplr:GetMouse()
+local robloxfriends = {}
+local phantomforces = {}
+local rendersteppedrunner
+local characterstep
+for i,v in pairs(getconnections(game:GetService("RunService").RenderStepped)) do
+    if v.Function then
+        local taskhandler = debug.getupvalues(v.Function)[1]
+        if type(taskhandler) == "table" and rawget(taskhandler, "_taskContainers") then
+            rendersteppedrunner = taskhandler
+            break
+        end
+    end
+end
+characterstep = next(rendersteppedrunner._taskContainers.char.tasks).task
+for i,v in pairs(getgc(true)) do
+    if type(v) == "table" and rawget(v, "getbodyparts") then
+        phantomforces["GetCharacter"] = v.getbodyparts
+    end
+end
+phantomforces["Menu"] = debug.getupvalue(characterstep, 27)
+phantomforces["Sound"] = debug.getupvalue(characterstep, 24)
+phantomforces["RoundSystem"] = debug.getupvalue(characterstep, 17)
+phantomforces["CFrame"] = debug.getupvalue(characterstep, 15)
+phantomforces["Character"] = debug.getupvalue(characterstep, 3)
+phantomforces["Camera"] = debug.getupvalue(characterstep, 2)
+phantomforces["Network"] = debug.getupvalue(phantomforces["Character"].setmovementmode, 20)
+phantomforces["UI"] = debug.getupvalue(phantomforces["Character"].setmovementmode, 10)
+phantomforces["Input"] = debug.getupvalue(phantomforces["Character"].setmovementmode, 17)
+phantomforces["GameLogic"] = debug.getupvalue(phantomforces["Character"].setsprint, 1)
+phantomforces["Replication"] = debug.getupvalue(phantomforces["UI"].attachflag, 1)
+do
+    local sendevent = getconnections(debug.getupvalue(phantomforces["Network"].send, 1).OnClientEvent)[1].Function
+    phantomforces["networkCache"] = debug.getupvalue(sendevent, 1)
+end
+local fakeBarrel = Instance.new("Part")
+fakeBarrel.CanCollide = false
+fakeBarrel.Size = Vector3.new(1,1,1)
+fakeBarrel.Transparency = 1
+fakeBarrel.Parent = workspace
+
+local function friendCheck(plr)
+	if not robloxfriends[plr.UserId] then
+		if lplr:IsFriendsWith(plr.UserId) then
+			table.insert(robloxfriends, plr.Name)
+			robloxfriends[plr.UserId] = true
+		end
+	end
+	return (GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and ((GuiLibrary["ObjectsThatCanBeSaved"]["Use Roblox FriendsToggle"]["Api"]["Enabled"] and table.find(robloxfriends, plr.Name) == nil) and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) == nil) or GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] == false)
+end
+
+local function teamCheck(plr)
+	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and (plr.Team ~= lplr.Team or (lplr.Team == nil or #lplr.Team:GetPlayers() == #game:GetService("Players"):GetChildren())) or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
+end
+
+local function targetCheck(plr, check)
+	return (check and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("ForceField") == nil or check == false)
+end
+
+local function isAlive(plr, plrchar)
+	local plrchar = phantomforces["GetCharacter"](plr)
+	if plr then
+		return plr and plrchar and (rawget(plrchar, "rootpart") ~= nil) and (rawget(plrchar, "head") ~= nil)
+	end
+	return lplr and lplr.Character and lplr.Character.Parent ~= nil and lplr.Character:FindFirstChild("HumanoidRootPart") and lplr.Character:FindFirstChild("Head")
+end
+
+local function isPlayerTargetable(plr, target, friend)
+	if phantomforces["GetCharacter"] == nil then
+		return false
+	end
+	local plrchar = phantomforces["GetCharacter"](plr)
+    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and plrchar and rawget(plrchar, "rootpart") and rawget(plrchar, "head") and (friend == true and friendCheck(plr) or friend == false) and teamCheck(plr)
+end
+
+local function vischeck(char, part)
+	return not unpack(cam:GetPartsObscuringTarget({lplr.Character[part].Position, char[part].Position}, {lplr.Character, char}))
+end
+
+local function GetNearestHumanoidToMouse(distance, checkvis)
+    local closest, returnedplayer = distance, nil
+    if isAlive() then
+        for i, v in pairs(players:GetChildren()) do
+            if isPlayerTargetable(v, true, true) then
+                local vec, vis = cam:WorldToScreenPoint(phantomforces["GetCharacter"](v).rootpart.Position)
+                if vis then
+                    local mag = (uis:GetMouseLocation() - Vector2.new(vec.X, vec.Y)).magnitude
+                    if mag <= closest then
+                        closest = mag
+                        returnedplayer = v
+                    end
+                end
+            end
+        end
+    end
+    return returnedplayer
+end
+
+local function CalculateObjectPosition(pos)
+	local newpos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(cam.CFrame:pointToObjectSpace(pos)))
+	return Vector2.new(newpos.X, newpos.Y)
+end
+
+local function CalculateLine(startVector, endVector, obj)
+	local Distance = (startVector - endVector).Magnitude
+	obj.Size = UDim2.new(0, Distance, 0, 2)
+	obj.Position = UDim2.new(0, (startVector.X + endVector.X) / 2, 0, ((startVector.Y + endVector.Y) / 2) - 36)
+	obj.Rotation = math.atan2(endVector.Y - startVector.Y, endVector.X - startVector.X) * (180 / math.pi)
+end
+
+GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
+local aimfov = {["Value"] = 1}
+local aimvischeck = {["Enabled"] = false}
+local aimheadshotchance = {["Value"] = 1}
+local aimhitchance = {["Value"] = 1}
+local currentgun = nil
+
+local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AimAssist", function()
+		currentgun = phantomforces["GameLogic"].currentgun
+		setmetatable(phantomforces["GameLogic"], {
+			__index = function(t,k)
+				if k == "currentgun" then
+					return currentgun
+				end
+			end,
+			__newindex = function(t,k,v)
+				if k == "currentgun" then
+					currentgun = v
+					
+					if v ~= nil and v.step ~= nil then
+						local gunStep = debug.getupvalues(v.step)
+						gunStep = gunStep[#gunStep]
+						
+						if not gunStep or type(gunStep) ~= "function" or is_synapse_function(gunStep) then
+							return    
+						end
+						
+						debug.setupvalue(gunStep, 38, fakeBarrel)
+						
+						local gunInfo = debug.getupvalue(gunStep, 6)
+						gunInfo.choke = false
+						gunInfo.hipchoke = false
+						gunInfo.aimchoke = false
+						
+						local hook
+						hook = hookfunction(gunStep, function(...)
+							if currentgun == v then
+								local plr = GetNearestHumanoidToMouse(aimfov["Value"], GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false and aimvischeck["Enabled"])
+								if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
+									local plrchar = phantomforces["GetCharacter"](plr)
+									nearest = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plrchar.head or plrchar.rootpart
+								else
+									nearest = nil
+								end
+			
+								if nearest then
+									
+									fakeBarrel.CFrame = CFrame.lookAt(v.barrel.Position, nearest.Position)
+								
+									debug.setupvalue(hook, 9, false)
+								else
+									fakeBarrel.CFrame = v.barrel.CFrame
+								end
+							end
+							return hook(...)
+						end)
+					end
+				end
+			end
+		})
+		phantomforces["GameLogic"].currentgun = nil
+end, function() 
+	setmetatable(phantomforces["GameLogic"], {})
+	phantomforces["GameLogic"].currentgun = currentgun
+	currentgun = nil
+end, true, function() 
+	return " PF"
+end)
+aimvischeck = AimAssist.CreateToggle("Wall Check", function() end, function() end)
+aimfov = AimAssist.CreateSlider("FOV", 1, 1000, function(val) end)
+aimhitchance = AimAssist.CreateSlider("Hit Chance", 1, 100, function(val) end)
+aimheadshotchance = AimAssist.CreateSlider("Headshot Chance", 1, 100, function(val) end)
+
+kek = function()
+
+    game:GetService("RunService"):BindToRenderStep("AimAssist", 1, function() 
+		local plr = GetNearestHumanoidToMouse(aimfov["Value"], GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false and aimvischeck["Enabled"])
+		local targettable = {}
+		local targetsize = 0
+		if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
+			targettable[plr.Name] = {
+				["UserId"] = plr.UserId,
+				["Health"] = plr.Character.Humanoid.Health,
+				["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+			}
+			targetsize = targetsize + 1
+			tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
+			targetinfo.UpdateInfo(targettable, targetsize)
+		else
+			tar = nil
+			targetinfo.UpdateInfo({}, 0)
+		end
+    end)
+end
+
+GuiLibrary["RemoveObject"]("ESPOptionsButton")
+local ESphantomforcesolder = Instance.new("Folder")
+ESphantomforcesolder.Name = "ESphantomforcesolder"
+ESphantomforcesolder.Parent = GuiLibrary["MainGui"]
+players.PlayerRemoving:connect(function(plr)
+	if ESphantomforcesolder:FindFirstChild(plr.Name) then
+		ESphantomforcesolder[plr.Name]:Remove()
+	end
+end)
+local ESPColor = {["Value"] = 0.44}
+local ESPMethod = {["Value"] = "2D"}
+local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("ESP", function() 
+	game:GetService("RunService"):BindToRenderStep("ESP", 500, function()
+		for i,plr in pairs(players:GetChildren()) do
+			if ESPMethod["Value"] == "2D" then
+				local thing
+				if ESphantomforcesolder:FindFirstChild(plr.Name) then
+					thing = ESphantomforcesolder[plr.Name]
+					thing.Visible = false
+					thing.Line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+					thing.Line2.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+					thing.Line3.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+					thing.Line4.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+				else
+					thing = Instance.new("Frame")
+					thing.BackgroundTransparency = 1
+					thing.BorderSizePixel = 0
+					thing.Visible = false
+					thing.Name = plr.Name
+					thing.Parent = ESphantomforcesolder
+					local line1 = Instance.new("Frame")
+					line1.BorderSizePixel = 0
+					line1.Name = "Line1"
+					line1.ZIndex = 2
+					line1.Size = UDim2.new(1, -2, 0, 1)
+					line1.Position = UDim2.new(0, 1, 0, 1)
+					line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+					line1.Parent = thing
+					local line2 = Instance.new("Frame")
+					line2.BorderSizePixel = 0
+					line2.Name = "Line2"
+					line2.Size = UDim2.new(1, -2, 0, 1)
+					line2.ZIndex = 2
+					line2.Position = UDim2.new(0, 1, 1, -2)
+					line2.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+					line2.Parent = thing
+					local line3 = Instance.new("Frame")
+					line3.BorderSizePixel = 0
+					line3.Name = "Line3"
+					line3.Size = UDim2.new(0, 1, 1, -2)
+					line3.Position = UDim2.new(0, 1, 0, 1)
+					line3.ZIndex = 2
+					line3.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+					line3.Parent = thing
+					local line4 = Instance.new("Frame")
+					line4.BorderSizePixel = 0
+					line4.Name = "Line4"
+					line4.Size = UDim2.new(0, 1, 1, -2)
+					line4.Position = UDim2.new(1, -2, 0, 1)
+					line4.ZIndex = 2
+					line4.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+					line4.Parent = thing
+					local line1clone = line1:Clone()
+					line1clone.ZIndex = 1
+					line1clone.Size = UDim2.new(1, 0, 0, 3)
+					line1clone.Position = UDim2.new(0, 0, 0, 0)
+					line1clone.BackgroundColor3 = Color3.new(0, 0, 0)
+					line1clone.Parent = thing
+					local line2clone = line2:Clone()
+					line2clone.ZIndex = 1
+					line2clone.Size = UDim2.new(1, 0, 0, 3)
+					line2clone.Position = UDim2.new(0, 0, 1, -3)
+					line2clone.BackgroundColor3 = Color3.new(0, 0, 0)
+					line2clone.Parent = thing
+					local line3clone = line3:Clone()
+					line3clone.ZIndex = 1
+					line3clone.Size = UDim2.new(0, 3, 1, 0)
+					line3clone.Position = UDim2.new(0, 0, 0, 0)
+					line3clone.BackgroundColor3 = Color3.new(0, 0, 0)
+					line3clone.Parent = thing
+					local line4clone = line4:Clone()
+					line4clone.ZIndex = 1
+					line4clone.Size = UDim2.new(0, 3, 1, 0)
+					line4clone.Position = UDim2.new(1, -3, 0, 0)
+					line4clone.BackgroundColor3 = Color3.new(0, 0, 0)
+					line4clone.Parent = thing
+				end
+				
+				if isPlayerTargetable(plr, false, false) then
+					local plrchar = phantomforces["GetCharacter"](plr)
+					local rootPos, rootVis = cam:WorldToViewportPoint(plrchar.rootpart.Position)
+					local rootSize = plrchar.rootpart.Size.X * 1500
+					local headPos, headVis = cam:WorldToViewportPoint(plrchar.head.Position + Vector3.new(0, 1, 0))
+					local legPos, legVis = cam:WorldToViewportPoint(plrchar.rootpart.Position - Vector3.new(0, 5, 0))
+					rootPos = rootPos * (1 / GuiLibrary["MainRescale"].Scale)
+					if rootVis then
+						thing.Visible = rootVis
+						thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
+						thing.Position = UDim2.new(0, rootPos.X - thing.Size.X.Offset / 2, 0, (rootPos.Y - thing.Size.Y.Offset / 2) - 36)
+					end
+				end
+			end
+			if ESPMethod["Value"] == "Skeleton" then
+				local thing
+				if ESphantomforcesolder:FindFirstChild(plr.Name) then
+					thing = ESphantomforcesolder[plr.Name]
+					thing.Visible = false
+					for linenum, line in pairs(thing:GetChildren()) do
+						line.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+					end
+				else
+					thing = Instance.new("Frame")
+					thing.BackgroundTransparency = 1
+					thing.BorderSizePixel = 0
+					thing.Visible = false
+					thing.Name = plr.Name
+					thing.Parent = ESphantomforcesolder
+					local line1 = Instance.new("Frame")
+					line1.BorderSizePixel = 0
+					line1.Name = "TopTorsoLine"
+					line1.AnchorPoint = Vector2.new(0.5, 0.5)
+					line1.ZIndex = 2
+					line1.Size = UDim2.new(0, 0, 0, 0)
+					line1.Position = UDim2.new(0, 0, 0, 0)
+					line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+					line1.Parent = thing
+					local line2 = line1:Clone()
+					line2.Name = "MiddleTorsoLine"
+					line2.Parent = thing
+					local line3 = line1:Clone()
+					line3.Name = "BottomTorsoLine"
+					line3.Parent = thing
+					local line4 = line1:Clone()
+					line4.Name = "LeftArm"
+					line4.Parent = thing
+					local line5 = line1:Clone()
+					line5.Name = "RightArm"
+					line5.Parent = thing
+					local line6 = line1:Clone()
+					line6.Name = "LeftLeg"
+					line6.Parent = thing
+					local line7 = line1:Clone()
+					line7.Name = "RightLeg"
+					line7.Parent = thing
+					local line8 = line1:Clone()
+					line8.Name = "Head"
+					line8.Parent = thing
+					local line9 = line1:Clone()
+					line9.Name = "HeadForward"
+					line9.Parent = thing
+				end
+				
+				if isPlayerTargetable(plr, false, false) then
+					local plrchar = phantomforces["GetCharacter"](plr)
+					local rootPos, rootVis = cam:WorldToViewportPoint(plrchar.rootpart.Position)
+					if rootVis and plrchar["rootpart"] and plrchar["larm"] and plrchar["rarm"] and plrchar["lleg"] and plrchar["rleg"] and plrchar["head"] then
+						thing.Visible = true
+						local head = CalculateObjectPosition((plrchar["head"].CFrame).p)
+						local headfront = CalculateObjectPosition((plrchar["head"].CFrame * CFrame.new(0, 0, -0.5)).p)
+						local toplefttorso = CalculateObjectPosition((plrchar["torso"].CFrame * CFrame.new(-1.5, 1, 0)).p)
+						local toprighttorso = CalculateObjectPosition((plrchar["torso"].CFrame * CFrame.new(1.5, 1, 0)).p)
+						local toptorso = CalculateObjectPosition((plrchar["torso"].CFrame * CFrame.new(0, 1, 0)).p)
+						local bottomtorso = CalculateObjectPosition((plrchar["torso"].CFrame * CFrame.new(0, -1, 0)).p)
+						local bottomlefttorso = CalculateObjectPosition((plrchar["torso"].CFrame * CFrame.new(-0.5, -1, 0)).p)
+						local bottomrighttorso = CalculateObjectPosition((plrchar["torso"].CFrame * CFrame.new(0.5, -1, 0)).p)
+						local leftarm = CalculateObjectPosition((plrchar["larm"].CFrame * CFrame.new(0, -0.8, 0)).p)
+						local rightarm = CalculateObjectPosition((plrchar["rarm"].CFrame * CFrame.new(0, -0.8, 0)).p)
+						local leftleg = CalculateObjectPosition((plrchar["lleg"].CFrame * CFrame.new(0, -0.8, 0)).p)
+						local rightleg = CalculateObjectPosition((plrchar["rleg"].CFrame * CFrame.new(0, -0.8, 0)).p)
+						CalculateLine(toplefttorso, toprighttorso, thing.TopTorsoLine)
+						CalculateLine(toptorso, bottomtorso, thing.MiddleTorsoLine)
+						CalculateLine(bottomlefttorso, bottomrighttorso, thing.BottomTorsoLine)
+						CalculateLine(toplefttorso, leftarm, thing.LeftArm)
+						CalculateLine(toprighttorso, rightarm, thing.RightArm)
+						CalculateLine(bottomlefttorso, leftleg, thing.LeftLeg)
+						CalculateLine(bottomrighttorso, rightleg, thing.RightLeg)
+						CalculateLine(toptorso, head, thing.Head)
+						CalculateLine(head, headfront, thing.HeadForward)
+					end
+				end
+			end
+		end
+	end)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("ESP") ESphantomforcesolder:ClearAllChildren() end, true)
+ESPColor = ESP.CreateColorSlider("Player Color", function(val) end)
+ESPMethod = ESP.CreateDropdown("Mode", {"2D", "Skeleton"}, function(val)
+	ESphantomforcesolder:ClearAllChildren()
+end)
+
+GuiLibrary["RemoveObject"]("ChamsOptionsButton")
+local ChamsFolder = Instance.new("Folder")
+ChamsFolder.Name = "ChamsFolder"
+ChamsFolder.Parent = GuiLibrary["MainGui"]
+players.PlayerRemoving:connect(function(plr)
+	if ChamsFolder:FindFirstChild(plr.Name) then
+		ChamsFolder[plr.Name]:Remove()
+	end
+end)
+local ChamsColor = {["Value"] = 0.44}
+local ChamsTransparency = {["Value"] = 1}
+local ChamsOnTop = {["Enabled"] = true}
+local chamobjects = {["larm"] = true, ["lleg"] = true, ["rarm"] = true, ["rleg"] = true, ["head"] = true, ["torso"] = true}
+local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Chams", function() 
+	game:GetService("RunService"):BindToRenderStep("Chams", 500, function()
+		for i,plr in pairs(players:GetChildren()) do
+				local thing
+				if ChamsFolder:FindFirstChild(plr.Name) then
+					thing = ChamsFolder[plr.Name]
+					for partnumber, part in pairs(thing:GetChildren()) do
+						part.Visible = false
+						part.Color3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ChamsColor["Value"], 1, 1)
+					end
+				end
+				
+				if isPlayerTargetable(plr, false, false) then
+					local plrchar = phantomforces["GetCharacter"](plr)
+					if ChamsFolder:FindFirstChild(plr.Name) == nil then
+						local chamfolder = Instance.new("Folder")
+						chamfolder.Name = plr.Name
+						chamfolder.Parent = ChamsFolder
+						thing = chamfolder
+						for partname, part in pairs(plrchar) do
+							if chamobjects[partname] then
+								local boxhandle = Instance.new("BoxHandleAdornment")
+								boxhandle.Size = (partname == "head" and Vector3.new(1.25, 1.25, 1.25) or part.Size) + Vector3.new(.01, .01, .01)
+								boxhandle.AlwaysOnTop = ChamsOnTop["Enabled"]
+								boxhandle.ZIndex = 10
+								boxhandle.Visible = true
+								boxhandle.Color3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ChamsColor["Value"], 1, 1)
+								boxhandle.Name = partname
+								boxhandle.Parent = chamfolder
+							end
+						end
+					end
+					for partname, part in pairs(thing:GetChildren()) do
+						part.Visible = true
+						if plrchar[part.Name] then
+							part.Adornee = plrchar[part.Name]
+							part.AlwaysOnTop = ChamsOnTop["Enabled"]
+							part.Transparency = ChamsTransparency["Value"] / 100
+						end
+					end
+				end
+		end
+	end)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("Chams") ChamsFolder:ClearAllChildren() end, true, function() return "" end, "testing")
+ChamsColor = Chams.CreateColorSlider("Player Color", function(val) end)
+ChamsTransparency = Chams.CreateSlider("Transparency", 1, 100, function(val) end, 50)
+ChamsOnTop = Chams.CreateToggle("Bypass Walls", function() end, function() end, true)
+	
+GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
+local NameTagsFolder = Instance.new("Folder")
+NameTagsFolder.Name = "NameTagsFolder"
+NameTagsFolder.Parent = GuiLibrary["MainGui"]
+players.PlayerRemoving:connect(function(plr)
+	if NameTagsFolder:FindFirstChild(plr.Name) then
+		NameTagsFolder[plr.Name]:Remove()
+	end
+end)
+local NameTagsColor = {["Value"] = 0.44}
+local NameTagsDisplayName = {["Enabled"] = false}
+local NameTagsHealth = {["Enabled"] = false}
+local NameTagsDistance = {["Enabled"] = false}
+local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("NameTags", function() 
+	game:GetService("RunService"):BindToRenderStep("NameTags", 500, function()
+		for i,plr in pairs(players:GetChildren()) do
+				local thing
+				if NameTagsFolder:FindFirstChild(plr.Name) then
+					thing = NameTagsFolder[plr.Name]
+					thing.Visible = false
+				else
+					thing = Instance.new("TextLabel")
+					thing.BackgroundTransparency = 0.5
+					thing.BackgroundColor3 = Color3.new(0, 0, 0)
+					thing.BorderSizePixel = 0
+					thing.Visible = false
+					thing.RichText = true
+					thing.Name = plr.Name
+					thing.Font = (GuiLibrary["ObjectsThatCanBeSaved"]["VapeOptionsSmooth fontToggle"]["Api"]["Enabled"] and Enum.Font.SourceSans or Enum.Font.Sarpanch)
+					thing.TextSize = 14
+					if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
+						local rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+						local modifiedText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+						thing.Text = modifiedText
+					else
+						local nametagSize = game:GetService("TextService"):GetTextSize(plr.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+						thing.Text = plr.Name
+					end
+					thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+					thing.Parent = NameTagsFolder
+				end
+				
+				if isPlayerTargetable(plr, false, false) then
+					local plrchar = phantomforces["GetCharacter"](plr)
+					local headPos, headVis = cam:WorldToViewportPoint((plrchar.rootpart:GetRenderCFrame() * CFrame.new(0, plrchar.head.Size.Y + plrchar.rootpart.Size.Y, 0)).Position)
+					headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
+					
+					if headVis then
+						local rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+						local modifiedText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+						thing.Text = modifiedText
+						thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+						thing.Visible = headVis
+						thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
+					end
+				end
+			end
+
+	end)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
+NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
+NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end)
+NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end)
+NameTagsDistance = NameTags.CreateToggle("Distance", function() end, function() end)
+
+GuiLibrary["RemoveObject"]("TracersOptionsButton")
+local TracersFolder = Instance.new("Folder")
+TracersFolder.Name = "TracersFolder"
+TracersFolder.Parent = GuiLibrary["MainGui"]
+players.PlayerRemoving:connect(function(plr)
+	if TracersFolder:FindFirstChild(plr.Name) then
+		TracersFolder[plr.Name]:Remove()
+	end
+end)
+local TracersColor = {["Value"] = 0.44}
+local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Tracers", function() 
+	game:GetService("RunService"):BindToRenderStep("Tracers", 500, function()
+		for i,plr in pairs(players:GetChildren()) do
+				local thing
+				if TracersFolder:FindFirstChild(plr.Name) then
+					thing = TracersFolder[plr.Name]
+					if thing.Visible then
+						thing.Visible = false
+					end
+				else
+					thing = Instance.new("Frame")
+					thing.BackgroundTransparency = 0
+					thing.AnchorPoint = Vector2.new(0.5, 0.5)
+					thing.BackgroundColor3 = Color3.new(0, 0, 0)
+					thing.BorderSizePixel = 0
+					thing.Visible = false
+					thing.Name = plr.Name
+					thing.Parent = TracersFolder
+				end
+				
+				if isPlayerTargetable(plr, false, false) then
+					local plrchar = phantomforces["GetCharacter"](plr)
+					local rootScrPos = cam:WorldToViewportPoint(plrchar.head.Position)
+					local tempPos = cam.CFrame:pointToObjectSpace(plrchar.head.Position)
+					if rootScrPos.Z < 0 then
+						tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
+					end
+					local tracerPos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
+					local screensize = cam.ViewportSize
+					local startVector = Vector2.new(screensize.X / 2, screensize.Y / 2)
+					local endVector = Vector2.new(tracerPos.X, tracerPos.Y)
+					local Distance = (startVector - endVector).Magnitude
+					startVector = startVector * (1 / GuiLibrary["MainRescale"].Scale)
+					endVector = endVector * (1 / GuiLibrary["MainRescale"].Scale)
+					thing.Visible = true
+					thing.BackgroundColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(TracersColor["Value"], 1, 1)
+					thing.Size = UDim2.new(0, Distance, 0, 2)
+					thing.Position = UDim2.new(0, (startVector.X + endVector.X) / 2, 0, ((startVector.Y + endVector.Y) / 2) - 36)
+					thing.Rotation = math.atan2(endVector.Y - startVector.Y, endVector.X - startVector.X) * (180 / math.pi)
+				end
+			end
+	end)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("Tracers") TracersFolder:ClearAllChildren() end, true)
+TracersColor = Tracers.CreateColorSlider("Player Color", function(val) end)
