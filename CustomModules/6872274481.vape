@@ -718,34 +718,22 @@ end, true)
 
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 local speedval = {["Value"] = 1}
-local speedmethod = {["Value"] = "AntiCheat A"}
 local speedjump = {["Enabled"] = false}
 local bodyvelo
 local Scaffold = {["Enabled"] = false}
 local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
 	game:GetService("RunService"):BindToRenderStep("Speed", 1, function(delta)
 		if isAlive() and matchState ~= 0 then
-			if speedmethod["Value"] == "AntiCheat A" then
-				if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
-					bodyvelo = Instance.new("BodyVelocity")
-					bodyvelo.Parent = lplr.Character.HumanoidRootPart
-					bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
-				else
-					bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
-				end
-			elseif speedmethod["Value"] == "AntiCheat B" then
-				if (bodyvelo ~= nil) then
-					bodyvelo:Remove()
-				end
-				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
+			if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
+				bodyvelo = Instance.new("BodyVelocity")
+				bodyvelo.Parent = lplr.Character.HumanoidRootPart
+				bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+			else
+				bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
 			end
 			if speedjump["Enabled"] and killauranear and (not Scaffold["Enabled"]) then
 				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-					if speedmethod["Value"] == "AntiCheat A" then
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
-					elseif speedmethod["Value"] == "AntiCheat B" then
-						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0.2, 0)
-					end
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
 				end
 			end
 		end
@@ -755,8 +743,7 @@ end, function()
 		bodyvelo:Remove()
 	end
 	game:GetService("RunService"):UnbindFromRenderStep("Speed")
-end, true, function() return " "..speedmethod["Value"] end, "Makes you go zoom")
-speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, function(val) end)
+end, true, function() return "" end, "Makes you go zoom")
 speedval = speed.CreateSlider("Speed", 1, 30, function(val) end, 30)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
