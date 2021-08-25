@@ -171,6 +171,7 @@ getfunctions = function()
 			end
 		end
 		spawn(function()
+			bedwars["BedTable"] = {}
 			scanforbeds()
 			repeat wait(1) scanforbeds() until #bedwars["BedTable"] > 0
 		end)
@@ -522,7 +523,6 @@ BuyCheck = function()
 			local SharpNewTier = SharpnessUpgrade["tiers"][CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 2 or 1]
 			local ProtCurrency = getItem(ProtNewTier["currency"])
 			if ProtCurrency and ProtCurrency["amount"] >= ProtNewTier["price"] then
-				print("yes")
 				bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 					upgradeId = "armor", 
 					tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 0
@@ -532,8 +532,6 @@ BuyCheck = function()
 			end
 			local SharpCurrency = getItem(SharpNewTier["currency"])
 			if SharpCurrency and SharpCurrency["amount"] >= SharpNewTier["price"] then
-				print("yes2")
-				print(CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 2 or 1)
 				bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 					upgradeId = "damage", 
 					tier = CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 1 or 0
@@ -772,7 +770,11 @@ local function buyballoons()
 		if getItem("balloon") == nil and flybuyballoon["Enabled"] then
 			bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 				shopItem = bedwars["Shop"].getShopItem("balloon")
-			})
+			}):andThen(function(p11)
+				if getItem("balloon") then
+					bedwars["BalloonController"]["inflateBalloon"]()
+				end
+			end)
 		end
 		if getItem("balloon") then
 			bedwars["BalloonController"]["inflateBalloon"]()
@@ -1020,6 +1022,51 @@ local function HealthbarColorTransferFunction(healthPercent)
 	local result = numeratorSum / denominatorSum
 	return Color3.new(result.x, result.y, result.z)
 end
+
+local BedESPFolder = Instance.new("Folder")
+BedESPFolder.Name = "BedESPFolder"
+BedESPFolder.Parent = GuiLibrary["MainGui"]
+local BedESPColor = {["Value"] = 0.44}
+local BedESPTransparency = {["Value"] = 1}
+local BedESPOnTop = {["Enabled"] = true}
+local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("BedESP", function() 
+	game:GetService("RunService"):BindToRenderStep("BedESP", 500, function()
+		for i,plr in pairs(bedwars["BedTable"]) do
+				local thing
+				if plr ~= nil and BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) then
+					thing = BedESPFolder[plr.Name..tostring(plr.Covers.BrickColor)]
+					for partnumber, part in pairs(thing:GetChildren()) do
+						part.Visible = false
+					end
+				end
+				
+				if plr ~= nil then
+					if BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) == nil then
+						local Bedfolder = Instance.new("Folder")
+						Bedfolder.Name = plr.Name..tostring(plr.Covers.BrickColor)
+						Bedfolder.Parent = BedESPFolder
+						thing = Bedfolder
+						for partnumber, part in pairs(plr:GetChildren()) do
+							local boxhandle = Instance.new("BoxHandleAdornment")
+							boxhandle.Size = part.Size + Vector3.new(.01, .01, .01)
+							boxhandle.AlwaysOnTop = true
+							boxhandle.ZIndex = 10
+							boxhandle.Visible = true
+							boxhandle.Color3 = part.Color
+							boxhandle.Name = partnumber
+							boxhandle.Parent = Bedfolder
+						end
+					end
+					for partnumber, part in pairs(thing:GetChildren()) do
+						part.Visible = true
+						if plr:GetChildren()[partnumber] then
+							part.Adornee = plr:GetChildren()[partnumber]
+						end
+					end
+				end
+		end
+	end)
+end, function() game:GetService("RunService"):UnbindFromRenderStep("BedESP") BedESPFolder:ClearAllChildren() end, true, function() return "" end, "testing")
 
 GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
 local NameTagsFolder = Instance.new("Folder")
