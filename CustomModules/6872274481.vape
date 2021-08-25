@@ -757,7 +757,7 @@ end, function()
 	game:GetService("RunService"):UnbindFromRenderStep("Speed")
 end, true, function() return " "..speedmethod["Value"] end, "Makes you go zoom")
 speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, function(val) end)
-speedval = speed.CreateSlider("Speed", 1, 30, function(val) end)
+speedval = speed.CreateSlider("Speed", 1, 30, function(val) end, 30)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
 local function getziplinepos()
