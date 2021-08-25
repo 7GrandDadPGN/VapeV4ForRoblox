@@ -12,7 +12,7 @@ local function GetURL(scripturl)
 	end
 end
 
-local GuiLibrary = loadstring(GetURL("GuiLibrary.lua"))()
+local GuiLibrary = loadstring(GetURL("OldGuiLibrary.lua"))()
 shared.GuiLibrary = GuiLibrary
 local workspace = game:GetService("Workspace")
 local cam = workspace.CurrentCamera
