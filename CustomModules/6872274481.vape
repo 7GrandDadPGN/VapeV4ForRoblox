@@ -459,12 +459,33 @@ local swords = {
 local AutoBuy = {["Enabled"] = false}
 local AutoBuyArmor = {["Enabled"] = false}
 local AutoBuySword = {["Enabled"] = false}
+local AutoBuyUpgrades = {["Enabled"] = false}
 
 local function BuyCheck()
 	if AutoBuy["Enabled"] then
 		local ExecuteInventory = bedwars["getInventory"](lplr)
 		local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (ExecuteInventory.armor[5] == nil and "leather_chestplate")
 		local NextSword = getSword() and swords[getSword().itemType]
+		local ProtectionUpgrade = bedwars["Shop"].getTeamUpgrade("armor")
+		local SharpnessUpgrade = bedwars["Shop"].getTeamUpgrade("damage")
+		if AutoBuySword["Enabled"] and NextSword then
+			local NextSwordTable = bedwars["Shop"].getShopItem(NextSword)
+			local NextSwordCurrency = getItem(NextSwordTable["currency"])
+			if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
+				bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+					shopItem = NextSwordTable
+				}):andThen(function(p11)
+					if p11 then
+						bedwars["SoundManager"]:playSound(12)
+						bedwars["ClientStore"]:dispatch({
+							type = "BedwarsAddItemPurchased", 
+							itemType = NextSwordTable.itemType
+						});
+					end
+					NextSword = swords[NextSwordTable["itemType"]]
+				end)
+			end
+		end
 		if AutoBuyArmor["Enabled"] and NextArmor then
 			local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
 			local NextArmorCurrency = getItem(NextArmorTable["currency"])
@@ -500,14 +521,29 @@ local function BuyCheck()
 				end)
 			end
 		end
-		if AutoBuySword["Enabled"] and NextSword then
-			local NextSwordTable = bedwars["Shop"].getShopItem(NextSword)
-			local NextSwordCurrency = getItem(NextSwordTable["currency"])
-			if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
-				bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-					shopItem = bedwars["Shop"].getShopItem(NextSword)
-				}):andThen(function(p11)
-					NextSword = swords[NextSwordTable["itemType"]]
+		if AutoBuyUpgrades["Enabled"] then
+			local CurrentUpgrades = bedwars["ClientStore"]:getState()["Bedwars"]["teamUpgrades"]
+			local ProtNewTier = ProtectionUpgrade["tiers"][CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 2 or 1]
+			local SharpNewTier = SharpnessUpgrade["tiers"][CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 2 or 1]
+			local ProtCurrency = getItem(ProtNewTier["currency"])
+			if ProtCurrency and ProtCurrency["amount"] >= ProtNewTier["price"] then
+				print("yes")
+				bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+					upgradeId = "armor", 
+					tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 1
+				}):andThen(function()
+					bedwars["SoundManager"]:playSound(11)
+				end)
+			end
+			local SharpCurrency = getItem(SharpNewTier["currency"])
+			if SharpCurrency and SharpCurrency["amount"] >= SharpNewTier["price"] then
+				print("yes2")
+				print(CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 2 or 1)
+				bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+					upgradeId = "damage", 
+					tier = CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 1 or 0
+				}):andThen(function()
+					bedwars["SoundManager"]:playSound(11)
 				end)
 			end
 		end
@@ -523,6 +559,7 @@ bedwars["Client"]:Get("PickupItemEvent"):Connect(BuyCheck)
 AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true)
 AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
 AutoBuySword = AutoBuy.CreateToggle("Buy Sword", function() end, function() end, true)
+AutoBuyUpgrades = AutoBuy.CreateToggle("Buy Team Upgrades", function() end, function() end, true)
 
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
