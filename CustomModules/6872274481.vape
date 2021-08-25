@@ -47,7 +47,7 @@ local function scanforbeds()
 	bedwars["BedTable"] = {}
 	for i = 1, #blocktab do
 		local obj = blocktab[i]
-		if obj.Name == "bed" and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
+		if obj.Name == "bed" then
 			bedwars["BedTable"][#bedwars["BedTable"] + 1] = obj
 		end
 	end  
@@ -172,7 +172,7 @@ getfunctions = function()
 		end
 		spawn(function()
 			scanforbeds()
-			repeat wait(1) scanforbeds() until #bedwars["BedTable"] == (#game.Teams:GetChildren() - 2)
+			repeat wait(1) scanforbeds() until #bedwars["BedTable"] > 0
 		end)
 		bedwars["ClientStore"].changed:connect(function(p3, p4)
 			if p3.Game ~= p4.Game then
@@ -768,10 +768,10 @@ local flypress
 local flyendpress
 
 local function buyballoons()
-	if isAlive() and fly["Enabled"] and flymethod["Value"] == "Balloons" then
+	if isAlive() and fly["Enabled"] then
 		if getItem("balloon") == nil and flybuyballoon["Enabled"] then
 			bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-				shopItem = bedwars["Shop"].getShopItem("balloons")
+				shopItem = bedwars["Shop"].getShopItem("balloon")
 			})
 		end
 		if getItem("balloon") then
