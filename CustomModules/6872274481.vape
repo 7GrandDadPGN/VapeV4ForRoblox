@@ -66,6 +66,10 @@ textlabel.TextStrokeTransparency = 0
 textlabel.TextColor3 = Color3.new(1, 1, 1)
 textlabel.TextSize = 30
 textlabel.Parent = GuiLibrary["MainGui"]
+local textlabel2 = textlabel:Clone()
+textlabel2.Text = "\n\n\nclick the discord button ;)"
+textlabel2.TextSize = 10
+textlabel2.Parent =  GuiLibrary["MainGui"]
 spawn(function()
 	repeat wait() until matchState ~= 0
 	textlabel:Remove()
