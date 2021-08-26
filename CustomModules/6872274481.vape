@@ -941,6 +941,7 @@ local AutoToxicGG = {["Enabled"] = false}
 local AutoToxicWin = {["Enabled"] = false}
 local AutoToxicFinalKill = {["Enabled"] = false}
 local AutoToxicWinStreak = {["Enabled"] = false}
+local AutoToxicAd = {["Enabled"] = false}
 local AutoToxicPhrases = {["RefreshValues"] = function() end}
 local AutoToxicOldWin = bedwars["VictoryScreen"].render
 local victorysaid = false
@@ -952,7 +953,7 @@ bedwars["VictoryScreen"].render = function(winstuff)
 			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
 		end
 		if AutoToxicWin["Enabled"] then
-			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#GuiLibrary["Settings"]["ToxicObject"]["List"] > 0 and GuiLibrary["Settings"]["ToxicObject"]["List"][math.random(1, #GuiLibrary["Settings"]["ToxicObject"]["List"])] or "EZ L TRASH KIDS : Sponsored by Vˤ̴ape V4 :)", "All")
+			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#GuiLibrary["Settings"]["ToxicObject"]["List"] > 0 and GuiLibrary["Settings"]["ToxicObject"]["List"][math.random(1, #GuiLibrary["Settings"]["ToxicObject"]["List"])] or (AutoToxicAd["Enabled"] and "EZ L TRASH KIDS : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
 		end
     end
     return AutoToxicOldWin(winstuff)
@@ -974,6 +975,7 @@ AutoToxicGG = AutoToxic.CreateToggle("AutoGG", function() end, function() end, t
 AutoToxicWin = AutoToxic.CreateToggle("Win", function() end, function() end, true)
 AutoToxicFinalKill = AutoToxic.CreateToggle("Final Kill", function() end, function() end, true)
 AutoToxicWinStreak = AutoToxic.CreateToggle("WinStreak", function() end, function() end, false)
+AutoToxicAd = AutoToxic.CreateToggle("Sponsor", function() end, function() end, false)
 AutoToxicPhrases = AutoToxic.CreateTextList("ToxicList", "phrase (win)", function(user)
 	table.insert(GuiLibrary["Settings"]["ToxicObject"]["List"], user)
 	AutoToxicPhrases["RefreshValues"](GuiLibrary["Settings"]["ToxicObject"]["List"])
