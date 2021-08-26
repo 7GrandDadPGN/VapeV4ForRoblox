@@ -433,6 +433,29 @@ Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOption
 	end)
 end, function() end, true, function() return "" end, "Sets your sprinting to true")
 
+local antivoidypos = 0
+local antivoidpart
+spawn(function()
+	if bedwars["BedTable"][1] then
+		antivoidypos = bedwars["BedTable"][1].Position.Y
+	end
+end)
+local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AntiVoid", function()
+	antivoidpart = Instance.new("Part")
+	antivoidpart.CanCollide = true
+	antivoidpart.Size = Vector3.new(10000, 1, 10000)
+	antivoidpart.Anchored = true
+	antivoidpart.Transparency = 0.5
+	antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
+	antivoidpart.Touched:connect(function(antivoidpart2)
+		if antivoidpart2.Parent == lplr.Character and isAlive() then
+			lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 100, 0)
+		end
+	end)
+	antivoidpart.Parent = game.Workspace
+end, function() antivoidpart:Remove() end, true, function() return "" end, "Gives you a chance to get on land.")
+
+
 local function getScaffold(vec)
     return Vector3.new(math.floor((vec.X / 3) + 0.5) * 3, math.floor((vec.Y / 3) + 0.5) * 3, math.floor((vec.Z / 3) + 0.5) * 3) 
 end
@@ -1037,8 +1060,8 @@ local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 				local thing
 				if plr ~= nil and BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) then
 					thing = BedESPFolder[plr.Name..tostring(plr.Covers.BrickColor)]
-					for partnumber, part in pairs(thing:GetChildren()) do
-						part.Visible = false
+					for antivoidpartnumber, antivoidpart in pairs(thing:GetChildren()) do
+						antivoidpart.Visible = false
 					end
 				end
 				
@@ -1048,21 +1071,21 @@ local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 						Bedfolder.Name = plr.Name..tostring(plr.Covers.BrickColor)
 						Bedfolder.Parent = BedESPFolder
 						thing = Bedfolder
-						for partnumber, part in pairs(plr:GetChildren()) do
+						for antivoidpartnumber, antivoidpart in pairs(plr:GetChildren()) do
 							local boxhandle = Instance.new("BoxHandleAdornment")
-							boxhandle.Size = part.Size + Vector3.new(.01, .01, .01)
+							boxhandle.Size = antivoidpart.Size + Vector3.new(.01, .01, .01)
 							boxhandle.AlwaysOnTop = true
 							boxhandle.ZIndex = 10
 							boxhandle.Visible = true
-							boxhandle.Color3 = part.Color
-							boxhandle.Name = partnumber
+							boxhandle.Color3 = antivoidpart.Color
+							boxhandle.Name = antivoidpartnumber
 							boxhandle.Parent = Bedfolder
 						end
 					end
-					for partnumber, part in pairs(thing:GetChildren()) do
-						part.Visible = true
-						if plr:GetChildren()[partnumber] then
-							part.Adornee = plr:GetChildren()[partnumber]
+					for antivoidpartnumber, antivoidpart in pairs(thing:GetChildren()) do
+						antivoidpart.Visible = true
+						if plr:GetChildren()[antivoidpartnumber] then
+							antivoidpart.Adornee = plr:GetChildren()[antivoidpartnumber]
 						end
 					end
 				end
