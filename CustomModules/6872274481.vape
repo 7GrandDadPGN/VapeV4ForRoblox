@@ -58,6 +58,15 @@ local function scanforbeds()
 	end  
 end
 
+local textlabel = Instance.new("TextLabel")
+textlabel.Size = UDim2.new(1, 0, 1, 0)
+textlabel.Text = "Vape has been discontinued, you may still use it."
+textlabel.BackgroundTransparency = 1
+textlabel.TextColor3 = Color3.new(1, 1, 1)
+textlabel.AutoScale = true
+textlabel.Parent = GuiLibrary["MainGui"]
+wait(5)
+
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
 		if type(v) == "table" then
@@ -1190,7 +1199,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 					
 					if headVis then
 						local inventory = bedwars["getInventory"](plr)
-						local blocksaway = math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude / 3)
+						local blocksaway = math.floor(((isAlive() and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
 						local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..blocksaway.."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 						local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..blocksaway..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
