@@ -180,11 +180,16 @@ getfunctions = function()
 			if p3.Game ~= p4.Game then
 				if p3.Game.matchState ~= p4.Game.matchState then
 					matchState = p3.Game.matchState
+					if matchState ~= 0 then
+						kit = rawget(bedwars["ClientStore"]:getState()["Bedwars"], "kit")
+					end
 				end
 			end
 		end)
 		matchState = bedwars["ClientStore"]:getState().Game.matchState
-		kit = bedwars["ClientStore"]:getState()["Bedwars"]["kit"]
+		if matchState ~= 0 then
+			kit = rawget(bedwars["ClientStore"]:getState()["Bedwars"], "kit")
+		end
 	else
 		wait(1)
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
@@ -447,8 +452,8 @@ local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Cre
 	antivoidpart.Anchored = true
 	antivoidpart.Transparency = 0.5
 	antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
-	antivoidpart.Touched:connect(function(antivoidpart2)
-		if antivoidpart2.Parent == lplr.Character and isAlive() then
+	antivoidpart.Touched:connect(function(touchedpart)
+		if touchedpart.Parent == lplr.Character and isAlive() then
 			lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 100, 0)
 		end
 	end)
@@ -635,7 +640,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					if isAlive() and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 						if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 							killauranear = true
-							if killauraautoblock["Enabled"] then
+							if killauraautoblock["Enabled"] and kit == "shielder" then
 								spawn(bedwars["raiseShield"])
 							end
 							if killauracframe["Enabled"] then
@@ -1060,8 +1065,8 @@ local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 				local thing
 				if plr ~= nil and BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) then
 					thing = BedESPFolder[plr.Name..tostring(plr.Covers.BrickColor)]
-					for antivoidpartnumber, antivoidpart in pairs(thing:GetChildren()) do
-						antivoidpart.Visible = false
+					for bedespnumber, bedesppart in pairs(thing:GetChildren()) do
+						bedesppart.Visible = false
 					end
 				end
 				
@@ -1071,21 +1076,21 @@ local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 						Bedfolder.Name = plr.Name..tostring(plr.Covers.BrickColor)
 						Bedfolder.Parent = BedESPFolder
 						thing = Bedfolder
-						for antivoidpartnumber, antivoidpart in pairs(plr:GetChildren()) do
+						for bedespnumber, bedesppart in pairs(plr:GetChildren()) do
 							local boxhandle = Instance.new("BoxHandleAdornment")
-							boxhandle.Size = antivoidpart.Size + Vector3.new(.01, .01, .01)
+							boxhandle.Size = bedesppart.Size + Vector3.new(.01, .01, .01)
 							boxhandle.AlwaysOnTop = true
 							boxhandle.ZIndex = 10
 							boxhandle.Visible = true
-							boxhandle.Color3 = antivoidpart.Color
-							boxhandle.Name = antivoidpartnumber
+							boxhandle.Color3 = bedesppart.Color
+							boxhandle.Name = bedespnumber
 							boxhandle.Parent = Bedfolder
 						end
 					end
-					for antivoidpartnumber, antivoidpart in pairs(thing:GetChildren()) do
-						antivoidpart.Visible = true
-						if plr:GetChildren()[antivoidpartnumber] then
-							antivoidpart.Adornee = plr:GetChildren()[antivoidpartnumber]
+					for bedespnumber, bedesppart in pairs(thing:GetChildren()) do
+						bedesppart.Visible = true
+						if plr:GetChildren()[bedespnumber] then
+							bedesppart.Adornee = plr:GetChildren()[bedespnumber]
 						end
 					end
 				end
