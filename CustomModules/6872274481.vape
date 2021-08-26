@@ -59,7 +59,8 @@ local function scanforbeds()
 end
 
 local textlabel = Instance.new("TextLabel")
-textlabel.Size = UDim2.new(1, 0, 1, 0)
+textlabel.Size = UDim2.new(1, 0, 0, 36)
+textlabel.Position = UDim2.new(0, 0, 0, -36)
 textlabel.Text = "Vape has been discontinued, you may still use it."
 textlabel.BackgroundTransparency = 1
 textlabel.TextStrokeTransparency = 0
