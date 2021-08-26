@@ -56,9 +56,10 @@ local QueueTypes = {}
 for i,v in pairs(workspace.Lobby.Queues:GetChildren()) do table.insert(QueueTypes, v.Name) end
 local JoinQueue = {["Enabled"] = false}
 local JoinQueueTypes = {["Value"] = QueueTypes[1]}
+local JoinQueueDelay = {["Value"] = 1}
 JoinQueue = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoQueue", function()
 	spawn(function()
-		wait(1)
+		wait(JoinQueueDelay["Value"])
 		if bedwars["ClientStore"]:getState().Party.leader.userId == lplr.UserId and bedwars["Client"]:Get("JoinQueue"):CallServer({
 			queueType = JoinQueueTypes["Value"]
 		}) then end
@@ -67,3 +68,4 @@ end, function()
 	bedwars["Client"]:Get("LeaveQueue"):CallServer();
 end, true)
 JoinQueueTypes = JoinQueue.CreateDropdown("Mode", QueueTypes, function(val) end)
+JoinQueueDelay = JoinQueue.CreateSlider("Delay", 1, 10, function(val) end, 1)
