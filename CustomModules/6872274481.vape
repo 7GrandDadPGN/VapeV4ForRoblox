@@ -73,6 +73,7 @@ textlabel2.Parent =  GuiLibrary["MainGui"]
 spawn(function()
 	repeat wait() until matchState ~= 0
 	textlabel:Remove()
+	textlabel2:Remove()
 end)
 
 getfunctions = function()
