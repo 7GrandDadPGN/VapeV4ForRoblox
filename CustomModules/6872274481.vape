@@ -14,6 +14,7 @@ local getfunctions
 local origC0 = nil
 local matchState = 0
 local kit = ""
+local antivoidypos = 0
 
 local function getItem(itemName)
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
@@ -50,6 +51,9 @@ local function scanforbeds()
 		local obj = blocktab[i]
 		if obj.Name == "bed" then
 			bedwars["BedTable"][#bedwars["BedTable"] + 1] = obj
+			if antivoidypos == 0 then
+				antivoidypos = obj.Position.Y
+			end
 		end
 	end  
 end
@@ -438,26 +442,23 @@ Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOption
 	end)
 end, function() end, true, function() return "" end, "Sets your sprinting to true")
 
-local antivoidypos = 0
 local antivoidpart
-spawn(function()
-	if bedwars["BedTable"][1] then
-		antivoidypos = bedwars["BedTable"][1].Position.Y
-	end
-end)
 local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AntiVoid", function()
-	antivoidpart = Instance.new("Part")
-	antivoidpart.CanCollide = true
-	antivoidpart.Size = Vector3.new(10000, 1, 10000)
-	antivoidpart.Anchored = true
-	antivoidpart.Transparency = 0.5
-	antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
-	antivoidpart.Touched:connect(function(touchedpart)
-		if touchedpart.Parent == lplr.Character and isAlive() then
-			lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 100, 0)
-		end
+	spawn(function()
+		repeat wait() until antivoidypos ~= 0
+		antivoidpart = Instance.new("Part")
+		antivoidpart.CanCollide = true
+		antivoidpart.Size = Vector3.new(10000, 1, 10000)
+		antivoidpart.Anchored = true
+		antivoidpart.Transparency = 0.5
+		antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
+		antivoidpart.Touched:connect(function(touchedpart)
+			if touchedpart.Parent == lplr.Character and isAlive() then
+				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 100, 0)
+			end
+		end)
+		antivoidpart.Parent = game.Workspace
 	end)
-	antivoidpart.Parent = game.Workspace
 end, function() antivoidpart:Remove() end, true, function() return "" end, "Gives you a chance to get on land.")
 
 
@@ -1091,6 +1092,8 @@ local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 						bedesppart.Visible = true
 						if plr:GetChildren()[bedespnumber] then
 							bedesppart.Adornee = plr:GetChildren()[bedespnumber]
+						else
+							bedesppart.Adornee = nil
 						end
 					end
 				end
