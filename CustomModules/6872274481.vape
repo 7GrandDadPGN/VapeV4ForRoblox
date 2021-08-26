@@ -933,11 +933,15 @@ ScaffoldExpand = Scaffold.CreateSlider("Expand", 1, 8, function(val) end, 1)
 ScaffoldBuyBlocks = Scaffold.CreateToggle("Buy Blocks", function() end, function() end)
 ScaffoldHandCheck = Scaffold.CreateToggle("Hand Check", function() end, function() end)
 
+if GuiLibrary["Settings"]["ToxicObject"] == nil then
+	GuiLibrary["Settings"]["ToxicObject"] = {["Type"] = "Custom", ["List"] = {}}
+end
 local AutoToxic = {["Enabled"] = false}
 local AutoToxicGG = {["Enabled"] = false}
 local AutoToxicWin = {["Enabled"] = false}
 local AutoToxicFinalKill = {["Enabled"] = false}
 local AutoToxicWinStreak = {["Enabled"] = false}
+local AutoToxicPhrases = {["RefreshValues"] = function() end}
 local AutoToxicOldWin = bedwars["VictoryScreen"].render
 local victorysaid = false
 bedwars["VictoryScreen"].render = function(winstuff)
@@ -948,7 +952,7 @@ bedwars["VictoryScreen"].render = function(winstuff)
 			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
 		end
 		if AutoToxicWin["Enabled"] then
-			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("EZ L TRASH KIDS : Sponsored by Vˤ̴ape V4 :)", "All")
+			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#GuiLibrary["Settings"]["ToxicObject"]["List"] > 0 and GuiLibrary["Settings"]["ToxicObject"]["List"][math.random(1, #GuiLibrary["Settings"]["ToxicObject"]["List"])] or "EZ L TRASH KIDS : Sponsored by Vˤ̴ape V4 :)", "All")
 		end
     end
     return AutoToxicOldWin(winstuff)
@@ -970,6 +974,14 @@ AutoToxicGG = AutoToxic.CreateToggle("AutoGG", function() end, function() end, t
 AutoToxicWin = AutoToxic.CreateToggle("Win", function() end, function() end, true)
 AutoToxicFinalKill = AutoToxic.CreateToggle("Final Kill", function() end, function() end, true)
 AutoToxicWinStreak = AutoToxic.CreateToggle("WinStreak", function() end, function() end, false)
+AutoToxicPhrases = AutoToxic.CreateTextList("ToxicList", "phrase (win)", function(user)
+	table.insert(GuiLibrary["Settings"]["ToxicObject"]["List"], user)
+	AutoToxicPhrases["RefreshValues"](GuiLibrary["Settings"]["ToxicObject"]["List"])
+end, function(num) 
+	table.remove(GuiLibrary["Settings"]["ToxicObject"]["List"], num) 
+	AutoToxicPhrases["RefreshValues"](GuiLibrary["Settings"]["ToxicObject"]["List"])
+end)
+
 
 --local BuyArrows = {["Enabled"] = false}
 --local BowAura = {["Enabled"] = false}
@@ -1062,41 +1074,43 @@ local BedESPTransparency = {["Value"] = 1}
 local BedESPOnTop = {["Enabled"] = true}
 local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("BedESP", function() 
 	game:GetService("RunService"):BindToRenderStep("BedESP", 500, function()
-		for i,plr in pairs(bedwars["BedTable"]) do
-				local thing
-				if plr ~= nil and BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) then
-					thing = BedESPFolder[plr.Name..tostring(plr.Covers.BrickColor)]
-					for bedespnumber, bedesppart in pairs(thing:GetChildren()) do
-						bedesppart.Visible = false
-					end
-				end
-				
-				if plr ~= nil then
-					if BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) == nil then
-						local Bedfolder = Instance.new("Folder")
-						Bedfolder.Name = plr.Name..tostring(plr.Covers.BrickColor)
-						Bedfolder.Parent = BedESPFolder
-						thing = Bedfolder
-						for bedespnumber, bedesppart in pairs(plr:GetChildren()) do
-							local boxhandle = Instance.new("BoxHandleAdornment")
-							boxhandle.Size = bedesppart.Size + Vector3.new(.01, .01, .01)
-							boxhandle.AlwaysOnTop = true
-							boxhandle.ZIndex = 10
-							boxhandle.Visible = true
-							boxhandle.Color3 = bedesppart.Color
-							boxhandle.Name = bedespnumber
-							boxhandle.Parent = Bedfolder
+		if bedwars["BedTable"] then
+			for i,plr in pairs(bedwars["BedTable"]) do
+					local thing
+					if plr ~= nil and BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) then
+						thing = BedESPFolder[plr.Name..tostring(plr.Covers.BrickColor)]
+						for bedespnumber, bedesppart in pairs(thing:GetChildren()) do
+							bedesppart.Visible = false
 						end
 					end
-					for bedespnumber, bedesppart in pairs(thing:GetChildren()) do
-						bedesppart.Visible = true
-						if plr:GetChildren()[bedespnumber] then
-							bedesppart.Adornee = plr:GetChildren()[bedespnumber]
-						else
-							bedesppart.Adornee = nil
+					
+					if plr ~= nil then
+						if BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) == nil then
+							local Bedfolder = Instance.new("Folder")
+							Bedfolder.Name = plr.Name..tostring(plr.Covers.BrickColor)
+							Bedfolder.Parent = BedESPFolder
+							thing = Bedfolder
+							for bedespnumber, bedesppart in pairs(plr:GetChildren()) do
+								local boxhandle = Instance.new("BoxHandleAdornment")
+								boxhandle.Size = bedesppart.Size + Vector3.new(.01, .01, .01)
+								boxhandle.AlwaysOnTop = true
+								boxhandle.ZIndex = 10
+								boxhandle.Visible = true
+								boxhandle.Color3 = bedesppart.Color
+								boxhandle.Name = bedespnumber
+								boxhandle.Parent = Bedfolder
+							end
+						end
+						for bedespnumber, bedesppart in pairs(thing:GetChildren()) do
+							bedesppart.Visible = true
+							if plr:GetChildren()[bedespnumber] then
+								bedesppart.Adornee = plr:GetChildren()[bedespnumber]
+							else
+								bedesppart.Adornee = nil
+							end
 						end
 					end
-				end
+			end
 		end
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("BedESP") BedESPFolder:ClearAllChildren() end, true, function() return "" end, "testing")
