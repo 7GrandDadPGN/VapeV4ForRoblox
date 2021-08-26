@@ -63,7 +63,7 @@ textlabel.Size = UDim2.new(1, 0, 1, 0)
 textlabel.Text = "Vape has been discontinued, you may still use it."
 textlabel.BackgroundTransparency = 1
 textlabel.TextColor3 = Color3.new(1, 1, 1)
-textlabel.AutoScale = true
+textlabel.TextSize = 30
 textlabel.Parent = GuiLibrary["MainGui"]
 wait(5)
 
