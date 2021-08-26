@@ -67,7 +67,7 @@ textlabel.TextColor3 = Color3.new(1, 1, 1)
 textlabel.TextSize = 30
 textlabel.Parent = GuiLibrary["MainGui"]
 spawn(function()
-	wait(3)
+	repeat wait() until matchState ~= 0
 	textlabel:Remove()
 end)
 
