@@ -451,7 +451,7 @@ end, function()
 		end
 	end
 end, true)
-hitboxexpand = Hitbox.CreateSlider("Expand amount", 1, 10, function(val) end)
+hitboxexpand = Hitbox.CreateSlider("Expand amount", 1, 30, function(val) end)
 
 local killauraaps = {["GetRandomValue"] = function() return 1 end}
 local killaurarange = {["Value"] = 1}
