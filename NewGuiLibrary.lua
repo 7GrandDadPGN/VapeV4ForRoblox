@@ -369,6 +369,37 @@ api["CreateMainWindow"] = function()
 	settingswheel.Position = UDim2.new(1, -25, 0, 14)
 	settingswheel.BackgroundTransparency = 1
 	settingswheel.Parent = windowtitle
+	local discordbutton = settingswheel:Clone()
+	discordbutton.Size = UDim2.new(0, 16, 0, 16)
+	discordbutton.Image = getcustomassetfunc("vape/assets/DiscordIcon.png")
+	discordbutton.Position = UDim2.new(1, -52, 0, 13)
+	discordbutton.Parent = windowtitle
+	discordbutton.MouseButton1Click:connect(function()
+		spawn(function()
+			for i = 1, 14 do
+				spawn(function()
+					local reqbody = {
+						["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
+						["args"] = {
+							["invite"] = {["code"] = "CBWsjk57SN"},
+							["code"] = "CBWsjk57SN",
+						},
+						["cmd"] = "INVITE_BROWSER"
+					}
+					local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
+					syn.request({
+						Headers = {
+							["Content-Type"] = "application/json",
+							["Origin"] = "https://discord.com"
+						},
+						Url = "http://127.0.0.1:64"..(53 + i).."/rpc?v=1",
+						Method = "POST",
+						Body = newreq
+					})
+				end)
+			end
+		end)
+	end)
 	local settingsexit = Instance.new("ImageButton")
 	settingsexit.Name = "SettingsExit"
 	settingsexit.ImageColor3 = Color3.fromRGB(121, 121, 121)
