@@ -953,7 +953,7 @@ bedwars["VictoryScreen"].render = function(winstuff)
 			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
 		end
 		if AutoToxicWin["Enabled"] then
-			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#GuiLibrary["Settings"]["ToxicObject"]["List"] > 0 and GuiLibrary["Settings"]["ToxicObject"]["List"][math.random(1, #GuiLibrary["Settings"]["ToxicObject"]["List"])] or (AutoToxicAd["Enabled"] and "EZ L TRASH KIDS : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
+			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#GuiLibrary["Settings"]["ToxicObject"]["List"] > 0 and GuiLibrary["Settings"]["ToxicObject"]["List"][math.random(1, #GuiLibrary["Settings"]["ToxicObject"]["List"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
 		end
     end
     return AutoToxicOldWin(winstuff)
