@@ -706,13 +706,15 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			for i = 1, #tab do
 				local obj = tab[i]
 				if isAlive() then
+					if obj and obj.Parent == nil then
+						thing:Remove()
+						bedwars["BedTable"][i] = nil
+					end
 					if obj and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
 						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
 							bedwars["breakBlock"](obj.Position + Vector3.new(0, 3, 0))
 							bedwars["breakBlock"](obj.Position)
 						end
-					else
-						tab[i] = nil
 					end
 				end
 			end
@@ -1069,13 +1071,14 @@ local function HealthbarColorTransferFunction(healthPercent)
 	return Color3.new(result.x, result.y, result.z)
 end
 
+local BedESP = {["Enabled"] = false}
 local BedESPFolder = Instance.new("Folder")
 BedESPFolder.Name = "BedESPFolder"
 BedESPFolder.Parent = GuiLibrary["MainGui"]
 local BedESPColor = {["Value"] = 0.44}
 local BedESPTransparency = {["Value"] = 1}
 local BedESPOnTop = {["Enabled"] = true}
-local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("BedESP", function() 
+BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("BedESP", function() 
 	game:GetService("RunService"):BindToRenderStep("BedESP", 500, function()
 		if bedwars["BedTable"] then
 			for i,plr in pairs(bedwars["BedTable"]) do
@@ -1113,9 +1116,10 @@ local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 							end
 						end
 					end
-			end
-			if #bedwars["BedTable"] ~= #BedESPFolder:GetChildren() then
-				BedESPFolder:ClearAllChildren()
+					if plr ~= nil and plr.Parent == nil then
+						thing:Remove()
+						bedwars["BedTable"][i] = nil
+					end
 			end
 		end
 	end)
