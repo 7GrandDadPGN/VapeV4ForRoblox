@@ -749,7 +749,9 @@ local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].C
 			end
 		end
 	end)
-end, function() end, true)
+end, function() 
+	game:GetService("RunService"):UnbindFromRenderStep("FastPickup")
+end, true)
 FastPickupRange = FastPickup.CreateSlider("Range", 1, 10, function() end, 10)
 
 local bednukerrange = {["Value"] = 1}
