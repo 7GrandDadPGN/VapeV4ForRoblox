@@ -1111,6 +1111,9 @@ local BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 						end
 					end
 			end
+			if #bedwars["BedTable"] ~= #BedESPFolder:GetChildren() then
+				BedESPFolder:ClearAllChildren()
+			end
 		end
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("BedESP") BedESPFolder:ClearAllChildren() end, true, function() return "" end, "testing")
