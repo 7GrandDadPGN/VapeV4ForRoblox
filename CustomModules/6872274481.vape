@@ -16,7 +16,20 @@ local origC0 = nil
 local matchState = 0
 local kit = ""
 local antivoidypos = 0
-local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+local textlabel = Instance.new("TextLabel")
+textlabel.Size = UDim2.new(1, 0, 0, 36)
+textlabel.Text = "Remember to use alts in this new update, report bans to the discord."
+textlabel.BackgroundTransparency = 1
+textlabel.TextStrokeTransparency = 0
+textlabel.TextSize = 30
+textlabel.TextColor3 = Color3.new(1, 1, 1)
+textlabel.Position = UDim2.new(0, 0, 0, -36)
+textlabel.Parent = GuiLibrary["MainGui"]
+spawn(function()
+	repeat wait() until matchState ~= 0
+	textlabel:Remove()
+end)
+--[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
 if place.Updated ~= "2021-08-27T20:25:05.3390746Z" then
     local textlabel = Instance.new("TextLabel")
     textlabel.Size = UDim2.new(1, 0, 1, 36)
@@ -28,7 +41,7 @@ if place.Updated ~= "2021-08-27T20:25:05.3390746Z" then
     spawn(function()
         while true do end
     end)
-end
+end]]
 
 local function getItem(itemName)
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
@@ -501,6 +514,28 @@ local swords = {
 	["iron_sword"] = "diamond_sword",
 	["diamond_sword"] = "emerald_sword"
 }
+local betterswords = {
+	["stone_sword"] = 2,
+	["iron_sword"] = 3,
+	["diamond_sword"] = 4,
+	["emerald_sword"] = 5,
+}
+
+
+local function checkallswords()
+	local highestsword = 1
+	local currentbuyablesword = nil
+	for i, v in pairs(betterswords) do
+		local NextSwordTable = bedwars["Shop"].getShopItem(i)
+		local NextSwordCurrency = getItem(NextSwordTable["currency"])
+		if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] and highestsword < v then
+			highestsword =  v
+			currentbuyablesword = i
+		end
+	end
+	return currentbuyablesword
+end
+
 local AutoBuy = {["Enabled"] = false}
 local AutoBuyArmor = {["Enabled"] = false}
 local AutoBuySword = {["Enabled"] = false}
@@ -511,13 +546,13 @@ BuyCheck = function()
 	if AutoBuy["Enabled"] then
 		local ExecuteInventory = bedwars["getInventory"](lplr)
 		local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (ExecuteInventory.armor[5] == nil and "leather_chestplate")
-		local NextSword = getSword() and swords[getSword().itemType]
-		local ProtectionUpgrade = bedwars["Shop"].getTeamUpgrade("armor")
-		local SharpnessUpgrade = bedwars["Shop"].getTeamUpgrade("damage")
+		local NextSword = getSword()
+		local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
+		local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
 		if AutoBuySword["Enabled"] and NextSword then
-			local NextSwordTable = bedwars["Shop"].getShopItem(NextSword)
-			local NextSwordCurrency = getItem(NextSwordTable["currency"])
-			if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
+			local buyablesword = checkallswords()
+			if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
+				local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
 				bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 					shopItem = NextSwordTable
 				}):andThen(function(p11)
