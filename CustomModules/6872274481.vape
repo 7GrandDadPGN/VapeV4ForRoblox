@@ -549,7 +549,7 @@ BuyCheck = function()
 		local NextSword = getSword()
 		local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
 		local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
-		if AutoBuySword["Enabled"] and NextSword and buydelay == false then
+		if AutoBuySword["Enabled"] and NextSword then
 			local buyablesword = checkallswords()
 			if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
 				local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
