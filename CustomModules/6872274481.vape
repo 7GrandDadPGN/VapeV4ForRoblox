@@ -699,6 +699,7 @@ local bednukerrange = {["Value"] = 1}
 local BedNuker = {["Enabled"] = false}
 BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BedNuker", function()
 	spawn(function()
+		scanforbeds()
 		repeat
 			wait(0.2)
 			local tab = bedwars["BedTable"]
