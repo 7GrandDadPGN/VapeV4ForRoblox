@@ -697,6 +697,7 @@ killauracframe = Killaura.CreateToggle("Face target", function() end, function()
 
 local bednukerrange = {["Value"] = 1}
 local BedNuker = {["Enabled"] = false}
+local BedNukerTopBlock = {["Enabled"] = false}
 BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BedNuker", function()
 	spawn(function()
 		scanforbeds()
@@ -712,7 +713,9 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					end
 					if obj and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
 						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
-							bedwars["breakBlock"](obj.Position + Vector3.new(0, 3, 0))
+							if BedNukerTopBlock["Enabled"] then
+								bedwars["breakBlock"](obj.Position + Vector3.new(0, 3, 0))
+							end
 							bedwars["breakBlock"](obj.Position)
 						end
 					end
@@ -722,6 +725,7 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	end)
 end, function() end, true)
 bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
+BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
 
 local fastbreak = {["Enabled"] = false}
 local oldbreakfunction
