@@ -6,6 +6,7 @@ local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
 local targetinfo = shared.VapeTargetInfo
+local collectionservice = game:GetService("CollectionService")
 local uis = game:GetService("UserInputService")
 local mouse = lplr:GetMouse()
 local robloxfriends = {}
@@ -143,6 +144,13 @@ getfunctions = function()
 					end
 				end
 			end
+			if rawget(v, "checkForPickup") then
+				for i2,v2 in pairs(debug.getconstants(v["checkForPickup"])) do
+					if tostring(v2):match("-") or tostring(v2):match("PickupItemDrop") then
+						bedwars["PickupRemote"] = v2
+					end
+				end
+			end
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
 			end
@@ -175,7 +183,7 @@ getfunctions = function()
 		end
 	end
 
-	if (bedwars["PlayerUtil"] and bedwars["Shop"] and bedwars["SoundManager"] and bedwars["SetSelectedShopItem"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
+	if (bedwars["PlayerUtil"] and bedwars["PickupRemote"] and bedwars["Shop"] and bedwars["SoundManager"] and bedwars["SetSelectedShopItem"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
 		repeat wait() until lplr.Team ~= nil
 		local blocktable
 		bedwars["placeBlock"] = function(newpos)
@@ -722,6 +730,27 @@ killauramouse = Killaura.CreateToggle("Require mouse down", function() end, func
 killauragui = Killaura.CreateToggle("GUI Check", function() end, function() end)
 killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
 killaurasound = Killaura.CreateToggle("Remove Sound", function() end, function() end)
+
+local FastPickupRange = {["Value"] = 1}
+local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastPickup", function()
+	game:GetService("RunService"):BindToRenderStep("FastPickup", 1, function()
+		local itemdrops = collectionservice:GetTagged("ItemDrop")
+		if isAlive() then
+			for i,v in pairs(itemdrops) do
+				if (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] then
+					bedwars["Client"]:Get(bedwars["PickupRemote"]):CallServerAsync({
+						itemDrop = v
+					}):andThen(function(p14)
+						if p14 then
+							bedwars["SoundManager"]:playSound(8)
+						end
+					end)
+				end
+			end
+		end
+	end)
+end, function() end, true)
+FastPickupRange = FastPickup.CreateSlider("Range", 1, 10, function() end, 10)
 
 local bednukerrange = {["Value"] = 1}
 local BedNuker = {["Enabled"] = false}
