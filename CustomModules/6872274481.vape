@@ -686,7 +686,7 @@ end, function()
 	game:GetService("RunService"):UnbindFromRenderStep("Killaura") 
 end, true, function()
 	return " BedWars"
-end, "Attack players around you\nwithout aiming at them.")
+end, "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder")
 killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 14)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 360)
 killauratargets = Killaura.CreateSlider("Max targets", 1, 10, function(val) end, 10)
