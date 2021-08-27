@@ -190,8 +190,8 @@ getfunctions = function()
 		end
 		spawn(function()
 			bedwars["BedTable"] = {}
+			repeat wait() until matchState ~= 0
 			scanforbeds()
-			repeat wait(1) scanforbeds() until #bedwars["BedTable"] > 0
 		end)
 		bedwars["ClientStore"].changed:connect(function(p3, p4)
 			if p3.Game ~= p4.Game then
@@ -713,17 +713,12 @@ local BedNuker = {["Enabled"] = false}
 local BedNukerTopBlock = {["Enabled"] = false}
 BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BedNuker", function()
 	spawn(function()
-		scanforbeds()
 		repeat
 			wait(0.2)
 			local tab = bedwars["BedTable"]
 			for i = 1, #tab do
 				local obj = tab[i]
 				if isAlive() then
-					if obj and obj.Parent == nil then
-						thing:Remove()
-						bedwars["BedTable"][i] = nil
-					end
 					if obj and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
 						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
 							if BedNukerTopBlock["Enabled"] then
@@ -1107,7 +1102,7 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 						end
 					end
 					
-					if plr ~= nil then
+					if plr ~= nil and plr.Parent ~= nil and plr.Covers.BrickColor ~= lplr.Team.TeamColor then
 						if BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) == nil then
 							local Bedfolder = Instance.new("Folder")
 							Bedfolder.Name = plr.Name..tostring(plr.Covers.BrickColor)
@@ -1132,10 +1127,6 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 								bedesppart.Adornee = nil
 							end
 						end
-					end
-					if plr ~= nil and plr.Parent == nil then
-						thing:Remove()
-						bedwars["BedTable"][i] = nil
 					end
 			end
 		end
