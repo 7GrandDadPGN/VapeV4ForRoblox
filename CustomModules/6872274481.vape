@@ -459,7 +459,7 @@ local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Cre
 		end)
 		antivoidpart.Parent = game.Workspace
 	end)
-end, function() antivoidpart:Remove() end, true, function() return "" end, "Gives you a chance to get on land.")
+end, function() antivoidpart:Remove() end, true, function() return "" end, "Gives you a chance to get on land (Not Perfect)")
 
 
 local function getScaffold(vec)
