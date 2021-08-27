@@ -690,8 +690,8 @@ end, "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inf
 killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 14)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 360)
 killauratargets = Killaura.CreateSlider("Max targets", 1, 10, function(val) end, 10)
-killauraautoblock = Killaura.CreateToggle("AutoBlock", function() end, function() end)
-killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end)
+killauraautoblock = Killaura.CreateToggle("AutoBlock", function() end, function() end, true)
+killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end, false)
 killauragui = Killaura.CreateToggle("GUI Check", function() end, function() end)
 killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
 
