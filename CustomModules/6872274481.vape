@@ -621,11 +621,11 @@ local oldsound = function() end
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
 	oldplay = bedwars["ViewmodelController"]["playAnimation"]
 	oldsound = bedwars["SoundManager"]["playSound"]
-	bedwars["SoundManager"]["playSound"] = function(tab, soundid)
+	bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
 		if (soundid == 13 or soundid == 14) and Killaura["Enabled"] and killaurasound["Enabled"] then
 			return nil
 		end
-		return oldsound(tab, soundid)
+		return oldsound(tab, soundid, ...)
 	end
 	bedwars["ViewmodelController"]["playAnimation"] = function(Self, id, ...)
 		if id == 5 and killauranear and killauraautoblock["Enabled"] and isAlive() and kit == "shielder" then
