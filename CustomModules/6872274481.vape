@@ -101,7 +101,14 @@ getfunctions = function()
 				bedwars["BlockController3"] = v
 			end
 			if rawget(v, "getInventory") then
-				bedwars["getInventory"] = v["getInventory"]
+				bedwars["getInventory"] = function(plr)
+					local suc, result = pcall(function() return v["getInventory"](plr) end)
+					return (suc and result or {
+						["items"] = {},
+						["armor"] = {},
+						["hand"] = nil
+					})
+				end
 			end
 			if rawget(v, "Client") and bedwars["Client"] == nil then
 				bedwars["Client"] = v.Client
@@ -486,7 +493,6 @@ local buyingthing = false
 local BuyCheck = function() end
 BuyCheck = function()
 	if AutoBuy["Enabled"] then
-		pcall(function()
 			local ExecuteInventory = bedwars["getInventory"](lplr)
 			local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (ExecuteInventory.armor[5] == nil and "leather_chestplate")
 			local NextSword = getSword()
@@ -576,7 +582,6 @@ BuyCheck = function()
 					end)
 				end
 			end
-		end)
 	end
 end
 
@@ -1239,21 +1244,19 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 					headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
 					
 					if headVis then
-						pcall(function()
-							local inventory = bedwars["getInventory"](plr)
-							if inventory.hand then
-								thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
-							end
-							if inventory.armor[4] then
-								thing.Helmet.Image = bedwars["getIcon"](inventory.armor[4], NameTagsShowInventory["Enabled"])
-							end
-							if inventory.armor[5] then
-								thing.Chestplate.Image = bedwars["getIcon"](inventory.armor[5], NameTagsShowInventory["Enabled"])
-							end
-							if inventory.armor[6] then
-								thing.Boots.Image = bedwars["getIcon"](inventory.armor[6], NameTagsShowInventory["Enabled"])
-							end
-						end)
+						local inventory = bedwars["getInventory"](plr)
+						if inventory.hand then
+							thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
+						end
+						if inventory.armor[4] then
+							thing.Helmet.Image = bedwars["getIcon"](inventory.armor[4], NameTagsShowInventory["Enabled"])
+						end
+						if inventory.armor[5] then
+							thing.Chestplate.Image = bedwars["getIcon"](inventory.armor[5], NameTagsShowInventory["Enabled"])
+						end
+						if inventory.armor[6] then
+							thing.Boots.Image = bedwars["getIcon"](inventory.armor[6], NameTagsShowInventory["Enabled"])
+						end
 						local blocksaway = math.floor(((isAlive() and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
 						local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..blocksaway.."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
