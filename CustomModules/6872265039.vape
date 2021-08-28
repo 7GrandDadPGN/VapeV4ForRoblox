@@ -62,7 +62,11 @@ JoinQueue = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 		wait(JoinQueueDelay["Value"])
 		if bedwars["ClientStore"]:getState().Party.leader.userId == lplr.UserId and bedwars["Client"]:Get("JoinQueue"):CallServer({
 			queueType = JoinQueueTypes["Value"]
-		}) then end
+		}) then
+			if JoinQueue["Enabled"] == false then
+				bedwars["Client"]:Get("LeaveQueue"):CallServer()
+			end
+		end
 	end)
 end, function()
 	bedwars["Client"]:Get("LeaveQueue"):CallServer();

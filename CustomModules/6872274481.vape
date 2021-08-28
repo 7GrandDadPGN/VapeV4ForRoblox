@@ -78,9 +78,6 @@ local function scanforbeds()
 		local obj = blocktab[i]
 		if obj.Name == "bed" then
 			bedwars["BedTable"][#bedwars["BedTable"] + 1] = obj
-			if antivoidypos == 0 then
-				antivoidypos = obj.Position.Y
-			end
 		end
 	end  
 end
@@ -97,8 +94,8 @@ getfunctions = function()
 			if rawget(v, "BlockPlacer") then
 				bedwars["BlockController2"] = v["BlockPlacer"]
 			end
-			if rawget(v, "BlockBreaker") then
-				bedwars["BlockController3"] = v["BlockBreaker"]
+			if rawget(v, "calculateBlockDamage") then
+				bedwars["BlockController3"] = v
 			end
 			if rawget(v, "getInventory") then
 				bedwars["getInventory"] = v["getInventory"]
@@ -213,6 +210,7 @@ getfunctions = function()
 			bedwars["BedTable"] = {}
 			repeat wait() until matchState ~= 0
 			scanforbeds()
+			antivoidypos = workspace.MapCFrames.spawn.Value.p.Y * 3
 		end)
 		bedwars["ClientStore"].changed:connect(function(p3, p4)
 			if p3.Game ~= p4.Game then
@@ -442,13 +440,6 @@ end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker"
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
 
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
-local oldreach1 = bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE
-local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Reach", function()
-	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1 * 3
-end, function() 
-	debug.setupvalue(bedwars["SwingSwordRegion"], 3, 3)
-	bedwars["CombatConstant"].RAYCAST_SWORD_CHARACTER_DISTANCE = oldreach1
-end, true, function() return "" end, "Extends attack reach")
 
 local velohorizontal = {["Value"] = 100}
 local velovertical = {["Value"] = 100}
@@ -540,6 +531,7 @@ local AutoBuy = {["Enabled"] = false}
 local AutoBuyArmor = {["Enabled"] = false}
 local AutoBuySword = {["Enabled"] = false}
 local AutoBuyUpgrades = {["Enabled"] = false}
+local buyingthing = false
 
 local BuyCheck = function() end
 BuyCheck = function()
@@ -549,9 +541,10 @@ BuyCheck = function()
 		local NextSword = getSword()
 		local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
 		local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
-		if AutoBuySword["Enabled"] and NextSword then
+		if AutoBuySword["Enabled"] and NextSword and buyingthing == false then
 			local buyablesword = checkallswords()
 			if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
+				buyingthing = true
 				local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
 				bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 					shopItem = NextSwordTable
@@ -564,6 +557,7 @@ BuyCheck = function()
 						});
 					end
 					NextSword = swords[NextSwordTable["itemType"]]
+					buyingthing = false
 					if p11 then
 						BuyCheck()
 					end
@@ -645,6 +639,7 @@ AutoBuyUpgrades = AutoBuy.CreateToggle("Buy Team Upgrades", function() end, func
 
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
+local killauramethod = {["Value"] = "lookAt"}
 local killaurarange = {["Value"] = 1}
 local killauraangle = {["Value"] = 90}
 local killauratargets = {["Value"] = 10}
@@ -724,7 +719,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							}
 							targetsize = targetsize + 1
 							killauradelay = tick() + 0.1
-							bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
+							bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, (killauramethod["Value"] == "lookAt" and CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).lookVector or Ray.new(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).Unit.Direction))	
 						end
 					else
 						killauranear = false
@@ -755,6 +750,7 @@ end, function()
 end, true, function()
 	return " BedWars"
 end, "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder")
+killauramethod = Killaura.CreateDropdown("Aim Method", {"lookAt", "Ray"}, function(val) end)
 killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 14)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 360)
 killauratargets = Killaura.CreateSlider("Max targets", 1, 10, function(val) end, 10)
@@ -793,7 +789,7 @@ local BedNukerTopBlock = {["Enabled"] = false}
 BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BedNuker", function()
 	spawn(function()
 		repeat
-			wait(0.2)
+			wait()
 			local tab = bedwars["BedTable"]
 			for i = 1, #tab do
 				local obj = tab[i]
@@ -813,19 +809,24 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 end, function() end, true)
 bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
 BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
-
+GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 local fastbreak = {["Enabled"] = false}
+local fastbreakhits = {["Value"] = 1}
 local oldbreakfunction
 fastbreak = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastBreak", function()
-	oldbreakfunction = bedwars["BlockController3"]["hitBlock"] 
-	bedwars["BlockController3"]["hitBlock"] = function(block, maid, ray)
-		block.blockHealth = 0
-		return oldbreakfunction(block, maid, ray)
+	oldbreakfunction = bedwars["BlockController3"]["calculateBlockDamage"] 
+	bedwars["BlockController3"]["calculateBlockDamage"] = function(p44, p45, p46)
+		local v114 = p44.store:getBlockAt(p46.blockPosition)
+		if v114 then
+			return v114:GetAttribute("Health") / fastbreakhits["Value"]
+		end
+		return oldbreakfunction(p44, p45, p46)
 	end
 end, function()
-	bedwars["BlockController3"]["hitBlock"] = oldbreakfunction
+	bedwars["BlockController3"]["calculateBlockDamage"] = oldbreakfunction
 	oldbreakfunction = nil
 end, true)
+fastbreakhits = fastbreak.CreateSlider("Block Hits", 1, 10, function(val) end, 1)
 
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 local speedval = {["Value"] = 1}
