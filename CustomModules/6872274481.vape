@@ -78,6 +78,9 @@ local function scanforbeds()
 		local obj = blocktab[i]
 		if obj.Name == "bed" then
 			bedwars["BedTable"][#bedwars["BedTable"] + 1] = obj
+			if antivoidypos ~= 0 then
+				antivoidypos = obj.Position.Y
+			end
 		end
 	end  
 end
@@ -209,8 +212,10 @@ getfunctions = function()
 		spawn(function()
 			bedwars["BedTable"] = {}
 			repeat wait() until matchState ~= 0
+			if workspace.MapCFrames:FindFirstChild("spawn") then
+				antivoidypos = workspace.MapCFrames.spawn.Value.p.Y * 3
+			end
 			scanforbeds()
-			antivoidypos = workspace.MapCFrames.spawn.Value.p.Y * 3
 		end)
 		bedwars["ClientStore"].changed:connect(function(p3, p4)
 			if p3.Game ~= p4.Game then
