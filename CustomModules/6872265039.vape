@@ -40,6 +40,22 @@ getfunctions = function()
 end
 getfunctions()
 
+GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
+GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
+GuiLibrary["RemoveObject"]("ReachOptionsButton")
+GuiLibrary["RemoveObject"]("BlinkOptionsButton")
+GuiLibrary["RemoveObject"]("FlyOptionsButton")
+GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
+GuiLibrary["RemoveObject"]("KillauraOptionsButton")
+GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
+GuiLibrary["RemoveObject"]("SpeedOptionsButton")
+GuiLibrary["RemoveObject"]("ESPOptionsButton")
+GuiLibrary["RemoveObject"]("ChamsOptionsButton")
+GuiLibrary["RemoveObject"]("FullbrightOptionsButton")
+GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
+GuiLibrary["RemoveObject"]("SearchOptionsButton")
+GuiLibrary["RemoveObject"]("TracersOptionsButton")
+
 local Sprint = {["Enabled"] = false}
 Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Sprint", function()
 	spawn(function()
