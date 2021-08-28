@@ -399,6 +399,28 @@ api["CreateMainWindow"] = function()
 				end)
 			end
 		end)
+		spawn(function()
+			local hover3textsize = game:GetService("TextService"):GetTextSize("Discord set to clipboard!", 16, Enum.Font.SourceSans, Vector2.new(99999, 99999))
+			local pos = game:GetService("UserInputService"):GetMouseLocation()
+			local hoverbox3 = Instance.new("TextLabel")
+			hoverbox3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			hoverbox3.Active = false
+			hoverbox3.Text = "Discord set to clipboard!"
+			hoverbox3.ZIndex = 5
+			hoverbox3.Size = UDim2.new(0, 13 + hover3textsize.X, 0, hover3textsize.Y + 5)
+			hoverbox3.TextColor3 = Color3.fromRGB(200, 200, 200)
+			hoverbox3.Position = UDim2.new(0, pos.X + 16, 0, pos.Y - (hoverbox3.Size.Y.Offset / 2) - 26)
+			hoverbox3.Font = Enum.Font.SourceSans
+			hoverbox3.TextSize = 16
+			hoverbox3.Visible = true
+			hoverbox3.Parent = clickgui
+			local hoverround3 = Instance.new("UICorner")
+			hoverround3.CornerRadius = UDim.new(0, 4)
+			hoverround3.Parent = hoverbox3
+			setclipboard("https://discord.com/CBWsjk57SN")
+			wait(1)
+			hoverbox3:Remove()
+		end)
 	end)
 	local settingsexit = Instance.new("ImageButton")
 	settingsexit.Name = "SettingsExit"
