@@ -355,7 +355,7 @@ local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 	settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
 end, function()
 	settings():GetService("NetworkSettings").IncomingReplicationLag = 0
-end, false)
+end, false, function() return "" end, "Chokes all packets")
 
 local flyspeed = {["Value"] = 1}
 local flyverticalspeed = {["Value"] = 1}

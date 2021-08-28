@@ -396,6 +396,15 @@ end, true, function() return "" end, "Reduces knockback taken")
 velohorizontal = Velocity.CreateSlider("Horizontal", 0, 100, function(val) bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (val / 100) end, 100)
 velovertical = Velocity.CreateSlider("Vertical", 0, 100, function(val) bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (val / 100) end, 100)
 
+local oldclick
+local noclickdelay = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("NoClickDelay", function()
+	oldclick = bedwars["SwordController"]["isClickingTooFast"]
+	bedwars["SwordController"]["isClickingTooFast"] = function() return false end
+end, function() 
+	bedwars["SwordController"]["isClickingTooFast"] = oldclick
+	oldclick = nil
+end, true, function() return "" end, "Removes Click Delay")
+
 local Sprint = {["Enabled"] = false}
 Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Sprint", function()
 	spawn(function()
@@ -573,7 +582,7 @@ bedwars["ClientStore"].changed:connect(function(p3, p4)
 	BuyCheck()
 end)
 bedwars["Client"]:Get("PickupItemEvent"):Connect(BuyCheck)
-AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true)
+AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true, function() return "" end, "Automatically Buys Swords, Armor, and Team Upgrades.")
 AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
 AutoBuySword = AutoBuy.CreateToggle("Buy Sword", function() end, function() end, true)
 AutoBuyUpgrades = AutoBuy.CreateToggle("Buy Team Upgrades", function() end, function() end, true)
@@ -581,8 +590,8 @@ AutoBuyUpgrades = AutoBuy.CreateToggle("Buy Team Upgrades", function() end, func
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 local killauramethod = {["Value"] = "lookAt"}
-local killaurarange = {["Value"] = 1}
-local killauraangle = {["Value"] = 90}
+local killaurarange = {["Value"] = 14}
+local killauraangle = {["Value"] = 360}
 local killauratargets = {["Value"] = 10}
 local killauramouse = {["Enabled"] = false}
 local killauracframe = {["Enabled"] = false}
@@ -770,6 +779,7 @@ end, true)
 fastbreakhits = fastbreak.CreateSlider("Block Hits", 1, 10, function(val) end, 1)
 
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
+local fly = {["Enabled"] = false}
 local speedval = {["Value"] = 1}
 local speedjump = {["Enabled"] = false}
 local bodyvelo
@@ -782,7 +792,7 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 				bodyvelo.Parent = lplr.Character.HumanoidRootPart
 				bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 			else
-				bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
+				bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * (fly["Enabled"] and 0 or speedval["Value"])
 			end
 			if speedjump["Enabled"] and killauranear and (not Scaffold["Enabled"]) then
 				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
@@ -816,12 +826,11 @@ end
 
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 local OldNoFallFunction
-local fly = {["Enabled"] = false}
 local flymethod = {["Value"] = "Balloons"}
-local flyspeed = {["Value"] = 1}
-local flyverticalspeed = {["Value"] = 1}
-local flyupanddown = {["Enabled"] = false}
-local flybuyballoon = {["Enabled"] = false}
+local flyspeed = {["Value"] = 40}
+local flyverticalspeed = {["Value"] = 40}
+local flyupanddown = {["Enabled"] = true}
+local flybuyballoon = {["Enabled"] = true}
 local olddeflate
 local flyposy = 0
 local flyrequests = 0
@@ -919,10 +928,10 @@ end, true, function() return " BedWars" end, "Makes you go zoom (Balloons Requir
 flymethod = fly.CreateDropdown("Mode", {"Balloons"}, function(val)
 
 end)
-flyspeed = fly.CreateSlider("Speed", 1, 40, function(val) end)
-flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 40, function(val) end)
-flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
-flybuyballoon = fly.CreateToggle("Buy Balloons", function() end, function() end)
+flyspeed = fly.CreateSlider("Speed", 1, 40, function(val) end, 40)
+flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 40, function(val) end, 40)
+flyupanddown = fly.CreateToggle("Y Level", function() end, function() end, true)
+flybuyballoon = fly.CreateToggle("Buy Balloons", function() end, function() end, true)
 
 
 local oldpos = Vector3.new(0, 0, 0)
