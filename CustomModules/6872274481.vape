@@ -194,7 +194,7 @@ getfunctions = function()
 		repeat wait() until lplr.Team ~= nil
 		local blocktable
 		bedwars["placeBlock"] = function(newpos)
-			if blocktable == nil and getwool() then
+			if blocktable == nil and getwool() or getwool():find(lplr.Team.Name:lower()) == nil then
 				blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
 			end
 			if blocktable then
@@ -589,7 +589,6 @@ GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 local killaurabox = Instance.new("BoxHandleAdornment")
 killaurabox.Transparency = 0.5
 killaurabox.Color3 = Color3.new(1, 0, 0)
-killaurabox.Size = Vector3.new(4.01, 5.2, 1.01)
 killaurabox.Adornee = nil
 killaurabox.AlwaysOnTop = true
 killaurabox.ZIndex = 11
