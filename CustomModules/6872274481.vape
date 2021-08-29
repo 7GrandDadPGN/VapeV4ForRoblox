@@ -368,7 +368,7 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 	game:GetService("RunService"):BindToRenderStep("AutoClicker", 1, function() 
 		if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and getEquipped()["Type"] == "sword" and bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
 			bedwars["SwingSword"](bedwars["SwordController"])
-			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
+			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
 		end
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker") end, true, function() return "" end, "Clicks for you")
@@ -573,7 +573,9 @@ BuyCheck = function()
 end
 
 bedwars["ClientStore"].changed:connect(function(p3, p4)
-	BuyCheck()
+	if p3.Inventory.observedInventory.inventory ~= p4.Inventory.observedInventory.inventory then
+		BuyCheck()
+	end
 end)
 bedwars["Client"]:Get("PickupItemEvent"):Connect(BuyCheck)
 AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true, function() return "" end, "Automatically Buys Swords, Armor, and Team Upgrades.")
@@ -583,7 +585,16 @@ AutoBuyUpgrades = AutoBuy.CreateToggle("Buy Team Upgrades", function() end, func
 
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
+
+local killaurabox = Instance.new("BoxHandleAdornment")
+killaurabox.Transparency = 0.5
+killaurabox.Color3 = Color3.new(1, 0, 0)
+killaurabox.Size = Vector3.new(4.01, 5.2, 1.01)
+killaurabox.Adornee = nil
+killaurabox.AlwaysOnTop = true
+killaurabox.Parent = GuiLibrary["MainGui"]
 local killauramethod = {["Value"] = "lookAt"}
+local killauraaps = {["GetRandomValue"] = function() return 1 end}
 local killaurarange = {["Value"] = 14}
 local killauraangle = {["Value"] = 360}
 local killauratargets = {["Value"] = 10}
@@ -591,7 +602,9 @@ local killauramouse = {["Enabled"] = false}
 local killauracframe = {["Enabled"] = false}
 local killauraautoblock = {["Enabled"] = false}
 local killauragui = {["Enabled"] = false}
+local killauratarget = {["Enabled"] = false}
 local killaurasound = {["Enabled"] = false}
+local killauraswing = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauradelay = 0
 local Killauranear = false
@@ -602,7 +615,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	oldplay = bedwars["ViewmodelController"]["playAnimation"]
 	oldsound = bedwars["SoundManager"]["playSound"]
 	bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
-		if (soundid == 13 or soundid == 14) and Killaura["Enabled"] and killaurasound["Enabled"] then
+		if (soundid == 13 or soundid == 14) and Killaura["Enabled"] and killaurasound["Enabled"] and killauranear then
 			return nil
 		end
 		return oldsound(tab, soundid, ...)
@@ -623,9 +636,11 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				end
 			end)
 			return nil
-		else
-			return oldplay(Self, id, ...)
 		end
+		if id == 5 and killauranear and killauraswing["Enabled"] and isAlive() then
+			return nil
+		end
+		return oldplay(Self, id, ...)
 	end
 	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
 		local targettable = {}
@@ -634,6 +649,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratargets["Value"])
 			if #plrs <= 0 then
 				killauranear = false
+				killaurabox.Adornee = nil
 				pcall(function()
 					if origC0 == nil then
 						origC0 = cam.Viewmodel.RightHand.RightWrist.C0
@@ -643,43 +659,47 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					end
 				end)
 			end
-				for i,plr in pairs(plrs) do
-					if isAlive() and getEquipped()["Type"] == "sword" and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
-						if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
-							killauranear = true
-							if killauraautoblock["Enabled"] and kit == "shielder" then
-								spawn(bedwars["raiseShield"])
-							end
-							if killauracframe["Enabled"] then
-								lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
-							end
-							if lplr.Character.Humanoid.SeatPart then
-								lplr.Character.Humanoid.SeatPart.CFrame = CFrame.new(lplr.Character.Humanoid.SeatPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.Humanoid.SeatPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-							end
-							targettable[plr.Name] = {
-								["UserId"] = plr.UserId,
-								["Health"] = plr.Character.Humanoid.Health,
-								["MaxHealth"] = plr.Character.Humanoid.MaxHealth
-							}
-							targetsize = targetsize + 1
-							killauradelay = tick() + 0.1
-							bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, (killauramethod["Value"] == "lookAt" and CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).lookVector or Ray.new(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).Unit.Direction))	
+			for i,plr in pairs(plrs) do
+				local entitytable = {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}
+				if isAlive() and getEquipped()["Type"] == "sword" and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
+						killauranear = true
+						if killauraautoblock["Enabled"] and kit == "shielder" then
+							spawn(bedwars["raiseShield"])
 						end
-					else
-						killauranear = false
-						pcall(function()
-							if origC0 == nil then
-								origC0 = cam.Viewmodel.RightHand.RightWrist.C0
-							end
-							if cam.Viewmodel.RightHand.RightWrist.C0 ~= origC0 then
-								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0}):Play()
-							end
-						end)
+						if killauracframe["Enabled"] then
+							lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+						end
+						if killauratarget["Enabled"] then
+							local ori, size = plr.Character:GetBoundingBox()
+							killaurabox.Adornee = (killauratarget["Enabled"] and plr.Character or nil)
+							killaurabox.Size = size + Vector3.new(.01, .01, .01)
+						end
+						targettable[plr.Name] = {
+							["UserId"] = plr.UserId,
+							["Health"] = plr.Character.Humanoid.Health,
+							["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+						}
+						targetsize = targetsize + 1
+						killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
+						bedwars["attackEntity"](bedwars["SwordController"], entitytable, (killauramethod["Value"] == "lookAt" and CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).lookVector or Ray.new(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).Unit.Direction))	
 					end
+				else
+					killaurabox.Adornee = nil
+					killauranear = false
+					pcall(function()
+						if origC0 == nil then
+							origC0 = cam.Viewmodel.RightHand.RightWrist.C0
+						end
+						if cam.Viewmodel.RightHand.RightWrist.C0 ~= origC0 then
+							game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0}):Play()
+						end
+					end)
 				end
-				if getEquipped()["Type"] ~= "bow" then
-					targetinfo.UpdateInfo(targettable, targetsize)
-				end
+			end
+			if getEquipped()["Type"] ~= "bow" then
+				targetinfo.UpdateInfo(targettable, targetsize)
+			end
 		end
 	end)
 end, function() 
@@ -694,16 +714,19 @@ end, function()
 end, true, function()
 	return " BedWars"
 end, "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder")
-killauramethod = Killaura.CreateDropdown("Aim Method", {"lookAt", "Ray"}, function(val) end)
+killauraaps = Killaura.CreateTwoSlider("Attacks per Second", 1, 20, function(val) end, false, 8, 12)
 killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 14)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 360)
 killauratargets = Killaura.CreateSlider("Max targets", 1, 10, function(val) end, 10)
+killauramethod = Killaura.CreateDropdown("Aim Mode", {"lookAt", "Ray"}, function(val) end)
 killauraautoblock = Killaura.CreateToggle("AutoBlock", function() end, function() end, true)
+killaurawall = Killaura.CreateToggle("Attack through walls", function() end, function() end, true)
 killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end, false)
 killauragui = Killaura.CreateToggle("GUI Check", function() end, function() end)
+killauratarget = Killaura.CreateToggle("Show target", function() end, function() end)
 killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
-killaurasound = Killaura.CreateToggle("Remove Sound", function() end, function() end)
-
+killaurasound = Killaura.CreateToggle("No Swing Sound", function() end, function() end)
+killauraswing = Killaura.CreateToggle("No Swing", function() end, function() end)
 local FastPickupRange = {["Value"] = 1}
 local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastPickup", function()
 	game:GetService("RunService"):BindToRenderStep("FastPickup", 1, function()
