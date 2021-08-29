@@ -71,6 +71,7 @@ local Utility = GuiLibrary.CreateWindow("Utility", "vape/assets/UtilityIcon.png"
 local World = GuiLibrary.CreateWindow("World", "vape/assets/WorldIcon.png", 16, UDim2.new(0, 223, 0, 6), false)
 local Other = GuiLibrary.CreateWindow("Other", "vape/assets/OtherIcon.png", 20, UDim2.new(0, 223, 0, 6), false)
 local Friends = GuiLibrary.CreateWindow2("Friends", "vape/assets/FriendsIcon.png", 17, UDim2.new(0, 177, 0, 6), false)
+local Profiles = GuiLibrary.CreateWindow2("Profiles", "vape/assets/ProfilesIcon.png", 19, UDim2.new(0, 177, 0, 6), false)
 GUI.CreateDivider()
 GUI.CreateButton("Combat", function() Combat.SetVisible(true) end, function() Combat.SetVisible(false) end, "vape/assets/CombatIcon.png", 15)
 GUI.CreateButton("Blatant", function() Blatant.SetVisible(true) end, function() Blatant.SetVisible(false) end, "vape/assets/BlatantIcon.png", 16)
@@ -80,11 +81,13 @@ GUI.CreateButton("World", function() World.SetVisible(true) end, function() Worl
 GUI.CreateButton("Other", function() Other.SetVisible(true) end, function() Other.SetVisible(false) end, "vape/assets/OtherIcon.png", 20)
 GUI.CreateDivider("MISC")
 GUI.CreateButton("Friends", function() Friends.SetVisible(true) end, function() Friends.SetVisible(false) end)
+GUI.CreateButton("Profiles", function() Profiles.SetVisible(true) end, function() Profiles.SetVisible(false) end)
 local FriendsTextList = {["RefreshValues"] = function() end}
 FriendsTextList = Friends.CreateTextList("FriendsList", "Username / Alias", function(user) end, function(num) end, function(obj)
 	local friendcircle = Instance.new("Frame")
 	friendcircle.Size = UDim2.new(0, 10, 0, 10)
 	friendcircle.Name = "FriendCircle"
+	friendcircle.ZIndex = 6
 	friendcircle.BackgroundColor3 = Color3.fromHSV(0.44, 1, 1)
 	friendcircle.BorderSizePixel = 0
 	friendcircle.Position = UDim2.new(0, 10, 0, 13)
@@ -93,16 +96,18 @@ FriendsTextList = Friends.CreateTextList("FriendsList", "Username / Alias", func
 	friendcorner.CornerRadius = UDim.new(0, 8)
 	friendcorner.Parent = friendcircle
 	obj.ItemText.Position = UDim2.new(0, 36, 0, 0)
+	obj.ZIndex = 6
 	obj.ItemText.Size = UDim2.new(0, 157, 0, 33)
+	obj.ItemText.ZIndex = 6
 end)
 Friends.CreateColorSlider("Friends Color", function(val) 
 	pcall(function()
-		FriendsTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(GuiLibrary["FriendsObject"]["Color"], 1, 1)
+		FriendsTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(val, 1, 1)
 	end)
 	for i, v in pairs(FriendsTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
 		pcall(function()
 			if v:IsA("Frame") then
-				v.FriendCircle.BackgroundColor3 = Color3.fromHSV(GuiLibrary["FriendsObject"]["Color"], 1, 1)
+				v.FriendCircle.BackgroundColor3 = Color3.fromHSV(val, 1, 1)
 			end
 		end)
 	end
@@ -110,15 +115,116 @@ end)
 Friends.CreateToggle("Use Friends", function() end, function() end, false, "")	
 Friends.CreateToggle("Use Roblox Friends", function() end, function() end, false, "")
 Friends.CreateToggle("Use color", function() end, function() end, false, "")
-GuiLibrary["FriendsObject"]["MiddleClickFunc"] = function(user)
-	if table.find(FriendsTextList["ObjectTable"], user) == nil then
-		table.insert(FriendsTextList["ObjectTable"], user)
-		FriendsTextList["RefreshValues"](FriendsTextList["ObjectTable"])
-	else
-		table.remove(FriendsTextList["ObjectTable"], table.find(FriendsTextList["ObjectTable"], user)) 
-		FriendsTextList["RefreshValues"](FriendsTextList["ObjectTable"])
+local ProfilesTextList = {["RefreshValues"] = function() end}
+ProfilesTextList = Profiles.CreateTextList("ProfilesList", "Type name", function(user)
+	GuiLibrary["Profiles"][user] = {["Keybind"] = "", ["Selected"] = false}
+end, function(num) 
+	if #ProfilesTextList["ObjectList"] == 0 then
+		table.insert(ProfilesTextList["ObjectList"], "default")
+		ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
 	end
-end
+end, function(obj, profilename) 
+		if GuiLibrary["Profiles"][profilename] == nil then
+			GuiLibrary["Profiles"][profilename] = {["Keybind"] = ""}
+		end
+		obj.MouseButton1Click:connect(function()
+			GuiLibrary["SwitchProfile"](profilename)
+		end)
+		local bindbkg = Instance.new("TextButton")
+		bindbkg.Text = ""
+		bindbkg.AutoButtonColor = false
+		bindbkg.Size = UDim2.new(0, 20, 0, 21)
+		bindbkg.Position = UDim2.new(1, -50, 0, 6)
+		bindbkg.ZIndex = 6
+		bindbkg.BorderSizePixel = 0
+		bindbkg.BackgroundColor3 = Color3.fromRGB(54, 53, 54)
+		bindbkg.Visible = true
+		bindbkg.Parent = obj
+		local bindimg = Instance.new("ImageLabel")
+		bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
+		bindimg.BackgroundTransparency = 1
+		bindimg.Size = UDim2.new(0, 12, 0, 12)
+		bindimg.Position = UDim2.new(0, 4, 0, 5)
+		bindimg.Active = false
+		bindimg.ZIndex = 6
+		bindimg.Visible = (GuiLibrary["Profiles"][profilename]["Keybind"] == "")
+		bindimg.Parent = bindbkg
+		local bindtext = Instance.new("TextLabel")
+		bindtext.Active = false
+		bindtext.BackgroundTransparency = 1
+		bindtext.Text = GuiLibrary["Profiles"][profilename]["Keybind"]
+		bindtext.TextSize = 16
+		bindtext.Parent = bindbkg
+		bindtext.ZIndex = 6
+		bindtext.Font = Enum.Font.SourceSans
+		bindtext.Size = UDim2.new(1, 0, 1, 0)
+		bindtext.TextColor3 = Color3.fromRGB(201, 201, 201)
+		bindtext.Visible = (GuiLibrary["Profiles"][profilename]["Keybind"] ~= "")
+		local bindtext2 = Instance.new("TextLabel")
+		bindtext2.Text = "PRESS A KEY TO BIND"
+		bindtext2.Size = UDim2.new(0, 150, 0, 33)
+		bindtext2.Font = Enum.Font.SourceSans
+		bindtext2.ZIndex = 6
+		bindtext2.TextSize = 17
+		bindtext2.TextColor3 = Color3.fromRGB(201, 201, 201)
+		bindtext2.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
+		bindtext2.BorderSizePixel = 0
+		bindtext2.Visible = false
+		bindtext2.Parent = obj
+		local bindround = Instance.new("UICorner")
+		bindround.CornerRadius = UDim.new(0, 4)
+		bindround.Parent = bindbkg
+		local newsize = UDim2.new(0, 20, 0, 21)
+		bindbkg.MouseButton1Click:connect(function()
+			if GuiLibrary["KeybindCaptured"] == false then
+				GuiLibrary["KeybindCaptured"] = true
+				spawn(function()
+					bindtext2.Visible = true
+					repeat wait() until GuiLibrary["PressedKeybindKey"] ~= ""
+					local key = (GuiLibrary["PressedKeybindKey"] == GuiLibrary["Profiles"][profilename]["Keybind"] and "" or GuiLibrary["PressedKeybindKey"])
+					if key == "" then
+						GuiLibrary["Profiles"][profilename]["Keybind"] = key
+						newsize = UDim2.new(0, 20, 0, 21)
+						bindbkg.Size = newsize
+						bindbkg.Visible = true
+						bindbkg.Position = UDim2.new(1, -(30 + newsize.X.Offset), 0, 6)
+						bindimg.Visible = true
+						bindtext.Visible = false
+						bindtext.Text = key
+					else
+						local textsize = game:GetService("TextService"):GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
+						newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
+						GuiLibrary["Profiles"][profilename]["Keybind"] = key
+						bindbkg.Visible = true
+						bindbkg.Size = newsize
+						bindbkg.Position = UDim2.new(1, -(30 + newsize.X.Offset), 0, 6)
+						bindimg.Visible = false
+						bindtext.Visible = true
+						bindtext.Text = key
+					end
+					GuiLibrary["PressedKeybindKey"] = ""
+					GuiLibrary["KeybindCaptured"] = false
+					bindtext2.Visible = false
+				end)
+			end
+		end)
+		bindbkg.MouseEnter:connect(function() 
+			bindimg.Image = getcustomassetfunc("vape/assets/PencilIcon.png") 
+			bindimg.Visible = true
+			bindtext.Visible = false
+			bindbkg.Size = UDim2.new(0, 20, 0, 21)
+			bindbkg.Position = UDim2.new(1, -50, 0, 6)
+		end)
+		bindbkg.MouseLeave:connect(function() 
+			bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
+			if GuiLibrary["Profiles"][profilename]["Keybind"] ~= "" then
+				bindimg.Visible = false
+				bindtext.Visible = true
+				bindbkg.Size = newsize
+				bindbkg.Position = UDim2.new(1, -(30 + newsize.X.Offset), 0, 6)
+			end
+		end)
+end)
 GUI.CreateDivider()
 ---GUI.CreateCustomButton("Favorites", "vape/assets/FavoritesListIcon.png", UDim2.new(0, 17, 0, 14), function() end, function() end)
 --GUI.CreateCustomButton("Text GUIVertical", "vape/assets/TextGUIIcon3.png", UDim2.new(1, -56, 0, 15), function() end, function() end)
@@ -438,7 +544,27 @@ GUI.CreateToggle("NPCs", function() end, function() end, false, "")
 GUI.CreateToggle("Ignore naked", function() end, function() end, false, "")
 GUI.CreateToggle("Teams by server", function() end, function() end, false, "")
 GUI.CreateToggle("Teams by color", function() end, function() end, true, "")
-GUI.CreateToggle("MiddleClick friends", function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = true end, function() GuiLibrary["FriendsObject"]["MiddleClickFriends"] = false end, false, "")
+local MiddleClickInput
+GUI.CreateToggle("MiddleClick friends", function() 
+	MiddleClickInput = game:GetService("UserInputService").InputBegan:connect(function(input1)
+		if input1.UserInputType == Enum.UserInputType.MouseButton3 then
+			if mouse.Target.Parent:FindFirstChild("HumanoidRootPart") or mouse.Target.Parent:IsA("Accessory") and mouse.Target.Parent.Parent:FindFirstChild("HumanoidRootPart") then
+				local user = (mouse.Target.Parent:IsA("Accessory") and mouse.Target.Parent.Parent.Name or mouse.Target.Parent.Name)
+				if table.find(FriendsTextList["ObjectList"], user) == nil then
+					table.insert(FriendsTextList["ObjectList"], user)
+					FriendsTextList["RefreshValues"](FriendsTextList["ObjectList"])
+				else
+					table.remove(FriendsTextList["ObjectList"], table.find(FriendsTextList["ObjectList"], user)) 
+					FriendsTextList["RefreshValues"](FriendsTextList["ObjectList"])
+				end
+			end
+		end
+	end)
+end, function()
+	if MiddleClickInput then
+		MiddleClickInput:Disconnect()
+	end
+end, false, "")
 local blatantmode = GUI.CreateToggle("Blatant mode", function()
 
 end, function()
@@ -495,6 +621,17 @@ GuiLibrary["UpdateUI"] = function()
 				v["Object"].Slider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
 				v["Object"].Slider.ButtonSlider2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
 			end
+		end
+		ProfilesTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+		for i3, v3 in pairs(ProfilesTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
+		--	pcall(function()
+				if v3:IsA("TextButton") and v3.ItemText.Text == GuiLibrary["CurrentProfile"] then
+					v3.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+					v3.ImageButton.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+					v3.ItemText.TextColor3 = Color3.new(1, 1, 1)
+					v3.ItemText.TextStrokeTransparency = 0.75
+				end
+		--	end)
 		end
 	end)
 end
@@ -562,7 +699,6 @@ SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function()
 	selfdestruct = true
 	SelfDestructButton["ToggleButton"](false)
 	GuiLibrary["SaveSettings"]()
-	GuiLibrary["SaveFriends"]()
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 		if (v["Type"] == "Button" or v["Type"] == "OptionsButton") and v["Api"]["Enabled"] then
 			v["Api"]["ToggleButton"](false)
@@ -573,6 +709,9 @@ SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function()
 	shared.GuiLibrary = nil
 	GuiLibrary["KeyInputHandler"]:Disconnect()
 	GuiLibrary["KeyInputHandler2"]:Disconnect()
+	if MiddleClickInput then
+		MiddleClickInput:Disconnect()
+	end
 	teleportfunc:Disconnect()
 	GuiLibrary["MainGui"]:Remove()
 	GuiLibrary["MainBlur"]:Remove()
@@ -589,6 +728,10 @@ else
 end
 
 GuiLibrary["LoadSettings"]()
+if #ProfilesTextList["ObjectList"] == 0 then
+	table.insert(ProfilesTextList["ObjectList"], "default")
+	ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
+end
 GuiLibrary["UpdateUI"]()
 if blatantmode["Enabled"] then
 	pcall(function()
@@ -601,6 +744,17 @@ if not shared.VapeSwitchServers then
 	GuiLibrary["LoadedAnimation"](welcomemsg["Enabled"])
 else
 	shared.VapeSwitchServers = nil
+end
+if shared.VapeOpenGui then
+	GuiLibrary["MainGui"].ClickGui.Visible = true
+	GuiLibrary["MainBlur"].Enabled = true	
+	shared.VapeOpenGui = nil
+end
+
+for i,v in pairs(GuiLibrary["MainGui"].ClickGui:GetDescendants()) do
+	if v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("Frame") or v:IsA("ImageLabel") or v:IsA("ImageButton") or v:IsA("TextBox") then
+		v.ZIndex = v.ZIndex + 5
+	end
 end
 
 spawn(function()
