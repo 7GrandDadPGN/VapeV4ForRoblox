@@ -335,8 +335,7 @@ end
 api["SwitchProfile"] = function(profilename)
 	api["Profiles"][api["CurrentProfile"]]["Selected"] = false
 	api["Profiles"][profilename]["Selected"] = true
-	print(isfile("vape/Profiles/"..(profilename == "default" and "" or profilename)..game.PlaceId..".vapeprofile"))
-	if (not isfile("vape/Profiles/"..profilename..game.PlaceId..".vapeprofile")) then
+	if (not isfile("vape/Profiles/"..(profilename == "default" and "" or profilename)..game.PlaceId..".vapeprofile")) then
 		local realprofile = api["CurrentProfile"]
 		api["CurrentProfile"] = profilename
 		api["SaveSettings"]()
