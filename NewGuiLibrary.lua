@@ -335,6 +335,12 @@ end
 api["SwitchProfile"] = function(profilename)
 	api["Profiles"][api["CurrentProfile"]]["Selected"] = false
 	api["Profiles"][profilename]["Selected"] = true
+	if (not isfile("vape/Profiles/"..profilename..game.PlaceId..".vapeprofile")) then
+		local realprofile = api["CurrentProfile"]
+		api["CurrentProfile"] = profilename
+		api["SaveSettings"]()
+		api["CurrentProfile"] = realprofile
+	end
 	api["ObjectsThatCanBeSaved"]["SelfDestructOptionsButton"]["Api"]["ToggleButton"](false)
 	shared.VapeSwitchServers = true
 	shared.VapeOpenGui = true
@@ -1802,11 +1808,10 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 				for i,v in pairs(textapi["ObjectList"]) do
 					local itemframe = Instance.new("TextButton")
 					itemframe.Size = UDim2.new(0, 200, 0, 33)
-					itemframe.Text = ""
-					itemframe.AutoButtonColor = false
-					itemframe.ZIndex = 5
 					itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 					itemframe.BorderSizePixel = 0
+					itemframe.Text = ""
+					itemframe.AutoButtonColor = false
 					itemframe.Parent = scrollframe
 					local itemcorner = Instance.new("UICorner")
 					itemcorner.CornerRadius = UDim.new(0, 4)
@@ -1815,7 +1820,6 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					itemtext.BackgroundTransparency = 1
 					itemtext.Size = UDim2.new(0, 193, 0, 33)
 					itemtext.Name = "ItemText"
-					itemtext.ZIndex = 5
 					itemtext.Position = UDim2.new(0, 8, 0, 0)
 					itemtext.Font = Enum.Font.SourceSans
 					itemtext.TextSize = 17
@@ -1826,7 +1830,6 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					local deletebutton = Instance.new("ImageButton")
 					deletebutton.Size = UDim2.new(0, 6, 0, 6)
 					deletebutton.BackgroundTransparency = 1
-					deletebutton.ZIndex = 5
 					deletebutton.AutoButtonColor = false
 					deletebutton.ZIndex = 2
 					deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
@@ -2884,7 +2887,6 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				local itemframe = Instance.new("TextButton")
 				itemframe.Size = UDim2.new(0, 200, 0, 33)
 				itemframe.Text = ""
-				itemframe.ZIndex = 5
 				itemframe.AutoButtonColor = false
 				itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 				itemframe.BorderSizePixel = 0
@@ -2896,7 +2898,6 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				itemtext.BackgroundTransparency = 1
 				itemtext.Size = UDim2.new(0, 193, 0, 33)
 				itemtext.Name = "ItemText"
-				itemtext.ZIndex = 5
 				itemtext.Position = UDim2.new(0, 8, 0, 0)
 				itemtext.Font = Enum.Font.SourceSans
 				itemtext.TextSize = 17
@@ -2908,7 +2909,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				deletebutton.Size = UDim2.new(0, 6, 0, 6)
 				deletebutton.BackgroundTransparency = 1
 				deletebutton.AutoButtonColor = false
-				deletebutton.ZIndex = 6
+				deletebutton.ZIndex = 2
 				deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
 				deletebutton.Position = UDim2.new(1, -16, 0, 14)
 				deletebutton.Parent = itemframe

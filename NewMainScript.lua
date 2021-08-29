@@ -87,7 +87,6 @@ FriendsTextList = Friends.CreateTextList("FriendsList", "Username / Alias", func
 	local friendcircle = Instance.new("Frame")
 	friendcircle.Size = UDim2.new(0, 10, 0, 10)
 	friendcircle.Name = "FriendCircle"
-	friendcircle.ZIndex = 6
 	friendcircle.BackgroundColor3 = Color3.fromHSV(0.44, 1, 1)
 	friendcircle.BorderSizePixel = 0
 	friendcircle.Position = UDim2.new(0, 10, 0, 13)
@@ -96,9 +95,7 @@ FriendsTextList = Friends.CreateTextList("FriendsList", "Username / Alias", func
 	friendcorner.CornerRadius = UDim.new(0, 8)
 	friendcorner.Parent = friendcircle
 	obj.ItemText.Position = UDim2.new(0, 36, 0, 0)
-	obj.ZIndex = 6
 	obj.ItemText.Size = UDim2.new(0, 157, 0, 33)
-	obj.ItemText.ZIndex = 6
 end)
 Friends.CreateColorSlider("Friends Color", function(val) 
 	pcall(function()
@@ -135,7 +132,6 @@ end, function(obj, profilename)
 		bindbkg.AutoButtonColor = false
 		bindbkg.Size = UDim2.new(0, 20, 0, 21)
 		bindbkg.Position = UDim2.new(1, -50, 0, 6)
-		bindbkg.ZIndex = 6
 		bindbkg.BorderSizePixel = 0
 		bindbkg.BackgroundColor3 = Color3.fromRGB(54, 53, 54)
 		bindbkg.Visible = true
@@ -146,7 +142,6 @@ end, function(obj, profilename)
 		bindimg.Size = UDim2.new(0, 12, 0, 12)
 		bindimg.Position = UDim2.new(0, 4, 0, 5)
 		bindimg.Active = false
-		bindimg.ZIndex = 6
 		bindimg.Visible = (GuiLibrary["Profiles"][profilename]["Keybind"] == "")
 		bindimg.Parent = bindbkg
 		local bindtext = Instance.new("TextLabel")
@@ -155,7 +150,6 @@ end, function(obj, profilename)
 		bindtext.Text = GuiLibrary["Profiles"][profilename]["Keybind"]
 		bindtext.TextSize = 16
 		bindtext.Parent = bindbkg
-		bindtext.ZIndex = 6
 		bindtext.Font = Enum.Font.SourceSans
 		bindtext.Size = UDim2.new(1, 0, 1, 0)
 		bindtext.TextColor3 = Color3.fromRGB(201, 201, 201)
@@ -164,7 +158,6 @@ end, function(obj, profilename)
 		bindtext2.Text = "PRESS A KEY TO BIND"
 		bindtext2.Size = UDim2.new(0, 150, 0, 33)
 		bindtext2.Font = Enum.Font.SourceSans
-		bindtext2.ZIndex = 6
 		bindtext2.TextSize = 17
 		bindtext2.TextColor3 = Color3.fromRGB(201, 201, 201)
 		bindtext2.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
@@ -749,12 +742,6 @@ if shared.VapeOpenGui then
 	GuiLibrary["MainGui"].ClickGui.Visible = true
 	GuiLibrary["MainBlur"].Enabled = true	
 	shared.VapeOpenGui = nil
-end
-
-for i,v in pairs(GuiLibrary["MainGui"].ClickGui:GetDescendants()) do
-	if v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("Frame") or v:IsA("ImageLabel") or v:IsA("ImageButton") or v:IsA("TextBox") then
-		v.ZIndex = v.ZIndex + 5
-	end
 end
 
 spawn(function()
