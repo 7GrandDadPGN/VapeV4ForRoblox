@@ -592,6 +592,7 @@ killaurabox.Color3 = Color3.new(1, 0, 0)
 killaurabox.Size = Vector3.new(4.01, 5.2, 1.01)
 killaurabox.Adornee = nil
 killaurabox.AlwaysOnTop = true
+killaurabox.ZIndex = 11
 killaurabox.Parent = GuiLibrary["MainGui"]
 local killauramethod = {["Value"] = "lookAt"}
 local killauraaps = {["GetRandomValue"] = function() return 1 end}
