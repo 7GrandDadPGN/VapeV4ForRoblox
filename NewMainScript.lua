@@ -127,6 +127,7 @@ end, function(obj, profilename)
 		obj.MouseButton1Click:connect(function()
 			GuiLibrary["SwitchProfile"](profilename)
 		end)
+		local newsize = UDim2.new(0, 20, 0, 21)
 		local bindbkg = Instance.new("TextButton")
 		bindbkg.Text = ""
 		bindbkg.AutoButtonColor = false
@@ -147,7 +148,6 @@ end, function(obj, profilename)
 		local bindtext = Instance.new("TextLabel")
 		bindtext.Active = false
 		bindtext.BackgroundTransparency = 1
-		bindtext.Text = GuiLibrary["Profiles"][profilename]["Keybind"]
 		bindtext.TextSize = 16
 		bindtext.Parent = bindbkg
 		bindtext.Font = Enum.Font.SourceSans
@@ -167,7 +167,6 @@ end, function(obj, profilename)
 		local bindround = Instance.new("UICorner")
 		bindround.CornerRadius = UDim.new(0, 4)
 		bindround.Parent = bindbkg
-		local newsize = UDim2.new(0, 20, 0, 21)
 		bindbkg.MouseButton1Click:connect(function()
 			if GuiLibrary["KeybindCaptured"] == false then
 				GuiLibrary["KeybindCaptured"] = true
@@ -217,6 +216,13 @@ end, function(obj, profilename)
 				bindbkg.Position = UDim2.new(1, -(30 + newsize.X.Offset), 0, 6)
 			end
 		end)
+		if GuiLibrary["Profiles"][profilename]["Keybind"] ~= "" then
+			bindtext.Text = GuiLibrary["Profiles"][profilename]["Keybind"]
+			local textsize = game:GetService("TextService"):GetTextSize(GuiLibrary["Profiles"][profilename]["Keybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
+			newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
+			bindbkg.Size = newsize
+			bindbkg.Position = UDim2.new(1, -(30 + newsize.X.Offset), 0, 6)
+		end
 end)
 GUI.CreateDivider()
 ---GUI.CreateCustomButton("Favorites", "vape/assets/FavoritesListIcon.png", UDim2.new(0, 17, 0, 14), function() end, function() end)
