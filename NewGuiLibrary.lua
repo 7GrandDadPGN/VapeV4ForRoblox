@@ -2099,6 +2099,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			slider3.Parent = slider2
 			slider3.Name = "ButtonSlider"
 			sliderapi["Value"] = (defaultvalue or min)
+			print(naame..name, defaultvalue)
 			sliderapi["Max"] = max
 			sliderapi["SetValue"] = function(val)
 				val = math.clamp(val, min, max)
