@@ -218,6 +218,9 @@ api["SaveSettings"] = function()
 		if (v["Type"] == "OptionsButton" or v["Type"] == "ExtrasButton") then
 			api["Settings"][i] = {["Type"] = "OptionsButton", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
 		end
+		if v["Type"] == "TextList" then
+			api["Settings"][i] = {["Type"] = "TextList", ["ObjectTable"] = v["Api"]["ObjectList"]}
+		end
 		if v["Type"] == "Dropdown" then
 			api["Settings"][i] = {["Type"] = "Dropdown", ["Value"] = v["Api"]["Value"]}
 		end
@@ -285,6 +288,9 @@ api["LoadSettings"] = function()
 			if v["Type"] == "Slider" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 				api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"] < api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] and v["Value"] or api["ObjectsThatCanBeSaved"][i]["Api"]["Max"])
 				--api["ObjectsThatCanBeSaved"][i]["Object"].Slider.FillSlider.Size = UDim2.new((v["Value"] < api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] and v["Value"] or api["ObjectsThatCanBeSaved"][i]["Api"]["Max"]) / api["ObjectsThatCanBeSaved"][i]["Api"]["Max"], 0, 1, 0)
+			end
+			if v["Type"] == "TextList" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
+				api["ObjectsThatCanBeSaved"][i]["Api"]["RefreshValues"]((v["ObjectTable"] or {}))
 			end
 			if v["Type"] == "TwoSlider" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 				api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"] == api["ObjectsThatCanBeSaved"][i]["Api"]["Min"] and 0 or v["Value"])
@@ -1764,11 +1770,13 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	
 			textapi["Object"] = frame
 			textapi["ScrollingObject"] = scrollframebkg
+			textapi["ObjectList"] = {}
 			textapi["RefreshValues"] = function(tab)
+				textapi["ObjectList"] = tab
 				for i2,v2 in pairs(scrollframe:GetChildren()) do
 					if v2:IsA("Frame") then v2:Remove() end
 				end
-				for i,v in pairs(tab) do
+				for i,v in pairs(textapi["ObjectList"]) do
 					local itemframe = Instance.new("Frame")
 					itemframe.Size = UDim2.new(0, 200, 0, 33)
 					itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
@@ -1797,6 +1805,8 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					deletebutton.Position = UDim2.new(1, -16, 0, 14)
 					deletebutton.Parent = itemframe
 					deletebutton.MouseButton1Click:connect(function()
+						table.remove(textapi["ObjectList"], i)
+						textapi["RefreshValues"](textapi["ObjectList"])
 						temporaryfunction2(i)
 					end)
 					if customstuff then
@@ -1804,8 +1814,14 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					end
 				end
 			end
-	
-			addbutton.MouseButton1Click:connect(function() temporaryfunction(textbox.Text) end)
+
+			api["ObjectsThatCanBeSaved"][name.."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
+			addbutton.MouseButton1Click:connect(function() 
+				table.insert(textapi["ObjectList"], textbox.Text)
+				textapi["RefreshValues"](textapi["ObjectList"])
+				temporaryfunction(textbox.Text) 
+			end)
+			api["ObjectsThatCanBeSaved"][naame..name.."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
 			return textapi
 		end
 
@@ -2099,7 +2115,6 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			slider3.Parent = slider2
 			slider3.Name = "ButtonSlider"
 			sliderapi["Value"] = (defaultvalue or min)
-			print(naame..name, defaultvalue)
 			sliderapi["Max"] = max
 			sliderapi["SetValue"] = function(val)
 				val = math.clamp(val, min, max)
@@ -2831,11 +2846,13 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 
 		textapi["Object"] = frame
 		textapi["ScrollingObject"] = scrollframebkg
+		textapi["ObjectList"] = {}
 		textapi["RefreshValues"] = function(tab)
+			textapi["ObjectList"] = tab
 			for i2,v2 in pairs(scrollframe:GetChildren()) do
 				if v2:IsA("Frame") then v2:Remove() end
 			end
-			for i,v in pairs(tab) do
+			for i,v in pairs(textapi["ObjectList"]) do
 				local itemframe = Instance.new("Frame")
 				itemframe.Size = UDim2.new(0, 200, 0, 33)
 				itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
@@ -2864,6 +2881,8 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				deletebutton.Position = UDim2.new(1, -16, 0, 14)
 				deletebutton.Parent = itemframe
 				deletebutton.MouseButton1Click:connect(function()
+					table.remove(textapi["ObjectList"], i)
+					textapi["RefreshValues"](textapi["ObjectList"])
 					temporaryfunction2(i)
 				end)
 				if customstuff then
@@ -2872,7 +2891,12 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 			end
 		end
 
-		addbutton.MouseButton1Click:connect(function() temporaryfunction(textbox.Text) end)
+		api["ObjectsThatCanBeSaved"][name.."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
+		addbutton.MouseButton1Click:connect(function() 
+			table.insert(textapi["ObjectList"], textbox.Text)
+			textapi["RefreshValues"](textapi["ObjectList"])
+			temporaryfunction(textbox.Text) 
+		end)
 		return textapi
 	end
 

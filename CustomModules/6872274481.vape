@@ -550,23 +550,27 @@ BuyCheck = function()
 				local CurrentUpgrades = bedwars["ClientStore"]:getState()["Bedwars"]["teamUpgrades"]
 				local ProtNewTier = ProtectionUpgrade["tiers"][CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 2 or 1]
 				local SharpNewTier = SharpnessUpgrade["tiers"][CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 2 or 1]
+				if ProtNewTier then
 				local ProtCurrency = getItem(ProtNewTier["currency"])
-				if ProtCurrency and ProtCurrency["amount"] >= ProtNewTier["price"] then
-					bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
-						upgradeId = "armor", 
-						tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 0
-					}):andThen(function()
-						bedwars["SoundManager"]:playSound(11)
-					end)
+					if ProtCurrency and ProtCurrency["amount"] >= ProtNewTier["price"] then
+						bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+							upgradeId = "armor", 
+							tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 0
+						}):andThen(function()
+							bedwars["SoundManager"]:playSound(11)
+						end)
+					end
 				end
-				local SharpCurrency = getItem(SharpNewTier["currency"])
-				if SharpCurrency and SharpCurrency["amount"] >= SharpNewTier["price"] then
-					bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
-						upgradeId = "damage", 
-						tier = CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 1 or 0
-					}):andThen(function()
-						bedwars["SoundManager"]:playSound(11)
-					end)
+				if SharpNewTier then
+					local SharpCurrency = getItem(SharpNewTier["currency"])
+					if SharpCurrency and SharpCurrency["amount"] >= SharpNewTier["price"] then
+						bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+							upgradeId = "damage", 
+							tier = CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 1 or 0
+						}):andThen(function()
+							bedwars["SoundManager"]:playSound(11)
+						end)
+					end
 				end
 			end
 	end
@@ -761,7 +765,7 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			for i = 1, #tab do
 				local obj = tab[i]
 				if isAlive() then
-					if obj and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
+					if obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
 						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
 							if BedNukerTopBlock["Enabled"] then
 								bedwars["breakBlock"](obj.Position + Vector3.new(0, 3, 0))
@@ -1006,7 +1010,7 @@ local AutoToxicWin = {["Enabled"] = false}
 local AutoToxicFinalKill = {["Enabled"] = false}
 local AutoToxicWinStreak = {["Enabled"] = false}
 local AutoToxicAd = {["Enabled"] = false}
-local AutoToxicPhrases = {["RefreshValues"] = function() end}
+local AutoToxicPhrases = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicOldWin = bedwars["VictoryScreen"].render
 local victorysaid = false
 bedwars["VictoryScreen"].render = function(winstuff)
@@ -1017,7 +1021,7 @@ bedwars["VictoryScreen"].render = function(winstuff)
 			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
 		end
 		if AutoToxicWin["Enabled"] then
-			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#GuiLibrary["Settings"]["ToxicObject"]["List"] > 0 and GuiLibrary["Settings"]["ToxicObject"]["List"][math.random(1, #GuiLibrary["Settings"]["ToxicObject"]["List"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
+			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
 		end
     end
     return AutoToxicOldWin(winstuff)
@@ -1040,14 +1044,7 @@ AutoToxicWin = AutoToxic.CreateToggle("Win", function() end, function() end, tru
 AutoToxicFinalKill = AutoToxic.CreateToggle("Final Kill", function() end, function() end, true)
 AutoToxicWinStreak = AutoToxic.CreateToggle("WinStreak", function() end, function() end, false)
 AutoToxicAd = AutoToxic.CreateToggle("Sponsor", function() end, function() end, false)
-AutoToxicPhrases = AutoToxic.CreateTextList("ToxicList", "phrase (win)", function(user)
-	table.insert(GuiLibrary["Settings"]["ToxicObject"]["List"], user)
-	AutoToxicPhrases["RefreshValues"](GuiLibrary["Settings"]["ToxicObject"]["List"])
-end, function(num) 
-	table.remove(GuiLibrary["Settings"]["ToxicObject"]["List"], num) 
-	AutoToxicPhrases["RefreshValues"](GuiLibrary["Settings"]["ToxicObject"]["List"])
-end)
-
+AutoToxicPhrases = AutoToxic.CreateTextList("ToxicList", "phrase (win)", function(user) end, function(num) end)
 
 --local BuyArrows = {["Enabled"] = false}
 --local BowAura = {["Enabled"] = false}
