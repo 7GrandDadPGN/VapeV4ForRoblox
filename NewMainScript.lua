@@ -81,15 +81,7 @@ GUI.CreateButton("Other", function() Other.SetVisible(true) end, function() Othe
 GUI.CreateDivider("MISC")
 GUI.CreateButton("Friends", function() Friends.SetVisible(true) end, function() Friends.SetVisible(false) end)
 local FriendsTextList = {["RefreshValues"] = function() end}
-FriendsTextList = Friends.CreateTextList("FriendsList", "Username / Alias", function(user)
-	table.insert(GuiLibrary["FriendsObject"]["Friends"], user)
-	FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
-	GuiLibrary["SaveFriends"]()
-end, function(num) 
-	table.remove(GuiLibrary["FriendsObject"]["Friends"], num) 
-	FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
-	GuiLibrary["SaveFriends"]()
-end, function(obj)
+FriendsTextList = Friends.CreateTextList("FriendsList", "Username / Alias", function(user) end, function(num) end, function(obj)
 	local friendcircle = Instance.new("Frame")
 	friendcircle.Size = UDim2.new(0, 10, 0, 10)
 	friendcircle.Name = "FriendCircle"
@@ -104,7 +96,6 @@ end, function(obj)
 	obj.ItemText.Size = UDim2.new(0, 157, 0, 33)
 end)
 Friends.CreateColorSlider("Friends Color", function(val) 
-	GuiLibrary["FriendsObject"]["Color"] = val 
 	pcall(function()
 		FriendsTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(GuiLibrary["FriendsObject"]["Color"], 1, 1)
 	end)
@@ -120,14 +111,12 @@ Friends.CreateToggle("Use Friends", function() end, function() end, false, "")
 Friends.CreateToggle("Use Roblox Friends", function() end, function() end, false, "")
 Friends.CreateToggle("Use color", function() end, function() end, false, "")
 GuiLibrary["FriendsObject"]["MiddleClickFunc"] = function(user)
-	if table.find(GuiLibrary["FriendsObject"]["Friends"], user) == nil then
-		table.insert(GuiLibrary["FriendsObject"]["Friends"], user)
-		FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
-		GuiLibrary["SaveFriends"]()
+	if table.find(FriendsTextList["ObjectTable"], user) == nil then
+		table.insert(FriendsTextList["ObjectTable"], user)
+		FriendsTextList["RefreshValues"](FriendsTextList["ObjectTable"])
 	else
-		table.remove(GuiLibrary["FriendsObject"]["Friends"], table.find(GuiLibrary["FriendsObject"]["Friends"], user)) 
-		FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
-		GuiLibrary["SaveFriends"]()
+		table.remove(FriendsTextList["ObjectTable"], table.find(FriendsTextList["ObjectTable"], user)) 
+		FriendsTextList["RefreshValues"](FriendsTextList["ObjectTable"])
 	end
 end
 GUI.CreateDivider()
@@ -600,8 +589,6 @@ else
 end
 
 GuiLibrary["LoadSettings"]()
-GuiLibrary["LoadFriends"]()
-FriendsTextList["RefreshValues"](GuiLibrary["FriendsObject"]["Friends"])
 GuiLibrary["UpdateUI"]()
 if blatantmode["Enabled"] then
 	pcall(function()
