@@ -965,8 +965,10 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				local newpos = getScaffold((lplr.Character.Head.Position + (lplr.Character.Humanoid.MoveDirection * (i * 3.5))) + Vector3.new(0, -6, 0))
 				if newpos ~= oldpos then
 					if ScaffoldBuyBlocks["Enabled"] and getwool() == nil and scaffoldallowed == true then
-						scaffoldallowed = false
-						lplr.Character.HumanoidRootPart.Anchored = true
+						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
+							scaffoldallowed = false
+							lplr.Character.HumanoidRootPart.Anchored = true
+						end
 						bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 							shopItem = bedwars["Shop"].getShopItem("wool_white")
 						}):andThen(function(p11)
