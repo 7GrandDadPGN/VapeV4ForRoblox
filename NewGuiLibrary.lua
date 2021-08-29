@@ -6,8 +6,13 @@ local request = syn and syn.request or http and http.request or http_request
 local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 local api = {
 	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
-	["FriendsObject"] = {["Color"] = 0.44, ["Friends"] = {}, ["MiddleClickFriends"] = false, ["MiddleClickFunc"] = function(plr) end},
-	["ToggleNotifications"] = false,
+	["Profiles"] = {
+		["default"] = {["Keybind"] = "", ["Selected"] = true}
+	},
+	["CurrentProfile"] = "default",
+	["KeybindCaptured"] = false,
+	["PressedKeybindKey"] = "",
+ 	["ToggleNotifications"] = false,
 	["ToggleTooltips"] = false,
 	["ObjectsThatCanBeSaved"] = {},
 }
@@ -23,6 +28,22 @@ local function getcustomassetfunc(path)
 	return getasset(path) 
 end
 
+local function GetURL(scripturl)
+	if shared.VapeDeveloper then
+		return readfile("vape/"..scripturl)
+	else
+		return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
+	end
+end
+
+local function getprofile()
+	for i,v in pairs(api["Profiles"]) do
+		if v["Selected"] then
+			api["CurrentProfile"] = i
+		end
+	end
+end
+
 coroutine.resume(coroutine.create(function()
 	repeat
 		for i = 0, 1, 0.01 do
@@ -33,8 +54,6 @@ coroutine.resume(coroutine.create(function()
 end))
 
 local holdingshift = false
-local captured = false
-local pressedkey = ""
 local capturedslider = nil
 local clickgui = {["Visible"] = true}
 
@@ -191,20 +210,8 @@ local function dragGUI(gui, tab)
 	end)
 end
 
-api["SaveFriends"] = function()
-	writefile("vape/Profiles/friends.vapefriends", game:GetService("HttpService"):JSONEncode(api["FriendsObject"]["Friends"]))
-end
-
-api["LoadFriends"] = function()
-	local success, result = pcall(function()
-		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/friends.vapefriends"))
-	end)
-	if success and type(result) == "table" then
-		api["FriendsObject"]["Friends"] = result
-	end
-end
-
 api["SaveSettings"] = function()
+	writefile("vape/Profiles/"..game.PlaceId..".vapeprofiles", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
 	for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
 		if v["Type"] == "Window" then
 			api["Settings"][i] = {["Type"] = "Window", ["Visible"] = v["Object"].Visible, ["Expanded"] = v["ChildrenObject"].Visible, ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
@@ -234,12 +241,19 @@ api["SaveSettings"] = function()
 			api["Settings"][i] = {["Type"] = "ColorSlider", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
 		end
 	end
-	writefile("vape/Profiles/"..game.PlaceId..".vapeprofile", game:GetService("HttpService"):JSONEncode(api["Settings"]))
+	writefile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..game.PlaceId..".vapeprofile", game:GetService("HttpService"):JSONEncode(api["Settings"]))
 end
 
 api["LoadSettings"] = function()
+	local success2, result2 = pcall(function()
+		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..game.PlaceId..".vapeprofiles"))
+	end)
+	if success2 and type(result2) == "table" then
+		api["Profiles"] = result2
+	end
+	getprofile()
 	local success, result = pcall(function()
-		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..game.PlaceId..".vapeprofile"))
+		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..game.PlaceId..".vapeprofile"))
 	end)
 	if success and type(result) == "table" then
 		for i,v in pairs(result) do
@@ -316,6 +330,15 @@ api["LoadSettings"] = function()
 			end
 		end
 	end
+end
+
+api["SwitchProfile"] = function(profilename)
+	api["Profiles"][api["CurrentProfile"]]["Selected"] = false
+	api["Profiles"][profilename]["Selected"] = true
+	api["ObjectsThatCanBeSaved"]["SelfDestructOptionsButton"]["Api"]["ToggleButton"](false)
+	shared.VapeSwitchServers = true
+	shared.VapeOpenGui = true
+	loadstring(GetURL("NewMainScript.lua"))()
 end
 
 api["RemoveObject"] = function(objname)
@@ -1774,11 +1797,14 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			textapi["RefreshValues"] = function(tab)
 				textapi["ObjectList"] = tab
 				for i2,v2 in pairs(scrollframe:GetChildren()) do
-					if v2:IsA("Frame") then v2:Remove() end
+					if v2:IsA("TextButton") then v2:Remove() end
 				end
 				for i,v in pairs(textapi["ObjectList"]) do
-					local itemframe = Instance.new("Frame")
+					local itemframe = Instance.new("TextButton")
 					itemframe.Size = UDim2.new(0, 200, 0, 33)
+					itemframe.Text = ""
+					itemframe.AutoButtonColor = false
+					itemframe.ZIndex = 5
 					itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 					itemframe.BorderSizePixel = 0
 					itemframe.Parent = scrollframe
@@ -1789,6 +1815,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					itemtext.BackgroundTransparency = 1
 					itemtext.Size = UDim2.new(0, 193, 0, 33)
 					itemtext.Name = "ItemText"
+					itemtext.ZIndex = 5
 					itemtext.Position = UDim2.new(0, 8, 0, 0)
 					itemtext.Font = Enum.Font.SourceSans
 					itemtext.TextSize = 17
@@ -1799,6 +1826,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					local deletebutton = Instance.new("ImageButton")
 					deletebutton.Size = UDim2.new(0, 6, 0, 6)
 					deletebutton.BackgroundTransparency = 1
+					deletebutton.ZIndex = 5
 					deletebutton.AutoButtonColor = false
 					deletebutton.ZIndex = 2
 					deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
@@ -2408,14 +2436,14 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			end
 		end)
 		bindbkg.MouseButton1Click:connect(function()
-			if captured == false then
-				captured = true
+			if api["KeybindCaptured"] == false then
+				api["KeybindCaptured"] = true
 				spawn(function()
 					bindtext2.Visible = true
-					repeat wait() until pressedkey ~= ""
-					buttonapi["SetKeybind"]((pressedkey == buttonapi["Keybind"] and "" or pressedkey))
-					pressedkey = ""
-					captured = false
+					repeat wait() until api["PressedKeybindKey"] ~= ""
+					buttonapi["SetKeybind"]((api["PressedKeybindKey"] == buttonapi["Keybind"] and "" or api["PressedKeybindKey"]))
+					api["PressedKeybindKey"] = ""
+					api["KeybindCaptured"] = false
 					bindtext2.Visible = false
 				end)
 			end
@@ -2850,11 +2878,14 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 		textapi["RefreshValues"] = function(tab)
 			textapi["ObjectList"] = tab
 			for i2,v2 in pairs(scrollframe:GetChildren()) do
-				if v2:IsA("Frame") then v2:Remove() end
+				if v2:IsA("TextButton") then v2:Remove() end
 			end
 			for i,v in pairs(textapi["ObjectList"]) do
-				local itemframe = Instance.new("Frame")
+				local itemframe = Instance.new("TextButton")
 				itemframe.Size = UDim2.new(0, 200, 0, 33)
+				itemframe.Text = ""
+				itemframe.ZIndex = 5
+				itemframe.AutoButtonColor = false
 				itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 				itemframe.BorderSizePixel = 0
 				itemframe.Parent = scrollframe
@@ -2865,6 +2896,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				itemtext.BackgroundTransparency = 1
 				itemtext.Size = UDim2.new(0, 193, 0, 33)
 				itemtext.Name = "ItemText"
+				itemtext.ZIndex = 5
 				itemtext.Position = UDim2.new(0, 8, 0, 0)
 				itemtext.Font = Enum.Font.SourceSans
 				itemtext.TextSize = 17
@@ -2876,7 +2908,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				deletebutton.Size = UDim2.new(0, 6, 0, 6)
 				deletebutton.BackgroundTransparency = 1
 				deletebutton.AutoButtonColor = false
-				deletebutton.ZIndex = 2
+				deletebutton.ZIndex = 6
 				deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
 				deletebutton.Position = UDim2.new(1, -16, 0, 14)
 				deletebutton.Parent = itemframe
@@ -2886,7 +2918,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 					temporaryfunction2(i)
 				end)
 				if customstuff then
-					customstuff(itemframe)
+					customstuff(itemframe, v)
 				end
 			end
 		end
@@ -3005,7 +3037,7 @@ local holdingcontrol = false
 
 api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(function(input1)
 	if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
-		if input1.KeyCode == Enum.KeyCode[api["Settings"]["GUIObject"]["GUIKeybind"]] and captured == false then
+		if input1.KeyCode == Enum.KeyCode[api["Settings"]["GUIObject"]["GUIKeybind"]] and api["KeybindCaptured"] == false then
 			clickgui.Visible = not clickgui.Visible
 			api["MainBlur"].Enabled = clickgui.Visible	
 		end
@@ -3015,11 +3047,6 @@ api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(
 		if input1.KeyCode == Enum.KeyCode.LeftControl then
 			holdingcontrol = true
 		end
-		if input1.UserInputType == Enum.UserInputType.MouseButton3 and api["FriendsObject"]["MiddleClickFriends"] then
-			if mouse.Target.Parent:FindFirstChild("HumanoidRootPart") or mouse.Target.Parent:IsA("Accessory") and mouse.Target.Parent.Parent:FindFirstChild("HumanoidRootPart") then
-				api["FriendsObject"]["MiddleClickFunc"](mouse.Target.Parent:IsA("Accessory") and mouse.Target.Parent.Parent.Name or mouse.Target.Parent.Name)
-			end
-		end
 		if holdingcontrol and (input1.KeyCode == Enum.KeyCode.Left or input1.KeyCode == Enum.KeyCode.Right) and capturedslider ~= nil then
 			if capturedslider["Type"] == "Slider" then
 				capturedslider["Api"]["SetValue"](capturedslider["Api"]["Value"] + (input1.KeyCode == Enum.KeyCode.Left and -1 or 1))
@@ -3028,17 +3055,24 @@ api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(
 				capturedslider["Api"]["SetValue"](capturedslider["Api"]["Value"] + (input1.KeyCode == Enum.KeyCode.Left and -0.01 or 0.01))
 			end
 		end
-		if captured and input1.KeyCode ~= Enum.KeyCode.LeftShift then
+		if api["KeybindCaptured"] and input1.KeyCode ~= Enum.KeyCode.LeftShift then
 			local hah = string.gsub(tostring(input1.KeyCode), "Enum.KeyCode.", "")
-			pressedkey = (hah ~= "Unknown" and hah or "")
+			api["PressedKeybindKey"] = (hah ~= "Unknown" and hah or "")
 		end
 		for modules,aapi in pairs(api["ObjectsThatCanBeSaved"]) do
-			if (aapi["Type"] == "OptionsButton" or aapi["Type"] == "Button") and (aapi["Api"]["Keybind"] ~= nil and aapi["Api"]["Keybind"] ~= "") and captured == false then
+			if (aapi["Type"] == "OptionsButton" or aapi["Type"] == "Button") and (aapi["Api"]["Keybind"] ~= nil and aapi["Api"]["Keybind"] ~= "") and api["KeybindCaptured"] == false then
 				if input1.KeyCode == Enum.KeyCode[aapi["Api"]["Keybind"]] and aapi["Api"]["Keybind"] ~= api["Settings"]["GUIObject"]["GUIKeybind"] then
 					aapi["Api"]["ToggleButton"](false)
 					if api["ToggleNotifications"] then
 						api["CreateNotification"]("Module Toggled", aapi["Api"]["Name"]..' <font color="#FFFFFF">has been</font> <font color="'..(aapi["Api"]["Enabled"] and '#32CD32' or '#E60000')..'">'..(aapi["Api"]["Enabled"] and "Enabled" or "Disabled")..'</font><font color="#FFFFFF">!</font>', 1)
 					end
+				end
+			end
+		end
+		for profilenametext, profiletab in pairs(api["Profiles"]) do
+			if (profiletab["Keybind"] ~= nil and profiletab["Keybind"] ~= "") and api["KeybindCaptured"] == false and profilenametext ~= api["CurrentProfile"] then
+				if input1.KeyCode == Enum.KeyCode[profiletab["Keybind"]] then
+					api["SwitchProfile"](profilenametext)
 				end
 			end
 		end
