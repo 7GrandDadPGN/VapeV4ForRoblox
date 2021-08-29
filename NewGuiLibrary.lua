@@ -343,7 +343,7 @@ api["SwitchProfile"] = function(profilename)
 	end
 	api["ObjectsThatCanBeSaved"]["SelfDestructOptionsButton"]["Api"]["ToggleButton"](false)
 	shared.VapeSwitchServers = true
-	shared.VapeOpenGui = true
+	shared.VapeOpenGui = (clickgui.Visible)
 	loadstring(GetURL("NewMainScript.lua"))()
 end
 
