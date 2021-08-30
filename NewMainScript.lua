@@ -7,7 +7,9 @@ local function GetURL(scripturl)
 		return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
 	end
 end
-
+if identifyexecutor and identifyexecutor() == "WeAreDevs" then
+	getgenv().getcustomasset = function(location) return "rbxasset://"..location end
+end
 local getasset = getsynasset or getcustomasset
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport
 local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request
