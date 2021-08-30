@@ -486,7 +486,7 @@ BuyCheck = function()
 			local NextSword = getSword()
 			local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
 			local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
-			if AutoBuySword["Enabled"] and NextSword and buyingthing == false and (AutoBuyGui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp == 5 or bedwars["ClientStore"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
+			if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and buyingthing == false and (AutoBuyGui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp == 5 or bedwars["ClientStore"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
 				local buyablesword = checkallswords()
 				if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
 					buyingthing = true
@@ -839,7 +839,7 @@ end, function()
 	end
 	game:GetService("RunService"):UnbindFromRenderStep("Speed")
 end, true, function() return "" end, "Makes you go zoom")
-speedval = speed.CreateSlider("Speed", 1, 30, function(val) end, 30)
+speedval = speed.CreateSlider("Speed", 1, 33, function(val) end, 33)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
 local function getziplinepos()
