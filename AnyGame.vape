@@ -503,6 +503,7 @@ killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90
 killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end)
 killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
 
+
 local longjumpboost = {["Value"] = 1}
 local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("LongJump", function()
 	game:GetService("RunService"):BindToRenderStep("LongJump", 1, function() 
@@ -514,6 +515,22 @@ local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Cre
 	end)
 end, function() game:GetService("RunService"):UnbindFromRenderStep("LongJump") end, true, function() return "" end, true)
 longjumpboost = longjump.CreateSlider("Boost", 1, 150, function(val) end)
+
+local phase
+GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Phase", function()
+	phase = game:GetService('RunService').Stepped:Connect(function()
+		if isAlive() then
+			for i, part in pairs(lplr.Character:GetDescendants()) do
+				if part:IsA("BasePart") and part.CanCollide == true then
+					part.CanCollide = false
+				end
+			end
+		end
+	end)
+end, function()
+	phase:Disconnect()
+end, true, function() return "" end, "Lets you phase/clip through walls")
+
 
 local speedval = {["Value"] = 1}
 local speedmethod = {["Value"] = "AntiCheat A"}

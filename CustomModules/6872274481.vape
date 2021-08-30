@@ -475,6 +475,7 @@ local AutoBuy = {["Enabled"] = false}
 local AutoBuyArmor = {["Enabled"] = false}
 local AutoBuySword = {["Enabled"] = false}
 local AutoBuyUpgrades = {["Enabled"] = false}
+local AutoBuyGui = {["Enabled"] = false}
 local buyingthing = false
 
 local BuyCheck = function() end
@@ -485,7 +486,7 @@ BuyCheck = function()
 			local NextSword = getSword()
 			local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
 			local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
-			if AutoBuySword["Enabled"] and NextSword and buyingthing == false then
+			if AutoBuySword["Enabled"] and NextSword and buyingthing == false and (AutoBuyGui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp == 5 or bedwars["ClientStore"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
 				local buyablesword = checkallswords()
 				if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
 					buyingthing = true
@@ -508,7 +509,7 @@ BuyCheck = function()
 					end)
 				end
 			end
-			if AutoBuyArmor["Enabled"] and NextArmor then
+			if AutoBuyArmor["Enabled"] and NextArmor and (AutoBuyGui["Enabled"] and bedwars["ClientStore"]:getState().App.shownApp == 5 or (not AutoBuyGui["Enabled"])) then
 				local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
 				local NextArmorCurrency = getItem(NextArmorTable["currency"])
 				if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
@@ -546,7 +547,7 @@ BuyCheck = function()
 					end)
 				end
 			end
-			if AutoBuyUpgrades["Enabled"] then
+			if AutoBuyUpgrades["Enabled"] and (AutoBuyGui["Enabled"] and bedwars["ClientStore"]:getState().App.shownApp == 4 or (not AutoBuyGui["Enabled"])) then
 				local CurrentUpgrades = bedwars["ClientStore"]:getState()["Bedwars"]["teamUpgrades"]
 				local ProtNewTier = ProtectionUpgrade["tiers"][CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 2 or 1]
 				local SharpNewTier = SharpnessUpgrade["tiers"][CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 2 or 1]
@@ -586,9 +587,19 @@ AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpti
 AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
 AutoBuySword = AutoBuy.CreateToggle("Buy Sword", function() end, function() end, true)
 AutoBuyUpgrades = AutoBuy.CreateToggle("Buy Team Upgrades", function() end, function() end, true)
-
+AutoBuyGui = AutoBuy.CreateToggle("Shop GUI Check", function() end, function() end)
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
+
+local OpenShop = {["Enabled"] = false}
+OpenShop = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("OpenShop", function()
+	bedwars["SoundManager"]:playSound(4)
+	bedwars["ClientStore"]:dispatch({
+		type = "SetShownApp", 
+		app = 5
+	})
+	OpenShop["ToggleButton"](false)
+end, function() end, true, function() return "" end, "Opens the Shop GUI")
 
 local killaurabox = Instance.new("BoxHandleAdornment")
 killaurabox.Transparency = 0.5
