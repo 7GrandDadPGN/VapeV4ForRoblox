@@ -12,7 +12,7 @@ if identifyexecutor and identifyexecutor() == "WeAreDevs" then
 end
 local getasset = getsynasset or getcustomasset
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport
-local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request
+local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request
 local function getcustomassetfunc(path)
 	if not isfile(path) then
 		local req = request({
