@@ -16,6 +16,8 @@ local origC0 = nil
 local matchState = 0
 local kit = ""
 local antivoidypos = 0
+local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request
+local getasset = getsynasset or getcustomasset
 --[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
 if place.Updated ~= "2021-08-27T20:25:05.3390746Z" then
     local textlabel = Instance.new("TextLabel")
@@ -29,6 +31,18 @@ if place.Updated ~= "2021-08-27T20:25:05.3390746Z" then
         while true do end
     end)
 end]]
+
+
+local function getcustomassetfunc(path)
+	if not isfile(path) then
+		local req = request({
+			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
+			Method = "GET"
+		})
+		writefile(path, req.Body)
+	end
+	return getasset(path) 
+end
 
 local function getItem(itemName)
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
@@ -923,7 +937,7 @@ BedVideoToggle = BedExploit.CreateToggle("Chips Video", function()
 			repeat wait() until #bedwars["BedTable"] > 0 and matchState ~= 0
 			if BedExploit["Enabled"] and (BedVideo == nil or (BedVideo and BedVideo.Parent == nil)) then
 				BedVideo = Instance.new("VideoFrame")
-				BedVideo.Video = getsynasset("chips.webm")
+				BedVideo.Video = getcustomassetfunc("vape/assets/chips.webm")
 				BedVideo.Size = UDim2.new(1, 0, 1, 36)
 				BedVideo.Position = UDim2.new(0, 0, 0, -36)
 				BedVideo.BorderSizePixel = 0
