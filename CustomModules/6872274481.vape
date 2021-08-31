@@ -871,7 +871,7 @@ bedwars["VictoryScreen"].render = function(winstuff)
 end
 
 lplr:GetAttributeChangedSignal("Spectator"):Connect(function()
-	if BedExploit["Enabled"] then
+	if BedExploit["Enabled"] and matchState ~= 0 then
 		wait(1)
 		bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
 	end
