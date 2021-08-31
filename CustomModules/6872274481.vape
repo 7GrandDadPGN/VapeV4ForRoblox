@@ -910,7 +910,7 @@ autowinfunc = function()
 						GuiLibrary["CreateNotification"]("AutoWin", "Breaking "..v.Name.."'s bed", 4, "ℹ️")
 						repeat
 							wait()
-							if isAlive() then
+							if isAlive() and BedExploit["Enabled"] then
 								lplr.Character.HumanoidRootPart.CFrame = CFrame.new(bed.Position - Vector3.new(0, 3, 0))
 								bedwars["breakBlock"](bed.Position)
 							end
