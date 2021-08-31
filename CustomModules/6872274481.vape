@@ -881,6 +881,22 @@ local autowinfunc
 autowinfunc = function()
 	spawn(function()
 		repeat wait() until #bedwars["BedTable"] > 0 and matchState ~= 0
+		if BedVideo == nil or (BedVideo and BedVideo.Parent == nil) then
+			spawn(function()
+				if BedExploit["Enabled"] and (BedVideo == nil or (BedVideo and BedVideo.Parent == nil)) then
+					BedVideo = Instance.new("VideoFrame")
+					BedVideo.Video = getcustomassetfunc("vape/assets/chips.webm")
+					BedVideo.Size = UDim2.new(1, 0, 1, 36)
+					BedVideo.Position = UDim2.new(0, 0, 0, -36)
+					BedVideo.BorderSizePixel = 0
+					BedVideo.ZIndex = 0
+					BedVideo.Volume = 0.25
+					BedVideo.Looped = true
+					BedVideo.Parent = game.Players.LocalPlayer.PlayerGui:GetChildren()[2]
+					BedVideo:Play()
+				end
+			end)
+		end
 		if BedExploit["Enabled"] then
 			spawn(function()
 				repeat
