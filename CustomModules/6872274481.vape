@@ -881,7 +881,7 @@ local autowinfunc
 autowinfunc = function()
 	spawn(function()
 		repeat wait() until #bedwars["BedTable"] > 0 and matchState ~= 0
-		if BedVideo == nil or (BedVideo == nil or (BedVideo and BedVideo.Parent == nil)) and BedExploit["Enabled"] and BedVideoToggle["Enabled"] then
+		if (BedVideo == nil or (BedVideo == nil or (BedVideo and BedVideo.Parent == nil))) and BedExploit["Enabled"] and BedVideoToggle["Enabled"] then
 			BedVideo = Instance.new("VideoFrame")
 			BedVideo.Video = getcustomassetfunc("vape/assets/chips.webm")
 			BedVideo.Size = UDim2.new(1, 0, 1, 36)
@@ -946,7 +946,7 @@ end, "Automatically wins 25% of the time")
 BedVideoToggle = BedExploit.CreateToggle("Chips Video", function() 
 	spawn(function()
 		repeat wait() until #bedwars["BedTable"] > 0 and matchState ~= 0
-		if BedVideo == nil or (BedVideo == nil or (BedVideo and BedVideo.Parent == nil)) and BedExploit["Enabled"] and BedVideoToggle["Enabled"] then
+		if (BedVideo == nil or (BedVideo == nil or (BedVideo and BedVideo.Parent == nil))) and BedExploit["Enabled"] and BedVideoToggle["Enabled"] then
 			BedVideo = Instance.new("VideoFrame")
 			BedVideo.Video = getcustomassetfunc("vape/assets/chips.webm")
 			BedVideo.Size = UDim2.new(1, 0, 1, 36)
