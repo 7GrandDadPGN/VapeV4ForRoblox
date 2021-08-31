@@ -58,6 +58,26 @@ local function getwool()
 	return nil
 end
 
+local function getBed(color)
+	for i,v in pairs(bedwars["BedTable"]) do
+		print(v)
+		if v and v:FindFirstChild("Covers") and v.Covers.BrickColor == color then
+			return v
+		end
+	end
+	return nil
+end
+
+local function teamsAreAlive()
+	local alive = false
+	for i,v in pairs(game.Teams:GetChildren()) do
+		if v.Name ~= "Spectators" and v.Name ~= "Neutral" and v ~= lplr.Team and #v:GetPlayers() > 0 then
+			alive = true
+		end
+	end
+	return alive
+end
+
 local function scanforbeds()
 	local blocktab = game.Workspace.Map.Blocks:GetChildren()
 	bedwars["BedTable"] = {}
@@ -411,6 +431,20 @@ Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOption
 	end)
 end, function() end, true, function() return "" end, "Sets your sprinting to true")
 
+GuiLibrary["RemoveObject"]("BlinkOptionsButton")
+local Blink = {["Enabled"] = false}
+Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Blink", function() 
+	if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
+		settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
+	else
+		Blink["ToggleButton"](false)
+	end
+end, function()
+	if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
+		settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+	end
+end, false, function() return "" end, "Chokes all incoming packets (blatant mode required)\nPlease do not turn this on if you do not know what you are doing.")
+
 local antivoidpart
 local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AntiVoid", function()
 	spawn(function()
@@ -727,7 +761,7 @@ end, function()
 	end)
 	game:GetService("RunService"):UnbindFromRenderStep("Killaura") 
 end, true, function()
-	return " BedWars"
+	return ""
 end, "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder")
 killauraaps = Killaura.CreateTwoSlider("Attacks per Second", 1, 20, function(val) end, false, 8, 12)
 killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 14)
@@ -788,7 +822,125 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			end
 		until BedNuker["Enabled"] == false
 	end)
-end, function() end, true)
+end, function() end, true, function()
+	return ""
+end, "Automatically destroys beds around you.")
+
+local BedExploit = {["Enabled"] = false}
+local BedVideoToggle = {["Enabled"] = false}
+local BedVideo
+local AutoToxic = {["Enabled"] = false}
+local AutoToxicGG = {["Enabled"] = false}
+local AutoToxicWin = {["Enabled"] = false}
+local AutoToxicFinalKill = {["Enabled"] = false}
+local AutoToxicWinStreak = {["Enabled"] = false}
+local AutoToxicAd = {["Enabled"] = false}
+local AutoToxicPhrases = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
+local AutoToxicOldWin = bedwars["VictoryScreen"].render
+local victorysaid = false
+bedwars["VictoryScreen"].render = function(winstuff)
+    local myTeam = bedwars["ClientStore"]:getState().Game.myTeam;
+    if myTeam and myTeam.id == winstuff.props.WinningTeamId and AutoToxic["Enabled"] and victorysaid == false then
+		victorysaid = true
+		if AutoToxicGG["Enabled"] then
+			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
+		end
+		if AutoToxicWin["Enabled"] then
+			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
+		end
+		wait(1)
+		if BedExploit["Enabled"] then
+			bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
+		end
+    end
+    return AutoToxicOldWin(winstuff)
+end
+
+lplr:GetAttributeChangedSignal("Spectator"):Connect(function()
+	if BedExploit["Enabled"] then
+		wait(1)
+		bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
+	end
+end)
+
+local autowinfunc
+autowinfunc = function()
+	spawn(function()
+		repeat wait() until #bedwars["BedTable"] > 0 and matchState ~= 0
+		if BedExploit["Enabled"] then
+			spawn(function()
+				repeat
+					wait(0.1)
+					if isAlive() then
+						lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+					end
+				until BedExploit["Enabled"] == false
+			end)
+			for i,v in pairs(game.Teams:GetChildren()) do
+				repeat wait() until isAlive()
+				if v.Name ~= "Spectators" and v.Name ~= "Neutral" and v ~= lplr.Team and #v:GetPlayers() > 0 then
+					local bed = getBed(v.TeamColor)
+					if bed and bed.Parent ~= nil then
+						GuiLibrary["CreateNotification"]("AutoWin", "Breaking "..v.Name.."'s bed", 4, "ℹ️")
+						repeat
+							wait()
+							if isAlive() then
+								lplr.Character.HumanoidRootPart.CFrame = CFrame.new(bed.Position - Vector3.new(0, 3, 0))
+								bedwars["breakBlock"](bed.Position)
+							end
+						until BedExploit["Enabled"] == false or bed.Parent == nil
+					end
+					GuiLibrary["CreateNotification"]("AutoWin", "Killing "..v.Name.." team players", 4, "ℹ️")
+					for i2,v2 in pairs(v:GetPlayers()) do
+						repeat
+							wait()
+							if isAlive() and isAlive(v2) and targetCheck(v2, true) then
+								lplr.Character.HumanoidRootPart.CFrame = (v2.Character.HumanoidRootPart.CFrame * CFrame.new(0, -7 + (v2.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping and (bed and bed.Position.Y - 3) or 0), 0))
+							end
+						until isAlive(v2) and (not targetCheck(v2, true)) or (not isAlive(v2)) or BedExploit["Enabled"] == false
+					end
+				end
+			end
+			if teamsAreAlive() and BedExploit["Enabled"] then
+				autowinfunc()
+			end
+		end
+	end)
+end
+
+BedExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoWin", function()
+	autowinfunc()
+end, function()
+	if BedVideo ~= nil then
+		BedVideo:Destroy()
+	end
+end, true, function()
+	return ""
+end, "Automatically wins 25% of the time")
+BedVideoToggle = BedExploit.CreateToggle("Chips Video", function() 
+	if BedVideo == nil or (BedVideo and BedVideo.Parent == nil) then
+		spawn(function()
+			repeat wait() until #bedwars["BedTable"] > 0 and matchState ~= 0
+			if BedExploit["Enabled"] and (BedVideo == nil or (BedVideo and BedVideo.Parent == nil)) then
+				BedVideo = Instance.new("VideoFrame")
+				BedVideo.Video = getsynasset("chips.webm")
+				BedVideo.Size = UDim2.new(1, 0, 1, 36)
+				BedVideo.Position = UDim2.new(0, 0, 0, -36)
+				BedVideo.BorderSizePixel = 0
+				BedVideo.ZIndex = 0
+				BedVideo.Volume = 0.25
+				BedVideo.Looped = true
+				BedVideo.Parent = game.Players.LocalPlayer.PlayerGui:GetChildren()[2]
+				BedVideo:Play()
+			end
+		end)
+	end
+end, function() 
+	if BedVideo ~= nil then
+		BedVideo:Destroy()
+	end
+end, true)
+
 bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
 BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
@@ -1015,28 +1167,7 @@ ScaffoldHandCheck = Scaffold.CreateToggle("Hand Check", function() end, function
 if GuiLibrary["Settings"]["ToxicObject"] == nil then
 	GuiLibrary["Settings"]["ToxicObject"] = {["Type"] = "Custom", ["List"] = {}}
 end
-local AutoToxic = {["Enabled"] = false}
-local AutoToxicGG = {["Enabled"] = false}
-local AutoToxicWin = {["Enabled"] = false}
-local AutoToxicFinalKill = {["Enabled"] = false}
-local AutoToxicWinStreak = {["Enabled"] = false}
-local AutoToxicAd = {["Enabled"] = false}
-local AutoToxicPhrases = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
-local AutoToxicOldWin = bedwars["VictoryScreen"].render
-local victorysaid = false
-bedwars["VictoryScreen"].render = function(winstuff)
-    local myTeam = bedwars["ClientStore"]:getState().Game.myTeam;
-    if myTeam and myTeam.id == winstuff.props.WinningTeamId and AutoToxic["Enabled"] and victorysaid == false then
-		victorysaid = true
-		if AutoToxicGG["Enabled"] then
-			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
-		end
-		if AutoToxicWin["Enabled"] then
-			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
-		end
-    end
-    return AutoToxicOldWin(winstuff)
-end
+
 bedwars["Client"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 	p6:Connect(function(p7)
 		if AutoToxic["Enabled"] then
