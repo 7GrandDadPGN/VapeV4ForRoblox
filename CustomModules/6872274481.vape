@@ -906,7 +906,7 @@ autowinfunc = function()
 				repeat wait() until isAlive()
 				if v.Name ~= "Spectators" and v.Name ~= "Neutral" and v ~= lplr.Team and #v:GetPlayers() > 0 then
 					local bed = getBed(v.TeamColor)
-					if bed and bed.Parent ~= nil then
+					if bed and bed.Parent ~= nil and BedExploit["Enabled"] then
 						GuiLibrary["CreateNotification"]("AutoWin", "Breaking "..v.Name.."'s bed", 4, "ℹ️")
 						repeat
 							wait()
@@ -916,11 +916,13 @@ autowinfunc = function()
 							end
 						until BedExploit["Enabled"] == false or bed.Parent == nil
 					end
-					GuiLibrary["CreateNotification"]("AutoWin", "Killing "..v.Name.." team players", 4, "ℹ️")
+					if BedExploit["Enabled"] then
+						GuiLibrary["CreateNotification"]("AutoWin", "Killing "..v.Name.." team players", 4, "ℹ️")
+					end
 					for i2,v2 in pairs(v:GetPlayers()) do
 						repeat
 							wait()
-							if isAlive() and isAlive(v2) and targetCheck(v2, true) then
+							if isAlive() and isAlive(v2) and targetCheck(v2, true) and BedExploit["Enabled"] then
 								lplr.Character.HumanoidRootPart.CFrame = (v2.Character.HumanoidRootPart.CFrame * CFrame.new(0, -7 - ((v2.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or v2.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and 0 or 7), 0))
 							end
 						until isAlive(v2) and (not targetCheck(v2, true)) or (not isAlive(v2)) or BedExploit["Enabled"] == false
