@@ -921,7 +921,7 @@ autowinfunc = function()
 						repeat
 							wait()
 							if isAlive() and isAlive(v2) and targetCheck(v2, true) then
-								lplr.Character.HumanoidRootPart.CFrame = (v2.Character.HumanoidRootPart.CFrame * CFrame.new(0, -7 + (v2.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping and (bed and bed.Position.Y - 3) or 0), 0))
+								lplr.Character.HumanoidRootPart.CFrame = (v2.Character.HumanoidRootPart.CFrame * CFrame.new(0, -7 - ((v2.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or v2.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and 0 or 7), 0))
 							end
 						until isAlive(v2) and (not targetCheck(v2, true)) or (not isAlive(v2)) or BedExploit["Enabled"] == false
 					end
