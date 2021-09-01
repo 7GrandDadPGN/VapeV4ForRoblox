@@ -639,6 +639,16 @@ end
 
 GUI.CreateToggle("Auto-load module states", function() end, function() end, false, "VapeOptions")
 GUI.CreateToggle("Blur Background", function() GuiLibrary["MainBlur"].Size = 25 end, function() GuiLibrary["MainBlur"].Size = 0 end, true, "VapeOptions")
+local rescale = GUI.CreateToggle("Rescale", function() 
+	GuiLibrary["MainRescale"].Scale = cam.ViewportSize.X / 1920
+end, function()
+	GuiLibrary["MainRescale"].Scale = 1 
+end, true, "VapeOptions")
+cam:GetPropertyChangedSignal("ViewportSize"):connect(function()
+	if rescale["Enabled"] then
+		GuiLibrary["MainRescale"].Scale = cam.ViewportSize.X / 1920
+	end
+end)
 GUI.CreateToggle("Enable Multi-Keybinding", function() end, function() end, false, "VapeOptions")
 local welcomemsg = GUI.CreateToggle("GUI bind indicator", function() end, function() end, true, "VapeOptions")
 GUI.CreateToggle("Smooth font", function()
