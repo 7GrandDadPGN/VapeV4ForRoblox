@@ -1049,7 +1049,7 @@ end, function()
 	end
 	game:GetService("RunService"):UnbindFromRenderStep("Speed")
 end, true, function() return "" end, "Makes you go zoom")
-speedval = speed.CreateSlider("Speed", 1, 33, function(val) end, 33)
+speedval = speed.CreateSlider("Speed", 1, 30, function(val) end, 30)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
 local function getziplinepos()
