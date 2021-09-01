@@ -982,6 +982,23 @@ end, function()
 	end
 end, true)
 
+local clientcrasherenabled = false
+local AntiCrash = {["Enabled"] = false}
+AntiCrash = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AntiCrash", function()
+	if clientcrasherenabled == false then
+		for i,v in pairs(getgc(true)) do
+			if type(v) == "table" and rawget(v, "Client") then
+				for i2,v2 in pairs(getconnections(v["Client"]:Get("LightningStrike")["instance"].OnClientEvent)) do
+					v2:Disable()
+				end
+				break
+			end
+		end
+		clientcrasherenabled = true
+	end
+end, function() end, true, function() return "" end, "Prevents Lightning Crashing")
+
+
 bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
 BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
