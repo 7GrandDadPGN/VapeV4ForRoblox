@@ -867,13 +867,15 @@ local AutoToxicOldWin = bedwars["VictoryScreen"].render
 local victorysaid = false
 bedwars["VictoryScreen"].render = function(winstuff)
     local myTeam = bedwars["ClientStore"]:getState().Game.myTeam;
-    if myTeam and myTeam.id == winstuff.props.WinningTeamId and AutoToxic["Enabled"] and victorysaid == false then
+    if myTeam and myTeam.id == winstuff.props.WinningTeamId and victorysaid == false then
 		victorysaid = true
-		if AutoToxicGG["Enabled"] then
-			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
-		end
-		if AutoToxicWin["Enabled"] then
-			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
+		if AutoToxic["Enabled"] then
+			if AutoToxicGG["Enabled"] then
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
+			end
+			if AutoToxicWin["Enabled"] then
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
+			end
 		end
 		wait(1)
 		if BedExploit["Enabled"] then
