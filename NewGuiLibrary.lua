@@ -429,8 +429,8 @@ api["CreateMainWindow"] = function()
 					local reqbody = {
 						["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
 						["args"] = {
-							["invite"] = {["code"] = "CBWsjk57SN"},
-							["code"] = "CBWsjk57SN",
+							["invite"] = {["code"] = "robloxvape"},
+							["code"] = "robloxvape",
 						},
 						["cmd"] = "INVITE_BROWSER"
 					}
@@ -465,7 +465,7 @@ api["CreateMainWindow"] = function()
 			local hoverround3 = Instance.new("UICorner")
 			hoverround3.CornerRadius = UDim.new(0, 4)
 			hoverround3.Parent = hoverbox3
-			setclipboard("https://discord.com/invite/CBWsjk57SN")
+			setclipboard("https://discord.com/invite/robloxvape")
 			wait(1)
 			hoverbox3:Remove()
 		end)
