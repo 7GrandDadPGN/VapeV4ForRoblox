@@ -675,6 +675,16 @@ OpenShop = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	OpenShop["ToggleButton"](false)
 end, function() end, true, function() return "" end, "Opens the Shop GUI")
 
+local OpenTeamUpgrades = {["Enabled"] = false}
+OpenTeamUpgrades = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("OpenTeamUpgrades", function()
+	bedwars["SoundManager"]:playSound(4)
+	bedwars["ClientStore"]:dispatch({
+		type = "SetShownApp", 
+		app = 4
+	})
+	OpenTeamUpgrades["ToggleButton"](false)
+end, function() end, true, function() return "" end, "Opens the Team Upgrade GUI")
+
 local killaurabox = Instance.new("BoxHandleAdornment")
 killaurabox.Transparency = 0.5
 killaurabox.Color3 = Color3.new(1, 0, 0)
@@ -694,15 +704,21 @@ local killauragui = {["Enabled"] = false}
 local killauratarget = {["Enabled"] = false}
 local killaurasound = {["Enabled"] = false}
 local killauraswing = {["Enabled"] = false}
+local killaurahandcheck = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauradelay = 0
 local Killauranear = false
 local killauraplaying = false
 local oldplay = function() end
 local oldsound = function() end
+local oldmeta
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
 	oldplay = bedwars["ViewmodelController"]["playAnimation"]
 	oldsound = bedwars["SoundManager"]["playSound"]
+	oldmeta = bedwars["SwordController"]["getHandItem"]
+	bedwars["SwordController"]["getHandItem"] = function()
+		return getSword()
+	end
 	bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
 		if (soundid == 13 or soundid == 14) and Killaura["Enabled"] and killaurasound["Enabled"] and killauranear then
 			return nil
@@ -715,7 +731,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				if origC0 == nil then
 					origC0 = cam.Viewmodel.RightHand.RightWrist.C0
 				end
-				if killauraplaying == false then
+				if killauraplaying == false and getEquipped()["Type"] == "sword" then
 					killauraplaying = true
 					game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(55), -math.rad(70))}):Play()
 					wait(0.05)
@@ -750,7 +766,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			end
 			for i,plr in pairs(plrs) do
 				local entitytable = {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}
-				if isAlive() and getEquipped()["Type"] == "sword" and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+				if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 						killauranear = true
 						if killauraautoblock["Enabled"] and kit == "shielder" then
@@ -800,6 +816,8 @@ end, function()
 		cam.Viewmodel.RightHand.RightWrist.C0 = origC0
 	end)
 	game:GetService("RunService"):UnbindFromRenderStep("Killaura") 
+	bedwars["SwordController"]["getHandItem"] = oldmeta
+	oldmeta = nil
 end, true, function()
 	return ""
 end, "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder")
@@ -816,6 +834,7 @@ killauratarget = Killaura.CreateToggle("Show target", function() end, function()
 killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
 killaurasound = Killaura.CreateToggle("No Swing Sound", function() end, function() end)
 killauraswing = Killaura.CreateToggle("No Swing", function() end, function() end)
+killaurahandcheck = Killaura.CreateToggle("Hand Check", function() end, function() end)
 local FastPickupRange = {["Value"] = 1}
 local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastPickup", function()
 	game:GetService("RunService"):BindToRenderStep("FastPickup", 1, function()
@@ -963,6 +982,30 @@ autowinfunc = function()
 		end
 	end)
 end
+
+local GrabItems = {["Enabled"] = false}
+GrabItems = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("GrabPickups", function()
+	spawn(function()
+		repeat
+			wait()
+			local itemdrops = collectionservice:GetTagged("ItemDrop")
+			for i,v in pairs(itemdrops) do
+				repeat
+					wait()
+					if isAlive() and GrabItems["Enabled"] then
+						lplr.Character.HumanoidRootPart.CFrame = v.CFrame
+						lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+						bedwars["Client"]:Get(bedwars["PickupRemote"]):CallServerAsync({
+							itemDrop = v
+						}):andThen(function(p14)
+	
+						end)
+					end
+				until v.Parent == nil or GrabItems["Enabled"] == false
+			end
+		until GrabItems["Enabled"] == false
+	end)
+end, function() end, true, function() return "" end, "Grabs all the dropped items.")
 
 BedExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoWin", function()
 	autowinfunc()
