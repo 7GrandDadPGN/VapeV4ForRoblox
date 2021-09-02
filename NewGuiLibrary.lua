@@ -113,7 +113,7 @@ local function getcustomassetfunc(path)
 	textlabel.TextSize = 30
 	textlabel.TextColor3 = Color3.new(1, 1, 1)
 	textlabel.Position = UDim2.new(0, 0, 0, -36)
-	textlabel.Parent = GuiLibrary["MainGui"]
+	textlabel.Parent = api["MainGui"]
 	repeat wait() until isfile(path)
 	textlabel:Remove()
 	return getasset(path) 

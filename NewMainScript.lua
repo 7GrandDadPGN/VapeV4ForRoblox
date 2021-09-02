@@ -13,27 +13,6 @@ end
 local getasset = getsynasset or getcustomasset
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport
 local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request
-local function getcustomassetfunc(path)
-	if not isfile(path) then
-		local req = request({
-			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
-			Method = "GET"
-		})
-		writefile(path, req.Body)
-	end
-	local textlabel = Instance.new("TextLabel")
-	textlabel.Size = UDim2.new(1, 0, 0, 36)
-	textlabel.Text = "Downloading "..path
-	textlabel.BackgroundTransparency = 1
-	textlabel.TextStrokeTransparency = 0
-	textlabel.TextSize = 30
-	textlabel.TextColor3 = Color3.new(1, 1, 1)
-	textlabel.Position = UDim2.new(0, 0, 0, -36)
-	textlabel.Parent = GuiLibrary["MainGui"]
-	repeat wait() until isfile(path)
-	textlabel:Remove()
-	return getasset(path) 
-end
 
 local function checkpublicrepo(id)
 	local req = request({
@@ -72,6 +51,29 @@ if isfolder("vape/assets") == false then
 end
 
 local GuiLibrary = loadstring(GetURL("NewGuiLibrary.lua"))()
+
+local function getcustomassetfunc(path)
+	if not isfile(path) then
+		local req = request({
+			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
+			Method = "GET"
+		})
+		writefile(path, req.Body)
+	end
+	local textlabel = Instance.new("TextLabel")
+	textlabel.Size = UDim2.new(1, 0, 0, 36)
+	textlabel.Text = "Downloading "..path
+	textlabel.BackgroundTransparency = 1
+	textlabel.TextStrokeTransparency = 0
+	textlabel.TextSize = 30
+	textlabel.TextColor3 = Color3.new(1, 1, 1)
+	textlabel.Position = UDim2.new(0, 0, 0, -36)
+	textlabel.Parent = GuiLibrary["MainGui"]
+	repeat wait() until isfile(path)
+	textlabel:Remove()
+	return getasset(path) 
+end
+
 shared.GuiLibrary = GuiLibrary
 local workspace = game:GetService("Workspace")
 local cam = workspace.CurrentCamera
