@@ -17,17 +17,6 @@ local api = {
 	["ObjectsThatCanBeSaved"] = {},
 }
 
-local function getcustomassetfunc(path)
-	if not isfile(path) then
-		local req = request({
-			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
-			Method = "GET"
-		})
-		writefile(path, req.Body)
-	end
-	return getasset(path) 
-end
-
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		return readfile("vape/"..scripturl)
@@ -106,6 +95,28 @@ elseif gethui then
     api["MainGui"] = gui
 elseif game:GetService("CoreGui"):FindFirstChild('RobloxGui') then
     api["MainGui"] = game:GetService("CoreGui").RobloxGui
+end
+
+local function getcustomassetfunc(path)
+	if not isfile(path) then
+		local req = request({
+			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
+			Method = "GET"
+		})
+		writefile(path, req.Body)
+	end
+	local textlabel = Instance.new("TextLabel")
+	textlabel.Size = UDim2.new(1, 0, 0, 36)
+	textlabel.Text = "Downloading "..path
+	textlabel.BackgroundTransparency = 1
+	textlabel.TextStrokeTransparency = 0
+	textlabel.TextSize = 30
+	textlabel.TextColor3 = Color3.new(1, 1, 1)
+	textlabel.Position = UDim2.new(0, 0, 0, -36)
+	textlabel.Parent = GuiLibrary["MainGui"]
+	repeat wait() until isfile(path)
+	textlabel:Remove()
+	return getasset(path) 
 end
 
 api["UpdateHudEvent"] = Instance.new("BindableEvent")

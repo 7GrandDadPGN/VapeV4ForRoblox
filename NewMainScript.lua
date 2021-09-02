@@ -21,6 +21,17 @@ local function getcustomassetfunc(path)
 		})
 		writefile(path, req.Body)
 	end
+	local textlabel = Instance.new("TextLabel")
+	textlabel.Size = UDim2.new(1, 0, 0, 36)
+	textlabel.Text = "Downloading "..path
+	textlabel.BackgroundTransparency = 1
+	textlabel.TextStrokeTransparency = 0
+	textlabel.TextSize = 30
+	textlabel.TextColor3 = Color3.new(1, 1, 1)
+	textlabel.Position = UDim2.new(0, 0, 0, -36)
+	textlabel.Parent = GuiLibrary["MainGui"]
+	repeat wait() until isfile(path)
+	textlabel:Remove()
 	return getasset(path) 
 end
 
