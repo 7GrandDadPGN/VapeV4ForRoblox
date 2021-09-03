@@ -1130,6 +1130,11 @@ end, function() end, true, function() return "" end, "Prevents Lightning Crashin
 
 local AutoLeave = {["Enabled"] = false}
 local autoleaveconnection
+bedwars["Client"]:OnEvent("MatchEndEvent", function(p2)
+	if AutoLeave["Enabled"] then
+		bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
+	end
+end)
 AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoLeave", function()
 	autoleaveconnection = players.PlayerAdded:connect(function(plr)
 		if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
@@ -1143,7 +1148,7 @@ AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 	end
 end, function() 
 	autoleaveconnection:Disconnect()
-end, true, function() return "" end, "Leaves if a staff member joins your game")
+end, true, function() return "" end, "Leaves if a staff member joins your game or when the match ends.")
 
 
 --bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
