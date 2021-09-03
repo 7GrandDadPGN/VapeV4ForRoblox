@@ -115,6 +115,14 @@ local function getSword()
 	return nil
 end
 
+local function getBaguette()
+	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
+		if v5["itemType"]:find("baguette") then
+			return v5
+		end
+	end
+	return nil
+end
 
 local function getwool()
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
@@ -740,6 +748,7 @@ local killauratarget = {["Enabled"] = false}
 local killaurasound = {["Enabled"] = false}
 local killauraswing = {["Enabled"] = false}
 local killaurahandcheck = {["Enabled"] = false}
+local killaurabaguette = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauradelay = 0
 local Killauranear = false
@@ -752,7 +761,11 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	oldsound = bedwars["SoundManager"]["playSound"]
 	oldmeta = bedwars["SwordController"]["getHandItem"]
 	bedwars["SwordController"]["getHandItem"] = function()
-		return getSword()
+		if killaurabaguette["Enabled"] then
+			return getBaguette()
+		else
+			return getSword()
+		end
 	end
 	bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
 		if (soundid == 13 or soundid == 14) and Killaura["Enabled"] and killaurasound["Enabled"] and killauranear then
@@ -870,6 +883,7 @@ killauracframe = Killaura.CreateToggle("Face target", function() end, function()
 killaurasound = Killaura.CreateToggle("No Swing Sound", function() end, function() end)
 killauraswing = Killaura.CreateToggle("No Swing", function() end, function() end)
 killaurahandcheck = Killaura.CreateToggle("Hand Check", function() end, function() end)
+killaurabaguette = Killaura.CreateToggle("Baguette Aura", function() end, function() end)
 local FastPickupRange = {["Value"] = 1}
 local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastPickup", function()
 	game:GetService("RunService"):BindToRenderStep("FastPickup", 1, function()
@@ -1011,7 +1025,7 @@ autowinfunc = function()
 					end
 				end
 			end
-			if teamsAreAlive() and BedExploit["Enabled"] then
+			if matchState ~= 0 and BedExploit["Enabled"] then
 				autowinfunc()
 			end
 		end
