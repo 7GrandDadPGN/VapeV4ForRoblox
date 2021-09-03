@@ -19,7 +19,7 @@ local antivoidypos = 0
 local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request
 local getasset = getsynasset or getcustomasset
 local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
+--[[if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
     local textlabel = Instance.new("TextLabel")
     textlabel.Size = UDim2.new(1, 0, 1, 36)
     textlabel.Text = "Vape is currently down for testing due to the BedWars update.\nThe discord has been copied to your clipboard."
@@ -57,8 +57,8 @@ if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
     spawn(function()
         while true do end
     end)
-end
---[[local textlabel = Instance.new("TextLabel")
+end]]
+local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
 textlabel.Text = "Remember to use alts in this new update, report bans to the discord."
 textlabel.BackgroundTransparency = 1
@@ -70,7 +70,7 @@ textlabel.Parent = GuiLibrary["MainGui"]
 spawn(function()
 	repeat wait() until matchState ~= 0
 	textlabel:Remove()
-end)]]
+end)
 
 
 local function getcustomassetfunc(path)
@@ -333,7 +333,7 @@ end
 
 getfunctions()
 bedwars["breakBlock"] = function(pos)
-    game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.BreakBlock:InvokeServer({
+    game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.DamageBlock:InvokeServer({
         ["blockRef"] = {
             ["blockPosition"] = Vector3.new(math.floor(pos.X / 3), math.floor(pos.Y / 3), math.floor(pos.Z / 3))
         },
@@ -1118,24 +1118,6 @@ end, function() end, true, function() return "" end, "Prevents Lightning Crashin
 bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
 BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
-local fastbreak = {["Enabled"] = false}
-local fastbreakhits = {["Value"] = 1}
-local oldbreakfunction
-fastbreak = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastBreak", function()
-	oldbreakfunction = bedwars["BlockController3"]["calculateBlockDamage"] 
-	bedwars["BlockController3"]["calculateBlockDamage"] = function(p44, p45, p46)
-		local v114 = p44.store:getBlockAt(p46.blockPosition)
-		if v114 then
-			return v114:GetAttribute("Health") / fastbreakhits["Value"]
-		end
-		return oldbreakfunction(p44, p45, p46)
-	end
-end, function()
-	bedwars["BlockController3"]["calculateBlockDamage"] = oldbreakfunction
-	oldbreakfunction = nil
-end, true)
-fastbreakhits = fastbreak.CreateSlider("Block Hits", 1, 10, function(val) end, 1)
-
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 local fly = {["Enabled"] = false}
 local speedval = {["Value"] = 1}
