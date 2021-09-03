@@ -893,7 +893,7 @@ end, function()
 end, true)
 FastPickupRange = FastPickup.CreateSlider("Range", 1, 10, function() end, 10)
 
-local bednukerrange = {["Value"] = 1}
+--[[local bednukerrange = {["Value"] = 1}
 local BedNuker = {["Enabled"] = false}
 local BedNukerTopBlock = {["Enabled"] = false}
 BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BedNuker", function()
@@ -918,7 +918,7 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	end)
 end, function() end, true, function()
 	return ""
-end, "Automatically destroys beds around you.")
+end, "Automatically destroys beds around you.")]]
 
 local BedExploit = {["Enabled"] = false}
 local BedVideoToggle = {["Enabled"] = false}
