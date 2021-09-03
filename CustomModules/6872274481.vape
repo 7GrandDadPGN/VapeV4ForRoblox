@@ -204,6 +204,14 @@ getfunctions = function()
 					end
 				end
 			end
+			if rawget(v, "BigmanController") then
+				local protos = debug.getconstants(debug.getprotos(debug.getprotos(v["BigmanController"]["KnitStart"])[2])[1])
+				for i2,v2 in pairs(protos) do
+					if tostring(v2):match("-") or tostring(v2):match("ConsumeTreeOrb") then
+						bedwars["TreeRemote"] = v2
+					end
+				end
+			end
 			if rawget(v, "performHeal") then
 				for i2,v2 in pairs(debug.getconstants(v["performHeal"])) do
 					if tostring(v2):match("-") or tostring(v2):match("PlayGuitar") then
@@ -1006,6 +1014,31 @@ GrabItems = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 		until GrabItems["Enabled"] == false
 	end)
 end, function() end, true, function() return "" end, "Grabs all the dropped items.")
+
+local GrabTreeOrbs = {["Enabled"] = false}
+GrabTreeOrbs = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("GrabTreeOrbs", function()
+	spawn(function()
+		repeat
+			wait()
+			local itemdrops = collectionservice:GetTagged("treeOrb")
+			for i,v in pairs(itemdrops) do
+				repeat
+					wait()
+					if isAlive() and GrabTreeOrbs["Enabled"] and v:FindFirstChild("Spirit") then
+						lplr.Character.HumanoidRootPart.CFrame = v.Spirit.CFrame
+						lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+						print(v:GetAttribute("TreeOrbSecret"))
+						if bedwars["Client"]:Get(bedwars["TreeRemote"]):CallServer({
+							treeOrbSecret = v:GetAttribute("TreeOrbSecret")
+						}) then
+							v:Destroy()
+						end
+					end
+				until v.Parent == nil or GrabTreeOrbs["Enabled"] == false
+			end
+		until GrabTreeOrbs["Enabled"] == false
+	end)
+end, function() end, true, function() return "" end, "Grabs all the tree orbs.")
 
 BedExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoWin", function()
 	autowinfunc()
