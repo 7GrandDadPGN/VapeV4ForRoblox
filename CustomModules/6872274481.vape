@@ -1128,6 +1128,23 @@ AntiCrash = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 	end
 end, function() end, true, function() return "" end, "Prevents Lightning Crashing")
 
+local AutoLeave = {["Enabled"] = false}
+local autoleaveconnection
+AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoLeave", function()
+	autoleaveconnection = players.PlayerAdded:connect(function(plr)
+		if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
+			bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
+		end
+	end)
+	for i, plr in pairs(players:GetChildren()) do
+		if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
+			bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
+		end
+	end
+end, function() 
+	autoleaveconnection:Disconnect()
+end, true, function() return "" end, "Leaves if a staff member joins your game")
+
 
 --bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
 --BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
