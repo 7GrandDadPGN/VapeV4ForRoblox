@@ -18,20 +18,47 @@ local kit = ""
 local antivoidypos = 0
 local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request
 local getasset = getsynasset or getcustomasset
---[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-08-27T20:25:05.3390746Z" then
+local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
     local textlabel = Instance.new("TextLabel")
     textlabel.Size = UDim2.new(1, 0, 1, 36)
-    textlabel.Text = "Vape is currently down due to the BedWars update."
+    textlabel.Text = "Vape is currently down for testing due to the BedWars update.\nThe discord has been copied to your clipboard."
+	textlabel.TextColor3 = Color3.new(1, 1, 1)
+    textlabel.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
     textlabel.Position = UDim2.new(0, 0, 0, -36)
     textlabel.TextSize = 30
     textlabel.Parent = GuiLibrary["MainGui"]
-    wait(0.1)
+	spawn(function()
+		for i = 1, 14 do
+			spawn(function()
+				local reqbody = {
+					["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
+					["args"] = {
+						["invite"] = {["code"] = "robloxvape"},
+						["code"] = "robloxvape",
+					},
+					["cmd"] = "INVITE_BROWSER"
+				}
+				local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
+				syn.request({
+					Headers = {
+						["Content-Type"] = "application/json",
+						["Origin"] = "https://discord.com"
+					},
+					Url = "http://127.0.0.1:64"..(53 + i).."/rpc?v=1",
+					Method = "POST",
+					Body = newreq
+				})
+			end)
+		end
+	end)
+	setclipboard("https://discord.com/invite/robloxvape")
+    wait(0.5)
     spawn(function()
         while true do end
     end)
-end]]
-local textlabel = Instance.new("TextLabel")
+end
+--[[local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
 textlabel.Text = "Remember to use alts in this new update, report bans to the discord."
 textlabel.BackgroundTransparency = 1
@@ -43,7 +70,7 @@ textlabel.Parent = GuiLibrary["MainGui"]
 spawn(function()
 	repeat wait() until matchState ~= 0
 	textlabel:Remove()
-end)
+end)]]
 
 
 local function getcustomassetfunc(path)
