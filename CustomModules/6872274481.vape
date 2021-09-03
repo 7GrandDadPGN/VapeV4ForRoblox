@@ -1115,8 +1115,8 @@ AntiCrash = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 end, function() end, true, function() return "" end, "Prevents Lightning Crashing")
 
 
-bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
-BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
+--bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
+--BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 local fly = {["Enabled"] = false}
