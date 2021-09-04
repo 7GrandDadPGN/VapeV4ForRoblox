@@ -176,6 +176,9 @@ getfunctions = function()
 			if rawget(v, "ClientBlockEngine") then
 				bedwars["BlockEngine"] = v["ClientBlockEngine"]
 			end
+			if rawget(v, "BlockEngine") then
+				bedwars["BlockEngine2"] = v["BlockEngine"]
+			end
 			if rawget(v, "BlockPlacer") then
 				bedwars["BlockController2"] = v["BlockPlacer"]
 			end
@@ -349,11 +352,12 @@ getfunctions()
 bedwars["breakBlock"] = function(pos)
     game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.DamageBlock:InvokeServer({
         ["blockRef"] = {
-            ["blockPosition"] = Vector3.new(math.floor(pos.X / 3), math.floor(pos.Y / 3), math.floor(pos.Z / 3))
+            ["blockPosition"] = bedwars["BlockEngine2"]:getBlockPosition(pos)
         },
-        ["hitPosition"] = pos + Vector3.new(makerandom(-0.2, 0.2), makerandom(-0.2, 0.2), makerandom(-0.2, 0.2)),
+        ["hitPosition"] = pos,
         ["hitNormal"] = Vector3.new(1, 0, 0)
     })
+	wait(0.25)
 end	
 
 local function friendCheck(plr)
@@ -924,7 +928,6 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				if isAlive() then
 					if obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
 						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
-							wait(0.25)
 							bedwars["breakBlock"](obj.Position)
 						end
 					end
