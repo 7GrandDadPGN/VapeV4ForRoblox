@@ -539,7 +539,7 @@ end, function()
 end, false, function() return "" end, "Chokes all incoming packets (blatant mode required)\nPlease do not turn this on if you do not know what you are doing.")
 
 local antivoidpart
-local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AntiVoid", function()
+local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("AntiVoid", function()
 	spawn(function()
 		repeat wait() until antivoidypos ~= 0
 		antivoidpart = Instance.new("Part")
@@ -710,7 +710,7 @@ bedwars["ClientStore"].changed:connect(function(p3, p4)
 	end
 end)
 bedwars["Client"]:Get("PickupItemEvent"):Connect(BuyCheck)
-AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true, function() return "" end, "Automatically Buys Swords, Armor, and Team Upgrades.")
+AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true, function() return "" end, "Automatically Buys Swords, Armor, and Team Upgrades.")
 AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
 AutoBuySword = AutoBuy.CreateToggle("Buy Sword", function() end, function() end, true)
 AutoBuyUpgrades = AutoBuy.CreateToggle("Buy Team Upgrades", function() end, function() end, true)
@@ -719,7 +719,7 @@ GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 
 local OpenShop = {["Enabled"] = false}
-OpenShop = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("OpenShop", function()
+OpenShop = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("OpenShop", function()
 	bedwars["SoundManager"]:playSound(4)
 	bedwars["ClientStore"]:dispatch({
 		type = "SetShownApp", 
@@ -729,7 +729,7 @@ OpenShop = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 end, function() end, true, function() return "" end, "Opens the Shop GUI")
 
 local OpenTeamUpgrades = {["Enabled"] = false}
-OpenTeamUpgrades = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("OpenTeamUpgrades", function()
+OpenTeamUpgrades = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("OpenTeamUpgrades", function()
 	bedwars["SoundManager"]:playSound(4)
 	bedwars["ClientStore"]:dispatch({
 		type = "SetShownApp", 
@@ -1038,7 +1038,7 @@ autowinfunc = function()
 end
 
 local GrabItems = {["Enabled"] = false}
-GrabItems = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("GrabPickups", function()
+GrabItems = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("GrabPickups", function()
 	spawn(function()
 		repeat
 			wait()
@@ -1062,7 +1062,7 @@ GrabItems = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 end, function() end, true, function() return "" end, "Grabs all the dropped items.")
 
 local GrabTreeOrbs = {["Enabled"] = false}
-GrabTreeOrbs = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("GrabTreeOrbs", function()
+GrabTreeOrbs = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("GrabTreeOrbs", function()
 	spawn(function()
 		repeat
 			wait()
@@ -1119,7 +1119,7 @@ end, true)
 
 local clientcrasherenabled = false
 local AntiCrash = {["Enabled"] = false}
-AntiCrash = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AntiCrash", function()
+AntiCrash = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AntiCrash", function()
 	if clientcrasherenabled == false then
 		for i2,v2 in pairs(getconnections(bedwars["Client"]:Get("LightningStrike")["instance"].OnClientEvent)) do
 			v2:Disable()
@@ -1154,7 +1154,7 @@ GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 
 local fastbreak = {["Enabled"] = false}
 local oldbreakspeed
-fastbreak = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastBreak", function()
+fastbreak = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("FastBreak", function()
 	oldbreakspeed = bedwars["BlockBreaker"]["COOLDOWN"]
 	bedwars["BlockBreaker"]["COOLDOWN"] = 0.25
 end, function()
@@ -1381,7 +1381,7 @@ bedwars["Client"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 		end
 	end)
 end)
-AutoToxic = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoToxic", function() end, function() end, true)
+AutoToxic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AutoToxic", function() end, function() end, true)
 AutoToxicGG = AutoToxic.CreateToggle("AutoGG", function() end, function() end, true)
 AutoToxicWin = AutoToxic.CreateToggle("Win", function() end, function() end, true)
 AutoToxicFinalKill = AutoToxic.CreateToggle("Final Kill", function() end, function() end, true)
