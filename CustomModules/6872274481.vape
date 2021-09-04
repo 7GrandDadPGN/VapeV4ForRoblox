@@ -16,7 +16,7 @@ local origC0 = nil
 local matchState = 0
 local kit = ""
 local antivoidypos = 0
-local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request
+local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
 --[[if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
@@ -40,7 +40,7 @@ local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
 					["cmd"] = "INVITE_BROWSER"
 				}
 				local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
-				syn.request({
+				syn.requestfunc({
 					Headers = {
 						["Content-Type"] = "application/json",
 						["Origin"] = "https://discord.com"
@@ -75,7 +75,7 @@ end)
 
 local function getcustomassetfunc(path)
 	if not isfile(path) then
-		local req = request({
+		local req = requestfunc({
 			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
 			Method = "GET"
 		})

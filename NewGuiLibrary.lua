@@ -2,7 +2,7 @@ local VERSION = "v4.06"
 local rainbowvalue = 0
 local cam = game:GetService("Workspace").CurrentCamera
 local getasset = getsynasset or getcustomasset
-local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request
+local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 local api = {
 	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.44}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
@@ -99,7 +99,7 @@ end
 
 local function getcustomassetfunc(path)
 	if not isfile(path) then
-		local req = request({
+		local req = requestfunc({
 			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
 			Method = "GET"
 		})
@@ -435,7 +435,7 @@ api["CreateMainWindow"] = function()
 						["cmd"] = "INVITE_BROWSER"
 					}
 					local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
-					syn.request({
+					syn.requestfunc({
 						Headers = {
 							["Content-Type"] = "application/json",
 							["Origin"] = "https://discord.com"

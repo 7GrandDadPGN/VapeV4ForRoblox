@@ -16,8 +16,11 @@ local origC0 = nil
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
 		if type(v) == "table" then
-			if rawget(v, "Client") and bedwars["Client"] == nil then
-				bedwars["Client"] = v.Client
+			if rawget(v, "Client") and type(v.Client) == "table" then
+				local suc = pcall(function() v.Client:Get("JoinQueue") end)
+				if suc then
+					bedwars["Client"] = v.Client
+				end
 			end
 			if rawget(v, "ClientStore") and bedwars["ClientStore"] == nil then
 				bedwars["ClientStore"] = v.ClientStore
