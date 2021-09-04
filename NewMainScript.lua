@@ -12,7 +12,7 @@ if identifyexecutor and identifyexecutor() == "WeAreDevs" then
 end
 local getasset = getsynasset or getcustomasset
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport
-local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
+local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 
 local function checkpublicrepo(id)
 	local req = requestfunc({
@@ -25,7 +25,7 @@ local function checkpublicrepo(id)
 	return nil
 end
 
-if not (getasset and request and queueteleport) then
+if not (getasset and requestfunc and queueteleport) then
 	print("Vape not supported with your exploit.")
 	return
 end
