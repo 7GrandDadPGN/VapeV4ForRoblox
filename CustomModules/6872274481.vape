@@ -764,7 +764,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	oldsound = bedwars["SoundManager"]["playSound"]
 	oldmeta = bedwars["SwordController"]["getHandItem"]
 	bedwars["SwordController"]["getHandItem"] = function()
-		if killaurabaguette["Enabled"] then
+		if killaurabaguette["Enabled"] and getBaguette() then
 			return getBaguette()
 		else
 			return getSword()
