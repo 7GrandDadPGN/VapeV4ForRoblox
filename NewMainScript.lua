@@ -12,10 +12,10 @@ if identifyexecutor and identifyexecutor() == "WeAreDevs" then
 end
 local getasset = getsynasset or getcustomasset
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport
-local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request
+local request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 
 local function checkpublicrepo(id)
-	local req = request({
+	local req = requestfunc({
 		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".vape",
 		Method = "GET"
 	})
@@ -54,7 +54,7 @@ local GuiLibrary = loadstring(GetURL("NewGuiLibrary.lua"))()
 
 local function getcustomassetfunc(path)
 	if not isfile(path) then
-		local req = request({
+		local req = requestfunc({
 			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
 			Method = "GET"
 		})
