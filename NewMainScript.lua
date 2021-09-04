@@ -9,7 +9,8 @@ local function GetURL(scripturl)
 end
 local getasset = getsynasset or getcustomasset
 if getasset == nil then
-	getasset = function(location) return "rbxasset://"..location end
+	getgenv().getcustomasset = function(location) return "rbxasset://"..location end
+	getasset = getgenv().getcustomasset
 end
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
