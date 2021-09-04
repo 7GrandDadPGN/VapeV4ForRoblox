@@ -435,7 +435,7 @@ api["CreateMainWindow"] = function()
 						["cmd"] = "INVITE_BROWSER"
 					}
 					local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
-					syn.requestfunc({
+					requestfunc({
 						Headers = {
 							["Content-Type"] = "application/json",
 							["Origin"] = "https://discord.com"
