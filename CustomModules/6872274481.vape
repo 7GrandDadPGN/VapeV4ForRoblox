@@ -913,9 +913,7 @@ end, function()
 end, true)
 FastPickupRange = FastPickup.CreateSlider("Range", 1, 10, function() end, 10)
 
---[[local bednukerrange = {["Value"] = 1}
 local BedNuker = {["Enabled"] = false}
-local BedNukerTopBlock = {["Enabled"] = false}
 BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BedNuker", function()
 	spawn(function()
 		repeat
@@ -925,10 +923,8 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				local obj = tab[i]
 				if isAlive() then
 					if obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
-						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
-							if BedNukerTopBlock["Enabled"] and obj.Parent ~= nil then
-								bedwars["breakBlock"](obj.Position + Vector3.new(0, 3, 0))
-							end
+						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
+							wait(0.25)
 							bedwars["breakBlock"](obj.Position)
 						end
 					end
@@ -938,7 +934,7 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	end)
 end, function() end, true, function()
 	return ""
-end, "Automatically destroys beds around you.")]]
+end, "Automatically destroys beds around you.")
 
 local BedExploit = {["Enabled"] = false}
 local BedVideoToggle = {["Enabled"] = false}
@@ -1151,9 +1147,6 @@ end, function()
 	autoleaveconnection:Disconnect()
 end, true, function() return "" end, "Leaves if a staff member joins your game or when the match ends.")
 
-
---bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
---BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 
 local fastbreak = {["Enabled"] = false}
