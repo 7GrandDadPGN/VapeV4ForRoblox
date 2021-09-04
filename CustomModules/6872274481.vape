@@ -179,6 +179,9 @@ getfunctions = function()
 			if rawget(v, "BlockPlacer") then
 				bedwars["BlockController2"] = v["BlockPlacer"]
 			end
+			if rawget(v, "BlockBreaker") then
+				bedwars["BlockBreaker"] = v["BlockBreaker"]
+			end
 			if rawget(v, "calculateBlockDamage") then
 				bedwars["BlockController3"] = v
 			end
@@ -1152,6 +1155,17 @@ end, true, function() return "" end, "Leaves if a staff member joins your game o
 --bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
 --BedNukerTopBlock = BedNuker.CreateToggle("Break Top Block", function() end, function() end, true)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
+
+local fastbreak = {["Enabled"] = false}
+local oldbreakspeed
+fastbreak = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastBreak", function()
+	oldbreakspeed = bedwars["BlockBreaker"]["COOLDOWN"]
+	bedwars["BlockBreaker"]["COOLDOWN"] = 0.25
+end, function()
+	bedwars["BlockBreaker"]["COOLDOWN"] = oldbreakspeed
+	oldbreakspeed = nil
+end, true)
+
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 local fly = {["Enabled"] = false}
 local speedval = {["Value"] = 1}
