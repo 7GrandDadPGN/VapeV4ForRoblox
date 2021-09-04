@@ -152,7 +152,8 @@ end, function(obj, profilename)
 		bindbkg.Size = UDim2.new(0, 20, 0, 21)
 		bindbkg.Position = UDim2.new(1, -50, 0, 6)
 		bindbkg.BorderSizePixel = 0
-		bindbkg.BackgroundColor3 = Color3.fromRGB(54, 53, 54)
+		bindbkg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		bindbkg.BackgroundTransparency = 0.7
 		bindbkg.Visible = true
 		bindbkg.Parent = obj
 		local bindimg = Instance.new("ImageLabel")
@@ -592,10 +593,10 @@ guicolorslider = GUI.CreateColorSlider("GUI Theme", function(val) GuiLibrary["Se
 
 GuiLibrary["UpdateUI"] = function()
 	pcall(function()
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1) or Color3.fromRGB(199, 199, 199))
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
-		onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
-		onetext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9) or Color3.fromRGB(199, 199, 199))
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		onetext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		local newtext = ""
 		local newfirst = false
 		for i2,v2 in pairs(textwithoutthing:split("\n")) do
@@ -604,47 +605,47 @@ GuiLibrary["UpdateUI"] = function()
 			if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
 			local str = tostring(rainbowcolor)
 			local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
-			local newcolor = Color3.fromHSV(newcol, 1, 1)
+			local newcolor = Color3.fromHSV(newcol, 0.7, 0.9)
 			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..v2..'</font>'
 			newfirst = true
 		end
 		onetext.Text = newtext
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "Button" and v["Api"]["Enabled"] then
-				v["Object"].ButtonText.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+				v["Object"].ButtonText.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				if v["Object"]:FindFirstChild("ButtonIcon") then
-					v["Object"].ButtonIcon.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+					v["Object"].ButtonIcon.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end
 			end
 			if v["Type"] == "OptionsButton" then
 				if v["Api"]["Enabled"] then
-					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end
 			end
 			if v["Type"] == "ExtrasButton" then
 				if v["Api"]["Enabled"] then
-					v["Object"].ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+					v["Object"].ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end
 			end
 			if v["Type"] == "Toggle" and v["Api"]["Enabled"] then
-					v["Object"].ToggleFrame1.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+					v["Object"].ToggleFrame1.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 			end
 			if v["Type"] == "Slider" then
-				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
-				v["Object"].Slider.FillSlider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				v["Object"].Slider.FillSlider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 			end
 			if v["Type"] == "TwoSlider" then
-				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
-				v["Object"].Slider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
-				v["Object"].Slider.ButtonSlider2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				v["Object"].Slider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				v["Object"].Slider.ButtonSlider2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 			end
 		end
-		ProfilesTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+		ProfilesTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		for i3, v3 in pairs(ProfilesTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
 		--	pcall(function()
 				if v3:IsA("TextButton") and v3.ItemText.Text == GuiLibrary["CurrentProfile"] then
-					v3.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
-					v3.ImageButton.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)
+					v3.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					v3.ImageButton.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 					v3.ItemText.TextColor3 = Color3.new(1, 1, 1)
 					v3.ItemText.TextStrokeTransparency = 0.75
 				end
