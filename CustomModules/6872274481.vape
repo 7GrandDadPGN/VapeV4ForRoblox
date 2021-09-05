@@ -176,7 +176,7 @@ getfunctions = function()
 			if rawget(v, "ClientBlockEngine") then
 				bedwars["BlockEngine"] = v["ClientBlockEngine"]
 			end
-			if rawget(v, "BlockEngine") then
+			if rawget(v, "BlockEngine") and rawget(v["BlockEngine"], "store") then
 				bedwars["BlockEngine2"] = v["BlockEngine"]
 			end
 			if rawget(v, "BlockPlacer") then
@@ -204,8 +204,8 @@ getfunctions = function()
 					bedwars["Client"] = v.Client
 				end
 			end
-			if rawget(v, "ClientStore") and bedwars["ClientStore"] == nil then
-				bedwars["ClientStore"] = v.ClientStore
+			if rawget(v, "ClientStore") and bedwars["ClientStoreHandler"] == nil then
+				bedwars["ClientStoreHandler"] = v.ClientStore
 			end
 			if rawget(v, "VictorySection") then
 				bedwars["VictoryScreen"] = v["VictorySection"]
@@ -270,6 +270,9 @@ getfunctions = function()
 					end
 				end
 			end
+			if rawget(v, "updateHealthbar") then
+				bedwars["healthBar"] = v
+			end
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
 			end
@@ -323,19 +326,19 @@ getfunctions = function()
 			end
 			scanforbeds()
 		end)
-		bedwars["ClientStore"].changed:connect(function(p3, p4)
+		bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 			if p3.Game ~= p4.Game then
 				if p3.Game.matchState ~= p4.Game.matchState then
 					matchState = p3.Game.matchState
 					if matchState ~= 0 then
-						kit = rawget(bedwars["ClientStore"]:getState()["Bedwars"], "kit")
+						kit = rawget(bedwars["ClientStoreHandler"]:getState()["Bedwars"], "kit")
 					end
 				end
 			end
 		end)
-		matchState = bedwars["ClientStore"]:getState().Game.matchState
+		matchState = bedwars["ClientStoreHandler"]:getState().Game.matchState
 		if matchState ~= 0 then
-			kit = rawget(bedwars["ClientStore"]:getState()["Bedwars"], "kit")
+			kit = rawget(bedwars["ClientStoreHandler"]:getState()["Bedwars"], "kit")
 		end
 	else
 		wait(1)
@@ -348,16 +351,42 @@ local function makerandom(min, max)
 	return Random.new().NextNumber(Random.new(), min, max)
 end
 
+local function getblock(pos)
+	return bedwars["BlockEngine2"]:getStore():getBlockAt(bedwars["BlockEngine2"]:getBlockPosition(pos))
+end
+
 getfunctions()
 bedwars["breakBlock"] = function(pos)
-    game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.DamageBlock:InvokeServer({
-        ["blockRef"] = {
-            ["blockPosition"] = bedwars["BlockEngine2"]:getBlockPosition(pos)
-        },
-        ["hitPosition"] = pos,
-        ["hitNormal"] = Vector3.new(1, 0, 0)
-    })
-	wait(0.25)
+	spawn(function()
+		local block = getblock(pos)
+		local lastfound = nil
+		if block then
+			for i = 1, 20 do
+				local extrablock = getblock(pos + Vector3.new(i * 3, 0, 0))
+				if extrablock then
+					lastfound = extrablock
+				else
+					if lastfound then
+						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.DamageBlock:InvokeServer({
+							blockRef = {
+								blockPosition = bedwars["BlockEngine2"]:getBlockPosition(lastfound.Position)
+							}, 
+							hitPosition = lastfound.Position, 
+							hitNormal = Vector3.new(1, 0, 0)
+						})
+					else
+						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.DamageBlock:InvokeServer({
+							blockRef = {
+								blockPosition = bedwars["BlockEngine2"]:getBlockPosition(pos)
+							}, 
+							hitPosition = pos, 
+							hitNormal = Vector3.new(1, 0, 0)
+						})
+					end
+				end
+			end
+		end
+	end)
 end	
 
 local function friendCheck(plr)
@@ -479,7 +508,7 @@ local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
 	game:GetService("RunService"):BindToRenderStep("AutoClicker", 1, function() 
-		if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and getEquipped()["Type"] == "sword" and bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
+		if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and getEquipped()["Type"] == "sword" and bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
 			bedwars["SwingSword"](bedwars["SwordController"])
 			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
 		end
@@ -623,7 +652,7 @@ BuyCheck = function()
 			local NextSword = getSword()
 			local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
 			local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
-			if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and buyingthing == false and (AutoBuyGui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp == 5 or bedwars["ClientStore"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
+			if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and buyingthing == false and (AutoBuyGui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or bedwars["ClientStoreHandler"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
 				local buyablesword = checkallswords()
 				if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
 					buyingthing = true
@@ -633,7 +662,7 @@ BuyCheck = function()
 					}):andThen(function(p11)
 						if p11 then
 							bedwars["SoundManager"]:playSound(12)
-							bedwars["ClientStore"]:dispatch({
+							bedwars["ClientStoreHandler"]:dispatch({
 								type = "BedwarsAddItemPurchased", 
 								itemType = NextSwordTable.itemType
 							});
@@ -646,7 +675,7 @@ BuyCheck = function()
 					end)
 				end
 			end
-			if AutoBuyArmor["Enabled"] and NextArmor and (AutoBuyGui["Enabled"] and bedwars["ClientStore"]:getState().App.shownApp == 5 or (not AutoBuyGui["Enabled"])) then
+			if AutoBuyArmor["Enabled"] and NextArmor and (AutoBuyGui["Enabled"] and bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or (not AutoBuyGui["Enabled"])) then
 				local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
 				local NextArmorCurrency = getItem(NextArmorTable["currency"])
 				if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
@@ -655,7 +684,7 @@ BuyCheck = function()
 					}):andThen(function(p11)
 						if p11 then
 							bedwars["SoundManager"]:playSound(12)
-							bedwars["ClientStore"]:dispatch({
+							bedwars["ClientStoreHandler"]:dispatch({
 								type = "BedwarsAddItemPurchased", 
 								itemType = NextArmorTable.itemType
 							});
@@ -684,8 +713,8 @@ BuyCheck = function()
 					end)
 				end
 			end
-			if AutoBuyUpgrades["Enabled"] and (AutoBuyGui["Enabled"] and bedwars["ClientStore"]:getState().App.shownApp == 4 or (not AutoBuyGui["Enabled"])) then
-				local CurrentUpgrades = bedwars["ClientStore"]:getState()["Bedwars"]["teamUpgrades"]
+			if AutoBuyUpgrades["Enabled"] and (AutoBuyGui["Enabled"] and bedwars["ClientStoreHandler"]:getState().App.shownApp == 4 or (not AutoBuyGui["Enabled"])) then
+				local CurrentUpgrades = bedwars["ClientStoreHandler"]:getState()["Bedwars"]["teamUpgrades"]
 				local ProtNewTier = ProtectionUpgrade["tiers"][CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 2 or 1]
 				local SharpNewTier = SharpnessUpgrade["tiers"][CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 2 or 1]
 				if ProtNewTier then
@@ -714,7 +743,7 @@ BuyCheck = function()
 	end
 end
 
-bedwars["ClientStore"].changed:connect(function(p3, p4)
+bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 	if p3.Inventory.observedInventory.inventory ~= p4.Inventory.observedInventory.inventory then
 		BuyCheck()
 	end
@@ -731,7 +760,7 @@ GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 local OpenShop = {["Enabled"] = false}
 OpenShop = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("OpenShop", function()
 	bedwars["SoundManager"]:playSound(4)
-	bedwars["ClientStore"]:dispatch({
+	bedwars["ClientStoreHandler"]:dispatch({
 		type = "SetShownApp", 
 		app = 5
 	})
@@ -741,7 +770,7 @@ end, function() end, true, function() return "" end, "Opens the Shop GUI")
 local OpenTeamUpgrades = {["Enabled"] = false}
 OpenTeamUpgrades = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("OpenTeamUpgrades", function()
 	bedwars["SoundManager"]:playSound(4)
-	bedwars["ClientStore"]:dispatch({
+	bedwars["ClientStoreHandler"]:dispatch({
 		type = "SetShownApp", 
 		app = 4
 	})
@@ -834,7 +863,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			end
 			for i,plr in pairs(plrs) do
 				local entitytable = {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}
-				if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStore"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+				if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 						killauranear = true
 						if killauraautoblock["Enabled"] and kit == "shielder" then
@@ -962,7 +991,7 @@ local AutoToxicPhrases = {["RefreshValues"] = function() end, ["ObjectList"] = {
 local AutoToxicOldWin = bedwars["VictoryScreen"].render
 local victorysaid = false
 bedwars["VictoryScreen"].render = function(winstuff)
-    local myTeam = bedwars["ClientStore"]:getState().Game.myTeam;
+    local myTeam = bedwars["ClientStoreHandler"]:getState().Game.myTeam
     if myTeam and myTeam.id == winstuff.props.WinningTeamId and victorysaid == false then
 		victorysaid = true
 		if AutoToxic["Enabled"] then
@@ -1166,7 +1195,7 @@ local fastbreak = {["Enabled"] = false}
 local oldbreakspeed
 fastbreak = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("FastBreak", function()
 	oldbreakspeed = bedwars["BlockBreaker"]["COOLDOWN"]
-	bedwars["BlockBreaker"]["COOLDOWN"] = 0.25
+	bedwars["BlockBreaker"]["COOLDOWN"] = 0.275
 end, function()
 	bedwars["BlockBreaker"]["COOLDOWN"] = oldbreakspeed
 	oldbreakspeed = nil
