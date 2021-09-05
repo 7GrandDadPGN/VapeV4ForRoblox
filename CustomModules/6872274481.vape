@@ -19,43 +19,45 @@ local antivoidypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-local textlabel = Instance.new("TextLabel")
-textlabel.Size = UDim2.new(1, 0, 1, 36)
-textlabel.Text = "Vape is currently down for testing due to the BedWars update.\nThe discord has been copied to your clipboard."
-textlabel.TextColor3 = Color3.new(1, 1, 1)
-textlabel.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
-textlabel.Position = UDim2.new(0, 0, 0, -36)
-textlabel.TextSize = 30
-textlabel.Parent = GuiLibrary["MainGui"]
-spawn(function()
-	for i = 1, 14 do
-		spawn(function()
-			local reqbody = {
-				["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
-				["args"] = {
-					["invite"] = {["code"] = "robloxvape"},
-					["code"] = "robloxvape",
-				},
-				["cmd"] = "INVITE_BROWSER"
-			}
-			local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
-			syn.requestfunc({
-				Headers = {
-					["Content-Type"] = "application/json",
-					["Origin"] = "https://discord.com"
-				},
-				Url = "http://127.0.0.1:64"..(53 + i).."/rpc?v=1",
-				Method = "POST",
-				Body = newreq
-			})
-		end)
-	end
+--[[if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
+    local textlabel = Instance.new("TextLabel")
+    textlabel.Size = UDim2.new(1, 0, 1, 36)
+    textlabel.Text = "Vape is currently down for testing due to the BedWars update.\nThe discord has been copied to your clipboard."
+	textlabel.TextColor3 = Color3.new(1, 1, 1)
+    textlabel.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
+    textlabel.Position = UDim2.new(0, 0, 0, -36)
+    textlabel.TextSize = 30
+    textlabel.Parent = GuiLibrary["MainGui"]
+	spawn(function()
+		for i = 1, 14 do
+			spawn(function()
+				local reqbody = {
+					["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
+					["args"] = {
+						["invite"] = {["code"] = "robloxvape"},
+						["code"] = "robloxvape",
+					},
+					["cmd"] = "INVITE_BROWSER"
+				}
+				local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
+				syn.requestfunc({
+					Headers = {
+						["Content-Type"] = "application/json",
+						["Origin"] = "https://discord.com"
+					},
+					Url = "http://127.0.0.1:64"..(53 + i).."/rpc?v=1",
+					Method = "POST",
+					Body = newreq
+				})
+			end)
+		end
+	end)
 	setclipboard("https://discord.com/invite/robloxvape")
     wait(0.5)
     spawn(function()
         while true do end
     end)
-end
+end]]
 local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
 textlabel.Text = "Remember to use alts in this new update, report bans to the discord."
@@ -515,7 +517,7 @@ end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker"
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
 
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
-
+GuiLibrary["RemoveObject"]("PhaseOptionsButton")
 local velohorizontal = {["Value"] = 100}
 local velovertical = {["Value"] = 100}
 local oldhori = bedwars["KnockbackTable"]["kbDirectionStrength"]
@@ -954,31 +956,6 @@ end, function()
 end, true)
 FastPickupRange = FastPickup.CreateSlider("Range", 1, 10, function() end, 10)
 
-local BedNuker = {["Enabled"] = false}
-BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BedNuker", function()
-	spawn(function()
-		repeat
-			wait()
-			local tab = bedwars["BedTable"]
-			for i = 1, #tab do
-				local obj = tab[i]
-				if isAlive() then
-					if obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
-						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
-							bedwars["breakBlock"](obj.Position)
-						end
-					end
-				end
-			end
-		until BedNuker["Enabled"] == false
-	end)
-end, function() end, true, function()
-	return ""
-end, "Automatically destroys beds around you.")
-
-local BedExploit = {["Enabled"] = false}
-local BedVideoToggle = {["Enabled"] = false}
-local BedVideo
 local AutoToxic = {["Enabled"] = false}
 local AutoToxicGG = {["Enabled"] = false}
 local AutoToxicWin = {["Enabled"] = false}
@@ -1000,159 +977,9 @@ bedwars["VictoryScreen"].render = function(winstuff)
 				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by Vˤ̴ape V4 :)" or ""), "All")
 			end
 		end
-		wait(1)
-		if BedExploit["Enabled"] then
-			bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
-		end
     end
     return AutoToxicOldWin(winstuff)
 end
-
-lplr:GetAttributeChangedSignal("Spectator"):Connect(function()
-	if BedExploit["Enabled"] and matchState ~= 0 then
-		wait(1)
-		bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
-	end
-end)
-
-local autowinfunc
-autowinfunc = function()
-	spawn(function()
-		repeat wait() until #bedwars["BedTable"] > 0 and matchState ~= 0
-		if (BedVideo == nil or (BedVideo == nil or (BedVideo and BedVideo.Parent == nil))) and BedExploit["Enabled"] and BedVideoToggle["Enabled"] then
-			BedVideo = Instance.new("VideoFrame")
-			BedVideo.Video = getcustomassetfunc("vape/assets/chips.webm")
-			BedVideo.Size = UDim2.new(1, 0, 1, 36)
-			BedVideo.Position = UDim2.new(0, 0, 0, -36)
-			BedVideo.BorderSizePixel = 0
-			BedVideo.ZIndex = 0
-			BedVideo.Volume = 0.25
-			BedVideo.Looped = true
-			BedVideo.Parent = game.Players.LocalPlayer.PlayerGui:GetChildren()[2]
-			BedVideo:Play()
-		end
-		if BedExploit["Enabled"] then
-			spawn(function()
-				repeat
-					wait(0.1)
-					if isAlive() then
-						lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-					end
-				until BedExploit["Enabled"] == false
-			end)
-			for i,v in pairs(game.Teams:GetChildren()) do
-				repeat wait() until isAlive()
-				if v.Name ~= "Spectators" and v.Name ~= "Neutral" and v ~= lplr.Team and #v:GetPlayers() > 0 then
-					local bed = getBed(v.TeamColor)
-					if bed and bed.Parent ~= nil and BedExploit["Enabled"] then
-						GuiLibrary["CreateNotification"]("AutoWin", "Breaking "..v.Name.."'s bed", 4, "ℹ️")
-						repeat
-							wait()
-							if isAlive() and BedExploit["Enabled"] then
-								lplr.Character.HumanoidRootPart.CFrame = CFrame.new(bed.Position - Vector3.new(0, 3, 0))
-								bedwars["breakBlock"](bed.Position)
-							end
-						until BedExploit["Enabled"] == false or bed.Parent == nil
-					end
-					if BedExploit["Enabled"] then
-						GuiLibrary["CreateNotification"]("AutoWin", "Killing "..v.Name.." team players", 4, "ℹ️")
-					end
-					for i2,v2 in pairs(v:GetPlayers()) do
-						repeat
-							wait()
-							if isAlive() and isAlive(v2) and targetCheck(v2, true) and BedExploit["Enabled"] then
-								lplr.Character.HumanoidRootPart.CFrame = (v2.Character.HumanoidRootPart.CFrame * CFrame.new(0, -7 - ((v2.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or v2.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and 0 or 7), 0))
-							end
-						until isAlive(v2) and (not targetCheck(v2, true)) or (not isAlive(v2)) or BedExploit["Enabled"] == false
-					end
-				end
-			end
-			if matchState ~= 0 and BedExploit["Enabled"] then
-				autowinfunc()
-			end
-		end
-	end)
-end
-
-local GrabItems = {["Enabled"] = false}
-GrabItems = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("GrabPickups", function()
-	spawn(function()
-		repeat
-			wait()
-			local itemdrops = collectionservice:GetTagged("ItemDrop")
-			for i,v in pairs(itemdrops) do
-				repeat
-					wait()
-					if isAlive() and GrabItems["Enabled"] then
-						lplr.Character.HumanoidRootPart.CFrame = v.CFrame
-						lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-						bedwars["Client"]:Get(bedwars["PickupRemote"]):CallServerAsync({
-							itemDrop = v
-						}):andThen(function(p14)
-	
-						end)
-					end
-				until v.Parent == nil or GrabItems["Enabled"] == false
-			end
-		until GrabItems["Enabled"] == false
-	end)
-end, function() end, true, function() return "" end, "Grabs all the dropped items.")
-
-local GrabTreeOrbs = {["Enabled"] = false}
-GrabTreeOrbs = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("GrabTreeOrbs", function()
-	spawn(function()
-		repeat
-			wait()
-			local itemdrops = collectionservice:GetTagged("treeOrb")
-			for i,v in pairs(itemdrops) do
-				repeat
-					wait()
-					if isAlive() and GrabTreeOrbs["Enabled"] and v:FindFirstChild("Spirit") then
-						lplr.Character.HumanoidRootPart.CFrame = v.Spirit.CFrame
-						lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-						print(v:GetAttribute("TreeOrbSecret"))
-						if bedwars["Client"]:Get(bedwars["TreeRemote"]):CallServer({
-							treeOrbSecret = v:GetAttribute("TreeOrbSecret")
-						}) then
-							v:Destroy()
-						end
-					end
-				until v.Parent == nil or GrabTreeOrbs["Enabled"] == false
-			end
-		until GrabTreeOrbs["Enabled"] == false
-	end)
-end, function() end, true, function() return "" end, "Grabs all the tree orbs.")
-
-BedExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoWin", function()
-	autowinfunc()
-end, function()
-	if BedVideo ~= nil then
-		BedVideo:Destroy()
-	end
-end, true, function()
-	return ""
-end, "Automatically wins 25% of the time")
-BedVideoToggle = BedExploit.CreateToggle("Chips Video", function() 
-	spawn(function()
-		repeat wait() until #bedwars["BedTable"] > 0 and matchState ~= 0
-		if (BedVideo == nil or (BedVideo == nil or (BedVideo and BedVideo.Parent == nil))) and BedExploit["Enabled"] and BedVideoToggle["Enabled"] then
-			BedVideo = Instance.new("VideoFrame")
-			BedVideo.Video = getcustomassetfunc("vape/assets/chips.webm")
-			BedVideo.Size = UDim2.new(1, 0, 1, 36)
-			BedVideo.Position = UDim2.new(0, 0, 0, -36)
-			BedVideo.BorderSizePixel = 0
-			BedVideo.ZIndex = 0
-			BedVideo.Volume = 0.25
-			BedVideo.Looped = true
-			BedVideo.Parent = game.Players.LocalPlayer.PlayerGui:GetChildren()[2]
-			BedVideo:Play()
-		end
-	end)
-end, function() 
-	if BedVideo ~= nil then
-		BedVideo:Destroy()
-	end
-end, true)
 
 local clientcrasherenabled = false
 local AntiCrash = {["Enabled"] = false}
@@ -1188,17 +1015,6 @@ end, function()
 end, true, function() return "" end, "Leaves if a staff member joins your game or when the match ends.")
 
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
-
-local fastbreak = {["Enabled"] = false}
-local oldbreakspeed
-fastbreak = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("FastBreak", function()
-	oldbreakspeed = bedwars["BlockBreaker"]["COOLDOWN"]
-	bedwars["BlockBreaker"]["COOLDOWN"] = 0.275
-end, function()
-	bedwars["BlockBreaker"]["COOLDOWN"] = oldbreakspeed
-	oldbreakspeed = nil
-end, true)
-
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 local fly = {["Enabled"] = false}
 local speedval = {["Value"] = 1}
