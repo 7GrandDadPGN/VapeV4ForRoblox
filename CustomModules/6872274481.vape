@@ -201,7 +201,17 @@ getfunctions = function()
 			if rawget(v, "Client") and type(v.Client) == "table" then
 				local suc = pcall(function() v.Client:Get("PickupItemEvent") end)
 				if suc then
-					bedwars["Client"] = v.Client
+					bedwars["ClientHandler"] = v.Client
+				end
+				local suc2 = pcall(function() v.Client:Get("SelfReport") end)
+				if suc2 then
+					local old = getmetatable(v.Client)["Get"]
+					getmetatable(v.Client)["Get"] = function(Self, remotename)
+						if remotename:match("SelfReport") then
+							return nil
+						end
+						return old(Self, remotename)
+					end
 				end
 			end
 			if rawget(v, "ClientStore") and bedwars["ClientStoreHandler"] == nil then
@@ -657,7 +667,7 @@ BuyCheck = function()
 				if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
 					buyingthing = true
 					local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
-					bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+					bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 						shopItem = NextSwordTable
 					}):andThen(function(p11)
 						if p11 then
@@ -679,7 +689,7 @@ BuyCheck = function()
 				local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
 				local NextArmorCurrency = getItem(NextArmorTable["currency"])
 				if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
-					bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+					bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 						shopItem = NextArmorTable
 					}):andThen(function(p11)
 						if p11 then
@@ -720,7 +730,7 @@ BuyCheck = function()
 				if ProtNewTier then
 				local ProtCurrency = getItem(ProtNewTier["currency"])
 					if ProtCurrency and ProtCurrency["amount"] >= ProtNewTier["price"] then
-						bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+						bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 							upgradeId = "armor", 
 							tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 0
 						}):andThen(function()
@@ -731,7 +741,7 @@ BuyCheck = function()
 				if SharpNewTier then
 					local SharpCurrency = getItem(SharpNewTier["currency"])
 					if SharpCurrency and SharpCurrency["amount"] >= SharpNewTier["price"] then
-						bedwars["Client"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+						bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 							upgradeId = "damage", 
 							tier = CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 1 or 0
 						}):andThen(function()
@@ -748,7 +758,7 @@ bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 		BuyCheck()
 	end
 end)
-bedwars["Client"]:Get("PickupItemEvent"):Connect(BuyCheck)
+bedwars["ClientHandler"]:Get("PickupItemEvent"):Connect(BuyCheck)
 AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true, function() return "" end, "Automatically Buys Swords, Armor, and Team Upgrades.")
 AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
 AutoBuySword = AutoBuy.CreateToggle("Buy Sword", function() end, function() end, true)
@@ -940,7 +950,7 @@ local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].C
 		if isAlive() then
 			for i,v in pairs(itemdrops) do
 				if (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] then
-					bedwars["Client"]:Get(bedwars["PickupRemote"]):CallServerAsync({
+					bedwars["ClientHandler"]:Get(bedwars["PickupRemote"]):CallServerAsync({
 						itemDrop = v
 					}):andThen(function(p14)
 						if p14 then
@@ -985,7 +995,7 @@ local clientcrasherenabled = false
 local AntiCrash = {["Enabled"] = false}
 AntiCrash = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AntiCrash", function()
 	if clientcrasherenabled == false then
-		for i2,v2 in pairs(getconnections(bedwars["Client"]:Get("LightningStrike")["instance"].OnClientEvent)) do
+		for i2,v2 in pairs(getconnections(bedwars["ClientHandler"]:Get("LightningStrike")["instance"].OnClientEvent)) do
 			v2:Disable()
 		end
 		clientcrasherenabled = true
@@ -994,20 +1004,20 @@ end, function() end, true, function() return "" end, "Prevents Lightning Crashin
 
 local AutoLeave = {["Enabled"] = false}
 local autoleaveconnection
-bedwars["Client"]:OnEvent("MatchEndEvent", function(p2)
+bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(p2)
 	if AutoLeave["Enabled"] then
-		bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
+		bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 	end
 end)
 AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoLeave", function()
 	autoleaveconnection = players.PlayerAdded:connect(function(plr)
 		if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-			bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
+			bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 		end
 	end)
 	for i, plr in pairs(players:GetChildren()) do
 		if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-			bedwars["Client"]:Get("TeleportToLobby"):SendToServer()
+			bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 		end
 	end
 end, function() 
@@ -1081,7 +1091,7 @@ local flyendpress
 local function buyballoons()
 	if isAlive() and fly["Enabled"] then
 		if getItem("balloon") == nil and flybuyballoon["Enabled"] then
-			bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+			bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 				shopItem = bedwars["Shop"].getShopItem("balloon")
 			}):andThen(function(p11)
 				if getItem("balloon") then
@@ -1095,7 +1105,7 @@ local function buyballoons()
 	end
 end
 
-bedwars["Client"]:WaitFor("BalloonPopped"):andThen(function(p6)
+bedwars["ClientHandler"]:WaitFor("BalloonPopped"):andThen(function(p6)
 	p6:Connect(function(p7)
 		buyballoons()
 	end)
@@ -1190,7 +1200,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							scaffoldallowed = false
 							lplr.Character.HumanoidRootPart.Anchored = true
 						end
-						bedwars["Client"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+						bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 							shopItem = bedwars["Shop"].getShopItem("wool_white")
 						}):andThen(function(p11)
 							scaffoldallowed = true
@@ -1222,7 +1232,7 @@ if GuiLibrary["Settings"]["ToxicObject"] == nil then
 	GuiLibrary["Settings"]["ToxicObject"] = {["Type"] = "Custom", ["List"] = {}}
 end
 
-bedwars["Client"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
+bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 	p6:Connect(function(p7)
 		if AutoToxic["Enabled"] then
 			if p7.fromEntity and p7.fromEntity == game.Players.LocalPlayer.Character then
