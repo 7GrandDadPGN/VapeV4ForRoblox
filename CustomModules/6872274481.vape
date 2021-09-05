@@ -539,6 +539,7 @@ end, function()
 end, false, function() return "" end, "Chokes all incoming packets (blatant mode required)\nPlease do not turn this on if you do not know what you are doing.")
 
 local antivoidpart
+local antitransparent = {["Enabled"] = false}
 local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("AntiVoid", function()
 	spawn(function()
 		repeat wait() until antivoidypos ~= 0
@@ -546,7 +547,7 @@ local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].Creat
 		antivoidpart.CanCollide = true
 		antivoidpart.Size = Vector3.new(10000, 1, 10000)
 		antivoidpart.Anchored = true
-		antivoidpart.Transparency = 0.5
+		antivoidpart.Transparency = (antitransparent["Enabled"] and 1 or 0.5)
 		antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
 		antivoidpart.Touched:connect(function(touchedpart)
 			if touchedpart.Parent == lplr.Character and isAlive() then
@@ -560,6 +561,15 @@ end, function()
 		antivoidpart:Remove() 
 	end
 end, true, function() return "" end, "Gives you a chance to get on land (Not Perfect)")
+antitransparent = AntiVoid.CreateToggle("Invisible", function() 
+	if antivoidpart then
+		antivoidpart.Transparency = 1
+	end
+end, function()
+	if antivoidpart then
+		antivoidpart.Transparency = 0.5
+	end
+end, true)
 
 
 local function getScaffold(vec)
