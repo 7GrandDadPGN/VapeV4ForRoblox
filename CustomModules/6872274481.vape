@@ -454,7 +454,7 @@ local function getEquipped()
 	local type = ""
 	local obj = (isAlive() and lplr.Character:FindFirstChild("HandInvItem") and lplr.Character.HandInvItem.Value or nil)
 	if obj then
-		if obj.Name:find("sword") or obj.Name:find("blade") then
+		if obj.Name:find("sword") or obj.Name:find("blade") or obj.Name:find("baguette") then
 			type = "sword"
 		end
 		if obj.Name:find("wool") then
@@ -870,10 +870,14 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	oldsound = bedwars["SoundManager"]["playSound"]
 	oldmeta = bedwars["SwordController"]["getHandItem"]
 	bedwars["SwordController"]["getHandItem"] = function()
-		if killaurabaguette["Enabled"] and getBaguette() then
-			return getBaguette()
+		if (not killaurahandcheck["Enabled"]) then
+			if killaurabaguette["Enabled"] and getBaguette() then
+				return getBaguette()
+			else
+				return getSword()
+			end
 		else
-			return getSword()
+			return oldmeta()
 		end
 	end
 	bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
@@ -923,7 +927,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			end
 			for i,plr in pairs(plrs) do
 				local entitytable = {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}
-				if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+				if isAlive() and (killaurahandcheck["Enabled"] and (getEquipped()["Type"] == "sword") or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 						killauranear = true
 						if killauraautoblock["Enabled"] and kit == "shielder" then
