@@ -5,10 +5,11 @@ local getasset = getsynasset or getcustomasset
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 local api = {
-	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["GUIKeybind"] = "RightShift", ["Color"] = 0.64}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
+	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["Color"] = 0.64}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
 	["Profiles"] = {
 		["default"] = {["Keybind"] = "", ["Selected"] = true}
 	},
+	["GUIKeybind"] = "RightShift",
 	["CurrentProfile"] = "default",
 	["KeybindCaptured"] = false,
 	["PressedKeybindKey"] = "",
@@ -137,7 +138,7 @@ notificationwindow.Active = false
 notificationwindow.Size = UDim2.new(1, 0, 1, 0)
 notificationwindow.Parent = api["MainGui"]
 local hoverbox = Instance.new("TextLabel")
-hoverbox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+hoverbox.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 hoverbox.Active = false
 hoverbox.Text = "Placeholder"
 hoverbox.ZIndex = 5
@@ -199,15 +200,18 @@ local function dragGUI(gui, tab)
 		end
 		gui.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and dragging == false then
-					dragging = clickgui.Visible
 					dragStart = input.Position
-					startPos = gui.Position
-					
-					input.Changed:Connect(function()
-						if input.UserInputState == Enum.UserInputState.End then
-							dragging = false
-						end
-					end)
+					local delta = (input.Position - dragStart) * (1 / api["MainRescale"].Scale)
+					if delta.Y <= 30 then
+						dragging = clickgui.Visible
+						startPos = gui.Position
+						
+						input.Changed:Connect(function()
+							if input.UserInputState == Enum.UserInputState.End then
+								dragging = false
+							end
+						end)
+					end
 				end
 		end)
 		gui.InputChanged:Connect(function(input)
@@ -225,12 +229,19 @@ end
 
 api["SaveSettings"] = function()
 	writefile("vape/Profiles/"..game.PlaceId..".vapeprofiles", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
+	local WindowTable = {}
 	for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
 		if v["Type"] == "Window" then
-			api["Settings"][i] = {["Type"] = "Window", ["Visible"] = v["Object"].Visible, ["Expanded"] = v["ChildrenObject"].Visible, ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
+			WindowTable[i] = {["Type"] = "Window", ["Visible"] = v["Object"].Visible, ["Expanded"] = v["ChildrenObject"].Visible, ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
 		end
 		if v["Type"] == "CustomWindow" then
-			api["Settings"][i] = {["Type"] = "CustomWindow", ["Visible"] = v["Object"].Visible, ["Pinned"] = v["Api"]["Pinned"], ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
+			WindowTable[i] = {["Type"] = "CustomWindow", ["Visible"] = v["Object"].Visible, ["Pinned"] = v["Api"]["Pinned"], ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
+		end
+		if (v["Type"] == "ButtonMain" or v["Type"] == "ToggleMain") then
+			WindowTable[i] = {["Type"] = "ButtonMain", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
+		end
+		if v["Type"] == "ColorSliderMain" then
+			WindowTable[i] = {["Type"] = "ColorSliderMain", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
 		end
 		if (v["Type"] == "Button" or v["Type"] == "Toggle" or v["Type"] == "ExtrasButton") then
 			api["Settings"][i] = {["Type"] = "Button", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
@@ -254,7 +265,9 @@ api["SaveSettings"] = function()
 			api["Settings"][i] = {["Type"] = "ColorSlider", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
 		end
 	end
+	WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = api["GUIKeybind"]}
 	writefile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..game.PlaceId..".vapeprofile", game:GetService("HttpService"):JSONEncode(api["Settings"]))
+	writefile("vape/Profiles/GUIPositions.vapeprofile", game:GetService("HttpService"):JSONEncode(WindowTable))
 end
 
 api["LoadSettings"] = function()
@@ -265,11 +278,11 @@ api["LoadSettings"] = function()
 		api["Profiles"] = result2
 	end
 	getprofile()
-	local success, result = pcall(function()
-		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..game.PlaceId..".vapeprofile"))
+	local success3, result3 = pcall(function()
+		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/GUIPositions.vapeprofile"))
 	end)
-	if success and type(result) == "table" then
-		for i,v in pairs(result) do
+	if success3 and type(result3) == "table" then
+		for i,v in pairs(result3) do
 			if v["Type"] == "Window" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 				api["ObjectsThatCanBeSaved"][i]["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
 				api["ObjectsThatCanBeSaved"][i]["Object"].Visible = v["Visible"]
@@ -285,6 +298,36 @@ api["LoadSettings"] = function()
 				end
 				api["ObjectsThatCanBeSaved"][i]["Api"]["CheckVis"]()
 			end
+			if v["Type"] == "ButtonMain" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
+				if api["ObjectsThatCanBeSaved"][i]["Type"] == "ToggleMain" then
+					api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](v["Enabled"], true)
+					if v["Keybind"] ~= "" then
+						api["ObjectsThatCanBeSaved"][i]["Api"]["Keybind"] = v["Keybind"]
+					end
+				else
+					if v["Enabled"] then
+						api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
+						if v["Keybind"] ~= "" then
+							api["ObjectsThatCanBeSaved"][i]["Api"]["SetKeybind"](v["Keybind"])
+						end
+					end
+				end
+			end
+			if v["Type"] == "ColorSliderMain" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
+				api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"])
+				api["ObjectsThatCanBeSaved"][i]["Api"]["SetRainbow"](v["RainbowValue"])
+				api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -7, 0, -7)
+			end
+			if v["Type"] == "GUIKeybind" then
+				api["GUIKeybind"] = v["Value"]
+			end
+		end
+	end
+	local success, result = pcall(function()
+		return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..game.PlaceId..".vapeprofile"))
+	end)
+	if success and type(result) == "table" then
+		for i,v in pairs(result) do
 			if v["Type"] == "Custom" and api["findObjectInTable"](api["Settings"], i) then
 				api["Settings"][i] = v
 			end
@@ -354,7 +397,7 @@ api["SwitchProfile"] = function(profilename)
 		api["SaveSettings"]()
 		api["CurrentProfile"] = realprofile
 	end
-	api["ObjectsThatCanBeSaved"]["SelfDestructOptionsButton"]["Api"]["ToggleButton"](false)
+	api["SelfDestruct"]()
 	shared.VapeSwitchServers = true
 	shared.VapeOpenGui = (clickgui.Visible)
 	loadstring(GetURL("NewMainScript.lua"))()
@@ -451,7 +494,7 @@ api["CreateMainWindow"] = function()
 			local hover3textsize = game:GetService("TextService"):GetTextSize("Discord set to clipboard!", 16, Enum.Font.SourceSans, Vector2.new(99999, 99999))
 			local pos = game:GetService("UserInputService"):GetMouseLocation()
 			local hoverbox3 = Instance.new("TextLabel")
-			hoverbox3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			hoverbox3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			hoverbox3.Active = false
 			hoverbox3.Text = "Discord set to clipboard!"
 			hoverbox3.ZIndex = 5
@@ -478,7 +521,7 @@ api["CreateMainWindow"] = function()
 	settingsexit.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
 	settingsexit.Visible = false
 	settingsexit.Position = UDim2.new(1, -32, 0, 9)
-	settingsexit.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	settingsexit.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 	settingsexit.Parent = windowtitle
 	local settingsexitround = Instance.new("UICorner")
 	settingsexitround.CornerRadius = UDim.new(0, 16)
@@ -487,7 +530,7 @@ api["CreateMainWindow"] = function()
 		game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 	end)
 	settingsexit.MouseLeave:connect(function()
-		game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(20, 20, 20), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+		game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 	end)
 	local children = Instance.new("Frame")
 	children.BackgroundTransparency = 1
@@ -514,7 +557,7 @@ api["CreateMainWindow"] = function()
 	overlaysbkg.Visible = false
 	overlaysbkg.Parent = windowtitle
 	local overlaystitle = Instance.new("Frame")
-	overlaystitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	overlaystitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 	overlaystitle.Size = UDim2.new(0, 220, 0, 45)
 	overlaystitle.Position = UDim2.new(0, 0, 1, -45)
 	overlaystitle.Parent = overlaysbkg
@@ -533,7 +576,7 @@ api["CreateMainWindow"] = function()
 	overlaysexit.AutoButtonColor = false
 	overlaysexit.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
 	overlaysexit.Position = UDim2.new(1, -32, 0, 9)
-	overlaysexit.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	overlaysexit.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 	overlaysexit.Parent = overlaystitle
 	local overlaysexitround = Instance.new("UICorner")
 	overlaysexitround.CornerRadius = UDim.new(0, 16)
@@ -542,7 +585,7 @@ api["CreateMainWindow"] = function()
 		game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 	end)
 	overlaysexit.MouseLeave:connect(function()
-		game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(20, 20, 20), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+		game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 	end)
 	local overlaysbutton = Instance.new("ImageButton")
 	overlaysbutton.Size = UDim2.new(0, 14, 0, 14)
@@ -623,6 +666,7 @@ api["CreateMainWindow"] = function()
 		settingstext.Visible = true
 		settingsexit.Visible = true
 		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+		windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 	end)
 
 	settingsexit.MouseButton1Click:connect(function()
@@ -634,6 +678,7 @@ api["CreateMainWindow"] = function()
 		settingstext.Visible = false
 		settingsexit.Visible = false
 		windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+		windowtitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	end)
 
 	overlaysbutton.MouseButton1Click:connect(function()
@@ -684,7 +729,7 @@ api["CreateMainWindow"] = function()
 		toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 		toggleframe2.Active = false
 		toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-		toggleframe2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		toggleframe2.BorderSizePixel = 0
 		toggleframe2.Parent = toggleframe1
 		local uicorner = Instance.new("UICorner")
@@ -741,7 +786,7 @@ api["CreateMainWindow"] = function()
 		end)
 
 		
-		api["ObjectsThatCanBeSaved"][(compatability or "VapeSettings")..name.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
+		api["ObjectsThatCanBeSaved"][(compatability or "VapeSettings")..name.."Toggle"] = {["Type"] = "ToggleMain", ["Object"] = buttontext, ["Api"] = buttonapi}
 		return buttonapi
 	end
 
@@ -781,7 +826,7 @@ api["CreateMainWindow"] = function()
 		if text then
 			local dividerlabel = Instance.new("TextLabel")
 			dividerlabel.Size = UDim2.new(1, 0, 0, 30)
-			dividerlabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20) 
+			dividerlabel.BackgroundColor3 = Color3.fromRGB(26, 25, 26) 
 			dividerlabel.BorderSizePixel = 0
 			dividerlabel.TextColor3 = Color3.fromRGB(85, 84, 85)
 			dividerlabel.TextSize = 14
@@ -792,6 +837,128 @@ api["CreateMainWindow"] = function()
 			dividerlabel.LayoutOrder = amount + 1
 			dividerlabel.Parent = children2
 		end
+	end
+
+	windowapi["CreateGUIBind"] = function()
+		local amount2 = #children2:GetChildren()
+		local frame = Instance.new("TextLabel")
+		frame.Size = UDim2.new(0, 220, 0, 40)
+		frame.BackgroundTransparency = 1
+		frame.TextSize = 17
+		frame.TextColor3 = Color3.fromRGB(151, 151, 151)
+		frame.Font = Enum.Font.SourceSans
+		frame.Text = "   Rebind GUI"
+		frame.LayoutOrder = amount2
+		frame.Name = "Rebind GUI"
+		frame.TextXAlignment = Enum.TextXAlignment.Left
+		frame.Parent = children2
+		local bindbkg = Instance.new("TextButton")
+		bindbkg.Text = ""
+		bindbkg.AutoButtonColor = false
+		bindbkg.Size = UDim2.new(0, 20, 0, 21)
+		bindbkg.Position = UDim2.new(1, -50, 0, 10)
+		bindbkg.BorderSizePixel = 0
+		bindbkg.BackgroundColor3 = Color3.fromRGB(72, 71, 72)
+		bindbkg.BackgroundTransparency = 0
+		bindbkg.Visible = true
+		bindbkg.Parent = frame
+		local bindimg = Instance.new("ImageLabel")
+		bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
+		bindimg.BackgroundTransparency = 1
+		bindimg.Size = UDim2.new(0, 12, 0, 12)
+		bindimg.Position = UDim2.new(0, 4, 0, 5)
+		bindimg.Active = false
+		bindimg.Visible = (api["GUIKeybind"] == "")
+		bindimg.Parent = bindbkg
+		local bindtext = Instance.new("TextLabel")
+		bindtext.Active = false
+		bindtext.BackgroundTransparency = 1
+		bindtext.TextSize = 16
+		bindtext.Parent = bindbkg
+		bindtext.Font = Enum.Font.SourceSans
+		bindtext.Size = UDim2.new(1, 0, 1, 0)
+		bindtext.TextColor3 = Color3.fromRGB(201, 201, 201)
+		bindtext.Visible = (api["GUIKeybind"] ~= "")
+		local bindtext2 = Instance.new("TextLabel")
+		bindtext2.Text = "PRESS A KEY TO BIND"
+		bindtext2.Size = UDim2.new(0, 150, 0, 33)
+		bindtext2.Font = Enum.Font.SourceSans
+		bindtext2.TextSize = 17
+		bindtext2.TextColor3 = Color3.fromRGB(201, 201, 201)
+		bindtext2.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
+		bindtext2.BorderSizePixel = 0
+		bindtext2.Visible = false
+		bindtext2.Parent = frame
+		local bindround = Instance.new("UICorner")
+		bindround.CornerRadius = UDim.new(0, 4)
+		bindround.Parent = bindbkg
+		bindbkg.MouseButton1Click:connect(function()
+			if api["KeybindCaptured"] == false then
+				api["KeybindCaptured"] = true
+				spawn(function()
+					bindtext2.Visible = true
+					repeat wait() until api["PressedKeybindKey"] ~= ""
+					local key = (api["PressedKeybindKey"] == api["GUIKeybind"] and "" or api["PressedKeybindKey"])
+					if key == "" then
+						api["GUIKeybind"] = key
+						newsize = UDim2.new(0, 20, 0, 21)
+						bindbkg.Size = newsize
+						bindbkg.Visible = true
+						bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
+						bindimg.Visible = true
+						bindtext.Visible = false
+						bindtext.Text = key
+					else
+						local textsize = game:GetService("TextService"):GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
+						newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
+						api["GUIKeybind"] = key
+						bindbkg.Visible = true
+						bindbkg.Size = newsize
+						bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
+						bindimg.Visible = false
+						bindtext.Visible = true
+						bindtext.Text = key
+					end
+					api["PressedKeybindKey"] = ""
+					api["KeybindCaptured"] = false
+					bindtext2.Visible = false
+				end)
+			end
+		end)
+		bindbkg.MouseEnter:connect(function() 
+			bindimg.Image = getcustomassetfunc("vape/assets/PencilIcon.png") 
+			bindimg.Visible = true
+			bindtext.Visible = false
+			bindbkg.Size = UDim2.new(0, 20, 0, 21)
+			bindbkg.Position = UDim2.new(1, -30, 0, 10)
+		end)
+		bindbkg.MouseLeave:connect(function() 
+			bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
+			if api["GUIKeybind"] ~= "" then
+				bindimg.Visible = false
+				bindtext.Visible = true
+				bindbkg.Size = newsize
+				bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
+			end
+		end)
+		if api["GUIKeybind"] ~= "" then
+			bindtext.Text = api["GUIKeybind"]
+			local textsize = game:GetService("TextService"):GetTextSize(api["GUIKeybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
+			newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
+			bindbkg.Size = newsize
+			bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
+		end
+		return {
+			["Reload"] = function()
+				if api["GUIKeybind"] ~= "" then
+					bindtext.Text = api["GUIKeybind"]
+					local textsize = game:GetService("TextService"):GetTextSize(api["GUIKeybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
+					newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
+					bindbkg.Size = newsize
+					bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
+				end
+			end
+		}
 	end
 
 	windowapi["CreateColorSlider"] = function(name, temporaryfunction)
@@ -833,12 +1000,12 @@ api["CreateMainWindow"] = function()
 		slider1.Name = "Slider"
 		slider1.Parent = frame
 		local uigradient = Instance.new("UIGradient")
-		uigradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)), ColorSequenceKeypoint.new(0.1, Color3.fromHSV(0.1, 1, 1)), ColorSequenceKeypoint.new(0.2, Color3.fromHSV(0.2, 1, 1)), ColorSequenceKeypoint.new(0.3, Color3.fromHSV(0.3, 1, 1)), ColorSequenceKeypoint.new(0.4, Color3.fromHSV(0.4, 1, 1)), ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 1, 1)), ColorSequenceKeypoint.new(0.6, Color3.fromHSV(0.6, 1, 1)), ColorSequenceKeypoint.new(0.7, Color3.fromHSV(0.7, 1, 1)), ColorSequenceKeypoint.new(0.8, Color3.fromHSV(0.8, 1, 1)), ColorSequenceKeypoint.new(0.9, Color3.fromHSV(0.9, 1, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))})
+		uigradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0.7, 0.9)), ColorSequenceKeypoint.new(0.1, Color3.fromHSV(0.1, 0.7, 0.9)), ColorSequenceKeypoint.new(0.2, Color3.fromHSV(0.2, 1, 1)), ColorSequenceKeypoint.new(0.3, Color3.fromHSV(0.3, 0.7, 0.9)), ColorSequenceKeypoint.new(0.4, Color3.fromHSV(0.4, 0.7, 0.9)), ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 0.7, 0.9)), ColorSequenceKeypoint.new(0.6, Color3.fromHSV(0.6, 0.7, 0.9)), ColorSequenceKeypoint.new(0.7, Color3.fromHSV(0.7, 0.7, 0.9)), ColorSequenceKeypoint.new(0.8, Color3.fromHSV(0.8, 0.7, 0.9)), ColorSequenceKeypoint.new(0.9, Color3.fromHSV(0.9, 0.7, 0.9)), ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 0.7, 0.9))})
 		uigradient.Parent = slider1
 		local slider3 = Instance.new("ImageButton")
 		slider3.AutoButtonColor = false
 		slider3.Size = UDim2.new(0, 24, 0, 16)
-		slider3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		slider3.BorderSizePixel = 0
 		slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
 		slider3.Position = UDim2.new(0.44, -11, 0, -7)
@@ -848,7 +1015,7 @@ api["CreateMainWindow"] = function()
 		sliderapi["RainbowValue"] = false
 		sliderapi["SetValue"] = function(val)
 			val = math.clamp(val, min, max)
-			text2.BackgroundColor3 = Color3.fromHSV(val, 1, 1)
+			text2.BackgroundColor3 = Color3.fromHSV(val, 0.7, 0.9)
 			sliderapi["Value"] = val
 			slider3.Position = UDim2.new(math.clamp(val, 0.02, 0.95), -9, 0, -7)
 			temporaryfunction(val)
@@ -927,7 +1094,7 @@ api["CreateMainWindow"] = function()
 				end
 			end)
 		end)
-		api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
+		api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"] = {["Type"] = "ColorSliderMain", ["Object"] = frame, ["Api"] = sliderapi}
 		return sliderapi
 	end
 
@@ -962,7 +1129,7 @@ api["CreateMainWindow"] = function()
 		toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 		toggleframe2.Active = false
 		toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-		toggleframe2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		toggleframe2.BorderSizePixel = 0
 		toggleframe2.Parent = toggleframe1
 		local uicorner = Instance.new("UICorner")
@@ -1098,8 +1265,51 @@ api["CreateMainWindow"] = function()
 				end
 			end
 		end)
-		api["ObjectsThatCanBeSaved"][name.."Button"] = {["Type"] = "Button", ["Object"] = button, ["Api"] = buttonapi}
+		api["ObjectsThatCanBeSaved"][name.."Button"] = {["Type"] = "ButtonMain", ["Object"] = button, ["Api"] = buttonapi}
 
+		return buttonapi
+	end
+
+	windowapi["CreateButton2"] = function(name, temporaryfunction)
+		local buttonapi = {}
+		local currentanim
+		local amount = #children2:GetChildren()
+		local buttontext = Instance.new("Frame")
+		buttontext.BackgroundTransparency = 1
+		buttontext.Name = "ButtonText"
+		buttontext.Name = name
+		buttontext.LayoutOrder = amount
+		buttontext.Size = UDim2.new(1, 0, 0, 30)
+		buttontext.Active = false
+		buttontext.Position = UDim2.new(0, (icon and 36 or 10), 0, 0)
+		buttontext.Parent = children2
+		local toggleframe2 = Instance.new("Frame")
+		toggleframe2.Size = UDim2.new(0, 200, 0, 27)
+		toggleframe2.Position = UDim2.new(0, 10, 0, 1)
+		toggleframe2.BackgroundColor3 = Color3.fromRGB(38, 37, 38)
+		toggleframe2.Name = "ToggleFrame2"
+		toggleframe2.Parent = buttontext
+		local toggleframe1 = Instance.new("TextButton")
+		toggleframe1.AutoButtonColor = false
+		toggleframe1.Size = UDim2.new(0, 198, 0, 25)
+		toggleframe1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+		toggleframe1.BorderSizePixel = 0
+		toggleframe1.Text = name:upper()
+		toggleframe1.Font = Enum.Font.SourceSans
+		toggleframe1.TextSize = 17
+		toggleframe1.TextColor3 = Color3.fromRGB(151, 151, 151)
+		toggleframe1.Name = "ToggleFrame1"
+		toggleframe1.Position = UDim2.new(0, 1, 0, 1)
+		toggleframe1.Parent = toggleframe2
+		local uicorner = Instance.new("UICorner")
+		uicorner.CornerRadius = UDim.new(0, 4)
+		uicorner.Parent = toggleframe1
+		local uicorner2 = Instance.new("UICorner")
+		uicorner2.CornerRadius = UDim.new(0, 4)
+		uicorner2.Parent = toggleframe2
+
+		toggleframe1.MouseButton1Click:connect(function() temporaryfunction() end)
+		
 		return buttonapi
 	end
 
@@ -1199,6 +1409,8 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 					windowicon.Visible = false
 					expandbutton.Visible = false
 					optionsbutton.Visible = false
+					children2.Visible = false
+					children.Visible = true
 				else
 					windowtitle.Visible = false
 				end
@@ -1269,7 +1481,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 		local slider3 = Instance.new("ImageButton")
 		slider3.AutoButtonColor = false
 		slider3.Size = UDim2.new(0, 24, 0, 16)
-		slider3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		slider3.BorderSizePixel = 0
 		slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
 		slider3.Position = UDim2.new(0.44, -11, 0, -7)
@@ -1358,7 +1570,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 				end
 			end)
 		end)
-		api["ObjectsThatCanBeSaved"][name..naame.."SliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
+		api["ObjectsThatCanBeSaved"][name..naame.."SliderColor"] = {["Type"] = "ColorSliderMain", ["Object"] = frame, ["Api"] = sliderapi}
 		return sliderapi
 	end
 
@@ -1392,7 +1604,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 		toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 		toggleframe2.Active = false
 		toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-		toggleframe2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		toggleframe2.BorderSizePixel = 0
 		toggleframe2.Parent = toggleframe1
 		local uicorner = Instance.new("UICorner")
@@ -1440,7 +1652,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 			end
 		end)
 
-		api["ObjectsThatCanBeSaved"][name..naame.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
+		api["ObjectsThatCanBeSaved"][name..naame.."Toggle"] = {["Type"] = "ToggleMain", ["Object"] = buttontext, ["Api"] = buttonapi}
 		return buttonapi
 	end
 	
@@ -1623,7 +1835,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		bindbkg.Position = UDim2.new(1, -56, 0, 9)
 		bindbkg.BorderSizePixel = 0
 		bindbkg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		bindbkg.BackgroundTransparency = 0.7
+		bindbkg.BackgroundTransparency = 0.8
 		bindbkg.Visible = false
 		bindbkg.Parent = button
 		local bindimg = Instance.new("ImageLabel")
@@ -1779,7 +1991,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			local addbutton = Instance.new("ImageButton")
 			addbutton.BorderSizePixel = 0
 			addbutton.Name = "AddButton"
-			addbutton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			addbutton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			addbutton.Position = UDim2.new(0, 174, 0, 8)
 			addbutton.AutoButtonColor = false
 			addbutton.Size = UDim2.new(0, 16, 0, 16)
@@ -2381,7 +2593,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 			toggleframe2.Active = false
 			toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-			toggleframe2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			toggleframe2.BorderSizePixel = 0
 			toggleframe2.Parent = toggleframe1
 			local uicorner = Instance.new("UICorner")
@@ -2770,7 +2982,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 		toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 		toggleframe2.Active = false
 		toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-		toggleframe2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		toggleframe2.BorderSizePixel = 0
 		toggleframe2.Parent = toggleframe1
 		local uicorner = Instance.new("UICorner")
@@ -2857,7 +3069,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 		local addbutton = Instance.new("ImageButton")
 		addbutton.BorderSizePixel = 0
 		addbutton.Name = "AddButton"
-		addbutton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		addbutton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		addbutton.Position = UDim2.new(0, 174, 0, 8)
 		addbutton.AutoButtonColor = false
 		addbutton.Size = UDim2.new(0, 16, 0, 16)
@@ -3025,7 +3237,7 @@ api["LoadedAnimation"] = function(enabled)
 		welcomeguitext.Position = UDim2.new(0, 2, 0.05, 1)
 		welcomeguitext.BackgroundTransparency = 1
 		welcomeguitext.TextSize = 25
-		welcomeguitext.Text = "Press "..api["Settings"]["GUIObject"]["GUIKeybind"].." to open GUI"
+		welcomeguitext.Text = "Press "..api["GUIKeybind"].." to open GUI"
 		welcomeguitext.TextColor3 = Color3.fromRGB(27, 42, 53)
 		welcomeguitext.Font = Enum.Font.SourceSans
 		welcomeguitext.Parent = api["MainGui"]
@@ -3036,7 +3248,7 @@ api["LoadedAnimation"] = function(enabled)
 			welcomeguitext.TextTransparency = welcomeguitext2.TextTransparency
 		end)
 		welcomeguitext2.Parent = welcomeguitext
-		api["CreateNotification"]("Finished Loading", "Press "..string.upper(api["Settings"]["GUIObject"]["GUIKeybind"]).." to open GUI", 4)
+		api["CreateNotification"]("Finished Loading", "Press "..string.upper(api["GUIKeybind"]).." to open GUI", 4)
 		spawn(function()
 			pcall(function()
 				wait(2.5)
@@ -3052,7 +3264,7 @@ local holdingcontrol = false
 
 api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(function(input1)
 	if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
-		if input1.KeyCode == Enum.KeyCode[api["Settings"]["GUIObject"]["GUIKeybind"]] and api["KeybindCaptured"] == false then
+		if input1.KeyCode == Enum.KeyCode[api["GUIKeybind"]] and api["KeybindCaptured"] == false then
 			clickgui.Visible = not clickgui.Visible
 			api["MainBlur"].Enabled = clickgui.Visible	
 		end
@@ -3076,7 +3288,7 @@ api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(
 		end
 		for modules,aapi in pairs(api["ObjectsThatCanBeSaved"]) do
 			if (aapi["Type"] == "OptionsButton" or aapi["Type"] == "Button") and (aapi["Api"]["Keybind"] ~= nil and aapi["Api"]["Keybind"] ~= "") and api["KeybindCaptured"] == false then
-				if input1.KeyCode == Enum.KeyCode[aapi["Api"]["Keybind"]] and aapi["Api"]["Keybind"] ~= api["Settings"]["GUIObject"]["GUIKeybind"] then
+				if input1.KeyCode == Enum.KeyCode[aapi["Api"]["Keybind"]] and aapi["Api"]["Keybind"] ~= api["GUIKeybind"] then
 					aapi["Api"]["ToggleButton"](false)
 					if api["ToggleNotifications"] then
 						api["CreateNotification"]("Module Toggled", aapi["Api"]["Name"]..' <font color="#FFFFFF">has been</font> <font color="'..(aapi["Api"]["Enabled"] and '#32CD32' or '#E60000')..'">'..(aapi["Api"]["Enabled"] and "Enabled" or "Disabled")..'</font><font color="#FFFFFF">!</font>', 1)

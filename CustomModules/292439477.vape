@@ -490,7 +490,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 					thing.Visible = false
 					thing.RichText = true
 					thing.Name = plr.Name
-					thing.Font = (GuiLibrary["ObjectsThatCanBeSaved"]["VapeOptionsSmooth fontToggle"]["Api"]["Enabled"] and Enum.Font.SourceSans or Enum.Font.Sarpanch)
+					thing.Font = Enum.Font.SourceSans
 					thing.TextSize = 14
 					if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
 						local rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)

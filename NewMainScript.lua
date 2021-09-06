@@ -87,7 +87,6 @@ local Blatant = GuiLibrary.CreateWindow("Blatant", "vape/assets/BlatantIcon.png"
 local Render = GuiLibrary.CreateWindow("Render", "vape/assets/RenderIcon.png", 17, UDim2.new(0, 223, 0, 6), false)
 local Utility = GuiLibrary.CreateWindow("Utility", "vape/assets/UtilityIcon.png", 17, UDim2.new(0, 223, 0, 6), false)
 local World = GuiLibrary.CreateWindow("World", "vape/assets/WorldIcon.png", 16, UDim2.new(0, 223, 0, 6), false)
-local Other = GuiLibrary.CreateWindow("Other", "vape/assets/OtherIcon.png", 20, UDim2.new(0, 223, 0, 6), false)
 local Friends = GuiLibrary.CreateWindow2("Friends", "vape/assets/FriendsIcon.png", 17, UDim2.new(0, 177, 0, 6), false)
 local Profiles = GuiLibrary.CreateWindow2("Profiles", "vape/assets/ProfilesIcon.png", 19, UDim2.new(0, 177, 0, 6), false)
 GUI.CreateDivider()
@@ -96,7 +95,6 @@ GUI.CreateButton("Blatant", function() Blatant.SetVisible(true) end, function() 
 GUI.CreateButton("Render", function() Render.SetVisible(true) end, function() Render.SetVisible(false) end, "vape/assets/RenderIcon.png", 17)
 GUI.CreateButton("Utility", function() Utility.SetVisible(true) end, function() Utility.SetVisible(false) end, "vape/assets/UtilityIcon.png", 17)
 GUI.CreateButton("World", function() World.SetVisible(true) end, function() World.SetVisible(false) end, "vape/assets/WorldIcon.png", 16)
-GUI.CreateButton("Other", function() Other.SetVisible(true) end, function() Other.SetVisible(false) end, "vape/assets/OtherIcon.png", 20)
 GUI.CreateDivider("MISC")
 GUI.CreateButton("Friends", function() Friends.SetVisible(true) end, function() Friends.SetVisible(false) end)
 GUI.CreateButton("Profiles", function() Profiles.SetVisible(true) end, function() Profiles.SetVisible(false) end)
@@ -295,7 +293,7 @@ onetext.TextXAlignment = Enum.TextXAlignment.Left
 onetext.TextYAlignment = Enum.TextYAlignment.Top
 onetext.BorderSizePixel = 0
 onetext.BackgroundColor3 = Color3.new(0, 0, 0)
-onetext.Font = Enum.Font.Gotham
+onetext.Font = Enum.Font.SourceSans
 onetext.Text = ""
 onetext.TextSize = 20
 local onetext2 = Instance.new("TextLabel")
@@ -312,7 +310,7 @@ onetext2.TextTransparency = 0.5
 onetext2.TextXAlignment = Enum.TextXAlignment.Left
 onetext2.TextYAlignment = Enum.TextYAlignment.Top
 onetext2.TextColor3 = Color3.new(0, 0, 0)
-onetext2.Font = Enum.Font.Gotham
+onetext2.Font = Enum.Font.SourceSans
 onetext2.TextSize = 20
 local onetext3 = onetext:Clone()
 onetext3.Name = "ExtraText"
@@ -611,7 +609,7 @@ GuiLibrary["UpdateUI"] = function()
 		end
 		onetext.Text = newtext
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-			if v["Type"] == "Button" and v["Api"]["Enabled"] then
+			if (v["Type"] == "Button" or v["Type"] == "ButtonMain") and v["Api"]["Enabled"] then
 				v["Object"].ButtonText.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				if v["Object"]:FindFirstChild("ButtonIcon") then
 					v["Object"].ButtonIcon.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
@@ -627,7 +625,7 @@ GuiLibrary["UpdateUI"] = function()
 					v["Object"].ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end
 			end
-			if v["Type"] == "Toggle" and v["Api"]["Enabled"] then
+			if (v["Type"] == "Toggle" or v["Type"] == "ToggleMain") and v["Api"]["Enabled"] then
 					v["Object"].ToggleFrame1.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 			end
 			if v["Type"] == "Slider" then
@@ -668,42 +666,10 @@ cam:GetPropertyChangedSignal("ViewportSize"):connect(function()
 end)
 GUI.CreateToggle("Enable Multi-Keybinding", function() end, function() end, false, "VapeOptions")
 local welcomemsg = GUI.CreateToggle("GUI bind indicator", function() end, function() end, true, "VapeOptions")
-GUI.CreateToggle("Smooth font", function()
-	for i,v in pairs(GuiLibrary["MainGui"]:GetDescendants()) do
-		if (v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("TextBox")) then
-			v.Font = Enum.Font.SourceSans
-			if v.Name == "DividerLabel" then
-				local string1 = v.Text:sub(2, v.Text:len())
-				v.Text = "  "..string1
-			end
-		end
-	end
-	for i2,v2 in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-		if v2["Type"] == "Toggle" then
-			v2["Object"].Text = "   "..v2["Object"].Name
-			v2["Object"].TextSize = 18
-		end
-	end
-end, function() 
-	for i,v in pairs(GuiLibrary["MainGui"]:GetDescendants()) do
-		if (v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("TextBox")) then
-			v.Font = Enum.Font.Sarpanch
-			if v.Name == "DividerLabel" then
-				local string1 = v.Text:sub(3, v.Text:len())
-				v.Text = " "..string1
-			end
-		end
-	end
-	for i2,v2 in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-		if v2["Type"] == "Toggle" then
-			v2["Object"].Text = "   "..v2["Object"].Name
-			v2["Object"].TextSize = 16
-		end
-	end
-end, true, "VapeOptions")
 GUI.CreateToggle("Show Tooltips", function() GuiLibrary["ToggleTooltips"] = true end, function() GuiLibrary["ToggleTooltips"] = false end, true, "VapeOptions")
 GUI.CreateToggle("Discord integration", function() end, function() end, false, "VapeOptions")
 GUI.CreateToggle("Notifications", function() GuiLibrary["ToggleNotifications"] = true end, function() GuiLibrary["ToggleNotifications"] = false end, true, "VapeOptions")
+local GUIbind = GUI.CreateGUIBind()
 
 local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
@@ -712,10 +678,8 @@ local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(f
     end
 end)
 
-local SelfDestructButton = {["ToggleButton"] = function() end}
-SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function() 
+GuiLibrary["SelfDestruct"] = function()
 	selfdestruct = true
-	SelfDestructButton["ToggleButton"](false)
 	GuiLibrary["SaveSettings"]()
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 		if (v["Type"] == "Button" or v["Type"] == "OptionsButton") and v["Api"]["Enabled"] then
@@ -733,7 +697,36 @@ SelfDestructButton = Other.CreateOptionsButton("SelfDestruct", function()
 	teleportfunc:Disconnect()
 	GuiLibrary["MainGui"]:Remove()
 	GuiLibrary["MainBlur"]:Remove()
-end, function() end, false)
+end
+
+GUI.CreateButton2("RESET CURRENT PROFILE", function()
+	GuiLibrary["SelfDestruct"]()
+	delfile("vape/Profiles/"..(GuiLibrary["CurrentProfile"] == "default" and "" or GuiLibrary["CurrentProfile"])..game.PlaceId..".vapeprofile")
+	shared.VapeSwitchServers = true
+	shared.VapeOpenGui = true
+	loadstring(GetURL("NewMainScript.lua"))()
+end)
+GUI.CreateButton2("RESET GUI POSITIONS", function()
+	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
+		if (v["Type"] == "Window" or v["Type"] == "CustomWindow") and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) then
+			v["Object"].Position = (i == "GUIWindow" and UDim2.new(0, 6, 0, 6) or UDim2.new(0, 223, 0, 6))
+		end
+	end
+end)
+GUI.CreateButton2("SORT GUI", function()
+	local sorttable = {}
+	local num = 229
+	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
+		if (v["Type"] == "Window" or v["Type"] == "CustomWindow") and i ~= "GUIWindow" and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) and v["Object"].Visible then
+			sorttable[#sorttable + (v["Type"] == "CustomWindow" and 100 or 1)] = v["Object"]
+		end
+	end
+	for i2,v2 in pairs(sorttable) do
+		v2.Position = UDim2.new(0, num, 0, 6)
+		num = num + 223
+	end
+end)
+GUI.CreateButton2("UNINJECT", GuiLibrary["SelfDestruct"])
 
 loadstring(GetURL("AnyGame.vape"))()
 if pcall(function() readfile("vape/CustomModules/"..game.PlaceId..".vape") end) then
@@ -750,6 +743,7 @@ if #ProfilesTextList["ObjectList"] == 0 then
 	table.insert(ProfilesTextList["ObjectList"], "default")
 	ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
 end
+GUIbind["Reload"]()
 GuiLibrary["UpdateUI"]()
 if blatantmode["Enabled"] then
 	pcall(function()
