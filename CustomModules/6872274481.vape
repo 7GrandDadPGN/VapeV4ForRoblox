@@ -419,7 +419,7 @@ bedwars["breakBlock"] = function(pos)
 	spawn(function()
 		local block = getblock(pos)
 		local lastfound = nil
-		if block then
+		if block and block.Parent ~= nil then
 			for i = 1, 20 do
 				local extrablock = getblock(pos + Vector3.new(i * 3, 0, 0))
 				if extrablock then
@@ -711,11 +711,10 @@ BuyCheck = function()
 					end)
 				end
 			end
-			if AutoBuyArmor["Enabled"] and NextArmor and buyingthing == false and (AutoBuyGui["Enabled"] and bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or (not AutoBuyGui["Enabled"])) then
+			if AutoBuyArmor["Enabled"] and NextArmor and (AutoBuyGui["Enabled"] and bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or (not AutoBuyGui["Enabled"])) then
 				local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
 				local NextArmorCurrency = getItem(NextArmorTable["currency"])
 				if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
-					buyingthing = true
 					bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 						shopItem = NextArmorTable
 					}):andThen(function(p11)
@@ -744,7 +743,6 @@ BuyCheck = function()
 							end
 						end
 						NextArmor = NextArmorTable["nextTier"]
-						buyingthing = false
 						if p11 then
 							BuyCheck()
 						end
@@ -790,7 +788,7 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			for i = 1, #tab do
 				local obj = tab[i]
 				if isAlive() then
-					if obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor ~= lplr.Team.TeamColor then
+					if obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor ~= lplr.Team.TeamColor and obj.Parent ~= nil then
 						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
 							bedwars["breakBlock"](obj.Position)
 						end
@@ -809,7 +807,7 @@ bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 	end
 end)
 bedwars["ClientHandler"]:Get("PickupItemEvent"):Connect(BuyCheck)
-AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AutoBuy", BuyCheck, function() end, true, function() return "" end, "Automatically Buys Swords, Armor, and Team Upgrades.")
+AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AutoBuy", function() buyingthing = false BuyCheck() end, function() end, true, function() return "" end, "Automatically Buys Swords, Armor, and Team Upgrades.")
 AutoBuyArmor = AutoBuy.CreateToggle("Buy Armor", function() end, function() end, true)
 AutoBuySword = AutoBuy.CreateToggle("Buy Sword", function() end, function() end, true)
 AutoBuyUpgrades = AutoBuy.CreateToggle("Buy Team Upgrades", function() end, function() end, true)
@@ -1108,7 +1106,7 @@ end, function()
 	end
 	game:GetService("RunService"):UnbindFromRenderStep("Speed")
 end, true, function() return "" end, "Makes you go zoom")
-speedval = speed.CreateSlider("Speed", 1, 30, function(val) end, 30)
+speedval = speed.CreateSlider("Speed", 1, 26, function(val) end, 26)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
 local function getziplinepos()
@@ -1468,7 +1466,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 					thing.Visible = false
 					thing.RichText = true
 					thing.Name = plr.Name
-					thing.Font = (GuiLibrary["ObjectsThatCanBeSaved"]["VapeOptionsSmooth fontToggle"]["Api"]["Enabled"] and Enum.Font.SourceSans or Enum.Font.Sarpanch)
+					thing.Font = Enum.Font.SourceSans
 					thing.TextSize = 14
 					if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
 						local rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
