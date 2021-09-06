@@ -927,7 +927,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			end
 			for i,plr in pairs(plrs) do
 				local entitytable = {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}
-				if isAlive() and (killaurahandcheck["Enabled"] and (getEquipped()["Type"] == "sword") or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+				if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 						killauranear = true
 						if killauraautoblock["Enabled"] and kit == "shielder" then
