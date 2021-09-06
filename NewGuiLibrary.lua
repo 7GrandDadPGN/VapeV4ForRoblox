@@ -898,27 +898,16 @@ api["CreateMainWindow"] = function()
 				spawn(function()
 					bindtext2.Visible = true
 					repeat wait() until api["PressedKeybindKey"] ~= ""
-					local key = (api["PressedKeybindKey"] == api["GUIKeybind"] and "" or api["PressedKeybindKey"])
-					if key == "" then
-						api["GUIKeybind"] = key
-						newsize = UDim2.new(0, 20, 0, 21)
-						bindbkg.Size = newsize
-						bindbkg.Visible = true
-						bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
-						bindimg.Visible = true
-						bindtext.Visible = false
-						bindtext.Text = key
-					else
-						local textsize = game:GetService("TextService"):GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
-						newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
-						api["GUIKeybind"] = key
-						bindbkg.Visible = true
-						bindbkg.Size = newsize
-						bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
-						bindimg.Visible = false
-						bindtext.Visible = true
-						bindtext.Text = key
-					end
+					local key = api["PressedKeybindKey"]
+					local textsize = game:GetService("TextService"):GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
+					newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
+					api["GUIKeybind"] = key
+					bindbkg.Visible = true
+					bindbkg.Size = newsize
+					bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
+					bindimg.Visible = false
+					bindtext.Visible = true
+					bindtext.Text = key
 					api["PressedKeybindKey"] = ""
 					api["KeybindCaptured"] = false
 					bindtext2.Visible = false
