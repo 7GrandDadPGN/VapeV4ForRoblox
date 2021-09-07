@@ -870,7 +870,6 @@ killaurabox.Adornee = nil
 killaurabox.AlwaysOnTop = true
 killaurabox.ZIndex = 11
 killaurabox.Parent = GuiLibrary["MainGui"]
-local killauramethod = {["Value"] = "lookAt"}
 local killauraanimmethod = {["Value"] = "Normal"}
 local killauraaps = {["GetRandomValue"] = function() return 1 end}
 local killaurarange = {["Value"] = 14}
@@ -976,7 +975,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						}
 						targetsize = targetsize + 1
 						killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
-						bedwars["attackEntity"](bedwars["SwordController"], entitytable, (killauramethod["Value"] == "lookAt" and CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).lookVector or Ray.new(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).Unit.Direction))	
+						bedwars["attackEntity"](bedwars["SwordController"], entitytable, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
 					end
 				else
 					killaurabox.Adornee = nil
@@ -1014,7 +1013,6 @@ killauraaps = Killaura.CreateTwoSlider("Attacks per Second", 1, 20, function(val
 killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 14)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 360)
 killauratargets = Killaura.CreateSlider("Max targets", 1, 10, function(val) end, 10)
-killauramethod = Killaura.CreateDropdown("Aim Mode", {"lookAt", "Ray"}, function(val) end)
 killauraanimmethod = Killaura.CreateDropdown("Animation", {"Normal", "Slow"}, function(val) end)
 killauraautoblock = Killaura.CreateToggle("AutoBlock", function() end, function() end, true)
 killaurawall = Killaura.CreateToggle("Attack through walls", function() end, function() end, true)
@@ -1256,7 +1254,7 @@ end, function()
 	else
 
 	end
-end, true, function() return " BedWars" end, "Makes you go zoom (Balloons Required) (Will Buy)\nMake sure to turn off speed (hotkeys can help)")
+end, true, function() return "" end, "Makes you go zoom (Balloons Required) (Will Buy)\nMake sure to turn off speed (hotkeys can help)")
 flymethod = fly.CreateDropdown("Mode", {"Balloons"}, function(val)
 
 end)
