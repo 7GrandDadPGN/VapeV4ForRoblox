@@ -10,6 +10,19 @@ local uis = game:GetService("UserInputService")
 local mouse = lplr:GetMouse()
 local robloxfriends = {}
 
+local RenderStepTable = {}
+local function BindToRenderStep(name, num, func)
+	if RenderStepTable[name] == nil then
+		RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
+	end
+end
+local function UnbindFromRenderStep(name)
+	if RenderStepTable[name] then
+		RenderStepTable[name]:Disconnect()
+		RenderStepTable[name] = nil
+	end
+end
+
 local function friendCheck(plr)
 	if not robloxfriends[plr.UserId] then
 		if lplr:IsFriendsWith(plr.UserId) then
@@ -170,7 +183,7 @@ players.PlayerRemoving:connect(function(plr)
 end)
 GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle("Radar", "vape/assets/TargetInfoIcon1.png", function()
 	Radar.SetVisible(true) 
-	game:GetService("RunService"):BindToRenderStep("Radar", 1, function() 
+	BindToRenderStep("Radar", 1, function() 
 		local v278 = (CFrame.new(0, 0, 0):inverse() * cam.CFrame).p * 0.2 * Vector3.new(1, 1, 1);
 		local v279, v280, v281 = cam.CFrame:ToOrientation();
 		local u90 = v280 * 180 / math.pi;
@@ -206,7 +219,7 @@ GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle("Rada
 	end)
 end, function() 
 	Radar.SetVisible(false) 
-	game:GetService("RunService"):UnbindFromRenderStep("Radar")
+	UnbindFromRenderStep("Radar")
 	RadarMainFrame:ClearAllChildren()
 end, false, "OptionsButton", 1)
 
@@ -225,7 +238,7 @@ local old2 = meta.__index
 local hook
 
 local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AimAssist", function() kek() end, function() 
-	game:GetService("RunService"):UnbindFromRenderStep("AimAssist") 
+	UnbindFromRenderStep("AimAssist") 
 	meta.__namecall = old
 	meta.__index = old2
 	tar = nil 
@@ -275,7 +288,7 @@ kek = function()
 
 		return old3(unpack(Args))
 	end)
-    game:GetService("RunService"):BindToRenderStep("AimAssist", 1, function() 
+    BindToRenderStep("AimAssist", 1, function() 
 		local plr = GetNearestHumanoidToMouse(aimfov["Value"], GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false and aimvischeck["Enabled"])
 		local targettable = {}
 		local targetsize = 0
@@ -299,20 +312,20 @@ local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
-	game:GetService("RunService"):BindToRenderStep("AutoClicker", 1, function() 
+	BindToRenderStep("AutoClicker", 1, function() 
 		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
 		if tool and isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() then
 			tool:Activate()
 			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker") end, true)
+end, function() UnbindFromRenderStep("AutoClicker") end, true)
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
 
 local reachrange = {["Value"] = 1}
 local oldsize = {}
 local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Reach", function()
-	game:GetService("RunService"):BindToRenderStep("Reach", 1, function() 
+	BindToRenderStep("Reach", 1, function() 
 		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
 		if tool and isAlive() then
 			local touch = findTouchInterest(tool)
@@ -328,7 +341,7 @@ local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 		end
 	end)
 end, function() 
-	game:GetService("RunService"):UnbindFromRenderStep("Reach")
+	UnbindFromRenderStep("Reach")
 	for i2,v2 in pairs(lplr.Character:GetChildren()) do
 		if v2:IsA("Tool") and rawget(oldsize, v2.Name) then
 			local touch = findTouchInterest(v2)
@@ -389,7 +402,7 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 			flydown = false
 		end
 	end)
-	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
+	BindToRenderStep("Fly", 1, function(delta) 
 		if isAlive() then
 			if flymethod["Value"] == "Normal" then
 				if (bodyvelofly == nil or bodyvelofly ~= nil and bodyvelofly.Parent ~= lplr.Character.HumanoidRootPart) then
@@ -423,7 +436,7 @@ end, function()
 	flydown = false
 	flypress:Disconnect()
 	flyendpress:Disconnect()
-	game:GetService("RunService"):UnbindFromRenderStep("Fly")
+	UnbindFromRenderStep("Fly")
 end, true, function() return " "..flymethod["Value"] end, true)
 flymethod = fly.CreateDropdown("Mode", {"Normal", "AntiCheat"}, function(val)
 	if isAlive() then
@@ -436,7 +449,7 @@ flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
 
 local hitboxexpand = {["Value"] = 1}
 local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("HitBoxes", function()
-	game:GetService("RunService"):BindToRenderStep("HitBoxes", 1, function() 
+	BindToRenderStep("HitBoxes", 1, function() 
 		for i,plr in pairs(players:GetChildren()) do
 			if isPlayerTargetable(plr, true, true) and isAlive(plr) then
 				plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.2), 2 + (hitboxexpand["Value"] * 0.2), 1 + (hitboxexpand["Value"] * 0.2))
@@ -444,7 +457,7 @@ local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Crea
 		end
 	end)
 end, function() 
-	game:GetService("RunService"):UnbindFromRenderStep("HitBoxes") 
+	UnbindFromRenderStep("HitBoxes") 
 	for i,plr in pairs(players:GetChildren()) do
 		if isAlive(plr) then
 			plr.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
@@ -462,7 +475,7 @@ local killauracframe = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauratick = tick()
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
-	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
+	BindToRenderStep("Killaura", 1, function() 
 		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
 		local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratarget["Value"])
 		if tool and isAlive() and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or killauramouse["Enabled"] == false) then
@@ -496,7 +509,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			end
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("Killaura") end, true)
+end, function() UnbindFromRenderStep("Killaura") end, true)
 killauraaps = Killaura.CreateTwoSlider("Attacks per second", 1, 20, function(val) end, false, 8, 12)
 killaurarange = Killaura.CreateSlider("Attack range", 1, 20, function(val) end)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
@@ -506,14 +519,14 @@ killauracframe = Killaura.CreateToggle("Face target", function() end, function()
 
 local longjumpboost = {["Value"] = 1}
 local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("LongJump", function()
-	game:GetService("RunService"):BindToRenderStep("LongJump", 1, function() 
+	BindToRenderStep("LongJump", 1, function() 
 		if isAlive() then
 			if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 				lplr.Character.HumanoidRootPart.Velocity = lplr.Character.HumanoidRootPart.Velocity + lplr.Character.Humanoid.MoveDirection * (longjumpboost["Value"])
 			end
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("LongJump") end, true, function() return "" end, true)
+end, function() UnbindFromRenderStep("LongJump") end, true, function() return "" end, true)
 longjumpboost = longjump.CreateSlider("Boost", 1, 150, function(val) end)
 
 local phase
@@ -538,7 +551,7 @@ local speedjump = {["Enabled"] = false}
 local bodyvelo
 
 local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
-	game:GetService("RunService"):BindToRenderStep("Speed", 1, function(delta)
+	BindToRenderStep("Speed", 1, function(delta)
 		if isAlive() then
 			if speedmethod["Value"] == "AntiCheat A" then
 				if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
@@ -569,7 +582,7 @@ end, function()
 	if bodyvelo then
 		bodyvelo:Remove()
 	end
-	game:GetService("RunService"):UnbindFromRenderStep("Speed")
+	UnbindFromRenderStep("Speed")
 end, true, function() return " "..speedmethod["Value"] end, true)
 speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, function(val) end)
 speedval = speed.CreateSlider("Speed", 1, 150, function(val) end)
@@ -629,7 +642,7 @@ local ESPColor = {["Value"] = 0.44}
 local ESPHealthBar = {["Enabled"] = false}
 local ESPMethod = {["Value"] = "2D"}
 local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("ESP", function() 
-	game:GetService("RunService"):BindToRenderStep("ESP", 500, function()
+	BindToRenderStep("ESP", 500, function()
 		for i,plr in pairs(players:GetChildren()) do
 			if ESPMethod["Value"] == "2D" then
 				local thing
@@ -822,7 +835,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 			end
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("ESP") ESPFolder:ClearAllChildren() end, true)
+end, function() UnbindFromRenderStep("ESP") ESPFolder:ClearAllChildren() end, true)
 ESPColor = ESP.CreateColorSlider("Player Color", function(val) end)
 ESPMethod = ESP.CreateDropdown("Mode", {"2D", "Skeleton"}, function(val)
 	ESPFolder:ClearAllChildren()
@@ -852,7 +865,7 @@ local ChamsTransparency = {["Value"] = 1}
 local ChamsOnTop = {["Enabled"] = true}
 local chamobjects = {["Head"] = true, ["Torso"] = true, ["UpperTorso"] = true, ["LowerTorso"] = true, ["Left Arm"] = true, ["Left Leg"] = true, ["Right Arm"] = true, ["Right Leg"] = true, ["LeftLowerLeg"] = true, ["RightLowerLeg"] = true, ["LeftUpperLeg"] = true, ["RightUpperLeg"] = true, ["LeftFoot"] = true, ["RightFoot"] = true, ["LeftLowerArm"] = true, ["RightLowerArm"] = true, ["LeftUpperArm"] = true, ["RightUpperArm"] = true, ["LeftHand"] = true, ["RightHand"] = true}
 local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Chams", function() 
-	game:GetService("RunService"):BindToRenderStep("Chams", 500, function()
+	BindToRenderStep("Chams", 500, function()
 		for i,plr in pairs(players:GetChildren()) do
 				local thing
 				if ChamsFolder:FindFirstChild(plr.Name) then
@@ -893,7 +906,7 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 				end
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("Chams") ChamsFolder:ClearAllChildren() end, true, function() return "" end, "testing")
+end, function() UnbindFromRenderStep("Chams") ChamsFolder:ClearAllChildren() end, true, function() return "" end, "testing")
 ChamsColor = Chams.CreateColorSlider("Player Color", function(val) end)
 ChamsTransparency = Chams.CreateSlider("Transparency", 1, 100, function(val) end, 50)
 ChamsOnTop = Chams.CreateToggle("Bypass Walls", function() end, function() end, true)
@@ -944,7 +957,7 @@ local NameTagsDisplayName = {["Enabled"] = false}
 local NameTagsHealth = {["Enabled"] = false}
 local NameTagsDistance = {["Enabled"] = false}
 local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("NameTags", function() 
-	game:GetService("RunService"):BindToRenderStep("NameTags", 500, function()
+	BindToRenderStep("NameTags", 500, function()
 		for i,plr in pairs(players:GetChildren()) do
 				local thing
 				if NameTagsFolder:FindFirstChild(plr.Name) then
@@ -998,7 +1011,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 			end
 
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
+end, function() UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
 NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
 NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end)
 NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end)
@@ -1114,7 +1127,7 @@ players.PlayerRemoving:connect(function(plr)
 end)
 local TracersColor = {["Value"] = 0.44}
 local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Tracers", function() 
-	game:GetService("RunService"):BindToRenderStep("Tracers", 500, function()
+	BindToRenderStep("Tracers", 500, function()
 		for i,plr in pairs(players:GetChildren()) do
 				local thing
 				if TracersFolder:FindFirstChild(plr.Name) then
@@ -1154,7 +1167,7 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 				end
 			end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("Tracers") TracersFolder:ClearAllChildren() end, true)
+end, function() UnbindFromRenderStep("Tracers") TracersFolder:ClearAllChildren() end, true)
 TracersColor = Tracers.CreateColorSlider("Player Color", function(val) end)
 
 Spring = {} do
@@ -1373,7 +1386,7 @@ local Freecam = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].Create
 	panSpring:Reset(Vector2.new())
 
 	PlayerState.Push()
-	game:GetService("RunService"):BindToRenderStep("Freecam", Enum.RenderPriority.Camera.Value, function(dt)
+	BindToRenderStep("Freecam", Enum.RenderPriority.Camera.Value, function(dt)
         local vel = velSpring:Update(dt, Input.Vel(dt))
         local pan = panSpring:Update(dt, Input.Pan(dt))
 
@@ -1392,7 +1405,7 @@ local Freecam = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].Create
 	Input.StartCapture()
 end, function() 
 	Input.StopCapture()
-	game:GetService("RunService"):UnbindFromRenderStep("Freecam")
+	UnbindFromRenderStep("Freecam")
 	PlayerState.Pop()
 end, true, function() return "" end, true)
 freecamspeed = Freecam.CreateSlider("Speed", 1, 150, function(val) NAV_KEYBOARD_SPEED = Vector3.new(val / 75,  val / 75, val / 75) end, 75)
