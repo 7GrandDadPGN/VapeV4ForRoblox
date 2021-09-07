@@ -884,6 +884,7 @@ local killaurasound = {["Enabled"] = false}
 local killauraswing = {["Enabled"] = false}
 local killaurahandcheck = {["Enabled"] = false}
 local killaurabaguette = {["Enabled"] = false}
+local killauraanimation = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauradelay = 0
 local Killauranear = false
@@ -913,12 +914,15 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		return oldsound(tab, soundid, ...)
 	end
 	bedwars["ViewmodelController"]["playAnimation"] = function(Self, id, ...)
-		if id == 5 and killauranear and killauraautoblock["Enabled"] and isAlive() and kit == "shielder" then
+		if id == 5 and killauranear and killauraswing["Enabled"] and isAlive() then
+			return nil
+		end
+		if id == 5 and killauranear and killauraanimation["Enabled"] and isAlive() then
 			pcall(function()
 				if origC0 == nil then
 					origC0 = cam.Viewmodel.RightHand.RightWrist.C0
 				end
-				if killauraplaying == false and getEquipped()["Type"] == "sword" then
+				if killauraplaying == false then
 					killauraplaying = true
 					game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(55), -math.rad(70))}):Play()
 					wait(0.05)
@@ -927,9 +931,6 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					killauraplaying = false
 				end
 			end)
-			return nil
-		end
-		if id == 5 and killauranear and killauraswing["Enabled"] and isAlive() then
 			return nil
 		end
 		return oldplay(Self, id, ...)
@@ -1023,6 +1024,8 @@ killaurasound = Killaura.CreateToggle("No Swing Sound", function() end, function
 killauraswing = Killaura.CreateToggle("No Swing", function() end, function() end)
 killaurahandcheck = Killaura.CreateToggle("Hand Check", function() end, function() end)
 killaurabaguette = Killaura.CreateToggle("Baguette Aura", function() end, function() end)
+killauraanimation = Killaura.CreateToggle("Custom Animation", function() end, function() end)
+
 local FastPickupRange = {["Value"] = 1}
 local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastPickup", function()
 	BindToRenderStep("FastPickup", 1, function()
