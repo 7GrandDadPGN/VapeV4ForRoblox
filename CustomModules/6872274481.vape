@@ -18,8 +18,21 @@ local kit = ""
 local antivoidypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
-local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
---[[if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
+
+local RenderStepTable = {}
+local function BindToRenderStep(name, num, func)
+	if RenderStepTable[name] == nil then
+		RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
+	end
+end
+local function UnbindFromRenderStep(name)
+	if RenderStepTable[name] then
+		RenderStepTable[name]:Disconnect()
+		RenderStepTable[name] = nil
+	end
+end
+--[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
     local textlabel = Instance.new("TextLabel")
     textlabel.Size = UDim2.new(1, 0, 1, 36)
     textlabel.Text = "Vape is currently down for testing due to the BedWars update.\nThe discord has been copied to your clipboard."
@@ -558,13 +571,13 @@ local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
-	game:GetService("RunService"):BindToRenderStep("AutoClicker", 1, function() 
+	BindToRenderStep("AutoClicker", 1, function() 
 		if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and getEquipped()["Type"] == "sword" and bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
 			bedwars["SwingSword"](bedwars["SwordController"])
 			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("AutoClicker") end, true, function() return "" end, "Clicks for you")
+end, function() UnbindFromRenderStep("AutoClicker") end, true, function() return "" end, "Clicks for you")
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
 
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
@@ -921,7 +934,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		end
 		return oldplay(Self, id, ...)
 	end
-	game:GetService("RunService"):BindToRenderStep("Killaura", 1, function() 
+	BindToRenderStep("Killaura", 1, function() 
 		local targettable = {}
 		local targetsize = 0
 		if (killauradelay <= tick()) and matchState ~= 0 then
@@ -989,7 +1002,7 @@ end, function()
 	pcall(function()
 		cam.Viewmodel.RightHand.RightWrist.C0 = origC0
 	end)
-	game:GetService("RunService"):UnbindFromRenderStep("Killaura") 
+	UnbindFromRenderStep("Killaura") 
 	bedwars["SwordController"]["getHandItem"] = oldmeta
 	oldmeta = nil
 end, true, function()
@@ -1012,7 +1025,7 @@ killaurahandcheck = Killaura.CreateToggle("Hand Check", function() end, function
 killaurabaguette = Killaura.CreateToggle("Baguette Aura", function() end, function() end)
 local FastPickupRange = {["Value"] = 1}
 local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("FastPickup", function()
-	game:GetService("RunService"):BindToRenderStep("FastPickup", 1, function()
+	BindToRenderStep("FastPickup", 1, function()
 		local itemdrops = collectionservice:GetTagged("ItemDrop")
 		if isAlive() then
 			for i,v in pairs(itemdrops) do
@@ -1029,7 +1042,7 @@ local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].C
 		end
 	end)
 end, function() 
-	game:GetService("RunService"):UnbindFromRenderStep("FastPickup")
+	UnbindFromRenderStep("FastPickup")
 end, true)
 FastPickupRange = FastPickup.CreateSlider("Range", 1, 10, function() end, 10)
 
@@ -1099,7 +1112,7 @@ local speedjump = {["Enabled"] = false}
 local bodyvelo
 local Scaffold = {["Enabled"] = false}
 local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
-	game:GetService("RunService"):BindToRenderStep("Speed", 1, function(delta)
+	BindToRenderStep("Speed", 1, function(delta)
 		if isAlive() and matchState ~= 0 then
 			if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
 				bodyvelo = Instance.new("BodyVelocity")
@@ -1119,7 +1132,7 @@ end, function()
 	if bodyvelo then
 		bodyvelo:Remove()
 	end
-	game:GetService("RunService"):UnbindFromRenderStep("Speed")
+	UnbindFromRenderStep("Speed")
 end, true, function() return "" end, "Makes you go zoom")
 speedval = speed.CreateSlider("Speed", 1, 26, function(val) end, 26)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
@@ -1205,7 +1218,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 			flydown = false
 		end
 	end)
-	game:GetService("RunService"):BindToRenderStep("Fly", 1, function(delta) 
+	BindToRenderStep("Fly", 1, function(delta) 
 		if isAlive() and matchState ~= 0 then
 			if (flymethod["Value"] == "Balloons" and (lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0)) then
 				if flyup then
@@ -1226,7 +1239,7 @@ end, function()
 	flydown = false
 	flypress:Disconnect()
 	flyendpress:Disconnect()
-	game:GetService("RunService"):UnbindFromRenderStep("Fly")
+	UnbindFromRenderStep("Fly")
 	if flymethod["Value"] == "Balloons" then
 		if isAlive() and lplr.Character:GetAttribute("InflatedBalloons") then
 			for i = 1, lplr.Character:GetAttribute("InflatedBalloons") do
@@ -1256,7 +1269,7 @@ local ScaffoldBuyBlocks = {["Enabled"] = false}
 local scaffoldallowed = true
 
 Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Scaffold", function()
-	game:GetService("RunService"):BindToRenderStep("Scaffold", 1, function(delta)
+	BindToRenderStep("Scaffold", 1, function(delta)
 		if isAlive() and (ScaffoldHandCheck["Enabled"] and getEquipped()["Type"] == "block" or (not ScaffoldHandCheck["Enabled"])) then
 			for i = 1, ScaffoldExpand["Value"] do
 				local newpos = getScaffold((lplr.Character.Head.Position + (lplr.Character.Humanoid.MoveDirection * (i * 3.5))) + Vector3.new(0, -6, 0))
@@ -1283,7 +1296,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		end
 	end)
 end, function()
-	game:GetService("RunService"):UnbindFromRenderStep("Scaffold")
+	UnbindFromRenderStep("Scaffold")
 	scaffoldallowed = true
 	oldpos = Vector3.new(0, 0, 0)
 	oldpos2 = Vector3.new(0, 0, 0)
@@ -1410,7 +1423,7 @@ local BedESPColor = {["Value"] = 0.44}
 local BedESPTransparency = {["Value"] = 1}
 local BedESPOnTop = {["Enabled"] = true}
 BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("BedESP", function() 
-	game:GetService("RunService"):BindToRenderStep("BedESP", 500, function()
+	BindToRenderStep("BedESP", 500, function()
 		if bedwars["BedTable"] then
 			for i,plr in pairs(bedwars["BedTable"]) do
 					local thing
@@ -1450,7 +1463,7 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 			end
 		end
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("BedESP") BedESPFolder:ClearAllChildren() end, true, function() return "" end, "testing")
+end, function() UnbindFromRenderStep("BedESP") BedESPFolder:ClearAllChildren() end, true, function() return "" end, "testing")
 
 GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
 local NameTagsFolder = Instance.new("Folder")
@@ -1467,7 +1480,7 @@ local NameTagsHealth = {["Enabled"] = false}
 local NameTagsDistance = {["Enabled"] = false}
 local NameTagsShowInventory = {["Enabled"] = false}
 local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("NameTags", function() 
-	game:GetService("RunService"):BindToRenderStep("NameTags", 500, function()
+	BindToRenderStep("NameTags", 500, function()
 		for i,plr in pairs(players:GetChildren()) do
 				local thing
 				if NameTagsFolder:FindFirstChild(plr.Name) then
@@ -1554,7 +1567,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 			end
 
 	end)
-end, function() game:GetService("RunService"):UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
+end, function() UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
 NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
 NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end)
 NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end)
