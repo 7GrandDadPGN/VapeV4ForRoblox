@@ -578,7 +578,6 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 	oldenable = bedwars["BlockController2"]["enable"]
 	olddisable = bedwars["BlockController2"]["disable"]
 	bedwars["BlockController2"]["enable"] = function(Self, tab)
-		print("aaa", Self)
 		blockplaceenabled = true
 		blockplacetable = Self
 		return oldenable(Self, tab)
