@@ -400,7 +400,7 @@ local function friendCheck(plr)
 end
 
 shared.vapeteamcheck = function(plr)
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and (bedwars["PlayerUtil"].getGamePlayer(lplr):getTeamId() ~= bedwars["PlayerUtil"].getGamePlayer(plr):getTeamId() or (lplr.Team == nil or #lplr.Team:GetPlayers() == #game:GetService("Players"):GetChildren())) or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
+	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and bedwars["PlayerUtil"].getGamePlayer(lplr):getTeamId() ~= bedwars["PlayerUtil"].getGamePlayer(plr):getTeamId() or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
 end
 
 local function targetCheck(plr, check)
@@ -871,6 +871,7 @@ killaurabox.AlwaysOnTop = true
 killaurabox.ZIndex = 11
 killaurabox.Parent = GuiLibrary["MainGui"]
 local killauramethod = {["Value"] = "lookAt"}
+local killauraanimmethod = {["Value"] = "Normal"}
 local killauraaps = {["GetRandomValue"] = function() return 1 end}
 local killaurarange = {["Value"] = 14}
 local killauraangle = {["Value"] = 360}
@@ -924,10 +925,10 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				end
 				if killauraplaying == false then
 					killauraplaying = true
-					game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(55), -math.rad(70))}):Play()
-					wait(0.05)
-					game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(105), -math.rad(70))}):Play()
-					wait(0.05)
+					game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new((killauraanimmethod["Value"] == "Normal" and 0.1 or 0.2)), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(55), -math.rad(70))}):Play()
+					wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
+					game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new((killauraanimmethod["Value"] == "Normal" and 0.1 or 0.2)), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(105), -math.rad(70))}):Play()
+					wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
 					killauraplaying = false
 				end
 			end)
@@ -1014,6 +1015,7 @@ killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 360)
 killauratargets = Killaura.CreateSlider("Max targets", 1, 10, function(val) end, 10)
 killauramethod = Killaura.CreateDropdown("Aim Mode", {"lookAt", "Ray"}, function(val) end)
+killauraanimmethod = Killaura.CreateDropdown("Animation", {"Normal", "Slow"}, function(val) end)
 killauraautoblock = Killaura.CreateToggle("AutoBlock", function() end, function() end, true)
 killaurawall = Killaura.CreateToggle("Attack through walls", function() end, function() end, true)
 killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end, false)
