@@ -567,17 +567,47 @@ end
 GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
 
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
+local oldenable
+local olddisable
+local blockplacetable = {}
+local blockplaceenabled = false
 local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
+	oldenable = bedwars["BlockController2"]["enable"]
+	olddisable = bedwars["BlockController2"]["disable"]
+	bedwars["BlockController2"]["enable"] = function(Self, tab)
+		print("aaa", Self)
+		blockplaceenabled = true
+		blockplacetable = Self
+		return oldenable(Self, tab)
+	end
+	bedwars["BlockController2"]["disable"] = function(Self)
+		blockplaceenabled = false
+		return olddisable(Self)
+	end
 	BindToRenderStep("AutoClicker", 1, function() 
-		if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and getEquipped()["Type"] == "sword" and bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
-			bedwars["SwingSword"](bedwars["SwordController"])
+		if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
 			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
+			if getEquipped()["Type"] == "sword" then
+				bedwars["SwingSword"](bedwars["SwordController"])
+			end
+			if blockplaceenabled then
+				local mouseinfo = blockplacetable.clientManager:getBlockSelector():getMouseInfo(0)
+				if mouseinfo and getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, blockplacetable.blockType, mouseinfo.placementPosition, 0) then
+					bedwars["BlockController2"]["placeBlock"](blockplacetable, mouseinfo.placementPosition)
+				end
+			end
 		end
 	end)
-end, function() UnbindFromRenderStep("AutoClicker") end, true, function() return "" end, "Clicks for you")
+end, function()
+	bedwars["BlockController2"]["enable"] = oldenable
+	bedwars["BlockController2"]["disable"] = olddisable
+	oldenable = nil
+	olddisable = nil
+	UnbindFromRenderStep("AutoClicker")
+end, true, function() return "" end, "Clicks for you")
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
 
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
