@@ -123,7 +123,7 @@ end
 local function getSword()
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
 		if v5["itemType"]:find("sword") or v5["itemType"]:find("blade") then
-			return v5
+			return v5, i5
 		end
 	end
 	return nil
@@ -344,7 +344,7 @@ getfunctions = function()
 			if blocktable == nil and getwool() or getwool():find(lplr.Team.Name:lower()) == nil then
 				blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
 			end
-			if blocktable then
+			if blocktable and getwool() and getwool():find(lplr.Team.Name:lower()) then
 				if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
 					bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 				end
@@ -737,6 +737,45 @@ local AutoBuyUpgrades = {["Enabled"] = false}
 local AutoBuyGui = {["Enabled"] = false}
 local buyingthing = false
 
+local function buyitem(itemtab, sucfunc)
+	bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+		shopItem = itemtab
+	}):andThen(function(p11)
+		if p11 then
+			bedwars["SoundManager"]:playSound(12)
+			bedwars["ClientStoreHandler"]:dispatch({
+				type = "BedwarsAddItemPurchased", 
+				itemType = itemtab.itemType
+			});
+			if itemtab.itemType == "emerald_sword" then
+				local sword, swordnum = getSword()
+				if sword.itemType ~= "emerald_sword" then
+					sword["tool"]:Remove()
+					bedwars["getInventory"](lplr)["items"][swordnum] = nil
+				end
+			end
+			if itemtab.nextTier then
+				local ShopItems = bedwars["Shop"].ShopItems;
+				local function isNextTier(p12)
+					return p12.itemType == NextArmorTable.nextTier;
+				end;
+				local itemToSelect = nil;
+				for itemnum, item in ipairs(ShopItems) do
+					if isNextTier(item, itemnum - 1, ShopItems) == true then
+						itemToSelect = item;
+						break;
+					end;
+				end;
+				bedwars["SetSelectedShopItem"](itemToSelect);
+				return;
+			elseif itemtab.tiered or itemtab.lockAfterPurchase then
+
+			end
+			sucfunc()
+		end
+	end)
+end
+
 local BuyCheck = function() end
 BuyCheck = function()
 	if AutoBuy["Enabled"] then
@@ -745,26 +784,14 @@ BuyCheck = function()
 			local NextSword = getSword()
 			local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
 			local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
-			if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and buyingthing == false and (AutoBuyGui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or bedwars["ClientStoreHandler"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
+			if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and (AutoBuyGui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or bedwars["ClientStoreHandler"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
 				local buyablesword = checkallswords()
 				if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
-					buyingthing = true
 					local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
-					bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-						shopItem = NextSwordTable
-					}):andThen(function(p11)
-						if p11 then
-							bedwars["SoundManager"]:playSound(12)
-							bedwars["ClientStoreHandler"]:dispatch({
-								type = "BedwarsAddItemPurchased", 
-								itemType = NextSwordTable.itemType
-							});
-						end
+					buyitem(NextSwordTable, function()
 						NextSword = swords[NextSwordTable["itemType"]]
-						buyingthing = false
-						if p11 then
-							BuyCheck()
-						end
+						print("bought")
+						BuyCheck()
 					end)
 				end
 			end
@@ -772,37 +799,9 @@ BuyCheck = function()
 				local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
 				local NextArmorCurrency = getItem(NextArmorTable["currency"])
 				if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
-					bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-						shopItem = NextArmorTable
-					}):andThen(function(p11)
-						if p11 then
-							bedwars["SoundManager"]:playSound(12)
-							bedwars["ClientStoreHandler"]:dispatch({
-								type = "BedwarsAddItemPurchased", 
-								itemType = NextArmorTable.itemType
-							});
-							if NextArmorTable.nextTier then
-								local l__ShopItems__5 = bedwars["Shop"].ShopItems;
-								local function v6(p12)
-									return p12.itemType == NextArmorTable.nextTier;
-								end;
-								local v7 = nil;
-								for v8, v9 in ipairs(l__ShopItems__5) do
-									if v6(v9, v8 - 1, l__ShopItems__5) == true then
-										v7 = v9;
-										break;
-									end;
-								end;
-								bedwars["SetSelectedShopItem"](v7);
-								return;
-							elseif NextArmorTable.tiered or NextArmorTable.lockAfterPurchase then
-			
-							end
-						end
+					buyitem(NextArmorTable, function()
 						NextArmor = NextArmorTable["nextTier"]
-						if p11 then
-							BuyCheck()
-						end
+						BuyCheck()
 					end)
 				end
 			end
@@ -1051,7 +1050,7 @@ killauratarget = Killaura.CreateToggle("Show target", function() end, function()
 killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
 killaurasound = Killaura.CreateToggle("No Swing Sound", function() end, function() end)
 killauraswing = Killaura.CreateToggle("No Swing", function() end, function() end)
-killaurahandcheck = Killaura.CreateToggle("Hand Check", function() end, function() end)
+killaurahandcheck = Killaura.CreateToggle("Limit to items", function() end, function() end)
 killaurabaguette = Killaura.CreateToggle("Baguette Aura", function() end, function() end)
 killauraanimation = Killaura.CreateToggle("Custom Animation", function() end, function() end)
 
@@ -1165,7 +1164,7 @@ end, function()
 		bodyvelo:Remove()
 	end
 	UnbindFromRenderStep("Speed")
-end, true, function() return "" end, "Makes you go zoom")
+end, true, function() return "" end, "Increases your movement.")
 speedval = speed.CreateSlider("Speed", 1, 26, function(val) end, 26)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
@@ -1335,7 +1334,7 @@ end, function()
 	if isAlive() then
 		lplr.Character.HumanoidRootPart.Anchored = false
 	end
-end, true)
+end, true, function() return "" end, "Helps you make bridges/scaffold walk.")
 ScaffoldExpand = Scaffold.CreateSlider("Expand", 1, 8, function(val) end, 1)
 ScaffoldBuyBlocks = Scaffold.CreateToggle("Buy Blocks", function() end, function() end)
 ScaffoldHandCheck = Scaffold.CreateToggle("Hand Check", function() end, function() end)
