@@ -159,6 +159,7 @@ end, function(obj, profilename)
 		bindimg.BackgroundTransparency = 1
 		bindimg.Size = UDim2.new(0, 12, 0, 12)
 		bindimg.Position = UDim2.new(0, 4, 0, 5)
+		bindimg.ImageTransparency = 0.2
 		bindimg.Active = false
 		bindimg.Visible = (GuiLibrary["Profiles"][profilename]["Keybind"] == "")
 		bindimg.Parent = bindbkg
@@ -265,9 +266,9 @@ onething.Visible = false
 onething.Image = getcustomassetfunc("vape/assets/VapeLogo3.png")
 local onething2 = Instance.new("ImageLabel")
 onething2.Parent = onething
-onething2.Size = UDim2.new(0, 40, 0, 27)
+onething2.Size = UDim2.new(0, 41, 0, 24)
 onething2.Name = "Logo2"
-onething2.Position = UDim2.new(1, 0, 0, 0)
+onething2.Position = UDim2.new(1, 0, 0, 1)
 onething2.BorderSizePixel = 0
 onething2.BackgroundColor3 = Color3.new(0, 0, 0)
 onething2.BackgroundTransparency = 1
@@ -747,9 +748,9 @@ GUIbind["Reload"]()
 GuiLibrary["UpdateUI"]()
 if blatantmode["Enabled"] then
 	pcall(function()
-		local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 4, "⚠️")
-		frame.Frame.BackgroundColor3 = Color3.fromRGB(218, 134, 75)
-		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(218, 134, 75)
+		local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 4, "vape/assets/WarningNotification.png")
+		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
 	end)
 end
 if not shared.VapeSwitchServers then
