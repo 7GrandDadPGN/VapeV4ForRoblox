@@ -790,8 +790,6 @@ BuyCheck = function()
 					local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
 					buyitem(NextSwordTable, function()
 						NextSword = swords[NextSwordTable["itemType"]]
-						print("bought")
-						BuyCheck()
 					end)
 				end
 			end
@@ -801,7 +799,6 @@ BuyCheck = function()
 				if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
 					buyitem(NextArmorTable, function()
 						NextArmor = NextArmorTable["nextTier"]
-						BuyCheck()
 					end)
 				end
 			end
@@ -1165,7 +1162,7 @@ end, function()
 	end
 	UnbindFromRenderStep("Speed")
 end, true, function() return "" end, "Increases your movement.")
-speedval = speed.CreateSlider("Speed", 1, 26, function(val) end, 26)
+speedval = speed.CreateSlider("Speed", 1, 30, function(val) end, 30)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
 local function getziplinepos()
