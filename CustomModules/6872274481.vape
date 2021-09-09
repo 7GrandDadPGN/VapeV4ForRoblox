@@ -964,7 +964,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		local targettable = {}
 		local targetsize = 0
 		if (killauradelay <= tick()) and matchState ~= 0 then
-			local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratargets["Value"])
+			local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"] + 0.4, killauratargets["Value"])
 			if #plrs <= 0 then
 				killauranear = false
 				killaurabox.Adornee = nil
