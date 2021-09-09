@@ -227,6 +227,10 @@ getfunctions = function()
 						return old(Self, remotename)
 					end
 				end
+				local suc3 = pcall(function() v.Client:Get("DamageBlock") end)
+				if suc3 then
+					bedwars["ClientHandlerDamageBlock"] = v.Client
+				end
 			end
 			if rawget(v, "ClientStore") and bedwars["ClientStoreHandler"] == nil then
 				bedwars["ClientStoreHandler"] = v.ClientStore
@@ -302,9 +306,6 @@ getfunctions = function()
 					end
 				end
 			end
-			if rawget(v, "updateHealthbar") then
-				bedwars["healthBar"] = v
-			end
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
 			end
@@ -313,6 +314,12 @@ getfunctions = function()
 			end
 			if rawget(v, "swingSwordAtMouse") then
 				bedwars["SwingSword"] = v["swingSwordAtMouse"]
+			end
+			if rawget(v, "updateHealthbar") then
+				bedwars["BlockHealthbar"] = v
+			end
+			if rawget(v, "lastHitTime") then
+				bedwars["BlockHealthbar2"] = v
 			end
 			if rawget(v, "swingSwordInRegion") then
 				bedwars["SwingSwordRegion"] = v["swingSwordInRegion"]
@@ -436,46 +443,63 @@ local function switchToAndUseTool(block)
 	end
 end
 
-bedwars["breakBlock"] = function(pos)
-	spawn(function()
-		local block = getblock(pos)
-		local lastfound = nil
-		local olditem = lplr.Character.HandInvItem.Value
-		if block and block.Parent ~= nil then
-			for i = 1, 20 do
-				local extrablock = getblock(pos + Vector3.new(i * 3, 0, 0))
-				if extrablock then
-					lastfound = extrablock
-				else
-					if lastfound then
-						switchToAndUseTool(lastfound)
-						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.DamageBlock:InvokeServer({
-							blockRef = {
-								blockPosition = bedwars["BlockEngine2"]:getBlockPosition(lastfound.Position)
-							}, 
-							hitPosition = lastfound.Position, 
-							hitNormal = Vector3.new(1, 0, 0)
-						})
-						if olditem then
-							switchItem(olditem)
-						end
-					else
-						switchToAndUseTool(block)
-						game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged.DamageBlock:InvokeServer({
-							blockRef = {
-								blockPosition = bedwars["BlockEngine2"]:getBlockPosition(pos)
-							}, 
-							hitPosition = pos, 
-							hitNormal = Vector3.new(1, 0, 0)
-						})
-						if olditem then
-							switchItem(olditem)
-						end
-					end
-				end
+local function getlastblock(pos, normal)
+	local lastfound = nil
+	for i = 1, 20 do
+		local extrablock = getblock(pos + (Vector3.FromNormalId(normal) * (i * 3)))
+		if extrablock and extrablock.Parent ~= nil then
+			lastfound = extrablock
+		else
+			break
+		end
+	end
+	return lastfound
+end
+
+local healthbarblocktable = {
+	["blockHealth"] = -1,
+	["breakingBlockPosition"] = Vector3.new(0, 0, 0)
+}
+bedwars["breakBlock"] = function(pos, effects, normal)
+	local block = (getlastblock(pos, Enum.NormalId[normal]) or getblock(pos))
+	local olditem = lplr.Character.HandInvItem.Value
+	local blockhealthbarpos = {blockPosition = Vector3.new(0, 0, 0)}
+	local blockdmg = 0
+	if block and block.Parent ~= nil then
+		switchToAndUseTool(block)
+		blockhealthbarpos = {
+			blockPosition = bedwars["BlockEngine2"]:getBlockPosition(block.Position)
+		}
+		if healthbarblocktable.blockHealth == -1 or blockhealthbarpos.blockPosition ~= healthbarblocktable.breakingBlockPosition then
+			healthbarblocktable.blockHealth = block:GetAttribute("Health")
+			healthbarblocktable.breakingBlockPosition = blockhealthbarpos.blockPosition
+		end
+		blockdmg = bedwars["BlockEngine2"]:calculateBlockDamage(lplr, blockhealthbarpos)
+		healthbarblocktable.blockHealth = healthbarblocktable.blockHealth - blockdmg
+		if healthbarblocktable.blockHealth < 0 then
+			healthbarblocktable.blockHealth = 0
+		end
+		if effects then
+			bedwars["BlockHealthbar"]["updateHealthbar"](bedwars["BlockHealthbar2"], blockhealthbarpos, healthbarblocktable.blockHealth, block:GetAttribute("MaxHealth"), blockdmg)
+		end
+		bedwars["ClientHandlerDamageBlock"]:Get("DamageBlock"):CallServerAsync({
+			blockRef = blockhealthbarpos, 
+			hitPosition = block.Position, 
+			hitNormal = Vector3.FromNormalId(Enum.NormalId[normal])
+		}):andThen(function(p9)
+			if olditem then
+				switchToAndUseTool(olditem)
+			end
+		end)
+		if effects then
+			if healthbarblocktable.blockHealth <= 0 then
+				bedwars["BlockHealthbar2"].breakEffect:playBreak(block.Name, blockhealthbarpos.blockPosition, lplr)
+				bedwars["BlockHealthbar2"].healthbarMaid:DoCleaning()
+			else
+				bedwars["BlockHealthbar2"].breakEffect:playHit(block.Name, blockhealthbarpos.blockPosition, lplr)
 			end
 		end
-	end)
+	end
 end	
 
 local function getEquipped()
@@ -771,6 +795,7 @@ local function buyitem(itemtab, sucfunc)
 			elseif itemtab.tiered or itemtab.lockAfterPurchase then
 
 			end
+			wait(0.3)
 			sucfunc()
 		end
 	end)
@@ -831,8 +856,10 @@ BuyCheck = function()
 			end
 	end
 end
-
 local BedNuker = {["Enabled"] = false}
+local bednukerdigpos = {["Value"] = "Right"}
+local bednukerrange = {["Value"] = 1}
+local bednukereffects = {["Enabled"] = false}
 BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("BedNuker", function()
 	spawn(function()
 		repeat
@@ -842,8 +869,9 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				local obj = tab[i]
 				if isAlive() then
 					if obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor ~= lplr.Team.TeamColor and obj.Parent ~= nil then
-						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= 20 then
-							bedwars["breakBlock"](obj.Position)
+						if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
+							bedwars["breakBlock"](obj.Position, bednukereffects["Enabled"], bednukerdigpos["Value"])
+							wait(0.3)
 						end
 					end
 				end
@@ -853,6 +881,9 @@ BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 end, function() end, true, function()
 	return ""
 end, "Automatically destroys beds around you.")
+bednukerdigpos = BedNuker.CreateDropdown("Break Direction", {"Right", "Left", "Front", "Back", "Top", "Bottom"}, function(val) end)
+bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
+bednukereffects = BedNuker.CreateToggle("Show HealthBar & Effects", function() end, function() bedwars["BlockHealthbar2"].healthbarMaid:DoCleaning() end, true)
 
 bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 	if p3.Inventory.observedInventory.inventory ~= p4.Inventory.observedInventory.inventory then
@@ -1491,7 +1522,7 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 			end
 		end
 	end)
-end, function() UnbindFromRenderStep("BedESP") BedESPFolder:ClearAllChildren() end, true, function() return "" end, "testing")
+end, function() UnbindFromRenderStep("BedESP") BedESPFolder:ClearAllChildren() end, true, function() return "" end, "Render Beds through walls")
 
 GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
 local NameTagsFolder = Instance.new("Folder")
