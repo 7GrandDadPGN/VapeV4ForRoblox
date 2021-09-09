@@ -419,7 +419,7 @@ local function switchToAndUseTool(block)
 	local blockmeta = bedwars["getItemMetadata"](block.Name)
 	local blockType = ""
 	if blockmeta["block"] and blockmeta["block"]["breakType"] then
-		blockType = blockmetea["block"]["breakType"]
+		blockType = blockmeta["block"]["breakType"]
 	end
 	for i,v in pairs(bedwars["getInventory"](lplr)["items"]) do
 		local meta = bedwars["getItemMetadata"](v["itemType"])
