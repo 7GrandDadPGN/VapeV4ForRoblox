@@ -86,27 +86,27 @@ spawn(function()
 	textlabel:Remove()
 end)
 
-
 local function getcustomassetfunc(path)
 	if not isfile(path) then
+		spawn(function()
+			local textlabel = Instance.new("TextLabel")
+			textlabel.Size = UDim2.new(1, 0, 0, 36)
+			textlabel.Text = "Downloading "..path
+			textlabel.BackgroundTransparency = 1
+			textlabel.TextStrokeTransparency = 0
+			textlabel.TextSize = 30
+			textlabel.Font = Enum.Font.SourceSans
+			textlabel.TextColor3 = Color3.new(1, 1, 1)
+			textlabel.Position = UDim2.new(0, 0, 0, -36)
+			textlabel.Parent = GuiLibrary["MainGui"]
+			repeat wait() until isfile(path)
+			textlabel:Remove()
+		end)
 		local req = requestfunc({
 			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
 			Method = "GET"
 		})
 		writefile(path, req.Body)
-	end
-	if not isfile(path) then
-		local textlabel = Instance.new("TextLabel")
-		textlabel.Size = UDim2.new(1, 0, 0, 36)
-		textlabel.Text = "Downloading "..path
-		textlabel.BackgroundTransparency = 1
-		textlabel.TextStrokeTransparency = 0
-		textlabel.TextSize = 30
-		textlabel.TextColor3 = Color3.new(1, 1, 1)
-		textlabel.Position = UDim2.new(0, 0, 0, -36)
-		textlabel.Parent = GuiLibrary["MainGui"]
-		repeat wait() until isfile(path)
-		textlabel:Remove()
 	end
 	return getasset(path) 
 end
@@ -346,15 +346,12 @@ getfunctions = function()
 
 	if (bedwars["PlayerUtil"] and bedwars["PickupRemote"] and bedwars["Shop"] and bedwars["SoundManager"] and bedwars["SetSelectedShopItem"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
 		repeat wait() until lplr.Team ~= nil
-		local blocktable
+		local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
+		local currentwool
 		bedwars["placeBlock"] = function(newpos)
-			if blocktable == nil and getwool() or getwool():find(lplr.Team.Name:lower()) == nil then
-				blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
-			end
-			if blocktable and getwool() and getwool():find(lplr.Team.Name:lower()) then
-				if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
-					bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
-				end
+			blocktable.blockType = getwool()
+			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
+				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
 		spawn(function()
@@ -1008,43 +1005,47 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					end
 				end)
 			end
+			if #plrs > 0 then
+				killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
+			end
 			for i,plr in pairs(plrs) do
-				local entitytable = {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}
-				if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
-					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
-						killauranear = true
-						if killauraautoblock["Enabled"] and kit == "shielder" then
-							spawn(bedwars["raiseShield"])
+				spawn(function()
+					local entitytable = {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}
+					if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+						if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
+							killauranear = true
+							if killauraautoblock["Enabled"] and kit == "shielder" then
+								spawn(bedwars["raiseShield"])
+							end
+							if killauracframe["Enabled"] then
+								lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+							end
+							if killauratarget["Enabled"] then
+								local ori, size = plr.Character:GetBoundingBox()
+								killaurabox.Adornee = (killauratarget["Enabled"] and plr.Character or nil)
+								killaurabox.Size = size + Vector3.new(.01, .01, .01)
+							end
+							targettable[plr.Name] = {
+								["UserId"] = plr.UserId,
+								["Health"] = plr.Character.Humanoid.Health,
+								["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+							}
+							targetsize = targetsize + 1
+							bedwars["attackEntity"](bedwars["SwordController"], entitytable, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
 						end
-						if killauracframe["Enabled"] then
-							lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
-						end
-						if killauratarget["Enabled"] then
-							local ori, size = plr.Character:GetBoundingBox()
-							killaurabox.Adornee = (killauratarget["Enabled"] and plr.Character or nil)
-							killaurabox.Size = size + Vector3.new(.01, .01, .01)
-						end
-						targettable[plr.Name] = {
-							["UserId"] = plr.UserId,
-							["Health"] = plr.Character.Humanoid.Health,
-							["MaxHealth"] = plr.Character.Humanoid.MaxHealth
-						}
-						targetsize = targetsize + 1
-						killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
-						bedwars["attackEntity"](bedwars["SwordController"], entitytable, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
+					else
+						killaurabox.Adornee = nil
+						killauranear = false
+						pcall(function()
+							if origC0 == nil then
+								origC0 = cam.Viewmodel.RightHand.RightWrist.C0
+							end
+							if cam.Viewmodel.RightHand.RightWrist.C0 ~= origC0 then
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0}):Play()
+							end
+						end)
 					end
-				else
-					killaurabox.Adornee = nil
-					killauranear = false
-					pcall(function()
-						if origC0 == nil then
-							origC0 = cam.Viewmodel.RightHand.RightWrist.C0
-						end
-						if cam.Viewmodel.RightHand.RightWrist.C0 ~= origC0 then
-							game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0}):Play()
-						end
-					end)
-				end
+				end)
 			end
 			if getEquipped()["Type"] ~= "bow" then
 				targetinfo.UpdateInfo(targettable, targetsize)
