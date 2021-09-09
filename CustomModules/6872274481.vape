@@ -31,8 +31,8 @@ local function UnbindFromRenderStep(name)
 		RenderStepTable[name] = nil
 	end
 end
---local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
---if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
+--[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+if place.Updated ~= "2021-09-01T16:32:56.5999524Z" then
     local textlabel = Instance.new("TextLabel")
     textlabel.Size = UDim2.new(1, 0, 1, 36)
     textlabel.Text = "Vape is currently down for testing due to the BedWars update.\nThe discord has been copied to your clipboard."
@@ -70,8 +70,8 @@ end
     spawn(function()
         while true do end
     end)
---end
---[[local textlabel = Instance.new("TextLabel")
+end--]]
+local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
 textlabel.Text = "Remember to use alts in this new update, report bans to the discord."
 textlabel.BackgroundTransparency = 1
@@ -84,7 +84,7 @@ textlabel.Parent = GuiLibrary["MainGui"]
 spawn(function()
 	repeat wait() until matchState ~= 0
 	textlabel:Remove()
-end)]]
+end)
 
 local function getcustomassetfunc(path)
 	if not isfile(path) then
@@ -149,7 +149,6 @@ end
 
 local function getBed(color)
 	for i,v in pairs(bedwars["BedTable"]) do
-		print(v)
 		if v and v:FindFirstChild("Covers") and v.Covers.BrickColor == color then
 			return v
 		end
@@ -221,7 +220,7 @@ getfunctions = function()
 				if suc2 then
 					local old = getmetatable(v.Client)["Get"]
 					getmetatable(v.Client)["Get"] = function(Self, remotename)
-						if remotename:match("SelfReport") then
+						if remotename and tostring(remotename):match("SelfReport") then
 							return nil
 						end
 						return old(Self, remotename)
@@ -274,14 +273,11 @@ getfunctions = function()
 				end
 			end
 			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
-				for i2,v2 in pairs(debug.getconstants(debug.getprotos(getmetatable(v["ShieldController"])["raiseShield"])[1])) do
-					if tostring(v2):match("-") or tostring(v2):match("UseShield") then
-						bedwars["raiseShield"] = function()
-							game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[tostring(v2)]:FireServer({
-								["raised"] = true
-							})
-						end
-					end
+				local remotetab = debug.getconstants(debug.getprotos(getmetatable(v["ShieldController"])["raiseShield"])[1])
+				bedwars["raiseShield"] = function()
+					game:GetService("ReplicatedStorage").rbxts_include.node_modules.net.out._NetManaged[remotetab[2]]:FireServer({
+						["raised"] = true
+					})
 				end
 			end
 			if rawget(v, "BigmanController") then
@@ -293,18 +289,12 @@ getfunctions = function()
 				end
 			end
 			if rawget(v, "performHeal") then
-				for i2,v2 in pairs(debug.getconstants(v["performHeal"])) do
-					if tostring(v2):match("-") or tostring(v2):match("PlayGuitar") then
-						bedwars["GuitarRemote"] = v2
-					end
-				end
+				local remotetab = debug.getconstants(v["performHeal"])
+				bedwars["GuitarRemote"] = remotetab[#remotetab - 4]
 			end
 			if rawget(v, "checkForPickup") then
-				for i2,v2 in pairs(debug.getconstants(v["checkForPickup"])) do
-					if tostring(v2):match("-") or tostring(v2):match("PickupItemDrop") then
-						bedwars["PickupRemote"] = v2
-					end
-				end
+				local remotetab = debug.getconstants(v["checkForPickup"])
+				bedwars["PickupRemote"] = remotetab[#remotetab - 5]
 			end
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
@@ -346,15 +336,11 @@ getfunctions = function()
 
 	if (bedwars["PlayerUtil"] and bedwars["PickupRemote"] and bedwars["Shop"] and bedwars["SoundManager"] and bedwars["SetSelectedShopItem"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
 		repeat wait() until lplr.Team ~= nil
-		local blocktable
+		local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
 		bedwars["placeBlock"] = function(newpos)
-			if blocktable == nil and getwool() or getwool():find(lplr.Team.Name:lower()) == nil then
-				blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
-			end
-			if blocktable and getwool() and getwool():find(lplr.Team.Name:lower()) then
-				if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
-					bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
-				end
+			blocktable.blockType = getwool()
+			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
+				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
 		spawn(function()
@@ -430,7 +416,11 @@ end
 
 local function switchToAndUseTool(block)
 	local tool = nil
-	local blockType = bedwars["getItemMetadata"](block.Name)["block"]["breakType"]
+	local blockmeta = bedwars["getItemMetadata"](block.Name)
+	local blockType = ""
+	if blockmeta["block"] and blockmeta["block"]["breakType"] then
+		blockType = blockmetea["block"]["breakType"]
+	end
 	for i,v in pairs(bedwars["getInventory"](lplr)["items"]) do
 		local meta = bedwars["getItemMetadata"](v["itemType"])
 		if meta["breakBlock"] and meta["breakBlock"][blockType] then
