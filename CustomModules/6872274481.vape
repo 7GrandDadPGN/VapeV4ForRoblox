@@ -1520,6 +1520,24 @@ end, function()
 	bedwars["damageTable"]["requestSelfDamage"] = OldNoFallFunction
 end, true, function() return "" end, "Prevents taking fall damage.")
 
+local NoSlowdown = {["Enabled"] = false}
+local OldSetSpeedFunc
+NoSlowdown = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("NoSlowdown", function()
+	OldSetSpeedFunc = bedwars["sprintTable"]["setSpeed"]
+	bedwars["sprintTable"]["setSpeed"] = function(tab1, val1)
+		spawn(function()
+			if lplr.Character then
+				local hum = lplr.Character:WaitForChild("Humanoid")
+				if hum then
+					hum.WalkSpeed = (bedwars["sprintTable"].blockSprint and (val1 + 6) or val1)
+				end
+			end
+		end)
+	end
+end, function() 
+	bedwars["sprintTable"]["setSpeed"] = OldSetSpeedFunc
+	OldSetSpeedFunc = nil
+end, true, function() return "" end, "Prevents slowing down when using items.")
 local healthColorToPosition = {
 	[Vector3.new(Color3.fromRGB(255, 28, 0).r,
   Color3.fromRGB(255, 28, 0).g,
