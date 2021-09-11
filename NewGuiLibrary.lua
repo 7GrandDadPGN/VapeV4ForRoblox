@@ -1715,15 +1715,23 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	windowtext.Text = name
 	windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 	windowtext.Parent = windowtitle
-	local expandbutton = Instance.new("ImageButton")
-	expandbutton.Active = true
-	expandbutton.Size = UDim2.new(0, 9, 0, 4)
-	expandbutton.Image = getcustomassetfunc("vape/assets/UpArrow.png")
-	expandbutton.Position = UDim2.new(1, -20, 0, 19)
-	expandbutton.Name = "ExpandButton"
+	local expandbutton = Instance.new("TextButton")
+	expandbutton.Text = ""
 	expandbutton.BackgroundTransparency = 1
-	expandbutton.Rotation = 180
+	expandbutton.BorderSizePixel = 0
+	expandbutton.BackgroundColor3 = Color3.new(1, 1, 1)
+	expandbutton.Name = "ExpandButton"
+	expandbutton.Size = UDim2.new(0, 24, 0, 16)
+	expandbutton.Position = UDim2.new(1, -28, 0, 13)
 	expandbutton.Parent = windowtitle
+	local expandbutton2 = Instance.new("ImageLabel")
+	expandbutton2.Active = false
+	expandbutton2.Size = UDim2.new(0, 9, 0, 4)
+	expandbutton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
+	expandbutton2.Position = UDim2.new(0, 8, 0, 6)
+	expandbutton2.Name = "ExpandButton2"
+	expandbutton2.BackgroundTransparency = 1
+	expandbutton2.Parent = expandbutton
 	local children = Instance.new("Frame")
 	children.BackgroundTransparency = 1
 	children.Size = UDim2.new(1, 0, 1, -4)
@@ -1754,10 +1762,10 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		if noexpand == false then
 			children.Visible = not children.Visible
 			if children.Visible then
-				expandbutton.Rotation = 0
+				expandbutton2.Image = getcustomassetfunc("vape/assets/DownArrow.png")
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 			else
-				expandbutton.Rotation = 180
+				expandbutton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
 				windowtitle.Size = UDim2.new(0, 220, 0, 41)
 			end
 		end
@@ -1790,8 +1798,8 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		buttonactiveborder.Parent = button
 		local button2 = Instance.new("ImageButton")
 		button2.BackgroundTransparency = 1
-		button2.Size = UDim2.new(0, 3, 0, 16)
-		button2.Position = UDim2.new(1, -21, 0, 12)
+		button2.Size = UDim2.new(0, 10, 0, 20)
+		button2.Position = UDim2.new(1, -24, 0, 10)
 		button2.Name = "OptionsButton"
 		button2.Image = getcustomassetfunc("vape/assets/MoreButton1.png")
 		button2.Parent = button
@@ -2727,15 +2735,23 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 	windowtext.Text = name
 	windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 	windowtext.Parent = windowtitle
-	local expandbutton = Instance.new("ImageButton")
-	expandbutton.Active = true
-	expandbutton.Size = UDim2.new(0, 9, 0, 4)
-	expandbutton.Image = getcustomassetfunc("vape/assets/UpArrow.png")
-	expandbutton.Position = UDim2.new(1, -20, 0, 19)
-	expandbutton.Name = "ExpandButton"
+	local expandbutton = Instance.new("TextButton")
+	expandbutton.Text = ""
 	expandbutton.BackgroundTransparency = 1
-	expandbutton.Rotation = 180
+	expandbutton.BorderSizePixel = 0
+	expandbutton.BackgroundColor3 = Color3.new(1, 1, 1)
+	expandbutton.Name = "ExpandButton"
+	expandbutton.Size = UDim2.new(0, 24, 0, 16)
+	expandbutton.Position = UDim2.new(1, -28, 0, 13)
 	expandbutton.Parent = windowtitle
+	local expandbutton2 = Instance.new("ImageLabel")
+	expandbutton2.Active = false
+	expandbutton2.Size = UDim2.new(0, 9, 0, 4)
+	expandbutton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
+	expandbutton2.Position = UDim2.new(0, 8, 0, 6)
+	expandbutton2.Name = "ExpandButton2"
+	expandbutton2.BackgroundTransparency = 1
+	expandbutton2.Parent = expandbutton
 	local settingsbutton = Instance.new("ImageButton")
 	settingsbutton.Active = true
 	settingsbutton.Size = UDim2.new(0, 16, 0, 16)
@@ -2785,10 +2801,10 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 		if noexpand == false then
 			children.Visible = not children.Visible
 			if children.Visible then
-				expandbutton.Rotation = 0
+				expandbutton2.Image = getcustomassetfunc("vape/assets/DownArrow.png")
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 			else
-				expandbutton.Rotation = 180
+				expandbutton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
 				windowtitle.Size = UDim2.new(0, 220, 0, 41)
 			end
 		end

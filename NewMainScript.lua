@@ -26,6 +26,18 @@ local function checkpublicrepo(id)
 	return nil
 end
 
+local function checkassetversion()
+	local req = requestfunc({
+		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/assetsversion.dat",
+		Method = "GET"
+	})
+	if req.StatusCode == 200 then
+		return req.Body
+	else
+		return nil
+	end
+end
+
 if not (getasset and requestfunc and queueteleport) then
 	print("Vape not supported with your exploit.")
 	return
@@ -41,11 +53,21 @@ end
 if isfolder("vape") == false then
 	makefolder("vape")
 end
+if isfile("vape/assetsversion.dat") == false then
+	writefile("vape/assetsversion.dat", "1")
+end
 if isfolder("vape/CustomModules") == false then
 	makefolder("vape/CustomModules")
 end
 if isfolder("vape/Profiles") == false then
 	makefolder("vape/Profiles")
+end
+local assetver = checkassetversion()
+if assetver and assetver > readfile("vape/assetsversion.dat") then
+	if shared.VapeDeveloper == nil then
+		delfolder("vape/assets")
+		writefile("vape/assetsversion.dat", assetver)
+	end
 end
 if isfolder("vape/assets") == false then
 	makefolder("vape/assets")

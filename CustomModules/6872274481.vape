@@ -156,6 +156,15 @@ local function getBed(color)
 	return nil
 end
 
+local function getArmor()
+	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
+		if v5["itemType"]:match("helmet") or v5["itemType"]:match("chestplate") or v5["itemType"]:match("boots") then
+			return v5["itemType"]
+		end
+	end	
+	return nil
+end
+
 local function teamsAreAlive()
 	local alive = false
 	for i,v in pairs(game.Teams:GetChildren()) do
@@ -749,50 +758,52 @@ local AutoBuyGui = {["Enabled"] = false}
 local buyingthing = false
 
 local function buyitem(itemtab, sucfunc)
-	bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-		shopItem = itemtab
-	}):andThen(function(p11)
-		if p11 then
-			bedwars["SoundManager"]:playSound(12)
-			bedwars["ClientStoreHandler"]:dispatch({
-				type = "BedwarsAddItemPurchased", 
-				itemType = itemtab.itemType
-			});
-			if itemtab.itemType == "emerald_sword" then
-				local sword, swordnum = getSword()
-				if sword.itemType ~= "emerald_sword" then
-					sword["tool"]:Remove()
-					bedwars["getInventory"](lplr)["items"][swordnum] = nil
+	if getItem(itemtab.itemType) == nil then
+		bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+			shopItem = itemtab
+		}):andThen(function(p11)
+			if p11 then
+				bedwars["SoundManager"]:playSound(12)
+				bedwars["ClientStoreHandler"]:dispatch({
+					type = "BedwarsAddItemPurchased", 
+					itemType = itemtab.itemType
+				});
+				if itemtab.itemType == "emerald_sword" then
+					local sword, swordnum = getSword()
+					if sword.itemType ~= "emerald_sword" then
+						sword["tool"]:Remove()
+						bedwars["getInventory"](lplr)["items"][swordnum] = nil
+					end
 				end
-			end
-			if itemtab.nextTier then
-				local ShopItems = bedwars["Shop"].ShopItems;
-				local function isNextTier(p12)
-					return p12.itemType == NextArmorTable.nextTier;
-				end;
-				local itemToSelect = nil;
-				for itemnum, item in ipairs(ShopItems) do
-					if isNextTier(item, itemnum - 1, ShopItems) == true then
-						itemToSelect = item;
-						break;
+				if itemtab.nextTier then
+					local ShopItems = bedwars["Shop"].ShopItems;
+					local function isNextTier(p12)
+						return p12.itemType == NextArmorTable.nextTier;
 					end;
-				end;
-				bedwars["SetSelectedShopItem"](itemToSelect);
-				return;
-			elseif itemtab.tiered or itemtab.lockAfterPurchase then
+					local itemToSelect = nil;
+					for itemnum, item in ipairs(ShopItems) do
+						if isNextTier(item, itemnum - 1, ShopItems) == true then
+							itemToSelect = item;
+							break;
+						end;
+					end;
+					bedwars["SetSelectedShopItem"](itemToSelect);
+					return;
+				elseif itemtab.tiered or itemtab.lockAfterPurchase then
 
+				end
+				wait(0.3)
+				sucfunc()
 			end
-			wait(0.3)
-			sucfunc()
-		end
-	end)
+		end)
+	end
 end
 
 local BuyCheck = function() end
 BuyCheck = function()
 	if AutoBuy["Enabled"] then
 			local ExecuteInventory = bedwars["getInventory"](lplr)
-			local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (ExecuteInventory.armor[5] == nil and "leather_chestplate")
+			local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType) and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (getArmor() == nil and "leather_chestplate" or nil)
 			local NextSword = getSword()
 			local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
 			local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
