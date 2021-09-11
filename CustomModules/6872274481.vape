@@ -264,6 +264,9 @@ getfunctions = function()
 			if rawget(v, "SetSelectedShopItem") then
 				bedwars["SetSelectedShopItem"] = v["SetSelectedShopItem"]
 			end
+			if rawget(v, "getLocalPlayerEntity") then
+				bedwars["getLocalEntity"] = v["getLocalPlayerEntity"]
+			end
 			if rawget(v, "getItemMeta") then
 				bedwars["getItemMetadata"] = v["getItemMeta"]
 				bedwars["getIcon"] = function(item, showinv)
@@ -412,6 +415,8 @@ local function isAlive(plr)
 	end
 	return lplr and lplr.Character and lplr.Character.Parent ~= nil and lplr.Character:FindFirstChild("HumanoidRootPart") and lplr.Character:FindFirstChild("Head") and lplr.Character:FindFirstChild("Humanoid")
 end
+
+local localentity = bedwars["getLocalEntity"]()
 
 local function switchItem(tool)
 	lplr.Character.HandInvItem.Value = tool
@@ -854,6 +859,7 @@ BuyCheck = function()
 			end
 	end
 end
+
 local BedNuker = {["Enabled"] = false}
 local bednukerdigpos = {["Value"] = "Right"}
 local bednukerrange = {["Value"] = 1}
@@ -1132,6 +1138,35 @@ bedwars["VictoryScreen"].render = function(winstuff)
     return AutoToxicOldWin(winstuff)
 end
 
+--[[local AutoArmor = {["Enabled"] = false}
+AutoArmor = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoArmor", function()
+	AutoArmor["ToggleButton"](false)
+	if isAlive() and getArmor() then
+		local inv = bedwars["getInventory"](lplr)
+		for i5, v5 in pairs(inv["items"]) do
+			if v5["itemType"]:match("helmet") then
+				localentity.equipArmorItem(localentity, v5["tool"], 0)
+				bedwars["ClientStoreHandler"]:dispatch({
+					type = "InventorySetArmorItem", 
+					item = v5, 
+					armorSlot = 0
+				})
+				v5 = nil
+			elseif v5["itemType"]:match("chestplate") then
+				localentity.equipArmorItem(localentity, v5["tool"], 1)
+				bedwars["ClientStoreHandler"]:dispatch({
+					type = "InventorySetArmorItem", 
+					item = v5, 
+					armorSlot = 1
+				})
+				v5 = nil
+			elseif v5["itemType"]:match("boots") then
+				localentity.equipArmorItem(localentity, v5["tool"], 2)
+			end
+		end	
+	end
+end, function() end, true, function() return "" end, "Automatically equips armor on toggle.")]]
+
 local AutoLeave = {["Enabled"] = false}
 local autoleaveconnection
 bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(p2)
@@ -1153,6 +1188,30 @@ AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 end, function() 
 	autoleaveconnection:Disconnect()
 end, true, function() return "" end, "Leaves if a staff member joins your game or when the match ends.")
+
+if GuiLibrary["Settings"]["ToxicObject"] == nil then
+	GuiLibrary["Settings"]["ToxicObject"] = {["Type"] = "Custom", ["List"] = {}}
+end
+
+bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
+	p6:Connect(function(p7)
+		if AutoToxic["Enabled"] then
+			if p7.fromEntity and p7.fromEntity == game.Players.LocalPlayer.Character then
+				local plr = game.Players:GetPlayerFromCharacter(p7.entityInstance)
+				if plr and plr.leaderstats.Bed.Value ~= "✅" and AutoToxicFinalKill["Enabled"] then
+					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("L "..(plr.DisplayName or plr.Name)..(AutoToxicWinStreak["Enabled"] and game.Players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak") > 0 and " : "..game.Players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak").." winstreak" or ""), "All")
+				end
+			end
+		end
+	end)
+end)
+AutoToxic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AutoToxic", function() end, function() end, true)
+AutoToxicGG = AutoToxic.CreateToggle("AutoGG", function() end, function() end, true)
+AutoToxicWin = AutoToxic.CreateToggle("Win", function() end, function() end, true)
+AutoToxicFinalKill = AutoToxic.CreateToggle("Final Kill", function() end, function() end, true)
+AutoToxicWinStreak = AutoToxic.CreateToggle("WinStreak", function() end, function() end, false)
+AutoToxicAd = AutoToxic.CreateToggle("Sponsor", function() end, function() end, false)
+AutoToxicPhrases = AutoToxic.CreateTextList("ToxicList", "phrase (win)", function(user) end, function(num) end)
 
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
@@ -1189,7 +1248,6 @@ speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
 
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 local OldNoFallFunction
-local flymethod = {["Value"] = "Balloons"}
 local flyspeed = {["Value"] = 40}
 local flyverticalspeed = {["Value"] = 40}
 local flyupanddown = {["Enabled"] = true}
@@ -1228,13 +1286,14 @@ bedwars["ClientHandler"]:WaitFor("BalloonPopped"):andThen(function(p6)
 end)
 
 fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
-	if flymethod["Value"] == "Balloons" then
-		olddeflate = bedwars["BalloonController"]["deflateBalloon"]
-		bedwars["BalloonController"]["deflateBalloon"] = function() end
-	end
+	olddeflate = bedwars["BalloonController"]["deflateBalloon"]
+	bedwars["BalloonController"]["deflateBalloon"] = function() end
 	if isAlive() then
-		flyposy = lplr.Character.HumanoidRootPart.Position.Y
-		buyballoons()
+		spawn(function()
+			flyposy = lplr.Character.HumanoidRootPart.Position.Y
+			repeat wait() flyposy = lplr.Character.HumanoidRootPart.Position.Y until flyposy == lplr.Character.HumanoidRootPart.Position.Y
+			buyballoons()
+		end)
 	end
 	flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
 		if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
@@ -1256,7 +1315,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 	end)
 	BindToRenderStep("Fly", 1, function(delta) 
 		if isAlive() and matchState ~= 0 then
-			if (flymethod["Value"] == "Balloons" and (lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0)) then
+			if (lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) then
 				if flyup then
 					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
 				end
@@ -1288,9 +1347,6 @@ end, function()
 
 	end
 end, true, function() return "" end, "Makes you go zoom (Balloons Required) (Will Buy)\nMake sure to turn off speed (hotkeys can help)")
-flymethod = fly.CreateDropdown("Mode", {"Balloons"}, function(val)
-
-end)
 flyspeed = fly.CreateSlider("Speed", 1, 40, function(val) end, 40)
 flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 40, function(val) end, 40)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end, true)
@@ -1411,29 +1467,7 @@ end)
 ScaffoldHandCheck = Scaffold.CreateToggle("Whitelist Only", function() end, function() end)
 ScaffoldBuyBlocks = Scaffold.CreateToggle("Buy Blocks", function() end, function() end)
 
-if GuiLibrary["Settings"]["ToxicObject"] == nil then
-	GuiLibrary["Settings"]["ToxicObject"] = {["Type"] = "Custom", ["List"] = {}}
-end
 
-bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
-	p6:Connect(function(p7)
-		if AutoToxic["Enabled"] then
-			if p7.fromEntity and p7.fromEntity == game.Players.LocalPlayer.Character then
-				local plr = game.Players:GetPlayerFromCharacter(p7.entityInstance)
-				if plr and plr.leaderstats.Bed.Value ~= "✅" and AutoToxicFinalKill["Enabled"] then
-					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("L "..(plr.DisplayName or plr.Name)..(AutoToxicWinStreak["Enabled"] and game.Players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak") > 0 and " : "..game.Players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak").." winstreak" or ""), "All")
-				end
-			end
-		end
-	end)
-end)
-AutoToxic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AutoToxic", function() end, function() end, true)
-AutoToxicGG = AutoToxic.CreateToggle("AutoGG", function() end, function() end, true)
-AutoToxicWin = AutoToxic.CreateToggle("Win", function() end, function() end, true)
-AutoToxicFinalKill = AutoToxic.CreateToggle("Final Kill", function() end, function() end, true)
-AutoToxicWinStreak = AutoToxic.CreateToggle("WinStreak", function() end, function() end, false)
-AutoToxicAd = AutoToxic.CreateToggle("Sponsor", function() end, function() end, false)
-AutoToxicPhrases = AutoToxic.CreateTextList("ToxicList", "phrase (win)", function(user) end, function(num) end)
 
 --local BuyArrows = {["Enabled"] = false}
 --local BowAura = {["Enabled"] = false}
