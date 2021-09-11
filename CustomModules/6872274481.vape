@@ -1330,12 +1330,14 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				if newpos ~= oldpos then
 					local wool, woolamount = getwool()
 					scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
-					if woolamount >= 128 then
-						scaffoldtext.TextColor3 = Color3.fromRGB(9, 255, 198)
-					elseif woolamount >= 64 then
-						scaffoldtext.TextColor3 = Color3.fromRGB(255, 249, 18)
-					else
-						scaffoldtext.TextColor3 = Color3.fromRGB(255, 0, 0)
+					if woolamount then
+						if woolamount >= 128 then
+							scaffoldtext.TextColor3 = Color3.fromRGB(9, 255, 198)
+						elseif woolamount >= 64 then
+							scaffoldtext.TextColor3 = Color3.fromRGB(255, 249, 18)
+						else
+							scaffoldtext.TextColor3 = Color3.fromRGB(255, 0, 0)
+						end
 					end
 					if ScaffoldBuyBlocks["Enabled"] and (wool and woolamount < 4 or (not wool)) and scaffoldallowed == true then
 						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
@@ -1348,7 +1350,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							scaffoldallowed = true
 						end)
 					end
-					if getwool() then
+					if getwool() and lplr.Character.HumanoidRootPart.CFrame.p.Y < 180 then
 						lplr.Character.HumanoidRootPart.Anchored = false
 						scaffoldBlock(newpos)
 						oldpos = newpos
