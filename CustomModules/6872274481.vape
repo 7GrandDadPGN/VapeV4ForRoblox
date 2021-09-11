@@ -1138,9 +1138,12 @@ bedwars["VictoryScreen"].render = function(winstuff)
     return AutoToxicOldWin(winstuff)
 end
 
---[[local AutoArmor = {["Enabled"] = false}
+local AutoArmor = {["Enabled"] = false}
 AutoArmor = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoArmor", function()
 	AutoArmor["ToggleButton"](false)
+	if localentity == nil then
+		localentity = bedwars["getLocalEntity"]()
+	end
 	if isAlive() and getArmor() then
 		local inv = bedwars["getInventory"](lplr)
 		for i5, v5 in pairs(inv["items"]) do
@@ -1151,7 +1154,7 @@ AutoArmor = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 					item = v5, 
 					armorSlot = 0
 				})
-				v5 = nil
+				bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory.items[i5 + 1] = nil
 			elseif v5["itemType"]:match("chestplate") then
 				localentity.equipArmorItem(localentity, v5["tool"], 1)
 				bedwars["ClientStoreHandler"]:dispatch({
@@ -1159,13 +1162,19 @@ AutoArmor = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 					item = v5, 
 					armorSlot = 1
 				})
-				v5 = nil
+				bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory.items[i5 + 1] = nil
 			elseif v5["itemType"]:match("boots") then
 				localentity.equipArmorItem(localentity, v5["tool"], 2)
+				bedwars["ClientStoreHandler"]:dispatch({
+					type = "InventorySetArmorItem", 
+					item = v5, 
+					armorSlot = 2
+				})
+				bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory.items[i5 + 1] = nil
 			end
-		end	
+		end
 	end
-end, function() end, true, function() return "" end, "Automatically equips armor on toggle.")]]
+end, function() end, true, function() return "" end, "Automatically equips armor on toggle.")
 
 local AutoLeave = {["Enabled"] = false}
 local autoleaveconnection
