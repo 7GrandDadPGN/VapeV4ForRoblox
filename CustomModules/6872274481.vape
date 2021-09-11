@@ -1299,18 +1299,44 @@ flybuyballoon = fly.CreateToggle("Buy Balloons", function() end, function() end,
 
 local oldpos = Vector3.new(0, 0, 0)
 local oldpos2 = Vector3.new(0, 0, 0)
+local scaffoldtext = Instance.new("TextLabel")
+scaffoldtext.Font = Enum.Font.SourceSans
+scaffoldtext.TextSize = 20
+scaffoldtext.BackgroundTransparency = 1
+scaffoldtext.TextColor3 = Color3.fromRGB(255, 0, 0)
+scaffoldtext.Size = UDim2.new(0, 0, 0, 0)
+scaffoldtext.Position = UDim2.new(0.5, 0, 0.5, 30)
+scaffoldtext.Text = "0"
+scaffoldtext.Visible = false
+scaffoldtext.Parent = GuiLibrary["MainGui"]
 local ScaffoldExpand = {["Value"] = 1}
+local ScaffoldTower = {["Enabled"] = false}
+local ScaffoldBlockCount = {["Enabled"] = false}
 local ScaffoldHandCheck = {["Enabled"] = false}
 local ScaffoldBuyBlocks = {["Enabled"] = false}
 local scaffoldallowed = true
 
 Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Scaffold", function()
+	scaffoldtext.Visible = ScaffoldBlockCount["Enabled"]
 	BindToRenderStep("Scaffold", 1, function(delta)
 		if isAlive() and (ScaffoldHandCheck["Enabled"] and getEquipped()["Type"] == "block" or (not ScaffoldHandCheck["Enabled"])) then
 			for i = 1, ScaffoldExpand["Value"] do
 				local newpos = getScaffold((lplr.Character.Head.Position + (lplr.Character.Humanoid.MoveDirection * (i * 3.5))) + Vector3.new(0, -6, 0))
+				if getwool() then
+					if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and lplr.Character.HumanoidRootPart.CFrame.p.Y < 180 then
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
+					end
+				end
 				if newpos ~= oldpos then
 					local wool, woolamount = getwool()
+					scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
+					if woolamount >= 128 then
+						scaffoldtext.TextColor3 = Color3.fromRGB(9, 255, 198)
+					elseif woolamount >= 64 then
+						scaffoldtext.TextColor3 = Color3.fromRGB(255, 249, 18)
+					else
+						scaffoldtext.TextColor3 = Color3.fromRGB(255, 0, 0)
+					end
 					if ScaffoldBuyBlocks["Enabled"] and (wool and woolamount < 4 or (not wool)) and scaffoldallowed == true then
 						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
 							scaffoldallowed = false
@@ -1332,6 +1358,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		end
 	end)
 end, function()
+	scaffoldtext.Visible = false
 	UnbindFromRenderStep("Scaffold")
 	scaffoldallowed = true
 	oldpos = Vector3.new(0, 0, 0)
@@ -1341,8 +1368,18 @@ end, function()
 	end
 end, true, function() return "" end, "Helps you make bridges/scaffold walk.")
 ScaffoldExpand = Scaffold.CreateSlider("Expand", 1, 8, function(val) end, 1)
+ScaffoldTower = Scaffold.CreateToggle("Tower", function() end, function() end)
+ScaffoldBlockCount = Scaffold.CreateToggle("Block Count", function() 
+	if Scaffold["Enabled"] then
+		scaffoldtext.Visible = true 
+	end
+end, function() 
+	if Scaffold["Enabled"] then
+		scaffoldtext.Visible = false 
+	end
+end)
+ScaffoldHandCheck = Scaffold.CreateToggle("Whitelist Only", function() end, function() end)
 ScaffoldBuyBlocks = Scaffold.CreateToggle("Buy Blocks", function() end, function() end)
-ScaffoldHandCheck = Scaffold.CreateToggle("Hand Check", function() end, function() end)
 
 if GuiLibrary["Settings"]["ToxicObject"] == nil then
 	GuiLibrary["Settings"]["ToxicObject"] = {["Type"] = "Custom", ["List"] = {}}
@@ -1608,4 +1645,4 @@ NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
 NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end, true)
 NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end, true)
 NameTagsDistance = NameTags.CreateToggle("Distance", function() end, function() end)
-NameTagsShowInventory = NameTags.CreateToggle("Show Inventory", function() end, function() end, true)
+NameTagsShowInventory = NameTags.CreateToggle("Equipment", function() end, function() end, true)
