@@ -601,7 +601,7 @@ GuiLibrary["UpdateUI"] = function()
 		local newfirst = false
 		for i2,v2 in pairs(textwithoutthing:split("\n")) do
 			local rainbowsub = 2
-			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (-0.015 * i2)
+			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.015 * i2) or 0)
 			if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
 			local str = tostring(rainbowcolor)
 			local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))

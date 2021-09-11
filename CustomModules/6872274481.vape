@@ -633,8 +633,8 @@ end, function()
 	bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori
 	bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert
 end, true, function() return "" end, "Reduces knockback taken")
-velohorizontal = Velocity.CreateSlider("Horizontal", 0, 100, function(val) bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (val / 100) end, 100)
-velovertical = Velocity.CreateSlider("Vertical", 0, 100, function(val) bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (val / 100) end, 100)
+velohorizontal = Velocity.CreateSlider("Horizontal", 0, 100, function(val) bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (val / 100) end, 0)
+velovertical = Velocity.CreateSlider("Vertical", 0, 100, function(val) bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (val / 100) end, 0)
 
 local oldclick
 local noclickdelay = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("NoClickDelay", function()
@@ -995,43 +995,47 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					end
 				end)
 			end
+			if #plrs > 0 then
+				killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
+			end
 			for i,plr in pairs(plrs) do
-				local entitytable = {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}
-				if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
-					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
-						killauranear = true
-						if killauraautoblock["Enabled"] and kit == "shielder" then
-							spawn(bedwars["raiseShield"])
+				spawn(function()
+					local entitytable = {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}
+					if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], entitytable) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+						if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
+							killauranear = true
+							if killauraautoblock["Enabled"] and kit == "shielder" then
+								spawn(bedwars["raiseShield"])
+							end
+							if killauracframe["Enabled"] then
+								lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+							end
+							if killauratarget["Enabled"] then
+								local ori, size = plr.Character:GetBoundingBox()
+								killaurabox.Adornee = (killauratarget["Enabled"] and plr.Character or nil)
+								killaurabox.Size = size + Vector3.new(.01, .01, .01)
+							end
+							targettable[plr.Name] = {
+								["UserId"] = plr.UserId,
+								["Health"] = plr.Character.Humanoid.Health,
+								["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+							}
+							targetsize = targetsize + 1
+							bedwars["attackEntity"](bedwars["SwordController"], entitytable, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
 						end
-						if killauracframe["Enabled"] then
-							lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
-						end
-						if killauratarget["Enabled"] then
-							local ori, size = plr.Character:GetBoundingBox()
-							killaurabox.Adornee = (killauratarget["Enabled"] and plr.Character or nil)
-							killaurabox.Size = size + Vector3.new(.01, .01, .01)
-						end
-						targettable[plr.Name] = {
-							["UserId"] = plr.UserId,
-							["Health"] = plr.Character.Humanoid.Health,
-							["MaxHealth"] = plr.Character.Humanoid.MaxHealth
-						}
-						targetsize = targetsize + 1
-						killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
-						bedwars["attackEntity"](bedwars["SwordController"], entitytable, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
+					else
+						killaurabox.Adornee = nil
+						killauranear = false
+						pcall(function()
+							if origC0 == nil then
+								origC0 = cam.Viewmodel.RightHand.RightWrist.C0
+							end
+							if cam.Viewmodel.RightHand.RightWrist.C0 ~= origC0 then
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0}):Play()
+							end
+						end)
 					end
-				else
-					killaurabox.Adornee = nil
-					killauranear = false
-					pcall(function()
-						if origC0 == nil then
-							origC0 = cam.Viewmodel.RightHand.RightWrist.C0
-						end
-						if cam.Viewmodel.RightHand.RightWrist.C0 ~= origC0 then
-							game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0}):Play()
-						end
-					end)
-				end
+				end)
 			end
 			if getEquipped()["Type"] ~= "bow" then
 				targetinfo.UpdateInfo(targettable, targetsize)
@@ -1052,7 +1056,7 @@ end, function()
 end, true, function()
 	return ""
 end, "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder")
-killauraaps = Killaura.CreateTwoSlider("Attacks per Second", 1, 20, function(val) end, false, 8, 12)
+killauraaps = Killaura.CreateTwoSlider("Attacks per Second", 1, 20, function(val) end, false, 19, 20)
 killaurarange = Killaura.CreateSlider("Attack range", 1, 14, function(val) end, 14)
 killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 360)
 killauratargets = Killaura.CreateSlider("Max targets", 1, 10, function(val) end, 10)
@@ -1117,17 +1121,6 @@ bedwars["VictoryScreen"].render = function(winstuff)
     return AutoToxicOldWin(winstuff)
 end
 
-local clientcrasherenabled = false
-local AntiCrash = {["Enabled"] = false}
-AntiCrash = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("AntiCrash", function()
-	if clientcrasherenabled == false then
-		for i2,v2 in pairs(getconnections(bedwars["ClientHandler"]:Get("LightningStrike")["instance"].OnClientEvent)) do
-			v2:Disable()
-		end
-		clientcrasherenabled = true
-	end
-end, function() end, true, function() return "" end, "Prevents Lightning Crashing")
-
 local AutoLeave = {["Enabled"] = false}
 local autoleaveconnection
 bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(p2)
@@ -1182,20 +1175,6 @@ end, function()
 end, true, function() return "" end, "Increases your movement.")
 speedval = speed.CreateSlider("Speed", 1, 30, function(val) end, 30)
 speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
-
-local function getziplinepos()
-	local tab = game.Workspace:GetChildren()
-	local pos2 = Vector3.new(0, 0, 0)
-			for i = 1, #tab do
-				local obj = tab[i]
-				
-					if obj.Name:match("zipline") and obj.Name:match("base") and obj:FindFirstChild("ZiplineDestination")  then
-						pos2 = obj.Position
-					end
-
-			end
-			return pos2 / 3
-end
 
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 local OldNoFallFunction
@@ -1480,7 +1459,7 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 						end
 					end
 					
-					if plr ~= nil and plr.Parent ~= nil and plr.Covers.BrickColor ~= lplr.Team.TeamColor then
+					if plr ~= nil and plr.Parent ~= nil and plr:FindFirstChild("Covers") and plr.Covers.BrickColor ~= lplr.Team.TeamColor then
 						if BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) == nil then
 							local Bedfolder = Instance.new("Folder")
 							Bedfolder.Name = plr.Name..tostring(plr.Covers.BrickColor)
@@ -1615,7 +1594,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 	end)
 end, function() UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
 NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
-NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end)
-NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end)
+NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end, true)
+NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end, true)
 NameTagsDistance = NameTags.CreateToggle("Distance", function() end, function() end)
-NameTagsShowInventory = NameTags.CreateToggle("Show Inventory", function() end, function() end)
+NameTagsShowInventory = NameTags.CreateToggle("Show Inventory", function() end, function() end, true)
