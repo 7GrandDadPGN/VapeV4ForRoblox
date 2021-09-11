@@ -1232,14 +1232,15 @@ local Scaffold = {["Enabled"] = false}
 local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
 	BindToRenderStep("Speed", 1, function(delta)
 		if isAlive() and matchState ~= 0 then
+			local jumpcheck = speedjump["Enabled"] and killauranear and (not Scaffold["Enabled"])
 			if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
 				bodyvelo = Instance.new("BodyVelocity")
 				bodyvelo.Parent = lplr.Character.HumanoidRootPart
 				bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 			else
-				bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * (fly["Enabled"] and 0 or speedval["Value"])
+				bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((fly["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1))
 			end
-			if speedjump["Enabled"] and killauranear and (not Scaffold["Enabled"]) then
+			if jumpcheck then
 				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
 				end
