@@ -1269,6 +1269,7 @@ local flytime = 60
 local flylimit = false
 local flyup = false
 local flydown = false
+local tnttimer = 0
 local flypress
 local flyendpress
 
@@ -1295,6 +1296,23 @@ bedwars["ClientHandler"]:WaitFor("BalloonPopped"):andThen(function(p6)
 	end)
 end)
 
+bedwars["ClientHandler"]:WaitFor("TNT_Explode"):andThen(function(p6)
+	p6:Connect(function(p7)
+		if isAlive() and (lplr.Character.HumanoidRootPart.Position - p7.position).magnitude < 20 and fly["Enabled"] then
+			spawn(function()
+				if tnttimer <= 0 then
+					tnttimer = 4
+					GuiLibrary["CreateNotification"]("TNT Fly", "You can fly for 4 seconds", 4, "vape/assets/InfoNotification.png")
+					for i = 4, 0, -1 do
+						wait(1)
+						tnttimer = i
+					end
+				end
+			end)
+		end
+	end)
+end)
+
 fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
 	olddeflate = bedwars["BalloonController"]["deflateBalloon"]
 	bedwars["BalloonController"]["deflateBalloon"] = function() end
@@ -1302,7 +1320,9 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 		spawn(function()
 			flyposy = lplr.Character.HumanoidRootPart.Position.Y
 			repeat wait() flyposy = lplr.Character.HumanoidRootPart.Position.Y until flyposy == lplr.Character.HumanoidRootPart.Position.Y
-			buyballoons()
+			if tnttimer <= 0 then
+				buyballoons()
+			end
 		end)
 	end
 	flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
@@ -1325,14 +1345,14 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 	end)
 	BindToRenderStep("Fly", 1, function(delta) 
 		if isAlive() and matchState ~= 0 then
-			if (lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) then
+			if (lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or tnttimer > 0 then
 				if flyup then
 					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
 				end
 				if flydown then
 					flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
 				end
-				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
+				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (tnttimer > 0 and 1.4 or 1)
 				lplr.Character.HumanoidRootPart.Transparency = 1
 				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
@@ -1345,18 +1365,14 @@ end, function()
 	flypress:Disconnect()
 	flyendpress:Disconnect()
 	UnbindFromRenderStep("Fly")
-	if flymethod["Value"] == "Balloons" then
-		if isAlive() and lplr.Character:GetAttribute("InflatedBalloons") then
-			for i = 1, lplr.Character:GetAttribute("InflatedBalloons") do
-				olddeflate()
-			end
+	if isAlive() and lplr.Character:GetAttribute("InflatedBalloons") then
+		for i = 1, lplr.Character:GetAttribute("InflatedBalloons") do
+			olddeflate()
 		end
-		bedwars["BalloonController"]["deflateBalloon"] = olddeflate
-		olddeflate = nil
-	else
-
 	end
-end, true, function() return "" end, "Makes you go zoom (Balloons Required) (Will Buy)\nMake sure to turn off speed (hotkeys can help)")
+	bedwars["BalloonController"]["deflateBalloon"] = olddeflate
+	olddeflate = nil
+end, true, function() return "" end, "Makes you go zoom (Balloons or TNT Required) (Will Buy Balloons)")
 flyspeed = fly.CreateSlider("Speed", 1, 40, function(val) end, 40)
 flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 40, function(val) end, 40)
 flyupanddown = fly.CreateToggle("Y Level", function() end, function() end, true)
