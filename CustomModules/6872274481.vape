@@ -1311,20 +1311,35 @@ scaffoldtext.Visible = false
 scaffoldtext.Parent = GuiLibrary["MainGui"]
 local ScaffoldExpand = {["Value"] = 1}
 local ScaffoldTower = {["Enabled"] = false}
+local ScaffoldStopMotion = {["Enabled"] = false}
 local ScaffoldBlockCount = {["Enabled"] = false}
 local ScaffoldHandCheck = {["Enabled"] = false}
 local ScaffoldBuyBlocks = {["Enabled"] = false}
+local scaffoldstopmotionval = false
 local scaffoldallowed = true
+
+local scaffoldstopmotionpos = Vector3.new(0, 0, 0)
 
 Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Scaffold", function()
 	scaffoldtext.Visible = ScaffoldBlockCount["Enabled"]
 	BindToRenderStep("Scaffold", 1, function(delta)
 		if isAlive() and (ScaffoldHandCheck["Enabled"] and getEquipped()["Type"] == "block" or (not ScaffoldHandCheck["Enabled"])) then
 			for i = 1, ScaffoldExpand["Value"] do
-				local newpos = getScaffold((lplr.Character.Head.Position + (lplr.Character.Humanoid.MoveDirection * (i * 3.5))) + Vector3.new(0, -6, 0))
+				local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -6, 0))
+				if uis:IsKeyDown(Enum.KeyCode.Space) then
+					if scaffoldstopmotionval == false then
+						scaffoldstopmotionval = true
+						scaffoldstopmotionpos = lplr.Character.HumanoidRootPart.CFrame.p
+					end
+				else
+					scaffoldstopmotionval = false
+				end
 				if getwool() then
 					if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and lplr.Character.HumanoidRootPart.CFrame.p.Y < 180 then
 						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
+						if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
+							lplr.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, lplr.Character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
+						end
 					end
 				end
 				if newpos ~= oldpos then
@@ -1370,7 +1385,20 @@ end, function()
 	end
 end, true, function() return "" end, "Helps you make bridges/scaffold walk.")
 ScaffoldExpand = Scaffold.CreateSlider("Expand", 1, 8, function(val) end, 1)
-ScaffoldTower = Scaffold.CreateToggle("Tower", function() end, function() end)
+ScaffoldTower = Scaffold.CreateToggle("Tower", function() 
+	if ScaffoldStopMotion["Object"] then
+		ScaffoldStopMotion["Object"].Visible = true 
+	end
+end, function() 
+	if ScaffoldStopMotion["Object"] then
+		ScaffoldStopMotion["Object"].Visible = false
+	end
+end)
+ScaffoldStopMotion = Scaffold.CreateToggle("Stop Motion", function() end, function() end)
+ScaffoldStopMotion["Object"].BackgroundTransparency = 0
+ScaffoldStopMotion["Object"].BorderSizePixel = 0
+ScaffoldStopMotion["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ScaffoldStopMotion["Object"].Visible = ScaffoldTower["Enabled"]
 ScaffoldBlockCount = Scaffold.CreateToggle("Block Count", function() 
 	if Scaffold["Enabled"] then
 		scaffoldtext.Visible = true 
