@@ -960,6 +960,37 @@ bednukerdigpos = BedNuker.CreateDropdown("Break Direction", {"Right", "Left", "F
 bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
 bednukereffects = BedNuker.CreateToggle("Show HealthBar & Effects", function() end, function() bedwars["BlockHealthbar2"].healthbarMaid:DoCleaning() end, true)
 
+local steptouched
+local stepcharadded
+local Step = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Step", function()
+	stepcharadded = lplr.CharacterAdded:connect(function(char)
+		spawn(function()
+			local hum = char:WaitForChild("Humanoid")
+			if isAlive() then
+				steptouched = char.HumanoidRootPart.Touched:connect(function(hitPart)
+					if hitPart:IsA("BasePart") and hitPart.Position.Y > char.HumanoidRootPart.Position.Y - 6 and hitPart:GetFullName():find("Workspace.Camera") == nil and hitPart:GetFullName():find("Workspace.BalloonRoots") == nil then
+						char.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
+					end
+				end)
+			end
+		end)
+	end)
+	if isAlive() then
+		steptouched = lplr.Character.HumanoidRootPart.Touched:connect(function(hitPart)
+			if hitPart:IsA("BasePart") and hitPart.Position.Y > lplr.Character.HumanoidRootPart.Position.Y - 6 and hitPart:GetFullName():find("Workspace.Camera") == nil and hitPart:GetFullName():find("Workspace.BalloonRoots") == nil then
+				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
+			end
+		end)
+	end
+end, function()
+	if steptouched then
+		steptouched:Disconnect()
+	end
+	if stepcharadded then
+		stepcharadded:Disconnect()
+	end
+end, true)
+
 bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 	if p3.Inventory.observedInventory.inventory ~= p4.Inventory.observedInventory.inventory then
 		BuyCheck()
