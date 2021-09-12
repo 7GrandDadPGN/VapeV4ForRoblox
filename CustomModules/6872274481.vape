@@ -111,6 +111,14 @@ local function getcustomassetfunc(path)
 	return getasset(path) 
 end
 
+local function createwarning(title, text, delay)
+	pcall(function()
+		local frame = GuiLibrary["CreateNotification"](title, text, delay, "vape/assets/WarningNotification.png")
+		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+	end)
+end
+
 local function getItem(itemName)
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
 		if v5["itemType"] == itemName then
@@ -1242,6 +1250,9 @@ local speedjump = {["Enabled"] = false}
 local bodyvelo
 local Scaffold = {["Enabled"] = false}
 local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
+	if fly["Enabled"] then
+		createwarning("Speed Stopped", "Disable fly to move.", 4)
+	end
 	BindToRenderStep("Speed", 1, function(delta)
 		if isAlive() and matchState ~= 0 then
 			local jumpcheck = speedjump["Enabled"] and killauranear and (not Scaffold["Enabled"])
@@ -1538,7 +1549,7 @@ NoSlowdown = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 			if lplr.Character then
 				local hum = lplr.Character:WaitForChild("Humanoid")
 				if hum then
-					hum.WalkSpeed = (bedwars["sprintTable"].blockSprint and (val1 + 6) or val1)
+					hum.WalkSpeed = (bedwars["sprintTable"].blockSprint and math.clamp(val1 + 6, 0, 20) or val1)
 				end
 			end
 		end)

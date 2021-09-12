@@ -944,6 +944,28 @@ GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("
 	end)
 end, function() for name,thing in pairs(lightingsettings) do lighting[name] = thing lightingconnection:Disconnect()  end end, false)
 
+local HealthText = Instance.new("TextLabel")
+HealthText.Font = Enum.Font.SourceSans
+HealthText.TextSize = 20
+HealthText.Text = "100❤"
+HealthText.Position = UDim2.new(0.5, 0, 0.5, 70)
+HealthText.BackgroundTransparency = 1
+HealthText.TextColor3 = Color3.fromRGB(255, 0, 0)
+HealthText.Size = UDim2.new(0, 0, 0, 0)
+HealthText.Visible = false
+HealthText.Parent = GuiLibrary["MainGui"]
+local Health = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Health", function() 
+	HealthText.Visible = true
+	BindToRenderStep("Health", 1, function()
+		if isAlive() then
+			HealthText.Text = tostring(math.round(lplr.Character.Humanoid.Health)).."❤"
+		end
+	end)
+end, function() 
+	HealthText.Visible = false
+	UnbindFromRenderStep("Health")
+end, true, function() return "" end, "Displays your health in the center of your screen.")
+
 local NameTagsFolder = Instance.new("Folder")
 NameTagsFolder.Name = "NameTagsFolder"
 NameTagsFolder.Parent = GuiLibrary["MainGui"]
