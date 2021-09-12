@@ -16,6 +16,7 @@ local origC0 = nil
 local matchState = 0
 local kit = ""
 local antivoidypos = 0
+local scaffoldypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 
@@ -353,6 +354,12 @@ getfunctions = function()
 
 	if (bedwars["PlayerUtil"] and bedwars["PickupRemote"] and bedwars["Shop"] and bedwars["SoundManager"] and bedwars["SetSelectedShopItem"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
 		repeat wait() until lplr.Team ~= nil
+		local suc = pcall(function()
+			scaffoldypos = workspace.SpectatorPlatform.floor.Position.Y - 160
+		end)
+		if not suc then
+			scaffoldypos = 9999999999
+		end
 		local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
 		bedwars["placeBlock"] = function(newpos)
 			blocktable.blockType = getwool()
@@ -1418,7 +1425,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				scaffoldstopmotionval = false
 			end
 			if getwool() then
-				if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and lplr.Character.HumanoidRootPart.CFrame.p.Y < 180 then
+				if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and lplr.Character.HumanoidRootPart.CFrame.p.Y < scaffoldypos then
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
 					if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
 						lplr.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, lplr.Character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
@@ -1427,6 +1434,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			end
 			for i = 1, ScaffoldExpand["Value"] do
 				local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * 3), 0))
+				newpos = Vector3.new(newpos.X, math.clamp(newpos.Y, -999, scaffoldypos), newpos.Z)
 				if newpos ~= oldpos then
 					local wool, woolamount = getwool()
 					scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
@@ -1450,7 +1458,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							scaffoldallowed = true
 						end)
 					end
-					if getwool() and lplr.Character.HumanoidRootPart.CFrame.p.Y < 180 then
+					if getwool() then
 						lplr.Character.HumanoidRootPart.Anchored = false
 						scaffoldBlock(newpos)
 						oldpos = newpos
