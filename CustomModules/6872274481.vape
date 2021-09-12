@@ -968,7 +968,7 @@ local Step = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 			local hum = char:WaitForChild("Humanoid")
 			if isAlive() then
 				steptouched = char.HumanoidRootPart.Touched:connect(function(hitPart)
-					if hitPart:IsA("BasePart") and hitPart.Position.Y > char.HumanoidRootPart.Position.Y - 6 and hitPart:GetFullName():find("Workspace.Map.Blocks") then
+					if hitPart:IsA("BasePart") and hitPart.Position.Y > char.HumanoidRootPart.Position.Y - 5 and hitPart:GetFullName():find("Workspace.Map.Blocks") then
 						char.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
 					end
 				end)
@@ -977,7 +977,7 @@ local Step = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 	end)
 	if isAlive() then
 		steptouched = lplr.Character.HumanoidRootPart.Touched:connect(function(hitPart)
-			if hitPart:IsA("BasePart") and hitPart.Position.Y > lplr.Character.HumanoidRootPart.Position.Y - 6 and hitPart:GetFullName():find("Workspace.Map.Blocks") then
+			if hitPart:IsA("BasePart") and hitPart.Position.Y > lplr.Character.HumanoidRootPart.Position.Y - 5 and hitPart:GetFullName():find("Workspace.Map.Blocks") then
 				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
 			end
 		end)
