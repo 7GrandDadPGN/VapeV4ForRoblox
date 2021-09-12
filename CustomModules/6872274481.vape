@@ -1034,8 +1034,8 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							end
 							targettable[plr.Name] = {
 								["UserId"] = plr.UserId,
-								["Health"] = plr.Character.Humanoid.Health,
-								["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+								["Health"] = (plr.Character.Humanoid and plr.Character.Humanoid.Health or 0),
+								["MaxHealth"] = (plr.Character.Humanoid and plr.Character.Humanoid.MaxHealth or 0)
 							}
 							targetsize = targetsize + 1
 							bedwars["attackEntity"](bedwars["SwordController"], entitytable, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
@@ -1120,6 +1120,7 @@ local AutoToxicFinalKill = {["Enabled"] = false}
 local AutoToxicWinStreak = {["Enabled"] = false}
 local AutoToxicAd = {["Enabled"] = false}
 local AutoToxicPhrases = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
+local AutoToxicPhrases2 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicOldWin = bedwars["VictoryScreen"].render
 local victorysaid = false
 bedwars["VictoryScreen"].render = function(winstuff)
@@ -1201,14 +1202,24 @@ end, true, function() return "" end, "Leaves if a staff member joins your game o
 if GuiLibrary["Settings"]["ToxicObject"] == nil then
 	GuiLibrary["Settings"]["ToxicObject"] = {["Type"] = "Custom", ["List"] = {}}
 end
+if GuiLibrary["Settings"]["ToxicObject2"] == nil then
+	GuiLibrary["Settings"]["ToxicObject2"] = {["Type"] = "Custom", ["List"] = {}}
+end
 
 bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 	p6:Connect(function(p7)
 		if AutoToxic["Enabled"] then
-			if p7.fromEntity and p7.fromEntity == game.Players.LocalPlayer.Character then
-				local plr = game.Players:GetPlayerFromCharacter(p7.entityInstance)
+			if p7.fromEntity and p7.fromEntity == lplr.Character then
+				local plr = players:GetPlayerFromCharacter(p7.entityInstance)
 				if plr and plr.leaderstats.Bed.Value ~= "✅" and AutoToxicFinalKill["Enabled"] then
-					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("L "..(plr.DisplayName or plr.Name)..(AutoToxicWinStreak["Enabled"] and game.Players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak") > 0 and " : "..game.Players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak").." winstreak" or ""), "All")
+					local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])]
+					local winstreak = (players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak") > 0 and players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak"))
+					if custommsg then
+						custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
+						custommsg = custommsg:gsub("<ws>", winstreak or "0")
+					end
+					local msg = custommsg or "L "..(plr.DisplayName or plr.Name)..(AutoToxicWinStreak["Enabled"] and winstreak and " : "..winstreak.." winstreak" or "")
+					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
 				end
 			end
 		end
@@ -1221,6 +1232,7 @@ AutoToxicFinalKill = AutoToxic.CreateToggle("Final Kill", function() end, functi
 AutoToxicWinStreak = AutoToxic.CreateToggle("WinStreak", function() end, function() end, false)
 AutoToxicAd = AutoToxic.CreateToggle("Sponsor", function() end, function() end, false)
 AutoToxicPhrases = AutoToxic.CreateTextList("ToxicList", "phrase (win)", function(user) end, function(num) end)
+AutoToxicPhrases2 = AutoToxic.CreateTextList("ToxicList2", "phrase (kill) <name> <ws>", function(user) end, function(num) end)
 
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
@@ -1386,24 +1398,24 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	scaffoldtext.Visible = ScaffoldBlockCount["Enabled"]
 	BindToRenderStep("Scaffold", 1, function(delta)
 		if isAlive() and (ScaffoldHandCheck["Enabled"] and getEquipped()["Type"] == "block" or (not ScaffoldHandCheck["Enabled"])) then
+			if uis:IsKeyDown(Enum.KeyCode.Space) then
+				if scaffoldstopmotionval == false then
+					scaffoldstopmotionval = true
+					scaffoldstopmotionpos = lplr.Character.HumanoidRootPart.CFrame.p
+				end
+			else
+				scaffoldstopmotionval = false
+			end
+			if getwool() then
+				if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and lplr.Character.HumanoidRootPart.CFrame.p.Y < 180 then
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
+					if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
+						lplr.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, lplr.Character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
+					end
+				end
+			end
 			for i = 1, ScaffoldExpand["Value"] do
-				local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -6, 0))
-				if uis:IsKeyDown(Enum.KeyCode.Space) then
-					if scaffoldstopmotionval == false then
-						scaffoldstopmotionval = true
-						scaffoldstopmotionpos = lplr.Character.HumanoidRootPart.CFrame.p
-					end
-				else
-					scaffoldstopmotionval = false
-				end
-				if getwool() then
-					if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and lplr.Character.HumanoidRootPart.CFrame.p.Y < 180 then
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
-						if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
-							lplr.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, lplr.Character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
-						end
-					end
-				end
+				local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * 3), 0))
 				if newpos ~= oldpos then
 					local wool, woolamount = getwool()
 					scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
