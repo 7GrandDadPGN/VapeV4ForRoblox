@@ -123,7 +123,16 @@ end
 local function getItem(itemName)
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
 		if v5["itemType"] == itemName then
-			return v5
+			return v5, i5
+		end
+	end
+	return nil
+end
+
+local function getHotbarSlot(itemName)
+	for i5, v5 in pairs(bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.hotbar) do
+		if v5["item"] and v5["item"]["itemType"] == itemName then
+			return i5 - 1
 		end
 	end
 	return nil
@@ -440,8 +449,9 @@ local function switchItem(tool)
 	})
 end
 
-local function switchToAndUseTool(block)
+local function switchToAndUseTool(block, legit)
 	local tool = nil
+	local toolnum = 0
 	local blockmeta = bedwars["getItemMetadata"](block.Name)
 	local blockType = ""
 	if blockmeta["block"] and blockmeta["block"]["breakType"] then
@@ -455,6 +465,12 @@ local function switchToAndUseTool(block)
 		end
 	end
 	if tool and (isAlive() and lplr.Character:FindFirstChild("HandInvItem") and lplr.Character.HandInvItem.Value ~= tool["tool"]) then
+		if legit then
+			bedwars["ClientStoreHandler"]:dispatch({
+				type = "InventorySelectHotbarSlot", 
+				slot = getHotbarSlot(tool["itemType"])
+			})
+		end
 		switchItem(tool["tool"])
 	end
 end
@@ -874,6 +890,46 @@ BuyCheck = function()
 			end
 	end
 end
+
+local oldenable2
+local olddisable2
+local oldhitblock
+local blockplacetable2 = {}
+local blockplaceenabled2 = false
+
+local AutoTool = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("AutoTool", function()
+	oldenable2 = bedwars["BlockHealthbar2"]["enable"]
+	olddisable2 = bedwars["BlockHealthbar2"]["disable"]
+	oldhitblock = bedwars["BlockHealthbar2"]["hitBlock"]
+	bedwars["BlockHealthbar2"]["enable"] = function(Self, tab)
+		blockplaceenabled2 = true
+		blockplacetable2 = Self
+		return oldenable2(Self, tab)
+	end
+	bedwars["BlockHealthbar2"]["disable"] = function(Self)
+		blockplaceenabled2 = false
+		return olddisable2(Self)
+	end
+	bedwars["BlockHealthbar2"]["hitBlock"] = function(...)
+		if isAlive() and matchState ~= 0 and blockplaceenabled2 then
+			local mouseinfo = blockplacetable2.clientManager:getBlockSelector():getMouseInfo(0)
+			if mouseinfo and mouseinfo.target then
+				switchToAndUseTool(mouseinfo.target.blockInstance, true)
+			end
+		end
+		return oldhitblock(...)
+	end
+end, function() 
+	UnbindFromRenderStep("AutoTool")
+	bedwars["BlockHealthbar2"]["enable"] = oldenable2
+	bedwars["BlockHealthbar2"]["disable"] = olddisable2
+	bedwars["BlockHealthbar2"]["hitBlock"] = oldhitblock
+	oldenable2 = nil
+	olddisable2 = nil
+	oldhitblock = nil
+end, true, function()
+	return ""
+end, "Automatically swaps your hand to the appropriate tool.")
 
 local BedNuker = {["Enabled"] = false}
 local bednukerdigpos = {["Value"] = "Right"}
