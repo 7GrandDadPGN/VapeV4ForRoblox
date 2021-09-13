@@ -976,6 +976,8 @@ AutoBuyGui = AutoBuy.CreateToggle("Shop GUI Check", function() end, function() e
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 
+local spiderparts = {}
+
 local function createpart(pos, ysize, part)
 	local truss = Instance.new("TrussPart")
 	truss.Size = Vector3.new(2, ysize, 2)
@@ -984,31 +986,74 @@ local function createpart(pos, ysize, part)
 	truss.Transparency = 1
 	truss.Anchored = true
 	truss.Parent = part
+	table.insert(spiderparts, truss)
 	return truss
 end
 
 local spiderconnection
+local cando = true
 local Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Spider", function()
-	spiderconnection = workspace.Map.Blocks.ChildAdded:connect(function(v)
-		for i3 = 1, v.Size.Z + 1 do
-			for i2 = 1, v.Size.X + 1 do
-				createpart(Vector3.new(i2, v.Size.Y / 2, i3), v.Size.Y, v)
+	if cando then
+		cando = false
+		spiderconnection = workspace.Map.Blocks.ChildAdded:connect(function(v)
+			for i3 = 1, v.Size.Z + 1 do
+				for i2 = 1, v.Size.X + 1 do
+					createpart(Vector3.new(i2, v.Size.Y / 2, i3), v.Size.Y, v)
+				end
 			end
-		end
-	end)
-	for i,v in pairs(workspace.Map.Blocks:GetChildren()) do
-		for i3 = 1, v.Size.Z + 1 do
-			for i2 = 1, v.Size.X + 1 do
-				createpart(Vector3.new(i2, v.Size.Y / 2, i3), v.Size.Y, v)
+		end)
+		spawn(function()
+			local spidermessage = Instance.new("TextLabel")
+			spidermessage.Size = UDim2.new(1, 0, 0, 36)
+			spidermessage.Text = "Parts Processed : 0"
+			spidermessage.BackgroundTransparency = 1
+			spidermessage.TextStrokeTransparency = 0
+			spidermessage.TextSize = 30
+			spidermessage.Font = Enum.Font.SourceSans
+			spidermessage.TextColor3 = Color3.new(1, 1, 1)
+			spidermessage.Position = UDim2.new(0, 0, 0, -36)
+			spidermessage.Parent = GuiLibrary["MainGui"]
+			local tempblocks = workspace.Map.Blocks:GetChildren()
+			for i,v in pairs(tempblocks) do
+				spidermessage.Text = "Parts Processed : "..tostring(i).."/"..tostring(#tempblocks)
+				if i % 100 == 0 then
+					wait(0.4)
+				end
+				for i3 = 1, v.Size.Z + 1 do
+					for i2 = 1, v.Size.X + 1 do
+						createpart(Vector3.new(i2, v.Size.Y / 2, i3), v.Size.Y, v)
+					end
+				end
 			end
-		end
+			spidermessage:Remove()
+			cando = true
+		end)
 	end
 end, function()
-	spiderconnection:Disconnect()
-	for i,v in pairs(workspace.Map.Blocks:GetDescendants()) do
-		if v:IsA("TrussPart") and v.Name:match("spiderman") then
-			v:Remove()
-		end
+	if cando then
+		cando = false
+		spiderconnection:Disconnect()
+		spawn(function()
+			local spidermessage = Instance.new("TextLabel")
+			spidermessage.Size = UDim2.new(1, 0, 0, 36)
+			spidermessage.Text = "Spider Parts Removed : 0"
+			spidermessage.BackgroundTransparency = 1
+			spidermessage.TextStrokeTransparency = 0
+			spidermessage.TextSize = 30
+			spidermessage.Font = Enum.Font.SourceSans
+			spidermessage.TextColor3 = Color3.new(1, 1, 1)
+			spidermessage.Position = UDim2.new(0, 0, 0, -36)
+			spidermessage.Parent = GuiLibrary["MainGui"]
+			for i,v in pairs(spiderparts) do
+				spidermessage.Text = "Spider Parts Removed : "..tostring(i).."/"..tostring(#spiderparts)
+				if i % 10000 == 0 then
+					wait(0.4)
+				end
+				v:Remove()
+			end
+			cando = true
+			spidermessage:Remove()
+		end)
 	end
 end, true, function() return "" end, "Lets you climb up walls after the lagspike.")
 
