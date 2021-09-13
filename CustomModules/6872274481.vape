@@ -974,6 +974,42 @@ AutoBuyGui = AutoBuy.CreateToggle("Shop GUI Check", function() end, function() e
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 
+local function createpart(pos, ysize, part)
+	local truss = Instance.new("TrussPart")
+	truss.Size = Vector3.new(2, ysize, 2)
+	truss.Name = "spiderman"
+	truss.Position = (part.Position - (part.Size / 2)) + Vector3.new(math.clamp(pos.X, 0,  part.Size.X - 1), math.clamp(pos.Y, 0, part.Size.Y), math.clamp(pos.Z, 0, part.Size.Z - 1))
+	truss.Transparency = 1
+	truss.Anchored = true
+	truss.Parent = part
+	return truss
+end
+
+local spiderconnection
+local Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Spider", function()
+	spiderconnection = workspace.Map.Blocks.ChildAdded:connect(function(v)
+		for i3 = 1, v.Size.Z + 1 do
+			for i2 = 1, v.Size.X + 1 do
+				createpart(Vector3.new(i2, v.Size.Y / 2, i3), v.Size.Y, v)
+			end
+		end
+	end)
+	for i,v in pairs(workspace.Map.Blocks:GetChildren()) do
+		for i3 = 1, v.Size.Z + 1 do
+			for i2 = 1, v.Size.X + 1 do
+				createpart(Vector3.new(i2, v.Size.Y / 2, i3), v.Size.Y, v)
+			end
+		end
+	end
+end, function()
+	spiderconnection:Disconnect()
+	for i,v in pairs(workspace.Map.Blocks:GetDescendants()) do
+		if v:IsA("TrussPart") and v.Name:match("spiderman") then
+			v:Remove()
+		end
+	end
+end, true, function() return "" end, "Lets you climb up walls after the lagspike.")
+
 local OpenShop = {["Enabled"] = false}
 OpenShop = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("OpenShop", function()
 	bedwars["SoundManager"]:playSound(4)
@@ -1325,6 +1361,11 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 				bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 			else
 				bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((fly["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1))
+			end
+			if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing then
+				bodyvelo.MaxForce = Vector3.new(0, 0, 0)
+			else
+				bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 			end
 			if jumpcheck then
 				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
