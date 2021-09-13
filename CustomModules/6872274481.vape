@@ -630,6 +630,7 @@ local blockplaceenabled = false
 local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
+local autoclickerblocks = {["Enabled"] = false}
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
 	oldenable = bedwars["BlockController2"]["enable"]
 	olddisable = bedwars["BlockController2"]["disable"]
@@ -648,7 +649,7 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 			if getEquipped()["Type"] == "sword" then
 				bedwars["SwingSword"](bedwars["SwordController"])
 			end
-			if blockplaceenabled then
+			if blockplaceenabled and autoclickerblocks["Enabled"] then
 				local mouseinfo = blockplacetable.clientManager:getBlockSelector():getMouseInfo(0)
 				if mouseinfo and getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, blockplacetable.blockType, mouseinfo.placementPosition, 0) then
 					bedwars["BlockController2"]["placeBlock"](blockplacetable, mouseinfo.placementPosition)
@@ -664,6 +665,7 @@ end, function()
 	UnbindFromRenderStep("AutoClicker")
 end, true, function() return "" end, "Clicks for you")
 autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
+autoclickerblocks = autoclicker.CreateToggle("Place Blocks", function() end, function() end, true)
 
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
 GuiLibrary["RemoveObject"]("PhaseOptionsButton")
