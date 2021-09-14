@@ -993,7 +993,7 @@ end
 local spiderconnection
 local cando = true
 local Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Spider", function()
-	if cando then
+	if cando and #spiderparts <= 0 then
 		cando = false
 		spiderconnection = workspace.Map.Blocks.ChildAdded:connect(function(v)
 			for i3 = 1, v.Size.Z + 1 do
@@ -1003,6 +1003,7 @@ local Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Creat
 			end
 		end)
 		spawn(function()
+			repeat wait() until matchState ~= 0
 			local spidermessage = Instance.new("TextLabel")
 			spidermessage.Size = UDim2.new(1, 0, 0, 36)
 			spidermessage.Text = "Parts Processed : 0"
@@ -1032,7 +1033,9 @@ local Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Creat
 end, function()
 	if cando then
 		cando = false
-		spiderconnection:Disconnect()
+		if spiderconnection then
+			spiderconnection:Disconnect()
+		end
 		spawn(function()
 			local spidermessage = Instance.new("TextLabel")
 			spidermessage.Size = UDim2.new(1, 0, 0, 36)
@@ -1053,6 +1056,7 @@ end, function()
 			end
 			cando = true
 			spidermessage:Remove()
+			spiderparts = {}
 		end)
 	end
 end, true, function() return "" end, "Lets you climb up walls after the lagspike.")
@@ -1187,8 +1191,8 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						end
 						targettable[plr.Name] = {
 							["UserId"] = plr.UserId,
-							["Health"] = (plr.Character.Humanoid and plr.Character.Humanoid.Health or 0),
-							["MaxHealth"] = (plr.Character.Humanoid and plr.Character.Humanoid.MaxHealth or 0)
+							["Health"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.Health or 0),
+							["MaxHealth"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.MaxHealth or 0)
 						}
 						targetsize = targetsize + 1
 						spawn(function()
@@ -1277,6 +1281,7 @@ local AutoToxicPhrases = {["RefreshValues"] = function() end, ["ObjectList"] = {
 local AutoToxicPhrases2 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicOldWin = bedwars["VictoryScreen"].render
 local victorysaid = false
+local lastsaid = ""
 bedwars["VictoryScreen"].render = function(winstuff)
     local myTeam = bedwars["ClientStoreHandler"]:getState().Game.myTeam
     if myTeam and myTeam.id == winstuff.props.WinningTeamId and victorysaid == false then
@@ -1367,6 +1372,11 @@ bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 				local plr = players:GetPlayerFromCharacter(p7.entityInstance)
 				if plr and plr.leaderstats.Bed.Value ~= "✅" and AutoToxicFinalKill["Enabled"] then
 					local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])]
+					if custommsg == lastsaid then
+						custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])]
+					else
+						lastsaid = custommsg
+					end
 					local winstreak = (players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak") > 0 and players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak"))
 					if custommsg then
 						custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
