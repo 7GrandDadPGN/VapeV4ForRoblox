@@ -364,7 +364,7 @@ getfunctions = function()
 	if (bedwars["PlayerUtil"] and bedwars["PickupRemote"] and bedwars["Shop"] and bedwars["SoundManager"] and bedwars["SetSelectedShopItem"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
 		repeat wait() until lplr.Team ~= nil
 		local suc = pcall(function()
-			scaffoldypos = workspace.SpectatorPlatform.floor.Position.Y - 160
+			scaffoldypos = workspace.SpectatorPlatform.floor.Position.Y
 		end)
 		if not suc then
 			scaffoldypos = 9999999999
@@ -1160,7 +1160,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"] + 0.4, killauratargets["Value"])
 			if #plrs <= 0 then
 				killauranear = false
-				killaurabox.Adornee = nil
+				if killaurabox.Adornee ~= nil then
+					killaurabox.Adornee = nil
+				end
 				pcall(function()
 					if origC0 == nil then
 						origC0 = cam.Viewmodel.RightHand.RightWrist.C0
@@ -1200,7 +1202,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						end)
 					end
 				else
-					killaurabox.Adornee = nil
+					if killaurabox.Adornee ~= nil then
+						killaurabox.Adornee = nil
+					end
 					killauranear = false
 					pcall(function()
 						if origC0 == nil then
