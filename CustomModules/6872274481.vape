@@ -1032,7 +1032,7 @@ end)
 local function projvischeck(launchpos, targetpos)
 	local direction = Ray.new(launchpos, (targetpos + Vector3.new(0, 0, 0) - launchpos).unit).Unit.Direction
 	local raycastparameters = RaycastParams.new()
-	raycastparameters.FilterDescendantsInstances = {lplr.Character, workspace.BedAlarmZones}
+	raycastparameters.FilterDescendantsInstances = {lplr.Character, workspace.BedAlarmZones, workspace.ProjectileTargeting}
 	raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
 	local newray = workspace:Raycast(launchpos, direction * 10000, raycastparameters)
 	if newray and newray.Instance then
