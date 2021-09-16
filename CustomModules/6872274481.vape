@@ -683,7 +683,7 @@ local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 		if isAlive() then
 			local direction = mouse.UnitRay.Direction
 			local raycastparameters = RaycastParams.new()
-			raycastparameters.FilterDescendantsInstances = {lplr.Character}
+			raycastparameters.FilterDescendantsInstances = {lplr.Character, workspace.BedAlarmZones}
 			raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
 			local newray = workspace:Raycast(mouse.UnitRay.Origin, direction * 200, raycastparameters)
 			if newray.Instance and (lplr.Character.PrimaryPart.Position - newray.Instance.Position).Magnitude <= 16 then
@@ -1027,6 +1027,136 @@ runcode(function()
 	bednukerdigpos = BedNuker.CreateDropdown("Break Direction", {"Right", "Left", "Front", "Back", "Top", "Bottom"}, function(val) end)
 	bednukerrange = BedNuker.CreateSlider("Break range", 1, 20, function(val) end, 20)
 	bednukereffects = BedNuker.CreateToggle("Show HealthBar & Effects", function() end, function() bedwars["BlockHealthbar2"].healthbarMaid:DoCleaning() end, true)
+end)
+
+local function projvischeck(launchpos, targetpos)
+	local direction = Ray.new(launchpos, (targetpos + Vector3.new(0, 0, 0) - launchpos).unit).Unit.Direction
+	local raycastparameters = RaycastParams.new()
+	raycastparameters.FilterDescendantsInstances = {lplr.Character, workspace.BedAlarmZones}
+	raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
+	local newray = workspace:Raycast(launchpos, direction * 10000, raycastparameters)
+	if newray and newray.Instance then
+		local plr = bedwars["getEntityTable"].getEntity(newray.Instance)
+		if plr then return true end
+	end
+	return false
+end
+
+runcode(function()
+	local aimfov = {["Value"] = 1}	
+	local aimvischeck = {["Enabled"] = false}
+	local aimheadshotchance = {["Value"] = 1}
+	local tar = nil
+	local hook
+	local aimbotping
+	local projtable = {}
+	local ProjectileAimbot = {["Enabled"] = false}
+	local ProjectileVelocity = {["Enabled"] = false}
+	local ProjectileBows = {["Enabled"] = false}
+	local ProjectilePearl = {["Enabled"] = false}
+	local ProjectileFireball = {["Enabled"] = false}
+	ProjectileAimbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("ProjectileAimbot", function() 
+		spawn(function()
+            repeat
+                wait(1)
+				aimbotping = tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())
+				aimbotping = math.floor(aimbotping)
+            until ProjectileAimbot["Enabled"] == false
+        end)
+		hook = bedwars["BowTable"]["calculateImportantLaunchValues"]
+		bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta)
+			local plr = GetNearestHumanoidToMouse(aimfov["Value"], false)
+			if plr then
+				tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
+				if aimvischeck["Enabled"] then
+					local launchPosition = bowtable:getLaunchPosition()
+					if launchPosition then
+						local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
+						if not projvischeck(realLaunchPosition, tar.Position) then
+							tar = nil
+						end
+					else
+						tar = nil
+					end
+				end
+			else
+				tar = nil
+			end
+			if tar and getEquipped()["Object"] and projtable[getEquipped()["Object"].Name] then
+					local launchPosition = bowtable:getLaunchPosition()
+					if not launchPosition then
+						return nil
+					end
+					local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
+					local proj = projmeta:getProjectileMeta();
+					if p26 then
+						local v58 = proj.predictionLifetimeSec;
+					else
+						v58 = proj.lifetimeSec;
+					end;
+					local v59 = v58;
+					if v59 == nil then
+						v59 = 3;
+					end;
+					local v60 = proj.launchVelocity;
+					if v60 == nil then
+						v60 = 100;
+					end;
+					local projGravity = proj.gravitationalAcceleration;
+					if projGravity == nil then
+						projGravity = 196.2;
+					end;
+					local multi = (10 / v60) + 0.0005
+					if getEquipped()["Object"] then
+						if getEquipped()["Object"].Name:find("fireball") then
+							multi = 0
+						end
+						if getEquipped()["Object"].Name:find("telepearl") then
+							multi = 0.3
+						end
+					end
+					local velocalc = (multi / 6) + (0.01 / aimbotping)
+					local realTargetPosition = tar.Position + (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, 0, plr.Character.HumanoidRootPart.Velocity.Y) * ((realLaunchPosition - tar.Position).magnitude * velocalc))
+					local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
+					return {
+						initialVelocity = (realLaunchPosition + (v65.Unit.Direction).Unit * ((Vector3.new(0, 0, 0) - realLaunchPosition).Magnitude) - realLaunchPosition).Unit * (v60 * projmeta.velocityMultiplier), 
+						positionFrom = realLaunchPosition, 
+						deltaT = v59, 
+						gravitationalAcceleration = projGravity * projmeta.gravityMultiplier
+					};
+			else
+				return hook(bowtable, projmeta, worldmeta)
+			end
+		end
+	end, function() 
+		bedwars["BowTable"]["calculateImportantLaunchValues"] = hook
+		tar = nil 
+		hook = nil
+	end, true, function() 
+		return ""
+	end, "Auto Aims projectile at closest player.")
+	aimfov = ProjectileAimbot.CreateSlider("FOV", 1, 1000, function(val) end, 1000)
+	aimheadshotchance = ProjectileAimbot.CreateSlider("Headshot Chance", 1, 100, function(val) end, 100)
+	aimvischeck = ProjectileAimbot.CreateToggle("Visible Check", function() end, function() end)
+	ProjectileBows = ProjectileAimbot.CreateToggle("Bows", function() 
+		projtable["wood_bow"] = true
+		projtable["wood_crossbow"] = true
+		projtable["tactical_crossbow"] = true
+	end, function() 
+		projtable["wood_bow"] = nil
+		projtable["wood_crossbow"] = nil
+		projtable["tactical_crossbow"] = nil
+	end, true)
+	ProjectilePearl = ProjectileAimbot.CreateToggle("Telepearl", function() 
+		projtable["telepearl"] = true
+	end, function() 
+		projtable["telepearl"] = nil
+	end, false)
+	ProjectileFireball = ProjectileAimbot.CreateToggle("Fireball", function() 
+		projtable["fireball"] = true
+	end, function() 
+		projtable["fireball"] = nil
+	end, false)
 end)
 
 bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
@@ -1747,7 +1877,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				scaffoldstopmotionval = false
 			end
 			if getwool() then
-				if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and lplr.Character.HumanoidRootPart.CFrame.p.Y < scaffoldypos then
+				if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil and lplr.Character.HumanoidRootPart.CFrame.p.Y < scaffoldypos then
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
 					if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
 						lplr.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, lplr.Character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
