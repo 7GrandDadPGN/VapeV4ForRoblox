@@ -1185,7 +1185,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	oldplay = bedwars["ViewmodelController"]["playAnimation"]
 	oldsound = bedwars["SoundManager"]["playSound"]
 	oldmeta = bedwars["SwordController"]["getHandItem"]
-	bedwars["SwordController"]["getHandItem"] = function()
+	bedwars["SwordController"]["getHandItem"] = function(Self)
 		if (not killaurahandcheck["Enabled"]) then
 			if killaurabaguette["Enabled"] and getBaguette() then
 				return getBaguette()
@@ -1193,7 +1193,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				return getSword()
 			end
 		else
-			return oldmeta()
+			return oldmeta(Self)
 		end
 	end
 	bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
