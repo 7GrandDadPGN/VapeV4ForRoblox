@@ -1055,6 +1055,7 @@ runcode(function()
 	local ProjectileBows = {["Enabled"] = false}
 	local ProjectilePearl = {["Enabled"] = false}
 	local ProjectileFireball = {["Enabled"] = false}
+	local ProjectileLasso = {["Enabled"] = false}
 	ProjectileAimbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("ProjectileAimbot", function() 
 		spawn(function()
             repeat
@@ -1082,7 +1083,7 @@ runcode(function()
 			else
 				tar = nil
 			end
-			if tar and getEquipped()["Object"] and projtable[getEquipped()["Object"].Name] then
+			if tar and projtable[projmeta.projectile] then
 					local launchPosition = bowtable:getLaunchPosition()
 					if not launchPosition then
 						return nil
@@ -1107,13 +1108,11 @@ runcode(function()
 						projGravity = 196.2;
 					end;
 					local multi = (10 / v60) + 0.0005
-					if getEquipped()["Object"] then
-						if getEquipped()["Object"].Name:find("fireball") then
-							multi = 0
-						end
-						if getEquipped()["Object"].Name:find("telepearl") then
-							multi = 0.3
-						end
+					if projmeta.projectile:find("fireball") then
+						multi = 0
+					end
+					if projmeta.projectile:find("telepearl") then
+						multi = 0.3
 					end
 					local velocalc = (multi / 6) + (0.01 / aimbotping)
 					local realTargetPosition = tar.Position + (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, 0, plr.Character.HumanoidRootPart.Velocity.Y) * ((realLaunchPosition - tar.Position).magnitude * velocalc))
@@ -1139,13 +1138,13 @@ runcode(function()
 	aimheadshotchance = ProjectileAimbot.CreateSlider("Headshot Chance", 1, 100, function(val) end, 100)
 	aimvischeck = ProjectileAimbot.CreateToggle("Visible Check", function() end, function() end, true)
 	ProjectileBows = ProjectileAimbot.CreateToggle("Bows", function() 
-		projtable["wood_bow"] = true
-		projtable["wood_crossbow"] = true
-		projtable["tactical_crossbow"] = true
+		projtable["arrow"] = true
+		projtable["crossbow_arrow"] = true
+		projtable["tactical_crossbow_arrow"] = true
 	end, function() 
-		projtable["wood_bow"] = nil
-		projtable["wood_crossbow"] = nil
-		projtable["tactical_crossbow"] = nil
+		projtable["arrow"] = nil
+		projtable["crossbow_arrow"] = nil
+		projtable["tactical_crossbow_arrow"] = nil
 	end, true)
 	ProjectilePearl = ProjectileAimbot.CreateToggle("Telepearl", function() 
 		projtable["telepearl"] = true
@@ -1156,6 +1155,11 @@ runcode(function()
 		projtable["fireball"] = true
 	end, function() 
 		projtable["fireball"] = nil
+	end, false)
+	ProjectileLasso = ProjectileAimbot.CreateToggle("Lasso", function()
+		projtable["lasso"] = true
+	end, function()
+		projtable["lasso"] = nil
 	end, false)
 end)
 
