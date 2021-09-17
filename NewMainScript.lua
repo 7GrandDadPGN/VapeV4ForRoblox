@@ -66,9 +66,7 @@ local assetver = checkassetversion()
 if assetver and assetver > readfile("vape/assetsversion.dat") then
 	if shared.VapeDeveloper == nil then
 		if isfolder("vape/assets") then
-			if identifyexecutor and identifyexecutor():find("ScriptWare Mac") then
-			
-			else
+			if delfolder then
 				delfolder("vape/assets")
 			end
 		end
