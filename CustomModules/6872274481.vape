@@ -1041,7 +1041,6 @@ end
 runcode(function()
 	local aimfov = {["Value"] = 1}	
 	local aimvischeck = {["Enabled"] = false}
-	local aimheadshotchance = {["Value"] = 1}
 	local tar = nil
 	local hook
 	local aimbotping
@@ -1064,12 +1063,12 @@ runcode(function()
 		bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta)
 			local plr = GetNearestHumanoidToMouse(aimfov["Value"], false)
 			if plr then
-				tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
+				tar = plr.Character.HumanoidRootPart
 				if aimvischeck["Enabled"] then
 					local launchPosition = bowtable:getLaunchPosition()
 					if launchPosition then
 						local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
-						if not projvischeck(realLaunchPosition, tar.Position) then
+						if not projvischeck(realLaunchPosition, (tar.Position + Vector3.new(0, 2, 0))) then
 							tar = nil
 						end
 					else
@@ -1111,7 +1110,7 @@ runcode(function()
 						multi = 0.3
 					end
 					local velocalc = (multi / 6) + (0.01 / aimbotping)
-					local realTargetPosition = tar.Position + (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, 0, plr.Character.HumanoidRootPart.Velocity.Y) * ((realLaunchPosition - tar.Position).magnitude * velocalc))
+					local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, 0, plr.Character.HumanoidRootPart.Velocity.Y) * ((realLaunchPosition - tar.Position).magnitude * velocalc))
 					local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
 					return {
 						initialVelocity = (realLaunchPosition + (v65.Unit.Direction).Unit * ((Vector3.new(0, 0, 0) - realLaunchPosition).Magnitude) - realLaunchPosition).Unit * (v60 * projmeta.velocityMultiplier), 
@@ -1131,7 +1130,6 @@ runcode(function()
 		return ""
 	end, "Auto Aims projectile at closest player.")
 	aimfov = ProjectileAimbot.CreateSlider("FOV", 0, 1000, function(val) end, 1000)
-	aimheadshotchance = ProjectileAimbot.CreateSlider("Headshot Chance", 0, 100, function(val) end, 100)
 	aimvischeck = ProjectileAimbot.CreateToggle("Visible Check", function() end, function() end, true)
 	ProjectileBows = ProjectileAimbot.CreateToggle("Bows", function() 
 		projtable["arrow"] = true
@@ -1901,13 +1899,18 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					end
 					if ScaffoldBuyBlocks["Enabled"] and (wool and woolamount < 4 or (not wool)) and scaffoldallowed == true then
 						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
+							if scaffoldallowed then
+								createwarning("Scaffold Stopped", "Scaffold stopped, get iron or wool.", 4)
+							end
 							scaffoldallowed = false
 							lplr.Character.HumanoidRootPart.Anchored = true
 						end
 						bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 							shopItem = bedwars["Shop"].getShopItem("wool_white")
 						}):andThen(function(p11)
-							scaffoldallowed = true
+							if p11 then
+								scaffoldallowed = true
+							end
 						end)
 					end
 					if getwool() then
