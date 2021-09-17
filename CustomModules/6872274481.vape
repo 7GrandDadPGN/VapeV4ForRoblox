@@ -1134,8 +1134,8 @@ runcode(function()
 	end, true, function() 
 		return ""
 	end, "Auto Aims projectile at closest player.")
-	aimfov = ProjectileAimbot.CreateSlider("FOV", 1, 1000, function(val) end, 1000)
-	aimheadshotchance = ProjectileAimbot.CreateSlider("Headshot Chance", 1, 100, function(val) end, 100)
+	aimfov = ProjectileAimbot.CreateSlider("FOV", 0, 1000, function(val) end, 1000)
+	aimheadshotchance = ProjectileAimbot.CreateSlider("Headshot Chance", 0, 100, function(val) end, 100)
 	aimvischeck = ProjectileAimbot.CreateToggle("Visible Check", function() end, function() end, true)
 	ProjectileBows = ProjectileAimbot.CreateToggle("Bows", function() 
 		projtable["arrow"] = true
