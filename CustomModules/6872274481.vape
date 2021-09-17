@@ -1964,11 +1964,12 @@ runcode(function()
 				wait()
 				local itemdrops = collectionservice:GetTagged("treeOrb")
 				for i,v in pairs(itemdrops) do
-					if isAlive() and GrabTreeOrbs["Enabled"] and v:FindFirstChild("Spirit") and (lplr.Character.HumanoidRootPart.Position - v.Spirit.Position).magnitude <= 30 then
+					if isAlive() and GrabTreeOrbs["Enabled"] and v:FindFirstChild("Spirit") and (lplr.Character.HumanoidRootPart.Position - v.Spirit.Position).magnitude <= 20 then
 						if bedwars["ClientHandler"]:Get(bedwars["TreeRemote"]):CallServer({
 							treeOrbSecret = v:GetAttribute("TreeOrbSecret")
 						}) then
 							v:Destroy()
+							collectionservice:RemoveTag(v, "treeOrb")
 						end
 					end
 				end
