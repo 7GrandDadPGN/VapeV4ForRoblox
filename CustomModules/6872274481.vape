@@ -312,11 +312,7 @@ getfunctions = function()
 			end
 			if rawget(v, "BigmanController") then
 				local protos = debug.getconstants(debug.getprotos(debug.getprotos(v["BigmanController"]["KnitStart"])[2])[1])
-				for i2,v2 in pairs(protos) do
-					if tostring(v2):match("-") or tostring(v2):match("ConsumeTreeOrb") then
-						bedwars["TreeRemote"] = v2
-					end
-				end
+				bedwars["TreeRemote"] = protos[#protos - 5]
 			end
 			if rawget(v, "performHeal") then
 				local remotetab = debug.getconstants(v["performHeal"])
@@ -1960,6 +1956,26 @@ end)
 ScaffoldHandCheck = Scaffold.CreateToggle("Whitelist Only", function() end, function() end)
 ScaffoldBuyBlocks = Scaffold.CreateToggle("Buy Blocks", function() end, function() end)
 
+runcode(function()
+	local GrabTreeOrbs = {["Enabled"] = false}
+	GrabTreeOrbs = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoTreeOrb", function()
+		spawn(function()
+			repeat
+				wait()
+				local itemdrops = collectionservice:GetTagged("treeOrb")
+				for i,v in pairs(itemdrops) do
+					if isAlive() and GrabTreeOrbs["Enabled"] and v:FindFirstChild("Spirit") and (lplr.Character.HumanoidRootPart.Position - v.Spirit.Position).magnitude <= 30 then
+						if bedwars["ClientHandler"]:Get(bedwars["TreeRemote"]):CallServer({
+							treeOrbSecret = v:GetAttribute("TreeOrbSecret")
+						}) then
+							v:Destroy()
+						end
+					end
+				end
+			until GrabTreeOrbs["Enabled"] == false
+		end)
+	end, function() end, true, function() return "" end, "Automatically grabs tree orbs.")
+end)
 
 
 --local BuyArrows = {["Enabled"] = false}
