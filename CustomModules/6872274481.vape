@@ -379,7 +379,11 @@ getfunctions = function()
 			bedwars["BedTable"] = {}
 			repeat wait() until matchState ~= 0
 			if workspace.MapCFrames:FindFirstChild("1_spawn") then
+				local specialpos = (workspace.MapCFrames:FindFirstChild("center") and workspace.MapCFrames.center.Value.p == Vector3.new(77, 11, 35))
 				antivoidypos = workspace.MapCFrames["1_spawn"].Value.p.Y * 3
+				if specialpos then
+					antivoidypos = 40
+				end
 			end
 			scanforbeds()
 		end)
@@ -781,6 +785,7 @@ runcode(function()
 	local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("AntiVoid", function()
 		spawn(function()
 			repeat wait() until antivoidypos ~= 0
+			local specialpos = (workspace.MapCFrames:FindFirstChild("center") and workspace.MapCFrames.center.Value.p == Vector3.new(77, 11, 35))
 			antivoidpart = Instance.new("Part")
 			antivoidpart.CanCollide = true
 			antivoidpart.Size = Vector3.new(10000, 1, 10000)
@@ -789,7 +794,7 @@ runcode(function()
 			antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
 			antivoidpart.Touched:connect(function(touchedpart)
 				if touchedpart.Parent == lplr.Character and isAlive() then
-					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 100, 0)
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 100 + (specialpos and 30 or 0), 0)
 				end
 			end)
 			antivoidpart.Parent = game.Workspace
