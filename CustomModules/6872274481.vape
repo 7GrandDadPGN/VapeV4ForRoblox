@@ -795,7 +795,6 @@ runcode(function()
 			antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
 			antivoidpart.Touched:connect(function(touchedpart)
 				if touchedpart.Parent == lplr.Character and isAlive() then
-					
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2) or (100 + (specialpos and 30 or 0)), 0)
 				end
 			end)
