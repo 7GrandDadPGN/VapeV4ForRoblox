@@ -279,6 +279,9 @@ getfunctions = function()
 			if rawget(v, "BedwarsShop") then
 				bedwars["Shop"] = v["BedwarsShop"]
 			end
+			if rawget(v, "BedwarsItemShopRight") then
+				bedwars["ShopRight"] = v["BedwarsItemShopRight"]
+			end
 			if rawget(v, "SoundManager") then
 				bedwars["SoundManager"] = v["SoundManager"]
 			end
@@ -321,6 +324,9 @@ getfunctions = function()
 			if rawget(v, "checkForPickup") then
 				local remotetab = debug.getconstants(v["checkForPickup"])
 				bedwars["PickupRemote"] = remotetab[#remotetab - 5]
+			end
+			if rawget(v, "dropItemInHand") then
+				bedwars["DropItem"] = v["dropItemInHand"]
 			end
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
@@ -401,6 +407,16 @@ getfunctions = function()
 		if matchState ~= 0 then
 			kit = rawget(bedwars["ClientStoreHandler"]:getState()["Bedwars"], "kit")
 		end
+		local oldbuyitem = bedwars["ShopRight"]["purchase"]
+		bedwars["ShopRight"]["purchase"] = function(item)
+			if item.props.SelectedItem.itemType == "emerald_sword" then
+				local sword, swordnum = getSword()
+				if sword.itemType ~= "emerald_sword" then
+					sword["tool"]:Remove()
+				end
+			end
+            return oldbuyitem(item)
+        end
 	else
 		wait(1)
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
@@ -782,7 +798,6 @@ end)
 runcode(function()
 	local antivoidpart
 	local antitransparent = {["Enabled"] = false}
-	local antivoidmethod = {["Value"] = "Set"}
 	local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("AntiVoid", function()
 		spawn(function()
 			repeat wait() until antivoidypos ~= 0
@@ -795,7 +810,7 @@ runcode(function()
 			antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
 			antivoidpart.Touched:connect(function(touchedpart)
 				if touchedpart.Parent == lplr.Character and isAlive() then
-					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2) or (100 + (specialpos and 30 or 0)), 0)
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2, 0)
 				end
 			end)
 			antivoidpart.Parent = game.Workspace
@@ -805,7 +820,6 @@ runcode(function()
 			antivoidpart:Remove() 
 		end
 	end, true, function() return "" end, "Gives you a chance to get on land (Not Perfect)")
-	antivoidmethod = AntiVoid.CreateDropdown("Mode", {"Set", "Dynamic"}, function() end)
 	antitransparent = AntiVoid.CreateToggle("Invisible", function() 
 		if antivoidpart then
 			antivoidpart.Transparency = 1
@@ -863,6 +877,13 @@ local buyingthing = false
 
 local function buyitem(itemtab, sucfunc)
 	if getItem(itemtab.itemType) == nil then
+		if itemtab.itemType == "emerald_sword" then
+			local sword, swordnum = getSword()
+			if sword.itemType ~= "emerald_sword" then
+				local swordSlot = swordnum
+				sword["tool"]:Remove()
+			end
+		end
 		bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 			shopItem = itemtab
 		}):andThen(function(p11)
@@ -872,13 +893,6 @@ local function buyitem(itemtab, sucfunc)
 					type = "BedwarsAddItemPurchased", 
 					itemType = itemtab.itemType
 				});
-				if itemtab.itemType == "emerald_sword" then
-					local sword, swordnum = getSword()
-					if sword.itemType ~= "emerald_sword" then
-						sword["tool"]:Remove()
-						bedwars["getInventory"](lplr)["items"][swordnum] = nil
-					end
-				end
 				if itemtab.nextTier then
 					local ShopItems = bedwars["Shop"].ShopItems;
 					local function isNextTier(p12)
@@ -903,6 +917,8 @@ local function buyitem(itemtab, sucfunc)
 	end
 end
 
+local justboughtarmor = ""
+local justboughtsword = ""
 local BuyCheck = function() end
 BuyCheck = function()
 	if AutoBuy["Enabled"] then
@@ -915,18 +931,24 @@ BuyCheck = function()
 				local buyablesword = checkallswords()
 				if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
 					local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
-					buyitem(NextSwordTable, function()
-						NextSword = swords[NextSwordTable["itemType"]]
-					end)
+					if justboughtsword ~= buyablesword then
+						justboughtsword = buyablesword
+						buyitem(NextSwordTable, function()
+							NextSword = swords[NextSwordTable["itemType"]]
+						end)
+					end
 				end
 			end
 			if AutoBuyArmor["Enabled"] and NextArmor and (AutoBuyGui["Enabled"] and bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or (not AutoBuyGui["Enabled"])) then
 				local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
 				local NextArmorCurrency = getItem(NextArmorTable["currency"])
 				if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
-					buyitem(NextArmorTable, function()
-						NextArmor = NextArmorTable["nextTier"]
-					end)
+					if justboughtarmor ~= NextArmor then
+						justboughtarmor = NextArmor
+						buyitem(NextArmorTable, function()
+							NextArmor = NextArmorTable["nextTier"]
+						end)
+					end
 				end
 			end
 			if AutoBuyUpgrades["Enabled"] and (AutoBuyGui["Enabled"] and bedwars["ClientStoreHandler"]:getState().App.shownApp == 4 or (not AutoBuyGui["Enabled"])) then
@@ -1502,7 +1524,7 @@ local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].C
 		local itemdrops = collectionservice:GetTagged("ItemDrop")
 		if isAlive() then
 			for i,v in pairs(itemdrops) do
-				if (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] then
+				if (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] and (v:GetAttribute("ClientDropTime") and tick() - v:GetAttribute("ClientDropTime") > 2 or v:GetAttribute("ClientDropTime") == nil) then
 					bedwars["ClientHandler"]:Get(bedwars["PickupRemote"]):CallServerAsync({
 						itemDrop = v
 					}):andThen(function(p14)
@@ -1518,6 +1540,18 @@ end, function()
 	UnbindFromRenderStep("FastPickup")
 end, true)
 FastPickupRange = FastPickup.CreateSlider("Range", 1, 10, function() end, 10)
+
+runcode(function()
+	local FastDrop = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("FastDrop", function()
+		BindToRenderStep("FastDrop", 1, function()
+			if isAlive() and (not bedwars["ClientStoreHandler"]:getState().Inventory.opened) and (uis:IsKeyDown(Enum.KeyCode.Q) or uis:IsKeyDown(Enum.KeyCode.Backspace)) and uis:GetFocusedTextBox() == nil then
+				bedwars["DropItem"]()
+			end
+		end)
+	end, function() 
+		UnbindFromRenderStep("FastDrop")
+	end, true, function() return "" end, "Drops items fast when you hold Q")
+end)
 
 local AutoToxic = {["Enabled"] = false}
 local AutoToxicGG = {["Enabled"] = false}
