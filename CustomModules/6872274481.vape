@@ -782,19 +782,21 @@ end)
 runcode(function()
 	local antivoidpart
 	local antitransparent = {["Enabled"] = false}
+	local antivoidmethod = {["Value"] = "Set"}
 	local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("AntiVoid", function()
 		spawn(function()
 			repeat wait() until antivoidypos ~= 0
 			local specialpos = (workspace.MapCFrames:FindFirstChild("center") and workspace.MapCFrames.center.Value.p == Vector3.new(77, 11, 35))
 			antivoidpart = Instance.new("Part")
-			antivoidpart.CanCollide = true
+			antivoidpart.CanCollide = false
 			antivoidpart.Size = Vector3.new(10000, 1, 10000)
 			antivoidpart.Anchored = true
 			antivoidpart.Transparency = (antitransparent["Enabled"] and 1 or 0.5)
 			antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
 			antivoidpart.Touched:connect(function(touchedpart)
 				if touchedpart.Parent == lplr.Character and isAlive() then
-					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 100 + (specialpos and 30 or 0), 0)
+					
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2) or (100 + (specialpos and 30 or 0)), 0)
 				end
 			end)
 			antivoidpart.Parent = game.Workspace
@@ -804,6 +806,7 @@ runcode(function()
 			antivoidpart:Remove() 
 		end
 	end, true, function() return "" end, "Gives you a chance to get on land (Not Perfect)")
+	antivoidmethod = AntiVoid.CreateDropdown("Mode", {"Set", "Dynamic"}, function() end)
 	antitransparent = AntiVoid.CreateToggle("Invisible", function() 
 		if antivoidpart then
 			antivoidpart.Transparency = 1
