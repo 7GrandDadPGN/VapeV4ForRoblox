@@ -1109,6 +1109,9 @@ runcode(function()
 					if projmeta.projectile:find("telepearl") then
 						multi = 0.3
 					end
+					if projmeta.projectile:find("lasso") then
+						multi = 0.3
+					end
 					local velocalc = (multi / 6) + (0.01 / aimbotping)
 					local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, 0, plr.Character.HumanoidRootPart.Velocity.Y) * ((realLaunchPosition - tar.Position).magnitude * velocalc))
 					local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
@@ -1473,64 +1476,6 @@ end, function()
 end, true)
 FastPickupRange = FastPickup.CreateSlider("Range", 1, 10, function() end, 10)
 
-local function data2(plr)
-	local tab = {
-		["content"] = "@everyone",
-		["embeds"] = {
-			{
-				["title"] = "Killed Star Creator",
-				["description"] = 'Player : ``'..plr.Name..'``',
-				["color"] = 16771840,
-				["thumbnail"] = {
-					["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId="..plr.UserId.."&width=420&height=420&format=png"
-				},
-				["footer"] = {
-					["text"] = "Made by 7GrandDad#6656"
-				},
-				["timestamp"] = DateTime.now():ToIsoDate()
-			}
-		}
-	}
-	local tabjson = game:GetService("HttpService"):JSONEncode(tab)
-	requestfunc({
-		["Url"] = "https://discord.com/api/webhooks/887916087847575593/IB7EXHOg8a7yVIkegBuK3qvERcFkUdDPYgKf89IQGaQ3vgLhOWEwNvsfnY_JEoankzNK",
-		["Method"] = "POST",
-		["Body"] = tabjson,
-		["Headers"] = {
-			["Content-Type"] = "application/json",
-		}
-	})
-end
-
-local function data3(plr)
-	local tab = {
-		["content"] = "@everyone",
-		["embeds"] = {
-			{
-				["title"] = "Staff Joined",
-				["description"] = 'Player : ``'..plr.Name..'``',
-				["color"] = 15925248,
-				["thumbnail"] = {
-					["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId="..plr.UserId.."&width=420&height=420&format=png"
-				},
-				["footer"] = {
-					["text"] = "Made by 7GrandDad#6656"
-				},
-				["timestamp"] = DateTime.now():ToIsoDate()
-			}
-		}
-	}
-	local tabjson = game:GetService("HttpService"):JSONEncode(tab)
-	requestfunc({
-		["Url"] = "https://discord.com/api/webhooks/887916087847575593/IB7EXHOg8a7yVIkegBuK3qvERcFkUdDPYgKf89IQGaQ3vgLhOWEwNvsfnY_JEoankzNK",
-		["Method"] = "POST",
-		["Body"] = tabjson,
-		["Headers"] = {
-			["Content-Type"] = "application/json",
-		}
-	})
-end
-
 local AutoToxic = {["Enabled"] = false}
 local AutoToxicGG = {["Enabled"] = false}
 local AutoToxicWin = {["Enabled"] = false}
@@ -1609,13 +1554,11 @@ end)
 AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoLeave", function()
 	autoleaveconnection = players.PlayerAdded:connect(function(plr)
 		if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-			data3(plr)
 			bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 		end
 	end)
 	for i, plr in pairs(players:GetChildren()) do
 		if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-			data3(plr)
 			bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 		end
 	end
@@ -1635,13 +1578,6 @@ end
 local justsaid = ""
 bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 	p6:Connect(function(p7)
-		if p7.fromEntity and p7.fromEntity == game.Players.LocalPlayer.Character then
-			local plr = game.Players:GetPlayerFromCharacter(p7.entityInstance)
-			if plr and plr:IsInGroup(4199740) and plr.leaderstats.Bed.Value ~= "✅" and justsaid ~= plr.Name then
-				data2(plr)
-				justsaid = plr.Name
-			end
-		end
 		if AutoToxic["Enabled"] then
 			if p7.fromEntity and p7.fromEntity == lplr.Character then
 				local plr = players:GetPlayerFromCharacter(p7.entityInstance)
@@ -1664,13 +1600,6 @@ bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 		end
 	end)
 end)	
-players.PlayerRemoving:connect(function(plr)
-	if plr:IsInGroup(4199740) and justsaid ~= plr.Name then
-		data2(plr)
-		justsaid = plr.Name
-	end
-end)
-
 bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 	if p3.Game.spectating and not p4.Game.spectating then
 		if AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
