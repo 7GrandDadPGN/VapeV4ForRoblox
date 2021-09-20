@@ -657,6 +657,7 @@ GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
 runcode(function()
 	local AimAssist = {["Enabled"] = false}
 	local AimAssistSmoothness = {["Value"] = 1}
+	local AimAssistWallCheck = {["Enabled"] = true}
 	local aimbegan
 	local aimended
 	local aimactive = false
@@ -679,7 +680,7 @@ runcode(function()
 		BindToRenderStep("AimAssist", 1, function()
 			if aimactive then
 				local plr = GetNearestHumanoidToPosition(30)
-				if plr and getEquipped()["Type"] == "sword" then
+				if plr and getEquipped()["Type"] == "sword" and matchState ~= 0 and ((not AimAssistWallCheck["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or AimAssistWallCheck["Enabled"]) then
 					cam.CFrame = cam.CFrame:lerp(CFrame.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position), 1 / AimAssistSmoothness["Value"])
 				end
 			end
@@ -691,6 +692,7 @@ runcode(function()
 		aimactive = false
 	end, true, function() return "" end, "Helps your aim")
 	AimAssistSmoothness = AimAssist.CreateSlider("Smoothness", 1, 100, function(val) end, 50)
+	AimAssistWallCheck = AimAssist.CreateToggle("Wall Check", function() end, function() end, true)
 end)
 
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
