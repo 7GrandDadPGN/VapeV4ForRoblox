@@ -455,8 +455,10 @@ local function renderNametag(plr)
 			end)
 		end)
 		spawn(function()
-			local head = plr.Character:WaitForChild("Head")
-			bedwars["getEntityTable"].getEntity(head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
+			if plr.Character then
+				local head = plr.Character:WaitForChild("Head")
+				bedwars["getEntityTable"].getEntity(head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
+			end
 		end)
 	end
 end
@@ -1511,7 +1513,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
 			end
 			for i,plr in pairs(plrs) do
-				if isAlive() and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+				if isAlive() and (GuiLibrary["ObjectsThatCanBeSaved"]["NPCsToggle"]["Api"]["Enabled"] == false and plr.UserId ~= 2904227753 or GuiLibrary["ObjectsThatCanBeSaved"]["NPCsToggle"]["Api"]["Enabled"]) and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 					if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 						killauranear = true
 						if killauraautoblock["Enabled"] and kit == "shielder" then
