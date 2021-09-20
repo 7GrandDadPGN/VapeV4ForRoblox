@@ -654,6 +654,44 @@ local function GetNearestHumanoidToMouse(distance, checkvis)
 end
 
 GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
+runcode(function()
+	local AimAssist = {["Enabled"] = false}
+	local AimAssistSmoothness = {["Value"] = 1}
+	local aimbegan
+	local aimended
+	local aimactive = false
+	AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AimAssist", function()
+		aimbegan = uis.InputBegan:connect(function(input1)
+			if uis:GetFocusedTextBox() == nil and input1.UserInputType == Enum.UserInputType.MouseButton1 then
+				local plr = GetNearestHumanoidToPosition(30)
+				if plr then
+					aimactive = true
+				end
+			end
+		end)
+		
+		aimended = uis.InputEnded:connect(function(input1)
+			if input1.UserInputType == Enum.UserInputType.MouseButton1 then
+				aimactive = false
+			end
+		end)
+		
+		BindToRenderStep("AimAssist", 1, function()
+			if aimactive then
+				local plr = GetNearestHumanoidToPosition(30)
+				if plr and getEquipped()["Type"] == "sword" then
+					cam.CFrame = cam.CFrame:lerp(CFrame.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position), 1 / AimAssistSmoothness["Value"])
+				end
+			end
+		end)
+	end, function() 
+		UnbindFromRenderStep("AimAssist")
+		aimbegan:Disconnect()
+		aimended:Disconnect()
+		aimactive = false
+	end, true, function() return "" end, "Helps your aim")
+	AimAssistSmoothness = AimAssist.CreateSlider("Smoothness", 1, 100, function(val) end, 50)
+end)
 
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
 local oldenable
