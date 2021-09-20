@@ -19,6 +19,7 @@ local antivoidypos = 0
 local scaffoldypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
+local ownedkits = {}
 
 local RenderStepTable = {}
 local function BindToRenderStep(name, num, func)
@@ -216,6 +217,9 @@ getfunctions = function()
 			if rawget(v, "ClientBlockEngine") then
 				bedwars["BlockEngine"] = v["ClientBlockEngine"]
 			end
+			if rawget(v, "BedwarsKitShop") then
+				bedwars["BedwarsKits"] = v["BedwarsKitShop"]
+			end
 			if rawget(v, "BlockEngine") and rawget(v["BlockEngine"], "store") then
 				bedwars["BlockEngine2"] = v["BlockEngine"]
 			end
@@ -407,6 +411,12 @@ getfunctions = function()
 		if matchState ~= 0 then
 			kit = rawget(bedwars["ClientStoreHandler"]:getState()["Bedwars"], "kit")
 		end
+		for i2,v2 in pairs(bedwars["ClientStoreHandler"]:getState().Bedwars.ownedKits) do
+            table.insert(ownedkits, v2)
+        end
+        for i3,v3 in pairs(bedwars["BedwarsKits"].FreeKits) do
+            table.insert(ownedkits, v3)
+        end
 		local oldbuyitem = bedwars["ShopRight"]["purchase"]
 		bedwars["ShopRight"]["purchase"] = function(item)
 			if item.props.SelectedItem.itemType == "emerald_sword" then
@@ -2254,3 +2264,22 @@ NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, 
 NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end, true)
 NameTagsDistance = NameTags.CreateToggle("Distance", function() end, function() end)
 NameTagsShowInventory = NameTags.CreateToggle("Equipment", function() end, function() end, true)
+
+runcode(function()
+	local SwitchKit = {["Enabled"] = false}
+	local SwitchKitDropdown = {["Value"] = ownedkits[1]}
+	SwitchKit = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("SwitchKit", function()
+		if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
+			createwarning("Bedwars", "Switched kit to "..SwitchKitDropdown["Value"], 3)
+			bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync({
+				kit = SwitchKitDropdown["Value"]
+			}):andThen(function(p11)
+				if p11 then
+					bedwars["SoundManager"]:playSound(19)
+				end;
+			end);
+		end
+		SwitchKit["ToggleButton"](false)
+	end, function() end, true, function() return "" end, "USE ALTS WHEN USING THIS \nIT CAN BE PATCHED AT ANY MOMENT (Blatant Mode Required)")
+	SwitchKitDropdown = SwitchKit.CreateDropdown("Kit", ownedkits, function(val) end)
+end)
