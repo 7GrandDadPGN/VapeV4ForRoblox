@@ -446,6 +446,24 @@ local function getblock(pos)
 	return bedwars["BlockEngine2"]:getStore():getBlockAt(bedwars["BlockEngine2"]:getBlockPosition(pos))
 end
 
+local function renderNametag(plr)
+	if plr.UserId == 2904227753 then
+		plr.CharacterAdded:connect(function(char)
+			spawn(function()
+				local head = char:WaitForChild("Head")
+				bedwars["getEntityTable"].getEntity(head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
+			end)
+		end)
+		spawn(function()
+			local head = plr.Character:WaitForChild("Head")
+			bedwars["getEntityTable"].getEntity(head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
+		end)
+	end
+end
+
+for i,v in pairs(players:GetChildren()) do renderNametag(v) end
+players.PlayerAdded:connect(renderNametag)
+
 getfunctions()
 
 local function friendCheck(plr)
@@ -2283,10 +2301,16 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 						if bountyhunter and bountyhunter.Adornee.Parent.Name == plr.Name then
 							istarget = true
 						end
+						local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+						local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+						if plr.UserId == 2904227753 then
+							displaynamestr = "[VAPE OWNER] xylex"
+							displaynamestr2 = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>"
+						end
 						local blocksaway = math.floor(((isAlive() and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
-						local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and isAlive() and "["..blocksaway.."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
+						local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and isAlive() and "["..blocksaway.."] " or "")..displaynamestr..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-						local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..blocksaway..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+						local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..blocksaway..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..displaynamestr2..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 						thing.Text = modifiedText
