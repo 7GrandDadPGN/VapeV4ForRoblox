@@ -406,6 +406,11 @@ getfunctions = function()
 					end
 				end
 			end
+			if p3.Bedwars.kit ~= p4.Bedwars.kit then
+				if matchState ~= 0 then
+					kit = rawget(bedwars["ClientStoreHandler"]:getState()["Bedwars"], "kit")
+				end
+			end
 		end)
 		matchState = bedwars["ClientStoreHandler"]:getState().Game.matchState
 		if matchState ~= 0 then
@@ -2342,8 +2347,12 @@ runcode(function()
 			}):andThen(function(p11)
 				if p11 then
 					bedwars["SoundManager"]:playSound(19)
-				end;
-			end);
+					bedwars["ClientStoreHandler"]:dispatch({
+						type = "SetBedwarsKit", 
+						kit = SwitchKitDropdown["Value"]
+					})
+				end
+			end)
 		end
 		SwitchKit["ToggleButton"](false)
 	end, function() end, true, function() return "" end, "USE ALTS WHEN USING THIS \nIT CAN BE PATCHED AT ANY MOMENT (Blatant Mode Required)")
