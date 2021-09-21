@@ -2353,6 +2353,8 @@ runcode(function()
 					})
 				end
 			end)
+		else
+			createwarning("Bedwars", "Requires Blatant mode", 3)
 		end
 		SwitchKit["ToggleButton"](false)
 	end, function() end, true, function() return "" end, "USE ALTS WHEN USING THIS \nIT CAN BE PATCHED AT ANY MOMENT (Blatant Mode Required)")
