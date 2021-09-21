@@ -1006,11 +1006,14 @@ BuyCheck = function()
 				local buyablesword = checkallswords()
 				if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
 					local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
-					if justboughtsword ~= buyablesword then
-						justboughtsword = buyablesword
-						buyitem(NextSwordTable, function()
-							NextSword = swords[NextSwordTable["itemType"]]
-						end)
+					local NextSwordCurrency = getItem(NextSwordTable["currency"])
+					if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
+						if justboughtsword ~= buyablesword then
+							justboughtsword = buyablesword
+							buyitem(NextSwordTable, function()
+								NextSword = swords[NextSwordTable["itemType"]]
+							end)
+						end
 					end
 				end
 			end
@@ -2338,25 +2341,33 @@ NameTagsShowInventory = NameTags.CreateToggle("Equipment", function() end, funct
 
 runcode(function()
 	local SwitchKit = {["Enabled"] = false}
-	local SwitchKitDropdown = {["Value"] = ownedkits[1]}
+	local SwitchKitDropdown = {["Value"] = nil}
 	SwitchKit = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("SwitchKit", function()
 		if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
-			createwarning("Bedwars", "Switched kit to "..SwitchKitDropdown["Value"], 3)
-			bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync({
-				kit = SwitchKitDropdown["Value"]
-			}):andThen(function(p11)
-				if p11 then
-					bedwars["SoundManager"]:playSound(19)
-					bedwars["ClientStoreHandler"]:dispatch({
-						type = "SetBedwarsKit", 
-						kit = SwitchKitDropdown["Value"]
-					})
-				end
-			end)
+			if matchState ~= 0 then
+				createwarning("Bedwars", "Switched kit to "..SwitchKitDropdown["Value"], 3)
+				bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync(SwitchKitDropdown["Value"] and {
+					kit = SwitchKitDropdown["Value"]
+				} or {}):andThen(function(p11)
+					if p11 then
+						bedwars["SoundManager"]:playSound(19)
+						if SwitchKitDropdown["Value"] then
+							bedwars["ClientStoreHandler"]:dispatch({
+								type = "SetBedwarsKit", 
+								kit = SwitchKitDropdown["Value"]
+							})
+						end
+					end
+				end)
+			end
 		else
 			createwarning("Bedwars", "Requires Blatant mode", 3)
 		end
 		SwitchKit["ToggleButton"](false)
 	end, function() end, true, function() return "" end, "USE ALTS WHEN USING THIS \nIT CAN BE PATCHED AT ANY MOMENT (Blatant Mode Required)")
 	SwitchKitDropdown = SwitchKit.CreateDropdown("Kit", ownedkits, function(val) end)
+	spawn(function()
+		repeat wait() until matchState ~= 0
+		SwitchKitDropdown["UpdateList"](ownedkits)
+	end)
 end)
