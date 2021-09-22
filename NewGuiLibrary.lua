@@ -700,14 +700,14 @@ api["CreateMainWindow"] = function()
 		return visibleicons
 	end
 
-	windowapi["CreateCustomToggle"] = function(name, icon, temporaryfunction, temporaryfunction2, default, compatability, priority)
+	windowapi["CreateCustomToggle"] = function(argstable)
 		local buttonapi = {}
 		local amount = #overlayschildren:GetChildren()
 		local buttontext = Instance.new("TextLabel")
 		buttontext.BackgroundTransparency = 1
 		buttontext.Name = "ButtonText"
-		buttontext.Text = "   "..name
-		buttontext.Name = name
+		buttontext.Text = "   "..argstable["Name"]
+		buttontext.Name = argstable["Name"]
 		buttontext.LayoutOrder = amount
 		buttontext.Size = UDim2.new(1, 0, 0, 40)
 		buttontext.Active = false
@@ -743,13 +743,13 @@ api["CreateMainWindow"] = function()
 		toggleicon.Size = UDim2.new(0, 16, 0, 16)
 		toggleicon.BackgroundTransparency = 1
 		toggleicon.Visible = false
-		toggleicon.LayoutOrder = priority
-		toggleicon.Image = getcustomassetfunc(icon)
+		toggleicon.LayoutOrder = argstable["Priority"]
+		toggleicon.Image = getcustomassetfunc(argstable["Icon"])
 		toggleicon.Parent = overlaysicons
 
 		buttonapi["Enabled"] = false
 		buttonapi["Keybind"] = ""
-		buttonapi["Default"] = default
+		buttonapi["Default"] = argstable["Default"]
 		buttonapi["ToggleButton"] = function(toggle, first)
 			buttonapi["Enabled"] = toggle
 			toggleicon.Visible = toggle
@@ -761,7 +761,6 @@ api["CreateMainWindow"] = function()
 				end
 			--	toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				temporaryfunction()
 			else
 				if not first then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -770,10 +769,12 @@ api["CreateMainWindow"] = function()
 				end
 			--	toggleframe1.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 				toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				temporaryfunction2()
 			end
+			argstable["Function"](buttonapi["Enabled"])
 		end
-		buttonapi["ToggleButton"](default, true)
+		if argstable["Default"] then
+			buttonapi["ToggleButton"](argstable["Default"], true)
+		end
 		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
 		toggleframe1.MouseEnter:connect(function()
 			if buttonapi["Enabled"] == false then
@@ -787,7 +788,7 @@ api["CreateMainWindow"] = function()
 		end)
 
 		
-		api["ObjectsThatCanBeSaved"][(compatability or "VapeSettings")..name.."Toggle"] = {["Type"] = "ToggleMain", ["Object"] = buttontext, ["Api"] = buttonapi}
+		api["ObjectsThatCanBeSaved"]["VapeSettings"..argstable["Name"].."Toggle"] = {["Type"] = "ToggleMain", ["Object"] = buttontext, ["Api"] = buttonapi}
 		return buttonapi
 	end
 
@@ -1089,15 +1090,15 @@ api["CreateMainWindow"] = function()
 		return sliderapi
 	end
 
-	windowapi["CreateToggle"] = function(name, temporaryfunction, temporaryfunction2, default, compatability)
+	windowapi["CreateToggle"] = function(argstable)
 		local buttonapi = {}
 		local currentanim
 		local amount = #children2:GetChildren()
 		local buttontext = Instance.new("TextLabel")
 		buttontext.BackgroundTransparency = 1
 		buttontext.Name = "ButtonText"
-		buttontext.Text = "   "..name
-		buttontext.Name = name
+		buttontext.Text = "   "..argstable["Name"]
+		buttontext.Name = argstable["Name"]
 		buttontext.LayoutOrder = amount
 		buttontext.Size = UDim2.new(1, 0, 0, 30)
 		buttontext.Active = false
@@ -1132,7 +1133,7 @@ api["CreateMainWindow"] = function()
 
 		buttonapi["Enabled"] = false
 		buttonapi["Keybind"] = ""
-		buttonapi["Default"] = default
+		buttonapi["Default"] = argstable["Default"]
 		buttonapi["ToggleButton"] = function(toggle, first)
 			buttonapi["Enabled"] = toggle
 			if buttonapi["Enabled"] then
@@ -1141,21 +1142,20 @@ api["CreateMainWindow"] = function()
 				else
 					toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end
-			--	toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				temporaryfunction()
 			else
 				if not first then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 				else
 					toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 				end
-			--	toggleframe1.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 				toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				temporaryfunction2()
 			end
+			argstable["Function"](buttonapi["Enabled"])
 		end
-		buttonapi["ToggleButton"](default, true)
+		if argstable["Default"] then
+			buttonapi["ToggleButton"](argstable["Default"], true)
+		end
 		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
 		toggleframe1.MouseEnter:connect(function()
 			if buttonapi["Enabled"] == false then
@@ -1168,15 +1168,15 @@ api["CreateMainWindow"] = function()
 			end
 		end)
 		
-		api["ObjectsThatCanBeSaved"][(compatability or "VapeSettings")..name.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
+		api["ObjectsThatCanBeSaved"][argstable["Name"].."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
 		return buttonapi
 	end
 
-	windowapi["CreateButton"] = function(name, temporaryfunction, temporaryfunction2, icon, iconsize)
+	windowapi["CreateButton"] = function(argstable)
 		local buttonapi = {}
 		local amount = #children:GetChildren()
 		local button = Instance.new("TextButton")
-		button.Name = name.."Button"
+		button.Name = argstable["Name"].."Button"
 		button.AutoButtonColor = false
 		button.Size = UDim2.new(1, 0, 0, 40)
 		button.BorderSizePixel = 0
@@ -1187,14 +1187,14 @@ api["CreateMainWindow"] = function()
 		local buttontext = Instance.new("TextLabel")
 		buttontext.BackgroundTransparency = 1
 		buttontext.Name = "ButtonText"
-		buttontext.Text = name
+		buttontext.Text = argstable["Name"]
 		buttontext.Size = UDim2.new(0, 120, 0, 38)
 		buttontext.Active = false
 		buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 		buttontext.TextSize = 17
 		buttontext.Font = Enum.Font.SourceSans
 		buttontext.TextXAlignment = Enum.TextXAlignment.Left
-		buttontext.Position = UDim2.new(0, (icon and 33 or 10), 0, 0)
+		buttontext.Position = UDim2.new(0, (argstable["Icon"] and 33 or 10), 0, 0)
 		buttontext.Parent = button
 		local arrow = Instance.new("ImageLabel")
 		arrow.Size = UDim2.new(0, 4, 0, 8)
@@ -1205,13 +1205,13 @@ api["CreateMainWindow"] = function()
 		arrow.Active = false
 		arrow.Parent = button
 		local buttonicon
-		if icon then
+		if argstable["Icon"] then
 			buttonicon = Instance.new("ImageLabel")
 			buttonicon.Active = false
-			buttonicon.Size = UDim2.new(0, iconsize - 2, 0, 14)
+			buttonicon.Size = UDim2.new(0, argstable["IconSize"] - 2, 0, 14)
 			buttonicon.BackgroundTransparency = 1
 			buttonicon.Position = UDim2.new(0, 10, 0, 13)
-			buttonicon.Image = getcustomassetfunc(icon)
+			buttonicon.Image = getcustomassetfunc(argstable["Icon"])
 			buttonicon.Name = "ButtonIcon"
 			buttonicon.Parent = button
 		end
@@ -1227,7 +1227,6 @@ api["CreateMainWindow"] = function()
 					if buttonicon then
 						buttonicon.ImageColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 					end
-					temporaryfunction()
 				else
 					button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
@@ -1235,8 +1234,8 @@ api["CreateMainWindow"] = function()
 					if buttonicon then
 						buttonicon.ImageColor3 = Color3.new(1, 1, 1)
 					end
-					temporaryfunction2()
 				end
+				argstable["Function"](buttonapi["Enabled"])
 				api["UpdateHudEvent"]:Fire()
 			end
 		end
@@ -1256,19 +1255,19 @@ api["CreateMainWindow"] = function()
 				end
 			end
 		end)
-		api["ObjectsThatCanBeSaved"][name.."Button"] = {["Type"] = "ButtonMain", ["Object"] = button, ["Api"] = buttonapi}
+		api["ObjectsThatCanBeSaved"][argstable["Name"].."Button"] = {["Type"] = "ButtonMain", ["Object"] = button, ["Api"] = buttonapi}
 
 		return buttonapi
 	end
 
-	windowapi["CreateButton2"] = function(name, temporaryfunction)
+	windowapi["CreateButton2"] = function(argstable)
 		local buttonapi = {}
 		local currentanim
 		local amount = #children2:GetChildren()
 		local buttontext = Instance.new("Frame")
 		buttontext.BackgroundTransparency = 1
 		buttontext.Name = "ButtonText"
-		buttontext.Name = name
+		buttontext.Name = argstable["Name"]
 		buttontext.LayoutOrder = amount
 		buttontext.Size = UDim2.new(1, 0, 0, 30)
 		buttontext.Active = false
@@ -1285,7 +1284,7 @@ api["CreateMainWindow"] = function()
 		toggleframe1.Size = UDim2.new(0, 198, 0, 25)
 		toggleframe1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		toggleframe1.BorderSizePixel = 0
-		toggleframe1.Text = name:upper()
+		toggleframe1.Text = argstable["Name"]:upper()
 		toggleframe1.Font = Enum.Font.SourceSans
 		toggleframe1.TextSize = 17
 		toggleframe1.TextColor3 = Color3.fromRGB(151, 151, 151)
@@ -1299,7 +1298,7 @@ api["CreateMainWindow"] = function()
 		uicorner2.CornerRadius = UDim.new(0, 4)
 		uicorner2.Parent = toggleframe2
 
-		toggleframe1.MouseButton1Click:connect(function() temporaryfunction() end)
+		toggleframe1.MouseButton1Click:connect(function() argstable["Function"]() end)
 		
 		return buttonapi
 	end
@@ -1307,21 +1306,21 @@ api["CreateMainWindow"] = function()
 	return windowapi
 end
 
-api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
+api["CreateCustomWindow"] = function(argstablemain)
 	local windowapi = {}
 	local windowtitle = Instance.new("TextButton")
 	windowtitle.Text = ""
 	windowtitle.AutoButtonColor = false
 	windowtitle.BackgroundColor3 = Color3.fromRGB(25, 26, 25)
 	windowtitle.Size = UDim2.new(0, 220, 0, 45)
-	windowtitle.Position = position
+	windowtitle.Position = UDim2.new(0, 223, 0, 6)
 	windowtitle.Name = "MainWindow"
-	windowtitle.Visible = visible
-	windowtitle.Name = name
+	windowtitle.Visible = false
+	windowtitle.Name = argstablemain["Name"]
 	windowtitle.Parent = hudgui
 	local windowicon = Instance.new("ImageLabel")
-	windowicon.Size = UDim2.new(0, iconsize, 0, 16)
-	windowicon.Image = getcustomassetfunc(icon)
+	windowicon.Size = UDim2.new(0, argstablemain["IconSize"], 0, 16)
+	windowicon.Image = getcustomassetfunc(argstablemain["Icon"])
 	windowicon.Name = "WindowIcon"
 	windowicon.BackgroundTransparency = 1
 	windowicon.Position = UDim2.new(0, 10, 0, 13)
@@ -1334,7 +1333,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 	windowtext.TextXAlignment = Enum.TextXAlignment.Left
 	windowtext.Font = Enum.Font.SourceSans
 	windowtext.TextSize = 17
-	windowtext.Text = name
+	windowtext.Text = argstablemain["Name"]
 	windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 	windowtext.Parent = windowtitle
 	local expandbutton = Instance.new("ImageButton")
@@ -1428,7 +1427,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 		end
 	end
 
-	windowapi["CreateColorSlider"] = function(naame, temporaryfunction)
+	windowapi["CreateColorSlider"] = function(argstable)
 		local min, max = 0, 1
 		local def = math.floor((min + max) / 2)
 		local defsca = (def - min)/(max - min)
@@ -1438,12 +1437,12 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 		frame.Size = UDim2.new(0, 220, 0, 50)
 		frame.BackgroundTransparency = 1
 		frame.LayoutOrder = amount2
-		frame.Name = name
+		frame.Name = argstable["Name"]
 		frame.Parent = children2
 		local text1 = Instance.new("TextLabel")
 		text1.Font = Enum.Font.SourceSans
 		text1.TextXAlignment = Enum.TextXAlignment.Left
-		text1.Text = "   "..naame
+		text1.Text = "   "..argstable["Name"]
 		text1.Size = UDim2.new(1, 0, 0, 25)
 		text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 		text1.BackgroundTransparency = 1
@@ -1485,7 +1484,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 			text2.BackgroundColor3 = Color3.fromHSV(val, 1, 1)
 			sliderapi["Value"] = val
 			slider3.Position = UDim2.new(math.clamp(val, 0.02, 0.95), -9, 0, -7)
-			temporaryfunction(val)
+			argstable["Function"](val)
 		end
 		sliderapi["SetRainbow"] = function(val)
 			sliderapi["RainbowValue"] = val
@@ -1561,18 +1560,18 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 				end
 			end)
 		end)
-		api["ObjectsThatCanBeSaved"][name..naame.."SliderColor"] = {["Type"] = "ColorSliderMain", ["Object"] = frame, ["Api"] = sliderapi}
+		api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."SliderColor"] = {["Type"] = "ColorSliderMain", ["Object"] = frame, ["Api"] = sliderapi}
 		return sliderapi
 	end
 
-	windowapi["CreateToggle"] = function(naame, temporaryfunction, temporaryfunction2, default)
+	windowapi["CreateToggle"] = function(argstable)
 		local buttonapi = {}
 		local amount = #children2:GetChildren()
 		local buttontext = Instance.new("TextLabel")
 		buttontext.BackgroundTransparency = 1
 		buttontext.Name = "ButtonText"
-		buttontext.Text = "   "..naame
-		buttontext.Name = naame
+		buttontext.Text = "   "..argstable["Name"]
+		buttontext.Name = argstable["Name"]
 		buttontext.LayoutOrder = amount
 		buttontext.Size = UDim2.new(1, 0, 0, 30)
 		buttontext.Active = false
@@ -1607,7 +1606,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 
 		buttonapi["Enabled"] = false
 		buttonapi["Keybind"] = ""
-		buttonapi["Default"] = default
+		buttonapi["Default"] = argstable["Default"]
 		buttonapi["ToggleButton"] = function(toggle, first)
 			buttonapi["Enabled"] = toggle
 			if buttonapi["Enabled"] then
@@ -1618,7 +1617,6 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 				end
 			--	toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				temporaryfunction()
 			else
 				if not first then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -1627,10 +1625,12 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 				end
 			--	toggleframe1.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 				toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				temporaryfunction2()
 			end
+			argstable["Function"](buttonapi["Enabled"])
 		end
-		buttonapi["ToggleButton"](default, true)
+		if argstable["Default"] then
+			buttonapi["ToggleButton"](argstable["Default"], true)
+		end
 		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
 		toggleframe1.MouseEnter:connect(function()
 			if buttonapi["Enabled"] == false then
@@ -1643,7 +1643,7 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 			end
 		end)
 
-		api["ObjectsThatCanBeSaved"][name..naame.."Toggle"] = {["Type"] = "ToggleMain", ["Object"] = buttontext, ["Api"] = buttonapi}
+		api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Toggle"] = {["Type"] = "ToggleMain", ["Object"] = buttontext, ["Api"] = buttonapi}
 		return buttonapi
 	end
 	
@@ -1666,12 +1666,12 @@ api["CreateCustomWindow"] = function(name, icon, iconsize, position, visible)
 	expandbutton.MouseButton1Click:connect(windowapi["PinnedToggle"])
 	windowtitle.MouseButton2Click:connect(windowapi["ExpandToggle"])
 	optionsbutton.MouseButton1Click:connect(windowapi["ExpandToggle"])
-	api["ObjectsThatCanBeSaved"][name.."CustomWindow"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "CustomWindow", ["Api"] = windowapi}
+	api["ObjectsThatCanBeSaved"][argstablemain["Name"].."CustomWindow"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "CustomWindow", ["Api"] = windowapi}
 	
 	return windowapi
 end
 
-api["CreateWindow"] = function(name, icon, iconsize, position, visible)
+api["CreateWindow"] = function(argstablemain2)
 	local currentexpandedbutton = nil
 	local windowapi = {}
 	local windowtitle = Instance.new("TextButton")
@@ -1679,14 +1679,14 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	windowtitle.AutoButtonColor = false
 	windowtitle.BackgroundColor3 = Color3.fromRGB(25, 26, 25)
 	windowtitle.Size = UDim2.new(0, 220, 0, 41)
-	windowtitle.Position = position
+	windowtitle.Position = UDim2.new(0, 223, 0, 6)
 	windowtitle.Name = "MainWindow"
-	windowtitle.Visible = visible
-	windowtitle.Name = name
+	windowtitle.Visible = false
+	windowtitle.Name = argstablemain2["Name"]
 	windowtitle.Parent = clickgui
 	local windowicon = Instance.new("ImageLabel")
-	windowicon.Size = UDim2.new(0, iconsize, 0, 16)
-	windowicon.Image = getcustomassetfunc(icon)
+	windowicon.Size = UDim2.new(0, argstablemain2["IconSize"], 0, 16)
+	windowicon.Image = getcustomassetfunc(argstablemain2["Icon"])
 	windowicon.Name = "WindowIcon"
 	windowicon.BackgroundTransparency = 1
 	windowicon.Position = UDim2.new(0, 10, 0, 13)
@@ -1712,7 +1712,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	windowtext.TextXAlignment = Enum.TextXAlignment.Left
 	windowtext.Font = Enum.Font.SourceSans
 	windowtext.TextSize = 17
-	windowtext.Text = name
+	windowtext.Text = argstablemain2["Name"]
 	windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 	windowtext.Parent = windowtitle
 	local expandbutton = Instance.new("TextButton")
@@ -1752,7 +1752,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	end)
 	local noexpand = false
 	dragGUI(windowtitle)
-	api["ObjectsThatCanBeSaved"][name.."Window"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "Window", ["Api"] = windowapi}
+	api["ObjectsThatCanBeSaved"][argstablemain2["Name"].."Window"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "Window", ["Api"] = windowapi}
 
 	windowapi["SetVisible"] = function(value)
 		windowtitle.Visible = value
@@ -1775,12 +1775,12 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	expandbutton.MouseButton1Click:connect(windowapi["ExpandToggle"])
 	expandbutton.MouseButton2Click:connect(windowapi["ExpandToggle"])
 
-	windowapi["CreateOptionsButton"] = function(naame, temporaryfunction, temporaryfunction2, expandedmenu, temporaryfunction3, hovertext)
+	windowapi["CreateOptionsButton"] = function(argstablemain)
 		local buttonapi = {}
 		local amount = #children:GetChildren()
 		local button = Instance.new("TextButton")
 		local currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)})
-		button.Name = naame.."Button"
+		button.Name = argstablemain["Name"].."Button"
 		button.AutoButtonColor = false
 		button.Size = UDim2.new(1, 0, 0, 40)
 		button.BorderSizePixel = 0
@@ -1806,7 +1806,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		local buttontext = Instance.new("TextLabel")
 		buttontext.BackgroundTransparency = 1
 		buttontext.Name = "ButtonText"
-		buttontext.Text = naame
+		buttontext.Text = argstablemain["Name"]
 		buttontext.Size = UDim2.new(0, 120, 0, 39)
 		buttontext.Active = false
 		buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
@@ -1820,7 +1820,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		children2.BackgroundTransparency = 1
 		children2.LayoutOrder = amount
 		children2.Visible = false
-		children2.Name = naame.."Children"
+		children2.Name = argstablemain["Name"].."Children"
 		children2.Parent = children
 		local uilistlayout2 = Instance.new("UIListLayout")
 		uilistlayout2.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1869,11 +1869,11 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		local bindround = Instance.new("UICorner")
 		bindround.CornerRadius = UDim.new(0, 4)
 		bindround.Parent = bindbkg
-		if hovertext and type(hovertext) == "string" then
+		if argstablemain["HoverText"] and type(argstablemain["HoverText"]) == "string" then
 			button.MouseEnter:connect(function() 
 				hoverbox.Visible = api["ToggleTooltips"]
-				local textsize = game:GetService("TextService"):GetTextSize(hovertext, 16, hoverbox.Font, Vector2.new(99999, 99999))
-				hoverbox.Text = hovertext
+				local textsize = game:GetService("TextService"):GetTextSize(argstablemain["HoverText"], 16, hoverbox.Font, Vector2.new(99999, 99999))
+				hoverbox.Text = argstablemain["HoverText"]
 				hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 			end)
 			button.MouseMoved:connect(function(x, y)
@@ -1883,9 +1883,9 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		end
 		buttonapi["Enabled"] = false
 		buttonapi["Keybind"] = ""
-		buttonapi["Name"] = naame
-		buttonapi["HasExtraText"] = type(temporaryfunction3) == "function"
-		buttonapi["GetExtraText"] = (buttonapi["HasExtraText"] and temporaryfunction3 or function() return "" end)
+		buttonapi["Name"] = argstablemain["Name"]
+		buttonapi["HasExtraText"] = type(argstablemain["ExtraText"]) == "function"
+		buttonapi["GetExtraText"] = (buttonapi["HasExtraText"] and argstablemain["ExtraText"] or function() return "" end)
 		local newsize = UDim2.new(0, 20, 0, 21)
 		
 		buttonapi["SetKeybind"] = function(key)
@@ -1919,14 +1919,13 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 				buttonactiveborder.Visible = true
 				button2.Image = getcustomassetfunc("vape/assets/MoreButton2.png")
 				buttontext.TextColor3 = Color3.new(0, 0, 0)
-				temporaryfunction()
 			else
 				button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				buttonactiveborder.Visible = false
 				button2.Image = getcustomassetfunc("vape/assets/MoreButton1.png")
 				buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
-				temporaryfunction2()
 			end
+			argstablemain["Function"](buttonapi["Enabled"])
 			api["UpdateHudEvent"]:Fire()
 		end
 
@@ -1958,7 +1957,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			end
 		end
 
-		buttonapi["CreateTextList"] = function(name, temptext, temporaryfunction, temporaryfunction2, customstuff)
+		buttonapi["CreateTextList"] = function(argstable)
 			local textapi = {}
 			local amount = #children2:GetChildren()
 			local frame = Instance.new("Frame")
@@ -1966,7 +1965,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			frame.BackgroundTransparency = 1
 			frame.ClipsDescendants = true
 			frame.LayoutOrder = amount
-			frame.Name = name
+			frame.Name = argstable["Name"]
 			frame.Parent = children2
 			local textboxbkg = Instance.new("ImageLabel")
 			textboxbkg.BackgroundTransparency = 1
@@ -1986,7 +1985,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 			textbox.Font = Enum.Font.SourceSans
 			textbox.Text = ""
-			textbox.PlaceholderText = temptext
+			textbox.PlaceholderText = argstable["TempText"]
 			textbox.TextSize = 17
 			textbox.Parent = textboxbkg
 			local addbutton = Instance.new("ImageButton")
@@ -2065,21 +2064,24 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					deletebutton.MouseButton1Click:connect(function()
 						table.remove(textapi["ObjectList"], i)
 						textapi["RefreshValues"](textapi["ObjectList"])
-						temporaryfunction2(i)
+						if argstable["RemoveFunction"] then
+							argstable["RemoveFunction"](i)
+						end
 					end)
-					if customstuff then
-						customstuff(itemframe)
+					if argstable["CustomFunction"] then
+						argstable["CustomFunction"](itemframe)
 					end
 				end
 			end
 
-			api["ObjectsThatCanBeSaved"][name.."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
 			addbutton.MouseButton1Click:connect(function() 
 				table.insert(textapi["ObjectList"], textbox.Text)
 				textapi["RefreshValues"](textapi["ObjectList"])
-				temporaryfunction(textbox.Text) 
+				if argstable["AddFunction"] then
+					argstable["AddFunction"](textbox.Text) 
+				end
 			end)
-			api["ObjectsThatCanBeSaved"][naame..name.."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
 			return textapi
 		end
 
@@ -2182,12 +2184,12 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			if buttonapi["HasExtraText"] then
 				api["UpdateHudEvent"]:Fire()
 			end
-			api["ObjectsThatCanBeSaved"][naame..name.."Dropdown"] = {["Type"] = "Dropdown", ["Object"] = frame, ["Api"] = dropapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..name.."Dropdown"] = {["Type"] = "Dropdown", ["Object"] = frame, ["Api"] = dropapi}
 
 			return dropapi
 		end
 
-		buttonapi["CreateColorSlider"] = function(name, temporaryfunction)
+		buttonapi["CreateColorSlider"] = function(argstable)
 			local min, max = 0, 1
 			local sliderapi = {}
 			local amount2 = #children2:GetChildren()
@@ -2195,12 +2197,12 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			frame.Size = UDim2.new(0, 220, 0, 50)
 			frame.BackgroundTransparency = 1
 			frame.LayoutOrder = amount2
-			frame.Name = name
+			frame.Name = argstable["Name"]
 			frame.Parent = children2
 			local text1 = Instance.new("TextLabel")
 			text1.Font = Enum.Font.SourceSans
 			text1.TextXAlignment = Enum.TextXAlignment.Left
-			text1.Text = "   "..name
+			text1.Text = "   "..argstable["Name"]
 			text1.Size = UDim2.new(1, 0, 0, 25)
 			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text1.BackgroundTransparency = 1
@@ -2242,7 +2244,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 				text2.BackgroundColor3 = Color3.fromHSV(val, 1, 1)
 				sliderapi["Value"] = val
 				slider3.Position = UDim2.new(math.clamp(val, 0.02, 0.95), -9, 0, -7)
-				temporaryfunction(val)
+				argstable["Function"](val)
 			end
 			sliderapi["SetRainbow"] = function(val)
 				sliderapi["RainbowValue"] = val
@@ -2318,11 +2320,11 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					end
 				end)
 			end)
-			api["ObjectsThatCanBeSaved"][naame..name.."SliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."SliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
 			return sliderapi
 		end
 
-		buttonapi["CreateSlider"] = function(name, min, max, temporaryfunction, defaultvalue, percent)
+		buttonapi["CreateSlider"] = function(argstable)
 			
 			local sliderapi = {}
 			local amount2 = #children2:GetChildren()
@@ -2331,12 +2333,12 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			frame.BackgroundTransparency = 1
 			frame.ClipsDescendants = true
 			frame.LayoutOrder = amount2
-			frame.Name = name
+			frame.Name = argstable["Name"]
 			frame.Parent = children2
 			local text1 = Instance.new("TextLabel")
 			text1.Font = Enum.Font.SourceSans
 			text1.TextXAlignment = Enum.TextXAlignment.Left
-			text1.Text = "   "..name
+			text1.Text = "   "..argstable["Name"]
 			text1.Size = UDim2.new(1, 0, 0, 25)
 			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text1.BackgroundTransparency = 1
@@ -2345,7 +2347,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			local text2 = Instance.new("TextLabel")
 			text2.Font = Enum.Font.SourceSans
 			text2.TextXAlignment = Enum.TextXAlignment.Right
-			text2.Text = tostring((defaultvalue or min)) .. ".0 "..(percent and "%" or " ").." "
+			text2.Text = tostring((argstable["Default"] or argstable["Min"])) .. ".0 "..(argstable["Percent"] and "%" or " ").." "
 			text2.Size = UDim2.new(1, 0, 0, 25)
 			text2.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text2.BackgroundTransparency = 1
@@ -2359,7 +2361,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			slider1.Name = "Slider"
 			slider1.Parent = frame
 			local slider2 = Instance.new("Frame")
-			slider2.Size = UDim2.new(math.clamp(((defaultvalue or min) / max), 0.02, 0.97), 0, 1, 0)
+			slider2.Size = UDim2.new(math.clamp(((argstable["Default"] or argstable["Min"]) / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
 			slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 			slider2.Name = "FillSlider"
 			slider2.Parent = slider1
@@ -2372,27 +2374,27 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			slider3.Position = UDim2.new(1, -11, 0, -7)
 			slider3.Parent = slider2
 			slider3.Name = "ButtonSlider"
-			sliderapi["Value"] = (defaultvalue or min)
-			sliderapi["Max"] = max
+			sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+			sliderapi["Max"] = argstable["Max"]
 			sliderapi["SetValue"] = function(val)
-				val = math.clamp(val, min, max)
+				val = math.clamp(val, argstable["Min"], argstable["Max"])
 				sliderapi["Value"] = val
-				slider2.Size = UDim2.new(math.clamp((val / max), 0.02, 0.97), 0, 1, 0)
-				text2.Text = sliderapi["Value"] .. ".0 "..(percent and "%" or " ").." "
-				temporaryfunction(val)
+				slider2.Size = UDim2.new(math.clamp((val / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
+				text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+				argstable["Function"](val)
 			end
 			slider3.MouseButton1Down:Connect(function()
 				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-				sliderapi["SetValue"](math.floor(min + ((max - min) * xscale)))
-				text2.Text = sliderapi["Value"] .. ".0 "..(percent and "%" or " ").." "
+				sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
+				text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
 				slider2.Size = UDim2.new(xscale2,0,1,0)
 				local move
 				local kill
 				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
 						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-						sliderapi["SetValue"](math.floor(min + ((max - min) * xscale)))
-						text2.Text = sliderapi["Value"] .. ".0 "..(percent and "%" or " ").." "
+						sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
+						text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
 						slider2.Size = UDim2.new(xscale2,0,1,0)
 					end
 				end)
@@ -2404,11 +2406,11 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					end
 				end)
 			end)
-			api["ObjectsThatCanBeSaved"][naame..name.."Slider"] = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Slider"] = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
 			return sliderapi
 		end
 
-		buttonapi["CreateTwoSlider"] = function(name, min, max, temporaryfunction, decimal, defaultvalue, defaultvalue2)
+		buttonapi["CreateTwoSlider"] = function(argstable)
 			
 			local sliderapi = {}
 			local amount2 = #children2:GetChildren()
@@ -2417,12 +2419,12 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			frame.BackgroundTransparency = 1
 			frame.ClipsDescendants = true
 			frame.LayoutOrder = amount2
-			frame.Name = name
+			frame.Name = argstable["Name"]
 			frame.Parent = children2
 			local text1 = Instance.new("TextLabel")
 			text1.Font = Enum.Font.SourceSans
 			text1.TextXAlignment = Enum.TextXAlignment.Left
-			text1.Text = "   "..name
+			text1.Text = "   "..argstable["Name"]
 			text1.Size = UDim2.new(1, 0, 0, 25)
 			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text1.BackgroundTransparency = 1
@@ -2431,8 +2433,8 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			local text2 = Instance.new("TextLabel")
 			text2.Font = Enum.Font.SourceSans
 			text2.TextXAlignment = Enum.TextXAlignment.Right
-			local text2string = tostring((defaultvalue2 or max) / 10)
-			text2.Text = (decimal and (text2string:len() > 1 and text2string or text2string..".0   ") or (defaultvalue2 or max) .. ".0   ")
+			local text2string = tostring((argstable["Default2"] or argstable["Max"]) / 10)
+			text2.Text = (argstable["Decimal"] and (text2string:len() > 1 and text2string or text2string..".0   ") or (argstable["Default2"] or argstable["Max"]) .. ".0   ")
 			text2.Size = UDim2.new(1, 0, 0, 25)
 			text2.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text2.BackgroundTransparency = 1
@@ -2445,8 +2447,8 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			text3.TextXAlignment = Enum.TextXAlignment.Right
 			text3.Size = UDim2.new(1, -77, 0, 25)
 			text3.TextSize = 17
-			local text3string = tostring((defaultvalue or min) / 10)
-			text3.Text = (decimal and (text3string:len() > 1 and text3string or text3string..".0") or (defaultvalue or min) .. ".0")
+			local text3string = tostring((argstable["Default"] or argstable["Min"]) / 10)
+			text3.Text = (argstable["Decimal"] and (text3string:len() > 1 and text3string or text3string..".0") or (argstable["Default"] or argstable["Min"]) .. ".0")
 			text3.Parent = frame
 			local text4 = Instance.new("ImageLabel")
 			text4.Size = UDim2.new(0, 12, 0, 6)
@@ -2488,45 +2490,43 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 				slider2.Size = UDim2.new(0, slider4.AbsolutePosition.X - slider3.AbsolutePosition.X, 1, 0)
 				slider2.Position = UDim2.new(slider3.Position.X.Scale, 0, 0, 0)
 			end)
-			slider3.Position = UDim2.new((defaultvalue and (defaultvalue == min and 0 or defaultvalue/max) or 0), -8, 1, -9)
-			slider4.Position = UDim2.new((defaultvalue2 and (defaultvalue2 == max and 1 or defaultvalue2/max) or 1), -8, 1, -9)
+			slider3.Position = UDim2.new((argstable["Default"] and (argstable["Default"] == argstable["Min"] and 0 or argstable["Default"]/argstable["Max"]) or 0), -8, 1, -9)
+			slider4.Position = UDim2.new((argstable["Default2"] and (argstable["Default2"] == argstable["Max"] and 1 or argstable["Default2"]/argstable["Max"]) or 1), -8, 1, -9)
 			slider2.Size = UDim2.new(0, slider4.AbsolutePosition.X - slider3.AbsolutePosition.X, 1, 0)
 			slider2.Position = UDim2.new(slider3.Position.X.Scale, 0, 0, 0)
-			sliderapi["Value"] = (defaultvalue or min)
-			sliderapi["Value2"] = (defaultvalue2 or max)
-			sliderapi["Max"] = max
+			sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+			sliderapi["Value2"] = (argstable["Default2"] or argstable["Max"])
+			sliderapi["Max"] = argstable["Max"]
 			sliderapi["SetValue"] = function(val)
-				val = math.clamp(val, min, max)
+				val = math.clamp(val, argstable["Min"], argstable["Max"])
 				sliderapi["Value"] = val
 				--slider2.Size = UDim2.new(math.clamp((val / max), 0.02, 0.97), 0, 1, 0)
 				--slider3.Position = UDim2.new((val / max), -8, 1, -9)
-				slider3:TweenPosition(UDim2.new((val / max), -8, 1, -9), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
+				slider3:TweenPosition(UDim2.new((val / argstable["Max"]), -8, 1, -9), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
 				local stringthing = tostring(sliderapi["Value"] / 10)
-				text3.Text = (decimal and (stringthing:len() > 1 and stringthing or stringthing..".0") or sliderapi["Value"] .. ".0")
-				temporaryfunction(val)
+				text3.Text = (argstable["Decimal"] and (stringthing:len() > 1 and stringthing or stringthing..".0") or sliderapi["Value"] .. ".0")
 			end
 			sliderapi["SetValue2"] = function(val)
-				val = math.clamp(val, min, max)
+				val = math.clamp(val, argstable["Min"], argstable["Max"])
 				sliderapi["Value2"] = val
 				--slider2.Size = UDim2.new(math.clamp((val / max), 0.02, 0.97), 0, 1, 0)
 				--slider4.Position = UDim2.new((val / max), -8, 1, -9)
 				local stringthing = tostring(sliderapi["Value2"] / 10)
-				text2.Text = (decimal and (stringthing:len() > 1 and stringthing or stringthing..".0").."   " or sliderapi["Value2"] .. ".0   ")
-				temporaryfunction(val)
+				text2.Text = (argstable["Decimal"] and (stringthing:len() > 1 and stringthing or stringthing..".0").."   " or sliderapi["Value2"] .. ".0   ")
 			end
 			sliderapi["GetRandomValue"] = function()
 				return Random.new().NextNumber(Random.new(), sliderapi["Value"], sliderapi["Value2"])
 			end
 			slider3.MouseButton1Down:Connect(function()
 				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-				sliderapi["SetValue"](math.floor(min + ((max - min) * xscale)))
+				sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 				slider3.Position = UDim2.new(xscale2, -8, 1, -9)
 				local move
 				local kill
 				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
 						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-						sliderapi["SetValue"](math.floor(min + ((max - min) * xscale)))
+						sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 					--	slider3.Position = UDim2.new(xscale2, -8, 1, -9)
 						slider3:TweenPosition(UDim2.new(xscale2, -8, 1, -9), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
 					end
@@ -2541,14 +2541,14 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			end)
 			slider4.MouseButton1Down:Connect(function()
 				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-				sliderapi["SetValue2"](math.floor(min + ((max - min) * xscale)))
+				sliderapi["SetValue2"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 				slider4.Position = UDim2.new(xscale2, -8, 1, -9)
 				local move
 				local kill
 				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
 						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-						sliderapi["SetValue2"](math.floor(min + ((max - min) * xscale)))
+						sliderapi["SetValue2"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 						--slider4.Position = UDim2.new(xscale2, -8, 1, -9)
 						slider4:TweenPosition(UDim2.new(xscale2, -8, 1, -9), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
 					end
@@ -2560,18 +2560,18 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					end
 				end)
 			end)
-			api["ObjectsThatCanBeSaved"][naame..name.."TwoSlider"] = {["Type"] = "TwoSlider", ["Object"] = frame, ["Api"] = sliderapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TwoSlider"] = {["Type"] = "TwoSlider", ["Object"] = frame, ["Api"] = sliderapi}
 			return sliderapi
 		end
 
-		buttonapi["CreateToggle"] = function(name, temporaryfunction, temporaryfunction2, default)
+		buttonapi["CreateToggle"] = function(argstable)
 			local buttonapi = {}
 			local amount = #children2:GetChildren()
 			local buttontext = Instance.new("TextLabel")
 			buttontext.BackgroundTransparency = 1
 			buttontext.Name = "ButtonText"
-			buttontext.Text = "   "..name
-			buttontext.Name = name
+			buttontext.Text = "   "..argstable["Name"]
+			buttontext.Name = argstable["Name"]
 			buttontext.LayoutOrder = amount
 			buttontext.Size = UDim2.new(1, 0, 0, 30)
 			buttontext.Active = false
@@ -2607,7 +2607,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 			buttonapi["Enabled"] = false
 			buttonapi["Keybind"] = ""
 			buttonapi["Object"] = buttontext
-			buttonapi["Default"] = default
+			buttonapi["Default"] = argstable["Default"]
 			buttonapi["ToggleButton"] = function(toggle, first)
 				buttonapi["Enabled"] = toggle
 				if buttonapi["Enabled"] then
@@ -2618,7 +2618,6 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					end
 				--	toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 					toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-					temporaryfunction()
 				else
 					if not first then
 						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -2627,10 +2626,12 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 					end
 				--	toggleframe1.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 					toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-					temporaryfunction2()
 				end
+				argstable["Function"](buttonapi["Enabled"])
 			end
-			buttonapi["ToggleButton"](default, true)
+			if argstable["Default"] then
+				buttonapi["ToggleButton"](argstable["Default"], true)
+			end
 			toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
 			toggleframe1.MouseEnter:connect(function()
 				if buttonapi["Enabled"] == false then
@@ -2643,7 +2644,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 				end
 			end)
 	
-			api["ObjectsThatCanBeSaved"][naame..name.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
 			return buttonapi
 		end
 
@@ -2696,7 +2697,7 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 		end)
 		button.MouseButton2Click:connect(buttonapi["ExpandToggle"])
 		button2.MouseButton1Click:connect(buttonapi["ExpandToggle"])
-		api["ObjectsThatCanBeSaved"][naame.."OptionsButton"] = {["Type"] = "OptionsButton", ["Object"] = button, ["Api"] = buttonapi}
+		api["ObjectsThatCanBeSaved"][argstablemain["Name"].."OptionsButton"] = {["Type"] = "OptionsButton", ["Object"] = button, ["Api"] = buttonapi}
 
 		return buttonapi
 	end
@@ -2704,21 +2705,21 @@ api["CreateWindow"] = function(name, icon, iconsize, position, visible)
 	return windowapi
 end
 
-api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
+api["CreateWindow2"] = function(argstablemain)
 	local windowapi = {}
 	local windowtitle = Instance.new("TextButton")
 	windowtitle.Text = ""
 	windowtitle.AutoButtonColor = false
 	windowtitle.BackgroundColor3 = Color3.fromRGB(25, 26, 25)
 	windowtitle.Size = UDim2.new(0, 220, 0, 41)
-	windowtitle.Position = position
+	windowtitle.Position = UDim2.new(0, 223, 0, 6)
 	windowtitle.Name = "MainWindow"
-	windowtitle.Visible = visible
-	windowtitle.Name = name
+	windowtitle.Visible = false
+	windowtitle.Name = argstablemain["Name"]
 	windowtitle.Parent = clickgui
 	local windowicon = Instance.new("ImageLabel")
-	windowicon.Size = UDim2.new(0, iconsize, 0, 16)
-	windowicon.Image = getcustomassetfunc(icon)
+	windowicon.Size = UDim2.new(0, argstablemain["IconSize"], 0, 16)
+	windowicon.Image = getcustomassetfunc(argstablemain["Icon"])
 	windowicon.ImageColor3 = Color3.fromRGB(200, 200, 200)
 	windowicon.Name = "WindowIcon"
 	windowicon.BackgroundTransparency = 1
@@ -2732,7 +2733,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 	windowtext.TextXAlignment = Enum.TextXAlignment.Left
 	windowtext.Font = Enum.Font.SourceSans
 	windowtext.TextSize = 17
-	windowtext.Text = name
+	windowtext.Text = argstablemain["Name"]
 	windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 	windowtext.Parent = windowtitle
 	local expandbutton = Instance.new("TextButton")
@@ -2791,7 +2792,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 	end)
 	local noexpand = false
 	dragGUI(windowtitle)
-	api["ObjectsThatCanBeSaved"][name.."Window"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "Window", ["Api"] = windowapi}
+	api["ObjectsThatCanBeSaved"][argstablemain["Name"].."Window"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "Window", ["Api"] = windowapi}
 
 	windowapi["SetVisible"] = function(value)
 		windowtitle.Visible = value
@@ -2825,7 +2826,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 	expandbutton.MouseButton1Click:connect(windowapi["ExpandToggle"])
 	expandbutton.MouseButton2Click:connect(windowapi["ExpandToggle"])
 
-	windowapi["CreateColorSlider"] = function(name, temporaryfunction)
+	windowapi["CreateColorSlider"] = function(argstable)
 		local min, max = 0, 1
 		local def = math.floor((min + max) / 2)
 		local defsca = (def - min)/(max - min)
@@ -2835,12 +2836,12 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 		frame.Size = UDim2.new(0, 220, 0, 50)
 		frame.BackgroundTransparency = 1
 		frame.LayoutOrder = amount2
-		frame.Name = name
+		frame.Name = argstable["Name"]
 		frame.Parent = children2
 		local text1 = Instance.new("TextLabel")
 		text1.Font = Enum.Font.SourceSans
 		text1.TextXAlignment = Enum.TextXAlignment.Left
-		text1.Text = "   "..name
+		text1.Text = "   "..argstable["Name"]
 		text1.Size = UDim2.new(1, 0, 0, 25)
 		text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 		text1.BackgroundTransparency = 1
@@ -2882,7 +2883,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 			text2.BackgroundColor3 = Color3.fromHSV(val, 1, 1)
 			sliderapi["Value"] = val
 			slider3.Position = UDim2.new(math.clamp(val, 0.02, 0.95), -9, 0, -7)
-			temporaryfunction(val)
+			argstable["Function"](val)
 		end
 		sliderapi["SetRainbow"] = function(val)
 			sliderapi["RainbowValue"] = val
@@ -2958,18 +2959,18 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				end
 			end)
 		end)
-		api["ObjectsThatCanBeSaved"][name.."SliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
+		api["ObjectsThatCanBeSaved"][argstable["Name"].."SliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
 		return sliderapi
 	end
 
-	windowapi["CreateToggle"] = function(name, temporaryfunction, temporaryfunction2, default, compatability)
+	windowapi["CreateToggle"] = function(argstable)
 		local buttonapi = {}
 		local amount = #children2:GetChildren()
 		local buttontext = Instance.new("TextLabel")
 		buttontext.BackgroundTransparency = 1
 		buttontext.Name = "ButtonText"
-		buttontext.Text = "   "..name
-		buttontext.Name = name
+		buttontext.Text = "   "..argstable["Name"]
+		buttontext.Name = argstable["Name"]
 		buttontext.LayoutOrder = amount
 		buttontext.Size = UDim2.new(1, 0, 0, 30)
 		buttontext.Active = false
@@ -3015,7 +3016,6 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				end
 			--	toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				temporaryfunction()
 			else
 				if not first then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -3024,10 +3024,12 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				end
 			--	toggleframe1.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 				toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.1, true)
-				temporaryfunction2()
 			end
+			argstable["Function"](buttonapi["Enabled"])
 		end
-		buttonapi["ToggleButton"](default, true)
+		if argstable["Default"] then
+			buttonapi["ToggleButton"](argstable["Default"], true)
+		end
 		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
 		toggleframe1.MouseEnter:connect(function()
 			if buttonapi["Enabled"] == false then
@@ -3040,12 +3042,11 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 			end
 		end)
 
-		
-		api["ObjectsThatCanBeSaved"][(compatability or "VapeSettings")..name.."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
+		api["ObjectsThatCanBeSaved"][argstable["Name"].."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
 		return buttonapi
 	end
 
-	windowapi["CreateTextList"] = function(name, temptext, temporaryfunction, temporaryfunction2, customstuff)
+	windowapi["CreateTextList"] = function(argstable)
 		local textapi = {}
 		local amount = #children:GetChildren()
 		local frame = Instance.new("Frame")
@@ -3053,7 +3054,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 		frame.BackgroundTransparency = 1
 		frame.ClipsDescendants = true
 		frame.LayoutOrder = amount
-		frame.Name = name
+		frame.Name = argstable["Name"]
 		frame.Parent = children
 		local textboxbkg = Instance.new("ImageLabel")
 		textboxbkg.BackgroundTransparency = 1
@@ -3073,7 +3074,7 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 		textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 		textbox.Font = Enum.Font.SourceSans
 		textbox.Text = ""
-		textbox.PlaceholderText = temptext
+		textbox.PlaceholderText = argstable["TempText"]
 		textbox.TextSize = 17
 		textbox.Parent = textboxbkg
 		local addbutton = Instance.new("ImageButton")
@@ -3152,19 +3153,23 @@ api["CreateWindow2"] = function(name, icon, iconsize, position, visible)
 				deletebutton.MouseButton1Click:connect(function()
 					table.remove(textapi["ObjectList"], i)
 					textapi["RefreshValues"](textapi["ObjectList"])
-					temporaryfunction2(i)
+					if argstable["RemoveFunction"] then
+						argstable["RemoveFunction"](i)
+					end
 				end)
-				if customstuff then
-					customstuff(itemframe, v)
+				if argstable["CustomFunction"] then
+					argstable["CustomFunction"](itemframe, v)
 				end
 			end
 		end
 
-		api["ObjectsThatCanBeSaved"][name.."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
+		api["ObjectsThatCanBeSaved"][argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
 		addbutton.MouseButton1Click:connect(function() 
 			table.insert(textapi["ObjectList"], textbox.Text)
 			textapi["RefreshValues"](textapi["ObjectList"])
-			temporaryfunction(textbox.Text) 
+			if argstable["AddFunction"] then
+				argstable["AddFunction"](textbox.Text) 
+			end
 		end)
 		return textapi
 	end
