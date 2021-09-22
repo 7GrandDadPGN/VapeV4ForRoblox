@@ -498,7 +498,7 @@ local function UpdateHud()
 	if sortingmethod == "Alphabetical" then
 		table.sort(tableofmodules, function(a, b) return a["Text"]:lower() < b["Text"]:lower() end)
 	else
-		table.sort(tableofmodules, function(a, b) return a["Text"]:len() + a["ExtraText"]():len() > b["Text"]:len() + b["ExtraText"]():len() end)
+		table.sort(tableofmodules, function(a, b) return a["Text"]:len() + (a["ExtraText"] and a["ExtraText"]():len() or 0) > b["Text"]:len() + (b["ExtraText"] and b["ExtraText"]():len() or 0) end)
 	end
 	for i2,v2 in pairs(tableofmodules) do
 		if first then

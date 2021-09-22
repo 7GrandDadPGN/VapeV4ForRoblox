@@ -1535,9 +1535,7 @@ api["CreateCustomWindow"] = function(argstablemain)
 						dropframe.Visible = false
 						argstable["Function"](listobj)
 						dropapi["UpdateList"](list)
-						if buttonapi["HasExtraText"] then
-							api["UpdateHudEvent"]:Fire()
-						end
+						api["UpdateHudEvent"]:Fire()
 					end)
 					placeholder = placeholder + 20
 				end
