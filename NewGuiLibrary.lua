@@ -2086,15 +2086,15 @@ api["CreateWindow"] = function(argstablemain2)
 			return textapi
 		end
 
-		buttonapi["CreateDropdown"] = function(name, tab, temporaryfunction)
+		buttonapi["CreateDropdown"] = function(argstable)
 			local dropapi = {}
-			local list = tab
+			local list = argstable["List"]
 			local amount2 = #children2:GetChildren()
 			local frame = Instance.new("Frame")
 			frame.Size = UDim2.new(0, 220, 0, 40)
 			frame.BackgroundTransparency = 1
 			frame.LayoutOrder = amount2
-			frame.Name = name
+			frame.Name = argstable["Name"]
 			frame.Parent = children2
 			local drop1 = Instance.new("TextButton")
 			drop1.AutoButtonColor = false
@@ -2107,7 +2107,7 @@ api["CreateWindow"] = function(argstablemain2)
 			drop1.TextSize = 17
 			drop1.TextXAlignment = Enum.TextXAlignment.Left
 			drop1.TextColor3 = Color3.fromRGB(162, 162, 162)
-			drop1.Text = "  "..name.." - "..(list ~= {} and list[1] or "")
+			drop1.Text = "  "..argstable["Name"].." - "..(list ~= {} and list[1] or "")
 			drop1.TextTruncate = Enum.TextTruncate.AtEnd
 			drop1.Font = Enum.Font.SourceSans
 			local thing = Instance.new("Frame")
@@ -2159,9 +2159,9 @@ api["CreateWindow"] = function(argstablemain2)
 						drop2.Parent = dropframe
 						drop2.MouseButton1Click:connect(function()
 							dropapi["Value"] = listobj
-							drop1.Text = "  "..name.." - "..listobj
+							drop1.Text = "  "..argstable["Name"].." - "..listobj
 							dropframe.Visible = false
-							temporaryfunction(listobj)
+							argstable["Function"](listobj)
 							dropapi["UpdateList"](list)
 							if buttonapi["HasExtraText"] then
 								api["UpdateHudEvent"]:Fire()
@@ -2173,9 +2173,9 @@ api["CreateWindow"] = function(argstablemain2)
 			end
 			dropapi["SetValue"] = function(listobj)
 				dropapi["Value"] = listobj
-				drop1.Text = "  "..name.." - "..listobj
+				drop1.Text = "  "..argstable["Name"].." - "..listobj
 				dropframe.Visible = false
-				temporaryfunction(listobj)
+				argstable["Function"](listobj)
 				dropapi["UpdateList"](list)
 				if buttonapi["HasExtraText"] then
 					api["UpdateHudEvent"]:Fire()
@@ -2185,7 +2185,7 @@ api["CreateWindow"] = function(argstablemain2)
 			if buttonapi["HasExtraText"] then
 				api["UpdateHudEvent"]:Fire()
 			end
-			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..name.."Dropdown"] = {["Type"] = "Dropdown", ["Object"] = frame, ["Api"] = dropapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Dropdown"] = {["Type"] = "Dropdown", ["Object"] = frame, ["Api"] = dropapi}
 
 			return dropapi
 		end

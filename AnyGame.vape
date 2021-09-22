@@ -297,7 +297,11 @@ local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].Cre
 		end
 	end
 })
-aimmethod = AimAssist.CreateDropdown("Method", {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay", "Mouse"}, function(val) end)
+aimmethod = AimAssist.CreateDropdown({
+	["Name"] = "Method", 
+	["List"] = {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay", "Mouse"},
+	["Function"] = function(val) end
+})
 local aimtable = {["FindPartOnRayWithIgnoreList"] = 1, ["FindPartOnRayWithWhitelist"] = 1, ["Raycast"] = 2, ["FindPartOnRay"] = 1, ["ScreenPointToRay"] = 3, ["ViewportPointToRay"] = 3, ["Mouse"] = 4}
 aimvischeck = AimAssist.CreateToggle({
 	["Name"] = "Wall Check",
@@ -535,11 +539,15 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 	end,
 	["ExtraText"] = function() return " "..flymethod["Value"] end
 })
-flymethod = fly.CreateDropdown("Mode", {"Normal", "AntiCheat"}, function(val)
-	if isAlive() then
-		flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+flymethod = fly.CreateDropdown({
+	["Name"] = "Mode", 
+	["List"] = {"Normal", "AntiCheat"},
+	["Function"] = function(val)
+		if isAlive() then
+			flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+		end
 	end
-end)
+})
 flyspeed = fly.CreateSlider({
 	["Name"] = "Speed",
 	["Min"] = 1,
@@ -726,7 +734,11 @@ HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	end,
 	["HoverText"] = "Lets you jump higher"
 })
-HighJumpMethod = HighJump.CreateDropdown("Mode", {"Toggle", "Normal"}, function() end)
+HighJumpMethod = HighJump.CreateDropdown({
+	["Name"] = "Mode", 
+	["List"] = {"Toggle", "Normal"},
+	["Function"] = function(val) end
+})
 HighJumpBoost = HighJump.CreateSlider({
 	["Name"] = "Boost",
 	["Min"] = 1,
@@ -808,7 +820,11 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 	end,
 	["ExtraText"] = function() return " "..speedmethod["Value"] end
 })
-speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, function(val) end)
+speedmethod = speed.CreateDropdown({
+	["Name"] = "Mode", 
+	["List"] = {"AntiCheat A", "AntiCheat B"},
+	["Function"] = function(val) end
+})
 speedval = speed.CreateSlider({
 	["Name"] = "Speed", 
 	["Min"] = 1,
@@ -1135,10 +1151,14 @@ ESPColor = ESP.CreateColorSlider({
 	["Name"] = "Player Color", 
 	["Function"] = function(val) end
 })
-ESPMethod = ESP.CreateDropdown("Mode", {"2D", "Skeleton"}, function(val)
-	ESPFolder:ClearAllChildren()
-	ESPHealthBar["Object"].Visible = (val == "2D")
-end)
+ESPMethod = ESP.CreateDropdown({
+	["Name"] = "Mode",
+	["List"] = {"2D", "Skeleton"},
+	["Function"] = function(val)
+		ESPFolder:ClearAllChildren()
+		ESPHealthBar["Object"].Visible = (val == "2D")
+	end
+})
 ESPHealthBar = ESP.CreateToggle({
 	["Name"] = "Health Bar", 
 	["Function"] = function(callback)
