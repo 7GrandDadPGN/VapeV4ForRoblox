@@ -185,14 +185,16 @@ GUI.CreateButton({
 	["Function"] = function(callback) Profiles.SetVisible(callback) end, 
 })
 local FriendsTextList = {["RefreshValues"] = function() end}
+local FriendsColor = {["Value"] = 0.44}
 FriendsTextList = Friends.CreateTextList({
 	["Name"] = "FriendsList", 
 	["TempText"] = "Username / Alias", 
 	["CustomFunction"] = function(obj)
+		obj.ItemText.TextColor3 = Color3.new(1, 1, 1)
 		local friendcircle = Instance.new("Frame")
 		friendcircle.Size = UDim2.new(0, 10, 0, 10)
 		friendcircle.Name = "FriendCircle"
-		friendcircle.BackgroundColor3 = Color3.fromHSV(0.44, 1, 1)
+		friendcircle.BackgroundColor3 = Color3.fromHSV(FriendsColor["Value"], 0.7, 0.9)
 		friendcircle.BorderSizePixel = 0
 		friendcircle.Position = UDim2.new(0, 10, 0, 13)
 		friendcircle.Parent = obj
@@ -203,7 +205,26 @@ FriendsTextList = Friends.CreateTextList({
 		obj.ItemText.Size = UDim2.new(0, 157, 0, 33)
 	end
 })
-Friends.CreateColorSlider({
+Friends.CreateToggle({
+	["Name"] = "Use Friends",
+	["Function"] = function(callback) end,
+	["Default"] = true
+})
+Friends.CreateToggle({
+	["Name"] = "Use Alias",
+	["Function"] = function(callback) end,
+	["Default"] = true,
+})
+Friends.CreateToggle({
+	["Name"] = "Spoof alias",
+	["Function"] = function(callback) end,
+})
+Friends.CreateToggle({
+	["Name"] = "Recolor visuals",
+	["Function"] = function(callback) end,
+	["Default"] = true
+})
+FriendsColor = Friends.CreateColorSlider({
 	["Name"] = "Friends Color", 
 	["Function"] = function(val) 
 		pcall(function()
@@ -211,24 +232,12 @@ Friends.CreateColorSlider({
 		end)
 		for i, v in pairs(FriendsTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
 			pcall(function()
-				if v:IsA("Frame") then
+				if v:IsA("TextButton") then
 					v.FriendCircle.BackgroundColor3 = Color3.fromHSV(val, 1, 1)
 				end
 			end)
 		end
 	end
-})
-Friends.CreateToggle({
-	["Name"] = "Use Friends",
-	["Function"] = function(callback) end,
-})
-Friends.CreateToggle({
-	["Name"] = "Use Roblox Friends",
-	["Function"] = function(callback) end,
-})
-Friends.CreateToggle({
-	["Name"] = "Use color",
-	["Function"] = function(callback) end,
 })
 local ProfilesTextList = {["RefreshValues"] = function() end}
 ProfilesTextList = Profiles.CreateTextList({
@@ -488,6 +497,8 @@ local function UpdateHud()
 	end
 	if sortingmethod == "Alphabetical" then
 		table.sort(tableofmodules, function(a, b) return a["Text"]:lower() < b["Text"]:lower() end)
+	else
+		table.sort(tableofmodules, function(a, b) return a["Text"]:len() + a["ExtraText"]():len() > b["Text"]:len() + b["ExtraText"]():len() end)
 	end
 	for i2,v2 in pairs(tableofmodules) do
 		if first then
@@ -528,7 +539,22 @@ local function UpdateHud()
 end
 
 GuiLibrary["UpdateHudEvent"].Event:connect(UpdateHud)
-
+TextGui.CreateDropdown({
+	["Name"] = "Sort",
+	["List"] = {"Alphabetical", "Length"},
+	["Function"] = function(val)
+		sortingmethod = val
+		GuiLibrary["UpdateHudEvent"]:Fire()
+	end
+})
+TextGui.CreateToggle({
+	["Name"] = "Shadow", 
+	["Function"] = function(callback) onetext2.Visible = callback onetext4.Visible = callback onething3.Visible = callback end
+})
+local TextGuiUseCategoryColor = TextGui.CreateToggle({
+	["Name"] = "Use Category Color", 
+	["Function"] = function(callback) end
+})
 TextGui.CreateToggle({
 	["Name"] = "Watermark", 
 	["Function"] = function(callback) 
@@ -553,29 +579,25 @@ TextGui.CreateToggle({
 			end
 		else
 			onething.Visible = false
-		if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
-			onetext.TextXAlignment = Enum.TextXAlignment.Right
-			onetext2.TextXAlignment = Enum.TextXAlignment.Right
-			onetext2.Position = UDim2.new(0, 1, 0, 1)
-			onetext3.TextXAlignment = Enum.TextXAlignment.Right
-			onetext4.TextXAlignment = Enum.TextXAlignment.Right
-			onething.Position = UDim2.new(1, -142, 0, 8)
-			onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
-		else
-			onetext.TextXAlignment = Enum.TextXAlignment.Left
-			onetext2.TextXAlignment = Enum.TextXAlignment.Left
-			onetext2.Position = UDim2.new(0, 4, 0, 1)
-			onetext3.TextXAlignment = Enum.TextXAlignment.Left
-			onetext4.TextXAlignment = Enum.TextXAlignment.Left
-			onething.Position = UDim2.new(0, 2, 0, 8)
-			onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
-		end
+			if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
+				onetext.TextXAlignment = Enum.TextXAlignment.Right
+				onetext2.TextXAlignment = Enum.TextXAlignment.Right
+				onetext2.Position = UDim2.new(0, 1, 0, 1)
+				onetext3.TextXAlignment = Enum.TextXAlignment.Right
+				onetext4.TextXAlignment = Enum.TextXAlignment.Right
+				onething.Position = UDim2.new(1, -142, 0, 8)
+				onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
+			else
+				onetext.TextXAlignment = Enum.TextXAlignment.Left
+				onetext2.TextXAlignment = Enum.TextXAlignment.Left
+				onetext2.Position = UDim2.new(0, 4, 0, 1)
+				onetext3.TextXAlignment = Enum.TextXAlignment.Left
+				onetext4.TextXAlignment = Enum.TextXAlignment.Left
+				onething.Position = UDim2.new(0, 2, 0, 8)
+				onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
+			end
 		end
 	end
-})
-TextGui.CreateToggle({
-	["Name"] = "Shadow", 
-	["Function"] = function(callback) onetext2.Visible = callback onetext4.Visible = callback onething3.Visible = callback end
 })
 TextGui.CreateToggle({
 	["Name"] = "Render background", 
@@ -755,6 +777,23 @@ local blatantmode = GUI.CreateToggle({
 })
 GUI.CreateDivider2("GENERAL SETTINGS")
 guicolorslider = GUI.CreateColorSlider("GUI Theme", function(val) GuiLibrary["Settings"]["GUIObject"]["Color"] = val GuiLibrary["UpdateUI"]() end)
+local tabsortorder = {
+	["CombatButton"] = 1,
+	["BlatantButton"] = 2,
+	["RenderButton"] = 3,
+	["UtilityButton"] = 4,
+	["WorldButton"] = 5,
+	["FriendsButton"] = 6,
+	["ProfilesButton"] = 7
+}
+
+local tabcategorycolor = {
+	["CombatWindow"] = Color3.fromRGB(214, 27, 6),
+	["BlatantWindow"] = Color3.fromRGB(219, 21, 133),
+	["RenderWindow"] = Color3.fromRGB(135, 14, 165),
+	["UtilityWindow"] = Color3.fromRGB(27, 145, 68),
+	["WorldWindow"] = Color3.fromRGB(70, 73, 16)
+}
 
 GuiLibrary["UpdateUI"] = function()
 	pcall(function()
@@ -771,15 +810,24 @@ GuiLibrary["UpdateUI"] = function()
 			local str = tostring(rainbowcolor)
 			local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
 			local newcolor = Color3.fromHSV(newcol, 0.7, 0.9)
+			if TextGuiUseCategoryColor["Enabled"] and GuiLibrary["ObjectsThatCanBeSaved"][v2:gsub(" ", "").."OptionsButton"] and tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][v2:gsub(" ", "").."OptionsButton"]["Object"].Parent.Parent.Name.."Window"] then
+				newcolor = tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][v2:gsub(" ", "").."OptionsButton"]["Object"].Parent.Parent.Name.."Window"]
+			end
 			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..v2..'</font>'
 			newfirst = true
 		end
 		onetext.Text = newtext
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if (v["Type"] == "Button" or v["Type"] == "ButtonMain") and v["Api"]["Enabled"] then
-				v["Object"].ButtonText.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				local rainbowsub = 2
+				local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.03 * tabsortorder[i]) or 0)
+				if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
+				local str = tostring(rainbowcolor)
+				local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
+				local newcolor = Color3.fromHSV(newcol, 0.7, 0.9)
+				v["Object"].ButtonText.TextColor3 = newcolor
 				if v["Object"]:FindFirstChild("ButtonIcon") then
-					v["Object"].ButtonIcon.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					v["Object"].ButtonIcon.ImageColor3 = newcolor
 				end
 			end
 			if v["Type"] == "OptionsButton" then
@@ -789,7 +837,13 @@ GuiLibrary["UpdateUI"] = function()
 			end
 			if v["Type"] == "ExtrasButton" then
 				if v["Api"]["Enabled"] then
-					v["Object"].ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					local rainbowsub = 2
+					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.03 * 8) or 0)
+					if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
+					local str = tostring(rainbowcolor)
+					local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
+					local newcolor = Color3.fromHSV(newcol, 0.7, 0.9)
+					v["Object"].ImageColor3 = newcolor
 				end
 			end
 			if (v["Type"] == "Toggle" or v["Type"] == "ToggleMain") and v["Api"]["Enabled"] then
@@ -884,7 +938,7 @@ local GUIbind = GUI.CreateGUIBind()
 local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
 		GuiLibrary["SaveSettings"]()
-        queueteleport('shared.VapeSwitchServers = true if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end')
+        queueteleport('shared.VapeSwitchServers = true wait(1) if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end')
     end
 end)
 
@@ -933,10 +987,21 @@ GUI.CreateButton2({
 	["Name"] = "SORT GUI", 
 	["Function"] = function()
 		local sorttable = {}
-		local num = 229
+		local sortordertable = {
+			["GUIWindow"] = 0,
+			["CombatWindow"] = 1,
+			["BlatantWindow"] = 2,
+			["RenderWindow"] = 3,
+			["UtilityWindow"] = 4,
+			["WorldWindow"] = 5,
+			["FriendsWindow"] = 6,
+			["ProfilesWindow"] = 7,
+		}
+		local num = 6
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-			if (v["Type"] == "Window" or v["Type"] == "CustomWindow") and i ~= "GUIWindow" and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) and v["Object"].Visible then
-				sorttable[#sorttable + (v["Type"] == "CustomWindow" and 100 or 1)] = v["Object"]
+			if (v["Type"] == "Window" or v["Type"] == "CustomWindow") and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) and v["Object"].Visible then
+				local sortordernum = (sortordertable[i] or #sorttable)
+				sorttable[sortordernum + (v["Type"] == "CustomWindow" and 100 or 1)] = v["Object"]
 			end
 		end
 		for i2,v2 in pairs(sorttable) do

@@ -1337,6 +1337,17 @@ api["CreateCustomWindow"] = function(argstablemain)
 	windowtitle.Visible = false
 	windowtitle.Name = argstablemain["Name"]
 	windowtitle.Parent = hudgui
+	local windowshadow = Instance.new("ImageLabel")
+	windowshadow.AnchorPoint = Vector2.new(0.5, 0.5)
+	windowshadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	windowshadow.Image = getcustomassetfunc("vape/assets/WindowBlur.png")
+	windowshadow.BackgroundTransparency = 1
+	windowshadow.ZIndex = -1
+	windowshadow.Size = UDim2.new(1, 6, 1, 6)
+	windowshadow.ImageColor3 = Color3.new(0, 0, 0)
+	windowshadow.ScaleType = Enum.ScaleType.Slice
+	windowshadow.SliceCenter = Rect.new(10, 10, 118, 118)
+	windowshadow.Parent = windowtitle
 	local windowicon = Instance.new("ImageLabel")
 	windowicon.Size = UDim2.new(0, argstablemain["IconSize"], 0, 16)
 	windowicon.Image = getcustomassetfunc(argstablemain["Icon"])
@@ -1427,6 +1438,7 @@ api["CreateCustomWindow"] = function(argstablemain)
 		else
 			windowtitle.Visible = false
 		end
+		windowshadow.Visible = (windowtitle.Size ~= UDim2.new(0, 220, 0, 0))
 	end
 	
 	windowapi["SetVisible"] = function(value)
@@ -1444,6 +1456,104 @@ api["CreateCustomWindow"] = function(argstablemain)
 			children.Visible = false
 			windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 		end
+	end
+
+	windowapi["CreateDropdown"] = function(argstable)
+		local dropapi = {}
+		local list = argstable["List"]
+		local amount2 = #children2:GetChildren()
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(0, 220, 0, 40)
+		frame.BackgroundTransparency = 1
+		frame.LayoutOrder = amount2
+		frame.Name = argstable["Name"]
+		frame.Parent = children2
+		local drop1 = Instance.new("TextButton")
+		drop1.AutoButtonColor = false
+		drop1.Size = UDim2.new(0, 200, 0, 30)
+		drop1.Position = UDim2.new(0, 10, 0, 10)
+		drop1.Parent = frame
+		drop1.BorderSizePixel = 0
+		drop1.ZIndex = 2
+		drop1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+		drop1.TextSize = 17
+		drop1.TextXAlignment = Enum.TextXAlignment.Left
+		drop1.TextColor3 = Color3.fromRGB(162, 162, 162)
+		drop1.Text = "  "..argstable["Name"].." - "..(list ~= {} and list[1] or "")
+		drop1.TextTruncate = Enum.TextTruncate.AtEnd
+		drop1.Font = Enum.Font.SourceSans
+		local thing = Instance.new("Frame")
+		thing.Size = UDim2.new(1, 2, 1, 2)
+		thing.BorderSizePixel = 0
+		thing.Position = UDim2.new(0, -1, 0, -1)
+		thing.ZIndex = 1
+		thing.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		thing.Parent = drop1
+		local uicorner = Instance.new("UICorner")
+		uicorner.CornerRadius = UDim.new(0, 4)
+		uicorner.Parent = drop1
+		local uicorner2 = Instance.new("UICorner")
+		uicorner2.CornerRadius = UDim.new(0, 4)
+		uicorner2.Parent = thing
+		local dropframe = Instance.new("Frame")
+		dropframe.ZIndex = 3
+		dropframe.Parent = drop1
+		dropframe.Position = UDim2.new(0, 0, 1, 0)
+		dropframe.BackgroundTransparency = 1
+		dropframe.BorderSizePixel = 0
+		dropframe.Visible = false
+		drop1.MouseButton1Click:connect(function()
+			dropframe.Visible = not dropframe.Visible
+		end)
+		local placeholder = 0
+		dropapi["Value"] = (list ~= {} and list[1] or "")
+		dropapi["Default"] = dropapi["Value"]
+		dropapi["UpdateList"] = function(val)
+			placeholder = 0
+			list = val
+			for del1, del2 in pairs(dropframe:GetChildren()) do if del2:IsA("TextButton") then del2:Remove() end end
+			for numbe, listobj in pairs(val) do
+				if listobj ~= dropapi["Value"] then
+					local drop2 = Instance.new("TextButton")
+					dropframe.Size = UDim2.new(0, 200, 0, placeholder + 20)
+					drop2.Text = listobj
+					drop2.LayoutOrder = numbe
+					drop2.TextColor3 = Color3.new(1, 1, 1)
+					drop2.AutoButtonColor = false
+					drop2.Size = UDim2.new(0, 200, 0, 20)
+					drop2.Position = UDim2.new(0, 2, 0, placeholder - 1)
+					drop2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+					drop2.Font = Enum.Font.SourceSans
+					drop2.TextSize = 14
+					drop2.ZIndex = 4
+					drop2.BorderSizePixel = 0
+					drop2.Name = listobj
+					drop2.Parent = dropframe
+					drop2.MouseButton1Click:connect(function()
+						dropapi["Value"] = listobj
+						drop1.Text = "  "..argstable["Name"].." - "..listobj
+						dropframe.Visible = false
+						argstable["Function"](listobj)
+						dropapi["UpdateList"](list)
+						if buttonapi["HasExtraText"] then
+							api["UpdateHudEvent"]:Fire()
+						end
+					end)
+					placeholder = placeholder + 20
+				end
+			end
+		end
+		dropapi["SetValue"] = function(listobj)
+			dropapi["Value"] = listobj
+			drop1.Text = "  "..argstable["Name"].." - "..listobj
+			dropframe.Visible = false
+			argstable["Function"](listobj)
+			dropapi["UpdateList"](list)
+		end
+		dropapi["UpdateList"](list)
+		api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Dropdown"] = {["Type"] = "Dropdown", ["Object"] = frame, ["Api"] = dropapi}
+
+		return dropapi
 	end
 
 	windowapi["CreateColorSlider"] = function(argstable)
