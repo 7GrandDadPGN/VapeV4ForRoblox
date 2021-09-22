@@ -105,7 +105,11 @@ JoinQueue = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 		end
 	end
 })
-JoinQueueTypes = JoinQueue.CreateDropdown("Mode", QueueTypes, function(val) end)
+JoinQueueTypes = JoinQueue.CreateDropdown({
+	["Name"] = "Mode",
+	["List"] = QueueTypes,
+	["Function"] = function(val) end
+})
 JoinQueueDelay = JoinQueue.CreateSlider({
 	["Name"] = "Delay",
 	["Min"] = 1,

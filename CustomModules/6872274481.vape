@@ -9,7 +9,6 @@ local targetinfo = shared.VapeTargetInfo
 local collectionservice = game:GetService("CollectionService")
 local uis = game:GetService("UserInputService")
 local mouse = lplr:GetMouse()
-local robloxfriends = {}
 local bedwars = {}
 local getfunctions
 local origC0 = nil
@@ -473,15 +472,14 @@ players.PlayerAdded:connect(renderNametag)
 
 getfunctions()
 
-local function friendCheck(plr)
-	if not robloxfriends[plr.UserId] then
-		if lplr:IsFriendsWith(plr.UserId) then
-			table.insert(robloxfriends, plr.Name)
-			robloxfriends[plr.UserId] = true
-		end
-	end
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and ((GuiLibrary["ObjectsThatCanBeSaved"]["Use Roblox FriendsToggle"]["Api"]["Enabled"] and table.find(robloxfriends, plr.Name) == nil) and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) == nil) or GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] == false)
+local function friendCheck(plr, recolor)
+	return (recolor and GuiLibrary["ObjectsThatCanBeSaved"]["Recolor visualsToggle"]["Api"]["Enabled"] or (not recolor)) and GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextList"]["Api"]["ObjectList"], plr.Name)
 end
+
+local function getPlayerColor(plr)
+	return (friendCheck(plr, true) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color)
+end
+
 
 shared.vapeteamcheck = function(plr)
 	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and bedwars["PlayerUtil"].getGamePlayer(lplr):getTeamId() ~= bedwars["PlayerUtil"].getGamePlayer(plr):getTeamId() or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
@@ -2694,7 +2692,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 								thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 								thing.Text = plr.Name
 							end
-							thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+							thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
 							thing.Parent = NameTagsFolder
 							local hand = Instance.new("ImageLabel")
 							hand.Size = UDim2.new(0, 30, 0, 30)
@@ -2753,7 +2751,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 								local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 								thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 								thing.Text = modifiedText
-								thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+								thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
 								thing.Visible = headVis
 								thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
 							end

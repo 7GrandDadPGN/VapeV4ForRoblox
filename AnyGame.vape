@@ -8,7 +8,6 @@ local cam = workspace.CurrentCamera
 local targetinfo = shared.VapeTargetInfo
 local uis = game:GetService("UserInputService")
 local mouse = lplr:GetMouse()
-local robloxfriends = {}
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 
@@ -25,14 +24,12 @@ local function UnbindFromRenderStep(name)
 	end
 end
 
-local function friendCheck(plr)
-	if not robloxfriends[plr.UserId] then
-		if lplr:IsFriendsWith(plr.UserId) then
-			table.insert(robloxfriends, plr.Name)
-			robloxfriends[plr.UserId] = true
-		end
-	end
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and ((GuiLibrary["ObjectsThatCanBeSaved"]["Use Roblox FriendsToggle"]["Api"]["Enabled"] and table.find(robloxfriends, plr.Name) == nil) and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) == nil) or GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] == false)
+local function friendCheck(plr, recolor)
+	return (recolor and GuiLibrary["ObjectsThatCanBeSaved"]["Recolor visualsToggle"]["Api"]["Enabled"] or (not recolor)) and GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextList"]["Api"]["ObjectList"], plr.Name)
+end
+
+local function getPlayerColor(plr)
+	return (friendCheck(plr, true) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color)
 end
 
 local function getcustomassetfunc(path)
@@ -76,7 +73,7 @@ local function isAlive(plr)
 end
 
 local function isPlayerTargetable(plr, target, friend)
-    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and (friend == true and friendCheck(plr) or friend == false) and isAlive(plr) and targetCheck(plr, target) and shared.vapeteamcheck(plr)
+    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and (friend and friendCheck(plr) or (not friend)) and isAlive(plr) and targetCheck(plr, target) and shared.vapeteamcheck(plr)
 end
 
 local function vischeck(char, part)
@@ -250,7 +247,7 @@ GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
 					if isPlayerTargetable(plr, false, false) then
 						local v238, v239 = radarcam:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * plr.Character.HumanoidRootPart.CFrame).p * 0.2)
 						thing.Visible = true
-						thing.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(RadarColor["Value"], 1, 1)
+						thing.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(RadarColor["Value"], 1, 1)
 						thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
 					end
 				end
@@ -896,7 +893,7 @@ local Arrows = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 						if ArrowsFolder:FindFirstChild(plr.Name) then
 							thing = ArrowsFolder[plr.Name]
 							thing.Visible = false
-							thing.ImageColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ArrowsColor["Value"], 1, 1)
+							thing.ImageColor3 = getPlayerColor(plr) or Color3.fromHSV(ArrowsColor["Value"], 1, 1)
 						else
 							thing = Instance.new("ImageLabel")
 							thing.BackgroundTransparency = 1
@@ -955,10 +952,10 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 						if ESPFolder:FindFirstChild(plr.Name) then
 							thing = ESPFolder[plr.Name]
 							thing.Visible = false
-							thing.Line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-							thing.Line2.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-							thing.Line3.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-							thing.Line4.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 						else
 							thing = Instance.new("Frame")
 							thing.BackgroundTransparency = 1
@@ -972,7 +969,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line1.ZIndex = 2
 							line1.Size = UDim2.new(1, -2, 0, 1)
 							line1.Position = UDim2.new(0, 1, 0, 1)
-							line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line1.Parent = thing
 							local line2 = Instance.new("Frame")
 							line2.BorderSizePixel = 0
@@ -980,7 +977,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line2.Size = UDim2.new(1, -2, 0, 1)
 							line2.ZIndex = 2
 							line2.Position = UDim2.new(0, 1, 1, -2)
-							line2.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line2.Parent = thing
 							local line3 = Instance.new("Frame")
 							line3.BorderSizePixel = 0
@@ -988,7 +985,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line3.Size = UDim2.new(0, 1, 1, -2)
 							line3.Position = UDim2.new(0, 1, 0, 1)
 							line3.ZIndex = 2
-							line3.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line3.Parent = thing
 							local line4 = Instance.new("Frame")
 							line4.BorderSizePixel = 0
@@ -996,7 +993,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line4.Size = UDim2.new(0, 1, 1, -2)
 							line4.Position = UDim2.new(1, -2, 0, 1)
 							line4.ZIndex = 2
-							line4.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line4.Parent = thing
 							local line1clone = line1:Clone()
 							line1clone.ZIndex = 1
@@ -1067,7 +1064,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							thing = ESPFolder[plr.Name]
 							thing.Visible = false
 							for linenum, line in pairs(thing:GetChildren()) do
-								line.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+								line.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							end
 						else
 							thing = Instance.new("Frame")
@@ -1083,7 +1080,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line1.ZIndex = 2
 							line1.Size = UDim2.new(0, 0, 0, 0)
 							line1.Position = UDim2.new(0, 0, 0, 0)
-							line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line1.Parent = thing
 							local line2 = line1:Clone()
 							line2.Name = "MiddleTorsoLine"
@@ -1199,7 +1196,7 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 							thing = ChamsFolder[plr.Name]
 							for partnumber, part in pairs(thing:GetChildren()) do
 								part.Visible = false
-								part.Color3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ChamsColor["Value"], 1, 1)
+								part.Color3 = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Value"], 1, 1)
 							end
 						end
 						
@@ -1216,7 +1213,7 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 										boxhandle.AlwaysOnTop = ChamsOnTop["Enabled"]
 										boxhandle.ZIndex = 10
 										boxhandle.Visible = true
-										boxhandle.Color3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ChamsColor["Value"], 1, 1)
+										boxhandle.Color3 = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Value"], 1, 1)
 										boxhandle.Name = part.Name
 										boxhandle.Parent = chamfolder
 									end
@@ -1374,7 +1371,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 							thing.Text = plr.Name
 						end
-						thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+						thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
 						thing.Parent = NameTagsFolder
 					end
 					
@@ -1389,7 +1386,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 							local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 							thing.Text = modifiedText
-							thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+							thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
 							thing.Visible = headVis
 							thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
 						end

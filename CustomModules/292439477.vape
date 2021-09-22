@@ -48,14 +48,12 @@ fakeBarrel.Size = Vector3.new(1,1,1)
 fakeBarrel.Transparency = 1
 fakeBarrel.Parent = workspace
 
-local function friendCheck(plr)
-	if not robloxfriends[plr.UserId] then
-		if lplr:IsFriendsWith(plr.UserId) then
-			table.insert(robloxfriends, plr.Name)
-			robloxfriends[plr.UserId] = true
-		end
-	end
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and ((GuiLibrary["ObjectsThatCanBeSaved"]["Use Roblox FriendsToggle"]["Api"]["Enabled"] and table.find(robloxfriends, plr.Name) == nil) and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) == nil) or GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] == false)
+local function friendCheck(plr, recolor)
+	return (recolor and GuiLibrary["ObjectsThatCanBeSaved"]["Recolor visualsToggle"]["Api"]["Enabled"] or (not recolor)) and GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextList"]["Api"]["ObjectList"], plr.Name)
+end
+
+local function getPlayerColor(plr)
+	return (friendCheck(plr, true) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1))
 end
 
 local function teamCheck(plr)
@@ -236,10 +234,10 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 						if ESphantomforcesolder:FindFirstChild(plr.Name) then
 							thing = ESphantomforcesolder[plr.Name]
 							thing.Visible = false
-							thing.Line1.BackgroundColor3 = Color3.fromHSV(ESPColor["Value"], 1, 1)
-							thing.Line2.BackgroundColor3 = Color3.fromHSV(ESPColor["Value"], 1, 1)
-							thing.Line3.BackgroundColor3 = Color3.fromHSV(ESPColor["Value"], 1, 1)
-							thing.Line4.BackgroundColor3 = Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 						else
 							thing = Instance.new("Frame")
 							thing.BackgroundTransparency = 1
@@ -253,7 +251,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line1.ZIndex = 2
 							line1.Size = UDim2.new(1, -2, 0, 1)
 							line1.Position = UDim2.new(0, 1, 0, 1)
-							line1.BackgroundColor3 = Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line1.Parent = thing
 							local line2 = Instance.new("Frame")
 							line2.BorderSizePixel = 0
@@ -261,7 +259,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line2.Size = UDim2.new(1, -2, 0, 1)
 							line2.ZIndex = 2
 							line2.Position = UDim2.new(0, 1, 1, -2)
-							line2.BackgroundColor3 = Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line2.Parent = thing
 							local line3 = Instance.new("Frame")
 							line3.BorderSizePixel = 0
@@ -269,7 +267,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line3.Size = UDim2.new(0, 1, 1, -2)
 							line3.Position = UDim2.new(0, 1, 0, 1)
 							line3.ZIndex = 2
-							line3.BackgroundColor3 = Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line3.Parent = thing
 							local line4 = Instance.new("Frame")
 							line4.BorderSizePixel = 0
@@ -277,7 +275,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line4.Size = UDim2.new(0, 1, 1, -2)
 							line4.Position = UDim2.new(1, -2, 0, 1)
 							line4.ZIndex = 2
-							line4.BackgroundColor3 = Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line4.Parent = thing
 							local line1clone = line1:Clone()
 							line1clone.ZIndex = 1
@@ -341,7 +339,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line1.ZIndex = 2
 							line1.Size = UDim2.new(0, 0, 0, 0)
 							line1.Position = UDim2.new(0, 0, 0, 0)
-							line1.BackgroundColor3 = Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
 							line1.Parent = thing
 							local line2 = line1:Clone()
 							line2.Name = "MiddleTorsoLine"
@@ -460,7 +458,7 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 										boxhandle.AlwaysOnTop = ChamsOnTop["Enabled"]
 										boxhandle.ZIndex = 10
 										boxhandle.Visible = true
-										boxhandle.Color3 = Color3.fromHSV(ChamsColor["Value"], 1, 1)
+										boxhandle.Color3 = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Value"], 1, 1)
 										boxhandle.Name = partname
 										boxhandle.Parent = chamfolder
 									end
@@ -559,7 +557,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 								local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 								thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 								thing.Text = modifiedText
-								thing.TextColor3 = Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+								thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
 								thing.Visible = headVis
 								thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
 							end
@@ -638,7 +636,7 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 							startVector = startVector * (1 / GuiLibrary["MainRescale"].Scale)
 							endVector = endVector * (1 / GuiLibrary["MainRescale"].Scale)
 							thing.Visible = true
-							thing.BackgroundColor3 = Color3.fromHSV(TracersColor["Value"], 1, 1)
+							thing.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(TracersColor["Value"], 1, 1)
 							thing.Size = UDim2.new(0, Distance, 0, 2)
 							thing.Position = UDim2.new(0, (startVector.X + endVector.X) / 2, 0, ((startVector.Y + endVector.Y) / 2) - 36)
 							thing.Rotation = math.atan2(endVector.Y - startVector.Y, endVector.X - startVector.X) * (180 / math.pi)
