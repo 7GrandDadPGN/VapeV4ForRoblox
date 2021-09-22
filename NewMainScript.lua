@@ -858,11 +858,27 @@ GUI.CreateToggle({
 	["Name"] = "Discord integration", 
 	["Function"] = function() end
 })
-GUI.CreateToggle({
+local ToggleNotifications = {["Object"] = nil}
+local Notifications = GUI.CreateToggle({
 	["Name"] = "Notifications", 
+	["Function"] = function(callback) 
+		GuiLibrary["Notifications"] = callback 
+		if ToggleNotifications["Object"] then
+			ToggleNotifications["Object"].Visible = callback
+		end
+	end,
+	["Default"] = true
+})
+ToggleNotifications = GUI.CreateToggle({
+	["Name"] = "Toggle Notifications", 
 	["Function"] = function(callback) GuiLibrary["ToggleNotifications"] = callback end,
 	["Default"] = true
 })
+ToggleNotifications["Object"].BackgroundTransparency = 0
+ToggleNotifications["Object"].BorderSizePixel = 0
+ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleNotifications["Object"].Visible = Notifications["Enabled"]
+
 local GUIbind = GUI.CreateGUIBind()
 
 local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
