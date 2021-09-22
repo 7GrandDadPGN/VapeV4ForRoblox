@@ -1626,7 +1626,7 @@ runcode(function()
 					type = "SetShownApp", 
 					app = 4
 				})
-				OpenShop["ToggleButton"](false)
+				OpenTeamUpgrades["ToggleButton"](false)
 			end
 		end, 
 		["HoverText"] = "Opens the Team Upgrades GUI"
