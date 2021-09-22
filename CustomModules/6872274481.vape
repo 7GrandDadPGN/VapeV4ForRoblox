@@ -788,7 +788,7 @@ autoclickercps = autoclicker.CreateTwoSlider({
 	["Name"] = "CPS",
 	["Min"] = 1,
 	["Max"] = 20,
-	["Function"] = function(val) end, false,
+	["Function"] = function(val) end,
 	["Default"] = 8,
 	["Default2"] = 12
 })
@@ -2815,5 +2815,6 @@ runcode(function()
 	spawn(function()
 		repeat wait() until matchState ~= 0
 		SwitchKitDropdown["UpdateList"](ownedkits)
+		SwitchKitDropdown["Value"] = ownedkits[1]
 	end)
 end)
