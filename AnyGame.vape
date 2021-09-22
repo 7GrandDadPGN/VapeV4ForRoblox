@@ -158,8 +158,15 @@ end
 
 local radarcam = Instance.new("Camera")
 radarcam.FieldOfView = 45
-local Radar = GuiLibrary.CreateCustomWindow("Radar", "vape/assets/TargetInfoIcon1.png", 16, UDim2.new(0, 177, 0, 6), false)
-local RadarColor = Radar.CreateColorSlider("Player Color", function(val) end)
+local Radar = GuiLibrary.CreateCustomWindow({
+	["Name"] = "Radar", 
+	["Icon"] = "vape/assets/TargetInfoIcon1.png",
+	["IconSize"] = 16
+})
+local RadarColor = Radar.CreateColorSlider({
+	["Name"] = "Player Color", 
+	["Function"] = function(val) end
+})
 local RadarFrame = Instance.new("Frame")
 RadarFrame.BackgroundColor3 = Color3.new(0, 0, 0)
 RadarFrame.BorderSizePixel = 0
@@ -208,47 +215,53 @@ players.PlayerRemoving:connect(function(plr)
 		RadarMainFrame[plr.Name]:Remove()
 	end
 end)
-GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle("Radar", "vape/assets/TargetInfoIcon1.png", function()
-	Radar.SetVisible(true) 
-	BindToRenderStep("Radar", 1, function() 
-		local v278 = (CFrame.new(0, 0, 0):inverse() * cam.CFrame).p * 0.2 * Vector3.new(1, 1, 1);
-		local v279, v280, v281 = cam.CFrame:ToOrientation();
-		local u90 = v280 * 180 / math.pi;
-		local v277 = 0 - u90;
-		local v276 = v278 + Vector3.new(0, 0, 0);
-		radarcam.CFrame = CFrame.new(v276 + Vector3.new(0, 50, 0)) * CFrame.Angles(0, -v277 * (math.pi / 180), 0) * CFrame.Angles(-90 * (math.pi / 180), 0, 0)
-		for i,plr in pairs(players:GetChildren()) do
-			local thing
-			if RadarMainFrame:FindFirstChild(plr.Name) then
-				thing = RadarMainFrame[plr.Name]
-				if thing.Visible then
-					thing.Visible = false
+GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
+	["Name"] = "Radar", 
+	["Icon"] = "vape/assets/TargetInfoIcon1.png", 
+	["Function"] = function(callback)
+		Radar.SetVisible(callback) 
+		if callback then
+			BindToRenderStep("Radar", 1, function() 
+				local v278 = (CFrame.new(0, 0, 0):inverse() * cam.CFrame).p * 0.2 * Vector3.new(1, 1, 1);
+				local v279, v280, v281 = cam.CFrame:ToOrientation();
+				local u90 = v280 * 180 / math.pi;
+				local v277 = 0 - u90;
+				local v276 = v278 + Vector3.new(0, 0, 0);
+				radarcam.CFrame = CFrame.new(v276 + Vector3.new(0, 50, 0)) * CFrame.Angles(0, -v277 * (math.pi / 180), 0) * CFrame.Angles(-90 * (math.pi / 180), 0, 0)
+				for i,plr in pairs(players:GetChildren()) do
+					local thing
+					if RadarMainFrame:FindFirstChild(plr.Name) then
+						thing = RadarMainFrame[plr.Name]
+						if thing.Visible then
+							thing.Visible = false
+						end
+					else
+						thing = Instance.new("Frame")
+						thing.BackgroundTransparency = 0
+						thing.Size = UDim2.new(0, 4, 0, 4)
+						thing.BorderSizePixel = 1
+						thing.BorderColor3 = Color3.new(0, 0, 0)
+						thing.BackgroundColor3 = Color3.new(0, 0, 0)
+						thing.Visible = false
+						thing.Name = plr.Name
+						thing.Parent = RadarMainFrame
+					end
+					
+					if isPlayerTargetable(plr, false, false) then
+						local v238, v239 = radarcam:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * plr.Character.HumanoidRootPart.CFrame).p * 0.2)
+						thing.Visible = true
+						thing.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(RadarColor["Value"], 1, 1)
+						thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
+					end
 				end
-			else
-				thing = Instance.new("Frame")
-				thing.BackgroundTransparency = 0
-				thing.Size = UDim2.new(0, 4, 0, 4)
-				thing.BorderSizePixel = 1
-				thing.BorderColor3 = Color3.new(0, 0, 0)
-				thing.BackgroundColor3 = Color3.new(0, 0, 0)
-				thing.Visible = false
-				thing.Name = plr.Name
-				thing.Parent = RadarMainFrame
-			end
-			
-			if isPlayerTargetable(plr, false, false) then
-				local v238, v239 = radarcam:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * plr.Character.HumanoidRootPart.CFrame).p * 0.2)
-				thing.Visible = true
-				thing.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(RadarColor["Value"], 1, 1)
-				thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
-			end
+			end)
+		else
+			UnbindFromRenderStep("Radar")
+			RadarMainFrame:ClearAllChildren()
 		end
-	end)
-end, function() 
-	Radar.SetVisible(false) 
-	UnbindFromRenderStep("Radar")
-	RadarMainFrame:ClearAllChildren()
-end, false, "OptionsButton", 1)
+	end, 
+	["Priority"] = 1
+})
 
 local aimfov = {["Value"] = 1}
 local aimvischeck = {["Enabled"] = false}
@@ -264,24 +277,50 @@ local old = meta.__namecall
 local old2 = meta.__index
 local hook
 
-local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AimAssist", function() kek() end, function() 
-	UnbindFromRenderStep("AimAssist") 
-	meta.__namecall = old
-	meta.__index = old2
-	tar = nil 
-end, true, function() 
-	if aimmethod["Value"]:match("FindPartOnRay") then
-		return " Ray"
-	else
-		return " "..string.gsub(aimmethod["Value"], "PointToRay", "") 
+local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "AimAssist", 
+	["Function"] = function(callback) 
+		if callback then
+			kek() 
+		else
+			UnbindFromRenderStep("AimAssist") 
+			meta.__namecall = old
+			meta.__index = old2
+			tar = nil 
+		end
+	end,
+	["ExtraText"] = function() 
+		if aimmethod["Value"]:match("FindPartOnRay") then
+			return " Ray"
+		else
+			return " "..string.gsub(aimmethod["Value"], "PointToRay", "") 
+		end
 	end
-end)
+})
 aimmethod = AimAssist.CreateDropdown("Method", {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay", "Mouse"}, function(val) end)
 local aimtable = {["FindPartOnRayWithIgnoreList"] = 1, ["FindPartOnRayWithWhitelist"] = 1, ["Raycast"] = 2, ["FindPartOnRay"] = 1, ["ScreenPointToRay"] = 3, ["ViewportPointToRay"] = 3, ["Mouse"] = 4}
-aimvischeck = AimAssist.CreateToggle("Wall Check", function() end, function() end)
-aimfov = AimAssist.CreateSlider("FOV", 1, 1000, function(val) end)
-aimhitchance = AimAssist.CreateSlider("Hit Chance", 1, 100, function(val) end)
-aimheadshotchance = AimAssist.CreateSlider("Headshot Chance", 1, 100, function(val) end)
+aimvischeck = AimAssist.CreateToggle({
+	["Name"] = "Wall Check",
+	["Function"] = function() end
+})
+aimfov = AimAssist.CreateSlider({
+	["Name"] = "FOV", 
+	["Min"] = 1, 
+	["Max"] = 1000, 
+	["Function"] = function(val) end
+})
+aimhitchance = AimAssist.CreateSlider({
+	["Name"] = "Hit Chance", 
+	["Min"] = 1, 
+	["Max"] = 100, 
+	["Function"] = function(val) end
+})
+aimheadshotchance = AimAssist.CreateSlider({
+	["Name"] = "Headshot Chance", 
+	["Min"] = 1,
+	["Max"] = 100, 
+	["Function"] = function(val) end
+})
 
 kek = function()
 	local old3
@@ -338,64 +377,89 @@ end
 local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
-autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("AutoClicker", function()
-	BindToRenderStep("AutoClicker", 1, function() 
-		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-		if tool and isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() then
-			tool:Activate()
-			autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
+autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "AutoClicker", 
+	["Function"] = function(callback)
+		if callback then
+			BindToRenderStep("AutoClicker", 1, function() 
+				local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
+				if tool and isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() then
+					tool:Activate()
+					autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
+				end
+			end)
+		else
+			UnbindFromRenderStep("AutoClicker")
 		end
-	end)
-end, function() UnbindFromRenderStep("AutoClicker") end, true)
-autoclickercps = autoclicker.CreateTwoSlider("CPS", 1, 20, function(val) end, false, 8, 12)
+	end
+})
+autoclickercps = autoclicker.CreateTwoSlider({
+	["Name"] = "CPS",
+	["Min"] = 1,
+	["Max"] = 20, 
+	["Default"] = 8,
+	["Default2"] = 12
+})
 
 local reachrange = {["Value"] = 1}
 local oldsize = {}
-local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Reach", function()
-	BindToRenderStep("Reach", 1, function() 
-		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-		if tool and isAlive() then
-			local touch = findTouchInterest(tool)
-			if touch then
-				local size = rawget(oldsize, tool.Name)
-				if size then
-					touch.Parent.Size = Vector3.new(size.X + reachrange["Value"], size.Y, size.Z + reachrange["Value"])
-					touch.Parent.Massless = true
-				else
-					oldsize[tool.Name] = touch.Parent.Size
+local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Reach", 
+	["Function"] = function(callback)
+		if callback then
+			BindToRenderStep("Reach", 1, function() 
+				local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
+				if tool and isAlive() then
+					local touch = findTouchInterest(tool)
+					if touch then
+						local size = rawget(oldsize, tool.Name)
+						if size then
+							touch.Parent.Size = Vector3.new(size.X + reachrange["Value"], size.Y, size.Z + reachrange["Value"])
+							touch.Parent.Massless = true
+						else
+							oldsize[tool.Name] = touch.Parent.Size
+						end
+					end
+				end
+			end)
+		else
+			UnbindFromRenderStep("Reach")
+			for i2,v2 in pairs(lplr.Character:GetChildren()) do
+				if v2:IsA("Tool") and rawget(oldsize, v2.Name) then
+					local touch = findTouchInterest(v2)
+					if touch then
+						touch.Parent.Size = rawget(oldsize, v2.Name)
+						touch.Parent.Massless = false
+					end
 				end
 			end
-		end
-	end)
-end, function() 
-	UnbindFromRenderStep("Reach")
-	for i2,v2 in pairs(lplr.Character:GetChildren()) do
-		if v2:IsA("Tool") and rawget(oldsize, v2.Name) then
-			local touch = findTouchInterest(v2)
-			if touch then
-				touch.Parent.Size = rawget(oldsize, v2.Name)
-				touch.Parent.Massless = false
+			for i2,v2 in pairs(lplr.Backpack:GetChildren()) do
+				if v2:IsA("Tool") and rawget(oldsize, v2.Name) then
+					local touch = findTouchInterest(v2)
+					if touch then
+						touch.Parent.Size = rawget(oldsize, v2.Name)
+						touch.Parent.Massless = false
+					end
+				end
 			end
+			oldsize = {}
 		end
 	end
-	for i2,v2 in pairs(lplr.Backpack:GetChildren()) do
-		if v2:IsA("Tool") and rawget(oldsize, v2.Name) then
-			local touch = findTouchInterest(v2)
-			if touch then
-				touch.Parent.Size = rawget(oldsize, v2.Name)
-				touch.Parent.Massless = false
-			end
-		end
-	end
-	oldsize = {}
-end, true)
-reachrange = Reach.CreateSlider("Range", 1, 20, function(val) end)
+})
+reachrange = Reach.CreateSlider({
+	["Name"] = "Range", 
+	["Min"] = 1,
+	["Max"] = 20, 
+	["Function"] = function(val) end
+})
 
-local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Blink", function() 
-	settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
-end, function()
-	settings():GetService("NetworkSettings").IncomingReplicationLag = 0
-end, false, function() return "" end, "Chokes all incoming packets")
+local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Blink", 
+	["Function"] = function(callback) 
+		settings():GetService("NetworkSettings").IncomingReplicationLag = (callback and 99999 or 0)
+	end, 
+	["HoverText"] = "Chokes all incoming packets"
+})
 
 local flyspeed = {["Value"] = 1}
 local flyverticalspeed = {["Value"] = 1}
@@ -407,91 +471,120 @@ local flydown = false
 local flypress
 local flyendpress
 local bodyvelofly
-local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Fly", function()
-	if isAlive() then
-		flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
-	end
-	flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
-		if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
-			if input1.KeyCode == Enum.KeyCode.Space then
-				flyup = true
+local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Fly", 
+	["Function"] = function(callback)
+		if callback then
+			if isAlive() then
+				flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
 			end
-			if input1.KeyCode == Enum.KeyCode.LeftControl then
-				flydown = true
+			flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
+				if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+					if input1.KeyCode == Enum.KeyCode.Space then
+						flyup = true
+					end
+					if input1.KeyCode == Enum.KeyCode.LeftControl then
+						flydown = true
+					end
+				end
+			end)
+			flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
+				if input1.KeyCode == Enum.KeyCode.Space then
+					flyup = false
+				end
+				if input1.KeyCode == Enum.KeyCode.LeftControl then
+					flydown = false
+				end
+			end)
+			BindToRenderStep("Fly", 1, function(delta) 
+				if isAlive() then
+					if flymethod["Value"] == "Normal" then
+						if (bodyvelofly == nil or bodyvelofly ~= nil and bodyvelofly.Parent ~= lplr.Character.HumanoidRootPart) then
+							bodyvelofly = Instance.new("BodyVelocity")
+							bodyvelofly.Parent = lplr.Character.HumanoidRootPart
+							bodyvelofly.MaxForce = Vector3.new(100000, 100000, 100000)
+						else
+							bodyvelofly.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+						end
+					elseif flymethod["Value"] == "AntiCheat" then
+						if (bodyvelofly ~= nil) then
+							bodyvelofly:Remove()
+						end
+						if flyup then
+							flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+						end
+						if flydown then
+							flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+						end
+						local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
+						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+					end
+				end
+			end)
+		else
+			if bodyvelofly then
+				bodyvelofly:Remove()
 			end
-		end
-	end)
-	flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
-		if input1.KeyCode == Enum.KeyCode.Space then
 			flyup = false
-		end
-		if input1.KeyCode == Enum.KeyCode.LeftControl then
 			flydown = false
+			flypress:Disconnect()
+			flyendpress:Disconnect()
+			UnbindFromRenderStep("Fly")
 		end
-	end)
-	BindToRenderStep("Fly", 1, function(delta) 
-		if isAlive() then
-			if flymethod["Value"] == "Normal" then
-				if (bodyvelofly == nil or bodyvelofly ~= nil and bodyvelofly.Parent ~= lplr.Character.HumanoidRootPart) then
-					bodyvelofly = Instance.new("BodyVelocity")
-					bodyvelofly.Parent = lplr.Character.HumanoidRootPart
-					bodyvelofly.MaxForce = Vector3.new(100000, 100000, 100000)
-				else
-					bodyvelofly.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
-				end
-			elseif flymethod["Value"] == "AntiCheat" then
-				if (bodyvelofly ~= nil) then
-					bodyvelofly:Remove()
-				end
-				if flyup then
-					flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
-				end
-				if flydown then
-					flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
-				end
-				local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
-				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
-				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-			end
-		end
-	end)
-end, function() 
-	if bodyvelofly then
-		bodyvelofly:Remove()
-	end
-	flyup = false
-	flydown = false
-	flypress:Disconnect()
-	flyendpress:Disconnect()
-	UnbindFromRenderStep("Fly")
-end, true, function() return " "..flymethod["Value"] end, true)
+	end,
+	["ExtraText"] = function() return " "..flymethod["Value"] end
+})
 flymethod = fly.CreateDropdown("Mode", {"Normal", "AntiCheat"}, function(val)
 	if isAlive() then
 		flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
 	end
 end)
-flyspeed = fly.CreateSlider("Speed", 1, 150, function(val) end)
-flyverticalspeed = fly.CreateSlider("Vertical Speed", 1, 150, function(val) end)
-flyupanddown = fly.CreateToggle("Y Level", function() end, function() end)
+flyspeed = fly.CreateSlider({
+	["Name"] = "Speed",
+	["Min"] = 1,
+	["Max"] = 150, 
+	["Function"] = function(val) end
+})
+flyverticalspeed = fly.CreateSlider({
+	["Name"] = "Vertical Speed",
+	["Min"] = 1,
+	["Max"] = 150, 
+	["Function"] = function(val) end
+})
+flyupanddown = fly.CreateToggle({
+	["Name"] = "Y Level", 
+	["Function"] = function() end
+})
 
 local hitboxexpand = {["Value"] = 1}
-local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("HitBoxes", function()
-	BindToRenderStep("HitBoxes", 1, function() 
-		for i,plr in pairs(players:GetChildren()) do
-			if isPlayerTargetable(plr, true, true) and isAlive(plr) then
-				plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.2), 2 + (hitboxexpand["Value"] * 0.2), 1 + (hitboxexpand["Value"] * 0.2))
+local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "HitBoxes", 
+	["Function"] = function(callback)
+		if callback then
+			BindToRenderStep("HitBoxes", 1, function() 
+				for i,plr in pairs(players:GetChildren()) do
+					if isPlayerTargetable(plr, true, true) and isAlive(plr) then
+						plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.2), 2 + (hitboxexpand["Value"] * 0.2), 1 + (hitboxexpand["Value"] * 0.2))
+					end
+				end
+			end)
+		else
+			UnbindFromRenderStep("HitBoxes") 
+			for i,plr in pairs(players:GetChildren()) do
+				if isAlive(plr) then
+					plr.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+				end
 			end
 		end
-	end)
-end, function() 
-	UnbindFromRenderStep("HitBoxes") 
-	for i,plr in pairs(players:GetChildren()) do
-		if isAlive(plr) then
-			plr.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
-		end
 	end
-end, true)
-hitboxexpand = Hitbox.CreateSlider("Expand amount", 1, 30, function(val) end)
+})
+hitboxexpand = Hitbox.CreateSlider({
+	["Name"] = "Expand amount",
+	["Min"] = 1,
+	["Max"] = 30,
+	["Function"] = function(val) end
+})
 
 local killauraaps = {["GetRandomValue"] = function() return 1 end}
 local killaurarange = {["Value"] = 1}
@@ -501,60 +594,101 @@ local killauramouse = {["Enabled"] = false}
 local killauracframe = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauratick = tick()
-Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Killaura", function()
-	BindToRenderStep("Killaura", 1, function() 
-		local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-		local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratarget["Value"])
-		if tool and isAlive() and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or killauramouse["Enabled"] == false) then
-			local touch = findTouchInterest(tool)
-			if touch then
-				local targettable = {}
-				local targetsize = 0
-				for i,v in pairs(plr) do
-					local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
-					local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
-					local angle = math.acos(localfacing:Dot(vec))
-					if angle <= (killauraangle["Value"] / 115) then
-						targettable[v.Name] = {
-							["UserId"] = v.UserId,
-							["Health"] = v.Character.Humanoid.Health,
-							["MaxHealth"] = v.Character.Humanoid.MaxHealth
-						}
-						targetsize = targetsize + 1
-						if killauracframe["Enabled"] then
-							lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(v.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, v.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Killaura", 
+	["Function"] = function(callback)
+		if callback then
+			BindToRenderStep("Killaura", 1, function() 
+				local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
+				local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratarget["Value"])
+				if tool and isAlive() and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or killauramouse["Enabled"] == false) then
+					local touch = findTouchInterest(tool)
+					if touch then
+						local targettable = {}
+						local targetsize = 0
+						for i,v in pairs(plr) do
+							local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
+							local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
+							local angle = math.acos(localfacing:Dot(vec))
+							if angle <= (killauraangle["Value"] / 115) then
+								targettable[v.Name] = {
+									["UserId"] = v.UserId,
+									["Health"] = v.Character.Humanoid.Health,
+									["MaxHealth"] = v.Character.Humanoid.MaxHealth
+								}
+								targetsize = targetsize + 1
+								if killauracframe["Enabled"] then
+									lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(v.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, v.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+								end
+								if killauratick <= tick() then
+									tool:Activate()
+									killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
+								end
+								firetouchinterest(touch.Parent, v.Character.Head, 1)
+								firetouchinterest(touch.Parent, v.Character.Head, 0)
+							end
 						end
-						if killauratick <= tick() then
-							tool:Activate()
-							killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
-						end
-						firetouchinterest(touch.Parent, v.Character.Head, 1)
-						firetouchinterest(touch.Parent, v.Character.Head, 0)
+						targetinfo.UpdateInfo(targettable, targetsize)
 					end
 				end
-				targetinfo.UpdateInfo(targettable, targetsize)
-			end
+			end)
+		else
+			UnbindFromRenderStep("Killaura")
 		end
-	end)
-end, function() UnbindFromRenderStep("Killaura") end, true)
-killauraaps = Killaura.CreateTwoSlider("Attacks per second", 1, 20, function(val) end, false, 8, 12)
-killaurarange = Killaura.CreateSlider("Attack range", 1, 20, function(val) end)
-killauraangle = Killaura.CreateSlider("Max angle", 1, 360, function(val) end, 90)
-killauramouse = Killaura.CreateToggle("Require mouse down", function() end, function() end)
-killauracframe = Killaura.CreateToggle("Face target", function() end, function() end)
-
+	end
+})
+killauraaps = Killaura.CreateTwoSlider({
+	["Name"] = "Attacks per second",
+	["Min"] = 1,
+	["Max"] = 20,
+	["Default"] = 8,
+	["Default2"] = 12
+})
+killaurarange = Killaura.CreateSlider({
+	["Name"] = "Attack range",
+	["Min"] = 1,
+	["Max"] = 20, 
+	["Function"] = function(val) end
+})
+killauraangle = Killaura.CreateSlider({
+	["Name"] = "Max angle",
+	["Min"] = 1,
+	["Max"] = 360, 
+	["Function"] = function(val) end,
+	["Default"] = 90
+})
+killauramouse = Killaura.CreateToggle({
+	["Name"] = "Require mouse down", 
+	["Function"] = function() end
+})
+killauracframe = Killaura.CreateToggle({
+	["Name"] = "Face target", 
+	["Function"] = function() end
+})
 
 local longjumpboost = {["Value"] = 1}
-local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("LongJump", function()
-	BindToRenderStep("LongJump", 1, function() 
-		if isAlive() then
-			if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-				lplr.Character.HumanoidRootPart.Velocity = lplr.Character.HumanoidRootPart.Velocity + lplr.Character.Humanoid.MoveDirection * (longjumpboost["Value"] / 50)
-			end
+local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "LongJump", 
+	["Function"] = function(callback)
+		if callback then
+			BindToRenderStep("LongJump", 1, function() 
+				if isAlive() then
+					if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+						lplr.Character.HumanoidRootPart.Velocity = lplr.Character.HumanoidRootPart.Velocity + lplr.Character.Humanoid.MoveDirection * (longjumpboost["Value"] / 50)
+					end
+				end
+			end)
+		else
+			UnbindFromRenderStep("LongJump")
 		end
-	end)
-end, function() UnbindFromRenderStep("LongJump") end, true, function() return "" end, true)
-longjumpboost = longjump.CreateSlider("Boost", 1, 150, function(val) end)
+	end
+})
+longjumpboost = longjump.CreateSlider({
+	["Name"] = "Boost",
+	["Min"] = 1,
+	["Max"] = 150, 
+	["Function"] = function(val) end
+})
 
 local HighJumpMethod = {["Value"] = "Toggle"}
 local HighJumpBoost = {["Value"] = 1}
@@ -562,48 +696,71 @@ local HighJumpDelay = {["Value"] = 20}
 local HighJumpTick = tick()
 local highjumpbound = true
 local HighJump = {["Enabled"] = false}
-HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("HighJump", function()
-	highjumpbound = false
-	if HighJumpMethod["Value"] == "Toggle" then
-		if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
-			HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-			lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-		else
-			createwarning("LongJump", "Wait "..math.round(HighJumpTick - tick()).." before retoggling.", 1)
-		end
-		HighJump["ToggleButton"](false)
-	else
-		highjumpbound = true
-		BindToRenderStep("HighJump", 1, function()
-			if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and uis:IsKeyDown(Enum.KeyCode.Space) then
-				HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-				lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "HighJump", 
+	["Function"] = function(callback)
+		if callback then
+			highjumpbound = false
+			if HighJumpMethod["Value"] == "Toggle" then
+				if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
+					HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+				else
+					createwarning("LongJump", "Wait "..math.round(HighJumpTick - tick()).." before retoggling.", 1)
+				end
+				HighJump["ToggleButton"](false)
+			else
+				highjumpbound = true
+				BindToRenderStep("HighJump", 1, function()
+					if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and uis:IsKeyDown(Enum.KeyCode.Space) then
+						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+					end
+				end)
 			end
-		end)
-	end
-end, function() 
-	if highjumpbound then
-		UnbindFromRenderStep("HighJump")
-	end
-end, true, function() return "" end, "Lets you jump higher")
+		else
+			if highjumpbound then
+				UnbindFromRenderStep("HighJump")
+			end
+		end
+	end,
+	["HoverText"] = "Lets you jump higher"
+})
 HighJumpMethod = HighJump.CreateDropdown("Mode", {"Toggle", "Normal"}, function() end)
-HighJumpBoost = HighJump.CreateSlider("Boost", 1, 150, function(val) end, 100)
-HighJumpDelay = HighJump.CreateSlider("Delay", 0, 50, function(val) end, 0)
+HighJumpBoost = HighJump.CreateSlider({
+	["Name"] = "Boost",
+	["Min"] = 1,
+	["Max"] = 150, 
+	["Function"] = function(val) end,
+	["Default"] = 100
+})
+HighJumpDelay = HighJump.CreateSlider({
+	["Name"] = "Delay",
+	["Min"] = 0,
+	["Max"] = 50, 
+	["Function"] = function(val) end,
+})
 
 local phase
-GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Phase", function()
-	phase = game:GetService('RunService').Stepped:Connect(function()
-		if isAlive() then
-			for i, part in pairs(lplr.Character:GetDescendants()) do
-				if part:IsA("BasePart") and part.CanCollide == true then
-					part.CanCollide = false
+GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Phase", 
+	["Function"] = function(callback)
+		if callback then
+			phase = game:GetService('RunService').Stepped:Connect(function()
+				if isAlive() then
+					for i, part in pairs(lplr.Character:GetDescendants()) do
+						if part:IsA("BasePart") and part.CanCollide == true then
+							part.CanCollide = false
+						end
+					end
 				end
-			end
+			end)
+		else
+			phase:Disconnect()
 		end
-	end)
-end, function()
-	phase:Disconnect()
-end, true, function() return "" end, "Lets you phase/clip through walls")
+	end,
+	["HoverText"] = "Lets you phase/clip through walls"
+})
 
 
 local speedval = {["Value"] = 1}
@@ -611,43 +768,57 @@ local speedmethod = {["Value"] = "AntiCheat A"}
 local speedjump = {["Enabled"] = false}
 local bodyvelo
 
-local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("Speed", function()
-	BindToRenderStep("Speed", 1, function(delta)
-		if isAlive() then
-			if speedmethod["Value"] == "AntiCheat A" then
-				if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
-					bodyvelo = Instance.new("BodyVelocity")
-					bodyvelo.Parent = lplr.Character.HumanoidRootPart
-					bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
-				else
-					bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
-				end
-			elseif speedmethod["Value"] == "AntiCheat B" then
-				if (bodyvelo ~= nil) then
-					bodyvelo:Remove()
-				end
-				lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
-			end
-			if speedjump["Enabled"] then
-				if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Speed", 
+	["Function"] = function(callback)
+		if callback then
+			BindToRenderStep("Speed", 1, function(delta)
+				if isAlive() then
 					if speedmethod["Value"] == "AntiCheat A" then
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
+						if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
+							bodyvelo = Instance.new("BodyVelocity")
+							bodyvelo.Parent = lplr.Character.HumanoidRootPart
+							bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+						else
+							bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
+						end
 					elseif speedmethod["Value"] == "AntiCheat B" then
-						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0.2, 0)
+						if (bodyvelo ~= nil) then
+							bodyvelo:Remove()
+						end
+						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
+					end
+					if speedjump["Enabled"] then
+						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+							if speedmethod["Value"] == "AntiCheat A" then
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
+							elseif speedmethod["Value"] == "AntiCheat B" then
+								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0.2, 0)
+							end
+						end
 					end
 				end
+			end)
+		else
+			if bodyvelo then
+				bodyvelo:Remove()
 			end
+			UnbindFromRenderStep("Speed")
 		end
-	end)
-end, function() 
-	if bodyvelo then
-		bodyvelo:Remove()
-	end
-	UnbindFromRenderStep("Speed")
-end, true, function() return " "..speedmethod["Value"] end, true)
+	end,
+	["ExtraText"] = function() return " "..speedmethod["Value"] end
+})
 speedmethod = speed.CreateDropdown("Mode", {"AntiCheat A", "AntiCheat B"}, function(val) end)
-speedval = speed.CreateSlider("Speed", 1, 150, function(val) end)
-speedjump = speed.CreateToggle("AutoJump", function() end, function() end)
+speedval = speed.CreateSlider({
+	["Name"] = "Speed", 
+	["Min"] = 1,
+	["Max"] = 150, 
+	["Function"] = function(val) end
+})
+speedjump = speed.CreateToggle({
+	["Name"] = "AutoJump", 
+	["Function"] = function() end
+})
 
 local healthColorToPosition = {
 	[Vector3.new(Color3.fromRGB(255, 28, 0).r,
@@ -699,40 +870,52 @@ players.PlayerRemoving:connect(function(plr)
 	end
 end)
 local ArrowsColor = {["Value"] = 0.44}
-local Arrows = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Arrows", function() 
-	BindToRenderStep("Arrows", 500, function()
-		for i,plr in pairs(players:GetChildren()) do
-				local thing
-				if ArrowsFolder:FindFirstChild(plr.Name) then
-					thing = ArrowsFolder[plr.Name]
-					thing.Visible = false
-					thing.ImageColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ArrowsColor["Value"], 1, 1)
-				else
-					thing = Instance.new("ImageLabel")
-					thing.BackgroundTransparency = 1
-					thing.BorderSizePixel = 0
-					thing.Size = UDim2.new(0, 256, 0, 256)
-					thing.AnchorPoint = Vector2.new(0.5, 0.5)
-					thing.Position = UDim2.new(0.5, 0, 0.5, 0)
-					thing.Visible = false
-                    thing.Image = getcustomassetfunc("vape/assets/ArrowIndicator.png")
-					thing.Name = plr.Name
-					thing.Parent = ArrowsFolder
+local Arrows = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Arrows", 
+	["Function"] = function(callback) 
+		if callback then
+			BindToRenderStep("Arrows", 500, function()
+				for i,plr in pairs(players:GetChildren()) do
+						local thing
+						if ArrowsFolder:FindFirstChild(plr.Name) then
+							thing = ArrowsFolder[plr.Name]
+							thing.Visible = false
+							thing.ImageColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ArrowsColor["Value"], 1, 1)
+						else
+							thing = Instance.new("ImageLabel")
+							thing.BackgroundTransparency = 1
+							thing.BorderSizePixel = 0
+							thing.Size = UDim2.new(0, 256, 0, 256)
+							thing.AnchorPoint = Vector2.new(0.5, 0.5)
+							thing.Position = UDim2.new(0.5, 0, 0.5, 0)
+							thing.Visible = false
+							thing.Image = getcustomassetfunc("vape/assets/ArrowIndicator.png")
+							thing.Name = plr.Name
+							thing.Parent = ArrowsFolder
+						end
+						
+						if isPlayerTargetable(plr, false, false) then
+							local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+							local camcframeflat = CFrame.new(cam.CFrame.p, cam.CFrame.p + cam.CFrame.lookVector * Vector3.new(1, 0, 1))
+							local pointRelativeToCamera = camcframeflat:pointToObjectSpace(plr.Character.HumanoidRootPart.Position)
+							local unitRelativeVector = (pointRelativeToCamera * Vector3.new(1, 0, 1)).unit
+							local rotation = math.atan2(unitRelativeVector.Z, unitRelativeVector.X)
+							thing.Visible = not rootVis
+							thing.Rotation = math.deg(rotation)
+						end
 				end
-				
-				if isPlayerTargetable(plr, false, false) then
-					local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-                    local camcframeflat = CFrame.new(cam.CFrame.p, cam.CFrame.p + cam.CFrame.lookVector * Vector3.new(1, 0, 1))
-                    local pointRelativeToCamera = camcframeflat:pointToObjectSpace(plr.Character.HumanoidRootPart.Position)
-                    local unitRelativeVector = (pointRelativeToCamera * Vector3.new(1, 0, 1)).unit
-                    local rotation = math.atan2(unitRelativeVector.Z, unitRelativeVector.X)
-					thing.Visible = not rootVis
-                    thing.Rotation = math.deg(rotation)
-				end
+			end)
+		else
+			UnbindFromRenderStep("Arrows") 
+			ArrowsFolder:ClearAllChildren()
 		end
-	end)
-end, function() UnbindFromRenderStep("Arrows") ArrowsFolder:ClearAllChildren() end, true, function() return "" end, "Draws arrows on screen when entities\nare out of your field of view.")
-ArrowsColor = Arrows.CreateColorSlider("Player Color", function(val) end)
+	end, 
+	["HoverText"] = "Draws arrows on screen when entities\nare out of your field of view."
+})
+ArrowsColor = Arrows.CreateColorSlider({
+	["Name"] = "Player Color", 
+	["Function"] = function(val) end
+})
 
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPFolder"
@@ -745,217 +928,234 @@ end)
 local ESPColor = {["Value"] = 0.44}
 local ESPHealthBar = {["Enabled"] = false}
 local ESPMethod = {["Value"] = "2D"}
-local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("ESP", function() 
-	BindToRenderStep("ESP", 500, function()
-		for i,plr in pairs(players:GetChildren()) do
-			if ESPMethod["Value"] == "2D" then
-				local thing
-				if ESPFolder:FindFirstChild(plr.Name) then
-					thing = ESPFolder[plr.Name]
-					thing.Visible = false
-					thing.Line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-					thing.Line2.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-					thing.Line3.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-					thing.Line4.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-				else
-					thing = Instance.new("Frame")
-					thing.BackgroundTransparency = 1
-					thing.BorderSizePixel = 0
-					thing.Visible = false
-					thing.Name = plr.Name
-					thing.Parent = ESPFolder
-					local line1 = Instance.new("Frame")
-					line1.BorderSizePixel = 0
-					line1.Name = "Line1"
-					line1.ZIndex = 2
-					line1.Size = UDim2.new(1, -2, 0, 1)
-					line1.Position = UDim2.new(0, 1, 0, 1)
-					line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-					line1.Parent = thing
-					local line2 = Instance.new("Frame")
-					line2.BorderSizePixel = 0
-					line2.Name = "Line2"
-					line2.Size = UDim2.new(1, -2, 0, 1)
-					line2.ZIndex = 2
-					line2.Position = UDim2.new(0, 1, 1, -2)
-					line2.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-					line2.Parent = thing
-					local line3 = Instance.new("Frame")
-					line3.BorderSizePixel = 0
-					line3.Name = "Line3"
-					line3.Size = UDim2.new(0, 1, 1, -2)
-					line3.Position = UDim2.new(0, 1, 0, 1)
-					line3.ZIndex = 2
-					line3.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-					line3.Parent = thing
-					local line4 = Instance.new("Frame")
-					line4.BorderSizePixel = 0
-					line4.Name = "Line4"
-					line4.Size = UDim2.new(0, 1, 1, -2)
-					line4.Position = UDim2.new(1, -2, 0, 1)
-					line4.ZIndex = 2
-					line4.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-					line4.Parent = thing
-					local line1clone = line1:Clone()
-					line1clone.ZIndex = 1
-					line1clone.Size = UDim2.new(1, 0, 0, 3)
-					line1clone.Position = UDim2.new(0, 0, 0, 0)
-					line1clone.BackgroundColor3 = Color3.new(0, 0, 0)
-					line1clone.Parent = thing
-					local line2clone = line2:Clone()
-					line2clone.ZIndex = 1
-					line2clone.Size = UDim2.new(1, 0, 0, 3)
-					line2clone.Position = UDim2.new(0, 0, 1, -3)
-					line2clone.BackgroundColor3 = Color3.new(0, 0, 0)
-					line2clone.Parent = thing
-					local line3clone = line3:Clone()
-					line3clone.ZIndex = 1
-					line3clone.Size = UDim2.new(0, 3, 1, 0)
-					line3clone.Position = UDim2.new(0, 0, 0, 0)
-					line3clone.BackgroundColor3 = Color3.new(0, 0, 0)
-					line3clone.Parent = thing
-					local line4clone = line4:Clone()
-					line4clone.ZIndex = 1
-					line4clone.Size = UDim2.new(0, 3, 1, 0)
-					line4clone.Position = UDim2.new(1, -3, 0, 0)
-					line4clone.BackgroundColor3 = Color3.new(0, 0, 0)
-					line4clone.Parent = thing
-					local healthline = Instance.new("Frame")
-					healthline.BorderSizePixel = 0
-					healthline.Name = "HealthLineMain"
-					healthline.ZIndex = 2
-					healthline.AnchorPoint = Vector2.new(0, 1)
-					healthline.Visible = ESPHealthBar["Enabled"]
-					healthline.Size = UDim2.new(0, 1, 1, -2)
-					healthline.Position = UDim2.new(0, -4, 1, -1)
-					healthline.BackgroundColor3 = Color3.new(0, 1, 0)
-					healthline.Parent = thing
-					local healthlineclone = healthline:Clone()
-					healthlineclone.ZIndex = 1
-					healthlineclone.AnchorPoint = Vector2.new(0, 0)
-					healthlineclone.Size = UDim2.new(0, 3, 1, 0)
-					healthlineclone.Visible = ESPHealthBar["Enabled"]
-					healthlineclone.Name = "HealthLineBKG"
-					healthlineclone.Position = UDim2.new(0, -5, 0, 0)
-					healthlineclone.BackgroundColor3 = Color3.new(0, 0, 0)
-					healthlineclone.Parent = thing
-				end
-				
-				if isPlayerTargetable(plr, false, false) then
-					local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-					local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1500) * (1 / GuiLibrary["MainRescale"].Scale)
-					local headPos, headVis = cam:WorldToViewportPoint(plr.Character.Head.Position + Vector3.new(0, 1, 0))
-					local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 4 + plr.Character.Humanoid.HipHeight, 0))
-					rootPos = rootPos * (1 / GuiLibrary["MainRescale"].Scale)
-					if rootVis then
-						if ESPHealthBar["Enabled"] then
-							local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-							thing.HealthLineMain.BackgroundColor3 = color
-							thing.HealthLineMain.Size = UDim2.new(0, 1, (plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth), -2)
+local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "ESP", 
+	["Function"] = function(callback) 
+		if callback then
+			BindToRenderStep("ESP", 500, function()
+				for i,plr in pairs(players:GetChildren()) do
+					if ESPMethod["Value"] == "2D" then
+						local thing
+						if ESPFolder:FindFirstChild(plr.Name) then
+							thing = ESPFolder[plr.Name]
+							thing.Visible = false
+							thing.Line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line2.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line3.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line4.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+						else
+							thing = Instance.new("Frame")
+							thing.BackgroundTransparency = 1
+							thing.BorderSizePixel = 0
+							thing.Visible = false
+							thing.Name = plr.Name
+							thing.Parent = ESPFolder
+							local line1 = Instance.new("Frame")
+							line1.BorderSizePixel = 0
+							line1.Name = "Line1"
+							line1.ZIndex = 2
+							line1.Size = UDim2.new(1, -2, 0, 1)
+							line1.Position = UDim2.new(0, 1, 0, 1)
+							line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line1.Parent = thing
+							local line2 = Instance.new("Frame")
+							line2.BorderSizePixel = 0
+							line2.Name = "Line2"
+							line2.Size = UDim2.new(1, -2, 0, 1)
+							line2.ZIndex = 2
+							line2.Position = UDim2.new(0, 1, 1, -2)
+							line2.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line2.Parent = thing
+							local line3 = Instance.new("Frame")
+							line3.BorderSizePixel = 0
+							line3.Name = "Line3"
+							line3.Size = UDim2.new(0, 1, 1, -2)
+							line3.Position = UDim2.new(0, 1, 0, 1)
+							line3.ZIndex = 2
+							line3.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line3.Parent = thing
+							local line4 = Instance.new("Frame")
+							line4.BorderSizePixel = 0
+							line4.Name = "Line4"
+							line4.Size = UDim2.new(0, 1, 1, -2)
+							line4.Position = UDim2.new(1, -2, 0, 1)
+							line4.ZIndex = 2
+							line4.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line4.Parent = thing
+							local line1clone = line1:Clone()
+							line1clone.ZIndex = 1
+							line1clone.Size = UDim2.new(1, 0, 0, 3)
+							line1clone.Position = UDim2.new(0, 0, 0, 0)
+							line1clone.BackgroundColor3 = Color3.new(0, 0, 0)
+							line1clone.Parent = thing
+							local line2clone = line2:Clone()
+							line2clone.ZIndex = 1
+							line2clone.Size = UDim2.new(1, 0, 0, 3)
+							line2clone.Position = UDim2.new(0, 0, 1, -3)
+							line2clone.BackgroundColor3 = Color3.new(0, 0, 0)
+							line2clone.Parent = thing
+							local line3clone = line3:Clone()
+							line3clone.ZIndex = 1
+							line3clone.Size = UDim2.new(0, 3, 1, 0)
+							line3clone.Position = UDim2.new(0, 0, 0, 0)
+							line3clone.BackgroundColor3 = Color3.new(0, 0, 0)
+							line3clone.Parent = thing
+							local line4clone = line4:Clone()
+							line4clone.ZIndex = 1
+							line4clone.Size = UDim2.new(0, 3, 1, 0)
+							line4clone.Position = UDim2.new(1, -3, 0, 0)
+							line4clone.BackgroundColor3 = Color3.new(0, 0, 0)
+							line4clone.Parent = thing
+							local healthline = Instance.new("Frame")
+							healthline.BorderSizePixel = 0
+							healthline.Name = "HealthLineMain"
+							healthline.ZIndex = 2
+							healthline.AnchorPoint = Vector2.new(0, 1)
+							healthline.Visible = ESPHealthBar["Enabled"]
+							healthline.Size = UDim2.new(0, 1, 1, -2)
+							healthline.Position = UDim2.new(0, -4, 1, -1)
+							healthline.BackgroundColor3 = Color3.new(0, 1, 0)
+							healthline.Parent = thing
+							local healthlineclone = healthline:Clone()
+							healthlineclone.ZIndex = 1
+							healthlineclone.AnchorPoint = Vector2.new(0, 0)
+							healthlineclone.Size = UDim2.new(0, 3, 1, 0)
+							healthlineclone.Visible = ESPHealthBar["Enabled"]
+							healthlineclone.Name = "HealthLineBKG"
+							healthlineclone.Position = UDim2.new(0, -5, 0, 0)
+							healthlineclone.BackgroundColor3 = Color3.new(0, 0, 0)
+							healthlineclone.Parent = thing
 						end
-						thing.Visible = rootVis
-						thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
-						thing.Position = UDim2.new(0, rootPos.X - thing.Size.X.Offset / 2, 0, (rootPos.Y - thing.Size.Y.Offset / 2) - 36)
+						
+						if isPlayerTargetable(plr, false, false) then
+							local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+							local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1500) * (1 / GuiLibrary["MainRescale"].Scale)
+							local headPos, headVis = cam:WorldToViewportPoint(plr.Character.Head.Position + Vector3.new(0, 1, 0))
+							local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 4 + plr.Character.Humanoid.HipHeight, 0))
+							rootPos = rootPos * (1 / GuiLibrary["MainRescale"].Scale)
+							if rootVis then
+								if ESPHealthBar["Enabled"] then
+									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
+									thing.HealthLineMain.BackgroundColor3 = color
+									thing.HealthLineMain.Size = UDim2.new(0, 1, (plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth), -2)
+								end
+								thing.Visible = rootVis
+								thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
+								thing.Position = UDim2.new(0, rootPos.X - thing.Size.X.Offset / 2, 0, (rootPos.Y - thing.Size.Y.Offset / 2) - 36)
+							end
+						end
+					end
+					if ESPMethod["Value"] == "Skeleton" then
+						local thing
+						if ESPFolder:FindFirstChild(plr.Name) then
+							thing = ESPFolder[plr.Name]
+							thing.Visible = false
+							for linenum, line in pairs(thing:GetChildren()) do
+								line.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							end
+						else
+							thing = Instance.new("Frame")
+							thing.BackgroundTransparency = 1
+							thing.BorderSizePixel = 0
+							thing.Visible = false
+							thing.Name = plr.Name
+							thing.Parent = ESPFolder
+							local line1 = Instance.new("Frame")
+							line1.BorderSizePixel = 0
+							line1.Name = "TopTorsoLine"
+							line1.AnchorPoint = Vector2.new(0.5, 0.5)
+							line1.ZIndex = 2
+							line1.Size = UDim2.new(0, 0, 0, 0)
+							line1.Position = UDim2.new(0, 0, 0, 0)
+							line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line1.Parent = thing
+							local line2 = line1:Clone()
+							line2.Name = "MiddleTorsoLine"
+							line2.Parent = thing
+							local line3 = line1:Clone()
+							line3.Name = "BottomTorsoLine"
+							line3.Parent = thing
+							local line4 = line1:Clone()
+							line4.Name = "LeftArm"
+							line4.Parent = thing
+							local line5 = line1:Clone()
+							line5.Name = "RightArm"
+							line5.Parent = thing
+							local line6 = line1:Clone()
+							line6.Name = "LeftLeg"
+							line6.Parent = thing
+							local line7 = line1:Clone()
+							line7.Name = "RightLeg"
+							line7.Parent = thing
+							local line8 = line1:Clone()
+							line8.Name = "Head"
+							line8.Parent = thing
+							local line9 = line1:Clone()
+							line9.Name = "HeadForward"
+							line9.Parent = thing
+						end
+						
+						if isPlayerTargetable(plr, false, false) and plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 then
+							local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+							if rootVis and plr.Character:FindFirstChild("Torso") and plr.Character:FindFirstChild("Left Arm") and plr.Character:FindFirstChild("Right Arm") and plr.Character:FindFirstChild("Left Leg") and plr.Character:FindFirstChild("Right Leg") and plr.Character:FindFirstChild("Head") then
+								thing.Visible = true
+								local head = CalculateObjectPosition((plr.Character["Head"].CFrame).p)
+								local headfront = CalculateObjectPosition((plr.Character["Head"].CFrame * CFrame.new(0, 0, -0.5)).p)
+								local toplefttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(-1.5, 1, 0)).p)
+								local toprighttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(1.5, 1, 0)).p)
+								local toptorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(0, 1, 0)).p)
+								local bottomtorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(0, -1, 0)).p)
+								local bottomlefttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(-0.5, -1, 0)).p)
+								local bottomrighttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(0.5, -1, 0)).p)
+								local leftarm = CalculateObjectPosition((plr.Character["Left Arm"].CFrame * CFrame.new(0, -0.8, 0)).p)
+								local rightarm = CalculateObjectPosition((plr.Character["Right Arm"].CFrame * CFrame.new(0, -0.8, 0)).p)
+								local leftleg = CalculateObjectPosition((plr.Character["Left Leg"].CFrame * CFrame.new(0, -0.8, 0)).p)
+								local rightleg = CalculateObjectPosition((plr.Character["Right Leg"].CFrame * CFrame.new(0, -0.8, 0)).p)
+								CalculateLine(toplefttorso, toprighttorso, thing.TopTorsoLine)
+								CalculateLine(toptorso, bottomtorso, thing.MiddleTorsoLine)
+								CalculateLine(bottomlefttorso, bottomrighttorso, thing.BottomTorsoLine)
+								CalculateLine(toplefttorso, leftarm, thing.LeftArm)
+								CalculateLine(toprighttorso, rightarm, thing.RightArm)
+								CalculateLine(bottomlefttorso, leftleg, thing.LeftLeg)
+								CalculateLine(bottomrighttorso, rightleg, thing.RightLeg)
+								CalculateLine(toptorso, head, thing.Head)
+								CalculateLine(head, headfront, thing.HeadForward)
+							end
+						end
 					end
 				end
-			end
-			if ESPMethod["Value"] == "Skeleton" then
-				local thing
-				if ESPFolder:FindFirstChild(plr.Name) then
-					thing = ESPFolder[plr.Name]
-					thing.Visible = false
-					for linenum, line in pairs(thing:GetChildren()) do
-						line.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-					end
-				else
-					thing = Instance.new("Frame")
-					thing.BackgroundTransparency = 1
-					thing.BorderSizePixel = 0
-					thing.Visible = false
-					thing.Name = plr.Name
-					thing.Parent = ESPFolder
-					local line1 = Instance.new("Frame")
-					line1.BorderSizePixel = 0
-					line1.Name = "TopTorsoLine"
-					line1.AnchorPoint = Vector2.new(0.5, 0.5)
-					line1.ZIndex = 2
-					line1.Size = UDim2.new(0, 0, 0, 0)
-					line1.Position = UDim2.new(0, 0, 0, 0)
-					line1.BackgroundColor3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ESPColor["Value"], 1, 1)
-					line1.Parent = thing
-					local line2 = line1:Clone()
-					line2.Name = "MiddleTorsoLine"
-					line2.Parent = thing
-					local line3 = line1:Clone()
-					line3.Name = "BottomTorsoLine"
-					line3.Parent = thing
-					local line4 = line1:Clone()
-					line4.Name = "LeftArm"
-					line4.Parent = thing
-					local line5 = line1:Clone()
-					line5.Name = "RightArm"
-					line5.Parent = thing
-					local line6 = line1:Clone()
-					line6.Name = "LeftLeg"
-					line6.Parent = thing
-					local line7 = line1:Clone()
-					line7.Name = "RightLeg"
-					line7.Parent = thing
-					local line8 = line1:Clone()
-					line8.Name = "Head"
-					line8.Parent = thing
-					local line9 = line1:Clone()
-					line9.Name = "HeadForward"
-					line9.Parent = thing
-				end
-				
-				if isPlayerTargetable(plr, false, false) and plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 then
-					local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-					if rootVis and plr.Character:FindFirstChild("Torso") and plr.Character:FindFirstChild("Left Arm") and plr.Character:FindFirstChild("Right Arm") and plr.Character:FindFirstChild("Left Leg") and plr.Character:FindFirstChild("Right Leg") and plr.Character:FindFirstChild("Head") then
-						thing.Visible = true
-						local head = CalculateObjectPosition((plr.Character["Head"].CFrame).p)
-						local headfront = CalculateObjectPosition((plr.Character["Head"].CFrame * CFrame.new(0, 0, -0.5)).p)
-						local toplefttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(-1.5, 1, 0)).p)
-						local toprighttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(1.5, 1, 0)).p)
-						local toptorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(0, 1, 0)).p)
-						local bottomtorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(0, -1, 0)).p)
-						local bottomlefttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(-0.5, -1, 0)).p)
-						local bottomrighttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(0.5, -1, 0)).p)
-						local leftarm = CalculateObjectPosition((plr.Character["Left Arm"].CFrame * CFrame.new(0, -0.8, 0)).p)
-						local rightarm = CalculateObjectPosition((plr.Character["Right Arm"].CFrame * CFrame.new(0, -0.8, 0)).p)
-						local leftleg = CalculateObjectPosition((plr.Character["Left Leg"].CFrame * CFrame.new(0, -0.8, 0)).p)
-						local rightleg = CalculateObjectPosition((plr.Character["Right Leg"].CFrame * CFrame.new(0, -0.8, 0)).p)
-						CalculateLine(toplefttorso, toprighttorso, thing.TopTorsoLine)
-						CalculateLine(toptorso, bottomtorso, thing.MiddleTorsoLine)
-						CalculateLine(bottomlefttorso, bottomrighttorso, thing.BottomTorsoLine)
-						CalculateLine(toplefttorso, leftarm, thing.LeftArm)
-						CalculateLine(toprighttorso, rightarm, thing.RightArm)
-						CalculateLine(bottomlefttorso, leftleg, thing.LeftLeg)
-						CalculateLine(bottomrighttorso, rightleg, thing.RightLeg)
-						CalculateLine(toptorso, head, thing.Head)
-						CalculateLine(head, headfront, thing.HeadForward)
-					end
-				end
-			end
+			end)
+		else
+			UnbindFromRenderStep("ESP") 
+			ESPFolder:ClearAllChildren()
 		end
-	end)
-end, function() UnbindFromRenderStep("ESP") ESPFolder:ClearAllChildren() end, true)
-ESPColor = ESP.CreateColorSlider("Player Color", function(val) end)
+	end
+})
+ESPColor = ESP.CreateColorSlider({
+	["Name"] = "Player Color", 
+	["Function"] = function(val) end
+})
 ESPMethod = ESP.CreateDropdown("Mode", {"2D", "Skeleton"}, function(val)
 	ESPFolder:ClearAllChildren()
 	ESPHealthBar["Object"].Visible = (val == "2D")
 end)
-ESPHealthBar = ESP.CreateToggle("Health Bar", function() 
-	for i,v in pairs(ESPFolder:GetChildren()) do
-		v.HealthLineMain.Visible = true
-		v.HealthLineBKG.Visible = true
+ESPHealthBar = ESP.CreateToggle({
+	["Name"] = "Health Bar", 
+	["Function"] = function(callback)
+		if callback then 
+			for i,v in pairs(ESPFolder:GetChildren()) do
+				v.HealthLineMain.Visible = true
+				v.HealthLineBKG.Visible = true
+			end
+		else
+			for i,v in pairs(ESPFolder:GetChildren()) do
+				v.HealthLineMain.Visible = false
+				v.HealthLineBKG.Visible = false
+			end
+		end
 	end
-end, function() 
-	for i,v in pairs(ESPFolder:GetChildren()) do
-		v.HealthLineMain.Visible = false
-		v.HealthLineBKG.Visible = false
-	end
-end)
+})
+
 local ChamsFolder = Instance.new("Folder")
 ChamsFolder.Name = "ChamsFolder"
 ChamsFolder.Parent = GuiLibrary["MainGui"]
@@ -968,85 +1168,116 @@ local ChamsColor = {["Value"] = 0.44}
 local ChamsTransparency = {["Value"] = 1}
 local ChamsOnTop = {["Enabled"] = true}
 local chamobjects = {["Head"] = true, ["Torso"] = true, ["UpperTorso"] = true, ["LowerTorso"] = true, ["Left Arm"] = true, ["Left Leg"] = true, ["Right Arm"] = true, ["Right Leg"] = true, ["LeftLowerLeg"] = true, ["RightLowerLeg"] = true, ["LeftUpperLeg"] = true, ["RightUpperLeg"] = true, ["LeftFoot"] = true, ["RightFoot"] = true, ["LeftLowerArm"] = true, ["RightLowerArm"] = true, ["LeftUpperArm"] = true, ["RightUpperArm"] = true, ["LeftHand"] = true, ["RightHand"] = true}
-local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Chams", function() 
-	BindToRenderStep("Chams", 500, function()
-		for i,plr in pairs(players:GetChildren()) do
-				local thing
-				if ChamsFolder:FindFirstChild(plr.Name) then
-					thing = ChamsFolder[plr.Name]
-					for partnumber, part in pairs(thing:GetChildren()) do
-						part.Visible = false
-						part.Color3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ChamsColor["Value"], 1, 1)
-					end
-				end
-				
-				if isPlayerTargetable(plr, false, false) then
-					if ChamsFolder:FindFirstChild(plr.Name) == nil then
-						local chamfolder = Instance.new("Folder")
-						chamfolder.Name = plr.Name
-						chamfolder.Parent = ChamsFolder
-						thing = chamfolder
-						for partnumber, part in pairs(plr.Character:GetChildren()) do
-							if chamobjects[part.Name] then
-								local boxhandle = Instance.new("BoxHandleAdornment")
-								boxhandle.Size = (part.Name == "Head" and Vector3.new(1.25, 1.25, 1.25) or part.Size) + Vector3.new(.01, .01, .01)
-								boxhandle.AlwaysOnTop = ChamsOnTop["Enabled"]
-								boxhandle.ZIndex = 10
-								boxhandle.Visible = true
-								boxhandle.Color3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ChamsColor["Value"], 1, 1)
-								boxhandle.Name = part.Name
-								boxhandle.Parent = chamfolder
+local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Chams", 
+	["Function"] = function(callback) 
+		if callback then
+			BindToRenderStep("Chams", 500, function()
+				for i,plr in pairs(players:GetChildren()) do
+						local thing
+						if ChamsFolder:FindFirstChild(plr.Name) then
+							thing = ChamsFolder[plr.Name]
+							for partnumber, part in pairs(thing:GetChildren()) do
+								part.Visible = false
+								part.Color3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ChamsColor["Value"], 1, 1)
 							end
 						end
-					end
-					for partnumber, part in pairs(thing:GetChildren()) do
-						part.Visible = true
-						if plr.Character:FindFirstChild(part.Name) then
-							part.Adornee = plr.Character[part.Name]
-							part.AlwaysOnTop = ChamsOnTop["Enabled"]
-							part.Transparency = ChamsTransparency["Value"] / 100
+						
+						if isPlayerTargetable(plr, false, false) then
+							if ChamsFolder:FindFirstChild(plr.Name) == nil then
+								local chamfolder = Instance.new("Folder")
+								chamfolder.Name = plr.Name
+								chamfolder.Parent = ChamsFolder
+								thing = chamfolder
+								for partnumber, part in pairs(plr.Character:GetChildren()) do
+									if chamobjects[part.Name] then
+										local boxhandle = Instance.new("BoxHandleAdornment")
+										boxhandle.Size = (part.Name == "Head" and Vector3.new(1.25, 1.25, 1.25) or part.Size) + Vector3.new(.01, .01, .01)
+										boxhandle.AlwaysOnTop = ChamsOnTop["Enabled"]
+										boxhandle.ZIndex = 10
+										boxhandle.Visible = true
+										boxhandle.Color3 = (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or Color3.fromHSV(ChamsColor["Value"], 1, 1)
+										boxhandle.Name = part.Name
+										boxhandle.Parent = chamfolder
+									end
+								end
+							end
+							for partnumber, part in pairs(thing:GetChildren()) do
+								part.Visible = true
+								if plr.Character:FindFirstChild(part.Name) then
+									part.Adornee = plr.Character[part.Name]
+									part.AlwaysOnTop = ChamsOnTop["Enabled"]
+									part.Transparency = ChamsTransparency["Value"] / 100
+								end
+							end
 						end
-					end
 				end
+			end)
+		else
+			UnbindFromRenderStep("Chams")
+			ChamsFolder:ClearAllChildren()
 		end
-	end)
-end, function() UnbindFromRenderStep("Chams") ChamsFolder:ClearAllChildren() end, true, function() return "" end, "testing")
-ChamsColor = Chams.CreateColorSlider("Player Color", function(val) end)
-ChamsTransparency = Chams.CreateSlider("Transparency", 1, 100, function(val) end, 50)
-ChamsOnTop = Chams.CreateToggle("Bypass Walls", function() end, function() end, true)
+	end,
+	["HoverText"] = "Render players through walls"
+})
+ChamsColor = Chams.CreateColorSlider({
+	["Name"] = "Player Color", 
+	["Function"] = function(val) end
+})
+ChamsTransparency = Chams.CreateSlider({
+	["Name"] = "Transparency", 
+	["Min"] = 1,
+	["Max"] = 100, 
+	["Function"] = function(val) end,
+	["Default"] = 50
+})
+ChamsOnTop = Chams.CreateToggle({
+	["Name"] = "Bypass Walls", 
+	["Function"] = function() end
+})
 local lightingsettings = {}
 local lightingconnection
 local lightingchanged = false
-GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Fullbright", function() 
-	lightingsettings["Brightness"] = lighting.Brightness
-	lightingsettings["ClockTime"] = lighting.ClockTime
-	lightingsettings["FogEnd"] = lighting.FogEnd
-	lightingsettings["GlobalShadows"] = lighting.GlobalShadows
-	lightingsettings["OutdoorAmbient"] = lighting.OutdoorAmbient
-	lightingchanged = false
-	lighting.Brightness = 2
-	lighting.ClockTime = 14
-	lighting.FogEnd = 100000
-	lighting.GlobalShadows = false
-	lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
-	lightingchanged = true
-	lightingconnection = lighting.Changed:connect(function()
-		if not lightingchanged then
+GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Fullbright",
+	["Function"] = function(callback)
+		if callback then 
 			lightingsettings["Brightness"] = lighting.Brightness
 			lightingsettings["ClockTime"] = lighting.ClockTime
 			lightingsettings["FogEnd"] = lighting.FogEnd
 			lightingsettings["GlobalShadows"] = lighting.GlobalShadows
 			lightingsettings["OutdoorAmbient"] = lighting.OutdoorAmbient
-			lightingchanged = true
+			lightingchanged = false
 			lighting.Brightness = 2
 			lighting.ClockTime = 14
 			lighting.FogEnd = 100000
 			lighting.GlobalShadows = false
 			lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
-			lightingchanged = false
+			lightingchanged = true
+			lightingconnection = lighting.Changed:connect(function()
+				if not lightingchanged then
+					lightingsettings["Brightness"] = lighting.Brightness
+					lightingsettings["ClockTime"] = lighting.ClockTime
+					lightingsettings["FogEnd"] = lighting.FogEnd
+					lightingsettings["GlobalShadows"] = lighting.GlobalShadows
+					lightingsettings["OutdoorAmbient"] = lighting.OutdoorAmbient
+					lightingchanged = true
+					lighting.Brightness = 2
+					lighting.ClockTime = 14
+					lighting.FogEnd = 100000
+					lighting.GlobalShadows = false
+					lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+					lightingchanged = false
+				end
+			end)
+		else
+			for name,thing in pairs(lightingsettings) do 
+				lighting[name] = thing 
+				lightingconnection:Disconnect()  
+			end
 		end
-	end)
-end, function() for name,thing in pairs(lightingsettings) do lighting[name] = thing lightingconnection:Disconnect()  end end, false)
+	end
+})
 
 local HealthText = Instance.new("TextLabel")
 HealthText.Font = Enum.Font.SourceSans
@@ -1058,17 +1289,23 @@ HealthText.TextColor3 = Color3.fromRGB(255, 0, 0)
 HealthText.Size = UDim2.new(0, 0, 0, 0)
 HealthText.Visible = false
 HealthText.Parent = GuiLibrary["MainGui"]
-local Health = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Health", function() 
-	HealthText.Visible = true
-	BindToRenderStep("Health", 1, function()
-		if isAlive() then
-			HealthText.Text = tostring(math.round(lplr.Character.Humanoid.Health)).."❤"
+local Health = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Health", 
+	["Function"] = function(callback) 
+		if callback then
+			HealthText.Visible = true
+			BindToRenderStep("Health", 1, function()
+				if isAlive() then
+					HealthText.Text = tostring(math.round(lplr.Character.Humanoid.Health)).."❤"
+				end
+			end)
+		else
+			HealthText.Visible = false
+			UnbindFromRenderStep("Health")
 		end
-	end)
-end, function() 
-	HealthText.Visible = false
-	UnbindFromRenderStep("Health")
-end, true, function() return "" end, "Displays your health in the center of your screen.")
+	end,
+	["HoverText"] = "Displays your health in the center of your screen."
+})
 
 local NameTagsFolder = Instance.new("Folder")
 NameTagsFolder.Name = "NameTagsFolder"
@@ -1082,66 +1319,85 @@ local NameTagsColor = {["Value"] = 0.44}
 local NameTagsDisplayName = {["Enabled"] = false}
 local NameTagsHealth = {["Enabled"] = false}
 local NameTagsDistance = {["Enabled"] = false}
-local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("NameTags", function() 
-	BindToRenderStep("NameTags", 500, function()
-		for i,plr in pairs(players:GetChildren()) do
-				local thing
-				if NameTagsFolder:FindFirstChild(plr.Name) then
-					thing = NameTagsFolder[plr.Name]
-					thing.Visible = false
-				else
-					thing = Instance.new("TextLabel")
-					thing.BackgroundTransparency = 0.5
-					thing.BackgroundColor3 = Color3.new(0, 0, 0)
-					thing.BorderSizePixel = 0
-					thing.Visible = false
-					thing.RichText = true
-					thing.Name = plr.Name
-					thing.Font = Enum.Font.SourceSans
-					thing.TextSize = 14
-					if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
-						local rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-						if NameTagsHealth["Enabled"] then
-							rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name).." "..math.floor(plr.Character.Humanoid.Health)
-						end
-						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-						local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
-						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
-						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
-						thing.Text = modifiedText
+local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "NameTags", 
+	["Function"] = function(callback) 
+		if callback then
+			BindToRenderStep("NameTags", 500, function()
+				for i,plr in pairs(players:GetChildren()) do
+					local thing
+					if NameTagsFolder:FindFirstChild(plr.Name) then
+						thing = NameTagsFolder[plr.Name]
+						thing.Visible = false
 					else
-						local nametagSize = game:GetService("TextService"):GetTextSize(plr.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
-						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
-						thing.Text = plr.Name
-					end
-					thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
-					thing.Parent = NameTagsFolder
-				end
-				
-				if isPlayerTargetable(plr, false, false) then
-					local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
-					headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
-					
-					if headVis then
-						local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
-						local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-						local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
-						local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
-						thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
-						thing.Text = modifiedText
+						thing = Instance.new("TextLabel")
+						thing.BackgroundTransparency = 0.5
+						thing.BackgroundColor3 = Color3.new(0, 0, 0)
+						thing.BorderSizePixel = 0
+						thing.Visible = false
+						thing.RichText = true
+						thing.Name = plr.Name
+						thing.Font = Enum.Font.SourceSans
+						thing.TextSize = 14
+						if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
+							local rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+							if NameTagsHealth["Enabled"] then
+								rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name).." "..math.floor(plr.Character.Humanoid.Health)
+							end
+							local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
+							local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+							local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+							thing.Text = modifiedText
+						else
+							local nametagSize = game:GetService("TextService"):GetTextSize(plr.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+							thing.Text = plr.Name
+						end
 						thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
-						thing.Visible = headVis
-						thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
+						thing.Parent = NameTagsFolder
+					end
+					
+					if isPlayerTargetable(plr, false, false) then
+						local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
+						headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
+						
+						if headVis then
+							local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
+							local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
+							local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+							local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+							thing.Text = modifiedText
+							thing.TextColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+							thing.Visible = headVis
+							thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
+						end
 					end
 				end
-			end
-
-	end)
-end, function() UnbindFromRenderStep("NameTags") NameTagsFolder:ClearAllChildren() end, true)
-NameTagsColor = NameTags.CreateColorSlider("Player Color", function(val) end)
-NameTagsDisplayName = NameTags.CreateToggle("Use Display Name", function() end, function() end)
-NameTagsHealth = NameTags.CreateToggle("Health", function() end, function() end)
-NameTagsDistance = NameTags.CreateToggle("Distance", function() end, function() end)
+			end)
+		else
+			UnbindFromRenderStep("NameTags")
+			NameTagsFolder:ClearAllChildren()
+		end
+	end
+})
+NameTagsColor = NameTags.CreateColorSlider({
+	["Name"] = "Player Color", 
+	["Function"] = function(val) end
+})
+NameTagsDisplayName = NameTags.CreateToggle({
+	["Name"] = "Use Display Name", 
+	["Function"] = function() end
+})
+NameTagsHealth = NameTags.CreateToggle({
+	["Name"] = "Health", 
+	["Function"] = function() end
+})
+NameTagsDistance = NameTags.CreateToggle({
+	["Name"] = "Distance", 
+	["Function"] = function() end
+})
 
 local searchColor = {["Value"] = 0.44}
 local searchModule = {["Enabled"] = false}
@@ -1176,72 +1432,90 @@ local searchRefresh = function()
 		end
 	end
 end
-local searchTextList = {["RefreshValues"] = function() end}
-searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Search", function() 
-	searchRefresh()
-	searchAdd = workspace.DescendantAdded:connect(function(v)
-		if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
-			local boxhandle = Instance.new("BoxHandleAdornment")
-			boxhandle.Name = v.Name
-			boxhandle.AlwaysOnTop = true
-			boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
-			boxhandle.Adornee = v
-			boxhandle.ZIndex = 10
-			boxhandle.Size = v.Size
-			boxhandle.Transparency = 0.5
-			boxhandle.Parent = searchFolder
+local searchTextList = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
+searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Search", 
+	["Function"] = function(callback) 
+		if callback then
+			searchRefresh()
+			searchAdd = workspace.DescendantAdded:connect(function(v)
+				if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
+					local boxhandle = Instance.new("BoxHandleAdornment")
+					boxhandle.Name = v.Name
+					boxhandle.AlwaysOnTop = true
+					boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
+					boxhandle.Adornee = v
+					boxhandle.ZIndex = 10
+					boxhandle.Size = v.Size
+					boxhandle.Transparency = 0.5
+					boxhandle.Parent = searchFolder
+				end
+			end)
+			searchRemove = workspace.DescendantRemoving:connect(function(v)
+				if v:IsA("BasePart") then
+					local boxhandle = searchFindBoxHandle(v)
+					if boxhandle then
+						boxhandle:Remove()
+					end
+				end
+			end)
+		else
+			pcall(function()
+				searchFolder:ClearAllChildren()
+				searchAdd:Disconnect()
+				searchRemove:Disconnect()
+			end)
 		end
-	end)
-	searchRemove = workspace.DescendantRemoving:connect(function(v)
-		if v:IsA("BasePart") then
-			local boxhandle = searchFindBoxHandle(v)
-			if boxhandle then
-				boxhandle:Remove()
-			end
-		end
-	end)
-end, function() 
-	pcall(function()
-		searchFolder:ClearAllChildren()
-		searchAdd:Disconnect()
-		searchRemove:Disconnect()
-	end)
-end, false)
-searchColor = searchModule.CreateColorSlider("new part color", function(val)
-	for i,v in pairs(searchFolder:GetChildren()) do
-		v.Color3 = Color3.fromHSV(val, 1, 1)
 	end
-end)
-SearchTextList = searchModule.CreateTextList("SearchList", "part name", function(user)
-	table.insert(GuiLibrary["Settings"]["SearchObject"]["List"], user)
-	SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
-	searchRefresh()
-end, function(num) 
-	table.remove(GuiLibrary["Settings"]["SearchObject"]["List"], num) 
-	SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
-	searchRefresh()
-end)
+})
+searchColor = searchModule.CreateColorSlider({
+	["Name"] = "new part color", 
+	["Function"] = function(val)
+		for i,v in pairs(searchFolder:GetChildren()) do
+			v.Color3 = Color3.fromHSV(val, 1, 1)
+		end
+	end
+})
+SearchTextList = searchModule.CreateTextList({
+	["Name"] = "SearchList",
+	["TempText"] = "part name", 
+	["AddFunction"] = function(user)
+		table.insert(GuiLibrary["Settings"]["SearchObject"]["List"], user)
+		SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
+		searchRefresh()
+	end, 
+		["RemoveFunction"] = function(num) 
+		table.remove(GuiLibrary["Settings"]["SearchObject"]["List"], num) 
+		SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
+		searchRefresh()
+	end
+})
 
 local XrayAdd
-local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("Xray", function() 
-	XrayAdd = workspace.DescendantAdded:connect(function(v)
-		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
-			v.LocalTransparencyModifier = 0.5
-		end
-	end)
-	for i, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
-			v.LocalTransparencyModifier = 0.5
+local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Xray", 
+	["Function"] = function(callback) 
+		if callback then
+			XrayAdd = workspace.DescendantAdded:connect(function(v)
+				if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+					v.LocalTransparencyModifier = 0.5
+				end
+			end)
+			for i, v in pairs(workspace:GetDescendants()) do
+				if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+					v.LocalTransparencyModifier = 0.5
+				end
+			end
+		else
+			for i, v in pairs(workspace:GetDescendants()) do
+				if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
+					v.LocalTransparencyModifier = 0
+				end
+			end
+			XrayAdd:Disconnect()
 		end
 	end
-end, function()
-	for i, v in pairs(workspace:GetDescendants()) do
-		if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
-			v.LocalTransparencyModifier = 0
-		end
-	end
-	XrayAdd:Disconnect()
-end, false)
+})
 
 local TracersFolder = Instance.new("Folder")
 TracersFolder.Name = "TracersFolder"
@@ -1252,49 +1526,60 @@ players.PlayerRemoving:connect(function(plr)
 	end
 end)
 local TracersColor = {["Value"] = 0.44}
-local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton("Tracers", function() 
-	BindToRenderStep("Tracers", 500, function()
-		for i,plr in pairs(players:GetChildren()) do
-				local thing
-				if TracersFolder:FindFirstChild(plr.Name) then
-					thing = TracersFolder[plr.Name]
-					if thing.Visible then
-						thing.Visible = false
+local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Tracers", 
+	["Function"] = function(callback) 
+		if callback then
+			BindToRenderStep("Tracers", 500, function()
+				for i,plr in pairs(players:GetChildren()) do
+						local thing
+						if TracersFolder:FindFirstChild(plr.Name) then
+							thing = TracersFolder[plr.Name]
+							if thing.Visible then
+								thing.Visible = false
+							end
+						else
+							thing = Instance.new("Frame")
+							thing.BackgroundTransparency = 0
+							thing.AnchorPoint = Vector2.new(0.5, 0.5)
+							thing.BackgroundColor3 = Color3.new(0, 0, 0)
+							thing.BorderSizePixel = 0
+							thing.Visible = false
+							thing.Name = plr.Name
+							thing.Parent = TracersFolder
+						end
+						
+						if isPlayerTargetable(plr, false, false) then
+							local rootScrPos = cam:WorldToViewportPoint(plr.Character.Head.Position)
+							local tempPos = cam.CFrame:pointToObjectSpace(plr.Character.Head.Position)
+							if rootScrPos.Z < 0 then
+								tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
+							end
+							local tracerPos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
+							local screensize = cam.ViewportSize
+							local startVector = Vector2.new(screensize.X / 2, screensize.Y / 2)
+							local endVector = Vector2.new(tracerPos.X, tracerPos.Y)
+							local Distance = (startVector - endVector).Magnitude
+							startVector = startVector * (1 / GuiLibrary["MainRescale"].Scale)
+							endVector = endVector * (1 / GuiLibrary["MainRescale"].Scale)
+							thing.Visible = true
+							thing.BackgroundColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(TracersColor["Value"], 1, 1)
+							thing.Size = UDim2.new(0, Distance, 0, 2)
+							thing.Position = UDim2.new(0, (startVector.X + endVector.X) / 2, 0, ((startVector.Y + endVector.Y) / 2) - 36)
+							thing.Rotation = math.atan2(endVector.Y - startVector.Y, endVector.X - startVector.X) * (180 / math.pi)
+						end
 					end
-				else
-					thing = Instance.new("Frame")
-					thing.BackgroundTransparency = 0
-					thing.AnchorPoint = Vector2.new(0.5, 0.5)
-					thing.BackgroundColor3 = Color3.new(0, 0, 0)
-					thing.BorderSizePixel = 0
-					thing.Visible = false
-					thing.Name = plr.Name
-					thing.Parent = TracersFolder
-				end
-				
-				if isPlayerTargetable(plr, false, false) then
-					local rootScrPos = cam:WorldToViewportPoint(plr.Character.Head.Position)
-					local tempPos = cam.CFrame:pointToObjectSpace(plr.Character.Head.Position)
-					if rootScrPos.Z < 0 then
-						tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
-					end
-					local tracerPos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
-					local screensize = cam.ViewportSize
-					local startVector = Vector2.new(screensize.X / 2, screensize.Y / 2)
-					local endVector = Vector2.new(tracerPos.X, tracerPos.Y)
-					local Distance = (startVector - endVector).Magnitude
-					startVector = startVector * (1 / GuiLibrary["MainRescale"].Scale)
-					endVector = endVector * (1 / GuiLibrary["MainRescale"].Scale)
-					thing.Visible = true
-					thing.BackgroundColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(TracersColor["Value"], 1, 1)
-					thing.Size = UDim2.new(0, Distance, 0, 2)
-					thing.Position = UDim2.new(0, (startVector.X + endVector.X) / 2, 0, ((startVector.Y + endVector.Y) / 2) - 36)
-					thing.Rotation = math.atan2(endVector.Y - startVector.Y, endVector.X - startVector.X) * (180 / math.pi)
-				end
-			end
-	end)
-end, function() UnbindFromRenderStep("Tracers") TracersFolder:ClearAllChildren() end, true)
-TracersColor = Tracers.CreateColorSlider("Player Color", function(val) end)
+			end)
+		else
+			UnbindFromRenderStep("Tracers") 
+			TracersFolder:ClearAllChildren()
+		end
+	end
+})
+TracersColor = Tracers.CreateColorSlider({
+	["Name"] = "Player Color", 
+	["Function"] = function(val) end
+})
 
 Spring = {} do
 	Spring.__index = Spring
@@ -1499,49 +1784,65 @@ local PlayerState = {} do
 	end
 end
 
-local Freecam = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton("Freecam", function()
-	local cameraCFrame = cam.CFrame
-	if pos then
-		cameraCFrame = pos
+local Freecam = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Freecam", 
+	["Function"] = function(callback)
+		if callback then
+			local cameraCFrame = cam.CFrame
+			if pos then
+				cameraCFrame = pos
+			end
+			cameraRot = Vector2.new()
+			cameraPos = cameraCFrame.p
+			cameraFov = cam.FieldOfView
+
+			velSpring:Reset(Vector3.new())
+			panSpring:Reset(Vector2.new())
+
+			PlayerState.Push()
+			BindToRenderStep("Freecam", Enum.RenderPriority.Camera.Value, function(dt)
+				local vel = velSpring:Update(dt, Input.Vel(dt))
+				local pan = panSpring:Update(dt, Input.Pan(dt))
+
+				local zoomFactor = math.sqrt(math.tan(math.rad(70/2))/math.tan(math.rad(cameraFov/2)))
+
+				cameraRot = cameraRot + pan*Vector2.new(0.75, 1)*8*(dt/zoomFactor)
+				cameraRot = Vector2.new(math.clamp(cameraRot.x, -math.rad(90), math.rad(90)), cameraRot.y%(2*math.pi))
+
+				local cameraCFrame = CFrame.new(cameraPos)*CFrame.fromOrientation(cameraRot.x, cameraRot.y, 0)*CFrame.new(vel*Vector3.new(1, 1, 1)*64*dt)
+				cameraPos = cameraCFrame.p
+
+				cam.CFrame = cameraCFrame
+				cam.Focus = cameraCFrame*CFrame.new(0, 0, -GetFocusDistance(cameraCFrame))
+				cam.FieldOfView = cameraFov
+			end)
+			Input.StartCapture()
+		else
+			Input.StopCapture()
+			UnbindFromRenderStep("Freecam")
+			PlayerState.Pop()
+		end
 	end
-	cameraRot = Vector2.new()
-	cameraPos = cameraCFrame.p
-	cameraFov = cam.FieldOfView
+})
+freecamspeed = Freecam.CreateSlider({
+	["Name"] = "Speed",
+	["Min"] = 1,
+	["Max"] = 150,
+	["Function"] = function(val) NAV_KEYBOARD_SPEED = Vector3.new(val / 75,  val / 75, val / 75) end,
+	["Default"] = 75
+})
 
-	velSpring:Reset(Vector3.new())
-	panSpring:Reset(Vector2.new())
-
-	PlayerState.Push()
-	BindToRenderStep("Freecam", Enum.RenderPriority.Camera.Value, function(dt)
-        local vel = velSpring:Update(dt, Input.Vel(dt))
-        local pan = panSpring:Update(dt, Input.Pan(dt))
-
-        local zoomFactor = math.sqrt(math.tan(math.rad(70/2))/math.tan(math.rad(cameraFov/2)))
-
-        cameraRot = cameraRot + pan*Vector2.new(0.75, 1)*8*(dt/zoomFactor)
-        cameraRot = Vector2.new(math.clamp(cameraRot.x, -math.rad(90), math.rad(90)), cameraRot.y%(2*math.pi))
-
-        local cameraCFrame = CFrame.new(cameraPos)*CFrame.fromOrientation(cameraRot.x, cameraRot.y, 0)*CFrame.new(vel*Vector3.new(1, 1, 1)*64*dt)
-        cameraPos = cameraCFrame.p
-
-        cam.CFrame = cameraCFrame
-        cam.Focus = cameraCFrame*CFrame.new(0, 0, -GetFocusDistance(cameraCFrame))
-        cam.FieldOfView = cameraFov
-    end)
-	Input.StartCapture()
-end, function() 
-	Input.StopCapture()
-	UnbindFromRenderStep("Freecam")
-	PlayerState.Pop()
-end, true, function() return "" end, true)
-freecamspeed = Freecam.CreateSlider("Speed", 1, 150, function(val) NAV_KEYBOARD_SPEED = Vector3.new(val / 75,  val / 75, val / 75) end, 75)
-
-local Panic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton("Panic", function()
-	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-		if v["Type"] == "Button" or v["Type"] == "OptionsButton" then
-			if v["Api"]["Enabled"] then
-				v["Api"]["ToggleButton"]()
+local Panic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Panic", 
+	["Function"] = function(callback)
+		if callback then
+			for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
+				if v["Type"] == "Button" or v["Type"] == "OptionsButton" then
+					if v["Api"]["Enabled"] then
+						v["Api"]["ToggleButton"]()
+					end
+				end
 			end
 		end
 	end
-end, function() end, false) 
+}) 

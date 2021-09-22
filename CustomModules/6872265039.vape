@@ -64,35 +64,52 @@ GuiLibrary["RemoveObject"]("SearchOptionsButton")
 GuiLibrary["RemoveObject"]("TracersOptionsButton")
 
 local Sprint = {["Enabled"] = false}
-Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton("Sprint", function()
-	spawn(function()
-		repeat
-			wait()
-			if bedwars["sprintTable"].sprinting == false then
-				getmetatable(bedwars["sprintTable"])["startSprinting"](bedwars["sprintTable"])
-			end
-		until Sprint["Enabled"] == false
-	end)
-end, function() end, true, function() return "" end, "Sets your sprinting to true")
+Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Sprint",
+	["Function"] = function(callback)
+		if callback then
+			spawn(function()
+				repeat
+					wait()
+					if bedwars["sprintTable"].sprinting == false then
+						getmetatable(bedwars["sprintTable"])["startSprinting"](bedwars["sprintTable"])
+					end
+				until Sprint["Enabled"] == false
+			end)
+		end
+	end, 
+	["HoverText"] = "Sets your sprinting to true"
+})
 
 local QueueTypes = {}
 for i,v in pairs(workspace.Lobby.Queues:GetChildren()) do table.insert(QueueTypes, v.Name) end
 local JoinQueue = {["Enabled"] = false}
 local JoinQueueTypes = {["Value"] = QueueTypes[1]}
 local JoinQueueDelay = {["Value"] = 1}
-JoinQueue = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton("AutoQueue", function()
-	spawn(function()
-		wait(JoinQueueDelay["Value"])
-		if bedwars["ClientStore"]:getState().Party.leader.userId == lplr.UserId and bedwars["Client"]:Get("JoinQueue"):CallServer({
-			queueType = JoinQueueTypes["Value"]
-		}) then
-			if JoinQueue["Enabled"] == false then
-				bedwars["Client"]:Get("LeaveQueue"):CallServer()
-			end
+JoinQueue = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "AutoQueue",
+	["Function"] = function(callback)
+		if callback then
+			spawn(function()
+				wait(JoinQueueDelay["Value"])
+				if bedwars["ClientStore"]:getState().Party.leader.userId == lplr.UserId and bedwars["Client"]:Get("JoinQueue"):CallServer({
+					queueType = JoinQueueTypes["Value"]
+				}) then
+					if JoinQueue["Enabled"] == false then
+						bedwars["Client"]:Get("LeaveQueue"):CallServer()
+					end
+				end
+			end)
+		else
+			bedwars["Client"]:Get("LeaveQueue"):CallServer()
 		end
-	end)
-end, function()
-	bedwars["Client"]:Get("LeaveQueue"):CallServer();
-end, true)
+	end
+})
 JoinQueueTypes = JoinQueue.CreateDropdown("Mode", QueueTypes, function(val) end)
-JoinQueueDelay = JoinQueue.CreateSlider("Delay", 1, 10, function(val) end, 1)
+JoinQueueDelay = JoinQueue.CreateSlider({
+	["Name"] = "Delay",
+	["Min"] = 1,
+	["Max"] = 10,
+	["Function"] = function(val) end,
+	["Default"] = 1
+})
