@@ -410,9 +410,13 @@ ESPColor = ESP.CreateColorSlider({
 	["Name"] = "Player Color", 
 	["Function"] = function(val) end
 })
-ESPMethod = ESP.CreateDropdown("Mode", {"2D", "Skeleton"}, function(val)
-	ESphantomforcesolder:ClearAllChildren()
-end)
+ESPMethod = ESP.CreateDropdown({
+	["Name"] = "Mode",
+	["List"] = {"2D", "Skeleton"}, 
+	["Function"] = function(val)
+		ESphantomforcesolder:ClearAllChildren()
+	end
+})
 
 GuiLibrary["RemoveObject"]("ChamsOptionsButton")
 local ChamsFolder = Instance.new("Folder")
