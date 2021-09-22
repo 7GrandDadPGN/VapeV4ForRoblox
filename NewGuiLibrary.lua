@@ -151,9 +151,10 @@ hoverbox.Parent = clickgui
 local hoverround = Instance.new("UICorner")
 hoverround.CornerRadius = UDim.new(0, 4)
 hoverround.Parent = hoverbox
+local vertextsize = game:GetService("TextService"):GetTextSize(VERSION, 25, Enum.Font.SourceSans, Vector2.new(99999, 99999))
 local vertext = Instance.new("TextLabel")
 vertext.Name = "Version"
-vertext.Size = UDim2.new(0, 45, 0, 20)
+vertext.Size = UDim2.new(0, vertextsize.X, 0, 20)
 vertext.Font = Enum.Font.SourceSans
 vertext.TextColor3 = Color3.new(1, 1, 1)
 vertext.Active = false
@@ -162,7 +163,7 @@ vertext.BackgroundTransparency = 1
 vertext.Text = VERSION
 vertext.TextXAlignment = Enum.TextXAlignment.Left
 vertext.TextYAlignment = Enum.TextYAlignment.Top
-vertext.Position = UDim2.new(1, -72, 1, -25)
+vertext.Position = UDim2.new(1, -(vertextsize.X) - 20, 1, -25)
 vertext.Parent = clickgui
 local vertext2 = vertext:Clone()
 vertext2.Position = UDim2.new(0, 1, 0, 1)
@@ -1911,8 +1912,8 @@ api["CreateWindow"] = function(argstablemain2)
 			end
 		end
 
-		buttonapi["ToggleButton"] = function(clicked)
-			buttonapi["Enabled"] = not buttonapi["Enabled"]
+		buttonapi["ToggleButton"] = function(clicked, toggle)
+			buttonapi["Enabled"] = (toggle or not buttonapi["Enabled"])
 			if buttonapi["Enabled"] then
 				button.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				currenttween:Cancel()
@@ -2648,6 +2649,9 @@ api["CreateWindow"] = function(argstablemain2)
 			return buttonapi
 		end
 
+		if argstablemain["Default"] then
+			buttonapi["ToggleButton"](false, true)
+		end
 		button.MouseButton1Click:connect(function() buttonapi["ToggleButton"](true) end)
 		button.MouseEnter:connect(function() 
 			bindbkg.Visible = true
