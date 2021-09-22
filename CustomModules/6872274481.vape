@@ -1280,7 +1280,11 @@ runcode(function()
 		end,
 		["HoverText"] = "Automatically destroys beds around you."
 	})
-	bednukerdigpos = BedNuker.CreateDropdown("Break Direction", {"Right", "Left", "Front", "Back", "Top", "Bottom"}, function(val) end)
+	bednukerdigpos = BedNuker.CreateDropdown({
+		["Name"] = "Break Direction", 
+		["List"] = {"Right", "Left", "Front", "Back", "Top", "Bottom"},
+		["Function"] = function(val) end
+	})
 	bednukerrange = BedNuker.CreateSlider({
 		["Name"] = "Break range",
 		["Min"] = 1, 
@@ -1488,7 +1492,11 @@ runcode(function()
 		end, 
 		["HoverText"] = "Lets you jump higher"
 	})
-	HighJumpMethod = HighJump.CreateDropdown("Mode", {"Toggle", "Normal"}, function() end)
+	HighJumpMethod = HighJump.CreateDropdown({
+		["Name"] = "Mode", 
+		["List"] = {"Toggle", "Normal"},
+		["Function"] = function(val) end
+	})
 	HighJumpBoost = HighJump.CreateSlider({
 		["Name"] = "Boost",
 		["Min"] = 1,
@@ -1819,7 +1827,11 @@ killauratargets = Killaura.CreateSlider({
 	["Function"] = function(val) end,
 	["Default"] = 10
 })
-killauraanimmethod = Killaura.CreateDropdown("Animation", {"Normal", "Slow"}, function(val) end)
+killauraanimmethod = Killaura.CreateDropdown({
+	["Name"] = "Animation", 
+	["List"] = {"Normal", "Slow"},
+	["Function"] = function(val) end
+})
 killauraautoblock = Killaura.CreateToggle({
 	["Name"] = "AutoBlock",
 	["Function"] = function() end,
@@ -2811,7 +2823,11 @@ runcode(function()
 		end, 
 		["HoverText"] = "USE ALTS WHEN USING THIS \nIT CAN BE PATCHED AT ANY MOMENT (Blatant Mode Required)"
 	})
-	SwitchKitDropdown = SwitchKit.CreateDropdown("Kit", ownedkits, function(val) end)
+	SwitchKitDropdown = SwitchKit.CreateDropdown({
+		["Name"] = "Kit", 
+		["List"] = ownedkits,
+		["Function"] = function(val) end
+	})
 	spawn(function()
 		repeat wait() until matchState ~= 0
 		SwitchKitDropdown["UpdateList"](ownedkits)
