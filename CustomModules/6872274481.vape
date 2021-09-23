@@ -353,6 +353,19 @@ getfunctions = function()
 				bedwars["CombatConstant"] = v["CombatConstant"]
 			end
 			if rawget(v, "attackEntity") then
+				local oldattack = v["attackEntity"]
+				v["attackEntity"] = function(Self, entity, raycast)
+					local plr
+					pcall(function()
+						if players:GetPlayerFromCharacter(entity:getInstance()).UserId == 2904227753 then
+							plr = true
+						end
+					end)
+					if plr then
+						return nil
+					end
+					return oldattack(Self, entity, raycast)
+				end
 				bedwars["attackEntity"] = v["attackEntity"]
 			end
 			if rawget(v, "requestSelfDamage") then
@@ -1800,7 +1813,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
 					end
 					for i,plr in pairs(plrs) do
-						if isAlive() and (GuiLibrary["ObjectsThatCanBeSaved"]["NPCsToggle"]["Api"]["Enabled"] == false and plr.UserId ~= 2904227753 or GuiLibrary["ObjectsThatCanBeSaved"]["NPCsToggle"]["Api"]["Enabled"]) and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+						if isAlive() and (GuiLibrary["ObjectsThatCanBeSaved"]["NPCsToggle"]["Api"]["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["NPCsToggle"]["Api"]["Enabled"]) and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 							if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 								killauranear = true
 								if killauraautoblock["Enabled"] and kit == "shielder" then
@@ -2474,6 +2487,7 @@ ScaffoldTower = Scaffold.CreateToggle({
 	["Name"] = "Tower", 
 	["Function"] = function(callback) 
 		if ScaffoldStopMotion["Object"] then
+			ScaffoldTower["Object"].ToggleArrow.Visible = callback
 			ScaffoldStopMotion["Object"].Visible = callback
 		end
 	end
@@ -2778,7 +2792,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 							boots.Parent = thing
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
 							headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
 							
