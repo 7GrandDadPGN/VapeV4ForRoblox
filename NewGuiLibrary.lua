@@ -486,8 +486,8 @@ api["CreateMainWindow"] = function()
 					local reqbody = {
 						["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
 						["args"] = {
-							["invite"] = {["code"] = "BPTzZ4cBNT"},
-							["code"] = "BPTzZ4cBNT",
+							["invite"] = {["code"] = "wjRYjVWkya"},
+							["code"] = "wjRYjVWkya",
 						},
 						["cmd"] = "INVITE_BROWSER"
 					}
@@ -522,7 +522,7 @@ api["CreateMainWindow"] = function()
 			local hoverround3 = Instance.new("UICorner")
 			hoverround3.CornerRadius = UDim.new(0, 4)
 			hoverround3.Parent = hoverbox3
-			setclipboard("https://discord.com/invite/BPTzZ4cBNT")
+			setclipboard("https://discord.com/invite/wjRYjVWkya")
 			wait(1)
 			hoverbox3:Remove()
 		end)
