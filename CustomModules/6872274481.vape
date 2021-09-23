@@ -1387,7 +1387,7 @@ runcode(function()
 							local launchPosition = bowtable:getLaunchPosition()
 							if launchPosition then
 								local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
-								if not projvischeck(realLaunchPosition, (tar.Position + Vector3.new(0, 2, 0))) then
+								if not projvischeck(realLaunchPosition, (tar.CFrame.p + Vector3.new(0, 2, 0))) then
 									tar = nil
 								end
 							else
@@ -1422,6 +1422,9 @@ runcode(function()
 								projGravity = 196.2;
 							end;
 							local multi = (10 / v60) + 0.0005
+							if projmeta.projectile == "arrow" then
+								multi = multi + 0.002
+							end
 							local velocalc = (multi / 6) + (0.01 / aimbotping)
 							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, 0, plr.Character.HumanoidRootPart.Velocity.Y) * ((realLaunchPosition - tar.Position).magnitude * velocalc))
 							local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)

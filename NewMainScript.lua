@@ -987,25 +987,42 @@ GUI.CreateButton2({
 	["Name"] = "SORT GUI", 
 	["Function"] = function()
 		local sorttable = {}
+		local movedown = false
 		local sortordertable = {
-			["GUIWindow"] = 0,
-			["CombatWindow"] = 1,
-			["BlatantWindow"] = 2,
-			["RenderWindow"] = 3,
-			["UtilityWindow"] = 4,
-			["WorldWindow"] = 5,
-			["FriendsWindow"] = 6,
-			["ProfilesWindow"] = 7,
+			["GUIWindow"] = 1,
+			["CombatWindow"] = 2,
+			["BlatantWindow"] = 3,
+			["RenderWindow"] = 4,
+			["UtilityWindow"] = 5,
+			["WorldWindow"] = 6,
+			["FriendsWindow"] = 7,
+			["ProfilesWindow"] = 8,
+			["Text GUICustomWindow"] = 9,
+			["RadarCustomWindow"] = 10,
+			["TargetInfoCustomWindow"] = 12,
+		}
+		local storedpos = {
+
 		}
 		local num = 6
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if (v["Type"] == "Window" or v["Type"] == "CustomWindow") and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) and v["Object"].Visible then
 				local sortordernum = (sortordertable[i] or #sorttable)
-				sorttable[sortordernum + (v["Type"] == "CustomWindow" and 100 or 1)] = v["Object"]
+				sorttable[sortordernum] = v["Object"]
 			end
 		end
 		for i2,v2 in pairs(sorttable) do
-			v2.Position = UDim2.new(0, num, 0, 6)
+			if num > 1697 then
+				movedown = true
+				num = 6
+			end
+			v2.Position = UDim2.new(0, num, 0, (movedown and (storedpos[num] and (storedpos[num] + 9) or 400) or 6))
+			if not storedpos[num] then
+				storedpos[num] = v2.AbsoluteSize.Y
+				if v2.Name == "MainWindow" then
+					storedpos[num] = 400
+				end
+			end
 			num = num + 223
 		end
 	end
