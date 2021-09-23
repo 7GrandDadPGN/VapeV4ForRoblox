@@ -998,8 +998,8 @@ GUI.CreateButton2({
 			["FriendsWindow"] = 7,
 			["ProfilesWindow"] = 8,
 			["Text GUICustomWindow"] = 9,
-			["RadarCustomWindow"] = 10,
-			["TargetInfoCustomWindow"] = 12,
+			["TargetInfoCustomWindow"] = 10,
+			["RadarCustomWindow"] = 11,
 		}
 		local storedpos = {
 
