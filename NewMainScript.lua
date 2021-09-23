@@ -266,9 +266,9 @@ ProfilesTextList = Profiles.CreateTextList({
 		bindbkg.Size = UDim2.new(0, 20, 0, 21)
 		bindbkg.Position = UDim2.new(1, -50, 0, 6)
 		bindbkg.BorderSizePixel = 0
-		bindbkg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		bindbkg.BackgroundTransparency = 0.7
-		bindbkg.Visible = true
+		bindbkg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		bindbkg.BackgroundTransparency = 0.95
+		bindbkg.Visible = GuiLibrary["Profiles"][profilename]["Keybind"] ~= ""
 		bindbkg.Parent = obj
 		local bindimg = Instance.new("ImageLabel")
 		bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
@@ -286,7 +286,7 @@ ProfilesTextList = Profiles.CreateTextList({
 		bindtext.Parent = bindbkg
 		bindtext.Font = Enum.Font.SourceSans
 		bindtext.Size = UDim2.new(1, 0, 1, 0)
-		bindtext.TextColor3 = Color3.fromRGB(201, 201, 201)
+		bindtext.TextColor3 = Color3.fromRGB(85, 85, 85)
 		bindtext.Visible = (GuiLibrary["Profiles"][profilename]["Keybind"] ~= "")
 		local bindtext2 = Instance.new("TextLabel")
 		bindtext2.Text = "PRESS A KEY TO BIND"
@@ -350,7 +350,14 @@ ProfilesTextList = Profiles.CreateTextList({
 				bindbkg.Position = UDim2.new(1, -(30 + newsize.X.Offset), 0, 6)
 			end
 		end)
+		obj.MouseEnter:connect(function()
+			bindbkg.Visible = true
+		end)
+		obj.MouseLeave:connect(function()
+			bindbkg.Visible = GuiLibrary["Profiles"][profilename]["Keybind"] ~= ""
+		end)
 		if GuiLibrary["Profiles"][profilename]["Keybind"] ~= "" then
+
 			bindtext.Text = GuiLibrary["Profiles"][profilename]["Keybind"]
 			local textsize = game:GetService("TextService"):GetTextSize(GuiLibrary["Profiles"][profilename]["Keybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
 			newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
@@ -362,6 +369,8 @@ ProfilesTextList = Profiles.CreateTextList({
 			obj.ImageButton.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 			obj.ItemText.TextColor3 = Color3.new(1, 1, 1)
 			obj.ItemText.TextStrokeTransparency = 0.75
+			bindbkg.BackgroundTransparency = 0.9
+			bindtext.TextColor3 = Color3.fromRGB(214, 214, 214)
 		end
 	end
 })
@@ -913,12 +922,14 @@ GUI.CreateToggle({
 	["Function"] = function() end
 })
 local ToggleNotifications = {["Object"] = nil}
-local Notifications = GUI.CreateToggle({
+local Notifications = {}
+Notifications = GUI.CreateToggle({
 	["Name"] = "Notifications", 
 	["Function"] = function(callback) 
 		GuiLibrary["Notifications"] = callback 
 		if ToggleNotifications["Object"] then
 			ToggleNotifications["Object"].Visible = callback
+			Notifications["Object"].ToggleArrow.Visible = callback
 		end
 	end,
 	["Default"] = true
@@ -1001,9 +1012,7 @@ GUI.CreateButton2({
 			["TargetInfoCustomWindow"] = 10,
 			["RadarCustomWindow"] = 11,
 		}
-		local storedpos = {
-
-		}
+		local storedpos = {}
 		local num = 6
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if (v["Type"] == "Window" or v["Type"] == "CustomWindow") and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) and v["Object"].Visible then

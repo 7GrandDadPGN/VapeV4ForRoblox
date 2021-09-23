@@ -303,7 +303,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line4clone.Parent = thing
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							local plrchar = phantomforces["GetCharacter"](plr)
 							local rootPos, rootVis = cam:WorldToViewportPoint(plrchar.rootpart.Position)
 							local rootSize = plrchar.rootpart.Size.X * 1500
@@ -367,7 +367,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line9.Parent = thing
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							local plrchar = phantomforces["GetCharacter"](plr)
 							local rootPos, rootVis = cam:WorldToViewportPoint(plrchar.rootpart.Position)
 							if rootVis and plrchar["rootpart"] and plrchar["larm"] and plrchar["rarm"] and plrchar["lleg"] and plrchar["rleg"] and plrchar["head"] then
@@ -444,7 +444,7 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 							end
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							local plrchar = phantomforces["GetCharacter"](plr)
 							if ChamsFolder:FindFirstChild(plr.Name) == nil then
 								local chamfolder = Instance.new("Folder")
@@ -546,7 +546,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 							thing.Parent = NameTagsFolder
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							local plrchar = phantomforces["GetCharacter"](plr)
 							local headPos, headVis = cam:WorldToViewportPoint((plrchar.rootpart:GetRenderCFrame() * CFrame.new(0, plrchar.head.Size.Y + plrchar.rootpart.Size.Y, 0)).Position)
 							headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
@@ -621,7 +621,7 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 							thing.Parent = TracersFolder
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							local plrchar = phantomforces["GetCharacter"](plr)
 							local rootScrPos = cam:WorldToViewportPoint(plrchar.head.Position)
 							local tempPos = cam.CFrame:pointToObjectSpace(plrchar.head.Position)

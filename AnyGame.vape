@@ -157,7 +157,7 @@ local radarcam = Instance.new("Camera")
 radarcam.FieldOfView = 45
 local Radar = GuiLibrary.CreateCustomWindow({
 	["Name"] = "Radar", 
-	["Icon"] = "vape/assets/TargetInfoIcon1.png",
+	["Icon"] = "vape/assets/RadarIcon1.png",
 	["IconSize"] = 16
 })
 local RadarColor = Radar.CreateColorSlider({
@@ -214,7 +214,7 @@ players.PlayerRemoving:connect(function(plr)
 end)
 GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
 	["Name"] = "Radar", 
-	["Icon"] = "vape/assets/TargetInfoIcon1.png", 
+	["Icon"] = "vape/assets/RadarIcon2.png", 
 	["Function"] = function(callback)
 		Radar.SetVisible(callback) 
 		if callback then
@@ -907,7 +907,7 @@ local Arrows = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 							thing.Parent = ArrowsFolder
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
 							local camcframeflat = CFrame.new(cam.CFrame.p, cam.CFrame.p + cam.CFrame.lookVector * Vector3.new(1, 0, 1))
 							local pointRelativeToCamera = camcframeflat:pointToObjectSpace(plr.Character.HumanoidRootPart.Position)
@@ -1040,7 +1040,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							healthlineclone.Parent = thing
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
 							local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1500) * (1 / GuiLibrary["MainRescale"].Scale)
 							local headPos, headVis = cam:WorldToViewportPoint(plr.Character.Head.Position + Vector3.new(0, 1, 0))
@@ -1108,7 +1108,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line9.Parent = thing
 						end
 						
-						if isPlayerTargetable(plr, false, false) and plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 then
+						if isAlive(plr) and plr ~= lplr and plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 then
 							local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
 							if rootVis and plr.Character:FindFirstChild("Torso") and plr.Character:FindFirstChild("Left Arm") and plr.Character:FindFirstChild("Right Arm") and plr.Character:FindFirstChild("Left Leg") and plr.Character:FindFirstChild("Right Leg") and plr.Character:FindFirstChild("Head") then
 								thing.Visible = true
@@ -1200,7 +1200,7 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 							end
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							if ChamsFolder:FindFirstChild(plr.Name) == nil then
 								local chamfolder = Instance.new("Folder")
 								chamfolder.Name = plr.Name
@@ -1375,7 +1375,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 						thing.Parent = NameTagsFolder
 					end
 					
-					if isPlayerTargetable(plr, false, false) then
+					if isAlive(plr) and plr ~= lplr then
 						local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
 						headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
 						
@@ -1566,7 +1566,7 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 							thing.Parent = TracersFolder
 						end
 						
-						if isPlayerTargetable(plr, false, false) then
+						if isAlive(plr) and plr ~= lplr then
 							local rootScrPos = cam:WorldToViewportPoint(plr.Character.Head.Position)
 							local tempPos = cam.CFrame:pointToObjectSpace(plr.Character.Head.Position)
 							if rootScrPos.Z < 0 then
