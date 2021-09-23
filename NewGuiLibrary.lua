@@ -4,6 +4,7 @@ local cam = game:GetService("Workspace").CurrentCamera
 local getasset = getsynasset or getcustomasset
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+local loadedsuccessfully = false
 local api = {
 	["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["Color"] = 0.64}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
 	["Profiles"] = {
@@ -231,46 +232,48 @@ local function dragGUI(gui, tab)
 end
 
 api["SaveSettings"] = function()
-	writefile("vape/Profiles/"..game.PlaceId..".vapeprofiles", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
-	local WindowTable = {}
-	for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
-		if v["Type"] == "Window" then
-			WindowTable[i] = {["Type"] = "Window", ["Visible"] = v["Object"].Visible, ["Expanded"] = v["ChildrenObject"].Visible, ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
+	if loadedsuccessfully then
+		writefile("vape/Profiles/"..game.PlaceId..".vapeprofiles", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
+		local WindowTable = {}
+		for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
+			if v["Type"] == "Window" then
+				WindowTable[i] = {["Type"] = "Window", ["Visible"] = v["Object"].Visible, ["Expanded"] = v["ChildrenObject"].Visible, ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
+			end
+			if v["Type"] == "CustomWindow" then
+				WindowTable[i] = {["Type"] = "CustomWindow", ["Visible"] = v["Object"].Visible, ["Pinned"] = v["Api"]["Pinned"], ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
+			end
+			if (v["Type"] == "ButtonMain" or v["Type"] == "ToggleMain") then
+				WindowTable[i] = {["Type"] = "ButtonMain", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
+			end
+			if v["Type"] == "ColorSliderMain" then
+				WindowTable[i] = {["Type"] = "ColorSliderMain", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
+			end
+			if (v["Type"] == "Button" or v["Type"] == "Toggle" or v["Type"] == "ExtrasButton") then
+				api["Settings"][i] = {["Type"] = "Button", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
+			end
+			if (v["Type"] == "OptionsButton" or v["Type"] == "ExtrasButton") then
+				api["Settings"][i] = {["Type"] = "OptionsButton", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
+			end
+			if v["Type"] == "TextList" then
+				api["Settings"][i] = {["Type"] = "TextList", ["ObjectTable"] = v["Api"]["ObjectList"]}
+			end
+			if v["Type"] == "Dropdown" then
+				api["Settings"][i] = {["Type"] = "Dropdown", ["Value"] = v["Api"]["Value"]}
+			end
+			if v["Type"] == "Slider" then
+				api["Settings"][i] = {["Type"] = "Slider", ["Value"] = v["Api"]["Value"]}
+			end
+			if v["Type"] == "TwoSlider" then
+				api["Settings"][i] = {["Type"] = "TwoSlider", ["Value"] = v["Api"]["Value"], ["Value2"] = v["Api"]["Value2"], ["SliderPos1"] = v["Object"].Slider.ButtonSlider.Position.X.Scale, ["SliderPos2"] = v["Object"].Slider.ButtonSlider2.Position.X.Scale}
+			end
+			if v["Type"] == "ColorSlider" then
+				api["Settings"][i] = {["Type"] = "ColorSlider", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
+			end
 		end
-		if v["Type"] == "CustomWindow" then
-			WindowTable[i] = {["Type"] = "CustomWindow", ["Visible"] = v["Object"].Visible, ["Pinned"] = v["Api"]["Pinned"], ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
-		end
-		if (v["Type"] == "ButtonMain" or v["Type"] == "ToggleMain") then
-			WindowTable[i] = {["Type"] = "ButtonMain", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
-		end
-		if v["Type"] == "ColorSliderMain" then
-			WindowTable[i] = {["Type"] = "ColorSliderMain", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
-		end
-		if (v["Type"] == "Button" or v["Type"] == "Toggle" or v["Type"] == "ExtrasButton") then
-			api["Settings"][i] = {["Type"] = "Button", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
-		end
-		if (v["Type"] == "OptionsButton" or v["Type"] == "ExtrasButton") then
-			api["Settings"][i] = {["Type"] = "OptionsButton", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
-		end
-		if v["Type"] == "TextList" then
-			api["Settings"][i] = {["Type"] = "TextList", ["ObjectTable"] = v["Api"]["ObjectList"]}
-		end
-		if v["Type"] == "Dropdown" then
-			api["Settings"][i] = {["Type"] = "Dropdown", ["Value"] = v["Api"]["Value"]}
-		end
-		if v["Type"] == "Slider" then
-			api["Settings"][i] = {["Type"] = "Slider", ["Value"] = v["Api"]["Value"]}
-		end
-		if v["Type"] == "TwoSlider" then
-			api["Settings"][i] = {["Type"] = "TwoSlider", ["Value"] = v["Api"]["Value"], ["Value2"] = v["Api"]["Value2"], ["SliderPos1"] = v["Object"].Slider.ButtonSlider.Position.X.Scale, ["SliderPos2"] = v["Object"].Slider.ButtonSlider2.Position.X.Scale}
-		end
-		if v["Type"] == "ColorSlider" then
-			api["Settings"][i] = {["Type"] = "ColorSlider", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
-		end
+		WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = api["GUIKeybind"]}
+		writefile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..game.PlaceId..".vapeprofile", game:GetService("HttpService"):JSONEncode(api["Settings"]))
+		writefile("vape/Profiles/GUIPositions.vapeprofile", game:GetService("HttpService"):JSONEncode(WindowTable))
 	end
-	WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = api["GUIKeybind"]}
-	writefile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..game.PlaceId..".vapeprofile", game:GetService("HttpService"):JSONEncode(api["Settings"]))
-	writefile("vape/Profiles/GUIPositions.vapeprofile", game:GetService("HttpService"):JSONEncode(WindowTable))
 end
 
 api["LoadSettings"] = function()
@@ -389,6 +392,7 @@ api["LoadSettings"] = function()
 			end
 		end
 	end
+	loadedsuccessfully = true
 end
 
 api["SwitchProfile"] = function(profilename)
