@@ -752,6 +752,9 @@ local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
 local autoclickerblocks = {["Enabled"] = false}
+local autoclickermousedown = false
+local autoclickerconnection1
+local autoclickerconnection2
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "AutoClicker",
 	["Function"] = function(callback)
@@ -767,8 +770,18 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 				blockplaceenabled = false
 				return olddisable(Self)
 			end
+			autoclickerconnection1 = uis.InputBegan:connect(function(input, gameProcessed)
+				if gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton1 then
+					autoclickermousedown = true
+				end
+			end)
+			autoclickerconnection2 = uis.InputEnded:connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					autoclickermousedown = false
+				end
+			end)
 			BindToRenderStep("AutoClicker", 1, function() 
-				if isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() and bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
+				if isAlive() and autoclickermousedown and autoclickertick <= tick() and bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
 					autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
 					if getEquipped()["Type"] == "sword" then
 						bedwars["SwordController"]["swingSwordAtMouse"](bedwars["SwordController"])
@@ -786,6 +799,12 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 			bedwars["BlockController2"]["disable"] = olddisable
 			oldenable = nil
 			olddisable = nil
+			if autoclickerconnection1 then
+				autoclickerconnection1:Disconnect()
+			end
+			if autoclickerconnection2 then
+				autoclickerconnection2:Disconnect()
+			end
 			UnbindFromRenderStep("AutoClicker")
 		end
 	end,
