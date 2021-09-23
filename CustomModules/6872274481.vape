@@ -505,6 +505,14 @@ local function switchItem(tool)
 	})
 end
 
+local inputobj = nil
+local updateitem = Instance.new("BindableEvent")
+updateitem.Event:connect(function(inputObj)
+	wait(0.3)
+	if uis:IsMouseButtonPressed(0) then
+		game:GetService("ContextActionService"):CallFunction("block-break", Enum.UserInputState.Begin, nil)
+	end
+end)
 local function switchToAndUseTool(block, legit)
 	local tool = nil
 	local toolnum = 0
@@ -526,6 +534,7 @@ local function switchToAndUseTool(block, legit)
 				type = "InventorySelectHotbarSlot", 
 				slot = getHotbarSlot(tool["itemType"])
 			})
+			updateitem:Fire(inputobj)
 		end
 		switchItem(tool["tool"])
 	end
