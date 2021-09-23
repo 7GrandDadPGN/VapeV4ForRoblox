@@ -843,24 +843,40 @@ local slowdownspeed = false
 local speed = {["Enabled"] = false}
 --[[runcode(function()
 	local nocheck = false
-	local function checkwall(pos)
+	local function checkwall(pos, movedirection)
+		movedirection = Vector3.new(math.clamp(movedirection.X, -0.005, 0.005), 0, math.clamp(movedirection.Z, -0.005, 0.005)) * 11
+		print(movedirection)
 		if not nocheck then
+			local newpos = (pos + movedirection)
+			local part = Instance.new("Part")
+			part.Position = newpos
+			part.Anchored = true
+			part.Size = Vector3.new(1, 1, 1)
+			part.CanCollide = false
+			part.Parent = workspace
+			game:GetService("Debris"):AddItem(part, 1)
 			local raycastparameters = RaycastParams.new()
-			raycastparameters.FilterDescendantsInstances = {lplr.Character, workspace.BedAlarmZones}
-			raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
-			local newray = workspace:Raycast(pos, Vector3.new(0, 0, 0), raycastparameters)
+			raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks}
+			raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+			local newray = workspace:Raycast(newpos, movedirection * 3, raycastparameters)
+			if newray then
+				print(newray)
+			end
 			if newray == nil then
 				if isAlive() then
 					spawn(function()
 						if not nocheck then
-							nocheck = true
 							slowdownspeed = true
-							wait(lplr.Character.HumanoidRootPart.Size.X / 4)
+							nocheck = true
+							wait(0.3)
 							nocheck = false
 							slowdownspeed = false
 						end
 					end)
-					lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(CFrame.new(pos), 0.7)
+					spawn(function()
+						wait(0.05)
+						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame * (movedirection * 20)
+					end)
 				end
 			end
 		end
@@ -879,17 +895,26 @@ local speed = {["Enabled"] = false}
 						local hum = char:WaitForChild("Humanoid")
 						if isAlive() then
 							phaseconnection = char.HumanoidRootPart.Touched:connect(function(hitPart)
-								if hitPart:IsA("BasePart") and hitPart.Position.Y > char.HumanoidRootPart.Position.Y - (char.Humanoid.HipHeight + 3) and hitPart:GetFullName():find("Workspace.Map.Blocks") then
-									checkwall(char.HumanoidRootPart.Position + char.Humanoid.MoveDirection * 5)
+								if hitPart:IsA("BasePart") and hitPart.Position.Y > char.HumanoidRootPart.Position.Y - 6 and hitPart:GetFullName():find("Workspace.Map.Blocks") then
+									checkwall(char.HumanoidRootPart.CFrame.p, char.Humanoid.MoveDirection)
 								end
 							end)
 						end
 					end)
 				end)
+				phaseconnection2 = game:GetService("RunService").Stepped:connect(function()
+					if isAlive() then
+						for i,v in pairs(lplr.Character:GetDescendants()) do
+							if v:IsA("BasePart") and nocheck then
+								v.CanCollide = false
+							end
+						end
+					end
+				end)
 				if isAlive() then
 					phaseconnection = lplr.Character.HumanoidRootPart.Touched:connect(function(hitPart)
 						if hitPart:IsA("BasePart") and hitPart.Position.Y > lplr.Character.HumanoidRootPart.Position.Y - 6 and hitPart:GetFullName():find("Workspace.Map.Blocks") then
-							checkwall(lplr.Character.HumanoidRootPart.Position + lplr.Character.Humanoid.MoveDirection * 5)
+							checkwall(lplr.Character.HumanoidRootPart.Position, lplr.Character.Humanoid.MoveDirection)
 						end
 					end)
 				end
@@ -1139,6 +1164,13 @@ end
 
 local justboughtarmor = ""
 local justboughtsword = ""
+
+lplr.CharacterAdded:connect(function()
+	local ExecuteInventory = bedwars["getInventory"](lplr)
+	justboughtarmor = (getSword() and getSword()["itemType"] or "")
+	justboughtsword = (ExecuteInventory.armor[5] and ExecuteInventory.armor[5].itemType or "")
+end)
+
 local BuyCheck = function() end
 BuyCheck = function()
 	if AutoBuy["Enabled"] then
@@ -2062,7 +2094,7 @@ bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 		if AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
 			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight.", "All")
 		end
-		if AutoLeave["Enabled"] then
+		if AutoLeave["Enabled"] and #bedwars["ClientStoreHandler"].Party.members == 0 then
 			wait(1)
 			bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 		end
