@@ -48,8 +48,8 @@ if place.Updated ~= "2021-09-23T20:48:09.1775216Z" then
 				local reqbody = {
 					["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
 					["args"] = {
-						["invite"] = {["code"] = "BPTzZ4cBNT"},
-						["code"] = "BPTzZ4cBNT",
+						["invite"] = {["code"] = "wjRYjVWkya"},
+						["code"] = "wjRYjVWkya",
 					},
 					["cmd"] = "INVITE_BROWSER"
 				}
@@ -66,7 +66,7 @@ if place.Updated ~= "2021-09-23T20:48:09.1775216Z" then
 			end)
 		end
 	end)
-	setclipboard("https://discord.com/invite/BPTzZ4cBNT")
+	setclipboard("https://discord.com/invite/wjRYjVWkya")
     wait(0.5)
     spawn(function()
         while true do end
