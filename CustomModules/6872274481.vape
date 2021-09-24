@@ -32,8 +32,8 @@ local function UnbindFromRenderStep(name)
 		RenderStepTable[name] = nil
 	end
 end
---[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-09-16T20:43:56.4320472Z" then
+local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+if place.Updated ~= "2021-09-23T20:48:09.1775216Z" then
     local textlabel = Instance.new("TextLabel")
     textlabel.Size = UDim2.new(1, 0, 1, 36)
     textlabel.Text = "Vape is currently down for testing due to the BedWars update.\nThe discord has been copied to your clipboard."
@@ -71,7 +71,7 @@ if place.Updated ~= "2021-09-16T20:43:56.4320472Z" then
     spawn(function()
         while true do end
     end)
-end]]
+end
 local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
 textlabel.Text = "Remember to use alts in this new update, report bans to the discord."
