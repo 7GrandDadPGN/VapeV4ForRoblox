@@ -2874,7 +2874,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
-					if matchState ~= 0 then
+					if matchState ~= 0 and table.find(ownedkits, SwitchKitDropdown["Value"]) then
 						createwarning("Bedwars", "Switched kit to "..SwitchKitDropdown["Value"], 3)
 						bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync(SwitchKitDropdown["Value"] and {
 							kit = SwitchKitDropdown["Value"]
