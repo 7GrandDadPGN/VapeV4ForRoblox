@@ -634,8 +634,8 @@ local function nakedcheck(plr)
 	return inventory["armor"][4] ~= nil and inventory["armor"][5] ~= nil and inventory["armor"][6] ~= nil
 end
 
-local function isPlayerTargetable(plr, target, friend, team)
-    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and isAlive(plr) and targetCheck(plr, target) and (GuiLibrary["ObjectsThatCanBeSaved"]["Ignore nakedToggle"]["Api"]["Enabled"] and nakedcheck(plr) or GuiLibrary["ObjectsThatCanBeSaved"]["Ignore nakedToggle"]["Api"]["Enabled"] == false) and ((team and plr.Team == lplr.Team) or (team == nil and shared.vapeteamcheck(plr)))
+local function isPlayerTargetable(plr, target, friend, team, naked)
+    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and isAlive(plr) and targetCheck(plr, target) and (naked and nakedcheck(plr) or (not naked)) and ((team and plr.Team == lplr.Team) or (team == nil and shared.vapeteamcheck(plr)))
 end
 
 local function vischeck(pos, pos2, ignore)
@@ -646,12 +646,12 @@ local function vischeck(pos, pos2, ignore)
 	return not unpack(vistab)
 end
 
-local function GetAllNearestHumanoidToPosition(distance, amount)
+local function GetAllNearestHumanoidToPosition(player, distance, amount)
 	local returnedplayer = {}
 	local currentamount = 0
     if isAlive() then
         for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable(v, true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and currentamount < amount then
+            if isPlayerTargetable((player and v or nil), true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and currentamount < amount then
                 local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= distance then
                     table.insert(returnedplayer, v)
@@ -663,11 +663,11 @@ local function GetAllNearestHumanoidToPosition(distance, amount)
 	return returnedplayer
 end
 
-local function GetNearestHumanoidToPosition(distance)
+local function GetNearestHumanoidToPosition(player, distance)
 	local closest, returnedplayer = distance, nil
     if isAlive() then
         for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable(v, true, false) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") then
+            if isPlayerTargetable((player and v or nil), true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") then
                 local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= closest then
                     closest = mag
@@ -679,11 +679,11 @@ local function GetNearestHumanoidToPosition(distance)
 	return returnedplayer
 end
 
-local function GetNearestHumanoidToMouse(distance, checkvis)
+local function GetNearestHumanoidToMouse(player, distance, checkvis)
     local closest, returnedplayer = distance, nil
     if isAlive() then
         for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable(v, true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and (checkvis == false or checkvis and (vischeck(v.Character, "Head") or vischeck(v.Character, "HumanoidRootPart"))) then
+            if isPlayerTargetable((player and v or nil), true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and (checkvis == false or checkvis and (vischeck(v.Character, "Head") or vischeck(v.Character, "HumanoidRootPart"))) then
                 local vec, vis = cam:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
                 if vis then
                     local mag = (uis:GetMouseLocation() - Vector2.new(vec.X, vec.Y)).magnitude
@@ -702,7 +702,7 @@ GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
 runcode(function()
 	local AimAssist = {["Enabled"] = false}
 	local AimAssistSmoothness = {["Value"] = 1}
-	local AimAssistWallCheck = {["Enabled"] = true}
+	local AimAssistTargetFrame = {["Players"] = {["Enabled"] = false}}
 	local aimbegan
 	local aimended
 	local aimactive = false
@@ -712,7 +712,7 @@ runcode(function()
 			if callback then
 				aimbegan = uis.InputBegan:connect(function(input1)
 					if uis:GetFocusedTextBox() == nil and input1.UserInputType == Enum.UserInputType.MouseButton1 then
-						local plr = GetNearestHumanoidToPosition(30)
+						local plr = GetNearestHumanoidToPosition(AimAssistTargetFrame["Players"]["Enabled"], 30)
 						if plr then
 							aimactive = true
 						end
@@ -727,8 +727,8 @@ runcode(function()
 				
 				BindToRenderStep("AimAssist", 1, function()
 					if aimactive then
-						local plr = GetNearestHumanoidToPosition(30)
-						if plr and getEquipped()["Type"] == "sword" and matchState ~= 0 and ((not AimAssistWallCheck["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or AimAssistWallCheck["Enabled"]) then
+						local plr = GetNearestHumanoidToPosition(AimAssistTargetFrame["Players"]["Enabled"], 30)
+						if plr and getEquipped()["Type"] == "sword" and matchState ~= 0 and (AimAssistTargetFrame["Walls"]["Enabled"] and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or (not AimAssistTargetFrame["Walls"]["Enabled"])) then
 							cam.CFrame = cam.CFrame:lerp(CFrame.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position), 1 / AimAssistSmoothness["Value"])
 						end
 					end
@@ -742,6 +742,7 @@ runcode(function()
 		end,
 		["HoverText"] = "Helps your aim"
 	})
+	AimAssistTargetFrame = AimAssist.CreateTargetWindow({["Default3"] = true})
 	AimAssistSmoothness = AimAssist.CreateSlider({
 		["Name"] = "Smoothness",
 		["Min"] = 1,
@@ -879,6 +880,7 @@ local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 	end, 
 	["HoverText"] = "Works 2% of the time lol"
 })
+GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("PhaseOptionsButton")
 local slowdownspeed = false
 local speed = {["Enabled"] = false}
@@ -980,13 +982,14 @@ runcode(function()
 	local oldhori = bedwars["KnockbackTable"]["kbDirectionStrength"]
 	local oldvert = bedwars["KnockbackTable"]["kbUpwardStrength"]
 	local oldvelo
-	local Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+	local Velocity = {["Enabled"] = false}
+	Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Velocity",
 		["Function"] = function(callback)
 			if callback then
 				oldvelo = bedwars["KnockbackTable2"]["applyKnockback"]
 				bedwars["KnockbackTable2"]["applyKnockback"] = function(...)
-					if velohorizontal["Value"] == 0 then
+					if velohorizontal["Value"] == 0 and Velocity["Enabled"] then
 						return nil
 					end
 					return oldvelo(...)
@@ -1006,14 +1009,22 @@ runcode(function()
 		["Name"] = "Horizontal",
 		["Min"] = 0,
 		["Max"] = 100,
-		["Function"] = function(val) bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (val / 100) end,
+		["Function"] = function(val) 
+			if Velocity["Enabled"] then
+				bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (val / 100) 
+			end
+		end,
 		["Default"] = 0
 	})
 	velovertical = Velocity.CreateSlider({
 		["Name"] = "Vertical",
 		["Min"] = 0,
 		["Max"] = 100,
-		["Function"] = function(val) bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (val / 100) end,
+		["Function"] = function(val) 
+			if Velocity["Enabled"] then
+				bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (val / 100) 
+			end
+		end,
 		["Default"] = 0
 	})
 end)
@@ -1412,7 +1423,7 @@ runcode(function()
 				end)
 				hook = bedwars["BowTable"]["calculateImportantLaunchValues"]
 				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta)
-					local plr = GetNearestHumanoidToMouse(aimfov["Value"], false)
+					local plr = GetNearestHumanoidToMouse(true, aimfov["Value"], false)
 					if plr then
 						tar = plr.Character.HumanoidRootPart
 						if aimvischeck["Enabled"] then
@@ -1722,6 +1733,7 @@ killaurabox.Adornee = nil
 killaurabox.AlwaysOnTop = true
 killaurabox.ZIndex = 11
 killaurabox.Parent = GuiLibrary["MainGui"]
+local killauratargetframe = {["Players"] = {["Enabled"] = false}}
 local killauraanimmethod = {["Value"] = "Normal"}
 local killauraaps = {["GetRandomValue"] = function() return 1 end}
 local killaurarange = {["Value"] = 14}
@@ -1794,7 +1806,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				local targettable = {}
 				local targetsize = 0
 				if (killauradelay <= tick()) and matchState ~= 0 then
-					local plrs = GetAllNearestHumanoidToPosition(killaurarange["Value"] + 0.4, killauratargets["Value"])
+					local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] + 0.4, killauratargets["Value"])
 					if #plrs <= 0 then
 						killauranear = false
 						if killaurabox.Adornee ~= nil then
@@ -1813,7 +1825,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
 					end
 					for i,plr in pairs(plrs) do
-						if isAlive() and (GuiLibrary["ObjectsThatCanBeSaved"]["NPCsToggle"]["Api"]["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["NPCsToggle"]["Api"]["Enabled"]) and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and ((not killaurawall["Enabled"]) and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or killaurawall["Enabled"]) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+						if isAlive() and (killauratargetframe["NPCs"]["Enabled"] == false or killauratargetframe["NPCs"]["Enabled"]) and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and (killauratargetframe["Walls"]["Enabled"] and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or (not killauratargetframe["Walls"]["Enabled"])) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 							if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 								killauranear = true
 								if killauraautoblock["Enabled"] and kit == "shielder" then
@@ -1872,6 +1884,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	end,
 	["HoverBox"] = "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder"
 })
+killauratargetframe = Killaura.CreateTargetWindow({})
 killauraaps = Killaura.CreateTwoSlider({
 	["Name"] = "Attacks per Second",
 	["Min"] = 1,
@@ -1908,11 +1921,6 @@ killauraanimmethod = Killaura.CreateDropdown({
 })
 killauraautoblock = Killaura.CreateToggle({
 	["Name"] = "AutoBlock",
-	["Function"] = function() end,
-	["Default"] = true
-})
-killaurawall = Killaura.CreateToggle({
-	["Name"] = "Attack through walls",
 	["Function"] = function() end,
 	["Default"] = true
 })
@@ -2874,7 +2882,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
-					if matchState ~= 0 and table.find(ownedkits, SwitchKitDropdown["Value"]) then
+					if table.find(ownedkits, SwitchKitDropdown["Value"]) then
 						createwarning("Bedwars", "Switched kit to "..SwitchKitDropdown["Value"], 3)
 						bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync(SwitchKitDropdown["Value"] and {
 							kit = SwitchKitDropdown["Value"]
@@ -2889,6 +2897,8 @@ runcode(function()
 								end
 							end
 						end)
+					else
+						createwarning("Bedwars", "Selected Kit not owned", 3)
 					end
 				else
 					createwarning("Bedwars", "Requires Blatant mode", 3)

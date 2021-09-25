@@ -248,7 +248,7 @@ api["SaveSettings"] = function()
 			if v["Type"] == "ColorSliderMain" then
 				WindowTable[i] = {["Type"] = "ColorSliderMain", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
 			end
-			if (v["Type"] == "Button" or v["Type"] == "Toggle" or v["Type"] == "ExtrasButton") then
+			if (v["Type"] == "Button" or v["Type"] == "Toggle" or v["Type"] == "ExtrasButton" or v["Type"] == "TargetButton") then
 				api["Settings"][i] = {["Type"] = "Button", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
 			end
 			if (v["Type"] == "OptionsButton" or v["Type"] == "ExtrasButton") then
@@ -346,6 +346,8 @@ api["LoadSettings"] = function()
 					if v["Keybind"] ~= "" then
 						api["ObjectsThatCanBeSaved"][i]["Api"]["Keybind"] = v["Keybind"]
 					end
+				elseif api["ObjectsThatCanBeSaved"][i]["Type"] == "TargetButton" then
+					api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](v["Enabled"], true)
 				else
 					if v["Enabled"] then
 						api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
@@ -1536,6 +1538,12 @@ api["CreateCustomWindow"] = function(argstablemain)
 		dropapi["UpdateList"] = function(val)
 			placeholder = 0
 			list = val
+			if not table.find(list, dropapi["Value"]) then
+				dropapi["Value"] = list[1]
+				drop1.Text = "  "..argstable["Name"].." - "..list[1]
+				dropframe.Visible = false
+				argstable["Function"](list[1])
+			end
 			for del1, del2 in pairs(dropframe:GetChildren()) do if del2:IsA("TextButton") then del2:Remove() end end
 			for numbe, listobj in pairs(val) do
 				if listobj ~= dropapi["Value"] then
@@ -2269,7 +2277,7 @@ api["CreateWindow"] = function(argstablemain2)
 			frame.Size = UDim2.new(0, 220, 0, 49)
 			frame.BackgroundTransparency = 1
 			frame.LayoutOrder = amount2
-			frame.Name = argstablemain3["Name"]
+			frame.Name = argstablemain["Name"].."TargetFrame"
 			frame.Parent = children2
 			local drop1 = Instance.new("TextButton")
 			drop1.AutoButtonColor = false
@@ -2294,6 +2302,17 @@ api["CreateWindow"] = function(argstablemain2)
 			targettext.Font = Enum.Font.SourceSans
 			targettext.TextXAlignment = Enum.TextXAlignment.Left
 			targettext.Parent = drop1
+			local targetframe = Instance.new("Frame")
+			targetframe.Size = UDim2.new(0, 100, 0, 12)
+			targetframe.BackgroundTransparency = 1
+			targetframe.Position = UDim2.new(0, 53, 0, 6)
+			targetframe.ZIndex = 3
+			targetframe.Parent = targettext
+			local targetlistlayout = Instance.new("UIListLayout")
+			targetlistlayout.FillDirection = Enum.FillDirection.Horizontal
+			targetlistlayout.SortOrder = Enum.SortOrder.LayoutOrder
+			targetlistlayout.Padding = UDim.new(0, 4)
+			targetlistlayout.Parent = targetframe
 			local thing = Instance.new("Frame")
 			thing.Size = UDim2.new(1, 2, 1, 2)
 			thing.BorderSizePixel = 0
@@ -2371,6 +2390,14 @@ api["CreateWindow"] = function(argstablemain2)
 			uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 			end)
+
+			buttonreturned["Invisible"] = {["Enabled"] = false}
+			buttonreturned["Naked"] = {["Enabled"] = false}
+			buttonreturned["Walls"] = {["Enabled"] = false}
+
+			windowapi["UpdateIgnore"] = function()
+				targettext.Text = "  Target : \n "..'<font size="'..(buttonreturned["Invisible"]["Enabled"] and buttonreturned["Naked"]["Enabled"] and buttonreturned["Walls"]["Enabled"] and 14 or 17)..'" color="rgb(151, 151, 151)">'.."Ignore "..((buttonreturned["Invisible"]["Enabled"] or buttonreturned["Naked"]["Enabled"] or buttonreturned["Walls"]["Enabled"]) and "" or "none")..(buttonreturned["Invisible"]["Enabled"] and "invisible" or "")..(buttonreturned["Naked"]["Enabled"] and ((buttonreturned["Invisible"]["Enabled"]) and ", " or "").."naked" or "")..(buttonreturned["Walls"]["Enabled"] and ((buttonreturned["Invisible"]["Enabled"] or buttonreturned["Naked"]["Enabled"]) and ", " or "").."behind walls" or "")..'</font>'
+			end
 
 			windowapi["CreateToggle"] = function(argstable)
 				local buttonapi = {}
@@ -2463,7 +2490,7 @@ api["CreateWindow"] = function(argstablemain2)
 					end
 				end)
 		
-				api["ObjectsThatCanBeSaved"][argstablemain3["Name"]..argstable["Name"].."Toggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
+				api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TargetToggle"] = {["Type"] = "Toggle", ["Object"] = buttontext, ["Api"] = buttonapi}
 				return buttonapi
 			end
 
@@ -2471,7 +2498,7 @@ api["CreateWindow"] = function(argstablemain2)
 				local buttonapi = {}
 				local amount = #children:GetChildren()
 				local buttontext = Instance.new("TextButton")
-				buttontext.Name = argstable["Name"]
+				buttontext.Name = argstablemain["Name"]..argstable["Name"].."TargetButton"
 				buttontext.LayoutOrder = amount
 				buttontext.AutoButtonColor = false
 				buttontext.Size = UDim2.new(0, 45, 0, 29)
@@ -2489,44 +2516,108 @@ api["CreateWindow"] = function(argstablemain2)
 				buttonbkg.Position = argstable["Position"] - UDim2.new(0, 1, 0, 1)
 				buttonbkg.ZIndex = 3
 				buttonbkg.Parent = buttonframeholder
+				local buttonimage = Instance.new("ImageLabel")
+				buttonimage.BackgroundTransparency = 1
+				buttonimage.Position = UDim2.new(0, 14, 0, 7)
+				buttonimage.Size = UDim2.new(0, argstable["IconSize"], 0, 16)
+				buttonimage.Image = getcustomassetfunc(argstable["Icon"])
+				buttonimage.ImageColor3 = Color3.fromRGB(121, 121, 121)
+				buttonimage.ZIndex = 5
+				buttonimage.Active = false
+				buttonimage.Parent = buttontext
+				local buttontexticon = Instance.new("ImageLabel")
+				buttontexticon.Size = UDim2.new(0, argstable["IconSize"] - 3, 0, 12)
+				buttontexticon.Image = getcustomassetfunc(argstable["Icon"])
+				buttontexticon.LayoutOrder = amount
+				buttontexticon.ZIndex = 4
+				buttontexticon.BackgroundTransparency = 1
+				buttontexticon.Visible = false
+				buttontexticon.Parent = targetframe
 				local buttonround1 = Instance.new("UICorner")
-				buttonround1.CornerRadius = UDim.new(0, 4)
+				buttonround1.CornerRadius = UDim.new(0, 5)
 				buttonround1.Parent = buttontext
 				local buttonround2 = Instance.new("UICorner")
-				buttonround2.CornerRadius = UDim.new(0, 4)
+				buttonround2.CornerRadius = UDim.new(0, 5)
 				buttonround2.Parent = buttonbkg
 				buttonapi["Enabled"] = false
+				buttonapi["Default"] = argstable["Default"]
 
-				buttonapi["ToggleButton"] = function()
-
+				buttonapi["ToggleButton"] = function(toggle, frist)
+					buttonapi["Enabled"] = toggle
+					buttontexticon.Visible = toggle
+					if buttonapi["Enabled"] then
+						if not first then
+							game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+						else
+							buttontext.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+						end
+					else
+						if not first then
+							game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+						else
+							buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+						end
+					end
+					buttonimage.ImageColor3 = (buttonapi["Enabled"] and Color3.new(1, 1, 1) or Color3.fromRGB(121, 121, 121))
+					argstable["Function"](buttonapi["Enabled"])
 				end
 
-				api["ObjectsThatCanBeSaved"][argstablemain3["Name"]..argstable["Name"].."TargetButton"] = {["Type"] = "Button", ["Object"] = buttontext, ["Api"] = buttonapi}
+				if argstable["Default"] then
+					buttonapi["ToggleButton"](argstable["Default"], true)
+				end
+				buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+				api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TargetButton"] = {["Type"] = "TargetButton", ["Object"] = buttontext, ["Api"] = buttonapi}
 				return buttonapi
 			end
 
-			windowapi["CreateButton"]({
+			buttonreturned["Players"] = windowapi["CreateButton"]({
 				["Name"] = "PlayersIcon",
-				["Position"] = UDim2.new(0, 11, 0, 6)
+				["Position"] = UDim2.new(0, 11, 0, 6),
+				["Icon"] = "vape/assets/TargetIcon1.png",
+				["IconSize"] = 15,
+				["Function"] = function() end,
+				["Default"] = true
+			})
+			buttonreturned["NPCs"] = windowapi["CreateButton"]({
+				["Name"] = "NPCsIcon",
+				["Position"] = UDim2.new(0, 62, 0, 6),
+				["Icon"] = "vape/assets/TargetIcon2.png",
+				["IconSize"] = 12,
+				["Function"] = function() end,
+				["Default"] = false
+			})
+			buttonreturned["Peaceful"] = windowapi["CreateButton"]({
+				["Name"] = "PeacefulIcon",
+				["Position"] = UDim2.new(0, 113, 0, 6),
+				["Icon"] = "vape/assets/TargetIcon3.png",
+				["IconSize"] = 16,
+				["Function"] = function() end,
+				["Default"] = false
+			})
+			buttonreturned["Neutral"] = windowapi["CreateButton"]({
+				["Name"] = "NeutralIcon",
+				["Position"] = UDim2.new(0, 164, 0, 6),
+				["Icon"] = "vape/assets/TargetIcon4.png",
+				["IconSize"] = 19,
+				["Function"] = function() end,
+				["Default"] = false
 			})
 
-			windowapi["CreateToggle"]({
+			buttonreturned["Invisible"] = windowapi["CreateToggle"]({
 				["Name"] = "Ignore invisible",
-				["Function"] = function() end,
-				["Default"] = true
+				["Function"] = function() windowapi["UpdateIgnore"]() end,
+				["Default"] = (argstablemain3["Default1"] or false)
 			})
-			windowapi["CreateToggle"]({
+			buttonreturned["Naked"] = windowapi["CreateToggle"]({
 				["Name"] = "Ignore naked",
-				["Function"] = function() end,
-				["Default"] = true
+				["Function"] = function() windowapi["UpdateIgnore"]() end,
+				["Default"] = (argstablemain3["Default2"] or false)
 			})
-			windowapi["CreateToggle"]({
+			buttonreturned["Walls"] = windowapi["CreateToggle"]({
 				["Name"] = "Ignore behind walls",
-				["Function"] = function() end,
-				["Default"] = true
+				["Function"] = function() windowapi["UpdateIgnore"]() end,
+				["Default"] = (argstablemain3["Default3"] or false)
 			})
-
-
 
 			drop1.MouseButton1Click:connect(function()
 				windowtitle.Visible = not windowtitle.Visible
