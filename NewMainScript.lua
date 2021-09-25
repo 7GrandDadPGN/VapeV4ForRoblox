@@ -839,7 +839,7 @@ GuiLibrary["UpdateUI"] = function()
 					v["Object"].ButtonIcon.ImageColor3 = newcolor
 				end
 			end
-			if v["Type"] == "OptionsButton" then
+			if v["Type"] == "OptionsButton" or v["Type"] == "TargetButton" then
 				if v["Api"]["Enabled"] then
 					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end

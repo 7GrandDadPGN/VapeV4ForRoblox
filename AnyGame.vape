@@ -7,7 +7,7 @@ local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
 local targetinfo = shared.VapeTargetInfo
 local uis = game:GetService("UserInputService")
-local mouse = lplr:GetMouse()
+local localmouse = lplr:GetMouse()
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 
@@ -73,19 +73,19 @@ local function isAlive(plr)
 end
 
 local function isPlayerTargetable(plr, target, friend)
-    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and (friend and friendCheck(plr) or (not friend)) and isAlive(plr) and targetCheck(plr, target) and shared.vapeteamcheck(plr)
+    return plr ~= lplr and plr and (friend and friendCheck(plr) or (not friend)) and isAlive(plr) and targetCheck(plr, target) and shared.vapeteamcheck(plr)
 end
 
 local function vischeck(char, part)
 	return not unpack(cam:GetPartsObscuringTarget({lplr.Character[part].Position, char[part].Position}, {lplr.Character, char}))
 end
 
-local function GetAllNearestHumanoidToPosition(distance, amount)
+local function GetAllNearestHumanoidToPosition(player, distance, amount)
 	local returnedplayer = {}
 	local currentamount = 0
     if isAlive() then
         for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable(v, true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and currentamount < amount then
+            if isPlayerTargetable((player and v or nil), true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and currentamount < amount then
                 local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= distance then
                     table.insert(returnedplayer, v)
@@ -97,11 +97,11 @@ local function GetAllNearestHumanoidToPosition(distance, amount)
 	return returnedplayer
 end
 
-local function GetNearestHumanoidToPosition(distance)
+local function GetNearestHumanoidToPosition(player, distance)
 	local closest, returnedplayer = distance, nil
     if isAlive() then
         for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable(v, true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") then
+            if isPlayerTargetable((player and v or nil), true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") then
                 local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= closest then
                     closest = mag
@@ -113,11 +113,11 @@ local function GetNearestHumanoidToPosition(distance)
 	return returnedplayer
 end
 
-local function GetNearestHumanoidToMouse(distance, checkvis)
+local function GetNearestHumanoidToMouse(player, distance, checkvis)
     local closest, returnedplayer = distance, nil
     if isAlive() then
         for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable(v, true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and (checkvis == false or checkvis and (vischeck(v.Character, "Head") or vischeck(v.Character, "HumanoidRootPart"))) then
+            if isPlayerTargetable((player and v or nil), true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and (checkvis == false or checkvis and (vischeck(v.Character, "Head") or vischeck(v.Character, "HumanoidRootPart"))) then
                 local vec, vis = cam:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
                 if vis then
                     local mag = (uis:GetMouseLocation() - Vector2.new(vec.X, vec.Y)).magnitude
@@ -294,16 +294,13 @@ local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].Cre
 		end
 	end
 })
+local aimassisttarget = AimAssist.CreateTargetWindow({})
 aimmethod = AimAssist.CreateDropdown({
 	["Name"] = "Method", 
 	["List"] = {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay", "Mouse"},
 	["Function"] = function(val) end
 })
 local aimtable = {["FindPartOnRayWithIgnoreList"] = 1, ["FindPartOnRayWithWhitelist"] = 1, ["Raycast"] = 2, ["FindPartOnRay"] = 1, ["ScreenPointToRay"] = 3, ["ViewportPointToRay"] = 3, ["Mouse"] = 4}
-aimvischeck = AimAssist.CreateToggle({
-	["Name"] = "Wall Check",
-	["Function"] = function() end
-})
 aimfov = AimAssist.CreateSlider({
 	["Name"] = "FOV", 
 	["Min"] = 1, 
@@ -356,7 +353,7 @@ kek = function()
 		return old3(unpack(Args))
 	end)
     BindToRenderStep("AimAssist", 1, function() 
-		local plr = GetNearestHumanoidToMouse(aimfov["Value"], GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false and aimvischeck["Enabled"])
+		local plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false and aimvischeck["Enabled"])
 		local targettable = {}
 		local targetsize = 0
 		if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
@@ -458,6 +455,18 @@ local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 	["Name"] = "Blink", 
 	["Function"] = function(callback) 
 		settings():GetService("NetworkSettings").IncomingReplicationLag = (callback and 99999 or 0)
+	end, 
+	["HoverText"] = "Chokes all incoming packets"
+})
+
+local ClickTP = {["Enabled"] = false}
+ClickTP = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "MouseTP", 
+	["Function"] = function(callback) 
+		if callback and isAlive() then
+			lplr.Character.HumanoidRootPart.CFrame = CFrame.new(localmouse.Hit.p)
+			ClickTP["ToggleButton"](false)
+		end
 	end, 
 	["HoverText"] = "Chokes all incoming packets"
 })
@@ -570,7 +579,7 @@ local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Crea
 			BindToRenderStep("HitBoxes", 1, function() 
 				for i,plr in pairs(players:GetChildren()) do
 					if isPlayerTargetable(plr, true, true) and isAlive(plr) then
-						plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.2), 2 + (hitboxexpand["Value"] * 0.2), 1 + (hitboxexpand["Value"] * 0.2))
+						plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.6), 2 + (hitboxexpand["Value"] * 0.6), 1 + (hitboxexpand["Value"] * 0.6))
 					end
 				end
 			end)
@@ -596,6 +605,7 @@ local killaurarange = {["Value"] = 1}
 local killauraangle = {["Value"] = 90}
 local killauratarget = {["Value"] = 1}
 local killauramouse = {["Enabled"] = false}
+local killauratargetframe = {["Players"] = {["Enabled"] = false}}
 local killauracframe = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauratick = tick()
@@ -605,8 +615,8 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		if callback then
 			BindToRenderStep("Killaura", 1, function() 
 				local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-				local plr = GetAllNearestHumanoidToPosition(killaurarange["Value"], killauratarget["Value"])
-				if tool and isAlive() and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or killauramouse["Enabled"] == false) then
+				local plr = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
+				if tool and isAlive() and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
 					local touch = findTouchInterest(tool)
 					if touch then
 						local targettable = {}
@@ -642,6 +652,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		end
 	end
 })
+killauratargetframe = Killaura.CreateTargetWindow({})
 killauraaps = Killaura.CreateTwoSlider({
 	["Name"] = "Attacks per second",
 	["Min"] = 1,
