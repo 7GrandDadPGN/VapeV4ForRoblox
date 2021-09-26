@@ -2135,6 +2135,7 @@ AutoLeaveDelay = AutoLeave.CreateSlider({
 })
 
 local justsaid = ""
+local leavesaid = false
 bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 	p6:Connect(function(p7)
 		if AutoToxic["Enabled"] then
@@ -2160,7 +2161,8 @@ bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 	end)
 end)	
 bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
-	if p3.Game.spectating and not p4.Game.spectating then
+	if (p3.Game.spectating and not p4.Game.spectating) and leavesaid == false then
+		leavesaid = true
 		if AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
 			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight.", "All")
 		end
