@@ -92,14 +92,18 @@ JoinQueue = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 	["Function"] = function(callback)
 		if callback then
 			spawn(function()
-				wait(JoinQueueDelay["Value"])
-				if bedwars["ClientStore"]:getState().Party.leader.userId == lplr.UserId and bedwars["Client"]:Get("JoinQueue"):CallServer({
-					queueType = JoinQueueTypes["Value"]
-				}) then
-					if JoinQueue["Enabled"] == false then
-						bedwars["Client"]:Get("LeaveQueue"):CallServer()
+				repeat
+					wait(JoinQueueDelay["Value"])
+					if bedwars["ClientStore"]:getState().Party.leader.userId == lplr.UserId and bedwars["Client"]:Get("JoinQueue"):CallServer({
+						queueType = JoinQueueTypes["Value"]
+					}) then
+						if JoinQueue["Enabled"] == false then
+							bedwars["Client"]:Get("LeaveQueue"):CallServer()
+						end
 					end
-				end
+					wait(30)
+					bedwars["Client"]:Get("LeaveQueue"):CallServer()
+				until JoinQueue["Enabled"] == false
 			end)
 		else
 			bedwars["Client"]:Get("LeaveQueue"):CallServer()
