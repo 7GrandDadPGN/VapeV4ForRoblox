@@ -2043,7 +2043,7 @@ bedwars["VictoryScreen"].render = function(winstuff)
 				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
 			end
 			if AutoToxicWin["Enabled"] then
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by Vxpe V4 :)" or ""), "All")
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS"..(AutoToxicAd["Enabled"] and " : Sponsored by V̂ǍPÉ V4 :)" or ""), "All")
 			end
 		end
     end
@@ -2095,10 +2095,12 @@ AutoArmor = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 })
 
 local AutoLeave = {["Enabled"] = false}
+local AutoLeaveDelay = {["Value"] = 1}
 local autoleaveconnection
 
 bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(p2)
 	if AutoLeave["Enabled"] then
+		wait(AutoLeaveDelay["Value"] / 10)
 		bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 	end
 end)
@@ -2121,6 +2123,13 @@ AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 		end
 	end,
 	["HoverText"] = "Leaves if a staff member joins your game or when the match ends."
+})
+AutoLeaveDelay = AutoLeave.CreateSlider({
+	["Name"] = "Delay",
+	["Min"] = 0,
+	["Max"] = 50,
+	["Default"] = 0,
+	["Function"] = function() end
 })
 
 local justsaid = ""
