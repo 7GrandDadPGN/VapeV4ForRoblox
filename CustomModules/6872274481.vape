@@ -2163,7 +2163,7 @@ bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight.", "All")
 		end
 		if AutoLeave["Enabled"] and #bedwars["ClientStoreHandler"].Party.members == 0 then
-			wait(1)
+			wait(1 + (AutoLeaveDelay["Value"] / 10))
 			bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 		end
 	end
