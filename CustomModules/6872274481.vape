@@ -19,6 +19,7 @@ local scaffoldypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 local ownedkits = {}
+local playerwhitelist = {2884764437, 2904227753, 2783615468}
 
 local RenderStepTable = {}
 local function BindToRenderStep(name, num, func)
@@ -357,11 +358,17 @@ getfunctions = function()
 				v["attackEntity"] = function(Self, entity, raycast)
 					local plr
 					pcall(function()
-						if players:GetPlayerFromCharacter(entity:getInstance()).UserId == 2904227753 then
+						if table.find(playerwhitelist, players:GetPlayerFromCharacter(entity:getInstance()).UserId) then
 							plr = true
 						end
 					end)
 					if plr then
+						local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
+						if plrentity ~= nil then
+							plrentity:playAnimation(0)
+						end
+						bedwars["ViewmodelController"]:playAnimation(5)
+						bedwars["SoundManager"]:playSound(math.random(13, 14))
 						return nil
 					end
 					return oldattack(Self, entity, raycast)
