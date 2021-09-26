@@ -438,7 +438,7 @@ getfunctions = function()
 		bedwars["ShopRight"]["purchase"] = function(item)
 			if item.props.SelectedItem.itemType == "emerald_sword" then
 				local sword, swordnum = getSword()
-				if sword.itemType ~= "emerald_sword" then
+				if sword and sword.itemType ~= "emerald_sword" then
 					sword["tool"]:Remove()
 				end
 			end
@@ -2915,6 +2915,13 @@ runcode(function()
 	})
 	spawn(function()
 		repeat wait() until matchState ~= 0
+		ownedkits = {}
+		for i2,v2 in pairs(bedwars["ClientStoreHandler"]:getState().Bedwars.ownedKits) do
+            table.insert(ownedkits, v2)
+        end
+        for i3,v3 in pairs(bedwars["BedwarsKits"].FreeKits) do
+            table.insert(ownedkits, v3)
+        end
 		SwitchKitDropdown["UpdateList"](ownedkits)
 		SwitchKitDropdown["Value"] = ownedkits[1]
 	end)

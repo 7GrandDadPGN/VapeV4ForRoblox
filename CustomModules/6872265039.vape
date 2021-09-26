@@ -45,6 +45,7 @@ getfunctions()
 
 GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
+GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
 GuiLibrary["RemoveObject"]("BlinkOptionsButton")
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
