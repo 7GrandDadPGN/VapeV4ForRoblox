@@ -1853,7 +1853,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 								}
 								targetsize = targetsize + 1
 								spawn(function()
-									bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
+									if plr.Character and plr.Character.HumanoidRootPart then
+										bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
+									end
 								end)
 							end
 						else
