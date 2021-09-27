@@ -19,6 +19,7 @@ local requestfunc = syn and syn.request or http and http.request or http_request
 local getasset = getsynasset or getcustomasset
 local ownedkits = {}
 local playerwhitelist = {2884764437, 2904227753, 2783615468}
+local oldattack
 
 local RenderStepTable = {}
 local function BindToRenderStep(name, num, func)
@@ -352,8 +353,25 @@ getfunctions = function()
 			if rawget(v, "CombatConstant") then
 				bedwars["CombatConstant"] = v["CombatConstant"]
 			end
+			if rawget(v, "prepareHashVector3") then
+				bedwars["prepareHashing"] = v["prepareHashVector3"]
+			end
 			if rawget(v, "attackEntity") then
-				local oldattack = v["attackEntity"]
+				bedwars["AttackRemote"] = debug.getconstant(v["attackEntity"], 43)
+				for i,v in pairs(debug.getupvalues(v["attackEntity"])) do
+					if tostring(v) == "AC" then
+						bedwars["AttackHashTable"] = v
+						local num = 0
+						for i2,v2 in pairs(v) do
+						    if num == 1 then
+								bedwars["AttackHashFunction"] = v2
+								bedwars["AttachHashText"] = i2
+							end
+							num = num + 1
+						end
+					end
+				end
+				oldattack = v["attackEntity"]
 				v["attackEntity"] = function(Self, entity, raycast)
 					local plr
 					pcall(function()
@@ -373,6 +391,7 @@ getfunctions = function()
 					local suc, res = pcall(function() return oldattack(Self, entity, raycast) end)
 					return res
 				end
+				bedwars["attackTable"] = v
 				bedwars["attackEntity"] = v["attackEntity"]
 			end
 			if rawget(v, "requestSelfDamage") then
@@ -457,6 +476,10 @@ getfunctions = function()
 		getfunctions()
 	end
 end
+
+GuiLibrary["SelfDestructEvent"].Event:connect(function()
+	bedwars["attackTable"]["attackEntity"] = oldattack
+end)
 
 local function runcode(func)
 	func()
@@ -1742,6 +1765,8 @@ killaurabox.AlwaysOnTop = true
 killaurabox.ZIndex = 11
 killaurabox.Parent = GuiLibrary["MainGui"]
 local killauratargetframe = {["Players"] = {["Enabled"] = false}}
+local killaurarealremote = bedwars["ClientHandler"]:Get(bedwars["AttackRemote"])["instance"]
+local killauramethod = {["Value"] = "Normal"}
 local killauraanimmethod = {["Value"] = "Normal"}
 local killauraaps = {["GetRandomValue"] = function() return 1 end}
 local killaurarange = {["Value"] = 14}
@@ -1764,6 +1789,14 @@ local killauraplaying = false
 local oldplay = function() end
 local oldsound = function() end
 local oldmeta
+
+local function hashvec(vec)
+	return {
+		["hash"] = bedwars["AttackHashFunction"](bedwars["AttackHashText"], bedwars["prepareHashing"](vec)), 
+		["value"] = vec
+	}
+end
+
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Killaura",
 	["Function"] = function(callback)
@@ -1854,16 +1887,37 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 								}
 								targetsize = targetsize + 1
 								spawn(function()
-									if plr.Character and plr.Character.HumanoidRootPart then
-										bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
+									if plr.Character and plr.Character.HumanoidRootPart then 
+										if killauramethod["Value"] == "Normal" then
+											bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
+										else
+											killaurarealremote:InvokeServer({
+												["weapon"] = killaurabaguette["Enabled"] and getBaguette() and getBaguette()["tool"] or getSword()["tool"],
+												["entityInstance"] = plr.Character,
+												["validate"] = {
+													["raycast"] = {
+														["cameraPosition"] = hashvec(cam.CFrame.p), 
+														["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
+													},
+													["targetPosition"] = hashvec(plr.Character.HumanoidRootPart.Position),
+													["selfPosition"] = hashvec(lplr.Character.HumanoidRootPart.Position)
+												}
+											})
+											local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
+											if plrentity ~= nil then
+												plrentity:playAnimation(0)
+											end
+											bedwars["ViewmodelController"]:playAnimation(5)
+											bedwars["SoundManager"]:playSound(math.random(13, 14))
+										end
 									end
 								end)
 							end
 						else
+							killauranear = false
 							if killaurabox.Adornee ~= nil then
 								killaurabox.Adornee = nil
 							end
-							killauranear = false
 							pcall(function()
 								if origC0 == nil then
 									origC0 = cam.Viewmodel.RightHand.RightWrist.C0
@@ -1898,10 +1952,10 @@ killauratargetframe = Killaura.CreateTargetWindow({})
 killauraaps = Killaura.CreateTwoSlider({
 	["Name"] = "Attacks per Second",
 	["Min"] = 1,
-	["Max"] = 20,
+	["Max"] = 10,
 	["Function"] = function(val) end, 
-	["Default"] = 19,
-	["Default2"] = 20
+	["Default"] = 8,
+	["Default2"] = 10
 })
 killaurarange = Killaura.CreateSlider({
 	["Name"] = "Attack range",
@@ -1923,6 +1977,11 @@ killauratargets = Killaura.CreateSlider({
 	["Max"] = 10,
 	["Function"] = function(val) end,
 	["Default"] = 10
+})
+killauramethod = Killaura.CreateDropdown({
+	["Name"] = "Mode", 
+	["List"] = {"Normal", "Direct"},
+	["Function"] = function(val) end
 })
 killauraanimmethod = Killaura.CreateDropdown({
 	["Name"] = "Animation", 
