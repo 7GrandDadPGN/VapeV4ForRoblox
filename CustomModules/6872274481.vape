@@ -1476,7 +1476,8 @@ runcode(function()
 								multi = multi + 0.002
 							end
 							local velocalc = (multi / 6) + (0.01 / aimbotping)
-							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, 0, plr.Character.HumanoidRootPart.Velocity.Y) * ((realLaunchPosition - tar.Position).magnitude * velocalc))
+							local lookvec = (plr.Character.HumanoidRootPart.Velocity.X == 0 and Vector3.new(0, 0, 0) or Vector3.new(plr.Character.HumanoidRootPart.CFrame.lookVector.X * plr.Character.Humanoid.WalkSpeed, plr.Character.Humanoid.Jump and 3 or 0, plr.Character.HumanoidRootPart.CFrame.lookVector.Y * plr.Character.Humanoid.WalkSpeed))
+							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (lookvec * ((realLaunchPosition - tar.Position).magnitude * velocalc))
 							local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
 							return {
 								initialVelocity = (realLaunchPosition + (v65.Unit.Direction).Unit * ((Vector3.new(0, 0, 0) - realLaunchPosition).Magnitude) - realLaunchPosition).Unit * (v60 * projmeta.velocityMultiplier), 
