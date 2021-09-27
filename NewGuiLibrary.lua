@@ -126,6 +126,7 @@ local function getcustomassetfunc(path)
 end
 
 api["UpdateHudEvent"] = Instance.new("BindableEvent")
+api["SelfDestructEvent"] = Instance.new("BindableEvent")
 
 local clickgui = Instance.new("Frame")
 clickgui.Name = "ClickGui"
