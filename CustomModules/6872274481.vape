@@ -2,7 +2,6 @@
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
 local lplr = players.LocalPlayer
-local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
 local targetinfo = shared.VapeTargetInfo
@@ -195,7 +194,7 @@ local function teamsAreAlive()
 end
 
 local function scanforbeds()
-	local blocktab = game.Workspace.Map.Blocks:GetChildren()
+	local blocktab = workspace.Map.Blocks:GetChildren()
 	bedwars["BedTable"] = {}
 	for i = 1, #blocktab do
 		local obj = blocktab[i]
@@ -1115,7 +1114,7 @@ runcode(function()
 							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2, 0)
 						end
 					end)
-					antivoidpart.Parent = game.Workspace
+					antivoidpart.Parent = workspace
 				end)
 			else
 				if antivoidpart then
@@ -2028,15 +2027,20 @@ local AutoToxic = {["Enabled"] = false}
 local AutoToxicGG = {["Enabled"] = false}
 local AutoToxicWin = {["Enabled"] = false}
 local AutoToxicDeath = {["Enabled"] = false}
+local AutoToxicRespond = {["Enabled"] = false}
 local AutoToxicFinalKill = {["Enabled"] = false}
 local AutoToxicWinStreak = {["Enabled"] = false}
 local AutoToxicAd = {["Enabled"] = false}
 local AutoToxicPhrases = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicPhrases2 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicPhrases3 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
+local AutoToxicPhrases4 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicOldWin = bedwars["VictoryScreen"].render
 local victorysaid = false
+local responddelay = false
 local lastsaid = ""
+local lastsaid2 = ""
+local ignoredplayers = {}
 bedwars["VictoryScreen"].render = function(winstuff)
     local myTeam = bedwars["ClientStoreHandler"]:getState().Game.myTeam
     if myTeam and myTeam.id == winstuff.props.WinningTeamId and victorysaid == false then
@@ -2052,6 +2056,24 @@ bedwars["VictoryScreen"].render = function(winstuff)
     end
     return AutoToxicOldWin(winstuff)
 end
+
+game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
+	local plr = players[tab["FromSpeaker"]]
+	if tab["Message"]:lower():find("hack") and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
+		local custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
+		if custommsg == lastsaid2 then
+			custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
+		else
+			lastsaid2 = custommsg
+		end
+		if custommsg then
+			custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
+		end
+		local msg = custommsg or "waaaa waaaa "..(plr.DisplayName or plr.Name)
+		game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+		table.insert(ignoredplayers, plr.UserId)
+	end
+end)
 
 local AutoArmor = {["Enabled"] = false}
 AutoArmor = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -2193,6 +2215,11 @@ AutoToxicDeath = AutoToxic.CreateToggle({
 	["Function"] = function() end, 
 	["Default"] = true
 })
+AutoToxicRespond = AutoToxic.CreateToggle({
+	["Name"] = "Respond",
+	["Function"] = function() end, 
+	["Default"] = true
+})
 AutoToxicFinalKill = AutoToxic.CreateToggle({
 	["Name"] = "Final Kill",
 	["Function"] = function() end, 
@@ -2217,6 +2244,10 @@ AutoToxicPhrases2 = AutoToxic.CreateTextList({
 AutoToxicPhrases3 = AutoToxic.CreateTextList({
 	["Name"] = "ToxicList3",
 	["TempText"] = "phrase (death)",
+})
+AutoToxicPhrases4 = AutoToxic.CreateTextList({
+	["Name"] = "ToxicList4",
+	["TempText"] = "phrase (respond) <name>",
 })
 
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
