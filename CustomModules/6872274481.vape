@@ -371,7 +371,8 @@ getfunctions = function()
 						bedwars["SoundManager"]:playSound(math.random(13, 14))
 						return nil
 					end
-					return oldattack(Self, entity, raycast)
+					local suc, res = pcall(function() return oldattack(Self, entity, raycast) end)
+					return res
 				end
 				bedwars["attackEntity"] = v["attackEntity"]
 			end
@@ -1245,8 +1246,8 @@ BuyCheck = function()
 					local NextSwordCurrency = getItem(NextSwordTable["currency"])
 					if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
 						if justboughtsword ~= buyablesword then
-							justboughtsword = buyablesword
 							buyitem(NextSwordTable, function()
+								justboughtsword = buyablesword
 								NextSword = swords[NextSwordTable["itemType"]]
 							end)
 						end
@@ -1258,8 +1259,8 @@ BuyCheck = function()
 				local NextArmorCurrency = getItem(NextArmorTable["currency"])
 				if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
 					if justboughtarmor ~= NextArmor then
-						justboughtarmor = NextArmor
 						buyitem(NextArmorTable, function()
+							justboughtarmor = NextArmor
 							NextArmor = NextArmorTable["nextTier"]
 						end)
 					end
@@ -2828,15 +2829,23 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 								local inventory = bedwars["getInventory"](plr)
 								if inventory.hand then
 									thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
+								else
+									thing.Hand.Image = ""
 								end
 								if inventory.armor[4] then
 									thing.Helmet.Image = bedwars["getIcon"](inventory.armor[4], NameTagsShowInventory["Enabled"])
+								else
+									thing.Helmet.Image = ""
 								end
 								if inventory.armor[5] then
 									thing.Chestplate.Image = bedwars["getIcon"](inventory.armor[5], NameTagsShowInventory["Enabled"])
+								else
+									thing.Chestplate.Image = ""
 								end
 								if inventory.armor[6] then
 									thing.Boots.Image = bedwars["getIcon"](inventory.armor[6], NameTagsShowInventory["Enabled"])
+								else
+									thing.Boots.Image = ""
 								end
 								local bountyhunter = lplr.PlayerGui:FindFirstChildWhichIsA("BillboardGui")
 								local istarget = false
