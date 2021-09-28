@@ -356,7 +356,7 @@ getfunctions = function()
 			if rawget(v, "prepareHashVector3") then
 				bedwars["prepareHashing"] = v["prepareHashVector3"]
 			end
-			if rawget(v, "attackEntity") then
+			if rawget(v, "attackEntity") and #debug.getconstants(v["attackEntity"]) >= 53 then
 				bedwars["AttackRemote"] = debug.getconstant(v["attackEntity"], 43)
 				for i,v in pairs(debug.getupvalues(v["attackEntity"])) do
 					if tostring(v) == "AC" then
