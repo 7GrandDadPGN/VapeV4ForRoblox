@@ -742,10 +742,7 @@ runcode(function()
 			if callback then
 				aimbegan = uis.InputBegan:connect(function(input1)
 					if uis:GetFocusedTextBox() == nil and input1.UserInputType == Enum.UserInputType.MouseButton1 then
-						local plr = GetNearestHumanoidToPosition(AimAssistTargetFrame["Players"]["Enabled"], 30)
-						if plr then
-							aimactive = true
-						end
+						aimactive = true
 					end
 				end)
 				
