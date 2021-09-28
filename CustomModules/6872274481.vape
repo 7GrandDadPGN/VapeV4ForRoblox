@@ -579,6 +579,7 @@ local function switchToAndUseTool(block, legit)
 			updateitem:Fire(inputobj)
 		end
 		switchItem(tool["tool"])
+		wait(0.1)
 	end
 end
 

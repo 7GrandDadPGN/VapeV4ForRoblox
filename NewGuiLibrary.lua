@@ -2269,6 +2269,55 @@ api["CreateWindow"] = function(argstablemain2)
 			return textapi
 		end
 
+		buttonapi["CreateTextBox"] = function(argstable)
+			local textapi = {}
+			local amount = #children2:GetChildren()
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(0, 220, 0, 40)
+			frame.BackgroundTransparency = 1
+			frame.ClipsDescendants = true
+			frame.LayoutOrder = amount
+			frame.Name = argstable["Name"]
+			frame.Parent = children2
+			local textboxbkg = Instance.new("ImageLabel")
+			textboxbkg.BackgroundTransparency = 1
+			textboxbkg.Name = "AddBoxBKG"
+			textboxbkg.Size = UDim2.new(0, 200, 0, 31)
+			textboxbkg.Position = UDim2.new(0, 10, 0, 5)
+			textboxbkg.ClipsDescendants = true
+			textboxbkg.Image = getcustomassetfunc("vape/assets/TextBoxBKG.png")
+			textboxbkg.Parent = frame
+			local textbox = Instance.new("TextBox")
+			textbox.Size = UDim2.new(0, 159, 1, 0)
+			textbox.Position = UDim2.new(0, 11, 0, 0)
+			textbox.TextXAlignment = Enum.TextXAlignment.Left
+			textbox.Name = "AddBox"
+			textbox.BackgroundTransparency = 1
+			textbox.TextColor3 = Color3.new(1, 1, 1)
+			textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
+			textbox.Font = Enum.Font.SourceSans
+			textbox.Text = ""
+			textbox.PlaceholderText = argstable["TempText"]
+			textbox.TextSize = 17
+			textbox.Parent = textboxbkg
+			
+			textapi["Object"] = frame
+			textapi["Value"] = ""
+			textapi["SetValue"] = function(val)
+				textapi["Value"] = val
+			end
+
+			textbox.FocusLost:connect(function(enter) 
+				if textapi["FocusLost"] then
+					textapi["SetValue"](textbox.Text)
+					textapi["FocusLost"](enter)
+				end
+			end)
+
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBox", ["Api"] = textapi}
+			return textapi
+		end
+
 		buttonapi["CreateTargetWindow"] = function(argstablemain3)
 			local buttonapi = {}
 			local buttonreturned = {}
