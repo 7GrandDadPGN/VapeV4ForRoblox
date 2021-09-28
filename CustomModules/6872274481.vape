@@ -2640,9 +2640,6 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							end
 							if ScaffoldBuyBlocks["Enabled"] and (wool and woolamount < 4 or (not wool)) and scaffoldallowed == true then
 								if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
-									if scaffoldallowed then
-										createwarning("Scaffold Stopped", "Scaffold stopped, get iron or wool.", 4)
-									end
 									scaffoldallowed = false
 									lplr.Character.HumanoidRootPart.Anchored = true
 								end
