@@ -297,6 +297,7 @@ getfunctions = function()
 			end
 			if rawget(v, "getItemMeta") then
 				bedwars["getItemMetadata"] = v["getItemMeta"]
+				bedwars["ItemTable"] = debug.getupvalue(v["getItemMeta"], 1)
 				bedwars["getIcon"] = function(item, showinv)
 					local itemmeta = v["getItemMeta"](item["itemType"])
 					if itemmeta and showinv then
@@ -625,8 +626,9 @@ bedwars["breakBlock"] = function(pos, effects, normal)
 			hitPosition = block.Position, 
 			hitNormal = Vector3.FromNormalId(Enum.NormalId[normal])
 		}):andThen(function(p9)
+			wait(0.05)
 			if olditem then
-				switchToAndUseTool(olditem)
+				switchItem(olditem)
 			end
 		end)
 		if effects then
@@ -793,6 +795,7 @@ local blockplaceenabled = false
 local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 local autoclicker = {["Enabled"] = false}
 local autoclickertick = tick()
+local autoclickerautoblock = {["Enabled"] = false}
 local autoclickerblocks = {["Enabled"] = false}
 local autoclickermousedown = false
 local autoclickerconnection1
@@ -828,6 +831,9 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 					if getEquipped()["Type"] == "sword" then
 						bedwars["SwordController"]["swingSwordAtMouse"](bedwars["SwordController"])
 					end
+					if autoclickerautoblock["Enabled"] and kit == "shielder" then
+						spawn(bedwars["raiseShield"])
+					end
 					if blockplaceenabled and autoclickerblocks["Enabled"] then
 						local mouseinfo = blockplacetable.clientManager:getBlockSelector():getMouseInfo(0)
 						if mouseinfo and getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, blockplacetable.blockType, mouseinfo.placementPosition, 0) then
@@ -859,6 +865,10 @@ autoclickercps = autoclicker.CreateTwoSlider({
 	["Function"] = function(val) end,
 	["Default"] = 8,
 	["Default2"] = 12
+})
+autoclickerautoblock = autoclicker.CreateToggle({
+	["Name"] = "AutoBlock", 
+	["Function"] = function() end, 
 })
 autoclickerblocks = autoclicker.CreateToggle({
 	["Name"] = "Place Blocks", 
@@ -1059,15 +1069,28 @@ end)
 
 runcode(function()
 	local oldclick
+	local oldattackspeeds = {}
 	local noclickdelay = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "NoClickDelay",
 		["Function"] = function(callback)
 			if callback then
+				for i2,v2 in pairs(bedwars["ItemTable"]) do
+					if type(v2) == "table" and rawget(v2, "sword") then
+						oldattackspeeds[i2] = v2["sword"]["attackSpeed"]
+						v2["sword"]["attackSpeed"] = 0.000000001
+					end
+				end
 				oldclick = bedwars["SwordController"]["isClickingTooFast"]
 				bedwars["SwordController"]["isClickingTooFast"] = function() return false end
 			else
+				for i2,v2 in pairs(bedwars["ItemTable"]) do
+					if type(v2) == "table" and rawget(v2, "sword") and oldattackspeeds[i2] then
+						v2["sword"]["attackSpeed"] = oldattackspeeds[i2]
+					end
+				end
 				bedwars["SwordController"]["isClickingTooFast"] = oldclick
 				oldclick = nil
+				oldattackspeeds = {}
 			end
 		end, 
 		["HoverText"] = "Removes Click Delay"
@@ -1854,7 +1877,6 @@ local oldsound = function() end
 local oldmeta
 
 local function hashvec(vec)
-	print(bedwars["AttackHashFunction"], bedwars["AttackHashText"], bedwars["prepareHashing"], vec)
 	return {
 		["hash"] = bedwars["AttackHashFunction"](bedwars["AttackHashText"], bedwars["prepareHashing"](vec)), 
 		["value"] = vec
@@ -1953,8 +1975,10 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 								spawn(function()
 									if plr.Character and plr.Character.HumanoidRootPart then 
 										if killauramethod["Value"] == "Normal" then
-											bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
+											bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
 										else
+											bedwars["ViewmodelController"]:playAnimation(5)
+											bedwars["SoundManager"]:playSound(math.random(13, 14))
 											if table.find(playerwhitelist, plr.UserId) == nil then
 												killaurarealremote:InvokeServer({
 													["weapon"] = killaurabaguette["Enabled"] and getBaguette() and getBaguette()["tool"] or getSword()["tool"],
@@ -1973,8 +1997,6 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 											if plrentity ~= nil then
 												plrentity:playAnimation(0)
 											end
-											bedwars["ViewmodelController"]:playAnimation(5)
-											bedwars["SoundManager"]:playSound(math.random(13, 14))
 										end
 									end
 								end)
