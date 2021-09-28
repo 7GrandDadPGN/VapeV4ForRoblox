@@ -627,10 +627,7 @@ bedwars["breakBlock"] = function(pos, effects, normal)
 			hitPosition = block.Position, 
 			hitNormal = Vector3.FromNormalId(Enum.NormalId[normal])
 		}):andThen(function(p9)
-			wait(0.05)
-			if olditem then
-				switchItem(olditem)
-			end
+
 		end)
 		if effects then
 			if healthbarblocktable.blockHealth <= 0 then
@@ -2066,7 +2063,7 @@ killauratargets = Killaura.CreateSlider({
 })
 killauramethod = Killaura.CreateDropdown({
 	["Name"] = "Mode", 
-	["List"] = {"Normal", "Direct"},
+	["List"] = {"Direct", "Normal"},
 	["Function"] = function(val) end
 })
 killauraanimmethod = Killaura.CreateDropdown({
