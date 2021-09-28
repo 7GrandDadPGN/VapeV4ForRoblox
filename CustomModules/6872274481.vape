@@ -361,13 +361,11 @@ getfunctions = function()
 				for i,v in pairs(debug.getupvalues(v["attackEntity"])) do
 					if tostring(v) == "AC" then
 						bedwars["AttackHashTable"] = v
-						local num = 0
 						for i2,v2 in pairs(v) do
-						    if num == 1 then
+						    if i2:find("constructor") == nil and i2:find("__index") == nil and i2:find("new") == nil then
 								bedwars["AttackHashFunction"] = v2
 								bedwars["AttachHashText"] = i2
 							end
-							num = num + 1
 						end
 					end
 				end
@@ -1158,9 +1156,74 @@ runcode(function()
 	})
 end)
 
+local oldpos = Vector3.new(0, 0, 0)
+local oldpos2 = Vector3.new(0, 0, 0)
 
 local function getScaffold(vec)
-    return Vector3.new(math.floor((vec.X / 3) + 0.5) * 3, math.floor((vec.Y / 3) + 0.5) * 3, math.floor((vec.Z / 3) + 0.5) * 3) 
+	local realvec = Vector3.new(math.floor((vec.X / 3) + 0.5) * 3, math.floor((vec.Y / 3) + 0.5) * 3, math.floor((vec.Z / 3) + 0.5) * 3) 
+	local newpos = (oldpos - realvec)
+	if isAlive() then
+	--[[	local localfacing = lplr.Character.Humanoid.MoveDirection
+		local angle = math.atan2(localfacing.X, localfacing.Z)
+		angle = math.abs(angle)
+		if localfacing ~= Vector3.new(0, 0, 0) then
+			print(angle)
+			if angle >= 0.6 and angle <= 1.2 then
+				print(newpos)
+				if newpos.Z == -3 and newpos.X == 0 then
+					realvec = realvec + Vector3.new(0, 0, -3)
+				end
+				if newpos.X == 3 and newpos.Z == 0 then
+					realvec = realvec + Vector3.new(0, 0, -3)
+				end
+				if newpos.X == 0 and newpos.Z == 3 then
+					realvec = realvec + Vector3.new(3, 0, 0)
+				end
+				if newpos.X == 0 and newpos.Z == -3 then
+					realvec = realvec + Vector3.new(-3, 0, 0)
+				end
+				if newpos.X == -6 and newpos.Z == 0 then
+					realvec = realvec + Vector3.new(12, 0, 0)
+				end
+				if newpos.X == -3 and newpos.Z == -6 then
+					realvec = realvec + Vector3.new(0, 0, -3)
+				end
+				if newpos.X == 0 and newpos.Z == -6 then
+					realvec = realvec + Vector3.new(3, 0, -3)
+				end
+				if newpos.X == -3 and newpos.Z == 0 then
+					realvec = realvec + Vector3.new(-3, 0, 0)
+				end
+			end
+			if angle >= 2.1 and angle <= 2.6 then
+				if newpos.Z == 3 and newpos.X == 0 then
+					realvec = realvec + Vector3.new(0, 0, 3)
+				end
+				if newpos.X == -3 and newpos.Z == 0 then
+					realvec = realvec + Vector3.new(0, 0, 3)
+				end
+				if newpos.X == 0 and newpos.Z == -3 then
+					realvec = realvec + Vector3.new(-3, 0, 0)
+				end
+				if newpos.X == 0 and newpos.Z == 3 then
+					realvec = realvec + Vector3.new(3, 0, 0)
+				end
+				if newpos.X == 6 and newpos.Z == 0 then
+					realvec = realvec + Vector3.new(-12, 0, 0)
+				end
+				if newpos.X == 3 and newpos.Z == 6 then
+					realvec = realvec + Vector3.new(0, 0, 3)
+				end
+				if newpos.X == 0 and newpos.Z == 6 then
+					realvec = realvec + Vector3.new(-3, 0, 3)
+				end
+				if newpos.X == 3 and newpos.Z == 0 then
+					realvec = realvec + Vector3.new(3, 0, 0)
+				end
+			end
+		end]]
+	end
+    return realvec
 end
 
 local function scaffoldBlock(newpos)
@@ -1791,6 +1854,7 @@ local oldsound = function() end
 local oldmeta
 
 local function hashvec(vec)
+	print(bedwars["AttackHashFunction"], bedwars["AttackHashText"], bedwars["prepareHashing"], vec)
 	return {
 		["hash"] = bedwars["AttackHashFunction"](bedwars["AttackHashText"], bedwars["prepareHashing"](vec)), 
 		["value"] = vec
@@ -1891,18 +1955,20 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 										if killauramethod["Value"] == "Normal" then
 											bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)	
 										else
-											killaurarealremote:InvokeServer({
-												["weapon"] = killaurabaguette["Enabled"] and getBaguette() and getBaguette()["tool"] or getSword()["tool"],
-												["entityInstance"] = plr.Character,
-												["validate"] = {
-													["raycast"] = {
-														["cameraPosition"] = hashvec(cam.CFrame.p), 
-														["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
-													},
-													["targetPosition"] = hashvec(plr.Character.HumanoidRootPart.Position),
-													["selfPosition"] = hashvec(lplr.Character.HumanoidRootPart.Position)
-												}
-											})
+											if table.find(playerwhitelist, plr.UserId) == nil then
+												killaurarealremote:InvokeServer({
+													["weapon"] = killaurabaguette["Enabled"] and getBaguette() and getBaguette()["tool"] or getSword()["tool"],
+													["entityInstance"] = plr.Character,
+													["validate"] = {
+														["raycast"] = {
+															["cameraPosition"] = hashvec(cam.CFrame.p), 
+															["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
+														},
+														["targetPosition"] = hashvec(plr.Character.HumanoidRootPart.Position),
+														["selfPosition"] = hashvec(lplr.Character.HumanoidRootPart.Position)
+													}
+												})
+											end
 											local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
 											if plrentity ~= nil then
 												plrentity:playAnimation(0)
@@ -2496,9 +2562,6 @@ flybuyballoon = fly.CreateToggle({
 	["Default"] = true
 })
 
-
-local oldpos = Vector3.new(0, 0, 0)
-local oldpos2 = Vector3.new(0, 0, 0)
 local scaffoldtext = Instance.new("TextLabel")
 scaffoldtext.Font = Enum.Font.SourceSans
 scaffoldtext.TextSize = 20
