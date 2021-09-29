@@ -3808,16 +3808,15 @@ end
 
 notificationwindow.ChildRemoved:connect(function()
 	for i,v in pairs(notificationwindow:GetChildren()) do
-		v.Position = UDim2.new(1, v.Position.X.Offset, 1, -(150 + 80 * (i - 1)))
+		v.Position = UDim2.new(1, v.Position.X.Offset, 1, -(150 + 80 * (num - 1)))
 	end
 end)
-
 
 api["CreateNotification"] = function(top, bottom, duration, customicon)
 		local offset = #notificationwindow:GetChildren()
 		local frame = Instance.new("Frame")
 		frame.Size = UDim2.new(0, 266, 0, 75)
-		frame.Position = UDim2.new(1, -262, 1, -(150 + 80 * offset))
+		frame.Position = UDim2.new(1, 0, 1, -(150 + 80 * offset))
 		frame.BackgroundTransparency = 0.5
 		frame.BackgroundColor3 = Color3.new(0, 0,0)
 		frame.BorderSizePixel = 0
@@ -3841,7 +3840,7 @@ api["CreateNotification"] = function(top, bottom, duration, customicon)
 		uicorner2.Parent = frame2
 		local icon = Instance.new("ImageLabel")
 		icon.Name = "IconLabel"
-		icon.Image = getcustomassetfunc(customicon or "vape/assets/InfoNotification.png")
+		icon.Image = getcustomassetfunc(customicon or "vapeprivate/assets/InfoNotification.png")
 		icon.BackgroundTransparency = 1
 		icon.Position = UDim2.new(0, -6, 0, -8)
 		icon.Size = UDim2.new(0, 60, 0, 60)
@@ -3865,6 +3864,8 @@ api["CreateNotification"] = function(top, bottom, duration, customicon)
 		textlabel2.Parent = frame
 		spawn(function()
 			pcall(function()
+				frame:TweenPosition(UDim2.new(1, -262, 1, -(150 + 80 * offset)), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
+				wait(0.1)
 				frame2:TweenSize(UDim2.new(0, 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, duration, true)
 				wait(duration)
 				frame:TweenPosition(UDim2.new(1, 0, 1, frame.Position.Y.Offset), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
