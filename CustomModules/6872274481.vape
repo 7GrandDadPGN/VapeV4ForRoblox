@@ -577,6 +577,11 @@ local function switchToAndUseTool(block, legit)
 				slot = getHotbarSlot(tool["itemType"])
 			})
 			updateitem:Fire(inputobj)
+			for i, track in pairs(lplr.Character.Humanoid.Animator:GetPlayingAnimationTracks()) do
+				if track.Animation.AnimationId == "rbxassetid://6322507715" then
+					track:Stop()
+				end
+			end
 		end
 		switchItem(tool["tool"])
 		wait(0.1)
