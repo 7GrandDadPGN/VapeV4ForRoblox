@@ -1139,6 +1139,7 @@ end)
 
 runcode(function()
 	local antivoidpart
+	local antivoidmethod = {["Value"] = "Dynamic"}
 	local antitransparent = {["Enabled"] = false}
 	local AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AntiVoid", 
@@ -1155,7 +1156,7 @@ runcode(function()
 					antivoidpart.Position = Vector3.new(0, antivoidypos - 20, 0)
 					antivoidpart.Touched:connect(function(touchedpart)
 						if touchedpart.Parent == lplr.Character and isAlive() then
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2, 0)
+							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and (math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2) or 100), 0)
 						end
 					end)
 					antivoidpart.Parent = workspace
@@ -1167,6 +1168,10 @@ runcode(function()
 			end
 		end, 
 		["HoverText"] = "Gives you a chance to get on land (Not Perfect)"
+	})
+	antivoidmethod = AntiVoid.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Dynamic", "Set"}
 	})
 	antitransparent = AntiVoid.CreateToggle({
 		["Name"] = "Invisible",
@@ -1182,69 +1187,17 @@ end)
 local oldpos = Vector3.new(0, 0, 0)
 local oldpos2 = Vector3.new(0, 0, 0)
 
-local function getScaffold(vec)
+local function getScaffold(vec, diagonaltoggle)
 	local realvec = Vector3.new(math.floor((vec.X / 3) + 0.5) * 3, math.floor((vec.Y / 3) + 0.5) * 3, math.floor((vec.Z / 3) + 0.5) * 3) 
 	local newpos = (oldpos - realvec)
+	local returedpos = realvec
 	if isAlive() then
-	--[[	local localfacing = lplr.Character.Humanoid.MoveDirection
-		local angle = math.atan2(localfacing.X, localfacing.Z)
-		angle = math.abs(angle)
-		if localfacing ~= Vector3.new(0, 0, 0) then
-			print(angle)
-			if angle >= 0.6 and angle <= 1.2 then
-				print(newpos)
-				if newpos.Z == -3 and newpos.X == 0 then
-					realvec = realvec + Vector3.new(0, 0, -3)
-				end
-				if newpos.X == 3 and newpos.Z == 0 then
-					realvec = realvec + Vector3.new(0, 0, -3)
-				end
-				if newpos.X == 0 and newpos.Z == 3 then
-					realvec = realvec + Vector3.new(3, 0, 0)
-				end
-				if newpos.X == 0 and newpos.Z == -3 then
-					realvec = realvec + Vector3.new(-3, 0, 0)
-				end
-				if newpos.X == -6 and newpos.Z == 0 then
-					realvec = realvec + Vector3.new(12, 0, 0)
-				end
-				if newpos.X == -3 and newpos.Z == -6 then
-					realvec = realvec + Vector3.new(0, 0, -3)
-				end
-				if newpos.X == 0 and newpos.Z == -6 then
-					realvec = realvec + Vector3.new(3, 0, -3)
-				end
-				if newpos.X == -3 and newpos.Z == 0 then
-					realvec = realvec + Vector3.new(-3, 0, 0)
-				end
-			end
-			if angle >= 2.1 and angle <= 2.6 then
-				if newpos.Z == 3 and newpos.X == 0 then
-					realvec = realvec + Vector3.new(0, 0, 3)
-				end
-				if newpos.X == -3 and newpos.Z == 0 then
-					realvec = realvec + Vector3.new(0, 0, 3)
-				end
-				if newpos.X == 0 and newpos.Z == -3 then
-					realvec = realvec + Vector3.new(-3, 0, 0)
-				end
-				if newpos.X == 0 and newpos.Z == 3 then
-					realvec = realvec + Vector3.new(3, 0, 0)
-				end
-				if newpos.X == 6 and newpos.Z == 0 then
-					realvec = realvec + Vector3.new(-12, 0, 0)
-				end
-				if newpos.X == 3 and newpos.Z == 6 then
-					realvec = realvec + Vector3.new(0, 0, 3)
-				end
-				if newpos.X == 0 and newpos.Z == 6 then
-					realvec = realvec + Vector3.new(-3, 0, 3)
-				end
-				if newpos.X == 3 and newpos.Z == 0 then
-					realvec = realvec + Vector3.new(3, 0, 0)
-				end
-			end
-		end]]
+		local angle = math.deg(math.atan2(-lplr.Character.Humanoid.MoveDirection.X, -lplr.Character.Humanoid.MoveDirection.Z))
+		local goingdiagonal = (angle >= 130 and angle <= 150) or (angle <= -35 and angle >= -50) or (angle >= 35 and angle <= 50) or (angle <= -130 and angle >= -150)
+		print(angle)
+		if goingdiagonal and ((newpos.X == 0 and newpos.Z ~= 0) or (newpos.X ~= 0 and newpos.Z == 0)) and diagonaltoggle then
+			return oldpos
+		end
 	end
     return realvec
 end
@@ -2595,6 +2548,7 @@ scaffoldtext.Text = "0"
 scaffoldtext.Visible = false
 scaffoldtext.Parent = GuiLibrary["MainGui"]
 local ScaffoldExpand = {["Value"] = 1}
+local ScaffoldDiagonal = {["Enabled"] = false}
 local ScaffoldTower = {["Enabled"] = false}
 local ScaffoldStopMotion = {["Enabled"] = false}
 local ScaffoldBlockCount = {["Enabled"] = false}
@@ -2629,7 +2583,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						end
 					end
 					for i = 1, ScaffoldExpand["Value"] do
-						local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * 3), 0))
+						local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * 3), 0), ScaffoldDiagonal["Enabled"])
 						newpos = Vector3.new(newpos.X, math.clamp(newpos.Y, -999, scaffoldypos), newpos.Z)
 						if newpos ~= oldpos then
 							local wool, woolamount = getwool()
@@ -2684,6 +2638,10 @@ ScaffoldExpand = Scaffold.CreateSlider({
 	["Max"] = 8,
 	["Function"] = function(val) end,
 	["Default"] = 1
+})
+ScaffoldDiagonal = Scaffold.CreateToggle({
+	["Name"] = "Diagonal", 
+	["Function"] = function(callback) end
 })
 ScaffoldTower = Scaffold.CreateToggle({
 	["Name"] = "Tower", 

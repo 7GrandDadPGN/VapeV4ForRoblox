@@ -3808,7 +3808,7 @@ end
 
 notificationwindow.ChildRemoved:connect(function()
 	for i,v in pairs(notificationwindow:GetChildren()) do
-		v.Position = UDim2.new(1, v.Position.X.Offset, 1, -(150 + 80 * (num - 1)))
+		v.Position = UDim2.new(1, v.Position.X.Offset, 1, -(150 + 80 * (i - 1)))
 	end
 end)
 
