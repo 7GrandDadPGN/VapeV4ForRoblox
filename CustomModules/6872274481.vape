@@ -1171,7 +1171,8 @@ runcode(function()
 	})
 	antivoidmethod = AntiVoid.CreateDropdown({
 		["Name"] = "Mode",
-		["List"] = {"Dynamic", "Set"}
+		["List"] = {"Dynamic", "Set"},
+		["Function"] = function() end
 	})
 	antitransparent = AntiVoid.CreateToggle({
 		["Name"] = "Invisible",
