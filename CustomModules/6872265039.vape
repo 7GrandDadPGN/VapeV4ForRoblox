@@ -25,6 +25,15 @@ local function isAlive(plr)
 	return lplr and lplr.Character and lplr.Character.Parent ~= nil and lplr.Character:FindFirstChild("HumanoidRootPart") and lplr.Character:FindFirstChild("Head") and lplr.Character:FindFirstChild("Humanoid")
 end
 
+local function createwarning(title, text, delay)
+	pcall(function()
+		local frame = GuiLibrary["CreateNotification"](title, text, delay, "vape/assets/WarningNotification.png")
+		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+	end)
+end
+
+
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
 		if type(v) == "table" then

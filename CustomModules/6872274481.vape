@@ -328,7 +328,7 @@ getfunctions = function()
 			end
 			if rawget(v, "performHeal") then
 				local remotetab = debug.getconstants(v["performHeal"])
-				bedwars["GuitarRemote"] = remotetab[#remotetab - 4]
+				bedwars["GuitarRemote"] = ""
 			end
 			if rawget(v, "checkForPickup") then
 				local remotetab = debug.getconstants(v["checkForPickup"])
@@ -1904,7 +1904,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 								}
 								targetsize = targetsize + 1
 								spawn(function()
-									if plr.Character and plr.Character.HumanoidRootPart then 
+									if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
 										if killauramethod["Value"] == "Normal" then
 											bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
 										else
