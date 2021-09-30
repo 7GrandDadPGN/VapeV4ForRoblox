@@ -25,6 +25,14 @@ local function UnbindFromRenderStep(name)
 	end
 end
 
+local function createwarning(title, text, delay)
+	pcall(function()
+		local frame = GuiLibrary["CreateNotification"](title, text, delay, "vapeprivate/assets/WarningNotification.png")
+		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+	end)
+end
+
 local function friendCheck(plr, recolor)
 	return (recolor and GuiLibrary["ObjectsThatCanBeSaved"]["Recolor visualsToggle"]["Api"]["Enabled"] or (not recolor)) and GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextList"]["Api"]["ObjectList"], plr.Name)
 end
