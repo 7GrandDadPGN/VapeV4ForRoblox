@@ -81,6 +81,10 @@ local function vischeck(char, part)
 	return not unpack(cam:GetPartsObscuringTarget({lplr.Character[part].Position, char[part].Position}, {lplr.Character, char}))
 end
 
+local function runcode(func)
+	func()
+end
+
 local function GetAllNearestHumanoidToPosition(player, distance, amount)
 	local returnedplayer = {}
 	local currentamount = 0
