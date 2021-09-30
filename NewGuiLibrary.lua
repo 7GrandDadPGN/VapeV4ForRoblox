@@ -2310,13 +2310,16 @@ api["CreateWindow"] = function(argstablemain2)
 			
 			textapi["Object"] = frame
 			textapi["Value"] = ""
-			textapi["SetValue"] = function(val)
+			textapi["SetValue"] = function(val, entered)
 				textapi["Value"] = val
 				textbox.Text = val
+				if argstable["FocusLost"] and (not entered) then
+					argstable["FocusLost"](false)
+				end
 			end
 
 			textbox.FocusLost:connect(function(enter) 
-				textapi["SetValue"](textbox.Text)
+				textapi["SetValue"](textbox.Text, true)
 				if argstable["FocusLost"] then
 					argstable["FocusLost"](enter)
 				end
