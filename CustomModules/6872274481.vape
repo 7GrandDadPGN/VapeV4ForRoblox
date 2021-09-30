@@ -459,16 +459,6 @@ getfunctions = function()
         for i3,v3 in pairs(bedwars["BedwarsKits"].FreeKits) do
             table.insert(ownedkits, v3)
         end
-		local oldbuyitem = bedwars["ShopRight"]["purchase"]
-		bedwars["ShopRight"]["purchase"] = function(item)
-			if item.props.SelectedItem.itemType == "emerald_sword" then
-				local sword, swordnum = getSword()
-				if sword and sword.itemType ~= "emerald_sword" then
-					sword["tool"]:Remove()
-				end
-			end
-            return oldbuyitem(item)
-        end
 	else
 		wait(1)
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
@@ -577,6 +567,7 @@ local function switchToAndUseTool(block, legit)
 				slot = getHotbarSlot(tool["itemType"])
 			})
 			updateitem:Fire(inputobj)
+			wait(0.1)
 			for i, track in pairs(lplr.Character.Humanoid.Animator:GetPlayingAnimationTracks()) do
 				if track.Animation.AnimationId == "rbxassetid://6322507715" then
 					track:Stop()
@@ -922,68 +913,43 @@ GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("PhaseOptionsButton")
 local slowdownspeed = false
 local speed = {["Enabled"] = false}
---[[runcode(function()
+runcode(function()
 	local nocheck = false
-	local function checkwall(pos, movedirection)
-		movedirection = Vector3.new(math.clamp(movedirection.X, -0.005, 0.005), 0, math.clamp(movedirection.Z, -0.005, 0.005)) * 11
-		print(movedirection)
-		if not nocheck then
-			local newpos = (pos + movedirection)
-			local part = Instance.new("Part")
-			part.Position = newpos
-			part.Anchored = true
-			part.Size = Vector3.new(1, 1, 1)
-			part.CanCollide = false
-			part.Parent = workspace
-			game:GetService("Debris"):AddItem(part, 1)
-			local raycastparameters = RaycastParams.new()
-			raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks}
-			raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-			local newray = workspace:Raycast(newpos, movedirection * 3, raycastparameters)
-			if newray then
-				print(newray)
-			end
-			if newray == nil then
-				if isAlive() then
-					spawn(function()
-						if not nocheck then
-							slowdownspeed = true
-							nocheck = true
-							wait(0.3)
-							nocheck = false
-							slowdownspeed = false
-						end
-					end)
-					spawn(function()
-						wait(0.05)
-						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame * (movedirection * 20)
-					end)
-				end
-			end
-		end
+	local phaseconnection
+	local phasedelay = tick()
+	local phase = {["Enabled"] = false}
+
+	local function isPointInMapOccupied(p)
+		local region = Region3.new(p - Vector3.new(1, 1, 1), p + Vector3.new(1, 1, 1))
+		local possible = workspace:FindPartsInRegion3WithWhiteList(region, {workspace.Map.Blocks})
+		return (#possible == 0)
 	end
 
-	local phaseconnection
-	local phaseconnection2
-	local phasecharadded
-	local phase = {["Enabled"] = false}
 	phase = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Phase",
 		["Function"] = function(callback)
 			if callback then
-				phasecharadded = lplr.CharacterAdded:connect(function(char)
-					spawn(function()
-						local hum = char:WaitForChild("Humanoid")
-						if isAlive() then
-							phaseconnection = char.HumanoidRootPart.Touched:connect(function(hitPart)
-								if hitPart:IsA("BasePart") and hitPart.Position.Y > char.HumanoidRootPart.Position.Y - 6 and hitPart:GetFullName():find("Workspace.Map.Blocks") then
-									checkwall(char.HumanoidRootPart.CFrame.p, char.Humanoid.MoveDirection)
-								end
-							end)
+				BindToRenderStep("Phase", 1, function()
+					if isAlive() then
+						local pos = lplr.Character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
+						local raycastparameters = RaycastParams.new()
+						raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks}
+						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+						local newray = workspace:Raycast(pos, lplr.Character.Humanoid.MoveDirection, raycastparameters)
+						if phasedelay <= tick() then
+							slowdownspeed = false
+							nocheck = false
 						end
-					end)
+						if newray and phasedelay <= tick() then
+							if isPointInMapOccupied(newray.Instance.Position + (newray.Normal * -3)) then
+								phasedelay = tick() + 0.75
+								nocheck = true
+								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (newray.Normal * -2.5)
+							end
+						end
+					end
 				end)
-				phaseconnection2 = game:GetService("RunService").Stepped:connect(function()
+				phaseconnection = game:GetService("RunService").Stepped:connect(function()
 					if isAlive() then
 						for i,v in pairs(lplr.Character:GetDescendants()) do
 							if v:IsA("BasePart") and nocheck then
@@ -992,28 +958,16 @@ local speed = {["Enabled"] = false}
 						end
 					end
 				end)
-				if isAlive() then
-					phaseconnection = lplr.Character.HumanoidRootPart.Touched:connect(function(hitPart)
-						if hitPart:IsA("BasePart") and hitPart.Position.Y > lplr.Character.HumanoidRootPart.Position.Y - 6 and hitPart:GetFullName():find("Workspace.Map.Blocks") then
-							checkwall(lplr.Character.HumanoidRootPart.Position, lplr.Character.Humanoid.MoveDirection)
-						end
-					end)
-				end
 			else
+				UnbindFromRenderStep("Phase")
 				if phaseconnection then
 					phaseconnection:Disconnect()
-				end
-				if phaseconnection2 then
-					phaseconnection2:Disconnect()
-				end
-				if phasecharadded then
-					phasecharadded:Disconnect()
 				end
 			end
 		end,
 		["HoverText"] = "Lets you phase/clip through walls. (works 60% of the time)"
 	})
-end)]]
+end)
 runcode(function()
 	local velohorizontal = {["Value"] = 100}
 	local velovertical = {["Value"] = 100}
@@ -1244,16 +1198,10 @@ local buyingthing = false
 
 local function buyitem(itemtab, sucfunc)
 	if getItem(itemtab.itemType) == nil then
-		if itemtab.itemType == "emerald_sword" then
-			local sword, swordnum = getSword()
-			if sword.itemType ~= "emerald_sword" then
-				local swordSlot = swordnum
-				sword["tool"]:Remove()
-			end
-		end
 		bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 			shopItem = itemtab
 		}):andThen(function(p11)
+			sucfunc(p11)
 			if p11 then
 				bedwars["SoundManager"]:playSound(12)
 				bedwars["ClientStoreHandler"]:dispatch({
@@ -1277,8 +1225,6 @@ local function buyitem(itemtab, sucfunc)
 				elseif itemtab.tiered or itemtab.lockAfterPurchase then
 
 				end
-				wait(0.3)
-				sucfunc()
 			end
 		end)
 	end
@@ -1295,7 +1241,7 @@ end)
 
 local BuyCheck = function() end
 BuyCheck = function()
-	if AutoBuy["Enabled"] then
+	if AutoBuy["Enabled"] and matchState == 1 then
 			local ExecuteInventory = bedwars["getInventory"](lplr)
 			local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType) and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (getArmor() == nil and "leather_chestplate" or nil)
 			local NextSword = getSword()
@@ -1308,9 +1254,14 @@ BuyCheck = function()
 					local NextSwordCurrency = getItem(NextSwordTable["currency"])
 					if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
 						if justboughtsword ~= buyablesword then
-							buyitem(NextSwordTable, function()
-								justboughtsword = buyablesword
-								NextSword = swords[NextSwordTable["itemType"]]
+							local oldboughtsword = justboughtsword
+							justboughtsword = buyablesword
+							buyitem(NextSwordTable, function(suc)
+								if suc then
+									NextSword = swords[NextSwordTable["itemType"]]
+								else
+									justboughtsword = oldboughtsword
+								end
 							end)
 						end
 					end
@@ -1321,9 +1272,14 @@ BuyCheck = function()
 				local NextArmorCurrency = getItem(NextArmorTable["currency"])
 				if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
 					if justboughtarmor ~= NextArmor then
-						buyitem(NextArmorTable, function()
-							justboughtarmor = NextArmor
-							NextArmor = NextArmorTable["nextTier"]
+						local oldboughtarmor = justboughtarmor
+						justboughtarmor = NextArmor
+						buyitem(NextArmorTable, function(suc)
+							if suc then
+								NextArmor = NextArmorTable["nextTier"]
+							else
+								justboughtarmor = oldboughtarmor
+							end
 						end)
 					end
 				end
@@ -1434,7 +1390,7 @@ runcode(function()
 	})
 	bednukerdigpos = BedNuker.CreateDropdown({
 		["Name"] = "Break Direction", 
-		["List"] = {"Right", "Left", "Front", "Back", "Top", "Bottom"},
+		["List"] = {"Top", "Left", "Right", "Front", "Back", "Bottom"},
 		["Function"] = function(val) end
 	})
 	bednukerrange = BedNuker.CreateSlider({
@@ -2642,7 +2598,8 @@ ScaffoldExpand = Scaffold.CreateSlider({
 })
 ScaffoldDiagonal = Scaffold.CreateToggle({
 	["Name"] = "Diagonal", 
-	["Function"] = function(callback) end
+	["Function"] = function(callback) end,
+	["Default"] = true
 })
 ScaffoldTower = Scaffold.CreateToggle({
 	["Name"] = "Tower", 
