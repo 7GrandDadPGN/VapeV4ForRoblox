@@ -1,6 +1,7 @@
 -- Credits to Inf Yield & all the other scripts that helped me make bypasses
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
+local textservice = game:GetService("TextService")
 local lplr = players.LocalPlayer
 local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
@@ -1426,6 +1427,107 @@ NameTagsDistance = NameTags.CreateToggle({
 	["Name"] = "Distance", 
 	["Function"] = function() end
 })
+
+runcode(function()
+	local NickHider = {["Enabled"] = false}
+	local NickHiderBox = {["Value"] = ""}
+	local newname
+	local newid
+	local newdisplayname
+	local nickeduser = {}
+	local nickconnections = {}
+	local nickhiderdescendantsadded
+	local OldNameCall = nil
+
+	local function plrthing(obj, property, revert)
+		if (NickHider["Enabled"] or revert) and nickeduser ~= {} and nickeduser ~= nil then
+			obj[property] = obj[property]:gsub((revert and newname or lplr.Name), (revert and lplr.Name or nickeduser["Username"]))
+			obj[property] = obj[property]:gsub((revert and newdisplayname or lplr.DisplayName), (revert and lplr.DisplayName or nickeduser["DisplayName"]))
+			obj[property] = obj[property]:gsub((revert and newid or lplr.UserId), (revert and lplr.UserId or nickeduser["Id"]))
+		end
+	end
+
+	local function newobj(v, revert)
+		if v:IsA("TextLabel") or v:IsA("TextButton") then
+			plrthing(v, "Text", revert)
+			if (not revert) then
+				table.insert(nickconnections, v:GetPropertyChangedSignal("Text"):connect(function()
+					plrthing(v, "Text", revert)
+				end))
+			end
+		end
+		if v:IsA("ImageLabel") then
+			plrthing(v, "Image", revert)
+			if (not revert) then
+				table.insert(nickconnections, v:GetPropertyChangedSignal("Image"):connect(function()
+					plrthing(v, "Image", revert)
+				end))
+			end
+		end
+	end
+
+	NickHider = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "NickHider",
+		["Function"] = function(callback)
+			if callback and nickeduser ~= {} and nickeduser ~= nil then
+				if not OldNameCall then
+					OldNameCall = hookmetamethod(game, "__namecall", function(...)
+						local Args = {...}
+						local Self = Args[1]
+						local NamecallMethod = getnamecallmethod()
+					
+						if not checkcaller() and Self == textservice and NamecallMethod == "GetTextSize" and NickHider["Enabled"] and nickeduser ~= {} and nickeduser ~= nil then
+							Args[2] = Args[2]:gsub(lplr.Name, nickeduser["Username"])
+							Args[2] = Args[2]:gsub(lplr.DisplayName, nickeduser["DisplayName"])
+						end
+					
+						return OldNameCall(unpack(Args))
+					end)
+				end
+				newname = nickeduser["Username"]
+				newdisplayname = nickeduser["DisplayName"]
+				newid = nickeduser["Id"]
+				for i,v in pairs(game:GetDescendants()) do
+					newobj(v)
+				end
+				nickhiderdescendantsadded = game.DescendantAdded:connect(newobj)
+			else
+				if nickhiderdescendantsadded then
+					nickhiderdescendantsadded:Disconnect()
+				end
+				if nickeduser == {} or nickeduser == nil then
+					createwarning("NickHider", "No User or Invalid User Id", 4)
+				end
+				for i2,v2 in pairs(nickconnections) do
+					v2:Disconnect()
+				end
+				for i,v in pairs(game:GetDescendants()) do
+					newobj(v, true)
+				end
+			end
+		end,
+		["HoverText"] = "Disguises as the UserId in the text box (Client Side)"
+	})
+	NickHiderBox = NickHider.CreateTextBox({
+		["Name"] = "UserBox",
+		["TempText"] = "User (userid)",
+		["FocusLost"] = function()
+			local success, result = pcall(function()
+				return game:GetService("UserService"):GetUserInfosByUserIdsAsync({ tonumber(NickHiderBox["Value"]) })
+			end)
+			 
+			if success and #result > 0 then
+				nickeduser = result[1]
+				if NickHider["Enabled"] then
+					NickHider["ToggleButton"](false)
+					NickHider["ToggleButton"](true)
+				end
+			else
+				createwarning("NickHider", "Invalid User Id", 4)
+			end
+		end
+	})
+end)
 
 local searchColor = {["Value"] = 0.44}
 local searchModule = {["Enabled"] = false}
