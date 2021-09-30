@@ -463,6 +463,16 @@ getfunctions = function()
         for i3,v3 in pairs(bedwars["BedwarsKits"].FreeKits) do
             table.insert(ownedkits, v3)
         end
+		local oldbuyitem = bedwars["ShopRight"]["purchase"]
+		bedwars["ShopRight"]["purchase"] = function(item)
+			if item.props.SelectedItem.itemType == "emerald_sword" then
+				local sword, swordnum = getSword()
+				if sword and sword.itemType ~= "emerald_sword" then
+					sword["tool"]:Remove()
+				end
+			end
+            return oldbuyitem(item)
+        end
 	else
 		wait(1)
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
@@ -1202,6 +1212,13 @@ local buyingthing = false
 
 local function buyitem(itemtab, sucfunc)
 	if getItem(itemtab.itemType) == nil then
+		if itemtab.itemType == "emerald_sword" then
+			local sword, swordnum = getSword()
+			if sword.itemType ~= "emerald_sword" then
+				local swordSlot = swordnum
+				sword["tool"]:Remove()
+			end
+		end
 		bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 			shopItem = itemtab
 		}):andThen(function(p11)
@@ -3120,7 +3137,7 @@ runcode(function()
 	NickHider = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "NickHider",
 		["Function"] = function(callback)
-			if callback and nickeduser ~= {} and nickeduser ~= nil then
+			if callback and nickeduser ~= {} and nickeduser ~= nil and NickHiderBox["Value"] ~= "" then
 				if not OldNameCall then
 					OldNameCall = hookmetamethod(game, "__namecall", function(...)
 						local Args = {...}
@@ -3155,7 +3172,7 @@ runcode(function()
 				if nickhiderdescendantsadded then
 					nickhiderdescendantsadded:Disconnect()
 				end
-				if nickeduser == {} or nickeduser == nil then
+				if nickeduser == {} or nickeduser == nil or NickHiderBox["Value"] ~= "" then
 					createwarning("NickHider", "No User or Invalid User Id", 4)
 				end
 				nickedmodel = game:GetService('Players'):GetCharacterAppearanceAsync(lplr.UserId)

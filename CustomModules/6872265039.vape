@@ -260,7 +260,7 @@ runcode(function()
 	NickHider = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "NickHider",
 		["Function"] = function(callback)
-			if callback and nickeduser ~= {} and nickeduser ~= nil then
+			if callback and nickeduser ~= {} and nickeduser ~= nil and NickHiderBox["Value"] ~= "" then
 				if not OldNameCall then
 					OldNameCall = hookmetamethod(game, "__namecall", function(...)
 						local Args = {...}
@@ -295,7 +295,7 @@ runcode(function()
 				if nickhiderdescendantsadded then
 					nickhiderdescendantsadded:Disconnect()
 				end
-				if nickeduser == {} or nickeduser == nil then
+				if nickeduser == {} or nickeduser == nil or NickHiderBox["Value"] == "" then
 					createwarning("NickHider", "No User or Invalid User Id", 4)
 				end
 				nickedmodel = game:GetService('Players'):GetCharacterAppearanceAsync(lplr.UserId)
