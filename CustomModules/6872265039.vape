@@ -1,6 +1,7 @@
 -- Credits to Inf Yield & all the other scripts that helped me make bypasses
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
+local textservice = game:GetService("TextService")
 local lplr = players.LocalPlayer
 local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
@@ -13,6 +14,17 @@ local bedwars = {}
 local getfunctions
 local origC0 = nil
 
+local function runcode(func)
+	func()
+end
+
+local function isAlive(plr)
+	if plr then
+		return plr and plr.Character and plr.Character.Parent ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Head") and plr.Character:FindFirstChild("Humanoid")
+	end
+	return lplr and lplr.Character and lplr.Character.Parent ~= nil and lplr.Character:FindFirstChild("HumanoidRootPart") and lplr.Character:FindFirstChild("Head") and lplr.Character:FindFirstChild("Humanoid")
+end
+
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
 		if type(v) == "table" then
@@ -24,6 +36,9 @@ getfunctions = function()
 			end
 			if rawget(v, "ClientStore") and bedwars["ClientStore"] == nil then
 				bedwars["ClientStore"] = v.ClientStore
+			end
+			if rawget(v, "WeldUtil") then
+				bedwars["WeldTable"] = v["WeldUtil"]
 			end
 			for i2,v2 in pairs(v) do
 				if tostring(i2):match("sprinting") and type(v2) == "boolean" then
@@ -122,3 +137,199 @@ JoinQueueDelay = JoinQueue.CreateSlider({
 	["Function"] = function(val) end,
 	["Default"] = 1
 })
+
+GuiLibrary["RemoveObject"]("NickHiderOptionsButton")
+runcode(function()
+	local NickHider = {["Enabled"] = false}
+	local NickHiderBox = {["Value"] = ""}
+	local newname
+	local newid
+	local newdisplayname
+	local nickeduser = {}
+	local nickconnections = {}
+	local nickedmodel 
+	local oldmodel = {}
+	local nickhidercharadded
+	local nickhiderdescendantsadded
+	local OldNameCall = nil
+
+	local function findclosestitem(name)
+		local close
+		return close
+	end
+
+	local function dostuff()
+		spawn(function()
+			local hum = lplr.Character:WaitForChild("Humanoid")
+			local rootpart = lplr.Character:WaitForChild("HumanoidRootPart")
+			local changedface = false
+			for i,v in pairs(lplr.Character:GetChildren()) do
+				if v:IsA("Accessory") and v:GetAttribute("ArmorSlot") == nil and v:GetAttribute("ItemData") == nil then
+					v.Handle.Transparency = 1
+				end
+				if v:IsA("LocalScript") and v.Name:find("Animate") then
+					oldmodel["animate"] = v
+				end
+				if v:IsA("BodyColors") then
+					oldmodel["bodycolors"] = v
+				end
+				if v.Name == "Head" and v:FindFirstChild("face") then
+					oldmodel["face"] = v.face
+				end
+				if v:IsA("Shirt") then
+					oldmodel["shirt"] = v
+				end
+				if v:IsA("Pants") then
+					oldmodel["pants"] = v
+				end
+			end
+			for i,v in pairs(nickedmodel:GetChildren()) do
+				if v:IsA("Folder") and v.Name:match("R15") and oldmodel["animate"] then
+					for i2,v2 in pairs(v:GetChildren()) do
+						if oldmodel["animate"]:FindFirstChild(v2.Name) then
+							oldmodel["animate"][v2.Name]:Remove()
+						end
+						v2:Clone().Parent = oldmodel["animate"]
+					end
+				end
+				if v:IsA("Shirt") then
+					if oldmodel["shirt"] then
+						oldmodel["shirt"].ShirtTemplate = v.ShirtTemplate
+					else
+						v:Clone().Parent = lplr.Character
+					end
+				end
+				if v:IsA("Pants") then
+					if oldmodel["pants"] then
+						oldmodel["pants"].PantsTemplate = v.PantsTemplate
+					else
+						v:Clone().Parent = lplr.Character
+					end
+				end
+				if v.Name == "face" and oldmodel["face"] then
+					oldmodel["face"].Texture = v.Texture
+					changedface = true
+				end
+				if v:IsA("BodyColors") and oldmodel["bodycolors"] then
+					oldmodel["bodycolors"].HeadColor3 = v.HeadColor3
+					oldmodel["bodycolors"].LeftArmColor3 = v.LeftArmColor3
+					oldmodel["bodycolors"].RightArmColor3 = v.RightArmColor3
+					oldmodel["bodycolors"].LeftLegColor3 = v.LeftLegColor3
+					oldmodel["bodycolors"].RightLegColor3 = v.RightLegColor3
+					oldmodel["bodycolors"].TorsoColor3 = v.TorsoColor3
+				end
+				if v:IsA("Accessory") then
+					local temp = v:Clone()
+					lplr.Character.Humanoid:AddAccessory(temp)
+				end
+			end
+			if oldmodel["face"] and changedface == false then
+				oldmodel["face"].Texture = "rbxasset://textures/face.png"
+			end
+			bedwars["WeldTable"].weldCharacterAccessories(lplr.Character)
+		end)
+	end
+
+	local function plrthing(obj, property, revert)
+		if (NickHider["Enabled"] or revert) and nickeduser ~= {} and nickeduser ~= nil then
+			obj[property] = obj[property]:gsub((revert and newname or lplr.Name), (revert and lplr.Name or nickeduser["Username"]))
+			obj[property] = obj[property]:gsub((revert and newdisplayname or lplr.DisplayName), (revert and lplr.DisplayName or nickeduser["DisplayName"]))
+			obj[property] = obj[property]:gsub((revert and newid or lplr.UserId), (revert and lplr.UserId or nickeduser["Id"]))
+		end
+	end
+
+	local function newobj(v, revert)
+		if v:IsA("TextLabel") or v:IsA("TextButton") then
+			plrthing(v, "Text", revert)
+			if (not revert) then
+				table.insert(nickconnections, v:GetPropertyChangedSignal("Text"):connect(function()
+					plrthing(v, "Text", revert)
+				end))
+			end
+		end
+		if v:IsA("ImageLabel") then
+			plrthing(v, "Image", revert)
+			if (not revert) then
+				table.insert(nickconnections, v:GetPropertyChangedSignal("Image"):connect(function()
+					plrthing(v, "Image", revert)
+				end))
+			end
+		end
+	end
+
+	NickHider = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "NickHider",
+		["Function"] = function(callback)
+			if callback and nickeduser ~= {} and nickeduser ~= nil then
+				if not OldNameCall then
+					OldNameCall = hookmetamethod(game, "__namecall", function(...)
+						local Args = {...}
+						local Self = Args[1]
+						local NamecallMethod = getnamecallmethod()
+					
+						if not checkcaller() and Self == textservice and NamecallMethod == "GetTextSize" and NickHider["Enabled"] and nickeduser ~= {} and nickeduser ~= nil then
+							Args[2] = Args[2]:gsub(lplr.Name, nickeduser["Username"])
+							Args[2] = Args[2]:gsub(lplr.DisplayName, nickeduser["DisplayName"])
+						end
+					
+						return OldNameCall(unpack(Args))
+					end)
+				end
+				nickedmodel = game:GetService('Players'):GetCharacterAppearanceAsync(nickeduser.Id)
+				newname = nickeduser["Username"]
+				newdisplayname = nickeduser["DisplayName"]
+				newid = nickeduser["Id"]
+				repeat wait() until nickedmodel ~= nil
+				if isAlive() then
+					dostuff()
+				end
+				for i,v in pairs(game:GetDescendants()) do
+					newobj(v)
+				end
+				nickhidercharadded = lplr.CharacterAdded:connect(dostuff)
+				nickhiderdescendantsadded = game.DescendantAdded:connect(newobj)
+			else
+				if nickhidercharadded then
+					nickhidercharadded:Disconnect()
+				end
+				if nickhiderdescendantsadded then
+					nickhiderdescendantsadded:Disconnect()
+				end
+				if nickeduser == {} or nickeduser == nil then
+					createwarning("NickHider", "No User or Invalid User Id", 4)
+				end
+				nickedmodel = game:GetService('Players'):GetCharacterAppearanceAsync(lplr.UserId)
+				repeat wait() until nickedmodel ~= nil
+				if isAlive() then
+					dostuff()
+				end
+				for i2,v2 in pairs(nickconnections) do
+					v2:Disconnect()
+				end
+				for i,v in pairs(game:GetDescendants()) do
+					newobj(v, true)
+				end
+			end
+		end,
+		["HoverText"] = "Disguises as the UserId in the text box (Client Side)"
+	})
+	NickHiderBox = NickHider.CreateTextBox({
+		["Name"] = "UserBox",
+		["TempText"] = "User (userid)",
+		["FocusLost"] = function()
+			local success, result = pcall(function()
+				return game:GetService("UserService"):GetUserInfosByUserIdsAsync({ tonumber(NickHiderBox["Value"]) })
+			end)
+			 
+			if success and #result > 0 then
+				nickeduser = result[1]
+				if NickHider["Enabled"] then
+					NickHider["ToggleButton"](false)
+					NickHider["ToggleButton"](true)
+				end
+			else
+				createwarning("NickHider", "Invalid User Id", 4)
+			end
+		end
+	})
+end)
