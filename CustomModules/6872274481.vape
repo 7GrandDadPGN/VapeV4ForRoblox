@@ -2998,6 +2998,7 @@ runcode(function()
 	})
 end)
 
+GuiLibrary["RemoveObject"]("NickHiderOptionsButton")
 runcode(function()
 	local NickHider = {["Enabled"] = false}
 	local NickHiderBox = {["Value"] = ""}
@@ -3170,7 +3171,7 @@ runcode(function()
 				end
 			end
 		end,
-		["HoverText"] = "Disguises as the UserId in the text box."
+		["HoverText"] = "Disguises as the UserId in the text box (Client Side)"
 	})
 	NickHiderBox = NickHider.CreateTextBox({
 		["Name"] = "UserBox",
