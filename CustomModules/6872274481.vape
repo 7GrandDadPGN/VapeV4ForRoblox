@@ -981,6 +981,7 @@ runcode(function()
 				BindToRenderStep("Phase", 1, function()
 					if isAlive() then
 						local pos = lplr.Character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
+						local pos2 = lplr.Character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks, workspace.SpectatorPlatform}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
@@ -990,7 +991,7 @@ runcode(function()
 							nocheck = false
 						end
 						if newray and phasedelay <= tick() then
-							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and lplr.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Landed then
+							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -6)) and lplr.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Landed then
 								phasedelay = tick() + 0.075
 								nocheck = true
 								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (newray.Normal * -2.5)
