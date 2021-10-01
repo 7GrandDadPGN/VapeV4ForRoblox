@@ -956,6 +956,7 @@ runcode(function()
 	local nocheck = false
 	local phaseconnection
 	local phasedelay = tick()
+	local phasedelay2 = tick()
 	local phase = {["Enabled"] = false}
 	local checktable = {}
 
@@ -990,9 +991,10 @@ runcode(function()
 							slowdownspeed = false
 							nocheck = false
 						end
-						if newray and phasedelay <= tick() then
+						if newray and phasedelay <= tick() and phasedelay2 <= tick() then
 							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -6)) and lplr.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Landed then
 								phasedelay = tick() + 0.075
+								phasedelay2 = tick() + 0.3
 								nocheck = true
 								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (newray.Normal * -2.5)
 							end
