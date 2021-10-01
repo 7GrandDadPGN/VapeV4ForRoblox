@@ -14,6 +14,19 @@ local bedwars = {}
 local getfunctions
 local origC0 = nil
 
+local RenderStepTable = {}
+local function BindToRenderStep(name, num, func)
+	if RenderStepTable[name] == nil then
+		RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
+	end
+end
+local function UnbindFromRenderStep(name)
+	if RenderStepTable[name] then
+		RenderStepTable[name]:Disconnect()
+		RenderStepTable[name] = nil
+	end
+end
+
 local function runcode(func)
 	func()
 end
@@ -72,13 +85,11 @@ GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
 GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
 GuiLibrary["RemoveObject"]("BlinkOptionsButton")
-GuiLibrary["RemoveObject"]("FlyOptionsButton")
 GuiLibrary["RemoveObject"]("PhaseOptionsButton")
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
-GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 GuiLibrary["RemoveObject"]("ArrowsOptionsButton")
 GuiLibrary["RemoveObject"]("HealthOptionsButton")
 GuiLibrary["RemoveObject"]("ESPOptionsButton")
@@ -87,6 +98,9 @@ GuiLibrary["RemoveObject"]("FullbrightOptionsButton")
 GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
 GuiLibrary["RemoveObject"]("SearchOptionsButton")
 GuiLibrary["RemoveObject"]("TracersOptionsButton")
+GuiLibrary["RemoveObject"]("XrayOptionsButton")
+GuiLibrary["RemoveObject"]("SpeedOptionsButton")
+GuiLibrary["RemoveObject"]("FlyOptionsButton")
 
 local Sprint = {["Enabled"] = false}
 Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
@@ -145,6 +159,125 @@ JoinQueueDelay = JoinQueue.CreateSlider({
 	["Max"] = 10,
 	["Function"] = function(val) end,
 	["Default"] = 1
+})
+
+local speed = {["Enabled"] = false}
+local speedval = {["Value"] = 1}
+local bodyvelo
+local Scaffold = {["Enabled"] = false}
+speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Speed",
+	["Function"] = function(callback)
+		if callback then
+			BindToRenderStep("Speed", 1, function(delta)
+				if isAlive() and matchState ~= 0 then
+					if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
+						bodyvelo = Instance.new("BodyVelocity")
+						bodyvelo.Parent = lplr.Character.HumanoidRootPart
+						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+					else
+						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1)) * (slowdownspeed and 0.6 or 1)
+					end
+					if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing then
+						bodyvelo.MaxForce = Vector3.new(0, 0, 0)
+					else
+						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+					end
+				end
+			end)
+		else
+			if bodyvelo then
+				bodyvelo:Remove()
+			end
+			UnbindFromRenderStep("Speed")
+		end
+	end, 
+	["HoverText"] = "Increases your movement."
+})
+speedval = speed.CreateSlider({
+	["Name"] = "Speed",
+	["Min"] = 1,
+	["Max"] = 30,
+	["Function"] = function(val) end,
+	["Default"] = 30
+})
+
+local flyspeed = {["Value"] = 1}
+local flyverticalspeed = {["Value"] = 1}
+local flyupanddown = {["Enabled"] = false}
+local flyposy = 0
+local flyup = false
+local flydown = false
+local flypress
+local flyendpress
+local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Fly", 
+	["Function"] = function(callback)
+		if callback then
+			if isAlive() then
+				flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+			end
+			flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
+				if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+					if input1.KeyCode == Enum.KeyCode.Space then
+						flyup = true
+					end
+					if input1.KeyCode == Enum.KeyCode.LeftShift then
+						flydown = true
+					end
+				end
+			end)
+			flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
+				if input1.KeyCode == Enum.KeyCode.Space then
+					flyup = false
+				end
+				if input1.KeyCode == Enum.KeyCode.LeftShift then
+					flydown = false
+				end
+			end)
+			BindToRenderStep("Fly", 1, function(delta) 
+				if isAlive() then
+						if (bodyvelofly ~= nil) then
+							bodyvelofly:Remove()
+						end
+						if flyup then
+							flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+						end
+						if flydown then
+							flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+						end
+						local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
+						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+				end
+			end)
+		else
+			flyup = false
+			flydown = false
+			flypress:Disconnect()
+			flyendpress:Disconnect()
+			UnbindFromRenderStep("Fly")
+		end
+	end,
+})
+flyspeed = fly.CreateSlider({
+	["Name"] = "Speed",
+	["Min"] = 1,
+	["Max"] = 40, 
+	["Function"] = function(val) end,
+	["Default"] = 40
+})
+flyverticalspeed = fly.CreateSlider({
+	["Name"] = "Vertical Speed",
+	["Min"] = 1,
+	["Max"] = 40, 
+	["Function"] = function(val) end,
+	["Default"] = 40
+})
+flyupanddown = fly.CreateToggle({
+	["Name"] = "Y Level", 
+	["Function"] = function() end,
+	["Default"] = true
 })
 
 GuiLibrary["RemoveObject"]("NickHiderOptionsButton")
