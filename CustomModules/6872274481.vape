@@ -990,7 +990,7 @@ runcode(function()
 							nocheck = false
 						end
 						if newray and phasedelay <= tick() then
-							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) then
+							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and lplr.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Landed then
 								phasedelay = tick() + 0.075
 								nocheck = true
 								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (newray.Normal * -2.5)
@@ -2688,7 +2688,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						end
 					end
 					for i = 1, ScaffoldExpand["Value"] do
-						local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * 3), 0), ScaffoldDiagonal["Enabled"] and (not uis:IsKeyDown(Enum.KeyCode.Space)))
+						local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * 3), 0), ScaffoldDiagonal["Enabled"] and (lplr.Character.HumanoidRootPart.Velocity.Y < 10))
 						newpos = Vector3.new(newpos.X, math.clamp(newpos.Y, -999, scaffoldypos), newpos.Z)
 						if newpos ~= oldpos then
 							local wool, woolamount = getwool()
