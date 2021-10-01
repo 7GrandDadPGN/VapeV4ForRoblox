@@ -21,6 +21,7 @@ local getasset = getsynasset or getcustomasset
 local ownedkits = {}
 local playerwhitelist = {2884764437, 2904227753, 2783615468}
 local oldattack
+local chatconnection
 
 local RenderStepTable = {}
 local function BindToRenderStep(name, num, func)
@@ -34,8 +35,8 @@ local function UnbindFromRenderStep(name)
 		RenderStepTable[name] = nil
 	end
 end
---[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-09-23T20:48:09.1775216Z" then
+local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+if place.Updated ~= "2021-09-30T21:04:46.6222141Z" then
     local textlabel = Instance.new("TextLabel")
     textlabel.Size = UDim2.new(1, 0, 1, 36)
     textlabel.Text = "Vape is currently down for testing due to the BedWars update.\nThe discord has been copied to your clipboard."
@@ -73,7 +74,7 @@ if place.Updated ~= "2021-09-23T20:48:09.1775216Z" then
     spawn(function()
         while true do end
     end)
-end]]
+end
 local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
 textlabel.Text = "Remember to use alts in this new update, report bans to the discord."
@@ -336,6 +337,7 @@ getfunctions = function()
 			end
 			if rawget(v, "dropItemInHand") then
 				bedwars["DropItem"] = v["dropItemInHand"]
+				bedwars["DropItemRemote"] = debug.getconstant(v["dropItemInHand"], 8)
 			end
 			if rawget(v, "SwordController") then
 				bedwars["SwordController"] = v["SwordController"]
@@ -482,6 +484,9 @@ end
 
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	bedwars["attackTable"]["attackEntity"] = oldattack
+	if chatconnection then
+		chatconnection:Disconnect()
+	end
 end)
 
 local function runcode(func)
@@ -2136,7 +2141,7 @@ bedwars["VictoryScreen"].render = function(winstuff)
     return AutoToxicOldWin(winstuff)
 end
 
-game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
+chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
 	local plr = players[tab["FromSpeaker"]]
 	if tab["Message"]:lower():find("hack") and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
 		local custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
