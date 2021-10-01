@@ -22,6 +22,7 @@ local ownedkits = {}
 local playerwhitelist = {2884764437, 2904227753, 2783615468}
 local oldattack
 local chatconnection
+local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 
 local RenderStepTable = {}
 local function BindToRenderStep(name, num, func)
@@ -598,12 +599,29 @@ local function switchToAndUseTool(block, legit)
 	end
 end
 
+local function isBlockCovered(pos)
+	local coveredsides = 0
+	for i, v in pairs(normalsides) do
+		local blockpos = (pos + (Vector3.FromNormalId(Enum.NormalId[v]) * 3))
+		local block = getblock(blockpos)
+		if block then
+			coveredsides = coveredsides + 1
+		end
+	end
+	return coveredsides == #normalsides
+end
+
 local function getlastblock(pos, normal)
 	local lastfound = nil
 	for i = 1, 20 do
-		local extrablock = getblock(pos + (Vector3.FromNormalId(normal) * (i * 3)))
-		if extrablock and extrablock.Parent ~= nil then
+		local blockpos = (pos + (Vector3.FromNormalId(normal) * (i * 3)))
+		local extrablock = getblock(blockpos)
+		local covered = isBlockCovered(blockpos)
+		if extrablock and extrablock.Parent ~= nil and (covered or covered == false and lastblock == nil) then
 			lastfound = extrablock
+			if covered == false then
+				break
+			end
 		else
 			break
 		end
@@ -1275,7 +1293,7 @@ runcode(function()
 	})
 	bednukerdigpos = BedNuker.CreateDropdown({
 		["Name"] = "Break Direction", 
-		["List"] = {"Top", "Left", "Right", "Front", "Back", "Bottom"},
+		["List"] = normalsides,
 		["Function"] = function(val) end
 	})
 	bednukerrange = BedNuker.CreateSlider({
