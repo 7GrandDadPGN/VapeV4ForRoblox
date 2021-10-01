@@ -930,6 +930,26 @@ local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 })
 GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("PhaseOptionsButton")
+
+local oldpos = Vector3.new(0, 0, 0)
+local oldpos2 = Vector3.new(0, 0, 0)
+local Spider = {["Enabled"] = false}
+
+local function getScaffold(vec, diagonaltoggle)
+	local realvec = Vector3.new(math.floor((vec.X / 3) + 0.5) * 3, math.floor((vec.Y / 3) + 0.5) * 3, math.floor((vec.Z / 3) + 0.5) * 3) 
+	local newpos = (oldpos - realvec)
+	local returedpos = realvec
+	if isAlive() then
+		local angle = math.deg(math.atan2(-lplr.Character.Humanoid.MoveDirection.X, -lplr.Character.Humanoid.MoveDirection.Z))
+		local goingdiagonal = (angle >= 130 and angle <= 150) or (angle <= -35 and angle >= -50) or (angle >= 35 and angle <= 50) or (angle <= -130 and angle >= -150)
+		if goingdiagonal and ((newpos.X == 0 and newpos.Z ~= 0) or (newpos.X ~= 0 and newpos.Z == 0)) and diagonaltoggle then
+			return oldpos
+		end
+	end
+    return realvec
+end
+
+
 local slowdownspeed = false
 local speed = {["Enabled"] = false}
 runcode(function()
@@ -937,10 +957,20 @@ runcode(function()
 	local phaseconnection
 	local phasedelay = tick()
 	local phase = {["Enabled"] = false}
+	local checktable = {}
+
+	for i,v in pairs(workspace:GetChildren()) do
+		if v:IsA("Folder") and v.Name:find("Map") == nil then
+			table.insert(checktable, v)
+		end
+	end
 
 	local function isPointInMapOccupied(p)
 		local region = Region3.new(p - Vector3.new(1, 1, 1), p + Vector3.new(1, 1, 1))
-		local possible = workspace:FindPartsInRegion3WithWhiteList(region, {workspace.Map.Blocks})
+		local possible = workspace:FindPartsInRegion3WithIgnoreList(region, {lplr.Character, unpack(checktable)})
+	--	for i,v in pairs(possible) do
+	--		print(v:GetFullName())
+	--	end
 		return (#possible == 0)
 	end
 
@@ -952,7 +982,7 @@ runcode(function()
 					if isAlive() then
 						local pos = lplr.Character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
 						local raycastparameters = RaycastParams.new()
-						raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks}
+						raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks, workspace.SpectatorPlatform}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
 						local newray = workspace:Raycast(pos, lplr.Character.Humanoid.MoveDirection, raycastparameters)
 						if phasedelay <= tick() then
@@ -960,7 +990,7 @@ runcode(function()
 							nocheck = false
 						end
 						if newray and phasedelay <= tick() then
-							if isPointInMapOccupied(newray.Instance.Position + (newray.Normal * -3)) then
+							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) then
 								phasedelay = tick() + 0.075
 								nocheck = true
 								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (newray.Normal * -2.5)
@@ -977,6 +1007,10 @@ runcode(function()
 						end
 					end
 				end)
+				if Spider["Enabled"] then
+					phase["ToggleButton"](false)
+					createwarning("Phase", "Disable Spider to use this feature", 4)
+				end
 			else
 				UnbindFromRenderStep("Phase")
 				if phaseconnection then
@@ -1157,24 +1191,6 @@ runcode(function()
 		["Default"] = true
 	})
 end)
-
-local oldpos = Vector3.new(0, 0, 0)
-local oldpos2 = Vector3.new(0, 0, 0)
-
-local function getScaffold(vec, diagonaltoggle)
-	local realvec = Vector3.new(math.floor((vec.X / 3) + 0.5) * 3, math.floor((vec.Y / 3) + 0.5) * 3, math.floor((vec.Z / 3) + 0.5) * 3) 
-	local newpos = (oldpos - realvec)
-	local returedpos = realvec
-	if isAlive() then
-		local angle = math.deg(math.atan2(-lplr.Character.Humanoid.MoveDirection.X, -lplr.Character.Humanoid.MoveDirection.Z))
-		local goingdiagonal = (angle >= 130 and angle <= 150) or (angle <= -35 and angle >= -50) or (angle >= 35 and angle <= 50) or (angle <= -130 and angle >= -150)
-		print(angle)
-		if goingdiagonal and ((newpos.X == 0 and newpos.Z ~= 0) or (newpos.X ~= 0 and newpos.Z == 0)) and diagonaltoggle then
-			return oldpos
-		end
-	end
-    return realvec
-end
 
 local function scaffoldBlock(newpos)
     bedwars["placeBlock"](newpos)
@@ -1669,7 +1685,7 @@ end
 runcode(function()
 	local spiderconnection
 	local cando = true
-	local Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Spider",
 		["Function"] = function(callback)
 			if callback then
