@@ -23,6 +23,7 @@ local playerwhitelist = {2884764437, 2904227753, 2783615468}
 local oldattack
 local chatconnection
 local normalsides = {"Top", "Left", "Right", "Front", "Back"}
+local blocks = {}
 
 local RenderStepTable = {}
 local function BindToRenderStep(name, num, func)
@@ -423,9 +424,10 @@ getfunctions = function()
 			scaffoldypos = 9999999999
 		end
 		local blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
-		bedwars["placeBlock"] = function(newpos)
-			blocktable.blockType = getwool()
-			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(getwool()) then
+		bedwars["placeBlock"] = function(newpos, customblock)
+			local placeblocktype = (customblock or getwool())
+			blocktable.blockType = placeblocktype
+			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, placeblocktype, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(placeblocktype) then
 				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
@@ -680,7 +682,7 @@ local function getEquipped()
 		if obj.Name:find("sword") or obj.Name:find("blade") or obj.Name:find("baguette") then
 			type = "sword"
 		end
-		if obj.Name:find("wool") then
+		if obj.Name:find("wool") or bedwars["ItemTable"][obj.Name]["block"] then
 			type = "block"
 		end
 		if obj.Name:find("bow") then
@@ -1213,8 +1215,8 @@ runcode(function()
 	})
 end)
 
-local function scaffoldBlock(newpos)
-    bedwars["placeBlock"](newpos)
+local function scaffoldBlock(newpos, customblock)
+    bedwars["placeBlock"](newpos, customblock)
 end
 
 runcode(function()
@@ -2700,7 +2702,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 					else
 						scaffoldstopmotionval = false
 					end
-					if getwool() then
+					if getwool() or getEquipped()["Type"] == "block" then
 						if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil and lplr.Character.HumanoidRootPart.CFrame.p.Y < scaffoldypos then
 							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
 							if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
@@ -2713,6 +2715,9 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						newpos = Vector3.new(newpos.X, math.clamp(newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 3 or 0), -999, scaffoldypos), newpos.Z)
 						if newpos ~= oldpos then
 							local wool, woolamount = getwool()
+							if getEquipped()["Type"] == "block" then
+								woolamount = getItem(getEquipped()["Object"].Name)["amount"]
+							end
 							scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
 							if woolamount then
 								if woolamount >= 128 then
@@ -2736,9 +2741,9 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 									end
 								end)
 							end
-							if getwool() then
+							if getwool() or getEquipped()["Type"] == "block" then
 								lplr.Character.HumanoidRootPart.Anchored = false
-								scaffoldBlock(newpos)
+								scaffoldBlock(newpos, (getEquipped()["Type"] == "block" and getEquipped()["Object"].Name))
 								oldpos = newpos
 							end
 						end
