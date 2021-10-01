@@ -950,7 +950,7 @@ runcode(function()
 			if callback then
 				BindToRenderStep("Phase", 1, function()
 					if isAlive() then
-						local pos = lplr.Character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
+						local pos = lplr.Character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
