@@ -107,7 +107,7 @@ GuiLibrary["RemoveObject"]("XrayOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 
-local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+--[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
 if place.Updated ~= "2021-10-01T22:56:55.1849388Z" then
     local textlabel = Instance.new("TextLabel")
     textlabel.Size = UDim2.new(1, 0, 1, 36)
@@ -147,7 +147,7 @@ if place.Updated ~= "2021-10-01T22:56:55.1849388Z" then
     spawn(function()
         while true do end
     end)
-end
+end]]
 
 local Sprint = {["Enabled"] = false}
 Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
