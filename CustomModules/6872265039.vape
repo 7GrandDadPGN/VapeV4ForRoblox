@@ -46,6 +46,11 @@ local function createwarning(title, text, delay)
 	end)
 end
 
+for i4,v4 in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
+	if (v4.Name:find("Analytics") or v4.Name:find("Report")) and (v4:IsA("RemoteFunction") or v4:IsA("RemoteEvent")) then
+		v4:Remove()
+	end
+end
 
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
