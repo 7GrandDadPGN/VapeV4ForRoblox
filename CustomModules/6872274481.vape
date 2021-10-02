@@ -810,11 +810,6 @@ runcode(function()
 		["Function"] = function(val) end,
 		["Default"] = 50
 	})
-	AimAssistWallCheck = AimAssist.CreateToggle({
-		["Name"] = "Wall Check",
-		["Function"] = function() end,
-		["Default"] = true
-	})
 end)
 
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
