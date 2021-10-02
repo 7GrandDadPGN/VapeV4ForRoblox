@@ -2552,6 +2552,7 @@ local flytime = 60
 local flylimit = false
 local flyup = false
 local flydown = false
+local tnttimer = 0
 local flypress
 local flyendpress
 
@@ -2578,6 +2579,23 @@ bedwars["ClientHandler"]:WaitFor("BalloonPopped"):andThen(function(p6)
 	end)
 end)
 
+bedwars["ClientHandler"]:WaitFor("TNT_Explode"):andThen(function(p6)
+	p6:Connect(function(p7)
+		if isAlive() and (lplr.Character.HumanoidRootPart.Position - p7.position).magnitude < 20 and fly["Enabled"] then
+			spawn(function()
+				if tnttimer <= 0 then
+					tnttimer = 4
+					GuiLibrary["CreateNotification"]("TNT Fly", "You can fly for 4 seconds", 4, "vape/assets/InfoNotification.png")
+					for i = 4, 0, -1 do
+						wait(1)
+						tnttimer = i
+					end
+				end
+			end)
+		end
+	end)
+end)
+
 fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Fly",
 	["Function"] = function(callback)
@@ -2588,7 +2606,9 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 				spawn(function()
 					flyposy = lplr.Character.HumanoidRootPart.Position.Y
 					repeat wait() flyposy = lplr.Character.HumanoidRootPart.Position.Y until flyposy == lplr.Character.HumanoidRootPart.Position.Y
-					buyballoons()
+					if tnttimer <= 0 then
+						buyballoons()
+					end
 				end)
 			end
 			flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
@@ -2609,20 +2629,21 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 					flydown = false
 				end
 			end)
+			if isAlive() then
+				flyposy = lplr.Character.HumanoidRootPart.Position.Y
+			end
 			BindToRenderStep("Fly", 1, function(delta) 
 				if isAlive() and matchState ~= 0 then
-					if (lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) then
 						if flyup then
-							flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+							flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 						end
 						if flydown then
-							flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+							flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 						end
-						local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
+						local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 						lplr.Character.HumanoidRootPart.Transparency = 1
 						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-					end
 				end
 			end)
 		else
@@ -2640,7 +2661,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 			olddeflate = nil
 		end
 	end,
-	["HoverText"] = "Makes you go zoom (Balloons Required) (Will Buy Balloons)"
+	["HoverText"] = "Makes you go zoom (Balloons or TNT Required) (Will Buy Balloons)"
 })
 flyspeed = fly.CreateSlider({
 	["Name"] = "Speed",
