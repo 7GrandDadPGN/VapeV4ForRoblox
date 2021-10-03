@@ -1006,6 +1006,7 @@ runcode(function()
 						local pos = lplr.Character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
 						local pos2 = lplr.Character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
 						local pos3 = lplr.Character.Head.CFrame.p
+						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks, workspace.SpectatorPlatform}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
@@ -1014,7 +1015,7 @@ runcode(function()
 							slowdownspeed = false
 							nocheck = false
 						end
-						if newray and phasedelay <= tick() and phasedelay2 <= tick() then
+						if newray and phasedelay <= tick() and phasedelay2 <= tick() and (not bird) then
 						--	print((newray.Instance.Position.Y - lplr.Character.HumanoidRootPart.CFrame.p.Y))
 							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -6)) then
 								phasedelay = tick() + 0.075
