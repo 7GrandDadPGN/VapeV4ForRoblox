@@ -1343,6 +1343,8 @@ runcode(function()
 	local tar = nil
 	local hook
 	local aimbotping
+	local velodelay = tick()
+	local velooldpos = Vector3.new(0, 0, 0)
 	local projtable = {
 		["arrow"] = true,
 		["crossbow_arrow"] = true,
@@ -1408,8 +1410,15 @@ runcode(function()
 								multi = multi + 0.002
 							end
 							local velocalc = (multi / 6) + (0.01 / aimbotping)
-							local lookvec = (plr.Character.HumanoidRootPart.Velocity.X == 0 and Vector3.new(0, 0, 0) or Vector3.new(plr.Character.HumanoidRootPart.CFrame.lookVector.X * plr.Character.Humanoid.WalkSpeed, plr.Character.Humanoid.Jump and 3 or 0, plr.Character.HumanoidRootPart.CFrame.lookVector.Y * plr.Character.Humanoid.WalkSpeed))
-							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (lookvec * ((realLaunchPosition - tar.Position).magnitude * velocalc))
+							local velocalc2 = Vector3.new(0, 0, 0)
+							if velodelay <= tick() then
+								velodelay = tick() + 0.05
+								velooldpos = Vector3.new(tar.Position.X, 0, tar.Position.Z)
+							end
+							if plr.Character.HumanoidRootPart.Velocity ~= Vector3.new(0, 0, 0) then
+								velocalc2 = (Vector3.new(tar.Position.X, 0, tar.Position.Z) - velooldpos) * 20
+							end
+							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (velocalc2 * ((realLaunchPosition - tar.Position).magnitude * velocalc))
 							local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
 							return {
 								initialVelocity = (realLaunchPosition + (v65.Unit.Direction).Unit * ((Vector3.new(0, 0, 0) - realLaunchPosition).Magnitude) - realLaunchPosition).Unit * (v60 * projmeta.velocityMultiplier), 
@@ -1778,7 +1787,12 @@ runcode(function()
 						end
 					end)
 				else
-					autoheal["ToggleButton"](false)
+					spawn(function()
+						repeat wait() until matchState ~= 0
+						if kit ~= "baker" and autoheal["Enabled"] then
+							autoheal["ToggleButton"](false)
+						end
+					end)
 				end
 			else
 				if autohealbound then
@@ -2761,6 +2775,7 @@ flybuyballoon = fly.CreateToggle({
 	["Default"] = true
 })
 
+
 local scaffoldtext = Instance.new("TextLabel")
 scaffoldtext.Font = Enum.Font.SourceSans
 scaffoldtext.TextSize = 20
@@ -2774,6 +2789,7 @@ scaffoldtext.Parent = GuiLibrary["MainGui"]
 local ScaffoldExpand = {["Value"] = 1}
 local ScaffoldDiagonal = {["Enabled"] = false}
 local ScaffoldTower = {["Enabled"] = false}
+local ScaffoldDownwards = {["Enabled"] = false}
 local ScaffoldStopMotion = {["Enabled"] = false}
 local ScaffoldBlockCount = {["Enabled"] = false}
 local ScaffoldHandCheck = {["Enabled"] = false}
@@ -2807,7 +2823,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						end
 					end
 					for i = 1, ScaffoldExpand["Value"] do
-						local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and 4 or 3)), 0), ScaffoldDiagonal["Enabled"] and (lplr.Character.HumanoidRootPart.Velocity.Y < 2))
+						local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 4 or 3)), 0), ScaffoldDiagonal["Enabled"] and (lplr.Character.HumanoidRootPart.Velocity.Y < 2))
 						newpos = Vector3.new(newpos.X, math.clamp(newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 3 or 0), -999, scaffoldypos), newpos.Z)
 						if newpos ~= oldpos then
 							local wool, woolamount = getwool()
@@ -2879,6 +2895,10 @@ ScaffoldTower = Scaffold.CreateToggle({
 			ScaffoldStopMotion["Object"].Visible = callback
 		end
 	end
+})
+ScaffoldDownwards  = Scaffold.CreateToggle({
+	["Name"] = "Downwards", 
+	["Function"] = function(callback) end
 })
 ScaffoldStopMotion = Scaffold.CreateToggle({
 	["Name"] = "Stop Motion",
