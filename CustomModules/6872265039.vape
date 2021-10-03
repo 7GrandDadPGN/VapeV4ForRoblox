@@ -244,9 +244,9 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 speedval = speed.CreateSlider({
 	["Name"] = "Speed",
 	["Min"] = 1,
-	["Max"] = 30,
+	["Max"] = 28,
 	["Function"] = function(val) end,
-	["Default"] = 30
+	["Default"] = 28
 })
 
 local flyspeed = {["Value"] = 1}

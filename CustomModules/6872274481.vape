@@ -2495,7 +2495,7 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 	["Name"] = "Speed",
 	["Function"] = function(callback)
 		if callback then
-			if fly["Enabled"] then
+			if GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] then
 				createwarning("Speed Stopped", "Disable fly to move.", 4)
 			end
 			BindToRenderStep("Speed", 1, function(delta)
@@ -2508,7 +2508,7 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 					else
 						if bird then
-							lplr.Character.Humanoid.WalkSpeed = (65 * (speedval["Value"] / 30))
+							lplr.Character.Humanoid.WalkSpeed = (65 * (speedval["Value"] / 28)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1)
 						end
 						bodyvelo.MaxForce = (bird and Vector3.new(0, 0, 0) or Vector3.new(100000, 0, 100000))
 						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1)) * (slowdownspeed and 0.6 or 1)
@@ -2537,9 +2537,9 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 speedval = speed.CreateSlider({
 	["Name"] = "Speed",
 	["Min"] = 1,
-	["Max"] = 30,
+	["Max"] = 28,
 	["Function"] = function(val) end,
-	["Default"] = 30
+	["Default"] = 28
 })
 speedjump = speed.CreateToggle({
 	["Name"] = "AutoJump", 
@@ -2743,7 +2743,7 @@ Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						end
 					end
 					for i = 1, ScaffoldExpand["Value"] do
-						local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * 3), 0), ScaffoldDiagonal["Enabled"] and (lplr.Character.HumanoidRootPart.Velocity.Y < 2))
+						local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and 4 or 3)), 0), ScaffoldDiagonal["Enabled"] and (lplr.Character.HumanoidRootPart.Velocity.Y < 2))
 						newpos = Vector3.new(newpos.X, math.clamp(newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 3 or 0), -999, scaffoldypos), newpos.Z)
 						if newpos ~= oldpos then
 							local wool, woolamount = getwool()
@@ -3324,14 +3324,13 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback and nickeduser ~= {} and nickeduser ~= nil and NickHiderBox["Value"] ~= "" then
 				if not OldNameCall then
-					OldNameCall = hookmetamethod(game, "__namecall", function(...)
+					OldNameCall = hookmetamethod(game, "__namecall", function(Self, ...)
 						local Args = {...}
-						local Self = Args[1]
 						local NamecallMethod = getnamecallmethod()
 					
-						if not checkcaller() and Self == textservice and NamecallMethod == "GetTextSize" and NickHider["Enabled"] and nickeduser ~= {} and nickeduser ~= nil then
-							Args[2] = Args[2]:gsub(lplr.Name, nickeduser["Username"])
-							Args[2] = Args[2]:gsub(lplr.DisplayName, nickeduser["DisplayName"])
+						if not checkcaller() and Self == textservice and NamecallMethod == "GetTextSize" and NickHider["Enabled"] and nickeduser ~= {} and nickeduser ~= nil and #args > 0 then
+							Args[1] = Args[1]:gsub(lplr.Name, nickeduser["Username"])
+							Args[1] = Args[1]:gsub(lplr.DisplayName, nickeduser["DisplayName"])
 						end
 					
 						return OldNameCall(unpack(Args))
