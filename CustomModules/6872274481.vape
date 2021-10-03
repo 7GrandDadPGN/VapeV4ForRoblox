@@ -2507,7 +2507,7 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 					else
 						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 						if bird then
-							lplr.Character.Humanoid.WalkSpeed = 60
+							lplr.Character.Humanoid.WalkSpeed = (70 * (speedval["Value"] / 30))
 						end
 						bodyvelo.MaxForce = (bird and Vector3.new(0, 0, 0) or Vector3.new(100000, 0, 100000))
 						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1)) * (slowdownspeed and 0.6 or 1)
@@ -2648,7 +2648,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 					if flydown then
 						flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 					end
-					local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (bird and 1.5 or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
+					local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (bird and (1.75 * (flyspeed["Value"] / 40)) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 					lplr.Character.HumanoidRootPart.Transparency = 1
 					lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
