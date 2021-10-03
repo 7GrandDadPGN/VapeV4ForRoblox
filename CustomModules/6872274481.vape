@@ -1209,7 +1209,7 @@ runcode(function()
 				end
 			end
 		end, 
-		["HoverText"] = "Gives you a chance to get on land (Not Perfect)"
+		["HoverText"] = "Gives you a chance to get on land (Bouncing Twice, abusing, or bad luck will lead to lagbacks)"
 	})
 	antivoidmethod = AntiVoid.CreateDropdown({
 		["Name"] = "Mode",
