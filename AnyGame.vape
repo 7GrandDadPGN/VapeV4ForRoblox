@@ -1543,6 +1543,7 @@ runcode(function()
 	})
 end)
 
+local SearchTextList = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local searchColor = {["Value"] = 0.44}
 local searchModule = {["Enabled"] = false}
 local searchFolder = Instance.new("Folder")
@@ -1562,41 +1563,60 @@ local searchRefresh = function()
 	searchFolder:ClearAllChildren()
 	if searchModule["Enabled"] then
 		for i,v in pairs(workspace:GetDescendants()) do
-			if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
+			if (v:IsA("BasePart") or v:IsA("Model")) and table.find(SearchTextList["ObjectList"], v.Name) and searchFindBoxHandle(v) == nil then
+				local oldparent = v.Parent
 				local boxhandle = Instance.new("BoxHandleAdornment")
 				boxhandle.Name = v.Name
 				boxhandle.AlwaysOnTop = true
 				boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
 				boxhandle.Adornee = v
 				boxhandle.ZIndex = 10
-				boxhandle.Size = v.Size
+				local modelpos, modelsize
+				spawn(function()
+					repeat
+						wait(0.2)
+						if v.ClassName == "Model" then
+							modelpos, modelsize = v:GetBoundingBox()
+						end
+						boxhandle.Size = (v.ClassName == "Model" and modelsize or v.Size)
+					until boxhandle == nil or v.Parent ~= oldparent
+				end)
 				boxhandle.Transparency = 0.5
 				boxhandle.Parent = searchFolder
 			end
 		end
 	end
 end
-local searchTextList = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Search", 
 	["Function"] = function(callback) 
 		if callback then
 			searchRefresh()
 			searchAdd = workspace.DescendantAdded:connect(function(v)
-				if v:IsA("BasePart") and table.find(GuiLibrary["Settings"]["SearchObject"]["List"], v.Name) and searchFindBoxHandle(v) == nil then
+				if (v:IsA("BasePart") or v:IsA("Model")) and table.find(SearchTextList["ObjectList"], v.Name) and searchFindBoxHandle(v) == nil then
+					local oldparent = v.Parent
 					local boxhandle = Instance.new("BoxHandleAdornment")
 					boxhandle.Name = v.Name
 					boxhandle.AlwaysOnTop = true
 					boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
 					boxhandle.Adornee = v
 					boxhandle.ZIndex = 10
-					boxhandle.Size = v.Size
+					local modelpos, modelsize
+					spawn(function()
+						repeat
+							wait(0.2)
+							if v.ClassName == "Model" then
+								modelpos, modelsize = v:GetBoundingBox()
+							end
+							boxhandle.Size = (v.ClassName == "Model" and modelsize or v.Size)
+						until boxhandle == nil or v.Parent ~= oldparent
+					end)
 					boxhandle.Transparency = 0.5
 					boxhandle.Parent = searchFolder
 				end
 			end)
 			searchRemove = workspace.DescendantRemoving:connect(function(v)
-				if v:IsA("BasePart") then
+				if v:IsA("BasePart") or v:IsA("Model") then
 					local boxhandle = searchFindBoxHandle(v)
 					if boxhandle then
 						boxhandle:Remove()
@@ -1624,13 +1644,9 @@ SearchTextList = searchModule.CreateTextList({
 	["Name"] = "SearchList",
 	["TempText"] = "part name", 
 	["AddFunction"] = function(user)
-		table.insert(GuiLibrary["Settings"]["SearchObject"]["List"], user)
-		SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
 		searchRefresh()
 	end, 
-		["RemoveFunction"] = function(num) 
-		table.remove(GuiLibrary["Settings"]["SearchObject"]["List"], num) 
-		SearchTextList["RefreshValues"](GuiLibrary["Settings"]["SearchObject"]["List"])
+	["RemoveFunction"] = function(num) 
 		searchRefresh()
 	end
 })

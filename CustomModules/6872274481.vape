@@ -1005,16 +1005,18 @@ runcode(function()
 					if isAlive() then
 						local pos = lplr.Character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
 						local pos2 = lplr.Character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
+						local pos3 = lplr.Character.Head.CFrame.p
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks, workspace.SpectatorPlatform}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-						local newray = workspace:Raycast(pos, lplr.Character.Humanoid.MoveDirection, raycastparameters)
+						local newray = workspace:Raycast(pos3, lplr.Character.Humanoid.MoveDirection, raycastparameters)
 						if phasedelay <= tick() then
 							slowdownspeed = false
 							nocheck = false
 						end
 						if newray and phasedelay <= tick() and phasedelay2 <= tick() then
-							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -6)) and lplr.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Landed then
+						--	print((newray.Instance.Position.Y - lplr.Character.HumanoidRootPart.CFrame.p.Y))
+							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -6)) then
 								phasedelay = tick() + 0.075
 								phasedelay2 = tick() + 0.3
 								nocheck = true
@@ -2503,6 +2505,11 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 						bodyvelo.Parent = lplr.Character.HumanoidRootPart
 						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 					else
+						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
+						if bird then
+							lplr.Character.Humanoid.WalkSpeed = 60
+						end
+						bodyvelo.MaxForce = (bird and Vector3.new(0, 0, 0) or Vector3.new(100000, 0, 100000))
 						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1)) * (slowdownspeed and 0.6 or 1)
 					end
 					if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing then
@@ -2585,7 +2592,7 @@ bedwars["ClientHandler"]:WaitFor("TNT_Explode"):andThen(function(p6)
 			spawn(function()
 				if tnttimer <= 0 then
 					tnttimer = 4
-					GuiLibrary["CreateNotification"]("TNT Fly", "You can fly for 4 seconds", 4, "vape/assets/InfoNotification.png")
+					createwarning("TNT Fly", "You can fly for 4 seconds", 4)
 					for i = 4, 0, -1 do
 						wait(1)
 						tnttimer = i
@@ -2634,16 +2641,17 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 			end
 			BindToRenderStep("Fly", 1, function(delta) 
 				if isAlive() and matchState ~= 0 then
-						if flyup then
-							flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
-						end
-						if flydown then
-							flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
-						end
-						local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
-						lplr.Character.HumanoidRootPart.Transparency = 1
-						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+					local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
+					if flyup then
+						flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
+					end
+					if flydown then
+						flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
+					end
+					local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (bird and 1.5 or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
+					lplr.Character.HumanoidRootPart.Transparency = 1
+					lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 				end
 			end)
 		else
@@ -3440,4 +3448,27 @@ runcode(function()
 		SwitchKitDropdown["UpdateList"](ownedkits)
 		SwitchKitDropdown["Value"] = ownedkits[1]
 	end)
+end)
+
+runcode(function()
+	local RemoveHonk = {["Enabled"] = false}
+	local oldsound2
+	RemoveHonk = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "RemoveHonk",
+		["Function"] = function(callback)
+			if callback then
+				oldsound2 = bedwars["SoundManager"]["playSound"]
+				bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
+					if (soundid == 110 or soundid == 111 or soundid == 112 or soundid == 113 or soundid == 114) then
+						return nil
+					end
+					return oldsound2(tab, soundid, ...)
+				end
+			else
+				bedwars["SoundManager"]["playSound"] = oldsound2
+				oldsound2 = nil
+			end
+		end, 
+		["HoverText"] = "Removes Honking noise from Dodo Bird"
+	})
 end)
