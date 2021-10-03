@@ -2501,12 +2501,12 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 			BindToRenderStep("Speed", 1, function(delta)
 				if isAlive() and matchState ~= 0 then
 					local jumpcheck = speedjump["Enabled"] and killauranear and (not Scaffold["Enabled"])
+					local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 					if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
 						bodyvelo = Instance.new("BodyVelocity")
 						bodyvelo.Parent = lplr.Character.HumanoidRootPart
 						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 					else
-						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 						if bird then
 							lplr.Character.Humanoid.WalkSpeed = (65 * (speedval["Value"] / 30))
 						end
@@ -2518,7 +2518,7 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 					else
 						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 					end
-					if jumpcheck then
+					if jumpcheck and (not bird) then
 						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
 						end
