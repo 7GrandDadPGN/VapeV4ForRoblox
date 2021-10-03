@@ -8,7 +8,7 @@ local function GetURL(scripturl)
 	end
 end
 local getasset = getsynasset or getcustomasset
-if getasset == nil then
+if getasset == nil and getgenv().getcustomasset == nil then
 	getgenv().getcustomasset = function(location) return "rbxasset://"..location end
 	getasset = getgenv().getcustomasset
 end

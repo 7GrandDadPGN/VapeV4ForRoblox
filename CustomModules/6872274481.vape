@@ -340,6 +340,9 @@ getfunctions = function()
 				local remotetab = debug.getconstants(v["performHeal"])
 				bedwars["GuitarRemote"] = ""
 			end
+			if rawget(v, "ConsumeController") then
+				bedwars["EatRemote"] = debug.getconstant(debug.getproto(getmetatable(v["ConsumeController"])["onEnable"], 1), 5)
+			end
 			if rawget(v, "checkForPickup") then
 				local remotetab = debug.getconstants(v["checkForPickup"])
 				bedwars["PickupRemote"] = remotetab[#remotetab - 5]
@@ -1741,6 +1744,67 @@ runcode(function()
 		["Function"] = function() end, 
 	})
 end)
+
+runcode(function()
+	local autoheal = {["Enabled"] = false}
+	local autobuyapple = {["Enabled"] = false}
+	local autohealval = {["Value"] = 100}
+	local autohealdelay = tick()
+	local autohealbound = false
+	autoheal = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoEat",
+		["Function"] = function(callback)
+			if callback then
+				if kit == "baker" then
+					autohealbound = true
+					BindToRenderStep("AutoHeal", 1, function()
+						if isAlive() and lplr.Character.Humanoid.Health <= autohealval["Value"] and autohealdelay <= tick() then
+							autohealdelay = tick() + 0.5
+							if getItem("apple") then
+								bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServer({
+									["item"] = getItem("apple")["tool"]
+								})
+							elseif autobuyapple["Enabled"] then
+								bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+									shopItem = bedwars["Shop"].getShopItem("apple")
+								}):andThen(function(suc)
+									if suc then
+										bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServer({
+											["item"] = getItem("apple")["tool"]
+										})
+									end
+								end)
+							end
+						end
+					end)
+				else
+					autoheal["ToggleButton"](false)
+				end
+			else
+				if autohealbound then
+					autohealbound = false
+					UnbindFromRenderStep("AutoHeal")
+				end
+				if kit ~= "baker" then
+					createwarning("AutoHeal", "Baker Kit Required", 4)
+				end
+			end
+		end,
+		["HoverText"] = "Automatically heals you (Baker Only)"
+	})
+	autobuyapple = autoheal.CreateToggle({
+		["Name"] = "Buy Apples",
+		["Function"] = function() end
+	})
+	autohealval = autoheal.CreateSlider({
+		["Name"] = "Health",
+		["Min"] = 1,
+		["Max"] = 99,
+		["Default"] = 70,
+		["Function"] = function() end
+	})
+end)
+
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 runcode(function()
