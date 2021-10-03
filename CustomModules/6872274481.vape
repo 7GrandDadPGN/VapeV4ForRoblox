@@ -446,9 +446,13 @@ getfunctions = function()
 			repeat wait() until matchState ~= 0
 			if workspace.MapCFrames:FindFirstChild("1_spawn") then
 				local specialpos = (workspace.MapCFrames:FindFirstChild("center") and workspace.MapCFrames.center.Value.p == Vector3.new(77, 11, 35))
+				local specialpos2 = (workspace.MapCFrames:FindFirstChild("center") and workspace.MapCFrames.center.Value.p == Vector3.new(64, 3, 78))
 				antivoidypos = workspace.MapCFrames["1_spawn"].Value.p.Y * 3
 				if specialpos then
 					antivoidypos = 40
+				end
+				if specialpos2 then
+					antivoidypos = 26
 				end
 			end
 			scanforbeds()
@@ -1822,7 +1826,6 @@ end)
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 runcode(function()
-	local HighJumpMethod = {["Value"] = "Toggle"}
 	local HighJumpBoost = {["Value"] = 1}
 	local HighJumpDelay = {["Value"] = 20}
 	local HighJumpTick = tick()
@@ -1832,36 +1835,18 @@ runcode(function()
 		["Name"] = "HighJump",
 		["Function"] = function(callback)
 			if callback then
-				highjumpbound = false
-				if HighJumpMethod["Value"] == "Toggle" then
-					if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
-						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-					else
-						createwarning("LongJump", "Wait "..math.round(HighJumpTick - tick()).." before retoggling.", 1)
-					end
-					HighJump["ToggleButton"](false)
+				if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
+					HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
+					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 				else
-					highjumpbound = true
-					BindToRenderStep("HighJump", 1, function()
-						if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and uis:IsKeyDown(Enum.KeyCode.Space) then
-							HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-						end
-					end)
+					createwarning("LongJump", "Wait "..(math.floor((HighJumpTick - tick()) * 10) / 10).." before retoggling.", 1)
 				end
+				HighJump["ToggleButton"](false)
 			else
-				if highjumpbound then
-					UnbindFromRenderStep("HighJump")
-				end
+
 			end
 		end, 
-		["HoverText"] = "Lets you jump higher"
-	})
-	HighJumpMethod = HighJump.CreateDropdown({
-		["Name"] = "Mode", 
-		["List"] = {"Toggle", "Normal"},
-		["Function"] = function(val) end
+		["HoverText"] = "Lets you jump higher (Spamming has a chance to lagback)"
 	})
 	HighJumpBoost = HighJump.CreateSlider({
 		["Name"] = "Boost",
