@@ -3388,13 +3388,13 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback and nickeduser ~= {} and nickeduser ~= nil and NickHiderBox["Value"] ~= "" then
 				if not OldNameCall then
-					OldNameCall = hookmetamethod(game, "__namecall", function(Self, ...)
+					OldNameCall = hookmetamethod(game, "__namecall", function(...)
 						local Args = {...}
 						local NamecallMethod = getnamecallmethod()
 					
-						if not checkcaller() and Self == textservice and NamecallMethod == "GetTextSize" and NickHider["Enabled"] and nickeduser ~= {} and nickeduser ~= nil and #args > 0 then
-							Args[1] = Args[1]:gsub(lplr.Name, nickeduser["Username"])
-							Args[1] = Args[1]:gsub(lplr.DisplayName, nickeduser["DisplayName"])
+						if not checkcaller() and #Args >= 2 and Args[1] == textservice and NamecallMethod == "GetTextSize" and NickHider["Enabled"] and nickeduser ~= {} and nickeduser ~= nil then
+							Args[2] = Args[2]:gsub(lplr.Name, nickeduser["Username"])
+							Args[2] = Args[2]:gsub(lplr.DisplayName, nickeduser["DisplayName"])
 						end
 					
 						return OldNameCall(unpack(Args))
