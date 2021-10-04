@@ -774,7 +774,7 @@ local function GetNearestBedToMouse(player, distance, checkvis)
             end
         end
     end
-    return returnedplayer
+    return returnedplayer, closest
 end
 
 local function GetNearestHumanoidToMouse(player, distance, checkvis)
@@ -793,7 +793,7 @@ local function GetNearestHumanoidToMouse(player, distance, checkvis)
             end
         end
     end
-    return returnedplayer
+    return returnedplayer, closest
 end
 
 GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
@@ -1080,6 +1080,7 @@ end)
 
 runcode(function()
 	local tntbomb = {["Enabled"] = false}
+	local tntbed = {["Enabled"] = false}
 	local tntpov = {["Enabled"] = false}
 	tntbomb = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "TNTBomb",
@@ -1090,19 +1091,24 @@ runcode(function()
 					createwarning("TNTBomb", "TNT not found", 1)
 					return
 				end
-				local plr = GetNearestHumanoidToMouse(true, 1000, false)
-				if plr then
+				local plr, plrdist = GetNearestHumanoidToMouse(true, 1000, false)
+				local bed, beddist = GetNearestBedToMouse(true, 1000, false)
+				local target = (plr or bed)
+				if bed and plr and (beddist < plrdist) and tntbed["Enabled"] then
+					target = bed
+				end
+				if target then
 					spawn(function()
 						local newpos = getScaffold(lplr.Character.Head.Position - Vector3.new(0, 3, 0), false)
 						bedwars["placeBlock"](newpos, "tnt")
 						local tnt = collectionservice:GetTagged("tnt")
 						if #tnt > 0 then
-							if isAlive(plr) and tntpov["Enabled"] then
-								cam.CameraSubject = plr.Character.Humanoid
+							if (target.Name == "bed" or isAlive(target)) and tntpov["Enabled"] then
+								cam.CameraSubject = (target.Name == "bed" and target or target.Character.Humanoid)
 							end
 							local tntobj = tnt[1]
 							wait(2.6)
-							tntobj.Position = (isAlive(plr) and plr.Character.HumanoidRootPart.Position or Vector3.new(0, 0, 0))
+							tntobj.Position = ((target.Name == "bed" and target.Position) or (isAlive(plr) and target.Character.HumanoidRootPart.Position) or Vector3.new(0, 0, 0))
 							wait(3)
 							if isAlive() and tntpov["Enabled"] then
 								cam.CameraSubject = lplr.Character.Humanoid
@@ -1114,6 +1120,10 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "Explodes closest player to mouse"
+	})
+	tntbed = tntbomb.CreateToggle({
+		["Name"] = "TNT Bed",
+		["Function"] = function() end,
 	})
 	tntpov = tntbomb.CreateToggle({
 		["Name"] = "POV",
