@@ -1080,6 +1080,7 @@ end)
 
 runcode(function()
 	local tntbomb = {["Enabled"] = false}
+	local tntpov = {["Enabled"] = false}
 	tntbomb = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "TNTBomb",
 		["Function"] = function(callback)
@@ -1096,10 +1097,16 @@ runcode(function()
 						bedwars["placeBlock"](newpos, "tnt")
 						local tnt = collectionservice:GetTagged("tnt")
 						if #tnt > 0 then
+							if isAlive(plr) and tntpov["Enabled"] then
+								cam.CameraSubject = plr.Character.Humanoid
+							end
 							local tntobj = tnt[1]
-							tntobj:ClearAllChildren()
 							wait(2.6)
-							tntobj.Position = plr.Character.HumanoidRootPart.Position
+							tntobj.Position = (isAlive(plr) and plr.Character.HumanoidRootPart.Position or Vector3.new(0, 0, 0))
+							wait(3)
+							if isAlive() and tntpov["Enabled"] then
+								cam.CameraSubject = lplr.Character.Humanoid
+							end
 						end
 					end)
 				end
@@ -1107,6 +1114,10 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "Explodes closest player to mouse"
+	})
+	tntpov = tntbomb.CreateToggle({
+		["Name"] = "POV",
+		["Function"] = function() end,
 	})
 end)
 

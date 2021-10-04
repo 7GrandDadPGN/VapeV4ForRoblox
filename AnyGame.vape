@@ -1686,6 +1686,7 @@ players.PlayerRemoving:connect(function(plr)
 	end
 end)
 local TracersColor = {["Value"] = 0.44}
+local TracersTransparency = {["Value"] = 1}
 local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Tracers", 
 	["Function"] = function(callback) 
@@ -1723,6 +1724,7 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 							startVector = startVector * (1 / GuiLibrary["MainRescale"].Scale)
 							endVector = endVector * (1 / GuiLibrary["MainRescale"].Scale)
 							thing.Visible = true
+							thing.BackgroundTransparency = TracersTransparency["Value"] / 100
 							thing.BackgroundColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(TracersColor["Value"], 1, 1)
 							thing.Size = UDim2.new(0, Distance, 0, 2)
 							thing.Position = UDim2.new(0, (startVector.X + endVector.X) / 2, 0, ((startVector.Y + endVector.Y) / 2) - 36)
@@ -1739,6 +1741,13 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 TracersColor = Tracers.CreateColorSlider({
 	["Name"] = "Player Color", 
 	["Function"] = function(val) end
+})
+TracersTransparency = Tracers.CreateSlider({
+	["Name"] = "Transparency", 
+	["Min"] = 1,
+	["Max"] = 100, 
+	["Function"] = function(val) end,
+	["Default"] = 0
 })
 
 Spring = {} do
