@@ -1793,8 +1793,13 @@ runcode(function()
 				else
 					spawn(function()
 						repeat wait() until matchState ~= 0
-						if kit ~= "baker" and autoheal["Enabled"] then
+						if kit ~= "baker" then
+							if autoheal["Enabled"] then
+								autoheal["ToggleButton"](false)
+							end
+						else
 							autoheal["ToggleButton"](false)
+							autoheal["ToggleButton"](true)
 						end
 					end)
 				end
