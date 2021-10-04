@@ -309,6 +309,9 @@ getfunctions = function()
 			if rawget(v, "getLocalPlayerEntity") then
 				bedwars["getEntityTable"] = v
 			end
+			if type(v) == "table" and rawget(v, "dropTNT") then
+				bedwars["TNTRemote"] = debug.getconstant(v["dropTNT"], 6)
+			end
 			if rawget(v, "getItemMeta") then
 				bedwars["getItemMetadata"] = v["getItemMeta"]
 				bedwars["ItemTable"] = debug.getupvalue(v["getItemMeta"], 1)
@@ -438,7 +441,7 @@ getfunctions = function()
 			local placeblocktype = (customblock or getwool())
 			blocktable.blockType = placeblocktype
 			if getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, placeblocktype, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3)) and getItem(placeblocktype) then
-				bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
+				return bedwars["BlockController2"].placeBlock(blocktable, Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
 		spawn(function()
@@ -755,6 +758,25 @@ local function GetNearestHumanoidToPosition(player, distance)
 	return returnedplayer
 end
 
+local function GetNearestBedToMouse(player, distance, checkvis)
+    local closest, returnedplayer = distance, nil
+    if isAlive() then
+        for i, obj in pairs(bedwars["BedTable"]) do
+            if obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor ~= lplr.Team.TeamColor and obj.Parent ~= nil then
+                local vec, vis = cam:WorldToScreenPoint(obj.Position)
+                if vis then
+                    local mag = (uis:GetMouseLocation() - Vector2.new(vec.X, vec.Y)).magnitude
+                    if mag <= closest then
+                        closest = mag
+                        returnedplayer = obj
+                    end
+                end
+            end
+        end
+    end
+    return returnedplayer
+end
+
 local function GetNearestHumanoidToMouse(player, distance, checkvis)
     local closest, returnedplayer = distance, nil
     if isAlive() then
@@ -801,7 +823,7 @@ runcode(function()
 				BindToRenderStep("AimAssist", 1, function()
 					if aimactive then
 						local plr = GetNearestHumanoidToPosition(AimAssistTargetFrame["Players"]["Enabled"], 30)
-						if plr and getEquipped()["Type"] == "sword" and matchState ~= 0 and (AimAssistTargetFrame["Walls"]["Enabled"] and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or (not AimAssistTargetFrame["Walls"]["Enabled"])) then
+						if plr and getEquipped()["Type"] == "sword" and matchState ~= 0 and (AimAssistTargetFrame["Walls"]["Enabled"] and bedwars["SwordController"]:canSee({["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or (not AimAssistTargetFrame["Walls"]["Enabled"])) then
 							cam.CFrame = cam.CFrame:lerp(CFrame.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position), 1 / AimAssistSmoothness["Value"])
 						end
 					end
@@ -1055,6 +1077,39 @@ runcode(function()
 		["HoverText"] = "Lets you phase/clip through walls. (works 60% of the time)"
 	})
 end)
+
+runcode(function()
+	local tntbomb = {["Enabled"] = false}
+	tntbomb = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "TNTBomb",
+		["Function"] = function(callback)
+			if callback then
+				if getItem("tnt") == nil then
+					tntbomb["ToggleButton"](false)
+					createwarning("TNTBomb", "TNT not found", 1)
+					return
+				end
+				local plr = GetNearestHumanoidToMouse(true, 1000, false)
+				if plr then
+					spawn(function()
+						local newpos = getScaffold(lplr.Character.Head.Position - Vector3.new(0, 3, 0), false)
+						bedwars["placeBlock"](newpos, "tnt")
+						local tnt = collectionservice:GetTagged("tnt")
+						if #tnt > 0 then
+							local tntobj = tnt[1]
+							tntobj:ClearAllChildren()
+							wait(2.6)
+							tntobj.Position = plr.Character.HumanoidRootPart.Position
+						end
+					end)
+				end
+				tntbomb["ToggleButton"](false)
+			end
+		end,
+		["HoverText"] = "Explodes closest player to mouse"
+	})
+end)
+
 runcode(function()
 	local velohorizontal = {["Value"] = 100}
 	local velovertical = {["Value"] = 100}
@@ -2105,7 +2160,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						killauradelay = tick() + (1 / killauraaps["GetRandomValue"]())
 					end
 					for i,plr in pairs(plrs) do
-						if isAlive() and (killauratargetframe["NPCs"]["Enabled"] == false or killauratargetframe["NPCs"]["Enabled"]) and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and (killauratargetframe["Walls"]["Enabled"] and bedwars["SwordController"]["canSee"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or (not killauratargetframe["Walls"]["Enabled"])) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
+						if isAlive() and (killauratargetframe["NPCs"]["Enabled"] == false or killauratargetframe["NPCs"]["Enabled"]) and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and (killauratargetframe["Walls"]["Enabled"] and bedwars["SwordController"]:canSee({["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or (not killauratargetframe["Walls"]["Enabled"])) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 							if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 								killauranear = true
 								if killauraautoblock["Enabled"] and kit == "shielder" then
@@ -2128,7 +2183,12 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 								spawn(function()
 									if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
 										if killauramethod["Value"] == "Normal" then
-											bedwars["attackEntity"](bedwars["SwordController"], {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
+											if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
+												bedwars["SwordController"]:attackEntity({["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
+											end
+											if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
+												bedwars["SwordController"]:attackEntity({["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
+											end
 										else
 											bedwars["ViewmodelController"]:playAnimation(5)
 											bedwars["SoundManager"]:playSound(math.random(13, 14))
