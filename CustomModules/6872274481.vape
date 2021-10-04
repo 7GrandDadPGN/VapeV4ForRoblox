@@ -578,6 +578,11 @@ local updateitem = Instance.new("BindableEvent")
 updateitem.Event:connect(function(inputObj)
 	wait(0.3)
 	if uis:IsMouseButtonPressed(0) then
+		for i, track in pairs(game.Players.LocalPlayer.Character.Humanoid.Animator:GetPlayingAnimationTracks()) do
+			if track.Animation.AnimationId == "rbxassetid://6322507715" then
+				track:Stop()
+			end
+		end
 		game:GetService("ContextActionService"):CallFunction("block-break", Enum.UserInputState.Begin, nil)
 	end
 end)
@@ -603,12 +608,6 @@ local function switchToAndUseTool(block, legit)
 				slot = getHotbarSlot(tool["itemType"])
 			})
 			updateitem:Fire(inputobj)
-			wait(0.1)
-			for i, track in pairs(lplr.Character.Humanoid.Animator:GetPlayingAnimationTracks()) do
-				if track.Animation.AnimationId == "rbxassetid://6322507715" then
-					track:Stop()
-				end
-			end
 		end
 		switchItem(tool["tool"])
 		wait(0.1)
