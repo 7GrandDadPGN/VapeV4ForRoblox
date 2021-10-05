@@ -1436,16 +1436,8 @@ runcode(function()
 								multi = multi + 0.002
 							end
 							local velocalc = (multi / 6) + (0.01 / aimbotping)
-							local velocalc2 = Vector3.new(0, 0, 0)
-							if velodelay <= tick() then
-								velodelay = tick() + 0.05
-								velooldpos = Vector3.new(tar.Position.X, 0, tar.Position.Z)
-							end
-							if plr.Character.HumanoidRootPart.Velocity ~= Vector3.new(0, 0, 0) then
-								velocalc2 = (Vector3.new(tar.Position.X, 0, tar.Position.Z) - velooldpos)
-								velocalc2 = Vector3.new(math.clamp(velocalc2.X, -0.1, 0.1), 0, math.clamp(velocalc2.Z, -0.1, 0.1)) * (plr.Character.Humanoid.WalkSpeed * 0.9)
-							end
-							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (velocalc2 * ((realLaunchPosition - tar.Position).magnitude * velocalc))
+							local lookvec = (plr.Character.HumanoidRootPart.Velocity.X == 0 and Vector3.new(0, 0, 0) or Vector3.new(plr.Character.HumanoidRootPart.CFrame.lookVector.X * plr.Character.Humanoid.WalkSpeed, plr.Character.Humanoid.Jump and 3 or 0, plr.Character.HumanoidRootPart.CFrame.lookVector.Y * plr.Character.Humanoid.WalkSpeed))
+							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (lookvec * ((realLaunchPosition - tar.Position).magnitude * velocalc))
 							local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
 							return {
 								initialVelocity = (realLaunchPosition + (v65.Unit.Direction).Unit * ((Vector3.new(0, 0, 0) - realLaunchPosition).Magnitude) - realLaunchPosition).Unit * (v60 * projmeta.velocityMultiplier), 
