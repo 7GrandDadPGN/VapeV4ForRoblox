@@ -1079,59 +1079,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local tntbomb = {["Enabled"] = false}
-	local tntbed = {["Enabled"] = false}
-	local tntpov = {["Enabled"] = false}
-	tntbomb = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "TNTBomb",
-		["Function"] = function(callback)
-			if callback then
-				if getItem("tnt") == nil then
-					tntbomb["ToggleButton"](false)
-					createwarning("TNTBomb", "TNT not found", 1)
-					return
-				end
-				local plr, plrdist = GetNearestHumanoidToMouse(true, 1000, false)
-				local bed, beddist = GetNearestBedToMouse(true, 1000, false)
-				local target = (plr or bed)
-				if bed and plr and (beddist < plrdist) and tntbed["Enabled"] then
-					target = bed
-				end
-				if target then
-					spawn(function()
-						local newpos = getScaffold(lplr.Character.Head.Position - Vector3.new(0, 3, 0), false)
-						bedwars["placeBlock"](newpos, "tnt")
-						local tnt = collectionservice:GetTagged("tnt")
-						if #tnt > 0 then
-							if (target.Name == "bed" or isAlive(target)) and tntpov["Enabled"] then
-								cam.CameraSubject = (target.Name == "bed" and target or target.Character.Humanoid)
-							end
-							local tntobj = tnt[1]
-							wait(2.6)
-							tntobj.Position = ((target.Name == "bed" and target.Position) or (isAlive(plr) and target.Character.HumanoidRootPart.Position) or Vector3.new(0, 0, 0))
-							wait(3)
-							if isAlive() and tntpov["Enabled"] then
-								cam.CameraSubject = lplr.Character.Humanoid
-							end
-						end
-					end)
-				end
-				tntbomb["ToggleButton"](false)
-			end
-		end,
-		["HoverText"] = "Explodes closest player to mouse"
-	})
-	tntbed = tntbomb.CreateToggle({
-		["Name"] = "TNT Bed",
-		["Function"] = function() end,
-	})
-	tntpov = tntbomb.CreateToggle({
-		["Name"] = "POV",
-		["Function"] = function() end,
-	})
-end)
-
-runcode(function()
 	local velohorizontal = {["Value"] = 100}
 	local velovertical = {["Value"] = 100}
 	local oldhori = bedwars["KnockbackTable"]["kbDirectionStrength"]
@@ -1495,7 +1442,8 @@ runcode(function()
 								velooldpos = Vector3.new(tar.Position.X, 0, tar.Position.Z)
 							end
 							if plr.Character.HumanoidRootPart.Velocity ~= Vector3.new(0, 0, 0) then
-								velocalc2 = (Vector3.new(tar.Position.X, 0, tar.Position.Z) - velooldpos) * 20
+								velocalc2 = (Vector3.new(tar.Position.X, 0, tar.Position.Z) - velooldpos)
+								velocalc2 = Vector3.new(math.clamp(velocalc2.X, -0.1, 0.1), 0, math.clamp(velocalc2.Z, -0.1, 0.1)) * (plr.Character.Humanoid.WalkSpeed * 0.9)
 							end
 							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (velocalc2 * ((realLaunchPosition - tar.Position).magnitude * velocalc))
 							local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
@@ -2147,10 +2095,21 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						end
 						if killauraplaying == false then
 							killauraplaying = true
-							game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new((killauraanimmethod["Value"] == "Normal" and 0.1 or 0.2)), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(55), -math.rad(70))}):Play()
-							wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
-							game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new((killauraanimmethod["Value"] == "Normal" and 0.1 or 0.2)), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(105), -math.rad(70))}):Play()
-							wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
+							if killauraanimmethod["Value"] == "Normal" or killauraanimmethod["Value"] == "Slow" then
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new((killauraanimmethod["Value"] == "Normal" and 0.1 or 0.2)), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(55), -math.rad(70))}):Play()
+								wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new((killauraanimmethod["Value"] == "Normal" and 0.1 or 0.2)), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(105), -math.rad(70))}):Play()
+								wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
+							elseif killauraanimmethod["Value"] == "Spin" then
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(90), math.rad(0), -math.rad(0))}):Play()
+								wait(0.1)
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(180), math.rad(0), -math.rad(0))}):Play()
+								wait(0.1)
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(240), math.rad(0), -math.rad(0))}):Play()
+								wait(0.1)
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(359), math.rad(0), -math.rad(0))}):Play()
+								wait(0.1)
+							end
 							killauraplaying = false
 						end
 					end)
@@ -2261,7 +2220,12 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			bedwars["SoundManager"]["playSound"] = oldsound
 			oldplay = nil
 			pcall(function()
-				cam.Viewmodel.RightHand.RightWrist.C0 = origC0
+				if origC0 == nil then
+					origC0 = cam.Viewmodel.RightHand.RightWrist.C0
+				end
+				if cam.Viewmodel.RightHand.RightWrist.C0 ~= origC0 then
+					game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = origC0}):Play()
+				end
 			end)
 			UnbindFromRenderStep("Killaura") 
 			bedwars["SwordController"]["getHandItem"] = oldmeta
@@ -2307,7 +2271,7 @@ killauramethod = Killaura.CreateDropdown({
 })
 killauraanimmethod = Killaura.CreateDropdown({
 	["Name"] = "Animation", 
-	["List"] = {"Normal", "Slow"},
+	["List"] = {"Normal", "Slow", "Spin"},
 	["Function"] = function(val) end
 })
 killauraautoblock = Killaura.CreateToggle({
