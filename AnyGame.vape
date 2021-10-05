@@ -82,7 +82,7 @@ local function isAlive(plr)
 end
 
 local function isPlayerTargetable(plr, target, friend)
-    return plr ~= lplr and plr and (friend and friendCheck(plr) or (not friend)) and isAlive(plr) and targetCheck(plr, target) and shared.vapeteamcheck(plr)
+    return plr ~= lplr and plr and (friend and friendCheck(plr) == nil or (not friend)) and isAlive(plr) and targetCheck(plr, target) and shared.vapeteamcheck(plr)
 end
 
 local function vischeck(char, part)
@@ -652,8 +652,8 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 									tool:Activate()
 									killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
 								end
-								firetouchinterest(touch.Parent, v.Character.Head, 1)
-								firetouchinterest(touch.Parent, v.Character.Head, 0)
+								firetouchinterest(touch.Parent, v.Character.HumanoidRootPart, 1)
+								firetouchinterest(touch.Parent, v.Character.HumanoidRootPart, 0)
 							end
 						end
 						targetinfo.UpdateInfo(targettable, targetsize)
@@ -676,7 +676,7 @@ killauraaps = Killaura.CreateTwoSlider({
 killaurarange = Killaura.CreateSlider({
 	["Name"] = "Attack range",
 	["Min"] = 1,
-	["Max"] = 20, 
+	["Max"] = 150, 
 	["Function"] = function(val) end
 })
 killauraangle = Killaura.CreateSlider({
