@@ -392,6 +392,7 @@ getfunctions = function()
 					end
 				end
 				oldattack = v["attackEntity"]
+				shared.backup_attack = oldattack
 				v["attackEntity"] = function(Self, entity, raycast)
 					local plr
 					pcall(function()
