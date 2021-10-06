@@ -3672,6 +3672,12 @@ runcode(function()
 								str = str..(v.DisplayName or v.Name).." : "..v:GetAttribute("WinStreak").."\n"
 							end
 						end
+						onetext.Text = str
+						onetext2.Text = str
+						textwithoutthing = str
+						local newsize = game:GetService("TextService"):GetTextSize(str, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
+						onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
+						onetext.Position = UDim2.new(onetext.Position.X.Scale, onetext.Position.X.Offset, onetext.Position.Y.Scale, -(newsize.Y - 60))
 					end)
 					for i,v in pairs(players:GetChildren()) do
 						repeat wait() until v:GetAttribute("WinStreak") ~= nil
