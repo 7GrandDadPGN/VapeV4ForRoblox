@@ -324,8 +324,7 @@ getfunctions = function()
 				end
 			end
 			if rawget(v, "equipItem") then
-				local remotetab = debug.getconstants(v["equipItem"])
-				bedwars["changeItem"] = remotetab[#remotetab - 5]
+				bedwars["EquipItemRemote"] = debug.getconstant(v["equipItem"], 25)
 			end
 			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
 				local remotetab = debug.getconstants(debug.getprotos(getmetatable(v["ShieldController"])["raiseShield"])[1])
@@ -572,7 +571,7 @@ local localentity = bedwars["getEntityTable"]["getLocalPlayerEntity"]()
 
 local function switchItem(tool)
 	lplr.Character.HandInvItem.Value = tool
-	bedwars["ClientHandler"]:Get(bedwars["changeItem"]):CallServerAsync({
+	bedwars["ClientHandler"]:Get(bedwars["EquipItemRemote"]):CallServerAsync({
 		hand = tool
 	})
 end
@@ -2193,7 +2192,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 												})
 											end
 											local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
-											if plrentity ~= nil then
+											if plrentity ~= nil and isAlive() then
 												plrentity:playAnimation(0)
 											end
 										end
@@ -2541,7 +2540,7 @@ bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 		if AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
 			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight.", "All")
 		end
-		if AutoLeave["Enabled"] and #bedwars["ClientStoreHandler"].Party.members == 0 then
+		if AutoLeave["Enabled"] and #bedwars["ClientStoreHandler"]:getState().Party.members == 0 then
 			wait(1 + (AutoLeaveDelay["Value"] / 10))
 			bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 		end
