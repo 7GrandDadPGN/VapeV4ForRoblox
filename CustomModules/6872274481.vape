@@ -793,6 +793,61 @@ local function GetNearestHumanoidToMouse(player, distance, checkvis)
     return returnedplayer, closest
 end
 
+runcode(function()
+	local handsquare = Instance.new("ImageLabel")
+	handsquare.Size = UDim2.new(0, 26, 0, 27)
+	handsquare.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+	handsquare.Position = UDim2.new(0, 72, 0, 39)
+	handsquare.Parent = targetinfo["Object"].GetCustomChildren().Frame.MainInfo
+	local handround = Instance.new("UICorner")
+	handround.CornerRadius = UDim.new(0, 4)
+	handround.Parent = handsquare
+	local helemtsquare = handsquare:Clone()
+	helemtsquare.Position = UDim2.new(0, 100, 0, 39)
+	helemtsquare.Parent = targetinfo["Object"].GetCustomChildren().Frame.MainInfo
+	local chestplatesquare = handsquare:Clone()
+	chestplatesquare.Position = UDim2.new(0, 127, 0, 39)
+	chestplatesquare.Parent = targetinfo["Object"].GetCustomChildren().Frame.MainInfo
+	local bootssquare = handsquare:Clone()
+	bootssquare.Position = UDim2.new(0, 155, 0, 39)
+	bootssquare.Parent = targetinfo["Object"].GetCustomChildren().Frame.MainInfo
+	local uselesssquare = handsquare:Clone()
+	uselesssquare.Position = UDim2.new(0, 182, 0, 39)
+	uselesssquare.Parent = targetinfo["Object"].GetCustomChildren().Frame.MainInfo
+	local oldupdate = targetinfo["UpdateInfo"]
+	targetinfo["UpdateInfo"] = function(tab, targetsize)
+		pcall(function()
+			for i,v in pairs(tab) do
+				local plr = players[i]
+				if plr then
+					local inventory = bedwars["getInventory"](plr)
+					if inventory.hand then
+						handsquare.Image = bedwars["getIcon"](inventory.hand, true)
+					else
+						handsquare.Image = ""
+					end
+					if inventory.armor[4] then
+						helemtsquare.Image = bedwars["getIcon"](inventory.armor[4], true)
+					else
+						helemtsquare.Image = ""
+					end
+					if inventory.armor[5] then
+						chestplatesquare.Image = bedwars["getIcon"](inventory.armor[5], true)
+					else
+						chestplatesquare.Image = ""
+					end
+					if inventory.armor[6] then
+						bootssquare.Image = bedwars["getIcon"](inventory.armor[6], true)
+					else
+						bootssquare.Image = ""
+					end
+				end
+			end
+		end)
+		return oldupdate(tab, targetsize)
+	end
+end)
+
 GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
 runcode(function()
 	local AimAssist = {["Enabled"] = false}
@@ -2102,7 +2157,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 								wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
 								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new((killauraanimmethod["Value"] == "Normal" and 0.1 or 0.2)), {C0 = origC0 * CFrame.new(0.7, -1, 0.6) * CFrame.Angles(-math.rad(45), math.rad(105), -math.rad(70))}):Play()
 								wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
-							elseif killauraanimmethod["Value"] == "Spin" then
+							elseif killauraanimmethod["Value"] == "Vertical Spin" then
 								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(90), math.rad(0), -math.rad(0))}):Play()
 								wait(0.1)
 								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(180), math.rad(0), -math.rad(0))}):Play()
@@ -2110,6 +2165,15 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(240), math.rad(0), -math.rad(0))}):Play()
 								wait(0.1)
 								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(359), math.rad(0), -math.rad(0))}):Play()
+								wait(0.1)
+							elseif killauraanimmethod["Value"] == "Horizontal Spin" then
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(45), math.rad(90), -math.rad(70))}):Play()
+								wait(0.1)
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(45), math.rad(180), -math.rad(70))}):Play()
+								wait(0.1)
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(45), math.rad(240), -math.rad(70))}):Play()
+								wait(0.1)
+								game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(45), math.rad(359), -math.rad(70))}):Play()
 								wait(0.1)
 							end
 							killauraplaying = false
@@ -2273,7 +2337,7 @@ killauramethod = Killaura.CreateDropdown({
 })
 killauraanimmethod = Killaura.CreateDropdown({
 	["Name"] = "Animation", 
-	["List"] = {"Normal", "Slow", "Spin"},
+	["List"] = {"Normal", "Slow", "Vertical Spin", "Horizontal Spin"},
 	["Function"] = function(val) end
 })
 killauraautoblock = Killaura.CreateToggle({
