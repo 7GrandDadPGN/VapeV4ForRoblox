@@ -866,7 +866,7 @@ runcode(function()
 			if callback then
 				BindToRenderStep("SpinBot", 1, function()
 					if isAlive() then
-						if bodyspin == nil or bodyspin ~= nil and bodyspin.Parent == nil then
+						if (bodyspin == nil or bodyspin ~= nil and bodyspin.Parent ~= lplr.Character.HumanoidRootPart) then
 							bodyspin = Instance.new("BodyAngularVelocity")
 							bodyspin.MaxTorque = Vector3.new(0, math.huge, 0)
 							bodyspin.AngularVelocity = Vector3.new(0, spinbotspeed["Value"], 0)
