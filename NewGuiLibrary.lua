@@ -2753,6 +2753,12 @@ api["CreateWindow"] = function(argstablemain2)
 			dropapi["UpdateList"] = function(val)
 				placeholder = 0
 				list = val
+				if not table.find(list, dropapi["Value"]) then
+					dropapi["Value"] = list[1]
+					drop1.Text = "  "..argstable["Name"].." - "..list[1]
+					dropframe.Visible = false
+					argstable["Function"](list[1])
+				end
 				for del1, del2 in pairs(dropframe:GetChildren()) do if del2:IsA("TextButton") then del2:Remove() end end
 				for numbe, listobj in pairs(val) do
 					if listobj ~= dropapi["Value"] then

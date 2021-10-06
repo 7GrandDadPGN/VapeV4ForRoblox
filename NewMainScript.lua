@@ -649,9 +649,10 @@ local targetname = Instance.new("TextLabel")
 targetname.TextSize = 17
 targetname.Font = Enum.Font.SourceSans
 targetname.TextColor3 = Color3.new(1, 1, 1)
-targetname.Position = UDim2.new(0, 72, 0, 6)
+targetname.Position = UDim2.new(0, 72, 0, 7)
+targetname.TextStrokeTransparency = 0.75
 targetname.BackgroundTransparency = 1
-targetname.Size = UDim2.new(0, 80, 0, 14)
+targetname.Size = UDim2.new(0, 80, 0, 16)
 targetname.TextScaled = true
 targetname.Text = "Target name"
 targetname.ZIndex = 2
@@ -707,7 +708,7 @@ TargetInfo.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):connect(f
 		targetinfobkg2.BackgroundTransparency = 0
 		targetinfobkg1.BackgroundTransparency = 0
 	else
-		targetinfobkg3.Position = UDim2.new(0, 0, 0, 0)
+		targetinfobkg3.Position = UDim2.new(0, 0, 0, 40)
 		targetinfobkg2.BackgroundTransparency = 1
 		targetinfobkg1.BackgroundTransparency = 1
 	end
