@@ -857,6 +857,43 @@ speedjump = speed.CreateToggle({
 	["Function"] = function() end
 })
 
+runcode(function()
+	local bodyspin
+	local spinbotspeed = {["Value"] = 1}
+	local spinbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "SpinBot",
+		["Function"] = function(callback)
+			if callback then
+				BindToRenderStep("SpinBot", 1, function()
+					if isAlive() then
+						if bodyspin == nil or bodyspin ~= nil and bodyspin.Parent == nil then
+							bodyspin = Instance.new("BodyAngularVelocity")
+							bodyspin.MaxTorque = Vector3.new(0, math.huge, 0)
+							bodyspin.AngularVelocity = Vector3.new(0, spinbotspeed["Value"], 0)
+							bodyspin.Parent = lplr.Character.HumanoidRootPart
+						else
+							bodyspin.AngularVelocity = Vector3.new(0, spinbotspeed["Value"], 0)
+						end
+					end
+				end)
+			else
+				if bodyspin then
+					bodyspin:Remove()
+				end
+				UnbindFromRenderStep("SpinBot")
+			end
+		end,
+		["HoverText"] = "Makes your character spin around in circles (does not work in first person)"
+	})
+	spinbotspeed = spinbot.CreateSlider({
+		["Name"] = "Speed",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Default"] = 40,
+		["Function"] = function() end
+	})
+end)
+
 local healthColorToPosition = {
 	[Vector3.new(Color3.fromRGB(255, 28, 0).r,
   Color3.fromRGB(255, 28, 0).g,

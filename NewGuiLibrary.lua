@@ -241,7 +241,11 @@ api["SaveSettings"] = function()
 				WindowTable[i] = {["Type"] = "Window", ["Visible"] = v["Object"].Visible, ["Expanded"] = v["ChildrenObject"].Visible, ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
 			end
 			if v["Type"] == "CustomWindow" then
-				WindowTable[i] = {["Type"] = "CustomWindow", ["Visible"] = v["Object"].Visible, ["Pinned"] = v["Api"]["Pinned"], ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
+                if v["Api"]["Bypass"] then
+				    api["Settings"][i] = {["Type"] = "CustomWindow", ["Visible"] = v["Object"].Visible, ["Pinned"] = v["Api"]["Pinned"], ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
+                else
+                    WindowTable[i] = {["Type"] = "CustomWindow", ["Visible"] = v["Object"].Visible, ["Pinned"] = v["Api"]["Pinned"], ["Position"] = {v["Object"].Position.X.Scale, v["Object"].Position.X.Offset, v["Object"].Position.Y.Scale, v["Object"].Position.Y.Offset}}
+                end
 			end
 			if (v["Type"] == "ButtonMain" or v["Type"] == "ToggleMain") then
 				WindowTable[i] = {["Type"] = "ButtonMain", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
@@ -343,6 +347,14 @@ api["LoadSettings"] = function()
 			end
 			if v["Type"] == "Dropdown" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 				api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"])
+			end
+            if v["Type"] == "CustomWindow" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
+				api["ObjectsThatCanBeSaved"][i]["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
+				api["ObjectsThatCanBeSaved"][i]["Object"].Visible = v["Visible"]
+				if v["Pinned"] then
+					api["ObjectsThatCanBeSaved"][i]["Api"]["PinnedToggle"]()
+				end
+				api["ObjectsThatCanBeSaved"][i]["Api"]["CheckVis"]()
 			end
 			if v["Type"] == "Button" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 				if api["ObjectsThatCanBeSaved"][i]["Type"] == "Toggle" then
@@ -1443,6 +1455,7 @@ api["CreateCustomWindow"] = function(argstablemain)
 	dragGUI(windowtitle)
 	windowapi["Pinned"] = false
 	windowapi["RealVis"] = false
+    windowapi["Bypass"] = argstablemain["Bypass"]
 	
 	windowapi["CheckVis"] = function()
 		if windowapi["RealVis"] then
