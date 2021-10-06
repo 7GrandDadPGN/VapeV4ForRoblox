@@ -680,7 +680,14 @@ targethealthbkg.Parent = targetinfobkg3
 local targethealthgreen = Instance.new("Frame")
 targethealthgreen.BackgroundColor3 = Color3.fromRGB(40, 137, 109)
 targethealthgreen.Size = UDim2.new(1, 0, 0, 4)
+targethealthgreen.ZIndex = 2
 targethealthgreen.Parent = targethealthbkg
+local targethealthorange = Instance.new("Frame")
+targethealthorange.ZIndex = 1
+targethealthorange.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+targethealthorange.Size = UDim2.new(1, 0, 0, 4)
+
+targethealthorange.Parent = targethealthbkg
 local targetimage = Instance.new("ImageLabel")
 targetimage.Size = UDim2.new(0, 61, 0, 61)
 targetimage.BackgroundTransparency = 1
@@ -699,9 +706,13 @@ round3.Parent = targethealthbkg
 local round4 = Instance.new("UICorner")
 round4.CornerRadius = UDim.new(0, 4)
 round4.Parent = targethealthgreen
+local round6 = Instance.new("UICorner")
+round6.CornerRadius = UDim.new(0, 4)
+round6.Parent = targethealthorange
 local round5 = Instance.new("UICorner")
 round5.CornerRadius = UDim.new(0, 4)
 round5.Parent = targetimage
+local oldhealth = 100
 TargetInfo.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):connect(function()
 	if TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.new(0, 220, 0, 0) then
 		targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
@@ -719,6 +730,15 @@ shared.VapeTargetInfo = {
 		for i,v in pairs(tab) do
 			targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
 			targethealthgreen:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
+			spawn(function()
+				if v["Health"] < oldhealth then
+					targethealthorange:TweenSize(UDim2.new(oldhealth / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
+					wait(0.7)
+					targethealthorange:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
+				else
+					targethealthorange:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
+				end
+			end)
 			targethealth.Text = math.floor(v["Health"]).." hp"
 			targetname.Text = i
 		end
