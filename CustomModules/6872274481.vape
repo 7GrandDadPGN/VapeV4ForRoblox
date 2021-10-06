@@ -24,8 +24,8 @@ local oldattack
 local chatconnection
 local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 local blocks = {}
-
 local RenderStepTable = {}
+
 local function BindToRenderStep(name, num, func)
 	if RenderStepTable[name] == nil then
 		RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
@@ -308,9 +308,6 @@ getfunctions = function()
 			end
 			if rawget(v, "getLocalPlayerEntity") then
 				bedwars["getEntityTable"] = v
-			end
-			if type(v) == "table" and rawget(v, "dropTNT") then
-				bedwars["TNTRemote"] = debug.getconstant(v["dropTNT"], 6)
 			end
 			if rawget(v, "getItemMeta") then
 				bedwars["getItemMetadata"] = v["getItemMeta"]
@@ -3574,24 +3571,135 @@ runcode(function()
 end)
 
 runcode(function()
-	local RemoveHonk = {["Enabled"] = false}
-	local oldsound2
-	RemoveHonk = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "RemoveHonk",
+	local WinstreakTracker = GuiLibrary.CreateCustomWindow({
+		["Name"] = "WinstreakTracker", 
+		["Icon"] = "vape/assets/RadarIcon1.png",
+		["IconSize"] = 16,
+		["Bypass"] = true
+	})
+	WinstreakTracker.GetCustomChildren().Position = UDim2.new(0, 0, -1, 0)
+	local onetext = Instance.new("TextLabel")
+	onetext.Parent = WinstreakTracker.GetCustomChildren()
+	onetext.Size = UDim2.new(1, 0, 1, 0)
+	onetext.Position = UDim2.new(1, -154, 0, 35)
+	onetext.TextColor3 = Color3.new(1, 1, 1)
+	onetext.RichText = true
+	onetext.BackgroundTransparency = 1
+	onetext.TextXAlignment = Enum.TextXAlignment.Left
+	onetext.TextYAlignment = Enum.TextYAlignment.Bottom
+	onetext.BorderSizePixel = 0
+	onetext.BackgroundColor3 = Color3.new(0, 0, 0)
+	onetext.Font = Enum.Font.SourceSans
+	onetext.Text = "7GrandDad : 1"
+	onetext.TextSize = 20
+	local onetext2 = Instance.new("TextLabel")
+	onetext2.Name = "ExtraText"
+	onetext2.Parent = onetext
+	onetext2.Size = UDim2.new(1, 0, 1, 0)
+	onetext2.Position = UDim2.new(0, 1, 0, 1)
+	onetext2.BorderSizePixel = 0
+	onetext2.Visible = false
+	onetext2.ZIndex = 0
+	onetext2.Text = ""
+	onetext2.BackgroundTransparency = 1
+	onetext2.TextTransparency = 0.5
+	onetext2.TextXAlignment = Enum.TextXAlignment.Left
+	onetext2.TextYAlignment = Enum.TextYAlignment.Bottom
+	onetext2.TextColor3 = Color3.new(0, 0, 0)
+	onetext2.Font = Enum.Font.SourceSans
+	onetext2.TextSize = 20
+	WinstreakTracker.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(function()
+		if (WinstreakTracker.GetCustomChildren().Parent.Position.X.Offset + WinstreakTracker.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
+			onetext.TextXAlignment = Enum.TextXAlignment.Right
+			onetext2.TextXAlignment = Enum.TextXAlignment.Right
+			onetext2.Position = UDim2.new(0, 1, 0, 1)
+			onetext.Position = UDim2.new(1, -154, 0, -(onetext.Size.Y.Offset - 60))
+		else
+			onetext.TextXAlignment = Enum.TextXAlignment.Left
+			onetext2.TextXAlignment = Enum.TextXAlignment.Left
+			onetext2.Position = UDim2.new(0, 4, 0, 1)
+			onetext.Position = UDim2.new(0, 0, 0, -(onetext.Size.Y.Offset - 60))
+		end
+	end)
+	if WinstreakTracker.GetCustomChildren().Parent then
+		if (WinstreakTracker.GetCustomChildren().Parent.Position.X.Offset + WinstreakTracker.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
+			onetext.TextXAlignment = Enum.TextXAlignment.Right
+			onetext2.Position = UDim2.new(0, 1, 0, 1)
+			onetext2.TextXAlignment = Enum.TextXAlignment.Right
+			onetext.Position = UDim2.new(1, -154, 0, -(onetext.Size.Y.Offset - 60))
+		else
+			onetext.TextXAlignment = Enum.TextXAlignment.Left
+			onetext2.TextXAlignment = Enum.TextXAlignment.Left
+			onetext2.Position = UDim2.new(0, 4, 0, 1)
+			onetext.Position = UDim2.new(0, 0, 0, -(onetext.Size.Y.Offset - 60))
+		end
+	end
+	
+	onetext.Position = UDim2.new(0, 0, 0, 35)
+	local playeraddedwinstreak
+	local textwithoutthing = ""
+	local WinstreakTrackerColor = {["Value"] = 0.44, ["RainbowValue"] = false}
+	local WinstreakTrackerShadow = {["Enabled"] = false}
+
+	local function updatecolor(val)
+		local newtext = ""
+		local newfirst = false
+		for i2,v2 in pairs(textwithoutthing:split("\n")) do
+			local rainbowsub = 2
+			local rainbowcolor = val + (WinstreakTrackerColor["RainbowValue"] and (-0.015 * i2) or 0)
+			if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
+			local str = tostring(rainbowcolor)
+			local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
+			local newcolor = Color3.fromHSV(newcol, 0.7, 0.9)
+			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..v2..'</font>'
+			newfirst = true
+		end
+		onetext.Text = newtext
+	end
+
+	local WinstreakTrackerButton = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "WinstreakTracker",
 		["Function"] = function(callback)
+			WinstreakTracker.SetVisible(callback)
 			if callback then
-				oldsound2 = bedwars["SoundManager"]["playSound"]
-				bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
-					if (soundid == 110 or soundid == 111 or soundid == 112 or soundid == 113 or soundid == 114) then
-						return nil
+				spawn(function()
+					local str = ""
+					playeraddedwinstreak = players.PlayerAdded:connect(function(v)
+						for i,v in pairs(players:GetChildren()) do
+							repeat wait() until v:GetAttribute("WinStreak") ~= nil
+							if v:GetAttribute("WinStreak") and v:GetAttribute("WinStreak") > 0 and v ~= lplr then
+								str = str..(v.DisplayName or v.Name).." : "..v:GetAttribute("WinStreak").."\n"
+							end
+						end
+					end)
+					for i,v in pairs(players:GetChildren()) do
+						repeat wait() until v:GetAttribute("WinStreak") ~= nil
+						if v:GetAttribute("WinStreak") and v:GetAttribute("WinStreak") > 0 and v ~= lplr then
+							str = str..(v.DisplayName or v.Name).." : "..v:GetAttribute("WinStreak").."\n"
+						end
 					end
-					return oldsound2(tab, soundid, ...)
-				end
+					onetext.Text = str
+					onetext2.Text = str
+					textwithoutthing = str
+					local newsize = game:GetService("TextService"):GetTextSize(str, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
+					onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
+					onetext.Position = UDim2.new(onetext.Position.X.Scale, onetext.Position.X.Offset, onetext.Position.Y.Scale, -(newsize.Y - 60))
+					updatecolor(WinstreakTrackerColor["Value"])
+				end)
 			else
-				bedwars["SoundManager"]["playSound"] = oldsound2
-				oldsound2 = nil
+				playeraddedwinstreak:Disconnect()
 			end
-		end, 
-		["HoverText"] = "Removes Honking noise from Dodo Bird"
+		end,
+		["HoverText"] = "Shows a list of WinStreaks"
+	})
+	WinstreakTrackerColor = WinstreakTrackerButton.CreateColorSlider({
+		["Name"] = "Text Color",
+		["Function"] = function(val)
+			updatecolor(val)
+		end
+	})
+	WinstreakTrackerShadow = WinstreakTrackerButton.CreateToggle({
+		["Name"] = "Shadow", 
+		["Function"] = function(callback) onetext2.Visible = callback end
 	})
 end)
