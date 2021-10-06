@@ -823,9 +823,22 @@ runcode(function()
 				
 				BindToRenderStep("AimAssist", 1, function()
 					if aimactive then
+						local targettable = {}
+						local targetsize = 0
 						local plr = GetNearestHumanoidToPosition(AimAssistTargetFrame["Players"]["Enabled"], 30)
+						if plr then
+							targettable[plr.Name] = {
+								["UserId"] = plr.UserId,
+								["Health"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.Health or 0),
+								["MaxHealth"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.MaxHealth or 0)
+							}
+							targetsize = targetsize + 1
+						end
 						if plr and getEquipped()["Type"] == "sword" and matchState ~= 0 and (AimAssistTargetFrame["Walls"]["Enabled"] and bedwars["SwordController"]:canSee({["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or (not AimAssistTargetFrame["Walls"]["Enabled"])) then
 							cam.CFrame = cam.CFrame:lerp(CFrame.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position), 1 / AimAssistSmoothness["Value"])
+						end
+						if getEquipped()["Type"] ~= "bow" then
+							targetinfo.UpdateInfo(targettable, targetsize)
 						end
 					end
 				end)
