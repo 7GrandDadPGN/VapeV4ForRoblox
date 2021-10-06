@@ -3665,6 +3665,7 @@ runcode(function()
 				spawn(function()
 					local str = ""
 					playeraddedwinstreak = players.PlayerAdded:connect(function(v)
+						str = ""
 						for i,v in pairs(players:GetChildren()) do
 							repeat wait() until v:GetAttribute("WinStreak") ~= nil
 							if v:GetAttribute("WinStreak") and v:GetAttribute("WinStreak") > 0 and v ~= lplr then
