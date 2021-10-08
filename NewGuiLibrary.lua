@@ -136,6 +136,12 @@ clickgui.BorderSizePixel = 0
 clickgui.BackgroundColor3 = Color3.fromRGB(79, 83, 166)
 clickgui.Visible = false
 clickgui.Parent = api["MainGui"]
+local OnlineProfilesBigFrame = Instance.new("Frame")
+OnlineProfilesBigFrame.Size = UDim2.new(1, 0, 1, 0)
+OnlineProfilesBigFrame.Name = "OnlineProfiles"
+OnlineProfilesBigFrame.BackgroundTransparency = 1
+OnlineProfilesBigFrame.Visible = false
+OnlineProfilesBigFrame.Parent = api["MainGui"]
 local notificationwindow = Instance.new("Frame")
 notificationwindow.BackgroundTransparency = 1
 notificationwindow.Active = false
@@ -2077,7 +2083,7 @@ api["CreateWindow"] = function(argstablemain2)
 			end)
 			button.MouseMoved:connect(function(x, y)
 				hoverbox.Visible = api["ToggleTooltips"]
-				hoverbox.Position = UDim2.new(0, x + 16, 0, y - (hoverbox.Size.Y.Offset / 2) - 26)
+				hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 			end)
 		end
 		buttonapi["Enabled"] = false
@@ -3710,10 +3716,10 @@ api["CreateWindow2"] = function(argstablemain)
 		local textboxbkg = Instance.new("ImageLabel")
 		textboxbkg.BackgroundTransparency = 1
 		textboxbkg.Name = "AddBoxBKG"
-		textboxbkg.Size = UDim2.new(0, 200, 0, 31)
+		textboxbkg.Size = UDim2.new(0, (argstable["Name"] == "ProfilesList" and 150 or 200), 0, 31)
 		textboxbkg.Position = UDim2.new(0, 10, 0, 5)
 		textboxbkg.ClipsDescendants = true
-		textboxbkg.Image = getcustomassetfunc("vape/assets/TextBoxBKG.png")
+		textboxbkg.Image = getcustomassetfunc((argstable["Name"] == "ProfilesList" and "vape/assets/TextBoxBKG2.png" or "vape/assets/TextBoxBKG.png"))
 		textboxbkg.Parent = frame
 		local textbox = Instance.new("TextBox")
 		textbox.Size = UDim2.new(0, 159, 1, 0)
@@ -3732,7 +3738,7 @@ api["CreateWindow2"] = function(argstablemain)
 		addbutton.BorderSizePixel = 0
 		addbutton.Name = "AddButton"
 		addbutton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-		addbutton.Position = UDim2.new(0, 174, 0, 8)
+		addbutton.Position = UDim2.new(0, (argstable["Name"] == "ProfilesList" and 124 or 174), 0, 8)
 		addbutton.AutoButtonColor = false
 		addbutton.Size = UDim2.new(0, 16, 0, 16)
 		addbutton.ImageColor3 = Color3.fromHSV(0.44, 1, 1)
@@ -3937,6 +3943,9 @@ api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(
 		if input1.KeyCode == Enum.KeyCode[api["GUIKeybind"]] and api["KeybindCaptured"] == false then
 			clickgui.Visible = not clickgui.Visible
 			api["MainBlur"].Enabled = clickgui.Visible	
+			if OnlineProfilesBigFrame.Visible then
+				OnlineProfilesBigFrame.Visible = false
+			end
 		end
 		if input1.KeyCode == Enum.KeyCode.LeftShift then
 			holdingshift = true
