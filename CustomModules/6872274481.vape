@@ -1573,6 +1573,7 @@ runcode(function()
 	local AutoBuy = {["Enabled"] = false}
 	local AutoBuyArmor = {["Enabled"] = false}
 	local AutoBuySword = {["Enabled"] = false}
+	local AutoBuyArrow = {["Enabled"] = false}
 	local AutoBuyUpgrades = {["Enabled"] = false}
 	local AutoBuyGen = {["Enabled"] = false}
 	local AutoBuyProt = {["Enabled"] = false}
@@ -1581,6 +1582,7 @@ runcode(function()
 	local AutoBuyAlarm = {["Enabled"] = false}
 	local AutoBuyGui = {["Enabled"] = false}
 	local buyingthing = false
+	local shoothook
 	
 	local function buyitem(itemtab, sucfunc)
 		if getItem(itemtab.itemType) == nil then
@@ -1757,6 +1759,25 @@ runcode(function()
 			if callback then 
 				buyingthing = false 
 				BuyCheck()
+				shoothook = bedwars["BowTable"]["launchProjectile"]
+				bedwars["BowTable"]["launchProjectile"] = function(Self, ...)
+					local args = {...}
+					local shoottab = args[2]
+
+					if shoottab.projectile:find("arrow") and AutoBuyArrow["Enabled"] then
+						print("yes", getItem("arrow")["amount"])
+						if getItem("arrow")["amount"] == 1 then
+							bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+								shopItem = bedwars["Shop"].getShopItem("arrow")
+							})
+						end
+					end
+
+					return shoothook(Self, ...)
+				end
+			else
+				bedwars["BowTable"]["launchProjectile"] = shoothook
+				shoothook = nil
 			end
 		end,
 		["HoverText"] = "Automatically Buys Swords, Armor, and Team Upgrades."
@@ -1770,6 +1791,10 @@ runcode(function()
 		["Name"] = "Buy Sword",
 		["Function"] = function() end, 
 		["Default"] = true
+	})
+	AutoBuyArrow = AutoBuy.CreateToggle({
+		["Name"] = "Buy Arrows",
+		["Function"] = function() end, 
 	})
 	AutoBuyUpgrades = AutoBuy.CreateToggle({
 		["Name"] = "Buy Team Upgrades",
@@ -2691,9 +2716,9 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 					else
 						if bird then
-							lplr.Character.Humanoid.WalkSpeed = (65 * (speedval["Value"] / 28)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1)
+							lplr.Character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 26)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1)
 							if (not (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics)) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
-								local newvelo = lplr.Character.Humanoid.MoveDirection * 50
+								local newvelo = lplr.Character.Humanoid.MoveDirection * 40
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 							end
 						end
@@ -2724,9 +2749,9 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 speedval = speed.CreateSlider({
 	["Name"] = "Speed",
 	["Min"] = 1,
-	["Max"] = 28,
+	["Max"] = 26,
 	["Function"] = function(val) end,
-	["Default"] = 28
+	["Default"] = 26
 })
 speedjump = speed.CreateToggle({
 	["Name"] = "AutoJump", 
@@ -2836,7 +2861,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 					if flydown then
 						flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 					end
-					local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (bird and (1.65 * (flyspeed["Value"] / 40)) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
+					local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (bird and (1.5 * (flyspeed["Value"] / 36)) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 					lplr.Character.HumanoidRootPart.Transparency = 1
 					lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
@@ -2862,16 +2887,16 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 flyspeed = fly.CreateSlider({
 	["Name"] = "Speed",
 	["Min"] = 1,
-	["Max"] = 40,
+	["Max"] = 36,
 	["Function"] = function(val) end, 
-	["Default"] = 40
+	["Default"] = 36
 })
 flyverticalspeed = fly.CreateSlider({
 	["Name"] = "Vertical Speed",
 	["Min"] = 1,
-	["Max"] = 40,
+	["Max"] = 36,
 	["Function"] = function(val) end, 
-	["Default"] = 40
+	["Default"] = 36
 })
 flyupanddown = fly.CreateToggle({
 	["Name"] = "Y Level",

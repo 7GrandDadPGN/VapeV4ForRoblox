@@ -374,6 +374,72 @@ ProfilesTextList = Profiles.CreateTextList({
 		end
 	end
 })
+local OnlineProfilesButton = Instance.new("TextButton")
+OnlineProfilesButton.Name = "OnlineProfilesButton"
+OnlineProfilesButton.LayoutOrder = 1
+OnlineProfilesButton.AutoButtonColor = false
+OnlineProfilesButton.Size = UDim2.new(0, 45, 0, 29)
+OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+OnlineProfilesButton.Active = false
+OnlineProfilesButton.Text = ""
+OnlineProfilesButton.ZIndex = 4
+OnlineProfilesButton.Font = Enum.Font.SourceSans
+OnlineProfilesButton.TextXAlignment = Enum.TextXAlignment.Left
+OnlineProfilesButton.Position = UDim2.new(0, 166, 0, 6)
+OnlineProfilesButton.Parent = ProfilesTextList["Object"]
+OnlineProfilesButton.MouseButton1Click:connect(function()
+	GuiLibrary["MainGui"].OnlineProfiles.Visible = true
+	GuiLibrary["MainGui"].ClickGui.Visible = false
+end)
+local OnlineProfilesButtonBKG = Instance.new("Frame")
+OnlineProfilesButtonBKG.BackgroundColor3 = Color3.fromRGB(38, 37, 38)
+OnlineProfilesButtonBKG.Size = UDim2.new(0, 47, 0, 31)
+OnlineProfilesButtonBKG.Position = UDim2.new(0, 165, 0, 5)
+OnlineProfilesButtonBKG.ZIndex = 3
+OnlineProfilesButtonBKG.Parent = ProfilesTextList["Object"]
+local OnlineProfilesButtonImage = Instance.new("ImageLabel")
+OnlineProfilesButtonImage.BackgroundTransparency = 1
+OnlineProfilesButtonImage.Position = UDim2.new(0, 14, 0, 7)
+OnlineProfilesButtonImage.Size = UDim2.new(0, 17, 0, 16)
+OnlineProfilesButtonImage.Image = getcustomassetfunc("vape/assets/OnlineProfilesButton.png")
+OnlineProfilesButtonImage.ImageColor3 = Color3.fromRGB(121, 121, 121)
+OnlineProfilesButtonImage.ZIndex = 5
+OnlineProfilesButtonImage.Active = false
+OnlineProfilesButtonImage.Parent = OnlineProfilesButton
+local OnlineProfilesbuttonround1 = Instance.new("UICorner")
+OnlineProfilesbuttonround1.CornerRadius = UDim.new(0, 5)
+OnlineProfilesbuttonround1.Parent = OnlineProfilesButton
+local OnlineProfilesbuttonround2 = Instance.new("UICorner")
+OnlineProfilesbuttonround2.CornerRadius = UDim.new(0, 5)
+OnlineProfilesbuttonround2.Parent = OnlineProfilesButtonBKG
+local OnlineProfilesFrame = Instance.new("Frame")
+OnlineProfilesFrame.Size = UDim2.new(0, 660, 0, 445)
+OnlineProfilesFrame.Position = UDim2.new(0.5, -330, 0.5, -223)
+OnlineProfilesFrame.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+OnlineProfilesFrame.Parent = GuiLibrary["MainGui"].OnlineProfiles
+local OnlineProfilesFrameShadow = Instance.new("ImageLabel")
+OnlineProfilesFrameShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+OnlineProfilesFrameShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+OnlineProfilesFrameShadow.Image = getcustomassetfunc("vape/assets/WindowBlur.png")
+OnlineProfilesFrameShadow.BackgroundTransparency = 1
+OnlineProfilesFrameShadow.ZIndex = -1
+OnlineProfilesFrameShadow.Size = UDim2.new(1, 6, 1, 6)
+OnlineProfilesFrameShadow.ImageColor3 = Color3.new(0, 0, 0)
+OnlineProfilesFrameShadow.ScaleType = Enum.ScaleType.Slice
+OnlineProfilesFrameShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+OnlineProfilesFrameShadow.Parent = OnlineProfilesFrame
+local OnlineProfilesFrameIcon = Instance.new("ImageLabel")
+OnlineProfilesFrameIcon.Size = UDim2.new(0, 19, 0, 16)
+OnlineProfilesFrameIcon.Image = getcustomassetfunc("vape/assets/ProfilesIcon.png")
+OnlineProfilesFrameIcon.Name = "WindowIcon"
+OnlineProfilesFrameIcon.BackgroundTransparency = 1
+OnlineProfilesFrameIcon.Position = UDim2.new(0, 10, 0, 13)
+OnlineProfilesFrameIcon.ImageColor3 = Color3.fromRGB(200, 200, 200)
+OnlineProfilesFrameIcon.Parent = OnlineProfilesFrame
+local OnlineProfilesFrameCorner = Instance.new("UICorner")
+OnlineProfilesFrameCorner.CornerRadius = UDim.new(0, 4)
+OnlineProfilesFrameCorner.Parent = OnlineProfilesFrame
+
 GUI.CreateDivider()
 ---GUI.CreateCustomButton("Favorites", "vape/assets/FavoritesListIcon.png", UDim2.new(0, 17, 0, 14), function() end, function() end)
 --GUI.CreateCustomButton("Text GUIVertical", "vape/assets/TextGUIIcon3.png", UDim2.new(1, -56, 0, 15), function() end, function() end)
