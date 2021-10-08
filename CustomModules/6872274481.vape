@@ -1428,6 +1428,81 @@ runcode(function()
 	})
 end)
 
+runcode(function()
+	local LuckyBlockNuker = {["Enabled"] = false}
+    local luckyconnection
+    local luckyconnection2
+    local luckyblocktable = {}
+	local luckyblocknukerdigpos = {["Value"] = "Right"}
+	local luckyblocknukerrange = {["Value"] = 1}
+	local luckyblocknukereffects = {["Enabled"] = false}
+	LuckyBlockNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "LuckyBlockNuker",
+		["Function"] = function(callback)
+            if callback then
+                for i,v in pairs(workspace:GetChildren()) do
+                    if v.Name:find("lucky") then
+                        table.insert(luckyblocktable, v)
+                    end
+                end
+                luckyconnection = workspace.ChildAdded:connect(function(v)
+                    if v.Name == "lucky_block" then
+                        table.insert(luckyblocktable, v)
+                    end
+                end)
+                luckyconnection2 = workspace.ChildRemoved:connect(function(v)
+                    if v.Name == "lucky_block" then
+                        table.remove(luckyblocktable, table.find(luckyblocktable, v))
+                    end
+                end)
+                spawn(function()
+                    repeat
+                        wait()
+                        local tab = luckyblocktable
+                        for i = 1, #tab do
+                            local obj = tab[i]
+                            if isAlive() then
+                                if obj and obj.Parent ~= nil then
+                                    if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= luckyblocknukerrange["Value"] then
+                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], luckyblocknukerdigpos["Value"])
+                                        wait(0.3)
+                                    end
+                                end
+                            end
+                        end
+                    until LuckyBlockNuker["Enabled"] == false
+                end)
+            else
+             --   luckyconnection:Disconnect()
+              --  luckyconnection2:Disconnect()
+              --  luckyblocktable = {}
+            end
+		end,
+		["HoverText"] = "Automatically destroys beds around you."
+	})
+	luckyblocknukerdigpos = LuckyBlockNuker.CreateDropdown({
+		["Name"] = "Break Direction", 
+		["List"] = normalsides,
+		["Function"] = function(val) end
+	})
+	luckyblocknukerrange = LuckyBlockNuker.CreateSlider({
+		["Name"] = "Break range",
+		["Min"] = 1, 
+		["Max"] = 20, 
+		["Function"] = function(val) end, 
+		["Default"] = 20
+	})
+	luckyblocknukereffects = LuckyBlockNuker.CreateToggle({
+		["Name"] = "Show HealthBar & Effects",
+		["Function"] = function(callback) 
+			if not callback then
+				bedwars["BlockHealthbar2"].healthbarMaid:DoCleaning()
+			end
+		 end,
+		["Default"] = true
+	})
+end)
+
 local function projvischeck(launchpos, targetpos)
 	local direction = Ray.new(launchpos, (targetpos + Vector3.new(0, 0, 0) - launchpos).unit).Unit.Direction
 	local raycastparameters = RaycastParams.new()
