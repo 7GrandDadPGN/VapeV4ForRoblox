@@ -321,7 +321,12 @@ getfunctions = function()
 				end
 			end
 			if rawget(v, "equipItem") then
-				bedwars["EquipItemRemote"] = debug.getconstant(v["equipItem"], 25)
+				for i3,v3 in pairs(debug.getconstants(v["equipItem"])) do
+					if tostring(v3) == "Client" then
+						bedwars["EquipItemRemote"] = debug.getconstant(v["equipItem"], i3 + 1)
+						break
+					end
+				end
 			end
 			if rawget(v, "ShieldController") and getmetatable(rawget(v, "ShieldController")) then
 				local remotetab = debug.getconstants(debug.getprotos(getmetatable(v["ShieldController"])["raiseShield"])[1])
