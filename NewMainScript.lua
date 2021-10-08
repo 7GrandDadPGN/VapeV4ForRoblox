@@ -501,23 +501,74 @@ OnlineProfilesButton.MouseButton1Click:connect(function()
 		end)
 		onlineprofiles = (success and result or {})
 		for i2,v2 in pairs(onlineprofiles) do
-			local profilebox = Instance.new("Frame")
-			profilebox.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
-			profilebox.Parent = OnlineProfilesList
-			local profiletext = Instance.new("TextLabel")
-			profiletext.TextSize = 15
-			profiletext.TextColor3 = Color3.fromRGB(137, 136, 137)
-			profiletext.Size = UDim2.new(0, 100, 0, 20)
-			profiletext.Position = UDim2.new(0, 18, 0, 25)
-			profiletext.Font = Enum.Font.SourceSans
-			profiletext.TextXAlignment = Enum.TextXAlignment.Left
-			profiletext.TextYAlignment = Enum.TextYAlignment.Top
-			profiletext.BackgroundTransparency = 1
-			profiletext.Text = i2
-			profiletext.Parent = profilebox
-			local profileround = Instance.new("UICorner")
-			profileround.CornerRadius = UDim.new(0, 4)
-			profileround.Parent = profilebox
+			if v2["ProfileGame"] == game.PlaceId then
+				local profilebox = Instance.new("Frame")
+				profilebox.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+				profilebox.Parent = OnlineProfilesList
+				local profiletext = Instance.new("TextLabel")
+				profiletext.TextSize = 15
+				profiletext.TextColor3 = Color3.fromRGB(137, 136, 137)
+				profiletext.Size = UDim2.new(0, 100, 0, 20)
+				profiletext.Position = UDim2.new(0, 18, 0, 25)
+				profiletext.Font = Enum.Font.SourceSans
+				profiletext.TextXAlignment = Enum.TextXAlignment.Left
+				profiletext.TextYAlignment = Enum.TextYAlignment.Top
+				profiletext.BackgroundTransparency = 1
+				profiletext.Text = i2
+				profiletext.Parent = profilebox
+				local profiledownload = Instance.new("TextButton")
+				profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+				profiledownload.Size = UDim2.new(0, 69, 0, 31)
+				profiledownload.Font = Enum.Font.SourceSans
+				profiledownload.TextColor3 = Color3.fromRGB(200, 200, 200)
+				profiledownload.TextSize = 15
+				profiledownload.AutoButtonColor = false
+				profiledownload.Text = "DOWNLOAD"
+				profiledownload.Position = UDim2.new(0, 14, 0, 96)
+				profiledownload.Visible = false 
+				profiledownload.Parent = profilebox
+				profiledownload.ZIndex = 2
+				local profiledownloadbkg = Instance.new("Frame")
+				profiledownloadbkg.Size = UDim2.new(0, 71, 0, 33)
+				profiledownloadbkg.BackgroundColor3 = Color3.fromRGB(42, 41, 42)
+				profiledownloadbkg.Position = UDim2.new(0, 13, 0, 95)
+				profiledownloadbkg.ZIndex = 1
+				profiledownloadbkg.Visible = false
+				profiledownloadbkg.Parent = profilebox
+				profilebox.MouseEnter:connect(function()
+					profiletext.TextColor3 = Color3.fromRGB(200, 200, 200)
+					profiledownload.Visible = true 
+					profiledownloadbkg.Visible = true
+				end)
+				profilebox.MouseLeave:connect(function()
+					profiletext.TextColor3 = Color3.fromRGB(137, 136, 137)
+					profiledownload.Visible = false
+					profiledownloadbkg.Visible = false
+				end)
+				profiledownload.MouseEnter:connect(function()
+					profiledownload.BackgroundColor3 = Color3.fromRGB(5, 134, 105)
+				end)
+				profiledownload.MouseLeave:connect(function()
+					profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+				end)
+				profiledownload.MouseButton1Click:connect(function()
+					writefile("vape/Profiles/"..v2["ProfileName"]..tostring(game.PlaceId)..".vapeprofile", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/vape/OnlineProfiles/"..v2["OnlineProfileName"], true)))
+					GuiLibrary["Profiles"][v2["ProfileName"]] = {["Keybind"] = "", ["Selected"] = false}
+					if table.find(ProfilesTextList["ObjectList"], v2["ProfileName"]) == nil then
+						table.insert(ProfilesTextList["ObjectList"], v2["ProfileName"])
+					end
+					ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
+				end)
+				local profileround = Instance.new("UICorner")
+				profileround.CornerRadius = UDim.new(0, 4)
+				profileround.Parent = profilebox
+				local profileround2 = Instance.new("UICorner")
+				profileround2.CornerRadius = UDim.new(0, 4)
+				profileround2.Parent = profiledownload
+				local profileround3 = Instance.new("UICorner")
+				profileround3.CornerRadius = UDim.new(0, 4)
+				profileround3.Parent = profiledownloadbkg
+			end
 		end
 		profilesloaded = true
 	end
