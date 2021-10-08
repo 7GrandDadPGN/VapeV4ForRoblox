@@ -240,6 +240,7 @@ FriendsColor = Friends.CreateColorSlider({
 	end
 })
 local ProfilesTextList = {["RefreshValues"] = function() end}
+local profilesloaded = false
 ProfilesTextList = Profiles.CreateTextList({
 	["Name"] = "ProfilesList",
 	["TempText"] = "Type name", 
@@ -387,10 +388,6 @@ OnlineProfilesButton.Font = Enum.Font.SourceSans
 OnlineProfilesButton.TextXAlignment = Enum.TextXAlignment.Left
 OnlineProfilesButton.Position = UDim2.new(0, 166, 0, 6)
 OnlineProfilesButton.Parent = ProfilesTextList["Object"]
-OnlineProfilesButton.MouseButton1Click:connect(function()
-	GuiLibrary["MainGui"].OnlineProfiles.Visible = true
-	GuiLibrary["MainGui"].ClickGui.Visible = false
-end)
 local OnlineProfilesButtonBKG = Instance.new("Frame")
 OnlineProfilesButtonBKG.BackgroundColor3 = Color3.fromRGB(38, 37, 38)
 OnlineProfilesButtonBKG.Size = UDim2.new(0, 47, 0, 31)
@@ -436,9 +433,95 @@ OnlineProfilesFrameIcon.BackgroundTransparency = 1
 OnlineProfilesFrameIcon.Position = UDim2.new(0, 10, 0, 13)
 OnlineProfilesFrameIcon.ImageColor3 = Color3.fromRGB(200, 200, 200)
 OnlineProfilesFrameIcon.Parent = OnlineProfilesFrame
+local OnlineProfilesFrameText = Instance.new("TextLabel")
+OnlineProfilesFrameText.Size = UDim2.new(0, 155, 0, 41)
+OnlineProfilesFrameText.BackgroundTransparency = 1
+OnlineProfilesFrameText.Name = "WindowTitle"
+OnlineProfilesFrameText.Position = UDim2.new(0, 36, 0, 0)
+OnlineProfilesFrameText.TextXAlignment = Enum.TextXAlignment.Left
+OnlineProfilesFrameText.Font = Enum.Font.SourceSans
+OnlineProfilesFrameText.TextSize = 17
+OnlineProfilesFrameText.Text = "Profiles"
+OnlineProfilesFrameText.TextColor3 = Color3.fromRGB(201, 201, 201)
+OnlineProfilesFrameText.Parent = OnlineProfilesFrame
+local OnlineProfilesFrameText2 = Instance.new("TextLabel")
+OnlineProfilesFrameText2.TextSize = 15
+OnlineProfilesFrameText2.TextColor3 = Color3.fromRGB(85, 84, 85)
+OnlineProfilesFrameText2.Text = "YOUR PROFILES"
+OnlineProfilesFrameText2.Font = Enum.Font.SourceSans
+OnlineProfilesFrameText2.BackgroundTransparency = 1
+OnlineProfilesFrameText2.TextXAlignment = Enum.TextXAlignment.Left
+OnlineProfilesFrameText2.TextYAlignment = Enum.TextYAlignment.Top
+OnlineProfilesFrameText2.Size = UDim2.new(1, 0, 0, 20)
+OnlineProfilesFrameText2.Position = UDim2.new(0, 10, 0, 48)
+OnlineProfilesFrameText2.Parent = OnlineProfilesFrame
+local OnlineProfilesFrameText3 = Instance.new("TextLabel")
+OnlineProfilesFrameText3.TextSize = 15
+OnlineProfilesFrameText3.TextColor3 = Color3.fromRGB(85, 84, 85)
+OnlineProfilesFrameText3.Text = "PUBLIC PROFILES"
+OnlineProfilesFrameText3.Font = Enum.Font.SourceSans
+OnlineProfilesFrameText3.BackgroundTransparency = 1
+OnlineProfilesFrameText3.TextXAlignment = Enum.TextXAlignment.Left
+OnlineProfilesFrameText3.TextYAlignment = Enum.TextYAlignment.Top
+OnlineProfilesFrameText3.Size = UDim2.new(1, 0, 0, 20)
+OnlineProfilesFrameText3.Position = UDim2.new(0, 231, 0, 48)
+OnlineProfilesFrameText3.Parent = OnlineProfilesFrame
+local OnlineProfilesBorder1 = Instance.new("Frame")
+OnlineProfilesBorder1.BackgroundColor3 = Color3.fromRGB(40, 39, 40)
+OnlineProfilesBorder1.BorderSizePixel = 0
+OnlineProfilesBorder1.Size = UDim2.new(1, 0, 0, 1)
+OnlineProfilesBorder1.Position = UDim2.new(0, 0, 0, 41)
+OnlineProfilesBorder1.Parent = OnlineProfilesFrame
+local OnlineProfilesBorder2 = Instance.new("Frame")
+OnlineProfilesBorder2.BackgroundColor3 = Color3.fromRGB(40, 39, 40)
+OnlineProfilesBorder2.BorderSizePixel = 0
+OnlineProfilesBorder2.Size = UDim2.new(0, 1, 1, -41)
+OnlineProfilesBorder2.Position = UDim2.new(0, 220, 0, 41)
+OnlineProfilesBorder2.Parent = OnlineProfilesFrame
+local OnlineProfilesList = Instance.new("ScrollingFrame")
+OnlineProfilesList.BackgroundTransparency = 1
+OnlineProfilesList.Size = UDim2.new(0, 408, 0, 319)
+OnlineProfilesList.Position = UDim2.new(0, 230, 0, 122)
+OnlineProfilesList.CanvasSize = UDim2.new(0, 408, 0, 319)
+OnlineProfilesList.Parent = OnlineProfilesFrame
+local OnlineProfilesListGrid = Instance.new("UIGridLayout")
+OnlineProfilesListGrid.CellSize = UDim2.new(0, 134, 0, 144)
+OnlineProfilesListGrid.CellPadding = UDim2.new(0, 4, 0, 4)
+OnlineProfilesListGrid.Parent = OnlineProfilesList
 local OnlineProfilesFrameCorner = Instance.new("UICorner")
 OnlineProfilesFrameCorner.CornerRadius = UDim.new(0, 4)
 OnlineProfilesFrameCorner.Parent = OnlineProfilesFrame
+OnlineProfilesButton.MouseButton1Click:connect(function()
+	GuiLibrary["MainGui"].OnlineProfiles.Visible = true
+	GuiLibrary["MainGui"].ClickGui.Visible = false
+	if profilesloaded == false then
+		local onlineprofiles = {}
+		local success, result = pcall(function()
+			return game:GetService("HttpService"):JSONDecode((shared.VapeDeveloper and readfile("vape/OnlineProfiles.vapeonline") or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles.vapeonline", true)))
+		end)
+		onlineprofiles = (success and result or {})
+		for i2,v2 in pairs(onlineprofiles) do
+			local profilebox = Instance.new("Frame")
+			profilebox.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+			profilebox.Parent = OnlineProfilesList
+			local profiletext = Instance.new("TextLabel")
+			profiletext.TextSize = 15
+			profiletext.TextColor3 = Color3.fromRGB(137, 136, 137)
+			profiletext.Size = UDim2.new(0, 100, 0, 20)
+			profiletext.Position = UDim2.new(0, 18, 0, 25)
+			profiletext.Font = Enum.Font.SourceSans
+			profiletext.TextXAlignment = Enum.TextXAlignment.Left
+			profiletext.TextYAlignment = Enum.TextYAlignment.Top
+			profiletext.BackgroundTransparency = 1
+			profiletext.Text = i2
+			profiletext.Parent = profilebox
+			local profileround = Instance.new("UICorner")
+			profileround.CornerRadius = UDim.new(0, 4)
+			profileround.Parent = profilebox
+		end
+		profilesloaded = true
+	end
+end)
 
 GUI.CreateDivider()
 ---GUI.CreateCustomButton("Favorites", "vape/assets/FavoritesListIcon.png", UDim2.new(0, 17, 0, 14), function() end, function() end)
