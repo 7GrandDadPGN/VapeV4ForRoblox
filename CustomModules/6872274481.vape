@@ -1773,7 +1773,6 @@ runcode(function()
 					local shoottab = args[2]
 
 					if shoottab.projectile:find("arrow") and AutoBuyArrow["Enabled"] then
-						print("yes", getItem("arrow")["amount"])
 						if getItem("arrow")["amount"] == 1 then
 							bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 								shopItem = bedwars["Shop"].getShopItem("arrow")
