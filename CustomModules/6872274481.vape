@@ -152,15 +152,29 @@ local function getHotbarSlot(itemName)
 	return nil
 end
 
+local betterswords2 = {
+	["wood_sword"] = 1,
+	["stone_sword"] = 2,
+	["iron_sword"] = 3,
+	["diamond_sword"] = 4,
+	["emerald_sword"] = 5,
+	["rageblade"] = 6
+}
+
 local function getSword()
+	local bestsword, bestswordslot, bestswordnum = nil, nil, 0
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
 		if v5["itemType"]:find("sword") or v5["itemType"]:find("blade") then
-			return v5, i5
+			local swordrank = betterswords2[v5["itemType"]]
+			if swordrank > bestswordnum then
+				bestswordnum = swordrank
+				bestswordslot = i5
+				bestsword = v5
+			end
 		end
 	end
-	return nil
+	return bestsword, bestswordslot
 end
-
 local function getBaguette()
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
 		if v5["itemType"]:find("baguette") then
@@ -661,8 +675,8 @@ local healthbarblocktable = {
 	["blockHealth"] = -1,
 	["breakingBlockPosition"] = Vector3.new(0, 0, 0)
 }
-bedwars["breakBlock"] = function(pos, effects, normal)
-	local block = (getlastblock(pos, Enum.NormalId[normal]) or getblock(pos))
+bedwars["breakBlock"] = function(pos, effects, normal, bypass)
+	local block = ((bypass == nil and getlastblock(pos, Enum.NormalId[normal])) or getblock(pos))
 	local olditem = lplr.Character.HandInvItem.Value
 	local blockhealthbarpos = {blockPosition = Vector3.new(0, 0, 0)}
 	local blockdmg = 0
@@ -969,7 +983,7 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 					if getEquipped()["Type"] == "sword" then
 						bedwars["SwordController"]["swingSwordAtMouse"](bedwars["SwordController"])
 					end
-					if autoclickerautoblock["Enabled"] and kit == "shielder" then
+					if autoclickerautoblock["Enabled"] and getItem("shield") then
 						spawn(bedwars["raiseShield"])
 					end
 					if blockplaceenabled and autoclickerblocks["Enabled"] then
@@ -1464,7 +1478,7 @@ runcode(function()
                             if isAlive() then
                                 if obj and obj.Parent ~= nil then
                                     if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= luckyblocknukerrange["Value"] then
-                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], luckyblocknukerdigpos["Value"])
+                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], luckyblocknukerdigpos["Value"], true)
                                         wait(0.3)
                                     end
                                 end
@@ -1960,7 +1974,6 @@ runcode(function()
 		["Name"] = "AutoEat",
 		["Function"] = function(callback)
 			if callback then
-				if kit == "baker" then
 					autohealbound = true
 					BindToRenderStep("AutoHeal", 1, function()
 						if isAlive() and lplr.Character.Humanoid.Health <= autohealval["Value"] and autohealdelay <= tick() then
@@ -1969,7 +1982,7 @@ runcode(function()
 								bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServer({
 									["item"] = getItem("apple")["tool"]
 								})
-							elseif autobuyapple["Enabled"] then
+							elseif autobuyapple["Enabled"] and kit == "baker" then
 								bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 									shopItem = bedwars["Shop"].getShopItem("apple")
 								}):andThen(function(suc)
@@ -1982,26 +1995,10 @@ runcode(function()
 							end
 						end
 					end)
-				else
-					spawn(function()
-						repeat wait() until matchState ~= 0
-						if kit ~= "baker" then
-							if autoheal["Enabled"] then
-								autoheal["ToggleButton"](false)
-							end
-						else
-							autoheal["ToggleButton"](false)
-							autoheal["ToggleButton"](true)
-						end
-					end)
-				end
 			else
 				if autohealbound then
 					autohealbound = false
 					UnbindFromRenderStep("AutoHeal")
-				end
-				if kit ~= "baker" then
-					createwarning("AutoHeal", "Baker Kit Required", 4)
 				end
 			end
 		end,
@@ -2321,7 +2318,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 						if isAlive() and (killauratargetframe["NPCs"]["Enabled"] == false or killauratargetframe["NPCs"]["Enabled"]) and (killaurahandcheck["Enabled"] and getEquipped()["Type"] == "sword" or (not killaurahandcheck["Enabled"])) and (killauratargetframe["Walls"]["Enabled"] and bedwars["SwordController"]:canSee({["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}) or (not killauratargetframe["Walls"]["Enabled"])) and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and (killauragui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false) or (not killauragui["Enabled"])) then
 							if plr.Character.PrimaryPart and lplr.Character.PrimaryPart then
 								killauranear = true
-								if killauraautoblock["Enabled"] and kit == "shielder" then
+								if killauraautoblock["Enabled"] and getItem("shield") then
 									spawn(bedwars["raiseShield"])
 								end
 								if killauracframe["Enabled"] then
