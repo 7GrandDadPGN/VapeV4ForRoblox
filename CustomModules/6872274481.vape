@@ -502,6 +502,7 @@ getfunctions = function()
         end
 	else
 		wait(1)
+		print(bedwars["PlayerUtil"], bedwars["PickupRemote"], bedwars["Shop"], bedwars["SoundManager"], bedwars["SetSelectedShopItem"], bedwars["ViewmodelController"], bedwars["GuitarRemote"], bedwars["BalloonController"], bedwars["SwingSwordRegion"], bedwars["CombatConstant"], bedwars["SwingSword"], bedwars["BowTable"], bedwars["getInventory"], bedwars["raiseShield"], bedwars["BlockController"], bedwars["BlockEngine"], bedwars["BlockController2"], bedwars["BlockController3"], bedwars["SwordController"], bedwars["attackEntity"], bedwars["damageTable"], bedwars["sprintTable"])
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
 		getfunctions()
 	end
@@ -933,6 +934,7 @@ local autoclickerblocks = {["Enabled"] = false}
 local autoclickermousedown = false
 local autoclickerconnection1
 local autoclickerconnection2
+local firstclick = false
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "AutoClicker",
 	["Function"] = function(callback)
@@ -951,6 +953,7 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 			autoclickerconnection1 = uis.InputBegan:connect(function(input, gameProcessed)
 				if gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton1 then
 					autoclickermousedown = true
+					firstclick = true
 				end
 			end)
 			autoclickerconnection2 = uis.InputEnded:connect(function(input)
@@ -959,7 +962,7 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 				end
 			end)
 			BindToRenderStep("AutoClicker", 1, function() 
-				if isAlive() and autoclickermousedown and autoclickertick <= tick() and bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 then
+				if isAlive() and autoclickermousedown and autoclickertick <= tick() and bedwars["ClientStoreHandler"]:getState().App.shownApp <= 0 and GuiLibrary["MainGui"].ClickGui.Visible == false and matchState ~= 0 and firstclick == false then
 					autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
 					if getEquipped()["Type"] == "sword" then
 						bedwars["SwordController"]["swingSwordAtMouse"](bedwars["SwordController"])
@@ -973,6 +976,8 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 							bedwars["BlockController2"]["placeBlock"](blockplacetable, mouseinfo.placementPosition)
 						end
 					end
+				else
+					firstclick = false
 				end
 			end)
 		else
@@ -1723,7 +1728,7 @@ runcode(function()
 				local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
 				local BreakSpeedUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "break")
 				local AlarmUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "alarm")
-				if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and (AutoBuyGui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or bedwars["ClientStoreHandler"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
+				if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and getItem("rage_blade") == nil and (AutoBuyGui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or bedwars["ClientStoreHandler"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
 					local buyablesword = checkallswords()
 					if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
 						local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
