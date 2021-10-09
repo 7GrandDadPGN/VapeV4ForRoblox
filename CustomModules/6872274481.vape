@@ -698,20 +698,20 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
 end	
 
 local function getEquipped()
-	local type = ""
+	local typetext = ""
 	local obj = (isAlive() and lplr.Character:FindFirstChild("HandInvItem") and lplr.Character.HandInvItem.Value or nil)
 	if obj then
 		if obj.Name:find("sword") or obj.Name:find("blade") or obj.Name:find("baguette") then
-			type = "sword"
+			typetext = "sword"
 		end
 		if obj.Name:find("wool") or bedwars["ItemTable"][obj.Name]["block"] then
-			type = "block"
+			typetext = "block"
 		end
 		if obj.Name:find("bow") then
-			type = "bow"
+			typetext = "bow"
 		end
 	end
-    return {["Object"] = obj, ["Type"] = type}
+    return {["Object"] = obj, ["Type"] = typetext}
 end
 
 local function nakedcheck(plr)
@@ -1382,7 +1382,7 @@ runcode(function()
 	local bednukerdigpos = {["Value"] = "Right"}
 	local bednukerrange = {["Value"] = 1}
 	local bednukereffects = {["Enabled"] = false}
-	BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "BedNuker",
 		["Function"] = function(callback)
 			spawn(function()
@@ -1425,6 +1425,95 @@ runcode(function()
 			end
 		 end,
 		["Default"] = true
+	})
+end)
+
+runcode(function()
+	local BedProtector = {["Enabled"] = false}
+	local bedprotector1stlayer = {
+		Vector3.new(0, 3, 0),
+		Vector3.new(0, 3, 3),
+		Vector3.new(3, 0, 0),
+		Vector3.new(3, 0, 3),
+		Vector3.new(-3, 0, 0),
+		Vector3.new(-3, 0, 3),
+		Vector3.new(0, 0, 6),
+		Vector3.new(0, 0, -3)
+	}
+	local bedprotector2ndlayer = {
+		Vector3.new(0, 6, 0),
+		Vector3.new(0, 6, 3),
+		Vector3.new(0, 3, 6),
+		Vector3.new(0, 3, -3),
+		Vector3.new(0, 0, -6),
+		Vector3.new(0, 0, 9),
+		Vector3.new(3, 3, 0),
+		Vector3.new(3, 3, 3),
+		Vector3.new(3, 0, 6),
+		Vector3.new(3, 0, -3),
+		Vector3.new(6, 0, 3),
+		Vector3.new(6, 0, 0),
+		Vector3.new(-3, 3, 3),
+		Vector3.new(-3, 3, 0),
+		Vector3.new(-6, 0, 3),
+		Vector3.new(-6, 0, 0),
+		Vector3.new(-3, 0, 6),
+		Vector3.new(-3, 0, -3),
+	}
+
+	local function getItemFromList(list)
+		local selecteditem
+		for i3,v3 in pairs(list) do
+			local item = getItem(v3)
+			if item then 
+				selecteditem = item
+				break
+			end
+		end
+		return selecteditem
+	end
+
+	local function placelayer(layertab, obj, selecteditems)
+		for i2,v2 in pairs(layertab) do
+			local selecteditem = getItemFromList(selecteditems)
+			if selecteditem then
+				bedwars["placeBlock"](obj.Position + v2, selecteditem["itemType"])
+			else
+				return false
+			end
+		end
+		return true
+	end
+
+	local bedprotectorrange = {["Value"] = 1}
+	BedProtector = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "BedProtector",
+		["Function"] = function(callback)
+            if callback then
+                spawn(function()
+                    for i, obj in pairs(bedwars["BedTable"]) do
+                        if isAlive() and obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor == lplr.Team.TeamColor and obj.Parent ~= nil then
+                            if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bedprotectorrange["Value"] then
+                                local firstlayerplaced = placelayer(bedprotector1stlayer, obj, {"obsidian", "stone_brick", "plank_oak", getwool()})
+							    if firstlayerplaced then
+									placelayer(bedprotector2ndlayer, obj, {getwool()})
+							    end
+                            end
+                            break
+                        end
+                    end
+                    BedProtector["ToggleButton"](false)
+                end)
+            end
+		end,
+		["HoverText"] = "Automatically places a bed defense (Toggle)"
+	})
+	bedprotectorrange = BedProtector.CreateSlider({
+		["Name"] = "Place range",
+		["Min"] = 1, 
+		["Max"] = 20, 
+		["Function"] = function(val) end, 
+		["Default"] = 20
 	})
 end)
 
