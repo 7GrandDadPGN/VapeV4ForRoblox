@@ -19,7 +19,6 @@ local scaffoldypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 local ownedkits = {}
-local playerwhitelist = {2884764437, 2904227753, 2783615468}
 local oldattack
 local chatconnection
 local normalsides = {"Top", "Left", "Right", "Front", "Back"}
@@ -413,27 +412,6 @@ getfunctions = function()
 							end
 						end
 					end
-				end
-				oldattack = v["attackEntity"]
-				shared.backup_attack = oldattack
-				v["attackEntity"] = function(Self, entity, raycast)
-					local plr
-					pcall(function()
-						if table.find(playerwhitelist, players:GetPlayerFromCharacter(entity:getInstance()).UserId) then
-							plr = true
-						end
-					end)
-					if plr then
-						local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
-						if plrentity ~= nil then
-							plrentity:playAnimation(0)
-						end
-						bedwars["ViewmodelController"]:playAnimation(5)
-						bedwars["SoundManager"]:playSound(math.random(13, 14))
-						return nil
-					end
-					local suc, res = pcall(function() return oldattack(Self, entity, raycast) end)
-					return res
 				end
 				bedwars["attackTable"] = v
 				bedwars["attackEntity"] = v["attackEntity"]
@@ -2347,20 +2325,18 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 										else
 											bedwars["ViewmodelController"]:playAnimation(5)
 											bedwars["SoundManager"]:playSound(math.random(13, 14))
-											if table.find(playerwhitelist, plr.UserId) == nil then
-												killaurarealremote:InvokeServer({
-													["weapon"] = killaurabaguette["Enabled"] and getBaguette() and getBaguette()["tool"] or getSword()["tool"],
-													["entityInstance"] = plr.Character,
-													["validate"] = {
-														["raycast"] = {
-															["cameraPosition"] = hashvec(cam.CFrame.p), 
-															["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
-														},
-														["targetPosition"] = hashvec(plr.Character.HumanoidRootPart.Position),
-														["selfPosition"] = hashvec(lplr.Character.HumanoidRootPart.Position)
-													}
-												})
-											end
+											killaurarealremote:InvokeServer({
+												["weapon"] = killaurabaguette["Enabled"] and getBaguette() and getBaguette()["tool"] or getSword()["tool"],
+												["entityInstance"] = plr.Character,
+												["validate"] = {
+													["raycast"] = {
+														["cameraPosition"] = hashvec(cam.CFrame.p), 
+														["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
+													},
+													["targetPosition"] = hashvec(plr.Character.HumanoidRootPart.Position),
+													["selfPosition"] = hashvec(lplr.Character.HumanoidRootPart.Position)
+												}
+											})
 											local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
 											if plrentity ~= nil and isAlive() then
 												plrentity:playAnimation(0)
