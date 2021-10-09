@@ -368,6 +368,9 @@ getfunctions = function()
 			if rawget(v, "ConsumeController") then
 				bedwars["EatRemote"] = debug.getconstant(debug.getproto(getmetatable(v["ConsumeController"])["onEnable"], 1), 5)
 			end
+			if rawget(v, "RavenController") then
+				bedwars["RavenTable"] = v["RavenController"]
+			end
 			if rawget(v, "checkForPickup") then
 				local remotetab = debug.getconstants(v["checkForPickup"])
 				bedwars["PickupRemote"] = remotetab[#remotetab - 5]
@@ -1834,7 +1837,7 @@ runcode(function()
 			if callback then 
 				buyingthing = false 
 				BuyCheck()
-				shoothook = bedwars["BowTable"]["launchProjectile"]
+				shoothook = bedwars["BowTable"]["launchProjectile"] 
 				bedwars["BowTable"]["launchProjectile"] = function(Self, ...)
 					local args = {...}
 					local shoottab = args[2]
@@ -1853,6 +1856,7 @@ runcode(function()
 				bedwars["BowTable"]["launchProjectile"] = shoothook
 				shoothook = nil
 			end
+			shared.launch_proj_backup = (shoothook or bedwars["BowTable"]["launchProjectile"])
 		end,
 		["HoverText"] = "Automatically Buys Swords, Armor, and Team Upgrades."
 	})
@@ -2771,14 +2775,14 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 					else
 						if bird then
-							lplr.Character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 26)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1)
+							lplr.Character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 26)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
 							if (not (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics)) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 								local newvelo = lplr.Character.Humanoid.MoveDirection * 40
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 							end
 						end
 						bodyvelo.MaxForce = (bird and Vector3.new(0, 0, 0) or Vector3.new(100000, 0, 100000))
-						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1)) * (slowdownspeed and 0.6 or 1)
+						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1)) * (slowdownspeed and 0.6 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
 					end
 					if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing then
 						bodyvelo.MaxForce = Vector3.new(0, 0, 0)
