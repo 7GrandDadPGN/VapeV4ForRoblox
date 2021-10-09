@@ -1478,7 +1478,7 @@ runcode(function()
               --  luckyblocktable = {}
             end
 		end,
-		["HoverText"] = "Automatically destroys beds around you."
+		["HoverText"] = "Automatically destroys lucky blocks around you."
 	})
 	luckyblocknukerdigpos = LuckyBlockNuker.CreateDropdown({
 		["Name"] = "Break Direction", 
