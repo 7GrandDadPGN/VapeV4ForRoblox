@@ -1120,6 +1120,8 @@ GUI.CreateToggle({
 local rescale = GUI.CreateToggle({
 	["Name"] = "Rescale", 
 	["Function"] = function(callback) 
+		GuiLibrary["MainRescale"].Scale = (callback and math.clamp(cam.ViewportSize.X / 1920, 0.5, 1) or 0.99)
+		wait(0.01)
 		GuiLibrary["MainRescale"].Scale = (callback and math.clamp(cam.ViewportSize.X / 1920, 0.5, 1) or 1)
 	end,
 	["Default"] = true
