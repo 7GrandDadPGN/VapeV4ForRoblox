@@ -1525,7 +1525,7 @@ runcode(function()
 	local luckyblocknukerdigpos = {["Value"] = "Right"}
 	local luckyblocknukerrange = {["Value"] = 1}
 	local luckyblocknukereffects = {["Enabled"] = false}
-	LuckyBlockNuker = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	LuckyBlockNuker = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "LuckyBlockNuker",
 		["Function"] = function(callback)
             if callback then
@@ -1591,6 +1591,35 @@ runcode(function()
 		["Default"] = true
 	})
 end)
+
+--[[runcode(function()
+	local Schematica = {["Enabled"] = false}
+	local startpos
+	local endpos 
+	Schematica = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Schematica",
+		["Function"] = function(callback)
+			if callback then
+				local mouseinfo = bedwars["BlockEngine"]:getBlockSelector():getMouseInfo(1)
+				if mouseinfo then
+					local newpos = (mouseinfo.target.blockRef.blockPosition * 3)
+					if not startpos then
+						startpos = newpos
+					elseif not endpos then
+						endpos = newpos
+						local region = Region3.new(startpos - Vector3.new(1, 1, 1), endpos + Vector3.new(1, 1, 1))
+						local parts = workspace:FindPartsInRegion3(region)
+						print(#parts)
+						startpos = nil
+						endpos = nil
+					end
+				end
+				Schematica["ToggleButton"](false)
+			end
+		end,
+		["HoverText"] = "Automatically places structure at mouse position."
+	})
+end)]]
 
 local function projvischeck(launchpos, targetpos)
 	local direction = Ray.new(launchpos, (targetpos + Vector3.new(0, 0, 0) - launchpos).unit).Unit.Direction
@@ -2293,7 +2322,6 @@ local Killauranear = false
 local killauraplaying = false
 local oldplay = function() end
 local oldsound = function() end
-local oldmeta
 
 local function hashvec(vec)
 	return {
@@ -2308,18 +2336,6 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		if callback then
 			oldplay = bedwars["ViewmodelController"]["playAnimation"]
 			oldsound = bedwars["SoundManager"]["playSound"]
-			oldmeta = bedwars["SwordController"]["getHandItem"]
-			bedwars["SwordController"]["getHandItem"] = function(Self)
-				if (not killaurahandcheck["Enabled"]) then
-					if killaurabaguette["Enabled"] and getBaguette() then
-						return getBaguette()
-					else
-						return getSword()
-					end
-				else
-					return oldmeta(Self)
-				end
-			end
 			bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
 				if (soundid == 13 or soundid == 14) and Killaura["Enabled"] and killaurasound["Enabled"] and killauranear then
 					return nil
@@ -2415,10 +2431,10 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 									if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
 										if killauramethod["Value"] == "Normal" then
 											if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
-												bedwars["SwordController"]:attackEntity({["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
+												getmetatable(bedwars["SwordController"])["attackEntity"]({["lastAttack"] = tick() - 1, ["getHandItem"] = function() if killaurabaguette["Enabled"] and getBaguette() then return getBaguette() else return getSword() end end}, {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
 											end
 											if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
-												bedwars["SwordController"]:attackEntity({["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
+												getmetatable(bedwars["SwordController"])["attackEntity"]({["lastAttack"] = tick() - 1, ["getHandItem"] = function() if killaurabaguette["Enabled"] and getBaguette() then return getBaguette() else return getSword() end end}, {["instance"] = plr.Character, ["player"] = plr, ["getInstance"] = function() return plr.Character end}, Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
 											end
 										else
 											bedwars["ViewmodelController"]:playAnimation(5)
@@ -2477,8 +2493,6 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				end
 			end)
 			UnbindFromRenderStep("Killaura") 
-			bedwars["SwordController"]["getHandItem"] = oldmeta
-			oldmeta = nil
 		end
 	end,
 	["HoverBox"] = "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder"
