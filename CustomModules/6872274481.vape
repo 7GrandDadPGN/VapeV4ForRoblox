@@ -1592,34 +1592,190 @@ runcode(function()
 	})
 end)
 
---[[runcode(function()
+runcode(function()
 	local Schematica = {["Enabled"] = false}
-	local startpos
-	local endpos 
+	local SchematicaBox = {["Value"] = ""}
+	local SchematicaTransparency = {["Value"] = 30}
+	local positions = {}
+	local tempfolder
+	local tempgui
+	local aroundpos = {
+		[1] = Vector3.new(0, 3, 0),
+		[2] = Vector3.new(-3, 3, 0),
+		[3] = Vector3.new(-3, -0, 0),
+		[4] = Vector3.new(-3, -3, 0),
+		[5] = Vector3.new(0, -3, 0),
+		[6] = Vector3.new(3, -3, 0),
+		[7] = Vector3.new(3, -0, 0),
+		[8] = Vector3.new(3, 3, 0),
+		[9] = Vector3.new(0, 3, -3),
+		[10] = Vector3.new(-3, 3, -3),
+		[11] = Vector3.new(-3, -0, -3),
+		[12] = Vector3.new(-3, -3, -3),
+		[13] = Vector3.new(0, -3, -3),
+		[14] = Vector3.new(3, -3, -3),
+		[15] = Vector3.new(3, -0, -3),
+		[16] = Vector3.new(3, 3, -3),
+		[17] = Vector3.new(0, 3, 3),
+		[18] = Vector3.new(-3, 3, 3),
+		[19] = Vector3.new(-3, -0, 3),
+		[20] = Vector3.new(-3, -3, 3),
+		[21] = Vector3.new(0, -3, 3),
+		[22] = Vector3.new(3, -3, 3),
+		[23] = Vector3.new(3, -0, 3),
+		[24] = Vector3.new(3, 3, 3),
+		[25] = Vector3.new(0, -0, 3),
+		[26] = Vector3.new(0, -0, -3)
+	}
+
+	local function isNearBlock(pos)
+		for i,v in pairs(aroundpos) do
+			if getblock(pos + v) then
+				return true
+			end
+		end
+		return false
+	end
+
+	local function gethighlightboxatpos(pos)
+		if tempfolder then
+			for i,v in pairs(tempfolder:GetChildren()) do
+				if v.Position == pos then
+					return v 
+				end
+			end
+		end
+		return nil
+	end
+
+	local function getmaterials(tab)
+		local materials = {}
+		for i,v in pairs(tab) do
+			materials[v["blockType"]] = (materials[v["blockType"]] and materials[v["blockType"]] + 1 or 1)
+		end
+		return materials
+	end
+
 	Schematica = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Schematica",
 		["Function"] = function(callback)
 			if callback then
-				local mouseinfo = bedwars["BlockEngine"]:getBlockSelector():getMouseInfo(1)
-				if mouseinfo then
-					local newpos = (mouseinfo.target.blockRef.blockPosition * 3)
-					if not startpos then
-						startpos = newpos
-					elseif not endpos then
-						endpos = newpos
-						local region = Region3.new(startpos - Vector3.new(1, 1, 1), endpos + Vector3.new(1, 1, 1))
-						local parts = workspace:FindPartsInRegion3(region)
-						print(#parts)
-						startpos = nil
-						endpos = nil
+				local mouseinfo = bedwars["BlockEngine"]:getBlockSelector():getMouseInfo(0)
+				if mouseinfo and isfile(SchematicaBox["Value"]) then
+					tempfolder = Instance.new("Folder")
+					tempfolder.Parent = workspace
+					local newpos = mouseinfo.placementPosition * 3
+					positions = game:GetService("HttpService"):JSONDecode(readfile(SchematicaBox["Value"]))
+					bedwars["placeBlock"](newpos)
+					for i2,v2 in pairs(positions) do
+						local texturetxt = bedwars["getItemMetadata"]((v2["blockType"] == "wool_white" and getwool() or v2["blockType"]))["block"]["greedyMesh"]["textures"][1]
+						local newerpos = (newpos + Vector3.new(v2.X, v2.Y, v2.Z))
+						local block = Instance.new("Part")
+						block.Position = newerpos
+						block.Size = Vector3.new(3, 3, 3)
+						block.CanCollide = false
+						block.Transparency = 1
+						block.Anchored = true
+						block.Parent = tempfolder
+						for i3,v3 in pairs(Enum.NormalId:GetEnumItems()) do
+							local texture = Instance.new("Texture")
+							texture.Face = v3
+							texture.Texture = texturetxt
+							texture.Name = tostring(v3)
+							texture.Transparency = 1 / SchematicaTransparency["Value"]
+							texture.Parent = block
+						end
 					end
+					spawn(function()
+						repeat
+							wait()
+							for i,v in pairs(positions) do
+								local newerpos = (newpos + Vector3.new(v.X, v.Y, v.Z))
+								if isAlive() and (lplr.Character.HumanoidRootPart.Position - newerpos).magnitude <= 30 and isNearBlock(newerpos) and getmetatable(bedwars["BlockController"])["isAllowedPlacement"](bedwars["BlockController"], lplr, getwool(), newerpos / 3, 0) then
+									bedwars["placeBlock"](newerpos, (v["blockType"] == "wool_white" and getwool() or v["blockType"]))
+									table.remove(positions, i)
+									if gethighlightboxatpos(newerpos) then
+										gethighlightboxatpos(newerpos):Remove()
+									end
+								end
+							end
+						until #positions == 0 or Schematica["Enabled"] == false
+						if Schematica["Enabled"] then 
+							Schematica["ToggleButton"](false)
+						end
+					end)
 				end
-				Schematica["ToggleButton"](false)
+			else
+				positions = {}
+				if tempfolder then
+					tempfolder:Remove()
+				end
 			end
 		end,
 		["HoverText"] = "Automatically places structure at mouse position."
 	})
-end)]]
+	SchematicaBox = Schematica.CreateTextBox({
+		["Name"] = "File",
+		["TempText"] = "File (location in workspace)",
+		["FocusLost"] = function(enter) 
+			if enter then
+				local suc, res = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile(SchematicaBox["Value"])) end)
+				if tempgui then
+					tempgui:Remove()
+				end
+				if suc then
+					tempgui = Instance.new("Frame")
+					tempgui.Name = "SchematicListOfBlocks"
+					tempgui.BackgroundTransparency = 1
+					tempgui.LayoutOrder = 9999
+					tempgui.Parent = SchematicaBox["Object"].Parent
+					local uilistlayoutschmatica = Instance.new("UIListLayout")
+					uilistlayoutschmatica.Parent = tempgui
+					uilistlayoutschmatica:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+						tempgui.Size = UDim2.new(0, 220, 0, uilistlayoutschmatica.AbsoluteContentSize.Y)
+					end)
+					for i4,v4 in pairs(getmaterials(res)) do
+						local testframe = Instance.new("Frame")
+						testframe.Size = UDim2.new(0, 220, 0, 40)
+						testframe.BackgroundTransparency = 1
+						testframe.Parent = tempgui
+						local testimage = Instance.new("ImageLabel")
+						testimage.Size = UDim2.new(0, 40, 0, 40)
+						testimage.Position = UDim2.new(0, 3, 0, 0)
+						testimage.BackgroundTransparency = 1
+						testimage.Image = bedwars["getIcon"]({["itemType"] = i4}, true)
+						testimage.Parent = testframe
+						local testtext = Instance.new("TextLabel")
+						testtext.Size = UDim2.new(1, -50, 0, 40)
+						testtext.Position = UDim2.new(0, 50, 0, 0)
+						testtext.TextSize = 20
+						testtext.Text = v4
+						testtext.Font = Enum.Font.SourceSans
+						testtext.TextXAlignment = Enum.TextXAlignment.Left
+						testtext.TextColor3 = Color3.new(1, 1, 1)
+						testtext.BackgroundTransparency = 1
+						testtext.Parent = testframe
+					end
+				end
+			end
+		end
+	})
+	SchematicaTransparency = Schematica.CreateSlider({
+		["Name"] = "Transparency",
+		["Min"] = 0,
+		["Max"] = 10,
+		["Default"] = 7,
+		["Function"] = function()
+			if tempfolder then
+				for i2,v2 in pairs(tempfolder:GetChildren()) do
+					for i3,v3 in pairs(v2:GetChildren()) do
+						v3.Transparency = 1 / SchematicaTransparency["Value"]
+					end
+				end
+			end
+		end
+	})
+end)
 
 local function projvischeck(launchpos, targetpos)
 	local direction = Ray.new(launchpos, (targetpos + Vector3.new(0, 0, 0) - launchpos).unit).Unit.Direction
