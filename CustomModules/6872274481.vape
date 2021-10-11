@@ -1648,6 +1648,33 @@ runcode(function()
 		return nil
 	end
 
+	local function removeduplicates(tab)
+		local actualpositions = {}
+		for i,v in pairs(tab) do
+			if table.find(actualpositions, Vector3.new(v.X, v.Y, v.Z)) == nil then
+				table.insert(actualpositions, Vector3.new(v.X, v.Y, v.Z))
+			else
+				table.remove(tab, i)
+			end
+			if v["blockType"] == "start_block" then
+				table.remove(tab, i)
+			end
+		end
+	end
+
+	local function rotate(tab)
+		for i,v in pairs(tab) do
+			local radvec, radius = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame:ToAxisAngle()
+			radius = (radius * 57.2957795)
+			radius = math.round(radius / 90) * 90
+			local rot = CFrame.new() * CFrame.fromAxisAngle(Vector3.new(0, 1, 0), math.rad(radius))
+			local newpos = CFrame.new(0, 0, 0) * rot * CFrame.new(Vector3.new(v.X, v.Y, v.Z))
+			v.X = math.round(newpos.p.X)
+			v.Y = math.round(newpos.p.Y)
+			v.Z = math.round(newpos.p.Z)
+		end
+	end
+
 	local function getmaterials(tab)
 		local materials = {}
 		for i,v in pairs(tab) do
@@ -1666,6 +1693,8 @@ runcode(function()
 					tempfolder.Parent = workspace
 					local newpos = mouseinfo.placementPosition * 3
 					positions = game:GetService("HttpService"):JSONDecode(readfile(SchematicaBox["Value"]))
+					rotate(positions)
+					removeduplicates(positions)
 					bedwars["placeBlock"](newpos)
 					for i2,v2 in pairs(positions) do
 						local texturetxt = bedwars["getItemMetadata"]((v2["blockType"] == "wool_white" and getwool() or v2["blockType"]))["block"]["greedyMesh"]["textures"][1]
@@ -1674,7 +1703,7 @@ runcode(function()
 						block.Position = newerpos
 						block.Size = Vector3.new(3, 3, 3)
 						block.CanCollide = false
-						block.Transparency = 1
+						block.Transparency = (SchematicaTransparency["Value"] == 10 and 0 or 1)
 						block.Anchored = true
 						block.Parent = tempfolder
 						for i3,v3 in pairs(Enum.NormalId:GetEnumItems()) do
@@ -1682,7 +1711,7 @@ runcode(function()
 							texture.Face = v3
 							texture.Texture = texturetxt
 							texture.Name = tostring(v3)
-							texture.Transparency = 1 / SchematicaTransparency["Value"]
+							texture.Transparency = (SchematicaTransparency["Value"] == 10 and 0 or (1 / SchematicaTransparency["Value"]))
 							texture.Parent = block
 						end
 					end
@@ -1702,6 +1731,7 @@ runcode(function()
 						until #positions == 0 or Schematica["Enabled"] == false
 						if Schematica["Enabled"] then 
 							Schematica["ToggleButton"](false)
+							createwarning("Schematica", "Finished Placing Blocks", 4)
 						end
 					end)
 				end
@@ -1718,12 +1748,12 @@ runcode(function()
 		["Name"] = "File",
 		["TempText"] = "File (location in workspace)",
 		["FocusLost"] = function(enter) 
-			if enter then
 				local suc, res = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile(SchematicaBox["Value"])) end)
 				if tempgui then
 					tempgui:Remove()
 				end
 				if suc then
+					removeduplicates(res)
 					tempgui = Instance.new("Frame")
 					tempgui.Name = "SchematicListOfBlocks"
 					tempgui.BackgroundTransparency = 1
@@ -1757,7 +1787,6 @@ runcode(function()
 						testtext.Parent = testframe
 					end
 				end
-			end
 		end
 	})
 	SchematicaTransparency = Schematica.CreateSlider({
@@ -1768,8 +1797,9 @@ runcode(function()
 		["Function"] = function()
 			if tempfolder then
 				for i2,v2 in pairs(tempfolder:GetChildren()) do
+					v2.Transparency = (SchematicaTransparency["Value"] == 10 and 0 or 1)
 					for i3,v3 in pairs(v2:GetChildren()) do
-						v3.Transparency = 1 / SchematicaTransparency["Value"]
+						v3.Transparency = (SchematicaTransparency["Value"] == 10 and 0 or (1 / SchematicaTransparency["Value"]))
 					end
 				end
 			end
