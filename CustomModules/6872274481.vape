@@ -1302,10 +1302,23 @@ runcode(function()
 end)
 
 runcode(function()
+	local function projvischeck(launchpos, targetpos)
+		local direction = Ray.new(launchpos, (targetpos + Vector3.new(0, 0, 0) - launchpos).unit).Unit.Direction
+		local raycastparameters = RaycastParams.new()
+		raycastparameters.FilterDescendantsInstances = {lplr.Character, workspace.BedAlarmZones, workspace.ProjectileTargeting, workspace.Camera, workspace.BedwarsSounds}
+		raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
+		local newray = workspace:Raycast(launchpos, direction * 10000, raycastparameters)
+		if newray and newray.Instance then
+			local plr = bedwars["getEntityTable"].getEntity(newray.Instance)
+			if plr then return true end
+		end
+		return false
+	end
+
 	local aimfov = {["Value"] = 1}	
 	local aimvischeck = {["Enabled"] = false}
 	local tar = nil
-	local hook
+	local shoothook
 	local aimbotping
 	local velodelay = tick()
 	local velooldpos = Vector3.new(0, 0, 0)
@@ -1326,8 +1339,8 @@ runcode(function()
 						aimbotping = math.floor(aimbotping)
 					until ProjectileAimbot["Enabled"] == false
 				end)
-				hook = bedwars["BowTable"]["calculateImportantLaunchValues"]
-				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta)
+				shoothook = bedwars["BowTable"]["calculateImportantLaunchValues"]
+				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta, ...)
 					local plr = GetNearestHumanoidToMouse(true, aimfov["Value"], false)
 					if plr then
 						tar = plr.Character.HumanoidRootPart
@@ -1384,13 +1397,13 @@ runcode(function()
 								gravitationalAcceleration = projGravity * projmeta.gravityMultiplier
 							};
 					else
-						return hook(bowtable, projmeta, worldmeta)
+						return shoothook(bowtable, projmeta, worldmeta, ...)
 					end
 				end
 			else
-				bedwars["BowTable"]["calculateImportantLaunchValues"] = hook
+				bedwars["BowTable"]["calculateImportantLaunchValues"] = shoothook
 				tar = nil 
-				hook = nil
+				shoothook = nil
 			end
 		end,
 		["HoverText"] = "Auto Aims bow at closest player."
@@ -1937,18 +1950,6 @@ runcode(function()
 	})
 end)
 
-local function projvischeck(launchpos, targetpos)
-	local direction = Ray.new(launchpos, (targetpos + Vector3.new(0, 0, 0) - launchpos).unit).Unit.Direction
-	local raycastparameters = RaycastParams.new()
-	raycastparameters.FilterDescendantsInstances = {lplr.Character, workspace.BedAlarmZones, workspace.ProjectileTargeting, workspace.Camera, workspace.BedwarsSounds}
-	raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
-	local newray = workspace:Raycast(launchpos, direction * 10000, raycastparameters)
-	if newray and newray.Instance then
-		local plr = bedwars["getEntityTable"].getEntity(newray.Instance)
-		if plr then return true end
-	end
-	return false
-end
 
 runcode(function()
 	local swords = {
