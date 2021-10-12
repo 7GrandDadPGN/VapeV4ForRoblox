@@ -1275,6 +1275,7 @@ if pcall(function() readfile("vape/CustomModules/"..game.PlaceId..".vape") end) 
 	loadstring(readfile("vape/CustomModules/"..game.PlaceId..".vape"))()
 else
 	local publicrepo = checkpublicrepo(game.PlaceId)
+	print(publicrepo)
 	if publicrepo then
 		loadstring(publicrepo)()
 	end
