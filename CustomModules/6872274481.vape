@@ -19,6 +19,7 @@ local scaffoldypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 local ownedkits = {}
+local playerwhitelist = {2884764437, 2904227753, 2783615468, 2564555445, 1339927097}
 local oldattack
 local chatconnection
 local normalsides = {"Top", "Left", "Right", "Front", "Back"}
@@ -415,6 +416,27 @@ getfunctions = function()
 							end
 						end
 					end
+				end
+				oldattack = v["attackEntity"]
+				shared.backup_attack = oldattack
+				v["attackEntity"] = function(Self, entity, raycast)
+					local plr
+					pcall(function()
+						if table.find(playerwhitelist, players:GetPlayerFromCharacter(entity:getInstance()).UserId) then
+							plr = true
+						end
+					end)
+					if plr then
+						local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
+						if plrentity ~= nil then
+							plrentity:playAnimation(0)
+						end
+						bedwars["ViewmodelController"]:playAnimation(5)
+						bedwars["SoundManager"]:playSound(math.random(13, 14))
+						return nil
+					end
+					local suc, res = pcall(function() return oldattack(Self, entity, raycast) end)
+					return res
 				end
 				bedwars["attackTable"] = v
 				bedwars["attackEntity"] = v["attackEntity"]
@@ -1280,6 +1302,114 @@ runcode(function()
 end)
 
 runcode(function()
+	local aimfov = {["Value"] = 1}	
+	local aimvischeck = {["Enabled"] = false}
+	local tar = nil
+	local hook
+	local aimbotping
+	local velodelay = tick()
+	local velooldpos = Vector3.new(0, 0, 0)
+	local projtable = {
+		["arrow"] = true,
+		["crossbow_arrow"] = true,
+		["tactical_crossbow_arrow"] = true
+	}
+	local ProjectileAimbot = {["Enabled"] = false}
+	ProjectileAimbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "BowAimbot",
+		["Function"] = function(callback) 
+			if callback then
+				spawn(function()
+					repeat
+						wait(1)
+						aimbotping = tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())
+						aimbotping = math.floor(aimbotping)
+					until ProjectileAimbot["Enabled"] == false
+				end)
+				hook = bedwars["BowTable"]["calculateImportantLaunchValues"]
+				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta)
+					local plr = GetNearestHumanoidToMouse(true, aimfov["Value"], false)
+					if plr then
+						tar = plr.Character.HumanoidRootPart
+						if aimvischeck["Enabled"] then
+							local launchPosition = bowtable:getLaunchPosition()
+							if launchPosition then
+								local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
+								if not projvischeck(realLaunchPosition, (tar.CFrame.p + Vector3.new(0, 2, 0))) then
+									tar = nil
+								end
+							else
+								tar = nil
+							end
+						end
+					else
+						tar = nil
+					end
+					if tar and projtable[projmeta.projectile] then
+							local launchPosition = bowtable:getLaunchPosition()
+							if not launchPosition then
+								return nil
+							end
+							local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
+							local proj = projmeta:getProjectileMeta();
+							if p26 then
+								local v58 = proj.predictionLifetimeSec;
+							else
+								v58 = proj.lifetimeSec;
+							end;
+							local v59 = v58;
+							if v59 == nil then
+								v59 = 3;
+							end;
+							local v60 = proj.launchVelocity;
+							if v60 == nil then
+								v60 = 100;
+							end;
+							local projGravity = proj.gravitationalAcceleration;
+							if projGravity == nil then
+								projGravity = 196.2;
+							end;
+							local multi = (10 / v60) + 0.0005
+							if projmeta.projectile == "arrow" then
+								multi = multi + 0.002
+							end
+							local velocalc = (multi / 6) + (0.01 / aimbotping)
+							local lookvec = (plr.Character.HumanoidRootPart.Velocity.X == 0 and Vector3.new(0, 0, 0) or Vector3.new(plr.Character.HumanoidRootPart.CFrame.lookVector.X * plr.Character.Humanoid.WalkSpeed, plr.Character.Humanoid.Jump and 3 or 0, plr.Character.HumanoidRootPart.CFrame.lookVector.Y * plr.Character.Humanoid.WalkSpeed))
+							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (lookvec * ((realLaunchPosition - tar.Position).magnitude * velocalc))
+							local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
+							return {
+								initialVelocity = (realLaunchPosition + (v65.Unit.Direction).Unit * ((Vector3.new(0, 0, 0) - realLaunchPosition).Magnitude) - realLaunchPosition).Unit * (v60 * projmeta.velocityMultiplier), 
+								positionFrom = realLaunchPosition, 
+								deltaT = v59, 
+								gravitationalAcceleration = projGravity * projmeta.gravityMultiplier
+							};
+					else
+						return hook(bowtable, projmeta, worldmeta)
+					end
+				end
+			else
+				bedwars["BowTable"]["calculateImportantLaunchValues"] = hook
+				tar = nil 
+				hook = nil
+			end
+		end,
+		["HoverText"] = "Auto Aims bow at closest player."
+	})
+	aimfov = ProjectileAimbot.CreateSlider({
+		["Name"] = "FOV",
+		["Min"] = 0,
+		["Max"] = 1000,
+		["Function"] = function(val) end, 
+		["Default"] = 1000
+	})
+	aimvischeck = ProjectileAimbot.CreateToggle({
+		["Name"] = "Visible Check",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+end)
+
+runcode(function()
 	local antivoidpart
 	local antivoidmethod = {["Value"] = "Dynamic"}
 	local antitransparent = {["Enabled"] = false}
@@ -1821,114 +1951,6 @@ local function projvischeck(launchpos, targetpos)
 end
 
 runcode(function()
-	local aimfov = {["Value"] = 1}	
-	local aimvischeck = {["Enabled"] = false}
-	local tar = nil
-	local hook
-	local aimbotping
-	local velodelay = tick()
-	local velooldpos = Vector3.new(0, 0, 0)
-	local projtable = {
-		["arrow"] = true,
-		["crossbow_arrow"] = true,
-		["tactical_crossbow_arrow"] = true
-	}
-	local ProjectileAimbot = {["Enabled"] = false}
-	ProjectileAimbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "BowAimbot",
-		["Function"] = function(callback) 
-			if callback then
-				spawn(function()
-					repeat
-						wait(1)
-						aimbotping = tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())
-						aimbotping = math.floor(aimbotping)
-					until ProjectileAimbot["Enabled"] == false
-				end)
-				hook = bedwars["BowTable"]["calculateImportantLaunchValues"]
-				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta)
-					local plr = GetNearestHumanoidToMouse(true, aimfov["Value"], false)
-					if plr then
-						tar = plr.Character.HumanoidRootPart
-						if aimvischeck["Enabled"] then
-							local launchPosition = bowtable:getLaunchPosition()
-							if launchPosition then
-								local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
-								if not projvischeck(realLaunchPosition, (tar.CFrame.p + Vector3.new(0, 2, 0))) then
-									tar = nil
-								end
-							else
-								tar = nil
-							end
-						end
-					else
-						tar = nil
-					end
-					if tar and projtable[projmeta.projectile] then
-							local launchPosition = bowtable:getLaunchPosition()
-							if not launchPosition then
-								return nil
-							end
-							local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
-							local proj = projmeta:getProjectileMeta();
-							if p26 then
-								local v58 = proj.predictionLifetimeSec;
-							else
-								v58 = proj.lifetimeSec;
-							end;
-							local v59 = v58;
-							if v59 == nil then
-								v59 = 3;
-							end;
-							local v60 = proj.launchVelocity;
-							if v60 == nil then
-								v60 = 100;
-							end;
-							local projGravity = proj.gravitationalAcceleration;
-							if projGravity == nil then
-								projGravity = 196.2;
-							end;
-							local multi = (10 / v60) + 0.0005
-							if projmeta.projectile == "arrow" then
-								multi = multi + 0.002
-							end
-							local velocalc = (multi / 6) + (0.01 / aimbotping)
-							local lookvec = (plr.Character.HumanoidRootPart.Velocity.X == 0 and Vector3.new(0, 0, 0) or Vector3.new(plr.Character.HumanoidRootPart.CFrame.lookVector.X * plr.Character.Humanoid.WalkSpeed, plr.Character.Humanoid.Jump and 3 or 0, plr.Character.HumanoidRootPart.CFrame.lookVector.Y * plr.Character.Humanoid.WalkSpeed))
-							local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0)) + (lookvec * ((realLaunchPosition - tar.Position).magnitude * velocalc))
-							local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
-							return {
-								initialVelocity = (realLaunchPosition + (v65.Unit.Direction).Unit * ((Vector3.new(0, 0, 0) - realLaunchPosition).Magnitude) - realLaunchPosition).Unit * (v60 * projmeta.velocityMultiplier), 
-								positionFrom = realLaunchPosition, 
-								deltaT = v59, 
-								gravitationalAcceleration = projGravity * projmeta.gravityMultiplier
-							};
-					else
-						return hook(bowtable, projmeta, worldmeta)
-					end
-				end
-			else
-				bedwars["BowTable"]["calculateImportantLaunchValues"] = hook
-				tar = nil 
-				hook = nil
-			end
-		end,
-		["HoverText"] = "Auto Aims bow at closest player."
-	})
-	aimfov = ProjectileAimbot.CreateSlider({
-		["Name"] = "FOV",
-		["Min"] = 0,
-		["Max"] = 1000,
-		["Function"] = function(val) end, 
-		["Default"] = 1000
-	})
-	aimvischeck = ProjectileAimbot.CreateToggle({
-		["Name"] = "Visible Check",
-		["Function"] = function() end,
-		["Default"] = true
-	})
-end)
-
-runcode(function()
 	local swords = {
 		["wood_sword"] = "stone_sword",
 		["stone_sword"] = "iron_sword",
@@ -2032,13 +2054,13 @@ runcode(function()
 				local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
 				local BreakSpeedUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "break")
 				local AlarmUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "alarm")
-				if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and getItem("rage_blade") == nil and (AutoBuyGui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or bedwars["ClientStoreHandler"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
+				if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and (AutoBuyGui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or bedwars["ClientStoreHandler"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
 					local buyablesword = checkallswords()
 					if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
 						local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
 						local NextSwordCurrency = getItem(NextSwordTable["currency"])
 						if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
-							if justboughtsword ~= buyablesword then
+							if justboughtsword ~= buyablesword and getItem("rage_blade") == nil then
 								local oldboughtsword = justboughtsword
 								justboughtsword = buyablesword
 								buyitem(NextSwordTable, function(suc)
@@ -2308,6 +2330,59 @@ runcode(function()
 	})
 end)
 
+--[[runcode(function()
+	local targetstrafenum = 0
+	local targetstrafenum2 = 0
+	local goup = true
+	local noplr = true
+	local targetstrafe = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "TargetStrafe",
+		["Function"] = function(callback)
+			if callback then
+				BindToRenderStep("TargetStrafe", 1, function(delta)
+					if isAlive() then
+						local plr = GetNearestHumanoidToPosition(true, 10)
+						if plr then
+							if noplr then
+								local pos, num = plr.Character.HumanoidRootPart.CFrame:ToAxisAngle()
+								targetstrafenum = -(num * 57.2957795)
+								noplr = false
+							end
+							local newpos = (CFrame.new(plr.Character.HumanoidRootPart.CFrame.p) * CFrame.Angles(0, math.rad(targetstrafenum), 0) * CFrame.new(0, 0, 8)) + Vector3.new(0, targetstrafenum2, 0)
+							if (lplr.Character.HumanoidRootPart.Position - newpos.p).magnitude >= 4 then
+								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newpos, 2.2 * delta)
+							else
+								lplr.Character.HumanoidRootPart.CFrame = newpos
+							end
+							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+							targetstrafenum = targetstrafenum + 1.5
+							if targetstrafenum >= 360 then
+								targetstrafenum = 0
+							end
+							if goup then
+								targetstrafenum2 = targetstrafenum2 + 0.1
+								if targetstrafenum2 >= 4 then
+									goup = false
+								end
+							else
+								targetstrafenum2 = targetstrafenum2 - 0.1
+								if targetstrafenum2 <= 0 then
+									goup = true
+								end
+							end
+						else
+							noplr = true
+						end
+					end
+				end)
+			else
+				UnbindFromRenderStep("TargetStrafe")
+			end
+		end,
+		["HoverText"] = "Automatically moves around attacking players"
+	})
+end)
+]]
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 runcode(function()
@@ -2625,18 +2700,20 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 										else
 											bedwars["ViewmodelController"]:playAnimation(5)
 											bedwars["SoundManager"]:playSound(math.random(13, 14))
-											killaurarealremote:InvokeServer({
-												["weapon"] = killaurabaguette["Enabled"] and getBaguette() and getBaguette()["tool"] or getSword()["tool"],
-												["entityInstance"] = plr.Character,
-												["validate"] = {
-													["raycast"] = {
-														["cameraPosition"] = hashvec(cam.CFrame.p), 
-														["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
-													},
-													["targetPosition"] = hashvec(plr.Character.HumanoidRootPart.Position),
-													["selfPosition"] = hashvec(lplr.Character.HumanoidRootPart.Position)
-												}
-											})
+											if table.find(playerwhitelist, plr.UserId) == nil then
+												killaurarealremote:InvokeServer({
+													["weapon"] = killaurabaguette["Enabled"] and getBaguette() and getBaguette()["tool"] or getSword()["tool"],
+													["entityInstance"] = plr.Character,
+													["validate"] = {
+														["raycast"] = {
+															["cameraPosition"] = hashvec(cam.CFrame.p), 
+															["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position).Unit.Direction)
+														},
+														["targetPosition"] = hashvec(plr.Character.HumanoidRootPart.Position),
+														["selfPosition"] = hashvec(lplr.Character.HumanoidRootPart.Position)
+													}
+												})
+											end
 											local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
 											if plrentity ~= nil and isAlive() then
 												plrentity:playAnimation(0)
