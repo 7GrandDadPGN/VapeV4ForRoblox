@@ -115,7 +115,8 @@ if identifyexecutor and identifyexecutor():find("Krnl") then
 	text2.Text = "Krnl is currently not working on vape\nIn the meantime, enjoy the rickroll"
 	text2.TextStrokeTransparency = 0
 	text2.BackgroundTransparency = 1
-	text2.TextSize = 20
+	text2.TextColor3 = Color3.new(1, 1, 1)
+	text2.TextSize = 40
 	text2.Font = Enum.Font.SourceSans
 	text2.Size = UDim2.new(1, 0, 1, 0)
 	text2.Parent = text
