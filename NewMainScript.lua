@@ -114,6 +114,7 @@ if identifyexecutor and identifyexecutor():find("Krnl") then
 	local text2 = Instance.new("TextLabel")
 	text2.Text = "Krnl is currently not working on vape\nIn the meantime, enjoy the rickroll"
 	text2.TextStrokeTransparency = 0
+	text2.BackgroundTransparency = 1
 	text2.TextSize = 20
 	text2.Font = Enum.Font.SourceSans
 	text2.Size = UDim2.new(1, 0, 1, 0)
