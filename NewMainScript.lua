@@ -104,19 +104,6 @@ local function getcustomassetfunc(path)
 	return getasset(path) 
 end
 
-if identifyexecutor and identifyexecutor():find("Krnl") then
-	local text2 = Instance.new("TextLabel")
-	text2.Text = "Krnl is currently not working on vape\nIn the meantime, enjoy the rickroll"
-	text2.TextStrokeTransparency = 0
-	text2.BackgroundTransparency = 1
-	text2.TextColor3 = Color3.new(1, 1, 1)
-	text2.TextSize = 40
-	text2.Font = Enum.Font.SourceSans
-	text2.Size = UDim2.new(1, 0, 1, 0)
-	text2.Parent = GuiLibrary["MainGui"]
-	return
-end
-
 shared.GuiLibrary = GuiLibrary
 local workspace = game:GetService("Workspace")
 local cam = workspace.CurrentCamera
