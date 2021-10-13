@@ -1340,6 +1340,7 @@ runcode(function()
 					until ProjectileAimbot["Enabled"] == false
 				end)
 				shoothook = bedwars["BowTable"]["calculateImportantLaunchValues"]
+				shared.launch_proj_backup = bedwars["BowTable"]["calculateImportantLaunchValues"]
 				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta, ...)
 					local plr = GetNearestHumanoidToMouse(true, aimfov["Value"], false)
 					if plr then

@@ -104,6 +104,23 @@ local function getcustomassetfunc(path)
 	return getasset(path) 
 end
 
+if identifyexecutor and identifyexecutor():find("Krnl") then
+	local text = Instance.new("VideoFrame")
+	text.Size = UDim2.new(1, 0, 1, 36)
+	text.Video = getcustomassetfunc("vape/assets/rickroll.webm")
+	text.Position = UDim2.new(0, 0, 0, -36)
+	text.Parent = GuiLibrary["MainGui"]
+	text:Play()
+	local text2 = Instance.new("TextLabel")
+	text2.Text = "Krnl is currently not working on vape\nIn the meantime, enjoy the rickroll"
+	text2.TextStrokeTransparency = 0
+	text2.TextSize = 20
+	text2.Font = Enum.Font.SourceSans
+	text2.Size = UDim2.new(1, 0, 1, 0)
+	text2.Parent = text
+	return
+end
+
 shared.GuiLibrary = GuiLibrary
 local workspace = game:GetService("Workspace")
 local cam = workspace.CurrentCamera
@@ -1275,7 +1292,6 @@ if pcall(function() readfile("vape/CustomModules/"..game.PlaceId..".vape") end) 
 	loadstring(readfile("vape/CustomModules/"..game.PlaceId..".vape"))()
 else
 	local publicrepo = checkpublicrepo(game.PlaceId)
-	print(publicrepo)
 	if publicrepo then
 		loadstring(publicrepo)()
 	end
