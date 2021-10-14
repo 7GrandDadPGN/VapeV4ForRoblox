@@ -19,7 +19,8 @@ local scaffoldypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 local ownedkits = {}
-local playerwhitelist = {2884764437, 2904227753, 2783615468, 2564555445, 1339927097}
+local playerwhitelist = {"a4ec11602d4018036fe443c08fa729744d52998c50a4b08a08d1a3d12b2c3f55", 'dc041681fda0df9eb9ce1b566f45a589b9c7935a1fe4374cd1af36885f0935ea', 'bff192a0ea16ba0c97e6ef30e13826402bb5c66975d452771f13d5e7afd26776', 'ae40c6601906277b71c22a7c96ecabe89ce9fee1f2242f64756dbc34dc9af475', '9ffa54b823c7161975446916e9408204242ed2ba8bb3af9f24af726b49728f68', '315d5e40bc6393667bef5a98fc3b4abffa83ef2c0b95ef7d06d6f652478fc6c4',}
+local storedshahashes = {}
 local oldattack
 local chatconnection
 local normalsides = {"Top", "Left", "Right", "Front", "Back"}
@@ -37,6 +38,22 @@ local function UnbindFromRenderStep(name)
 		RenderStepTable[name] = nil
 	end
 end
+
+local function shareal(b)local function c(b,d,e,...)b=b%2^32;d=d%2^32;local b=(b%0x00000002>=0x00000001 and d%0x00000002>=0x00000001 and 0x00000001 or 0)+(b%0x00000004>=0x00000002 and d%0x00000004>=0x00000002 and 0x00000002 or 0)+(b%0x00000008>=0x00000004 and d%0x00000008>=0x00000004 and 0x00000004 or 0)+(b%0x00000010>=0x00000008 and d%0x00000010>=0x00000008 and 0x00000008 or 0)+(b%0x00000020>=0x00000010 and d%0x00000020>=0x00000010 and 0x00000010 or 0)+(b%0x00000040>=0x00000020 and d%0x00000040>=0x00000020 and 0x00000020 or 0)+(b%0x00000080>=0x00000040 and d%0x00000080>=0x00000040 and 0x00000040 or 0)+(b%0x00000100>=0x00000080 and d%0x00000100>=0x00000080 and 0x00000080 or 0)+(b%0x00000200>=0x00000100 and d%0x00000200>=0x00000100 and 0x00000100 or 0)+(b%0x00000400>=0x00000200 and d%0x00000400>=0x00000200 and 0x00000200 or 0)+(b%0x00000800>=0x00000400 and d%0x00000800>=0x00000400 and 0x00000400 or 0)+(b%0x00001000>=0x00000800 and d%0x00001000>=0x00000800 and 0x00000800 or 0)+(b%0x00002000>=0x00001000 and d%0x00002000>=0x00001000 and 0x00001000 or 0)+(b%0x00004000>=0x00002000 and d%0x00004000>=0x00002000 and 0x00002000 or 0)+(b%0x00008000>=0x00004000 and d%0x00008000>=0x00004000 and 0x00004000 or 0)+(b%0x00010000>=0x00008000 and d%0x00010000>=0x00008000 and 0x00008000 or 0)+(b%0x00020000>=0x00010000 and d%0x00020000>=0x00010000 and 0x00010000 or 0)+(b%0x00040000>=0x00020000 and d%0x00040000>=0x00020000 and 0x00020000 or 0)+(b%0x00080000>=0x00040000 and d%0x00080000>=0x00040000 and 0x00040000 or 0)+(b%0x00100000>=0x00080000 and d%0x00100000>=0x00080000 and 0x00080000 or 0)+(b%0x00200000>=0x00100000 and d%0x00200000>=0x00100000 and 0x00100000 or 0)+(b%0x00400000>=0x00200000 and d%0x00400000>=0x00200000 and 0x00200000 or 0)+(b%0x00800000>=0x00400000 and d%0x00800000>=0x00400000 and 0x00400000 or 0)+(b%0x01000000>=0x00800000 and d%0x01000000>=0x00800000 and 0x00800000 or 0)+(b%0x02000000>=0x01000000 and d%0x02000000>=0x01000000 and 0x01000000 or 0)+(b%0x04000000>=0x02000000 and d%0x04000000>=0x02000000 and 0x02000000 or 0)+(b%0x08000000>=0x04000000 and d%0x08000000>=0x04000000 and 0x04000000 or 0)+(b%0x10000000>=0x08000000 and d%0x10000000>=0x08000000 and 0x08000000 or 0)+(b%0x20000000>=0x10000000 and d%0x20000000>=0x10000000 and 0x10000000 or 0)+(b%0x40000000>=0x20000000 and d%0x40000000>=0x20000000 and 0x20000000 or 0)+(b%0x80000000>=0x40000000 and d%0x80000000>=0x40000000 and 0x40000000 or 0)+(b>=0x80000000 and d>=0x80000000 and 0x80000000 or 0)return e and c(b,e,...)or b end;local function d(b,c,e,...)local b=(b%0x00000002>=0x00000001~=(c%0x00000002>=0x00000001)and 0x00000001 or 0)+(b%0x00000004>=0x00000002~=(c%0x00000004>=0x00000002)and 0x00000002 or 0)+(b%0x00000008>=0x00000004~=(c%0x00000008>=0x00000004)and 0x00000004 or 0)+(b%0x00000010>=0x00000008~=(c%0x00000010>=0x00000008)and 0x00000008 or 0)+(b%0x00000020>=0x00000010~=(c%0x00000020>=0x00000010)and 0x00000010 or 0)+(b%0x00000040>=0x00000020~=(c%0x00000040>=0x00000020)and 0x00000020 or 0)+(b%0x00000080>=0x00000040~=(c%0x00000080>=0x00000040)and 0x00000040 or 0)+(b%0x00000100>=0x00000080~=(c%0x00000100>=0x00000080)and 0x00000080 or 0)+(b%0x00000200>=0x00000100~=(c%0x00000200>=0x00000100)and 0x00000100 or 0)+(b%0x00000400>=0x00000200~=(c%0x00000400>=0x00000200)and 0x00000200 or 0)+(b%0x00000800>=0x00000400~=(c%0x00000800>=0x00000400)and 0x00000400 or 0)+(b%0x00001000>=0x00000800~=(c%0x00001000>=0x00000800)and 0x00000800 or 0)+(b%0x00002000>=0x00001000~=(c%0x00002000>=0x00001000)and 0x00001000 or 0)+(b%0x00004000>=0x00002000~=(c%0x00004000>=0x00002000)and 0x00002000 or 0)+(b%0x00008000>=0x00004000~=(c%0x00008000>=0x00004000)and 0x00004000 or 0)+(b%0x00010000>=0x00008000~=(c%0x00010000>=0x00008000)and 0x00008000 or 0)+(b%0x00020000>=0x00010000~=(c%0x00020000>=0x00010000)and 0x00010000 or 0)+(b%0x00040000>=0x00020000~=(c%0x00040000>=0x00020000)and 0x00020000 or 0)+(b%0x00080000>=0x00040000~=(c%0x00080000>=0x00040000)and 0x00040000 or 0)+(b%0x00100000>=0x00080000~=(c%0x00100000>=0x00080000)and 0x00080000 or 0)+(b%0x00200000>=0x00100000~=(c%0x00200000>=0x00100000)and 0x00100000 or 0)+(b%0x00400000>=0x00200000~=(c%0x00400000>=0x00200000)and 0x00200000 or 0)+(b%0x00800000>=0x00400000~=(c%0x00800000>=0x00400000)and 0x00400000 or 0)+(b%0x01000000>=0x00800000~=(c%0x01000000>=0x00800000)and 0x00800000 or 0)+(b%0x02000000>=0x01000000~=(c%0x02000000>=0x01000000)and 0x01000000 or 0)+(b%0x04000000>=0x02000000~=(c%0x04000000>=0x02000000)and 0x02000000 or 0)+(b%0x08000000>=0x04000000~=(c%0x08000000>=0x04000000)and 0x04000000 or 0)+(b%0x10000000>=0x08000000~=(c%0x10000000>=0x08000000)and 0x08000000 or 0)+(b%0x20000000>=0x10000000~=(c%0x20000000>=0x10000000)and 0x10000000 or 0)+(b%0x40000000>=0x20000000~=(c%0x40000000>=0x20000000)and 0x20000000 or 0)+(b%0x80000000>=0x40000000~=(c%0x80000000>=0x40000000)and 0x40000000 or 0)+(b>=0x80000000~=(c>=0x80000000)and 0x80000000 or 0)return e and d(b,e,...)or b end;local function e(b)return 4294967295-b end;local function f(b,c)b=b%2^32;local b=b/2^c;return b-b%1 end;local function g(b,c)b=b%2^32;local b=b/2^c;local c=b%1;return b-c+c*2^32 end;local h={0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2}local function i(b)local b=string.gsub(b,".",function(b)return string.format("%02x",string.byte(b))end)return b end;local function j(b,c)local d=""for c=1,c do local c=b%256;d=string.char(c)..d;b=(b-c)/256 end;return d end;local function k(b,c)local d=0;for c=c,c+3 do d=d*256+string.byte(b,c)end;return d end;local function l(b,c)local d=64-(c+1+8)%64;c=j(8*c,8)b=b.."\128"..string.rep("\0",d)..c;return b end;local function m(b)b[1]=0x6a09e667;b[2]=0xbb67ae85;b[3]=0x3c6ef372;b[4]=0xa54ff53a;b[5]=0x510e527f;b[6]=0x9b05688c;b[7]=0x1f83d9ab;b[8]=0x5be0cd19;return b end;local function n(b,i,j)local l={}for c=1,16 do l[c]=k(b,i+(c-1)*4)end;for b=17,64 do local c=l[b-15]local e=d(g(c,7),g(c,18),f(c,3))c=l[b-2]local c=d(g(c,17),g(c,19),f(c,10))l[b]=l[b-16]+e+l[b-7]+c end;local b,f,i,k,m,n,o,p=j[1],j[2],j[3],j[4],j[5],j[6],j[7],j[8]for j=1,64 do local q=d(g(b,2),g(b,13),g(b,22))local r=d(c(b,f),c(b,i),c(f,i))local q=q+r;local g=d(g(m,6),g(m,11),g(m,25))local c=d(c(m,n),c(e(m),o))local c=p+g+c+h[j]+l[j]p,o,n,m,k,i,f,b=o,n,m,k+c,i,f,b,c+q end;j[1]=(j[1]+b)%2^32;j[2]=(j[2]+f)%2^32;j[3]=(j[3]+i)%2^32;j[4]=(j[4]+k)%2^32;j[5]=(j[5]+m)%2^32;j[6]=(j[6]+n)%2^32;j[7]=(j[7]+o)%2^32;j[8]=(j[8]+p)%2^32 end;b=l(b,#b)local c=m({})for d=1,#b,64 do n(b,d,c)end;return i(j(c[1],4)..j(c[2],4)..j(c[3],4)..j(c[4],4)..j(c[5],4)..j(c[6],4)..j(c[7],4)..j(c[8],4))end
+
+local function sha(b)
+	if storedshahashes[b] == nil then
+		storedshahashes[b] = shareal(b)
+	end
+	return storedshahashes[b]
+end
+
+local function func1(cframe, pos2)
+	local x, y, z, RR00, RR01, RR02, RR10, RR11, RR12, RR20, RR21, RR22 = cframe:GetComponents()
+	local xx2, yy2, zz2 = pos2.X, pos2.Y, pos2.Z
+	return CFrame.new(x + xx2, y + yy2, z + zz2, RR00, RR01, RR02, RR10, RR11, RR12, RR20, RR21, RR22)
+end
+
 --[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
 if place.Updated ~= "2021-10-05T00:25:03.577Z" then
 	local image = Instance.new("ImageLabel")
@@ -329,7 +346,8 @@ getfunctions = function()
 				bedwars["SetSelectedShopItem"] = v["SetSelectedShopItem"]
 			end
 			if rawget(v, "getLocalPlayerEntity") then
-				bedwars["getEntityTable"] = v
+				bedwars["getEntityFunc"] = v["getEntity"]
+				bedwars["getLocalEntityFunc"] = v["getLocalPlayerEntity"]
 			end
 			if rawget(v, "getItemMeta") then
 				bedwars["getItemMetadata"] = v["getItemMeta"]
@@ -422,12 +440,12 @@ getfunctions = function()
 				v["attackEntity"] = function(Self, entity, raycast)
 					local plr
 					pcall(function()
-						if table.find(playerwhitelist, players:GetPlayerFromCharacter(entity:getInstance()).UserId) then
+						if table.find(playerwhitelist, sha(tostring(players:GetPlayerFromCharacter(entity:getInstance()).UserId))) then
 							plr = true
 						end
 					end)
 					if plr then
-						local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
+						local plrentity = bedwars["getLocalEntityFunc"]()
 						if plrentity ~= nil then
 							plrentity:playAnimation(0)
 						end
@@ -550,17 +568,17 @@ local function getblock(pos)
 end
 
 local function renderNametag(plr)
-	if plr.UserId == 2904227753 then
+	if sha(tostring(plr.UserId)) == "a4ec11602d4018036fe443c08fa729744d52998c50a4b08a08d1a3d12b2c3f55" then
 		plr.CharacterAdded:connect(function(char)
 			spawn(function()
 				local head = char:WaitForChild("Head")
-				bedwars["getEntityTable"].getEntity(head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
+				bedwars["getEntityFunc"](head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
 			end)
 		end)
 		spawn(function()
 			if plr.Character then
 				local head = plr.Character:WaitForChild("Head")
-				bedwars["getEntityTable"].getEntity(head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
+				bedwars["getEntityFunc"](head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
 			end
 		end)
 	end
@@ -595,7 +613,7 @@ local function isAlive(plr)
 	return lplr and lplr.Character and lplr.Character.Parent ~= nil and lplr.Character:FindFirstChild("HumanoidRootPart") and lplr.Character:FindFirstChild("Head") and lplr.Character:FindFirstChild("Humanoid")
 end
 
-local localentity = bedwars["getEntityTable"]["getLocalPlayerEntity"]()
+local localentity = bedwars["getLocalEntityFunc"]()
 
 local function switchItem(tool)
 	lplr.Character.HandInvItem.Value = tool
@@ -1053,7 +1071,7 @@ local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 					local newray = workspace:Raycast(mouse.UnitRay.Origin, direction * 200, raycastparameters)
 					if newray.Instance and (lplr.Character.PrimaryPart.Position - newray.Instance.Position).Magnitude <= 16 then
 						local mag = (lplr.Character.PrimaryPart.Position - newray.Instance.Position).Magnitude
-						local plr = bedwars["getEntityTable"].getEntity(newray.Instance)
+						local plr = bedwars["getEntityFunc"](newray.Instance)
 						if mag > 14.4 and plr then
 							if reachtping == false then
 								local oldcframe = lplr.Character.HumanoidRootPart.CFrame
@@ -1309,7 +1327,7 @@ runcode(function()
 		raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
 		local newray = workspace:Raycast(launchpos, direction * 10000, raycastparameters)
 		if newray and newray.Instance then
-			local plr = bedwars["getEntityTable"].getEntity(newray.Instance)
+			local plr = bedwars["getEntityFunc"](newray.Instance)
 			if plr then return true end
 		end
 		return false
@@ -2702,7 +2720,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 										else
 											bedwars["ViewmodelController"]:playAnimation(5)
 											bedwars["SoundManager"]:playSound(math.random(13, 14))
-											if table.find(playerwhitelist, plr.UserId) == nil then
+											if table.find(playerwhitelist, sha(tostring(plr.UserId))) == nil then
 												killaurarealremote:InvokeServer({
 													["weapon"] = killaurabaguette["Enabled"] and getBaguette() and getBaguette()["tool"] or getSword()["tool"],
 													["entityInstance"] = plr.Character,
@@ -2716,7 +2734,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 													}
 												})
 											end
-											local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
+											local plrentity = bedwars["getLocalEntityFunc"]()
 											if plrentity ~= nil and isAlive() then
 												plrentity:playAnimation(0)
 											end
@@ -2956,7 +2974,7 @@ AutoArmor = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 		if callback then
 			AutoArmor["ToggleButton"](false)
 			if localentity == nil then
-				localentity = bedwars["getEntityTable"]["getLocalPlayerEntity"]()
+				localentity = bedwars["getLocalEntityFunc"]()
 			end
 			if isAlive() and getArmor() then
 				local inv = bedwars["getInventory"](lplr)
@@ -3295,7 +3313,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 					end
 					local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (bird and (1.5 * (flyspeed["Value"] / 36)) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 					lplr.Character.HumanoidRootPart.Transparency = 1
-					lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+					lplr.Character.HumanoidRootPart.CFrame = func1(lplr.Character.HumanoidRootPart.CFrame, Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z))
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 				end
 			end)
