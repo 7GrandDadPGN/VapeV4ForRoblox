@@ -3232,7 +3232,7 @@ runcode(function()
 	local function finddroppedblock()
 		local block
 		for i,v in pairs(collectionservice:GetTagged("ItemDrop")) do
-			if isAlive() and isnetworkowner(v) and v.Name:match("wool") then
+			if isAlive() and (isnetworkowner and isnetworkowner(v) or isnetworkowner == nil and (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 50) and v.Name:match("wool") then
 				block = v
 			end
 		end
