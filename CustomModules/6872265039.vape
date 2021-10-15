@@ -134,8 +134,8 @@ GuiLibrary["RemoveObject"]("XrayOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 
---[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-10-05T00:25:03.577Z" then
+local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+if place.Updated ~= "2021-10-13T00:59:24.163Z" then
 	local image = Instance.new("ImageLabel")
 	image.Size = UDim2.new(1, 0, 1, 36)
 	image.Image = getcustomassetfunc("vape/assets/UpdateImage.png")
@@ -182,7 +182,7 @@ if place.Updated ~= "2021-10-05T00:25:03.577Z" then
     spawn(function()
         while true do end
     end)
-end]]
+end
 
 local Sprint = {["Enabled"] = false}
 Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
