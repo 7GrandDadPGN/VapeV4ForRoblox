@@ -3263,7 +3263,7 @@ runcode(function()
 			if block then
 				flyallowed = true
 				flyblockconnection = game:GetService("RunService").RenderStepped:connect(function()
-					if block.Parent ~= nil and isAlive() and isnetworkowner(block) then
+					if block.Parent ~= nil and isAlive() and (isnetworkowner and isnetworkowner(block) or isnetworkowner == nil and (lplr.Character.HumanoidRootPart.Position - block.Position).magnitude <= 50) then
 						block.CFrame = lplr.Character.HumanoidRootPart.CFrame - Vector3.new(0, 2, 0)
 						if block:FindFirstChild("Handle") then
 							block.Handle:Remove()
