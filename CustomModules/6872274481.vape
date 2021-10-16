@@ -1157,8 +1157,12 @@ runcode(function()
 				phaseconnection = game:GetService("RunService").Stepped:connect(function()
 					if isAlive() then
 						for i,v in pairs(lplr.Character:GetDescendants()) do
-							if v:IsA("BasePart") and nocheck then
-								v.CanCollide = false
+							if v:IsA("BasePart") then
+								if nocheck then
+									v.CanCollide = false
+								elseif nocheck == false and v.Name == "HumanoidRootPart" then
+									v.CanCollide = true
+								end
 							end
 						end
 					end
@@ -1660,6 +1664,103 @@ runcode(function()
 		["Default"] = 20
 	})
 end)
+
+--[[runcode(function()
+	local TrapPlayer = {["Enabled"] = false}
+
+	local function getItemFromList(list)
+		local selecteditem
+		for i3,v3 in pairs(list) do
+			local item = getItem(v3)
+			if item then 
+				selecteditem = item
+				break
+			end
+		end
+		return selecteditem
+	end
+
+	local function placelayer(layertab, obj, selecteditems)
+		for i2,v2 in pairs(layertab) do
+			local selecteditem = getItemFromList(selecteditems)
+			if selecteditem then
+				spawn(function()
+					bedwars["placeBlock"](obj + v2, selecteditem["itemType"])
+				end)
+			end
+		end
+	end
+
+	local trapplayerrange = {["Value"] = 1}
+	TrapPlayer = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "TrapPlayer",
+		["Function"] = function(callback)
+            if callback then
+                spawn(function()
+					local plr = GetNearestHumanoidToPosition(true, trapplayerrange["Value"])
+					if plr then
+						placelayer({
+							[1] = Vector3.new(-6, 0, 0),
+							[2] = Vector3.new(-6, 0, 3),
+							[3] = Vector3.new(-6, 3, 3),
+							[4] = Vector3.new(-6, 3, 0),
+							[5] = Vector3.new(-6, 3, -3),
+							[6] = Vector3.new(-6, 0, -3),
+							[7] = Vector3.new(-6, 6, -3),
+							[8] = Vector3.new(-6, 6, 0),
+							[9] = Vector3.new(-6, 6, 3),
+							[10] = Vector3.new(6, 0, 3),
+							[11] = Vector3.new(6, 3, 3),
+							[12] = Vector3.new(6, 3, 0),
+							[13] = Vector3.new(6, 3, -3),
+							[14] = Vector3.new(6, 0, -3),
+							[15] = Vector3.new(6, 6, -3),
+							[16] = Vector3.new(6, 6, 0),
+							[17] = Vector3.new(6, 6, 3),
+							[18] = Vector3.new(6, 0, 0),
+							[19] = Vector3.new(3, 0, -6),
+							[20] = Vector3.new(3, 3, -6),
+							[21] = Vector3.new(0, 3, -6),
+							[22] = Vector3.new(-3, 3, -6),
+							[23] = Vector3.new(-3, 0, -6),
+							[24] = Vector3.new(-3, 6, -6),
+							[25] = Vector3.new(0, 6, -6),
+							[26] = Vector3.new(3, 6, -6),
+							[27] = Vector3.new(0, 0, -6),
+							[28] = Vector3.new(3, 0, 6),
+							[29] = Vector3.new(3, 3, 6),
+							[30] = Vector3.new(0, 3, 6),
+							[31] = Vector3.new(-3, 3, 6),
+							[32] = Vector3.new(-3, 0, 6),
+							[33] = Vector3.new(-3, 6, 6),
+							[34] = Vector3.new(0, 6, 6),
+							[35] = Vector3.new(3, 6, 6),
+							[36] = Vector3.new(0, 0, 6),
+							[37] = Vector3.new(3, 9, 3),
+							[38] = Vector3.new(3, 9, 0),
+							[39] = Vector3.new(0, 9, 0),
+							[40] = Vector3.new(-3, 9, 0),
+							[41] = Vector3.new(-3, 9, 3),
+							[42] = Vector3.new(-3, 9, -3),
+							[43] = Vector3.new(0, 9, -3),
+							[44] = Vector3.new(3, 9, -3),
+							[45] = Vector3.new(0, 9, 3)
+						 }, getScaffold((plr.Character.HumanoidRootPart.Position - Vector3.new(0, 2, 0)) + plr.Character.HumanoidRootPart.Velocity), {"obsidian", "stone_brick", "plank_oak", getwool()})
+					end
+					TrapPlayer["ToggleButton"](false)
+                end)
+            end
+		end,
+		["HoverText"] = "Automatically places a bed defense (Toggle)"
+	})
+	trapplayerrange = TrapPlayer.CreateSlider({
+		["Name"] = "Place range",
+		["Min"] = 1, 
+		["Max"] = 20, 
+		["Function"] = function(val) end, 
+		["Default"] = 20
+	})
+end)]]
 
 runcode(function()
 	local LuckyBlockNuker = {["Enabled"] = false}
@@ -3293,7 +3394,7 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 					if flydown then
 						flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 					end
-					local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (bird and (1.5 * (flyspeed["Value"] / 36)) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
+					local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * (bird and (1.5 * (flyspeed["Value"] / 44)) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer > 0)) and 1 or 0)
 					lplr.Character.HumanoidRootPart.Transparency = 1
 					lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
@@ -3319,16 +3420,16 @@ fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsB
 flyspeed = fly.CreateSlider({
 	["Name"] = "Speed",
 	["Min"] = 1,
-	["Max"] = 36,
+	["Max"] = 44,
 	["Function"] = function(val) end, 
-	["Default"] = 36
+	["Default"] = 44
 })
 flyverticalspeed = fly.CreateSlider({
 	["Name"] = "Vertical Speed",
 	["Min"] = 1,
-	["Max"] = 36,
+	["Max"] = 44,
 	["Function"] = function(val) end, 
-	["Default"] = 36
+	["Default"] = 44
 })
 flyupanddown = fly.CreateToggle({
 	["Name"] = "Y Level",
@@ -4187,14 +4288,16 @@ runcode(function()
 		onetext.Text = newtext
 	end
 
-	local WinstreakTrackerButton = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	local WinstreakTrackerButton = {["Enabled"] = false}
+	WinstreakTrackerButton = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "WinstreakTracker",
 		["Function"] = function(callback)
 			WinstreakTracker.SetVisible(callback)
 			if callback then
 				spawn(function()
 					local str = ""
-					playeraddedwinstreak = players.PlayerAdded:connect(function(v)
+					repeat
+						wait(3)
 						str = ""
 						for i,v in pairs(players:GetChildren()) do
 							repeat wait() until v:GetAttribute("WinStreak") ~= nil
@@ -4205,26 +4308,12 @@ runcode(function()
 						onetext.Text = str
 						onetext2.Text = str
 						textwithoutthing = str
+						updatecolor(WinstreakTrackerColor["Value"])
 						local newsize = game:GetService("TextService"):GetTextSize(str, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
 						onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
 						onetext.Position = UDim2.new(onetext.Position.X.Scale, onetext.Position.X.Offset, onetext.Position.Y.Scale, -(newsize.Y - 60))
-					end)
-					for i,v in pairs(players:GetChildren()) do
-						repeat wait() until v:GetAttribute("WinStreak") ~= nil
-						if v:GetAttribute("WinStreak") and v:GetAttribute("WinStreak") > 0 and v ~= lplr then
-							str = str..(v.DisplayName or v.Name).." : "..v:GetAttribute("WinStreak").."\n"
-						end
-					end
-					onetext.Text = str
-					onetext2.Text = str
-					textwithoutthing = str
-					local newsize = game:GetService("TextService"):GetTextSize(str, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
-					onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
-					onetext.Position = UDim2.new(onetext.Position.X.Scale, onetext.Position.X.Offset, onetext.Position.Y.Scale, -(newsize.Y - 60))
-					updatecolor(WinstreakTrackerColor["Value"])
+					until WinstreakTrackerButton["Enabled"] == false
 				end)
-			else
-				playeraddedwinstreak:Disconnect()
 			end
 		end,
 		["HoverText"] = "Shows a list of WinStreaks"
