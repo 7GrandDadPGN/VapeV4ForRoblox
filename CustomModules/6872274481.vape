@@ -3263,7 +3263,7 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 					else
 						if bird then
-							lplr.Character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 26)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
+							lplr.Character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 34)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
 							if (not (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics)) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 								local newvelo = lplr.Character.Humanoid.MoveDirection * 40
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
@@ -3296,9 +3296,9 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 speedval = speed.CreateSlider({
 	["Name"] = "Speed",
 	["Min"] = 1,
-	["Max"] = 26,
+	["Max"] = 34,
 	["Function"] = function(val) end,
-	["Default"] = 26
+	["Default"] = 34
 })
 speedjump = speed.CreateToggle({
 	["Name"] = "AutoJump", 
