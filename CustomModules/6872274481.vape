@@ -1765,7 +1765,7 @@ runcode(function()
                 end)
             end
 		end,
-		["HoverText"] = "Automatically places a bed defense (Toggle)"
+		["HoverText"] = "works 1% of the time due to lag lol (Toggle)"
 	})
 	trapplayerrange = TrapPlayer.CreateSlider({
 		["Name"] = "Place range",
