@@ -1665,7 +1665,7 @@ runcode(function()
 	})
 end)
 
---[[runcode(function()
+runcode(function()
 	local TrapPlayer = {["Enabled"] = false}
 
 	local function getItemFromList(list)
@@ -1699,6 +1699,8 @@ end)
                 spawn(function()
 					local plr = GetNearestHumanoidToPosition(true, trapplayerrange["Value"])
 					if plr then
+						local movedir = plr.Character.HumanoidRootPart.Velocity ~= Vector3.new(0, 0, 0) and (plr.Character.HumanoidRootPart.CFrame.lookVector * 3) or Vector3.new(0, 0, 0)
+						local pos = getScaffold((plr.Character.HumanoidRootPart.Position - Vector3.new(0, 2, 0)) + movedir)
 						placelayer({
 							[1] = Vector3.new(-6, 0, 0),
 							[2] = Vector3.new(-6, 0, 3),
@@ -1744,8 +1746,20 @@ end)
 							[42] = Vector3.new(-3, 9, -3),
 							[43] = Vector3.new(0, 9, -3),
 							[44] = Vector3.new(3, 9, -3),
-							[45] = Vector3.new(0, 9, 3)
-						 }, getScaffold((plr.Character.HumanoidRootPart.Position - Vector3.new(0, 2, 0)) + plr.Character.HumanoidRootPart.Velocity), {"obsidian", "stone_brick", "plank_oak", getwool()})
+							[45] = Vector3.new(0, 9, 3),
+							[46] = Vector3.new(3, -3, -3),
+							[47] = Vector3.new(0, -3, -3),
+							[48] = Vector3.new(-3, -3, -3),
+							[49] = Vector3.new(-3, -3, 0),
+							[50] = Vector3.new(0, -3, 0),
+							[51] = Vector3.new(3, -3, 0),
+							[52] = Vector3.new(3, -3, 3),
+							[53] = Vector3.new(0, -3, 3),
+							[54] = Vector3.new(-3, -3, 3)
+						 }, pos, {"obsidian", "stone_brick", "plank_oak", getwool()})
+						 if getItem("tnt") then
+							bedwars["placeBlock"](pos, "tnt")
+						 end
 					end
 					TrapPlayer["ToggleButton"](false)
                 end)
@@ -1760,7 +1774,7 @@ end)
 		["Function"] = function(val) end, 
 		["Default"] = 20
 	})
-end)]]
+end)
 
 runcode(function()
 	local LuckyBlockNuker = {["Enabled"] = false}
