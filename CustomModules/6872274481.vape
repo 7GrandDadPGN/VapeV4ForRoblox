@@ -3270,7 +3270,7 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 							end
 						end
 						bodyvelo.MaxForce = (bird and Vector3.new(0, 0, 0) or Vector3.new(100000, 0, 100000))
-						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1)) * (slowdownspeed and 0.6 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
+						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * 1) * (slowdownspeed and 0.6 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
 					end
 					if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing then
 						bodyvelo.MaxForce = Vector3.new(0, 0, 0)
