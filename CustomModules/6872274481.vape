@@ -3162,15 +3162,19 @@ AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 	["Function"] = function(callback)
 		if callback then
 			autoleaveconnection = players.PlayerAdded:connect(function(plr)
-				if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-					bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+				spawn(function()
+					if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
+						bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+					end
+				end)
+			end)
+			spawn(function()
+				for i, plr in pairs(players:GetChildren()) do
+					if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
+						bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+					end
 				end
 			end)
-			for i, plr in pairs(players:GetChildren()) do
-				if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-					bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
-				end
-			end
 		else
 			autoleaveconnection:Disconnect()
 		end
