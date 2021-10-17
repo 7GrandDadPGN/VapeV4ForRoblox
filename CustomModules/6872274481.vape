@@ -2134,7 +2134,7 @@ runcode(function()
 					local found, npctype = nearNPC()
 					if found and autobuydelay <= tick() then
 						BuyCheck(npctype)
-						autobuydelay = tick() + 0.2
+						autobuydelay = tick() + 0.1
 					end
 				end)
 			else
