@@ -2216,7 +2216,7 @@ runcode(function()
 						local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
 						local NextSwordCurrency = getItem(NextSwordTable["currency"])
 						if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
-							if justboughtsword ~= buyablesword and getItem("rage_blade") == nil then
+							if justboughtsword ~= buyablesword and getItem("rageblade") == nil then
 								local oldboughtsword = justboughtsword
 								justboughtsword = buyablesword
 								buyitem(NextSwordTable, function(suc)
