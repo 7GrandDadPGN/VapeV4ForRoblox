@@ -1925,6 +1925,7 @@ runcode(function()
 	end
 
 	local AutoBuy = {["Enabled"] = false}
+	local autobuydelay = tick()
 	local AutoBuyArmor = {["Enabled"] = false}
 	local AutoBuySword = {["Enabled"] = false}
 	local AutoBuyArrow = {["Enabled"] = false}
@@ -1937,6 +1938,26 @@ runcode(function()
 	local AutoBuyGui = {["Enabled"] = false}
 	local buyingthing = false
 	local shoothook
+	local bedwarsshopnpcs = {}
+	spawn(function()
+		repeat wait() until matchState ~= 0
+		for i,v in pairs(workspace:GetChildren()) do
+			if v:FindFirstChild("BedwarsItemShop") or v:FindFirstChild("BedwarsTeamUpgrader") then
+				table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = v:FindFirstChild("BedwarsTeamUpgrader")})
+			end
+		end
+	end)
+
+	local function nearNPC()
+		if isAlive() then
+			for i, v in pairs(bedwarsshopnpcs) do
+				if (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
+					return true, v.TeamUpgradeNPC
+				end
+			end
+		end
+		return false
+	end
 
 	local function buyitem(itemtab, sucfunc)
 		if getItem(itemtab.itemType) == nil then
@@ -1989,16 +2010,17 @@ runcode(function()
 	end)
 
 	local BuyCheck = function() end
-	BuyCheck = function()
+	BuyCheck = function(upgradesshopnpc)
 		if AutoBuy["Enabled"] and matchState == 1 then
-				local ExecuteInventory = bedwars["getInventory"](lplr)
-				local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType) and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (getArmor() == nil and "leather_chestplate" or nil)
-				local NextSword = getSword()
-				local GeneratorUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "generator")
-				local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
-				local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
-				local BreakSpeedUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "break")
-				local AlarmUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "alarm")
+			local ExecuteInventory = bedwars["getInventory"](lplr)
+			local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType) and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (getArmor() == nil and "leather_chestplate" or nil)
+			local NextSword = getSword()
+			local GeneratorUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "generator")
+			local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
+			local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
+			local BreakSpeedUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "break")
+			local AlarmUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "alarm")
+			if not upgradesshopnpc then
 				if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and (AutoBuyGui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or bedwars["ClientStoreHandler"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
 					local buyablesword = checkallswords()
 					if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
@@ -2036,6 +2058,7 @@ runcode(function()
 						end
 					end
 				end
+			else
 				if AutoBuyUpgrades["Enabled"] and (AutoBuyGui["Enabled"] and bedwars["ClientStoreHandler"]:getState().App.shownApp == 4 or (not AutoBuyGui["Enabled"])) then
 					local CurrentUpgrades = bedwars["ClientStoreHandler"]:getState()["Bedwars"]["teamUpgrades"]
 					local GenNewTier = GeneratorUpgrade["tiers"][CurrentUpgrades["generator"] and CurrentUpgrades["generator"] + 2 or 1]
@@ -2099,22 +2122,26 @@ runcode(function()
 						end
 					end
 				end
+			end
 		end
 	end
-	bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
-		if (p3.Inventory.observedInventory.inventory ~= p4.Inventory.observedInventory.inventory or p3.App.shownApp ~= p4.App.shownApp) and (p3.App.shownApp == 4 or p3.App.shownApp == 5) then
-			BuyCheck()
-		end
-	end)
 	AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoBuy", 
 		["Function"] = function(callback)
 			if callback then 
 				buyingthing = false 
-				BuyCheck()
+				BindToRenderStep("AutoBuy", 1, function()
+					local found, npctype = nearNPC()
+					if found and autobuydelay <= tick() then
+						BuyCheck(npctype)
+						autobuydelay = tick() + 0.2
+					end
+				end)
+			else
+				UnbindFromRenderStep("AutoBuy")
 			end
 		end,
-		["HoverText"] = "Automatically Buys Swords, Armor, and Team Upgrades\nwhen you open the shop"
+		["HoverText"] = "Automatically Buys Swords, Armor, and Team Upgrades\nwhen you walk near the NPC"
 	})
 	AutoBuyArmor = AutoBuy.CreateToggle({
 		["Name"] = "Buy Armor",
