@@ -25,7 +25,10 @@ local nametagaccounts = {
 	["6adb24b74ff2da02b3d7ee9a9a5f8b7431fd6def7faca60f5b0f0ddc8c226bb0"] = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>",
 	["07640bf9e2fd037b1cbdfe3aaa678fdce491105acc1bc7bd25200f42925b0efc"] = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>",
 	["fff7a4369e47e12c66c32baa19a43c99146b605313450c6c1cda9a6e58e3ab75"] = "<font color=\"rgb(255, 119, 245)\">[dumpster] Emily❤️</font>",
-	["81a8f17708f2d32091b2ee2471dab17f87b452f059f8d77d0eb00205a53cf5b0"] = "<font color=\"rgb(255, 119, 245)\">[dumpster] chloe❤️</font>"
+	["81a8f17708f2d32091b2ee2471dab17f87b452f059f8d77d0eb00205a53cf5b0"] = "<font color=\"rgb(255, 119, 245)\">[dumpster] chloe❤️</font>",
+	["11dfb731564cff728c4b93aa0e2f8dbed8d8141e09f81b4bc63e8967bc08f498"] = "<font color=\"rgb(120, 2, 255)\">[VAPE PRIVATE] Fern</font>",
+	["8586d5486a96303ae75960492bd33f30bbe5749d15f01e62a1f0a51b022e6751"] = "<font color=\"rgb(120, 2, 255)\">[VAPE PRIVATE] Fern</font>",
+	["ae40c6601906277b71c22a7c96ecabe89ce9fee1f2242f64756dbc34dc9af475"] = "<font color=\"rgb(255, 130, 0)\">[CHAD] ChadMcThunderChock</font>"
 }
 local storedshahashes = {}
 local oldattack
