@@ -1896,6 +1896,313 @@ runcode(function()
 end)
 
 runcode(function()
+	local swords = {
+		["wood_sword"] = "stone_sword",
+		["stone_sword"] = "iron_sword",
+		["iron_sword"] = "diamond_sword",
+		["diamond_sword"] = "emerald_sword"
+	}
+	local betterswords = {
+		["stone_sword"] = 2,
+		["iron_sword"] = 3,
+		["diamond_sword"] = 4,
+		["emerald_sword"] = 5,
+	}
+
+
+	local function checkallswords()
+		local highestsword = 1
+		local currentbuyablesword = nil
+		for i, v in pairs(betterswords) do
+			local NextSwordTable = bedwars["Shop"].getShopItem(i)
+			local NextSwordCurrency = getItem(NextSwordTable["currency"])
+			if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] and highestsword < v then
+				highestsword =  v
+				currentbuyablesword = i
+			end
+		end
+		return currentbuyablesword
+	end
+
+	local AutoBuy = {["Enabled"] = false}
+	local AutoBuyArmor = {["Enabled"] = false}
+	local AutoBuySword = {["Enabled"] = false}
+	local AutoBuyArrow = {["Enabled"] = false}
+	local AutoBuyUpgrades = {["Enabled"] = false}
+	local AutoBuyGen = {["Enabled"] = false}
+	local AutoBuyProt = {["Enabled"] = false}
+	local AutoBuySharp = {["Enabled"] = false}
+	local AutoBuyBreakSpeed = {["Enabled"] = false}
+	local AutoBuyAlarm = {["Enabled"] = false}
+	local AutoBuyGui = {["Enabled"] = false}
+	local buyingthing = false
+	local shoothook
+
+	local function buyitem(itemtab, sucfunc)
+		if getItem(itemtab.itemType) == nil then
+			if itemtab.itemType == "emerald_sword" then
+				local sword, swordnum = getSword()
+				if sword.itemType ~= "emerald_sword" then
+					local swordSlot = swordnum
+					sword["tool"]:Remove()
+				end
+			end
+			bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+				shopItem = itemtab
+			}):andThen(function(p11)
+				sucfunc(p11)
+				if p11 then
+					bedwars["SoundManager"]:playSound(12)
+					bedwars["ClientStoreHandler"]:dispatch({
+						type = "BedwarsAddItemPurchased", 
+						itemType = itemtab.itemType
+					});
+					if itemtab.nextTier then
+						local ShopItems = bedwars["Shop"].ShopItems;
+						local function isNextTier(p12)
+							return p12.itemType == NextArmorTable.nextTier;
+						end;
+						local itemToSelect = nil;
+						for itemnum, item in ipairs(ShopItems) do
+							if isNextTier(item, itemnum - 1, ShopItems) == true then
+								itemToSelect = item;
+								break;
+							end;
+						end;
+						bedwars["SetSelectedShopItem"](itemToSelect);
+						return;
+					elseif itemtab.tiered or itemtab.lockAfterPurchase then
+
+					end
+				end
+			end)
+		end
+	end
+
+	local justboughtarmor = ""
+	local justboughtsword = ""
+
+	lplr.CharacterAdded:connect(function()
+		local ExecuteInventory = bedwars["getInventory"](lplr)
+		justboughtarmor = (getSword() and getSword()["itemType"] or "")
+		justboughtsword = (ExecuteInventory.armor[5] and ExecuteInventory.armor[5].itemType or "")
+	end)
+
+	local BuyCheck = function() end
+	BuyCheck = function()
+		if AutoBuy["Enabled"] and matchState == 1 then
+				local ExecuteInventory = bedwars["getInventory"](lplr)
+				local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType) and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (getArmor() == nil and "leather_chestplate" or nil)
+				local NextSword = getSword()
+				local GeneratorUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "generator")
+				local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
+				local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
+				local BreakSpeedUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "break")
+				local AlarmUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "alarm")
+				if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and (AutoBuyGui["Enabled"] and (bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or bedwars["ClientStoreHandler"]:getState().App.shownApp == 4) or (not AutoBuyGui["Enabled"])) then
+					local buyablesword = checkallswords()
+					if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
+						local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
+						local NextSwordCurrency = getItem(NextSwordTable["currency"])
+						if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
+							if justboughtsword ~= buyablesword and getItem("rageblade") == nil then
+								local oldboughtsword = justboughtsword
+								justboughtsword = buyablesword
+								buyitem(NextSwordTable, function(suc)
+									if suc then
+										NextSword = swords[NextSwordTable["itemType"]]
+									else
+										justboughtsword = oldboughtsword
+									end
+								end)
+							end
+						end
+					end
+				end
+				if AutoBuyArmor["Enabled"] and NextArmor and (AutoBuyGui["Enabled"] and bedwars["ClientStoreHandler"]:getState().App.shownApp == 5 or (not AutoBuyGui["Enabled"])) then
+					local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
+					local NextArmorCurrency = getItem(NextArmorTable["currency"])
+					if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
+						if justboughtarmor ~= NextArmor then
+							local oldboughtarmor = justboughtarmor
+							justboughtarmor = NextArmor
+							buyitem(NextArmorTable, function(suc)
+								if suc then
+									NextArmor = NextArmorTable["nextTier"]
+								else
+									justboughtarmor = oldboughtarmor
+								end
+							end)
+						end
+					end
+				end
+				if AutoBuyUpgrades["Enabled"] and (AutoBuyGui["Enabled"] and bedwars["ClientStoreHandler"]:getState().App.shownApp == 4 or (not AutoBuyGui["Enabled"])) then
+					local CurrentUpgrades = bedwars["ClientStoreHandler"]:getState()["Bedwars"]["teamUpgrades"]
+					local GenNewTier = GeneratorUpgrade["tiers"][CurrentUpgrades["generator"] and CurrentUpgrades["generator"] + 2 or 1]
+					local ProtNewTier = ProtectionUpgrade["tiers"][CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 2 or 1]
+					local SharpNewTier = SharpnessUpgrade["tiers"][CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 2 or 1]
+					local BreakSpeedNewTier = BreakSpeedUpgrade["tiers"][CurrentUpgrades["break"] and CurrentUpgrades["break"] + 2 or 1]
+					local AlarmNewTier = AlarmUpgrade["tiers"][CurrentUpgrades["alarm"] and CurrentUpgrades["alarm"] + 2 or 1]
+					if GenNewTier and AutoBuyGen["Enabled"] then
+						local GenCurrency = getItem(GenNewTier["currency"])
+						if GenCurrency and GenCurrency["amount"] >= GenNewTier["price"] then
+							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+								upgradeId = "generator", 
+								tier = CurrentUpgrades["generator"] and CurrentUpgrades["generator"] + 1 or 0
+							}):andThen(function()
+								bedwars["SoundManager"]:playSound(11)
+							end)
+						end
+					end
+					if ProtNewTier and AutoBuyProt["Enabled"] then
+						local ProtCurrency = getItem(ProtNewTier["currency"])
+						if ProtCurrency and ProtCurrency["amount"] >= ProtNewTier["price"] then
+							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+								upgradeId = "armor", 
+								tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 0
+							}):andThen(function()
+								bedwars["SoundManager"]:playSound(11)
+							end)
+						end
+					end
+					if SharpNewTier and AutoBuySharp["Enabled"] then
+						local SharpCurrency = getItem(SharpNewTier["currency"])
+						if SharpCurrency and SharpCurrency["amount"] >= SharpNewTier["price"] then
+							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+								upgradeId = "damage", 
+								tier = CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 1 or 0
+							}):andThen(function()
+								bedwars["SoundManager"]:playSound(11)
+							end)
+						end
+					end
+					if BreakSpeedNewTier and AutoBuyBreakSpeed["Enabled"] then
+						local BreakSpeedCurrency = getItem(BreakSpeedNewTier["currency"])
+						if BreakSpeedCurrency and BreakSpeedCurrency["amount"] >= BreakSpeedNewTier["price"] then
+							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+								upgradeId = "break", 
+								tier = CurrentUpgrades["break"] and CurrentUpgrades["break"] + 1 or 0
+							}):andThen(function()
+								bedwars["SoundManager"]:playSound(11)
+							end)
+						end
+					end
+					if AlarmNewTier and AutoBuyAlarm["Enabled"] then
+						local AlarmCurrency = getItem(AlarmNewTier["currency"])
+						if AlarmCurrency and AlarmCurrency["amount"] >= AlarmNewTier["price"] then
+							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+								upgradeId = "alarm", 
+								tier = CurrentUpgrades["alarm"] and CurrentUpgrades["alarm"] + 1 or 0
+							}):andThen(function()
+								bedwars["SoundManager"]:playSound(11)
+							end)
+						end
+					end
+				end
+		end
+	end
+	bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
+		if (p3.Inventory.observedInventory.inventory ~= p4.Inventory.observedInventory.inventory or p3.App.shownApp ~= p4.App.shownApp) and (p3.App.shownApp == 4 or p3.App.shownApp == 5) then
+			BuyCheck()
+		end
+	end)
+	AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoBuy", 
+		["Function"] = function(callback)
+			if callback then 
+				buyingthing = false 
+				BuyCheck()
+			end
+		end,
+		["HoverText"] = "Automatically Buys Swords, Armor, and Team Upgrades\nwhen you open the shop"
+	})
+	AutoBuyArmor = AutoBuy.CreateToggle({
+		["Name"] = "Buy Armor",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
+	AutoBuySword = AutoBuy.CreateToggle({
+		["Name"] = "Buy Sword",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
+	AutoBuyArrow = AutoBuy.CreateToggle({
+		["Name"] = "Buy Arrows",
+		["Function"] = function() end, 
+	})
+	AutoBuyUpgrades = AutoBuy.CreateToggle({
+		["Name"] = "Buy Team Upgrades",
+		["Function"] = function(callback) 
+			if AutoBuyUpgrades["Object"] then
+				AutoBuyUpgrades["Object"].ToggleArrow.Visible = callback
+			end
+			if AutoBuyGen["Object"] then
+				AutoBuyGen["Object"].Visible = callback
+			end
+			if AutoBuyProt["Object"] then
+				AutoBuyProt["Object"].Visible = callback
+			end
+			if AutoBuySharp["Object"] then
+				AutoBuySharp["Object"].Visible = callback
+			end
+			if AutoBuyBreakSpeed["Object"] then
+				AutoBuyBreakSpeed["Object"].Visible = callback
+			end
+			if AutoBuyAlarm["Object"] then
+				AutoBuyAlarm["Object"].Visible = callback
+			end
+		end, 
+		["Default"] = true
+	})
+	AutoBuyGen = AutoBuy.CreateToggle({
+		["Name"] = "Buy Team Generator",
+		["Function"] = function() end, 
+	})
+	AutoBuyProt = AutoBuy.CreateToggle({
+		["Name"] = "Buy Protection",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
+	AutoBuySharp = AutoBuy.CreateToggle({
+		["Name"] = "Buy Sharpness",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
+	AutoBuyBreakSpeed = AutoBuy.CreateToggle({
+		["Name"] = "Buy Break Speed",
+		["Function"] = function() end, 
+	})
+	AutoBuyAlarm = AutoBuy.CreateToggle({
+		["Name"] = "Buy Alarm",
+		["Function"] = function() end, 
+	})
+	AutoBuyGen["Object"].BackgroundTransparency = 0
+	AutoBuyGen["Object"].BorderSizePixel = 0
+	AutoBuyGen["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	AutoBuyGen["Object"].Visible = AutoBuyUpgrades["Enabled"]
+	AutoBuyProt["Object"].BackgroundTransparency = 0
+	AutoBuyProt["Object"].BorderSizePixel = 0
+	AutoBuyProt["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	AutoBuyProt["Object"].Visible = AutoBuyUpgrades["Enabled"]
+	AutoBuySharp["Object"].BackgroundTransparency = 0
+	AutoBuySharp["Object"].BorderSizePixel = 0
+	AutoBuySharp["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	AutoBuySharp["Object"].Visible = AutoBuyUpgrades["Enabled"]
+	AutoBuyBreakSpeed["Object"].BackgroundTransparency = 0
+	AutoBuyBreakSpeed["Object"].BorderSizePixel = 0
+	AutoBuyBreakSpeed["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	AutoBuyBreakSpeed["Object"].Visible = AutoBuyUpgrades["Enabled"]
+	AutoBuyAlarm["Object"].BackgroundTransparency = 0
+	AutoBuyAlarm["Object"].BorderSizePixel = 0
+	AutoBuyAlarm["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	AutoBuyAlarm["Object"].Visible = AutoBuyUpgrades["Enabled"]
+	AutoBuyGui = AutoBuy.CreateToggle({
+		["Name"] = "Shop GUI Check",
+		["Function"] = function() end, 
+	})
+end)
+
+runcode(function()
 	local Schematica = {["Enabled"] = false}
 	local SchematicaBox = {["Value"] = ""}
 	local SchematicaTransparency = {["Value"] = 30}
