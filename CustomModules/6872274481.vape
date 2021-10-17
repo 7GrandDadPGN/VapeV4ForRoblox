@@ -20,7 +20,11 @@ local requestfunc = syn and syn.request or http and http.request or http_request
 local getasset = getsynasset or getcustomasset
 local ownedkits = {}
 local playerwhitelist = {"11dfb731564cff728c4b93aa0e2f8dbed8d8141e09f81b4bc63e8967bc08f498", "6a3b791f07120580a0e71b70cbe46d3d8b3ebb967a219d7e67ae9e99fd010452", "07640bf9e2fd037b1cbdfe3aaa678fdce491105acc1bc7bd25200f42925b0efc", "a4ec11602d4018036fe443c08fa729744d52998c50a4b08a08d1a3d12b2c3f55", "8586d5486a96303ae75960492bd33f30bbe5749d15f01e62a1f0a51b022e6751", "6adb24b74ff2da02b3d7ee9a9a5f8b7431fd6def7faca60f5b0f0ddc8c226bb0", "dc041681fda0df9eb9ce1b566f45a589b9c7935a1fe4374cd1af36885f0935ea", "bff192a0ea16ba0c97e6ef30e13826402bb5c66975d452771f13d5e7afd26776", "ae40c6601906277b71c22a7c96ecabe89ce9fee1f2242f64756dbc34dc9af475", "9ffa54b823c7161975446916e9408204242ed2ba8bb3af9f24af726b49728f68", "315d5e40bc6393667bef5a98fc3b4abffa83ef2c0b95ef7d06d6f652478fc6c4"}
-local owneraccounts = {"a4ec11602d4018036fe443c08fa729744d52998c50a4b08a08d1a3d12b2c3f55", "6adb24b74ff2da02b3d7ee9a9a5f8b7431fd6def7faca60f5b0f0ddc8c226bb0", "07640bf9e2fd037b1cbdfe3aaa678fdce491105acc1bc7bd25200f42925b0efc"}
+local nametagaccounts = {
+	["a4ec11602d4018036fe443c08fa729744d52998c50a4b08a08d1a3d12b2c3f55"] = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>", 
+	["6adb24b74ff2da02b3d7ee9a9a5f8b7431fd6def7faca60f5b0f0ddc8c226bb0"] = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>",
+	["07640bf9e2fd037b1cbdfe3aaa678fdce491105acc1bc7bd25200f42925b0efc"] = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>"
+}
 local storedshahashes = {}
 local oldattack
 local chatconnection
@@ -563,17 +567,17 @@ local function getblock(pos)
 end
 
 local function renderNametag(plr)
-	if table.find(owneraccounts, sha(tostring(plr.UserId))) then
+	if nametagaccounts[sha(tostring(plr.UserId))] then
 		plr.CharacterAdded:connect(function(char)
 			spawn(function()
 				local head = char:WaitForChild("Head")
-				bedwars["getEntityTable"].getEntity(head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
+				bedwars["getEntityTable"].getEntity(head):setNametag(nametagaccounts[sha(tostring(plr.UserId))])
 			end)
 		end)
 		spawn(function()
 			if plr.Character then
 				local head = plr.Character:WaitForChild("Head")
-				bedwars["getEntityTable"].getEntity(head):setNametag("<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>");
+				bedwars["getEntityTable"].getEntity(head):setNametag(nametagaccounts[sha(tostring(plr.UserId))])
 			end
 		end)
 	end
