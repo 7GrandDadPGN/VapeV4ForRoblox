@@ -3861,10 +3861,6 @@ runcode(function()
 									end
 									local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
 									local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-									if nametagaccounts[sha(tostring(plr.UserId))] then
-										displaynamestr = nametagaccounts[sha(tostring(plr.UserId))]
-										displaynamestr2 = removeTags(nametagaccounts[sha(tostring(plr.UserId))])
-									end
 									local blocksaway = math.floor(((isAlive() and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
 									local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and isAlive() and "["..blocksaway.."] " or "")..displaynamestr..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
