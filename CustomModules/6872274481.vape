@@ -542,7 +542,9 @@ getfunctions = function()
 end
 
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
-	bedwars["attackTable"]["attackEntity"] = oldattack
+	if oldattack then
+		bedwars["attackTable"]["attackEntity"] = oldattack
+	end
 	if chatconnection then
 		chatconnection:Disconnect()
 	end
@@ -559,26 +561,6 @@ end
 local function getblock(pos)
 	return bedwars["BlockEngine2"]:getStore():getBlockAt(bedwars["BlockEngine2"]:getBlockPosition(pos))
 end
-
-local function renderNametag(plr)
-	if nametagaccounts[sha(tostring(plr.UserId))] then
-		plr.CharacterAdded:connect(function(char)
-			spawn(function()
-				local head = char:WaitForChild("Head")
-				bedwars["getEntityTable"].getEntity(head):setNametag(nametagaccounts[sha(tostring(plr.UserId))])
-			end)
-		end)
-		spawn(function()
-			if plr.Character then
-				local head = plr.Character:WaitForChild("Head")
-				bedwars["getEntityTable"].getEntity(head):setNametag(nametagaccounts[sha(tostring(plr.UserId))])
-			end
-		end)
-	end
-end
-
-for i,v in pairs(players:GetChildren()) do renderNametag(v) end
-players.PlayerAdded:connect(renderNametag)
 
 getfunctions()
 
