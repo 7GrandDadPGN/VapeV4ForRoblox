@@ -99,10 +99,10 @@ if place.Updated ~= "2021-10-05T00:25:03.577Z" then
 end]]
 local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
-textlabel.Text = "Remember to use alts in this new update, report bans to the discord."
+textlabel.Text = "Vape will no longer be consistently updated, Expect bans and bugs and ofc, always use alts."
 textlabel.BackgroundTransparency = 1
 textlabel.TextStrokeTransparency = 0
-textlabel.TextSize = 30
+textlabel.TextScaled = true
 textlabel.Font = Enum.Font.SourceSans
 textlabel.TextColor3 = Color3.new(1, 1, 1)
 textlabel.Position = UDim2.new(0, 0, 0, -36)
@@ -535,7 +535,7 @@ getfunctions = function()
         end
 	else
 		wait(1)
-		print(bedwars["PlayerUtil"], bedwars["PickupRemote"], bedwars["Shop"], bedwars["SoundManager"], bedwars["SetSelectedShopItem"], bedwars["ViewmodelController"], bedwars["GuitarRemote"], bedwars["BalloonController"], bedwars["SwingSwordRegion"], bedwars["CombatConstant"], bedwars["SwingSword"], bedwars["BowTable"], bedwars["getInventory"], bedwars["raiseShield"], bedwars["BlockController"], bedwars["BlockEngine"], bedwars["BlockController2"], bedwars["BlockController3"], bedwars["SwordController"], bedwars["attackEntity"], bedwars["damageTable"], bedwars["sprintTable"])
+		--print(bedwars["PlayerUtil"], bedwars["PickupRemote"], bedwars["Shop"], bedwars["SoundManager"], bedwars["SetSelectedShopItem"], bedwars["ViewmodelController"], bedwars["GuitarRemote"], bedwars["BalloonController"], bedwars["SwingSwordRegion"], bedwars["CombatConstant"], bedwars["SwingSword"], bedwars["BowTable"], bedwars["getInventory"], bedwars["raiseShield"], bedwars["BlockController"], bedwars["BlockEngine"], bedwars["BlockController2"], bedwars["BlockController3"], bedwars["SwordController"], bedwars["attackEntity"], bedwars["damageTable"], bedwars["sprintTable"])
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
 		getfunctions()
 	end
