@@ -19,15 +19,9 @@ local scaffoldypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
 local ownedkits = {}
-local playerwhitelist = {"81a8f17708f2d32091b2ee2471dab17f87b452f059f8d77d0eb00205a53cf5b0", "fff7a4369e47e12c66c32baa19a43c99146b605313450c6c1cda9a6e58e3ab75", "11dfb731564cff728c4b93aa0e2f8dbed8d8141e09f81b4bc63e8967bc08f498", "6a3b791f07120580a0e71b70cbe46d3d8b3ebb967a219d7e67ae9e99fd010452", "07640bf9e2fd037b1cbdfe3aaa678fdce491105acc1bc7bd25200f42925b0efc", "a4ec11602d4018036fe443c08fa729744d52998c50a4b08a08d1a3d12b2c3f55", "8586d5486a96303ae75960492bd33f30bbe5749d15f01e62a1f0a51b022e6751", "6adb24b74ff2da02b3d7ee9a9a5f8b7431fd6def7faca60f5b0f0ddc8c226bb0", "dc041681fda0df9eb9ce1b566f45a589b9c7935a1fe4374cd1af36885f0935ea", "bff192a0ea16ba0c97e6ef30e13826402bb5c66975d452771f13d5e7afd26776", "ae40c6601906277b71c22a7c96ecabe89ce9fee1f2242f64756dbc34dc9af475", "9ffa54b823c7161975446916e9408204242ed2ba8bb3af9f24af726b49728f68", "315d5e40bc6393667bef5a98fc3b4abffa83ef2c0b95ef7d06d6f652478fc6c4"}
+local playerwhitelist = {"c0e72e855105a63a784f5a5d1c7fe3805a230fea4b758129a74022a8b398431d", "104707975383489eb749c3c6f21ac4b798c01e8e83b616c3fc73cfca06f6ec29", "81a8f17708f2d32091b2ee2471dab17f87b452f059f8d77d0eb00205a53cf5b0", "fff7a4369e47e12c66c32baa19a43c99146b605313450c6c1cda9a6e58e3ab75", "11dfb731564cff728c4b93aa0e2f8dbed8d8141e09f81b4bc63e8967bc08f498", "6a3b791f07120580a0e71b70cbe46d3d8b3ebb967a219d7e67ae9e99fd010452", "07640bf9e2fd037b1cbdfe3aaa678fdce491105acc1bc7bd25200f42925b0efc", "a4ec11602d4018036fe443c08fa729744d52998c50a4b08a08d1a3d12b2c3f55", "8586d5486a96303ae75960492bd33f30bbe5749d15f01e62a1f0a51b022e6751", "6adb24b74ff2da02b3d7ee9a9a5f8b7431fd6def7faca60f5b0f0ddc8c226bb0", "dc041681fda0df9eb9ce1b566f45a589b9c7935a1fe4374cd1af36885f0935ea", "bff192a0ea16ba0c97e6ef30e13826402bb5c66975d452771f13d5e7afd26776", "ae40c6601906277b71c22a7c96ecabe89ce9fee1f2242f64756dbc34dc9af475", "9ffa54b823c7161975446916e9408204242ed2ba8bb3af9f24af726b49728f68", "315d5e40bc6393667bef5a98fc3b4abffa83ef2c0b95ef7d06d6f652478fc6c4"}
 local nametagaccounts = {
-	["a4ec11602d4018036fe443c08fa729744d52998c50a4b08a08d1a3d12b2c3f55"] = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>", 
-	["6adb24b74ff2da02b3d7ee9a9a5f8b7431fd6def7faca60f5b0f0ddc8c226bb0"] = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>",
-	["07640bf9e2fd037b1cbdfe3aaa678fdce491105acc1bc7bd25200f42925b0efc"] = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>",
-	["fff7a4369e47e12c66c32baa19a43c99146b605313450c6c1cda9a6e58e3ab75"] = "<font color=\"rgb(255, 119, 245)\">[dumpster] Emily❤️</font>",
-	["81a8f17708f2d32091b2ee2471dab17f87b452f059f8d77d0eb00205a53cf5b0"] = "<font color=\"rgb(255, 119, 245)\">[dumpster] chloe❤️</font>",
-	["11dfb731564cff728c4b93aa0e2f8dbed8d8141e09f81b4bc63e8967bc08f498"] = "<font color=\"rgb(120, 2, 255)\">[VAPE PRIVATE] Fern</font>",
-	["8586d5486a96303ae75960492bd33f30bbe5749d15f01e62a1f0a51b022e6751"] = "<font color=\"rgb(120, 2, 255)\">[VAPE PRIVATE] Fern</font>",
+	["c0e72e855105a63a784f5a5d1c7fe3805a230fea4b758129a74022a8b398431d"] = "<font color=\"rgb(255, 0, 0)\">[VAPE OWNER] xylex</font>", 
 	["ae40c6601906277b71c22a7c96ecabe89ce9fee1f2242f64756dbc34dc9af475"] = "<font color=\"rgb(255, 130, 0)\">[CHAD] ChadMcThunderChock</font>"
 }
 local storedshahashes = {}
@@ -1928,7 +1922,6 @@ runcode(function()
 	local autobuydelay = tick()
 	local AutoBuyArmor = {["Enabled"] = false}
 	local AutoBuySword = {["Enabled"] = false}
-	local AutoBuyArrow = {["Enabled"] = false}
 	local AutoBuyUpgrades = {["Enabled"] = false}
 	local AutoBuyGen = {["Enabled"] = false}
 	local AutoBuyProt = {["Enabled"] = false}
@@ -2134,7 +2127,7 @@ runcode(function()
 					local found, npctype = nearNPC()
 					if found and autobuydelay <= tick() then
 						BuyCheck(npctype)
-						autobuydelay = tick() + 0.1
+						autobuydelay = tick() + 0.2
 					end
 				end)
 			else
@@ -2152,10 +2145,6 @@ runcode(function()
 		["Name"] = "Buy Sword",
 		["Function"] = function() end, 
 		["Default"] = true
-	})
-	AutoBuyArrow = AutoBuy.CreateToggle({
-		["Name"] = "Buy Arrows",
-		["Function"] = function() end, 
 	})
 	AutoBuyUpgrades = AutoBuy.CreateToggle({
 		["Name"] = "Buy Team Upgrades",
