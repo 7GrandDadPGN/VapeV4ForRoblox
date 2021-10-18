@@ -99,7 +99,7 @@ if place.Updated ~= "2021-10-05T00:25:03.577Z" then
 end]]
 local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
-textlabel.Text = "Vape will no longer be consistently updated or at all, Expect bans and bugs and ofc, always use alts."
+textlabel.Text = "Report any bans to the discord, and always use alts."
 textlabel.BackgroundTransparency = 1
 textlabel.TextStrokeTransparency = 0
 textlabel.TextScaled = true
