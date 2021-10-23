@@ -1900,13 +1900,7 @@ runcode(function()
                             if isAlive() then
                                 if obj and obj.Parent ~= nil then
                                     if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= luckyblocknukerrange["Value"] then
-<<<<<<< Updated upstream
-
-										--getbestside(obj.Position) secret function :eyes:
-                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], luckyblocknukerdigpos["Value"], true)
-=======
-                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], getbestside(obj.Position), true)
->>>>>>> Stashed changes
+										bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], getbestside(obj.Position), true)
                                         wait(0.3)
                                     end
                                 end
