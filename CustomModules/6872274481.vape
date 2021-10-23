@@ -42,7 +42,7 @@ local function UnbindFromRenderStep(name)
 end
 
 local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-10-23T14:54:48.9469968Z" then
+if place.Updated ~= "2021-10-23T16:00:22.7594232Z" then
 	local image = Instance.new("ImageLabel")
 	image.Size = UDim2.new(1, 0, 1, 36)
 	image.Image = getcustomassetfunc("vape/assets/UpdateImage.png")
