@@ -42,7 +42,7 @@ local function UnbindFromRenderStep(name)
 end
 
 --[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-10-23T16:09:24.227116Z" then]]
+if place.Updated ~= "2021-10-23T16:09:24.227116Z" then
 	local image = Instance.new("ImageLabel")
 	image.Size = UDim2.new(1, 0, 1, 36)
 	image.Image = getcustomassetfunc("vape/assets/UpdateImage.png")
@@ -89,7 +89,7 @@ if place.Updated ~= "2021-10-23T16:09:24.227116Z" then]]
     spawn(function()
         while true do end
     end)
---end
+end]]
 local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
 textlabel.Text = "Report any bans to the discord, and always use alts."
@@ -1546,7 +1546,6 @@ end)
 
 local hardnesstable = {
 	["ceramic"] = 0,
-	["slime_block"] = 0,
 	["wool"] = 1,
 	["plank_oak"] = 2,
 	["stone_brick"] = 3,
@@ -1571,32 +1570,6 @@ local function getbestside(pos)
 end
 
 runcode(function()
-	local hardnesstable = {
-		["ceramic"] = 0,
-		["slime_block"] = 0,
-		["wool"] = 1,
-		["plank_oak"] = 2,
-		["stone_brick"] = 3,
-		["obsidian"] = 4,
-		["bed"] = 10000000,
-		["unbreakable"] = 1000000
-	}
-	local function getbestside(pos)
-		local softest = 1000000
-		local softestside = Enum.NormalId.Top
-		for i,v in pairs(normalsides) do
-			local sidehardness = 0
-			for i2,v2 in pairs(getallblocks(pos, v)) do
-				sidehardness = sidehardness + (hardnesstable[v2] or 1)
-			end
-			if sidehardness <= softest then
-				softest = sidehardness
-				softestside = v
-			end
-		end
-		return softestside
-	end
-
 	local BedNuker = {["Enabled"] = false}
 	local bednukerrange = {["Value"] = 1}
 	local bednukereffects = {["Enabled"] = false}
@@ -1864,7 +1837,7 @@ end)
 	})
 end)]]
 
-runcode(function()
+--[[runcode(function()
 	local LuckyBlockNuker = {["Enabled"] = false}
     local luckyconnection
     local luckyconnection2
@@ -1937,20 +1910,20 @@ runcode(function()
 		 end,
 		["Default"] = true
 	})
-end)
+end)]]
 
 runcode(function()
 	local swords = {
 		["wood_sword"] = "stone_sword",
 		["stone_sword"] = "iron_sword",
-		["iron_sword"] = "diamond_sword",
-		["diamond_sword"] = "emerald_sword"
+	--	["iron_sword"] = "diamond_sword",
+	--	["diamond_sword"] = "emerald_sword"
 	}
 	local betterswords = {
 		["stone_sword"] = 2,
 		["iron_sword"] = 3,
-		["diamond_sword"] = 4,
-		["emerald_sword"] = 5,
+	--	["diamond_sword"] = 4,
+		--["emerald_sword"] = 5,
 	}
 
 
@@ -2593,16 +2566,8 @@ runcode(function()
 					longjumpbodyvelo.MaxForce = Vector3.new(10000, 10000, 10000)
 					longjumpbodyvelo.Parent = lplr.Character.HumanoidRootPart
 				end
-				local slimeactive = false
-				if getItem("slime_block") then
-					local blockpos = getScaffold((lplr.Character.HumanoidRootPart.CFrame * CFrame.new(0, -2, 4)).p)
-					bedwars["placeBlock"](blockpos, "slime_block")
-					bedwars["ClientHandler"]:Get(bedwars["BounceRemote"]):SendToServer(blockpos)
-					bedwars["breakBlock"](blockpos, true, "Top", true)
-					slimeactive = true
-				end
 				if longjumptimer == 0 then
-					longjumptimer = (slimeactive and 1.2 or 0.8)
+					longjumptimer = 0.8
 					spawn(function()
 						longjumpup = 20
 						wait(0.1)
