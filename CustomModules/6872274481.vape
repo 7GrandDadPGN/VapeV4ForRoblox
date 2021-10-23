@@ -42,7 +42,7 @@ local function UnbindFromRenderStep(name)
 end
 
 local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-10-23T00:21:32.2283386Z" then
+if place.Updated ~= "2021-10-23T14:54:48.9469968Z" then
 	local image = Instance.new("ImageLabel")
 	image.Size = UDim2.new(1, 0, 1, 36)
 	image.Image = getcustomassetfunc("vape/assets/UpdateImage.png")
@@ -1874,7 +1874,9 @@ runcode(function()
                             if isAlive() then
                                 if obj and obj.Parent ~= nil then
                                     if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= luckyblocknukerrange["Value"] then
-                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], getbestside(obj.Position), true)
+
+										--getbestside(obj.Position) secret function :eyes:
+                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], luckyblocknukerdigpos["Value"], true)
                                         wait(0.3)
                                     end
                                 end
