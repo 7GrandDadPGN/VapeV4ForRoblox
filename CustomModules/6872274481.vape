@@ -17,6 +17,8 @@ local kit = ""
 local antivoidypos = 0
 local scaffoldypos = 0
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
+local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport
+local teleportfunc
 local getasset = getsynasset or getcustomasset
 local ownedkits = {}
 local storedshahashes = {}
@@ -25,6 +27,7 @@ local chatconnection
 local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 local blocks = {}
 local RenderStepTable = {}
+local Hitboxes = {["Enabled"] = false}
 
 local function BindToRenderStep(name, num, func)
 	if RenderStepTable[name] == nil then
@@ -38,18 +41,8 @@ local function UnbindFromRenderStep(name)
 	end
 end
 
-
-local function shareal(b)local function c(b,d,e,...)b=b%2^32;d=d%2^32;local b=(b%0x00000002>=0x00000001 and d%0x00000002>=0x00000001 and 0x00000001 or 0)+(b%0x00000004>=0x00000002 and d%0x00000004>=0x00000002 and 0x00000002 or 0)+(b%0x00000008>=0x00000004 and d%0x00000008>=0x00000004 and 0x00000004 or 0)+(b%0x00000010>=0x00000008 and d%0x00000010>=0x00000008 and 0x00000008 or 0)+(b%0x00000020>=0x00000010 and d%0x00000020>=0x00000010 and 0x00000010 or 0)+(b%0x00000040>=0x00000020 and d%0x00000040>=0x00000020 and 0x00000020 or 0)+(b%0x00000080>=0x00000040 and d%0x00000080>=0x00000040 and 0x00000040 or 0)+(b%0x00000100>=0x00000080 and d%0x00000100>=0x00000080 and 0x00000080 or 0)+(b%0x00000200>=0x00000100 and d%0x00000200>=0x00000100 and 0x00000100 or 0)+(b%0x00000400>=0x00000200 and d%0x00000400>=0x00000200 and 0x00000200 or 0)+(b%0x00000800>=0x00000400 and d%0x00000800>=0x00000400 and 0x00000400 or 0)+(b%0x00001000>=0x00000800 and d%0x00001000>=0x00000800 and 0x00000800 or 0)+(b%0x00002000>=0x00001000 and d%0x00002000>=0x00001000 and 0x00001000 or 0)+(b%0x00004000>=0x00002000 and d%0x00004000>=0x00002000 and 0x00002000 or 0)+(b%0x00008000>=0x00004000 and d%0x00008000>=0x00004000 and 0x00004000 or 0)+(b%0x00010000>=0x00008000 and d%0x00010000>=0x00008000 and 0x00008000 or 0)+(b%0x00020000>=0x00010000 and d%0x00020000>=0x00010000 and 0x00010000 or 0)+(b%0x00040000>=0x00020000 and d%0x00040000>=0x00020000 and 0x00020000 or 0)+(b%0x00080000>=0x00040000 and d%0x00080000>=0x00040000 and 0x00040000 or 0)+(b%0x00100000>=0x00080000 and d%0x00100000>=0x00080000 and 0x00080000 or 0)+(b%0x00200000>=0x00100000 and d%0x00200000>=0x00100000 and 0x00100000 or 0)+(b%0x00400000>=0x00200000 and d%0x00400000>=0x00200000 and 0x00200000 or 0)+(b%0x00800000>=0x00400000 and d%0x00800000>=0x00400000 and 0x00400000 or 0)+(b%0x01000000>=0x00800000 and d%0x01000000>=0x00800000 and 0x00800000 or 0)+(b%0x02000000>=0x01000000 and d%0x02000000>=0x01000000 and 0x01000000 or 0)+(b%0x04000000>=0x02000000 and d%0x04000000>=0x02000000 and 0x02000000 or 0)+(b%0x08000000>=0x04000000 and d%0x08000000>=0x04000000 and 0x04000000 or 0)+(b%0x10000000>=0x08000000 and d%0x10000000>=0x08000000 and 0x08000000 or 0)+(b%0x20000000>=0x10000000 and d%0x20000000>=0x10000000 and 0x10000000 or 0)+(b%0x40000000>=0x20000000 and d%0x40000000>=0x20000000 and 0x20000000 or 0)+(b%0x80000000>=0x40000000 and d%0x80000000>=0x40000000 and 0x40000000 or 0)+(b>=0x80000000 and d>=0x80000000 and 0x80000000 or 0)return e and c(b,e,...)or b end;local function d(b,c,e,...)local b=(b%0x00000002>=0x00000001~=(c%0x00000002>=0x00000001)and 0x00000001 or 0)+(b%0x00000004>=0x00000002~=(c%0x00000004>=0x00000002)and 0x00000002 or 0)+(b%0x00000008>=0x00000004~=(c%0x00000008>=0x00000004)and 0x00000004 or 0)+(b%0x00000010>=0x00000008~=(c%0x00000010>=0x00000008)and 0x00000008 or 0)+(b%0x00000020>=0x00000010~=(c%0x00000020>=0x00000010)and 0x00000010 or 0)+(b%0x00000040>=0x00000020~=(c%0x00000040>=0x00000020)and 0x00000020 or 0)+(b%0x00000080>=0x00000040~=(c%0x00000080>=0x00000040)and 0x00000040 or 0)+(b%0x00000100>=0x00000080~=(c%0x00000100>=0x00000080)and 0x00000080 or 0)+(b%0x00000200>=0x00000100~=(c%0x00000200>=0x00000100)and 0x00000100 or 0)+(b%0x00000400>=0x00000200~=(c%0x00000400>=0x00000200)and 0x00000200 or 0)+(b%0x00000800>=0x00000400~=(c%0x00000800>=0x00000400)and 0x00000400 or 0)+(b%0x00001000>=0x00000800~=(c%0x00001000>=0x00000800)and 0x00000800 or 0)+(b%0x00002000>=0x00001000~=(c%0x00002000>=0x00001000)and 0x00001000 or 0)+(b%0x00004000>=0x00002000~=(c%0x00004000>=0x00002000)and 0x00002000 or 0)+(b%0x00008000>=0x00004000~=(c%0x00008000>=0x00004000)and 0x00004000 or 0)+(b%0x00010000>=0x00008000~=(c%0x00010000>=0x00008000)and 0x00008000 or 0)+(b%0x00020000>=0x00010000~=(c%0x00020000>=0x00010000)and 0x00010000 or 0)+(b%0x00040000>=0x00020000~=(c%0x00040000>=0x00020000)and 0x00020000 or 0)+(b%0x00080000>=0x00040000~=(c%0x00080000>=0x00040000)and 0x00040000 or 0)+(b%0x00100000>=0x00080000~=(c%0x00100000>=0x00080000)and 0x00080000 or 0)+(b%0x00200000>=0x00100000~=(c%0x00200000>=0x00100000)and 0x00100000 or 0)+(b%0x00400000>=0x00200000~=(c%0x00400000>=0x00200000)and 0x00200000 or 0)+(b%0x00800000>=0x00400000~=(c%0x00800000>=0x00400000)and 0x00400000 or 0)+(b%0x01000000>=0x00800000~=(c%0x01000000>=0x00800000)and 0x00800000 or 0)+(b%0x02000000>=0x01000000~=(c%0x02000000>=0x01000000)and 0x01000000 or 0)+(b%0x04000000>=0x02000000~=(c%0x04000000>=0x02000000)and 0x02000000 or 0)+(b%0x08000000>=0x04000000~=(c%0x08000000>=0x04000000)and 0x04000000 or 0)+(b%0x10000000>=0x08000000~=(c%0x10000000>=0x08000000)and 0x08000000 or 0)+(b%0x20000000>=0x10000000~=(c%0x20000000>=0x10000000)and 0x10000000 or 0)+(b%0x40000000>=0x20000000~=(c%0x40000000>=0x20000000)and 0x20000000 or 0)+(b%0x80000000>=0x40000000~=(c%0x80000000>=0x40000000)and 0x40000000 or 0)+(b>=0x80000000~=(c>=0x80000000)and 0x80000000 or 0)return e and d(b,e,...)or b end;local function e(b)return 4294967295-b end;local function f(b,c)b=b%2^32;local b=b/2^c;return b-b%1 end;local function g(b,c)b=b%2^32;local b=b/2^c;local c=b%1;return b-c+c*2^32 end;local h={0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2}local function i(b)local b=string.gsub(b,".",function(b)return string.format("%02x",string.byte(b))end)return b end;local function j(b,c)local d=""for c=1,c do local c=b%256;d=string.char(c)..d;b=(b-c)/256 end;return d end;local function k(b,c)local d=0;for c=c,c+3 do d=d*256+string.byte(b,c)end;return d end;local function l(b,c)local d=64-(c+1+8)%64;c=j(8*c,8)b=b.."\128"..string.rep("\0",d)..c;return b end;local function m(b)b[1]=0x6a09e667;b[2]=0xbb67ae85;b[3]=0x3c6ef372;b[4]=0xa54ff53a;b[5]=0x510e527f;b[6]=0x9b05688c;b[7]=0x1f83d9ab;b[8]=0x5be0cd19;return b end;local function n(b,i,j)local l={}for c=1,16 do l[c]=k(b,i+(c-1)*4)end;for b=17,64 do local c=l[b-15]local e=d(g(c,7),g(c,18),f(c,3))c=l[b-2]local c=d(g(c,17),g(c,19),f(c,10))l[b]=l[b-16]+e+l[b-7]+c end;local b,f,i,k,m,n,o,p=j[1],j[2],j[3],j[4],j[5],j[6],j[7],j[8]for j=1,64 do local q=d(g(b,2),g(b,13),g(b,22))local r=d(c(b,f),c(b,i),c(f,i))local q=q+r;local g=d(g(m,6),g(m,11),g(m,25))local c=d(c(m,n),c(e(m),o))local c=p+g+c+h[j]+l[j]p,o,n,m,k,i,f,b=o,n,m,k+c,i,f,b,c+q end;j[1]=(j[1]+b)%2^32;j[2]=(j[2]+f)%2^32;j[3]=(j[3]+i)%2^32;j[4]=(j[4]+k)%2^32;j[5]=(j[5]+m)%2^32;j[6]=(j[6]+n)%2^32;j[7]=(j[7]+o)%2^32;j[8]=(j[8]+p)%2^32 end;b=l(b,#b)local c=m({})for d=1,#b,64 do n(b,d,c)end;return i(j(c[1],4)..j(c[2],4)..j(c[3],4)..j(c[4],4)..j(c[5],4)..j(c[6],4)..j(c[7],4)..j(c[8],4))end
-
-local function sha(b)
-	if storedshahashes[b] == nil then
-		storedshahashes[b] = shareal(b)
-	end
-	return storedshahashes[b]
-end
-
---[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-10-05T00:25:03.577Z" then
+local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+if place.Updated ~= "2021-10-23T00:21:32.2283386Z" then
 	local image = Instance.new("ImageLabel")
 	image.Size = UDim2.new(1, 0, 1, 36)
 	image.Image = getcustomassetfunc("vape/assets/UpdateImage.png")
@@ -96,7 +89,7 @@ if place.Updated ~= "2021-10-05T00:25:03.577Z" then
     spawn(function()
         while true do end
     end)
-end]]
+end
 local textlabel = Instance.new("TextLabel")
 textlabel.Size = UDim2.new(1, 0, 0, 36)
 textlabel.Text = "Report any bans to the discord, and always use alts."
@@ -252,6 +245,13 @@ for i4,v4 in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
 	end
 end
 
+local function isAlive(plr)
+	if plr then
+		return plr and plr.Character and plr.Character.Parent ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Head") and plr.Character:FindFirstChild("Humanoid")
+	end
+	return lplr and lplr.Character and lplr.Character.Parent ~= nil and lplr.Character:FindFirstChild("HumanoidRootPart") and lplr.Character:FindFirstChild("Head") and lplr.Character:FindFirstChild("Humanoid")
+end
+
 getfunctions = function()
 	for i,v in pairs(getgc(true)) do
 		if type(v) == "table" then
@@ -336,9 +336,6 @@ getfunctions = function()
 			if rawget(v, "SoundManager") then
 				bedwars["SoundManager"] = v["SoundManager"]
 			end
-			if rawget(v, "SetSelectedShopItem") then
-				bedwars["SetSelectedShopItem"] = v["SetSelectedShopItem"]
-			end
 			if rawget(v, "getLocalPlayerEntity") then
 				bedwars["getEntityTable"] = v
 			end
@@ -379,6 +376,9 @@ getfunctions = function()
 			end
 			if rawget(v, "ConsumeController") then
 				bedwars["EatRemote"] = debug.getconstant(debug.getproto(getmetatable(v["ConsumeController"])["onEnable"], 1), 5)
+			end
+			if rawget(v, "BounceController") then
+				bedwars["BounceRemote"] = debug.getconstant(v["BounceController"]["KnitStart"], 2)
 			end
 			if rawget(v, "RavenController") then
 				bedwars["RavenTable"] = v["RavenController"]
@@ -430,25 +430,12 @@ getfunctions = function()
 				end
 				oldattack = v["attackEntity"]
 				shared.backup_attack = oldattack
-			--[[	v["attackEntity"] = function(Self, entity, raycast)
-					local plr
-					pcall(function()
-						if table.find(playerwhitelist, sha(tostring(players:GetPlayerFromCharacter(entity:getInstance()).UserId))) then
-							plr = true
-						end
-					end)
-					if plr then
-						local plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
-						if plrentity ~= nil then
-							plrentity:playAnimation(0)
-						end
-						bedwars["ViewmodelController"]:playAnimation(5)
-						bedwars["SoundManager"]:playSound(math.random(13, 14))
-						return nil
+				v["attackEntity"] = function(Self, entity, raycast)
+					if entity and Hitboxes["Enabled"] and isAlive() and isAlive(entity.player) then
+						raycast = Ray.new(cam.CFrame.p, entity.instance.HumanoidRootPart.Position).Unit.Direction
 					end
-					local suc, res = pcall(function() return oldattack(Self, entity, raycast) end)
-					return res
-				end]]
+					return oldattack(Self, entity, raycast)
+				end
 				bedwars["attackTable"] = v
 				bedwars["attackEntity"] = v["attackEntity"]
 			end
@@ -466,7 +453,7 @@ getfunctions = function()
 		end
 	end
 
-	if (bedwars["PlayerUtil"] and bedwars["PickupRemote"] and bedwars["Shop"] and bedwars["SoundManager"] and bedwars["SetSelectedShopItem"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
+	if (bedwars["PlayerUtil"] and bedwars["PickupRemote"] and bedwars["Shop"] and bedwars["BounceRemote"] and bedwars["SoundManager"] and bedwars["ViewmodelController"] and bedwars["GuitarRemote"] and bedwars["BalloonController"] and bedwars["SwingSwordRegion"] and bedwars["CombatConstant"] and bedwars["SwingSword"] and bedwars["BowTable"] and bedwars["getInventory"] and bedwars["raiseShield"] and bedwars["BlockController"] and bedwars["BlockEngine"] and bedwars["BlockController2"] and bedwars["BlockController3"] and bedwars["SwordController"] and bedwars["attackEntity"] and bedwars["damageTable"] and bedwars["sprintTable"]) or (not shared.VapeExecuted) then
 		repeat wait() until lplr.Team ~= nil
 		local suc = pcall(function()
 			scaffoldypos = workspace.SpectatorPlatform.floor.Position.Y
@@ -535,7 +522,7 @@ getfunctions = function()
         end
 	else
 		wait(1)
-		--print(bedwars["PlayerUtil"], bedwars["PickupRemote"], bedwars["Shop"], bedwars["SoundManager"], bedwars["SetSelectedShopItem"], bedwars["ViewmodelController"], bedwars["GuitarRemote"], bedwars["BalloonController"], bedwars["SwingSwordRegion"], bedwars["CombatConstant"], bedwars["SwingSword"], bedwars["BowTable"], bedwars["getInventory"], bedwars["raiseShield"], bedwars["BlockController"], bedwars["BlockEngine"], bedwars["BlockController2"], bedwars["BlockController3"], bedwars["SwordController"], bedwars["attackEntity"], bedwars["damageTable"], bedwars["sprintTable"])
+		--print(bedwars["PlayerUtil"], bedwars["PickupRemote"], bedwars["Shop"], bedwars["SoundManager"], bedwars["ViewmodelController"], bedwars["GuitarRemote"], bedwars["BalloonController"], bedwars["SwingSwordRegion"], bedwars["CombatConstant"], bedwars["SwingSword"], bedwars["BowTable"], bedwars["getInventory"], bedwars["raiseShield"], bedwars["BlockController"], bedwars["BlockEngine"], bedwars["BlockController2"], bedwars["BlockController3"], bedwars["SwordController"], bedwars["attackEntity"], bedwars["damageTable"], bedwars["sprintTable"])
 	--	print(bedwars["assetTable"],bedwars["ZiplineRemote"],bedwars["HitProjectile"],bedwars["FireProjectile"],bedwars["getInventory"],bedwars["raiseShield"],bedwars["BlockController"],bedwars["BlockEngine"],bedwars["BlockController2"],bedwars["SwordController"],bedwars["attackEntity"],bedwars["damageTable"],bedwars["sprintTable"])
 		getfunctions()
 	end
@@ -545,9 +532,18 @@ GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	if oldattack then
 		bedwars["attackTable"]["attackEntity"] = oldattack
 	end
+	if teleportfunc then
+		teleportfunc:Disconnect()
+	end
 	if chatconnection then
 		chatconnection:Disconnect()
 	end
+end)
+
+teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+    if State == Enum.TeleportState.Started and bedwars["ClientStoreHandler"] and #bedwars["ClientStoreHandler"]:getState().Party.members > 0 then
+        queueteleport('shared.vapeteammembers = '..#bedwars["ClientStoreHandler"]:getState().Party.members)
+    end
 end)
 
 local function runcode(func)
@@ -581,13 +577,6 @@ local function targetCheck(plr, check)
 	return (check and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("ForceField") == nil or check == false)
 end
 
-local function isAlive(plr)
-	if plr then
-		return plr and plr.Character and plr.Character.Parent ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Head") and plr.Character:FindFirstChild("Humanoid")
-	end
-	return lplr and lplr.Character and lplr.Character.Parent ~= nil and lplr.Character:FindFirstChild("HumanoidRootPart") and lplr.Character:FindFirstChild("Head") and lplr.Character:FindFirstChild("Humanoid")
-end
-
 local localentity = bedwars["getEntityTable"]["getLocalPlayerEntity"]()
 
 local function switchItem(tool)
@@ -597,18 +586,27 @@ local function switchItem(tool)
 	})
 end
 
-local inputobj = nil
 local updateitem = Instance.new("BindableEvent")
-updateitem.Event:connect(function(inputObj)
-	wait(0.3)
-	if uis:IsMouseButtonPressed(0) then
-		for i, track in pairs(game.Players.LocalPlayer.Character.Humanoid.Animator:GetPlayingAnimationTracks()) do
-			if track.Animation.AnimationId == "rbxassetid://6322507715" then
-				track:Stop()
-			end
+runcode(function()
+	local inputobj = nil
+	local tempconnection
+	tempconnection = game:GetService("UserInputService").InputBegan:connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			inputobj = input
+			tempconnection:Disconnect()
 		end
-		game:GetService("ContextActionService"):CallFunction("block-break", Enum.UserInputState.Begin, nil)
-	end
+	end)
+	updateitem.Event:connect(function(inputObj)
+		wait(0.3)
+		if uis:IsMouseButtonPressed(0) then
+			for i, track in pairs(game.Players.LocalPlayer.Character.Humanoid.Animator:GetPlayingAnimationTracks()) do
+				if track.Animation.AnimationId == "rbxassetid://6322507715" then
+					track:Stop()
+				end
+			end
+			game:GetService("ContextActionService"):CallFunction("block-break", Enum.UserInputState.Begin, inputobj)
+		end
+	end)
 end)
 local function switchToAndUseTool(block, legit)
 	local tool = nil
@@ -648,6 +646,31 @@ local function isBlockCovered(pos)
 		end
 	end
 	return coveredsides == #normalsides
+end
+
+local function getallblocks(pos, normal)
+	local blocks = {}
+	local lastfound = nil
+	for i = 1, 20 do
+		local blockpos = (pos + (Vector3.FromNormalId(normal) * (i * 3)))
+		local extrablock = getblock(blockpos)
+		local covered = isBlockCovered(blockpos)
+		if extrablock and extrablock.Parent ~= nil and (covered or covered == false and lastblock == nil) then
+			if bedwars["BlockEngine2"]:isBlockBreakable({["blockPosition"] = blockpos}, lplr) then
+				table.insert(blocks, extrablock.Name:find("wool") and "wool" or extrablock.Name)
+			else
+				table.insert(blocks, "unbreakable")
+				break
+			end
+			lastfound = extrablock
+			if covered == false then
+				break
+			end
+		else
+			break
+		end
+	end
+	return blocks
 end
 
 local function getlastblock(pos, normal)
@@ -1095,6 +1118,8 @@ end
 
 local slowdownspeed = false
 local speed = {["Enabled"] = false}
+local longjump = {["Enabled"] = false}
+local longjumpvelo = Vector3.new(0, 0, 0)
 runcode(function()
 	local nocheck = false
 	local phaseconnection
@@ -1133,14 +1158,16 @@ runcode(function()
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
 						local newray = workspace:Raycast(pos3, lplr.Character.Humanoid.MoveDirection, raycastparameters)
 						if phasedelay <= tick() then
-							slowdownspeed = false
 							nocheck = false
 						end
+						if phasedelay2 <= tick() then
+							slowdownspeed = false
+						end
 						if newray and phasedelay <= tick() and phasedelay2 <= tick() and (not bird) and GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] == false then
-						--	print((newray.Instance.Position.Y - lplr.Character.HumanoidRootPart.CFrame.p.Y))
 							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -6)) then
 								phasedelay = tick() + 0.075
-								phasedelay2 = tick() + 0.3
+								phasedelay2 = tick() + 0.1
+								slowdownspeed = true
 								nocheck = true
 								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (newray.Normal * -2.5)
 							end
@@ -1518,8 +1545,33 @@ runcode(function()
 end)
 
 runcode(function()
+	local hardnesstable = {
+		["ceramic"] = 0,
+		["slime_block"] = 0,
+		["wool"] = 1,
+		["plank_oak"] = 2,
+		["stone_brick"] = 3,
+		["obsidian"] = 4,
+		["bed"] = 10000000,
+		["unbreakable"] = 1000000
+	}
+	local function getbestside(pos)
+		local softest = 1000000
+		local softestside = Enum.NormalId.Top
+		for i,v in pairs(normalsides) do
+			local sidehardness = 0
+			for i2,v2 in pairs(getallblocks(pos, v)) do
+				sidehardness = sidehardness + (hardnesstable[v2] or 1)
+			end
+			if sidehardness <= softest then
+				softest = sidehardness
+				softestside = v
+			end
+		end
+		return softestside
+	end
+
 	local BedNuker = {["Enabled"] = false}
-	local bednukerdigpos = {["Value"] = "Right"}
 	local bednukerrange = {["Value"] = 1}
 	local bednukereffects = {["Enabled"] = false}
 	BedNuker = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
@@ -1534,7 +1586,7 @@ runcode(function()
 						if isAlive() then
 							if obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor ~= lplr.Team.TeamColor and obj.Parent ~= nil then
 								if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bednukerrange["Value"] then
-									bedwars["breakBlock"](obj.Position, bednukereffects["Enabled"], bednukerdigpos["Value"])
+									bedwars["breakBlock"](obj.Position, bednukereffects["Enabled"], getbestside(obj.Position))
 									wait(0.3)
 								end
 							end
@@ -1544,11 +1596,6 @@ runcode(function()
 			end)
 		end,
 		["HoverText"] = "Automatically destroys beds around you."
-	})
-	bednukerdigpos = BedNuker.CreateDropdown({
-		["Name"] = "Break Direction", 
-		["List"] = normalsides,
-		["Function"] = function(val) end
 	})
 	bednukerrange = BedNuker.CreateSlider({
 		["Name"] = "Break range",
@@ -1827,7 +1874,7 @@ runcode(function()
                             if isAlive() then
                                 if obj and obj.Parent ~= nil then
                                     if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= luckyblocknukerrange["Value"] then
-                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], luckyblocknukerdigpos["Value"], true)
+                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], getbestside(obj.Position), true)
                                         wait(0.3)
                                     end
                                 end
@@ -1960,7 +2007,6 @@ runcode(function()
 								break;
 							end;
 						end;
-						bedwars["SetSelectedShopItem"](itemToSelect);
 						return;
 					elseif itemtab.tiered or itemtab.lockAfterPurchase then
 
@@ -2506,6 +2552,71 @@ end)
 end)
 ]]
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
+runcode(function()
+	local longjumpbound = false
+	local longjumptimer = 0
+	local longjumpup = 0
+	local longjumpbodyvelo
+	longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "LongJump",
+		["Function"] = function(callback)
+			if callback then
+				longjumpvelo = Vector3.new(0, 0, 0)
+				if (not GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Enabled"]) and isAlive() then
+					longjumpbodyvelo = Instance.new("BodyVelocity")
+					longjumpbodyvelo.MaxForce = Vector3.new(10000, 10000, 10000)
+					longjumpbodyvelo.Parent = lplr.Character.HumanoidRootPart
+				end
+				local slimeactive = false
+				if getItem("slime_block") then
+					local blockpos = getScaffold((lplr.Character.HumanoidRootPart.CFrame * CFrame.new(0, -2, 4)).p)
+					bedwars["placeBlock"](blockpos, "slime_block")
+					bedwars["ClientHandler"]:Get(bedwars["BounceRemote"]):SendToServer(blockpos)
+					bedwars["breakBlock"](blockpos, true, "Top", true)
+					slimeactive = true
+				end
+				if longjumptimer == 0 then
+					longjumptimer = (slimeactive and 1.2 or 0.8)
+					spawn(function()
+						longjumpup = 20
+						wait(0.1)
+						longjumpup = 0
+					end)
+					spawn(function()
+						repeat 
+							wait(0.1)
+							longjumptimer = longjumptimer - 0.1
+						until longjump["Enabled"] == false or longjumptimer <= 0
+						longjumptimer = 0
+					end)
+				end
+				BindToRenderStep("LongJump", 1, function()
+					if longjumptimer > 0 and isAlive() then
+						longjumpvelo = (Vector3.new(lplr.Character.HumanoidRootPart.CFrame.lookVector.X, 0, lplr.Character.HumanoidRootPart.CFrame.lookVector.Z) * 32) + Vector3.new(0, longjumpup, 0)
+						if longjumpbodyvelo then
+							longjumpbodyvelo.Velocity = longjumpvelo
+						end
+					else
+						longjumptimer = 0
+						UnbindFromRenderStep("LongJump")
+						if longjumpbodyvelo then
+							longjumpbodyvelo:Remove()
+						end
+						if longjump["Enabled"] then
+							longjump["ToggleButton"](false)
+						end
+					end
+				end)
+			else
+				if longjumpbodyvelo then
+					longjumpbodyvelo:Remove()
+				end
+				longjumptimer = 0
+			end
+		end, 
+		["HoverText"] = "Lets you jump farther (Spamming has a chance to lagback)"
+	})
+end)
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 runcode(function()
 	local HighJumpBoost = {["Value"] = 1}
@@ -3094,13 +3205,13 @@ AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 	["Function"] = function(callback)
 		if callback then
 			autoleaveconnection = players.PlayerAdded:connect(function(plr)
-				spawn(function()
+				pcall(function()
 					if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
 						bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 					end
 				end)
 			end)
-			spawn(function()
+			pcall(function()
 				for i, plr in pairs(players:GetChildren()) do
 					if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
 						bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
@@ -3135,12 +3246,10 @@ bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 					else
 						lastsaid = custommsg
 					end
-					local winstreak = (players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak") > 0 and players:GetPlayerFromCharacter(p7.entityInstance):GetAttribute("WinStreak"))
 					if custommsg then
 						custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
-						custommsg = custommsg:gsub("<ws>", winstreak or "0")
 					end
-					local msg = custommsg or "L "..(plr.DisplayName or plr.Name)..(AutoToxicWinStreak["Enabled"] and winstreak and " : "..winstreak.." winstreak" or "")
+					local msg = custommsg or "L "..(plr.DisplayName or plr.Name)
 					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
 				end
 			end
@@ -3203,7 +3312,7 @@ AutoToxicPhrases = AutoToxic.CreateTextList({
 })
 AutoToxicPhrases2 = AutoToxic.CreateTextList({
 	["Name"] = "ToxicList2",
-	["TempText"] = "phrase (kill) <name> <ws>",
+	["TempText"] = "phrase (kill) <name>",
 })
 AutoToxicPhrases3 = AutoToxic.CreateTextList({
 	["Name"] = "ToxicList3",
@@ -3214,11 +3323,11 @@ AutoToxicPhrases4 = AutoToxic.CreateTextList({
 	["TempText"] = "phrase (respond) <name>",
 })
 
-GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 local fly = {["Enabled"] = false}
 local speedval = {["Value"] = 1}
 local speedjump = {["Enabled"] = false}
+local speedjumpalways = {["Enabled"] = false}
 local bodyvelo
 local Scaffold = {["Enabled"] = false}
 speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -3238,21 +3347,16 @@ speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 					else
 						if bird then
-							lplr.Character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 32)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
+							lplr.Character.Humanoid.WalkSpeed = (60 * (speedval["Value"] / 32)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
 							if (not (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics)) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
-								local newvelo = lplr.Character.Humanoid.MoveDirection * 40
+								local newvelo = lplr.Character.Humanoid.MoveDirection * 50
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 							end
 						end
-						bodyvelo.MaxForce = (bird and Vector3.new(0, 0, 0) or Vector3.new(100000, 0, 100000))
-						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * 1) * (slowdownspeed and 0.6 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
+						bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 100000, 100000) or Vector3.new(100000, 0, 100000)))
+						bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * 1) * (slowdownspeed and 0.6 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1)
 					end
-					if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing then
-						bodyvelo.MaxForce = Vector3.new(0, 0, 0)
-					else
-						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
-					end
-					if jumpcheck and (not bird) then
+					if (speedjumpalways["Enabled"] or jumpcheck) and (not bird) then
 						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
 						end
@@ -3277,9 +3381,22 @@ speedval = speed.CreateSlider({
 })
 speedjump = speed.CreateToggle({
 	["Name"] = "AutoJump", 
-	["Function"] = function() end,
+	["Function"] = function(callback) 
+		if speedjumpalways["Object"] then
+			speedjump["Object"].ToggleArrow.Visible = callback
+			speedjumpalways["Object"].Visible = callback
+		end
+	end,
 	["Default"] = true
 })
+speedjumpalways = speed.CreateToggle({
+	["Name"] = "Always Jump",
+	["Function"] = function() end
+})
+speedjumpalways["Object"].BackgroundTransparency = 0
+speedjumpalways["Object"].BorderSizePixel = 0
+speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+speedjumpalways["Object"].Visible = speedjump["Enabled"]
 
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 local OldNoFallFunction
@@ -3316,9 +3433,9 @@ bedwars["ClientHandler"]:WaitFor("TNT_Explode"):andThen(function(p6)
 		if isAlive() and (lplr.Character.HumanoidRootPart.Position - p7.position).magnitude < 20 and fly["Enabled"] then
 			spawn(function()
 				if tnttimer <= 0 then
-					tnttimer = 4
+					tnttimer = 3
 					createwarning("TNT Fly", "You can fly for 4 seconds", 4)
-					for i = 4, 0, -1 do
+					for i = 3, 0, -1 do
 						wait(1)
 						tnttimer = i
 					end
@@ -3414,6 +3531,18 @@ flyupanddown = fly.CreateToggle({
 	["Name"] = "Y Level",
 	["Function"] = function() end, 
 	["Default"] = true
+})
+GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
+Hitboxes = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "HitBoxes",
+	["Function"] = function(callback)
+		if callback then
+			debug.setconstant(bedwars["attackTable"]["swingSwordInRegion"], 6, 4.8)
+		else
+			debug.setconstant(bedwars["attackTable"]["swingSwordInRegion"], 6, 3.8)
+		end
+	end,
+	["HoverText"] = "Expands entities hitboxes when your not clicking on them"
 })
 
 local scaffoldtext = Instance.new("TextLabel")
@@ -4003,7 +4132,9 @@ runcode(function()
 		if (NickHider["Enabled"] or revert) and nickeduser ~= {} and nickeduser ~= nil then
 			obj[property] = obj[property]:gsub((revert and newname or lplr.Name), (revert and lplr.Name or nickeduser["Username"]))
 			obj[property] = obj[property]:gsub((revert and newdisplayname or lplr.DisplayName), (revert and lplr.DisplayName or nickeduser["DisplayName"]))
-			obj[property] = obj[property]:gsub((revert and newid or lplr.UserId), (revert and lplr.UserId or nickeduser["Id"]))
+			if property ~= "Text" then
+				obj[property] = obj[property]:gsub((revert and newid or lplr.UserId), (revert and lplr.UserId or nickeduser["Id"]))
+			end
 		end
 	end
 
@@ -4102,186 +4233,4 @@ runcode(function()
 			end
 		end
 	})
-end)
-
-runcode(function()
-	local SwitchKit = {["Enabled"] = false}
-	local SwitchKitDropdown = {["Value"] = nil}
-	SwitchKit = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "SwitchKit",
-		["Function"] = function(callback)
-			if callback then
-				if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
-					if table.find(ownedkits, SwitchKitDropdown["Value"]) then
-						createwarning("Bedwars", "Switched kit to "..SwitchKitDropdown["Value"], 3)
-						bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync(SwitchKitDropdown["Value"] and {
-							kit = SwitchKitDropdown["Value"]
-						} or {}):andThen(function(p11)
-							if p11 then
-								bedwars["SoundManager"]:playSound(19)
-								if SwitchKitDropdown["Value"] then
-									bedwars["ClientStoreHandler"]:dispatch({
-										type = "SetBedwarsKit", 
-										kit = SwitchKitDropdown["Value"]
-									})
-								end
-							end
-						end)
-					else
-						createwarning("Bedwars", "Selected Kit not owned", 3)
-					end
-				else
-					createwarning("Bedwars", "Requires Blatant mode", 3)
-				end
-				SwitchKit["ToggleButton"](false)
-			end
-		end, 
-		["HoverText"] = "USE ALTS WHEN USING THIS \nIT CAN BE PATCHED AT ANY MOMENT (Blatant Mode Required)"
-	})
-	SwitchKitDropdown = SwitchKit.CreateDropdown({
-		["Name"] = "Kit", 
-		["List"] = ownedkits,
-		["Function"] = function(val) end
-	})
-	spawn(function()
-		repeat wait() until matchState ~= 0
-		ownedkits = {}
-		for i2,v2 in pairs(bedwars["ClientStoreHandler"]:getState().Bedwars.ownedKits) do
-            table.insert(ownedkits, v2)
-        end
-        for i3,v3 in pairs(bedwars["BedwarsKits"].FreeKits) do
-            table.insert(ownedkits, v3)
-        end
-		SwitchKitDropdown["UpdateList"](ownedkits)
-		SwitchKitDropdown["Value"] = ownedkits[1]
-	end)
-end)
-
-runcode(function()
-	local WinstreakTracker = GuiLibrary.CreateCustomWindow({
-		["Name"] = "WinstreakTracker", 
-		["Icon"] = "vape/assets/RadarIcon1.png",
-		["IconSize"] = 16,
-		["Bypass"] = true
-	})
-	WinstreakTracker.GetCustomChildren().Position = UDim2.new(0, 0, -1, 0)
-	local onetext = Instance.new("TextLabel")
-	onetext.Parent = WinstreakTracker.GetCustomChildren()
-	onetext.Size = UDim2.new(1, 0, 1, 0)
-	onetext.Position = UDim2.new(1, -154, 0, 35)
-	onetext.TextColor3 = Color3.new(1, 1, 1)
-	onetext.RichText = true
-	onetext.BackgroundTransparency = 1
-	onetext.TextXAlignment = Enum.TextXAlignment.Left
-	onetext.TextYAlignment = Enum.TextYAlignment.Bottom
-	onetext.BorderSizePixel = 0
-	onetext.BackgroundColor3 = Color3.new(0, 0, 0)
-	onetext.Font = Enum.Font.SourceSans
-	onetext.Text = "7GrandDad : 1"
-	onetext.TextSize = 20
-	local onetext2 = Instance.new("TextLabel")
-	onetext2.Name = "ExtraText"
-	onetext2.Parent = onetext
-	onetext2.Size = UDim2.new(1, 0, 1, 0)
-	onetext2.Position = UDim2.new(0, 1, 0, 1)
-	onetext2.BorderSizePixel = 0
-	onetext2.Visible = false
-	onetext2.ZIndex = 0
-	onetext2.Text = ""
-	onetext2.BackgroundTransparency = 1
-	onetext2.TextTransparency = 0.5
-	onetext2.TextXAlignment = Enum.TextXAlignment.Left
-	onetext2.TextYAlignment = Enum.TextYAlignment.Bottom
-	onetext2.TextColor3 = Color3.new(0, 0, 0)
-	onetext2.Font = Enum.Font.SourceSans
-	onetext2.TextSize = 20
-	WinstreakTracker.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(function()
-		if (WinstreakTracker.GetCustomChildren().Parent.Position.X.Offset + WinstreakTracker.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
-			onetext.TextXAlignment = Enum.TextXAlignment.Right
-			onetext2.TextXAlignment = Enum.TextXAlignment.Right
-			onetext2.Position = UDim2.new(0, 1, 0, 1)
-			onetext.Position = UDim2.new(1, -154, 0, -(onetext.Size.Y.Offset - 60))
-		else
-			onetext.TextXAlignment = Enum.TextXAlignment.Left
-			onetext2.TextXAlignment = Enum.TextXAlignment.Left
-			onetext2.Position = UDim2.new(0, 4, 0, 1)
-			onetext.Position = UDim2.new(0, 0, 0, -(onetext.Size.Y.Offset - 60))
-		end
-	end)
-	if WinstreakTracker.GetCustomChildren().Parent then
-		if (WinstreakTracker.GetCustomChildren().Parent.Position.X.Offset + WinstreakTracker.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
-			onetext.TextXAlignment = Enum.TextXAlignment.Right
-			onetext2.Position = UDim2.new(0, 1, 0, 1)
-			onetext2.TextXAlignment = Enum.TextXAlignment.Right
-			onetext.Position = UDim2.new(1, -154, 0, -(onetext.Size.Y.Offset - 60))
-		else
-			onetext.TextXAlignment = Enum.TextXAlignment.Left
-			onetext2.TextXAlignment = Enum.TextXAlignment.Left
-			onetext2.Position = UDim2.new(0, 4, 0, 1)
-			onetext.Position = UDim2.new(0, 0, 0, -(onetext.Size.Y.Offset - 60))
-		end
-	end
-	
-	onetext.Position = UDim2.new(0, 0, 0, 35)
-	local playeraddedwinstreak
-	local textwithoutthing = ""
-	local WinstreakTrackerColor = {["Value"] = 0.44, ["RainbowValue"] = false}
-	local WinstreakTrackerShadow = {["Enabled"] = false}
-
-	local function updatecolor(val)
-		local newtext = ""
-		local newfirst = false
-		for i2,v2 in pairs(textwithoutthing:split("\n")) do
-			local rainbowsub = 2
-			local rainbowcolor = val + (WinstreakTrackerColor["RainbowValue"] and (-0.015 * i2) or 0)
-			if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
-			local str = tostring(rainbowcolor)
-			local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
-			local newcolor = Color3.fromHSV(newcol, 0.7, 0.9)
-			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..v2..'</font>'
-			newfirst = true
-		end
-		onetext.Text = newtext
-	end
-
-	local WinstreakTrackerButton = {["Enabled"] = false}
-	WinstreakTrackerButton = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "WinstreakTracker",
-		["Function"] = function(callback)
-			WinstreakTracker.SetVisible(callback)
-			if callback then
-				spawn(function()
-					local str = ""
-					repeat
-						wait(3)
-						str = ""
-						for i,v in pairs(players:GetChildren()) do
-							repeat wait() until v:GetAttribute("WinStreak") ~= nil
-							if v:GetAttribute("WinStreak") and v:GetAttribute("WinStreak") > 0 and v ~= lplr then
-								str = str..(v.DisplayName or v.Name).." : "..v:GetAttribute("WinStreak").."\n"
-							end
-						end
-						onetext.Text = str
-						onetext2.Text = str
-						textwithoutthing = str
-						updatecolor(WinstreakTrackerColor["Value"])
-						local newsize = game:GetService("TextService"):GetTextSize(str, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
-						onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
-						onetext.Position = UDim2.new(onetext.Position.X.Scale, onetext.Position.X.Offset, onetext.Position.Y.Scale, -(newsize.Y - 60))
-					until WinstreakTrackerButton["Enabled"] == false
-				end)
-			end
-		end,
-		["HoverText"] = "Shows a list of WinStreaks"
-	})
-	WinstreakTrackerColor = WinstreakTrackerButton.CreateColorSlider({
-		["Name"] = "Text Color",
-		["Function"] = function(val)
-			updatecolor(val)
-		end
-	})
-	WinstreakTrackerShadow = WinstreakTrackerButton.CreateToggle({
-		["Name"] = "Shadow", 
-		["Function"] = function(callback) onetext2.Visible = callback end
-	})
-end)
+end)	
