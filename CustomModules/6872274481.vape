@@ -41,8 +41,13 @@ local function UnbindFromRenderStep(name)
 	end
 end
 
+<<<<<<< Updated upstream
 local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
 if place.Updated ~= "2021-10-23T14:54:48.9469968Z" then
+=======
+local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
+if place.Updated ~= "2021-10-23T14:54:48.9469968Z" then
+>>>>>>> Stashed changes
 	local image = Instance.new("ImageLabel")
 	image.Size = UDim2.new(1, 0, 1, 36)
 	image.Image = getcustomassetfunc("vape/assets/UpdateImage.png")
@@ -1544,6 +1549,32 @@ runcode(function()
 	})
 end)
 
+local hardnesstable = {
+	["ceramic"] = 0,
+	["slime_block"] = 0,
+	["wool"] = 1,
+	["plank_oak"] = 2,
+	["stone_brick"] = 3,
+	["obsidian"] = 4,
+	["bed"] = 10000000,
+	["unbreakable"] = 1000000
+}
+local function getbestside(pos)
+	local softest = 1000000
+	local softestside = Enum.NormalId.Top
+	for i,v in pairs(normalsides) do
+		local sidehardness = 0
+		for i2,v2 in pairs(getallblocks(pos, v)) do
+			sidehardness = sidehardness + (hardnesstable[v2] or 1)
+		end
+		if sidehardness <= softest then
+			softest = sidehardness
+			softestside = v
+		end
+	end
+	return softestside
+end
+
 runcode(function()
 	local hardnesstable = {
 		["ceramic"] = 0,
@@ -1874,9 +1905,13 @@ runcode(function()
                             if isAlive() then
                                 if obj and obj.Parent ~= nil then
                                     if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= luckyblocknukerrange["Value"] then
+<<<<<<< Updated upstream
 
 										--getbestside(obj.Position) secret function :eyes:
                                         bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], luckyblocknukerdigpos["Value"], true)
+=======
+                                        bedwars["breakBlock"](obj.Position, luckyblocknukereffects["Enabled"], getbestside(obj.Position), true)
+>>>>>>> Stashed changes
                                         wait(0.3)
                                     end
                                 end

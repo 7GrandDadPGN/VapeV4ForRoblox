@@ -662,7 +662,22 @@ onetext3.Parent = onetext
 local onetext4 = onetext3.ExtraText
 onetext4.TextColor3 = Color3.new(0, 0, 0)
 onetext4.TextTransparency = 0.5
+local onebackground = Instance.new("Frame")
+onebackground.BackgroundTransparency = 0.5
+onebackground.BorderSizePixel = 0
+onebackground.BackgroundColor3 = Color3.new(0, 0, 0)
+onebackground.Visible = false 
+onebackground.Parent = TextGui.GetCustomChildren()
+onebackground.ZIndex = 0
 onetext3:GetPropertyChangedSignal("Text"):connect(function() onetext4.Text = onetext3.Text end)
+onetext:GetPropertyChangedSignal("Size"):connect(function()
+	onebackground.Position = onething.Position - UDim2.new(0, (onetext.Position.X.Offset == -154 and 10 or 0), 0, 0)
+	onebackground.Size = UDim2.new(0, onetext.Size.X.Offset, 0, onetext.Size.Y.Offset + (onething.Visible and 27 or 0))
+end)
+onetext:GetPropertyChangedSignal("Position"):connect(function()
+	onebackground.Position = onething.Position - UDim2.new(0, (onetext.Position.X.Offset == -154 and 10 or 0), 0, 0)
+	onebackground.Size = UDim2.new(0, onetext.Size.X.Offset, 0, onetext.Size.Y.Offset + (onething.Visible and 27 or 0))
+end)
 TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(function()
 	if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
 		onetext.TextXAlignment = Enum.TextXAlignment.Right
@@ -724,6 +739,9 @@ local function UpdateHud()
 	onetext2.Text = text
 	onetext3.Text = text2
 	local newsize = game:GetService("TextService"):GetTextSize(text, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
+	if text == "" then
+		newsize = Vector2.new(0, 0)
+	end
 	onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
 	onetext3.Size = UDim2.new(0, 154, 0, newsize.Y)
 	if TextGui.GetCustomChildren().Parent then
@@ -745,6 +763,7 @@ local function UpdateHud()
 			onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
 		end
 	end
+	GuiLibrary["UpdateUI"]()
 end
 
 GuiLibrary["UpdateHudEvent"].Event:connect(UpdateHud)
@@ -762,7 +781,7 @@ TextGui.CreateToggle({
 })
 local TextGuiUseCategoryColor = TextGui.CreateToggle({
 	["Name"] = "Use Category Color", 
-	["Function"] = function(callback) end
+	["Function"] = function(callback) GuiLibrary["UpdateUI"]() end
 })
 TextGui.CreateToggle({
 	["Name"] = "Watermark", 
@@ -810,16 +829,8 @@ TextGui.CreateToggle({
 })
 TextGui.CreateToggle({
 	["Name"] = "Render background", 
-	["Function"] = function(callback) 
-		if callback then
-			onething.BackgroundTransparency = 0.5 
-			onething2.BackgroundTransparency = 0.5 
-			onetext.BackgroundTransparency = 0.5 
-		else
-			onething.BackgroundTransparency = 1
-			onething2.BackgroundTransparency = 1
-			onetext.BackgroundTransparency = 1
-		end
+	["Function"] = function(callback)
+		onebackground.Visible = callback
 	end
 })
 
@@ -1025,26 +1036,22 @@ local tabsortorder = {
 local tabcategorycolor = {
 	["CombatWindow"] = Color3.fromRGB(214, 27, 6),
 	["BlatantWindow"] = Color3.fromRGB(219, 21, 133),
-	["RenderWindow"] = Color3.fromRGB(135, 14, 165),
-	["UtilityWindow"] = Color3.fromRGB(27, 145, 68),
-	["WorldWindow"] = Color3.fromRGB(70, 73, 16)
+	["RenderWindow"] = Color3.fromRGB(0, 255, 0),
+	["UtilityWindow"] = Color3.fromRGB(0, 193, 22),
+	["WorldWindow"] = Color3.fromRGB(231, 6, 112)
 }
 
 GuiLibrary["UpdateUI"] = function()
 	pcall(function()
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9) or Color3.fromRGB(199, 199, 199))
 		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		onetext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		local newtext = ""
 		local newfirst = false
 		for i2,v2 in pairs(textwithoutthing:split("\n")) do
-			local rainbowsub = 2
-			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.015 * i2) or 0)
-			if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
-			local str = tostring(rainbowcolor)
-			local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
-			local newcolor = Color3.fromHSV(newcol, 0.7, 0.9)
+			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * i2) or 0)
+			if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+			local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
 			if TextGuiUseCategoryColor["Enabled"] and GuiLibrary["ObjectsThatCanBeSaved"][v2:gsub(" ", "").."OptionsButton"] and tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][v2:gsub(" ", "").."OptionsButton"]["Object"].Parent.Parent.Name.."Window"] then
 				newcolor = tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][v2:gsub(" ", "").."OptionsButton"]["Object"].Parent.Parent.Name.."Window"]
 			end
@@ -1052,14 +1059,13 @@ GuiLibrary["UpdateUI"] = function()
 			newfirst = true
 		end
 		onetext.Text = newtext
+		local buttons = 0
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if (v["Type"] == "Button" or v["Type"] == "ButtonMain") and v["Api"]["Enabled"] then
-				local rainbowsub = 2
-				local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.03 * tabsortorder[i]) or 0)
-				if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
-				local str = tostring(rainbowcolor)
-				local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
-				local newcolor = Color3.fromHSV(newcol, 0.7, 0.9)
+				buttons = buttons + 1
+				local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * tabsortorder[i]) or 0)
+				if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+				local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
 				v["Object"].ButtonText.TextColor3 = newcolor
 				if v["Object"]:FindFirstChild("ButtonIcon") then
 					v["Object"].ButtonIcon.ImageColor3 = newcolor
@@ -1072,12 +1078,10 @@ GuiLibrary["UpdateUI"] = function()
 			end
 			if v["Type"] == "ExtrasButton" then
 				if v["Api"]["Enabled"] then
-					local rainbowsub = 2
-					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.03 * 8) or 0)
-					if rainbowcolor < 0 then rainbowsub = 3 rainbowcolor = rainbowcolor * 0.25 end
-					local str = tostring(rainbowcolor)
-					local newcol = tonumber("0"..string.sub(str, rainbowsub, string.len(str)))
-					local newcolor = Color3.fromHSV(newcol, 0.7, 0.9)
+					print(buttons)
+					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
+					if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+					local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
 					v["Object"].ImageColor3 = newcolor
 				end
 			end
@@ -1094,6 +1098,9 @@ GuiLibrary["UpdateUI"] = function()
 				v["Object"].Slider.ButtonSlider2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 			end
 		end
+		local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
+		if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(rainbowcolor, 0.7, 0.9) or Color3.fromRGB(199, 199, 199))
 		ProfilesTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		for i3, v3 in pairs(ProfilesTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
 		--	pcall(function()
@@ -1287,14 +1294,14 @@ if #ProfilesTextList["ObjectList"] == 0 then
 end
 GUIbind["Reload"]()
 GuiLibrary["UpdateUI"]()
-if blatantmode["Enabled"] then
-	pcall(function()
-		local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 4, "vape/assets/WarningNotification.png")
-		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
-		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
-	end)
-end
 if not shared.VapeSwitchServers then
+	if blatantmode["Enabled"] then
+		pcall(function()
+			local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 4, "vape/assets/WarningNotification.png")
+			frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+			frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+		end)
+	end
 	GuiLibrary["LoadedAnimation"](welcomemsg["Enabled"])
 else
 	shared.VapeSwitchServers = nil

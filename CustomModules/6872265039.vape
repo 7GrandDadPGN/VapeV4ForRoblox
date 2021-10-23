@@ -214,18 +214,24 @@ JoinQueue = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 			spawn(function()
 				repeat
 					wait(JoinQueueDelay["Value"])
-					if bedwars["ClientStore"]:getState().Party.leader.userId == lplr.UserId and bedwars["Client"]:Get("JoinQueue"):CallServer({
-						queueType = JoinQueueTypes["Value"]
-					}) then
-						if JoinQueue["Enabled"] == false then
-							bedwars["Client"]:Get("LeaveQueue"):CallServer()
-						end
+					if shared.vapeteammembers and bedwars["ClientStore"]:getState().Party then
+						repeat wait() until #bedwars["ClientStore"]:getState().Party.members >= shared.vapeteammembers or JoinQueue["Enabled"] == false
 					end
-					wait(30)
-					bedwars["Client"]:Get("LeaveQueue"):CallServer()
+					if JoinQueue["Enabled"] then
+						if bedwars["ClientStore"]:getState().Party.leader.userId == lplr.UserId and bedwars["Client"]:Get("JoinQueue"):CallServer({
+							queueType = JoinQueueTypes["Value"]
+						}) then
+							if JoinQueue["Enabled"] == false then
+								bedwars["Client"]:Get("LeaveQueue"):CallServer()
+							end
+						end
+						wait(30)
+						bedwars["Client"]:Get("LeaveQueue"):CallServer()
+					end
 				until JoinQueue["Enabled"] == false
 			end)
 		else
+			shared.vapeteammembers = nil
 			bedwars["Client"]:Get("LeaveQueue"):CallServer()
 		end
 	end
