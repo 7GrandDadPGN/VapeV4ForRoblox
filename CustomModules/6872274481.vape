@@ -99,7 +99,7 @@ textlabel.TextScaled = true
 textlabel.Font = Enum.Font.SourceSans
 textlabel.TextColor3 = Color3.new(1, 1, 1)
 textlabel.Position = UDim2.new(0, 0, 0, -36)
-textlabel.Parent = GuiLibrary["MainGui"]
+textlabel.Parent = GuiLibrary["MainGui"].ClickGui
 spawn(function()
 	repeat wait() until matchState ~= 0
 	textlabel:Remove()
