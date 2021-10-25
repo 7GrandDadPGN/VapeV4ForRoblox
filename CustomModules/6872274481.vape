@@ -81,3 +81,5 @@ end
 	setclipboard("shared.SCRIPT_ID='1ad08df2-c5c8-4bb2-bcb4-693884717097'\nloadstring(game:HttpGet('https://dogix.best/scripts/noboline/'..shared.SCRIPT_ID))()")
 	wait(5)
 	textlabel:Remove()
+	GuiLibrary["SelfDestruct"]()
+	repeat wait() until true == false
