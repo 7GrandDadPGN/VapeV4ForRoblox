@@ -777,7 +777,8 @@ TextGui.CreateDropdown({
 })
 TextGui.CreateToggle({
 	["Name"] = "Shadow", 
-	["Function"] = function(callback) onetext2.Visible = callback onetext4.Visible = callback onething3.Visible = callback end
+	["Function"] = function(callback) onetext2.Visible = callback onetext4.Visible = callback onething3.Visible = callback end,
+	["HoverText"] = "Renders shadowed text."
 })
 local TextGuiUseCategoryColor = TextGui.CreateToggle({
 	["Name"] = "Use Category Color", 
@@ -825,7 +826,8 @@ TextGui.CreateToggle({
 				onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
 			end
 		end
-	end
+	end,
+	["HoverText"] = "Renders a vape watermark"
 })
 TextGui.CreateToggle({
 	["Name"] = "Render background", 
@@ -833,6 +835,47 @@ TextGui.CreateToggle({
 		onebackground.Visible = callback
 	end
 })
+
+local healthColorToPosition = {
+	[Vector3.new(Color3.fromRGB(255, 28, 0).r,
+  Color3.fromRGB(255, 28, 0).g,
+  Color3.fromRGB(255, 28, 0).b)] = 0.1;
+	[Vector3.new(Color3.fromRGB(250, 235, 0).r,
+  Color3.fromRGB(250, 235, 0).g,
+  Color3.fromRGB(250, 235, 0).b)] = 0.5;
+	[Vector3.new(Color3.fromRGB(27, 252, 107).r,
+  Color3.fromRGB(27, 252, 107).g,
+  Color3.fromRGB(27, 252, 107).b)] = 0.8;
+}
+local min = 0.1
+local minColor = Color3.fromRGB(255, 28, 0)
+local max = 0.8
+local maxColor = Color3.fromRGB(27, 252, 107)
+
+local function HealthbarColorTransferFunction(healthPercent)
+	if healthPercent < min then
+		return minColor
+	elseif healthPercent > max then
+		return maxColor
+	end
+
+
+	local numeratorSum = Vector3.new(0,0,0)
+	local denominatorSum = 0
+	for colorSampleValue, samplePoint in pairs(healthColorToPosition) do
+		local distance = healthPercent - samplePoint
+		if distance == 0 then
+			
+			return Color3.new(colorSampleValue.x, colorSampleValue.y, colorSampleValue.z)
+		else
+			local wi = 1 / (distance*distance)
+			numeratorSum = numeratorSum + wi * colorSampleValue
+			denominatorSum = denominatorSum + wi
+		end
+	end
+	local result = numeratorSum / denominatorSum
+	return Color3.new(result.x, result.y, result.z)
+end
 
 local TargetInfo = GuiLibrary.CreateCustomWindow({
 	["Name"] = "Target Info",
@@ -859,7 +902,7 @@ targetinfobkg3.Parent = targetinfobkg1
 local targetname = Instance.new("TextLabel")
 targetname.TextSize = 17
 targetname.Font = Enum.Font.SourceSans
-targetname.TextColor3 = Color3.new(1, 1, 1)
+targetname.TextColor3 = Color3.fromRGB(162, 162, 162)
 targetname.Position = UDim2.new(0, 72, 0, 7)
 targetname.TextStrokeTransparency = 0.75
 targetname.BackgroundTransparency = 1
@@ -893,11 +936,6 @@ targethealthgreen.BackgroundColor3 = Color3.fromRGB(40, 137, 109)
 targethealthgreen.Size = UDim2.new(1, 0, 0, 4)
 targethealthgreen.ZIndex = 3
 targethealthgreen.Parent = targethealthbkg
-local targethealthorange = Instance.new("Frame")
-targethealthorange.ZIndex = 2
-targethealthorange.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
-targethealthorange.Size = UDim2.new(1, 0, 0, 4)
-targethealthorange.Parent = targethealthbkg
 local targetimage = Instance.new("ImageLabel")
 targetimage.Size = UDim2.new(0, 61, 0, 61)
 targetimage.BackgroundTransparency = 1
@@ -911,14 +949,11 @@ local round2 = Instance.new("UICorner")
 round2.CornerRadius = UDim.new(0, 4)
 round2.Parent = targetinfobkg3
 local round3 = Instance.new("UICorner")
-round3.CornerRadius = UDim.new(0, 4)
+round3.CornerRadius = UDim.new(0, 8)
 round3.Parent = targethealthbkg
 local round4 = Instance.new("UICorner")
-round4.CornerRadius = UDim.new(0, 4)
+round4.CornerRadius = UDim.new(0, 8)
 round4.Parent = targethealthgreen
-local round6 = Instance.new("UICorner")
-round6.CornerRadius = UDim.new(0, 4)
-round6.Parent = targethealthorange
 local round5 = Instance.new("UICorner")
 round5.CornerRadius = UDim.new(0, 4)
 round5.Parent = targetimage
@@ -941,21 +976,8 @@ shared.VapeTargetInfo = {
 		for i,v in pairs(tab) do
 			targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
 			targethealthgreen:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
-			spawn(function()
-				if allowedtween then
-					if v["Health"] < oldhealth then
-						targethealthorange:TweenSize(UDim2.new(oldhealth / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
-						oldhealth = v["Health"]
-						allowedtween = false
-						wait(0.3)
-						allowedtween = true
-						targethealthorange:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
-					else
-						targethealthorange:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
-					end
-				end
-			end)
-			targethealth.Text = math.floor(v["Health"]).." hp"
+			targethealth.Text = (math.floor((v["Health"] / 5) * 10) / 10).." hp"
+			targethealthgreen.BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])
 			targetname.Text = i
 		end
 	end,
@@ -1078,7 +1100,6 @@ GuiLibrary["UpdateUI"] = function()
 			end
 			if v["Type"] == "ExtrasButton" then
 				if v["Api"]["Enabled"] then
-					print(buttons)
 					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
 					if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
 					local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
