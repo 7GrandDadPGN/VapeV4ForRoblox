@@ -27,7 +27,7 @@ end
 
 local function createwarning(title, text, delay)
 	pcall(function()
-		local frame = GuiLibrary["CreateNotification"](title, text, delay, "vapeprivate/assets/WarningNotification.png")
+		local frame = GuiLibrary["CreateNotification"](title, text, delay, "vape/assets/WarningNotification.png")
 		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
 		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
 	end)
@@ -663,7 +663,8 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		else
 			UnbindFromRenderStep("Killaura")
 		end
-	end
+	end,
+	["HoverText"] = "Attack players around you\nwithout aiming at them."
 })
 killauratargetframe = Killaura.CreateTargetWindow({})
 killauraaps = Killaura.CreateTwoSlider({
@@ -1059,24 +1060,28 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							local line1clone = line1:Clone()
 							line1clone.ZIndex = 1
 							line1clone.Size = UDim2.new(1, 0, 0, 3)
+							line1clone.BackgroundTransparency = 0.5
 							line1clone.Position = UDim2.new(0, 0, 0, 0)
 							line1clone.BackgroundColor3 = Color3.new(0, 0, 0)
 							line1clone.Parent = thing
 							local line2clone = line2:Clone()
 							line2clone.ZIndex = 1
 							line2clone.Size = UDim2.new(1, 0, 0, 3)
+							line2clone.BackgroundTransparency = 0.5
 							line2clone.Position = UDim2.new(0, 0, 1, -3)
 							line2clone.BackgroundColor3 = Color3.new(0, 0, 0)
 							line2clone.Parent = thing
 							local line3clone = line3:Clone()
 							line3clone.ZIndex = 1
 							line3clone.Size = UDim2.new(0, 3, 1, 0)
+							line3clone.BackgroundTransparency = 0.5
 							line3clone.Position = UDim2.new(0, 0, 0, 0)
 							line3clone.BackgroundColor3 = Color3.new(0, 0, 0)
 							line3clone.Parent = thing
 							local line4clone = line4:Clone()
 							line4clone.ZIndex = 1
 							line4clone.Size = UDim2.new(0, 3, 1, 0)
+							line4clone.BackgroundTransparency = 0.5
 							line4clone.Position = UDim2.new(1, -3, 0, 0)
 							line4clone.BackgroundColor3 = Color3.new(0, 0, 0)
 							line4clone.Parent = thing
@@ -1094,6 +1099,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							healthlineclone.ZIndex = 1
 							healthlineclone.AnchorPoint = Vector2.new(0, 0)
 							healthlineclone.Size = UDim2.new(0, 3, 1, 0)
+							healthlineclone.BackgroundTransparency = 0.5
 							healthlineclone.Visible = ESPHealthBar["Enabled"]
 							healthlineclone.Name = "HealthLineBKG"
 							healthlineclone.Position = UDim2.new(0, -5, 0, 0)
@@ -1103,15 +1109,15 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 						
 						if isAlive(plr) and plr ~= lplr then
 							local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-							local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1500) * (1 / GuiLibrary["MainRescale"].Scale)
-							local headPos, headVis = cam:WorldToViewportPoint(plr.Character.Head.Position + Vector3.new(0, 1, 0))
-							local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 4 + plr.Character.Humanoid.HipHeight, 0))
+							local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1200) * (1 / GuiLibrary["MainRescale"].Scale)
+							local headPos, headVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position + Vector3.new(0, 1 + plr.Character.Humanoid.HipHeight, 0))
+							local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 1 + plr.Character.Humanoid.HipHeight, 0))
 							rootPos = rootPos * (1 / GuiLibrary["MainRescale"].Scale)
 							if rootVis then
 								if ESPHealthBar["Enabled"] then
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 									thing.HealthLineMain.BackgroundColor3 = color
-									thing.HealthLineMain.Size = UDim2.new(0, 1, (plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth), -2)
+									thing.HealthLineMain.Size = UDim2.new(0, 1, math.clamp(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth, 0, 1), (math.clamp(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth, 0, 1) == 0 and 0 or -2))
 								end
 								thing.Visible = rootVis
 								thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
@@ -1203,7 +1209,8 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 			UnbindFromRenderStep("ESP") 
 			ESPFolder:ClearAllChildren()
 		end
-	end
+	end,
+	["HoverText"] = "Extra Sensory Perception\nRenders an ESP on players."
 })
 ESPColor = ESP.CreateColorSlider({
 	["Name"] = "Player Color", 
@@ -1458,7 +1465,8 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 			UnbindFromRenderStep("NameTags")
 			NameTagsFolder:ClearAllChildren()
 		end
-	end
+	end,
+	["HoverText"] = "Renders nametags on entities through walls."
 })
 NameTagsColor = NameTags.CreateColorSlider({
 	["Name"] = "Player Color", 
@@ -1667,7 +1675,8 @@ searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 				searchRemove:Disconnect()
 			end)
 		end
-	end
+	end,
+	["HoverText"] = "Draws a box around selected parts\nAdd parts in Search frame"
 })
 searchColor = searchModule.CreateColorSlider({
 	["Name"] = "new part color", 
