@@ -481,7 +481,7 @@ ClickTP = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpti
 			ClickTP["ToggleButton"](false)
 		end
 	end, 
-	["HoverText"] = "Chokes all incoming packets"
+	["HoverText"] = "Teleports to where your mouse is."
 })
 
 local flyspeed = {["Value"] = 1}
