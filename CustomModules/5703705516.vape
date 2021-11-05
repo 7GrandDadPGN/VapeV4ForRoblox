@@ -71,7 +71,7 @@ shared.vapeteamcheck = function(plr)
 end
 
 local function targetCheck(plr, check)
-	return (check and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("ForceField") == nil or check == false)
+	return (check and plr.Character.Humanoid.Health > 0 or check == false)
 end
 
 local function isAlive(plr)
@@ -200,7 +200,9 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 								if killauracframe["Enabled"] then
 									lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
 								end
-								game:GetService("ReplicatedStorage").Tools.Sword:FireServer(plr.Character.HumanoidRootPart)
+
+								game:GetService("ReplicatedStorage").Sword:FireServer(plr.Character.HumanoidRootPart)
+
 							end
 						end
 						targetinfo.UpdateInfo(targettable, targetsize)
