@@ -15,17 +15,6 @@ end
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 
-local function checkpublicrepo(id)
-	local req = requestfunc({
-		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".vape",
-		Method = "GET"
-	})
-	if req.StatusCode == 200 then
-		return req.Body
-	end
-	return nil
-end
-
 local function checkassetversion()
 	local req = requestfunc({
 		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/assetsversion.dat",
@@ -78,6 +67,38 @@ if isfolder("vape/assets") == false then
 end
 
 local GuiLibrary = loadstring(GetURL("NewGuiLibrary.lua"))()
+
+local checkpublicreponum = 0
+local checkpublicrepo
+checkpublicrepo = function(id)
+	local suc, req = pcall(function() return requestfunc({
+		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".vape",
+		Method = "GET"
+	}) end)
+	if not suc then
+		checkpublicreponum = checkpublicreponum + 1
+		spawn(function()
+			local textlabel = Instance.new("TextLabel")
+			textlabel.Size = UDim2.new(1, 0, 0, 36)
+			textlabel.Text = "Loading CustomModule Failed!, Attempts : "..checkpublicreponum
+			textlabel.BackgroundTransparency = 1
+			textlabel.TextStrokeTransparency = 0
+			textlabel.TextSize = 30
+			textlabel.Font = Enum.Font.SourceSans
+			textlabel.TextColor3 = Color3.new(1, 1, 1)
+			textlabel.Position = UDim2.new(0, 0, 0, -36)
+			textlabel.Parent = GuiLibrary["MainGui"]
+			wait(2)
+			textlabel:Remove()
+		end)
+		wait(2)
+		return checkpublicrepo(id)
+	end
+	if req.StatusCode == 200 then
+		return req.Body
+	end
+	return nil
+end
 
 local function getcustomassetfunc(path)
 	if not isfile(path) then
@@ -989,32 +1010,21 @@ GUI.CreateCustomToggle({
 	["Function"] = function(callback) TargetInfo.SetVisible(callback) end,
 	["Priority"] = 1
 })
-
-GUI.CreateDivider2("MODULE SETTINGS")
-GUI.CreateToggle({
-	["Name"] = "Players", 
-	["Function"] = function() end,
-	["Default"] = true
-})
-GUI.CreateToggle({
-	["Name"] = "NPCs", 
-	["Function"] = function() end,
-})
-GUI.CreateToggle({
-	["Name"] = "Ignore naked", 
-	["Function"] = function() end,
-})
-GUI.CreateToggle({
+local GeneralSettings = GUI.CreateDivider2("General Settings")
+local ModuleSettings = GUI.CreateDivider2("Module Settings")
+local GUISettings = GUI.CreateDivider2("GUI Settings")
+ModuleSettings.CreateToggle({
 	["Name"] = "Teams by server", 
 	["Function"] = function() end,
 })
-GUI.CreateToggle({
+ModuleSettings.CreateToggle({
 	["Name"] = "Teams by color", 
 	["Function"] = function() end,
-	["Default"] = true
+	["Default"] = true,
+	["HoverText"] = "Ignore players with the selected name color"
 })
 local MiddleClickInput
-GUI.CreateToggle({
+ModuleSettings.CreateToggle({
 	["Name"] = "MiddleClick friends", 
 	["Function"] = function(callback) 
 		if callback then
@@ -1037,13 +1047,20 @@ GUI.CreateToggle({
 				MiddleClickInput:Disconnect()
 			end
 		end
-	end
+	end,
+	["HoverText"] = "Click middle mouse button to add the player you are hovering over as a friend"
+})
+ModuleSettings.CreateToggle({
+	["Name"] = "Lobby Check",
+	["Function"] = function() end,
+	["Default"] = true,
+	["HoverText"] = "Temporarily disables certain features in server lobbies."
 })
 local blatantmode = GUI.CreateToggle({
 	["Name"] = "Blatant mode",
-	["Function"] = function() end
+	["Function"] = function() end,
+	["HoverText"] = "Required for certain features."
 })
-GUI.CreateDivider2("GENERAL SETTINGS")
 guicolorslider = GUI.CreateColorSlider("GUI Theme", function(val) GuiLibrary["Settings"]["GUIObject"]["Color"] = val GuiLibrary["UpdateUI"]() end)
 local tabsortorder = {
 	["CombatButton"] = 1,
@@ -1083,6 +1100,11 @@ GuiLibrary["UpdateUI"] = function()
 		onetext.Text = newtext
 		local buttons = 0
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
+			if v["Type"] == "TargetFrame" then
+				if v["Object"].TargetWindow.Visible then
+					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				end
+			end
 			if (v["Type"] == "Button" or v["Type"] == "ButtonMain") and v["Api"]["Enabled"] then
 				buttons = buttons + 1
 				local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * tabsortorder[i]) or 0)
@@ -1136,16 +1158,18 @@ GuiLibrary["UpdateUI"] = function()
 	end)
 end
 
-GUI.CreateToggle({
+GeneralSettings.CreateToggle({
 	["Name"] = "Auto-load module states", 
-	["Function"] = function() end
+	["Function"] = function() end,
+	["HoverText"] = "Automatically enable saved module states upon loading profiles.\n(You can save module states by shift-clicking a profile button)"
 })
-GUI.CreateToggle({
+GUISettings.CreateToggle({
 	["Name"] = "Blur Background", 
 	["Function"] = function(callback) GuiLibrary["MainBlur"].Size = (callback and 25 or 0) end,
-	["Default"] = true
+	["Default"] = true,
+	["HoverText"] = "Blur the background of the GUI"
 })
-local rescale = GUI.CreateToggle({
+local rescale = GUISettings.CreateToggle({
 	["Name"] = "Rescale", 
 	["Function"] = function(callback) 
 		GuiLibrary["MainRescale"].Scale = (callback and math.clamp(cam.ViewportSize.X / 1920, 0.5, 1) or 0.99)
@@ -1159,46 +1183,45 @@ cam:GetPropertyChangedSignal("ViewportSize"):connect(function()
 		GuiLibrary["MainRescale"].Scale = math.clamp(cam.ViewportSize.X / 1920, 0.5, 1)
 	end
 end)
-GUI.CreateToggle({
+GeneralSettings.CreateToggle({
 	["Name"] = "Enable Multi-Keybinding", 
 	["Function"] = function() end
 })
-local welcomemsg = GUI.CreateToggle({
+local welcomemsg = GUISettings.CreateToggle({
 	["Name"] = "GUI bind indicator", 
 	["Function"] = function() end, 
-	["Default"] = true
+	["Default"] = true,
+	["HoverText"] = 'Displays a message indicating your GUI keybind upon injecting.\nI.E "Press RIGHTSHIFT to open GUI"'
 })
-GUI.CreateToggle({
+GUISettings.CreateToggle({
 	["Name"] = "Show Tooltips", 
 	["Function"] = function(callback) GuiLibrary["ToggleTooltips"] = callback end,
-	["Default"] = true
+	["Default"] = true,
+	["HoverText"] = "Toggles visibility of these"
 })
-GUI.CreateToggle({
+GeneralSettings.CreateToggle({
 	["Name"] = "Discord integration", 
 	["Function"] = function() end
 })
 local ToggleNotifications = {["Object"] = nil}
 local Notifications = {}
-Notifications = GUI.CreateToggle({
+Notifications = GeneralSettings.CreateToggle({
 	["Name"] = "Notifications", 
 	["Function"] = function(callback) 
 		GuiLibrary["Notifications"] = callback 
-		if ToggleNotifications["Object"] then
-			ToggleNotifications["Object"].Visible = callback
-			Notifications["Object"].ToggleArrow.Visible = callback
-		end
 	end,
-	["Default"] = true
+	["Default"] = true,
+	["HoverText"] = "Shows notifications"
 })
-ToggleNotifications = GUI.CreateToggle({
-	["Name"] = "Toggle Notifications", 
+ToggleNotifications = GUISettings.CreateToggle({
+	["Name"] = "Toggle Alert", 
 	["Function"] = function(callback) GuiLibrary["ToggleNotifications"] = callback end,
-	["Default"] = true
+	["Default"] = true,
+	["HoverText"] = "Notifies you if a module is enabled/disabled."
 })
 ToggleNotifications["Object"].BackgroundTransparency = 0
 ToggleNotifications["Object"].BorderSizePixel = 0
 ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ToggleNotifications["Object"].Visible = Notifications["Enabled"]
 
 local GUIbind = GUI.CreateGUIBind()
 
@@ -1231,7 +1254,7 @@ GuiLibrary["SelfDestruct"] = function()
 	GuiLibrary["MainBlur"]:Remove()
 end
 
-GUI.CreateButton2({
+ModuleSettings.CreateButton2({
 	["Name"] = "RESET CURRENT PROFILE", 
 	["Function"] = function()
 		GuiLibrary["SelfDestruct"]()
@@ -1241,7 +1264,7 @@ GUI.CreateButton2({
 		loadstring(GetURL("NewMainScript.lua"))()
 	end
 })
-GUI.CreateButton2({
+GUISettings.CreateButton2({
 	["Name"] = "RESET GUI POSITIONS", 
 	["Function"] = function()
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
@@ -1251,7 +1274,7 @@ GUI.CreateButton2({
 		end
 	end
 })
-GUI.CreateButton2({
+GUISettings.CreateButton2({
 	["Name"] = "SORT GUI", 
 	["Function"] = function()
 		local sorttable = {}
@@ -1293,7 +1316,7 @@ GUI.CreateButton2({
 		end
 	end
 })
-GUI.CreateButton2({
+GeneralSettings.CreateButton2({
 	["Name"] = "UNINJECT",
 	["Function"] = GuiLibrary["SelfDestruct"]
 })
