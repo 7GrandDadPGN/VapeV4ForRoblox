@@ -77,7 +77,7 @@ local function isPlayerTargetable(plr, target, friend)
 		return false
 	end
 	local plrchar = phantomforces["GetCharacter"](plr)
-    return plr ~= lplr and GuiLibrary["ObjectsThatCanBeSaved"]["PlayersToggle"]["Api"]["Enabled"] and plr and plrchar and rawget(plrchar, "rootpart") and rawget(plrchar, "head") and (friend == true and friendCheck(plr) or friend == false) and teamCheck(plr)
+    return plr ~= lplr and plr and plrchar and rawget(plrchar, "rootpart") and rawget(plrchar, "head") and (friend == true and friendCheck(plr) or friend == false) and teamCheck(plr)
 end
 
 local function vischeck(char, part)
