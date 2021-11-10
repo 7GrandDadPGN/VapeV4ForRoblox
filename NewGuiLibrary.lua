@@ -3122,12 +3122,13 @@ api["CreateWindow"] = function(argstablemain2)
 			local drop2 = drop1:Clone()
 			drop2.Name = "MainButton"
 			drop2.Position = UDim2.new(0, 0, 0, 0)
-			drop2.ZIndex = 4
+			drop2.ZIndex = 9
 			drop2.BackgroundTransparency = 1
 			drop1:GetPropertyChangedSignal("Text"):connect(function()
 				drop2.Text = drop1.Text
 			end)
 			drop2.ExpandButton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
+			drop2.ExpandButton2.ZIndex = 10
 			local thing = Instance.new("Frame")
 			thing.Size = UDim2.new(1, 2, 1, 2)
 			thing.BorderSizePixel = 0
@@ -3142,7 +3143,7 @@ api["CreateWindow"] = function(argstablemain2)
 			uicorner2.CornerRadius = UDim.new(0, 6)
 			uicorner2.Parent = thing
 			local dropframe = Instance.new("Frame")
-			dropframe.ZIndex = 3
+			dropframe.ZIndex = 7
 			dropframe.Parent = drop1
 			dropframe.Position = UDim2.new(0, 0, 0, 0)
 			dropframe.Size = UDim2.new(1, 0, 0, 0)
@@ -3153,6 +3154,7 @@ api["CreateWindow"] = function(argstablemain2)
 			uicorner3.CornerRadius = UDim.new(0, 6)
 			uicorner3.Parent = dropframe
 			local thing2 = thing:Clone()
+			thing2.ZIndex = 2
 			thing2.BackgroundColor3 = Color3.fromRGB(53, 52, 53)
 			thing2.Parent = dropframe
 			drop2.Parent = dropframe
@@ -3195,7 +3197,7 @@ api["CreateWindow"] = function(argstablemain2)
 					drop2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					drop2.Font = Enum.Font.SourceSans
 					drop2.TextSize = 17
-					drop2.ZIndex = 4
+					drop2.ZIndex = 8
 					drop2.BorderSizePixel = 0
 					drop2.Name = listobj
 					drop2.Parent = dropframe
@@ -4396,6 +4398,7 @@ api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(
 	if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
 		if input1.KeyCode == Enum.KeyCode[api["GUIKeybind"]] and api["KeybindCaptured"] == false then
 			clickgui.Visible = not clickgui.Visible
+			game:GetService("UserInputService").OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
 			api["MainBlur"].Enabled = clickgui.Visible	
 			if OnlineProfilesBigFrame.Visible then
 				OnlineProfilesBigFrame.Visible = false

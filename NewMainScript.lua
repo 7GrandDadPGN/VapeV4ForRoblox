@@ -1233,6 +1233,7 @@ local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(f
 end)
 
 GuiLibrary["SelfDestruct"] = function()
+	game:GetService("UserInputService").OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.None
 	GuiLibrary["SelfDestructEvent"]:Fire()
 	selfdestruct = true
 	GuiLibrary["SaveSettings"]()
