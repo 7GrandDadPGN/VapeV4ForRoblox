@@ -1296,7 +1296,7 @@ GUISettings.CreateButton2({
 		local storedpos = {}
 		local num = 6
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-			if (v["Type"] == "Window" or v["Type"] == "CustomWindow") and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) and v["Object"].Visible then
+			if v["Type"] == "Window" and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) and v["Object"].Visible then
 				local sortordernum = (sortordertable[i] or #sorttable)
 				sorttable[sortordernum] = v["Object"]
 			end
