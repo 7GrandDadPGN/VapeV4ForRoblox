@@ -2589,6 +2589,9 @@ api["CreateWindow"] = function(argstablemain2)
 			textapi["ObjectList"] = {}
 			textapi["RefreshValues"] = function(tab)
 				textapi["ObjectList"] = tab
+				if argstable["SortFunction"] then
+					table.sort(textapi["ObjectList"], argstable["SortFunction"])
+				end
 				for i2,v2 in pairs(scrollframe:GetChildren()) do
 					if v2:IsA("TextButton") then v2:Remove() end
 				end
@@ -2623,7 +2626,7 @@ api["CreateWindow"] = function(argstablemain2)
 					deletebutton.Position = UDim2.new(1, -16, 0, 14)
 					deletebutton.Parent = itemframe
 					deletebutton.MouseButton1Click:connect(function()
-						table.remove(textapi["ObjectList"], i)
+						table.remove(textapi["ObjectList"], table.find(textapi["ObjectList"], v))
 						textapi["RefreshValues"](textapi["ObjectList"])
 						if argstable["RemoveFunction"] then
 							argstable["RemoveFunction"](i)
