@@ -743,7 +743,13 @@ local function UpdateHud()
 	if sortingmethod == "Alphabetical" then
 		table.sort(tableofmodules, function(a, b) return a["Text"]:lower() < b["Text"]:lower() end)
 	else
-		table.sort(tableofmodules, function(a, b) return a["Text"]:len() + (a["ExtraText"] and a["ExtraText"]():len() or 0) > b["Text"]:len() + (b["ExtraText"] and b["ExtraText"]():len() or 0) end)
+		table.sort(tableofmodules, function(a, b) 
+			local textsize1 = a["Text"]..(a["ExtraText"] and a["ExtraText"]() or "")
+			local textsize2 = b["Text"]..(b["ExtraText"] and b["ExtraText"]() or "")
+			textsize1 = game:GetService("TextService"):GetTextSize(textsize1, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
+			textsize2 = game:GetService("TextService"):GetTextSize(textsize2, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
+			return textsize1.X > textsize2.X 
+		end)
 	end
 	for i2,v2 in pairs(tableofmodules) do
 		if first then
