@@ -2767,7 +2767,7 @@ api["CreateWindow"] = function(argstablemain2)
 	uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
 		if children.Visible then
 			windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y, 0, 605))
-			children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y)
+			children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			--560
 		end
 	end)
@@ -2785,7 +2785,7 @@ api["CreateWindow"] = function(argstablemain2)
 			if children.Visible then
 				expandbutton2.Image = getcustomassetfunc("vape/assets/DownArrow.png")
 				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y, 0, 605))
-				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y)
+				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			else
 				expandbutton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
 				windowtitle.Size = UDim2.new(0, 220, 0, 41)
@@ -2971,7 +2971,7 @@ api["CreateWindow"] = function(argstablemain2)
 				children2.Visible = false
 				noexpand = false
 				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y, 0, 605))
-				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y)
+				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			else
 				for i,v in pairs(children:GetChildren()) do
 					if v:IsA("TextButton") then
@@ -2985,7 +2985,7 @@ api["CreateWindow"] = function(argstablemain2)
 				noexpand = true
 				--windowtitle.Size = UDim2.new(0, 220, 0, 85 + uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(85 + uilistlayout2.AbsoluteContentSize.Y, 0, 605))
-				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout2.AbsoluteContentSize.Y + 10)
+				children.CanvasSize = UDim2.new(0, 0, 0, (uilistlayout2.AbsoluteContentSize.Y + 10) * (1 / api["MainRescale"].Scale))
 				currentexpandedbutton = buttonapi
 			end
 		end
