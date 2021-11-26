@@ -34,11 +34,11 @@ local function createwarning(title, text, delay)
 end
 
 local function friendCheck(plr, recolor)
-	return (recolor and GuiLibrary["ObjectsThatCanBeSaved"]["Recolor visualsToggle"]["Api"]["Enabled"] or (not recolor)) and GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextList"]["Api"]["ObjectList"], plr.Name)
+	return (recolor and GuiLibrary["ObjectsThatCanBeSaved"]["Recolor visualsToggle"]["Api"]["Enabled"] or (not recolor)) and GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"]["ObjectList"], plr.Name) and GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"]["ObjectListEnabled"][table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"]["ObjectList"], plr.Name)]
 end
 
 local function getPlayerColor(plr)
-	return (friendCheck(plr, true) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color)
+	return (friendCheck(plr, true) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"]) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color)
 end
 
 local function getcustomassetfunc(path)
@@ -260,7 +260,7 @@ GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
 					if isPlayerTargetable(plr, false, false) then
 						local v238, v239 = radarcam:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * plr.Character.HumanoidRootPart.CFrame).p * 0.2)
 						thing.Visible = true
-						thing.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(RadarColor["Value"], 1, 1)
+						thing.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(RadarColor["Hue"], RadarColor["Sat"], RadarColor["Value"])
 						thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
 					end
 				end
@@ -461,7 +461,7 @@ reachrange = Reach.CreateSlider({
 	["Name"] = "Range", 
 	["Min"] = 1,
 	["Max"] = 20, 
-	["Function"] = function(val) end
+	["Function"] = function(val) end,
 })
 
 local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -955,7 +955,7 @@ local Arrows = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 						if ArrowsFolder:FindFirstChild(plr.Name) then
 							thing = ArrowsFolder[plr.Name]
 							thing.Visible = false
-							thing.ImageColor3 = getPlayerColor(plr) or Color3.fromHSV(ArrowsColor["Value"], 1, 1)
+							thing.ImageColor3 = getPlayerColor(plr) or Color3.fromHSV(ArrowsColor["Hue"], ArrowsColor["Sat"], ArrowsColor["Value"])
 						else
 							thing = Instance.new("ImageLabel")
 							thing.BackgroundTransparency = 1
@@ -989,7 +989,7 @@ local Arrows = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 })
 ArrowsColor = Arrows.CreateColorSlider({
 	["Name"] = "Player Color", 
-	["Function"] = function(val) end
+	["Function"] = function(val) end,
 })
 
 local ESPFolder = Instance.new("Folder")
@@ -1014,10 +1014,10 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 						if ESPFolder:FindFirstChild(plr.Name) then
 							thing = ESPFolder[plr.Name]
 							thing.Visible = false
-							thing.Line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
-							thing.Line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
-							thing.Line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
-							thing.Line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							thing.Line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+							thing.Line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+							thing.Line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+							thing.Line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
 						else
 							thing = Instance.new("Frame")
 							thing.BackgroundTransparency = 1
@@ -1031,7 +1031,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line1.ZIndex = 2
 							line1.Size = UDim2.new(1, -2, 0, 1)
 							line1.Position = UDim2.new(0, 1, 0, 1)
-							line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
 							line1.Parent = thing
 							local line2 = Instance.new("Frame")
 							line2.BorderSizePixel = 0
@@ -1039,7 +1039,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line2.Size = UDim2.new(1, -2, 0, 1)
 							line2.ZIndex = 2
 							line2.Position = UDim2.new(0, 1, 1, -2)
-							line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
 							line2.Parent = thing
 							local line3 = Instance.new("Frame")
 							line3.BorderSizePixel = 0
@@ -1047,7 +1047,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line3.Size = UDim2.new(0, 1, 1, -2)
 							line3.Position = UDim2.new(0, 1, 0, 1)
 							line3.ZIndex = 2
-							line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
 							line3.Parent = thing
 							local line4 = Instance.new("Frame")
 							line4.BorderSizePixel = 0
@@ -1055,7 +1055,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line4.Size = UDim2.new(0, 1, 1, -2)
 							line4.Position = UDim2.new(1, -2, 0, 1)
 							line4.ZIndex = 2
-							line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
 							line4.Parent = thing
 							local line1clone = line1:Clone()
 							line1clone.ZIndex = 1
@@ -1131,7 +1131,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							thing = ESPFolder[plr.Name]
 							thing.Visible = false
 							for linenum, line in pairs(thing:GetChildren()) do
-								line.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+								line.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
 							end
 						else
 							thing = Instance.new("Frame")
@@ -1147,7 +1147,7 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line1.ZIndex = 2
 							line1.Size = UDim2.new(0, 0, 0, 0)
 							line1.Position = UDim2.new(0, 0, 0, 0)
-							line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Value"], 1, 1)
+							line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
 							line1.Parent = thing
 							local line2 = line1:Clone()
 							line2.Name = "MiddleTorsoLine"
@@ -1222,7 +1222,7 @@ ESPMethod = ESP.CreateDropdown({
 	["Function"] = function(val)
 		ESPFolder:ClearAllChildren()
 		ESPHealthBar["Object"].Visible = (val == "2D")
-	end
+	end,
 })
 ESPHealthBar = ESP.CreateToggle({
 	["Name"] = "Health Bar", 
@@ -1264,7 +1264,7 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 							thing = ChamsFolder[plr.Name]
 							for partnumber, part in pairs(thing:GetChildren()) do
 								part.Visible = false
-								part.Color3 = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Value"], 1, 1)
+								part.Color3 = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Hue"], ChamsColor["Sat"], ChamsColor["Value"])
 							end
 						end
 						
@@ -1281,7 +1281,7 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 										boxhandle.AlwaysOnTop = ChamsOnTop["Enabled"]
 										boxhandle.ZIndex = 10
 										boxhandle.Visible = true
-										boxhandle.Color3 = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Value"], 1, 1)
+										boxhandle.Color3 = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Hue"], ChamsColor["Sat"], ChamsColor["Value"])
 										boxhandle.Name = part.Name
 										boxhandle.Parent = chamfolder
 									end
@@ -1439,7 +1439,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 							thing.Text = plr.Name
 						end
-						thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+						thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
 						thing.Parent = NameTagsFolder
 					end
 					
@@ -1454,7 +1454,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 							local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 							thing.Text = modifiedText
-							thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Value"], 1, 1)
+							thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
 							thing.Visible = headVis
 							thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
 						end
@@ -1613,7 +1613,7 @@ local searchRefresh = function()
 				local boxhandle = Instance.new("BoxHandleAdornment")
 				boxhandle.Name = v.Name
 				boxhandle.AlwaysOnTop = true
-				boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
+				boxhandle.Color3 = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
 				boxhandle.Adornee = v
 				boxhandle.ZIndex = 10
 				local modelpos, modelsize
@@ -1643,7 +1643,7 @@ searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 					local boxhandle = Instance.new("BoxHandleAdornment")
 					boxhandle.Name = v.Name
 					boxhandle.AlwaysOnTop = true
-					boxhandle.Color3 = Color3.fromHSV(searchColor["Value"], 1, 1)
+					boxhandle.Color3 = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
 					boxhandle.Adornee = v
 					boxhandle.ZIndex = 10
 					local modelpos, modelsize
@@ -1680,9 +1680,9 @@ searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 })
 searchColor = searchModule.CreateColorSlider({
 	["Name"] = "new part color", 
-	["Function"] = function(val)
+	["Function"] = function(hue, sat, val)
 		for i,v in pairs(searchFolder:GetChildren()) do
-			v.Color3 = Color3.fromHSV(val, 1, 1)
+			v.Color3 = Color3.fromHSV(hue, sat, val)
 		end
 	end
 })
@@ -1771,7 +1771,7 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 							endVector = endVector * (1 / GuiLibrary["MainRescale"].Scale)
 							thing.Visible = true
 							thing.BackgroundTransparency = TracersTransparency["Value"] / 100
-							thing.BackgroundColor3 = tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color or (GuiLibrary["ObjectsThatCanBeSaved"]["Use colorToggle"]["Api"]["Enabled"] and table.find(GuiLibrary["FriendsObject"]["Friends"], plr.Name) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"], 1, 1)) or Color3.fromHSV(TracersColor["Value"], 1, 1)
+							thing.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(TracersColor["Hue"], TracersColor["Sat"], TracersColor["Value"])
 							thing.Size = UDim2.new(0, Distance, 0, 2)
 							thing.Position = UDim2.new(0, (startVector.X + endVector.X) / 2, 0, ((startVector.Y + endVector.Y) / 2) - 36)
 							thing.Rotation = math.atan2(endVector.Y - startVector.Y, endVector.X - startVector.X) * (180 / math.pi)
@@ -2037,7 +2037,8 @@ local Freecam = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].Create
 			UnbindFromRenderStep("Freecam")
 			PlayerState.Pop()
 		end
-	end
+	end,
+	["HoverText"] = "Lets you fly and clip through walls freely\nwithout moving your player server-sided."
 })
 freecamspeed = Freecam.CreateSlider({
 	["Name"] = "Speed",
