@@ -207,9 +207,10 @@ GUI.CreateButton({
 })
 local FriendsTextList = {["RefreshValues"] = function() end}
 local FriendsColor = {["Value"] = 0.44}
-FriendsTextList = Friends.CreateTextList({
+FriendsTextList = Friends.CreateCircleTextList({
 	["Name"] = "FriendsList", 
 	["TempText"] = "Username / Alias", 
+	["Color"] = Color3.fromRGB(5, 133, 104),	
 	["CustomFunction"] = function(obj)
 		obj.ItemText.TextColor3 = Color3.new(1, 1, 1)
 		local friendcircle = Instance.new("Frame")
@@ -248,16 +249,7 @@ Friends.CreateToggle({
 FriendsColor = Friends.CreateColorSlider({
 	["Name"] = "Friends Color", 
 	["Function"] = function(val) 
-		pcall(function()
-			FriendsTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(val, 1, 1)
-		end)
-		for i, v in pairs(FriendsTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
-			pcall(function()
-				if v:IsA("TextButton") then
-					v.FriendCircle.BackgroundColor3 = Color3.fromHSV(val, 1, 1)
-				end
-			end)
-		end
+
 	end
 })
 local ProfilesTextList = {["RefreshValues"] = function() end}
@@ -603,6 +595,7 @@ local TextGui = GuiLibrary.CreateCustomWindow({
 	["Icon"] = "vape/assets/TextGUIIcon1.png", 
 	["IconSize"] = 21
 })
+local TextGuiCircleObject = {["CircleList"] = {}}
 --GUI.CreateCustomButton("Text GUI", "vape/assets/TextGUIIcon2.png", UDim2.new(1, -23, 0, 15), function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, "OptionsButton")
 GUI.CreateCustomToggle({
 	["Name"] = "Text GUI", 
@@ -736,7 +729,10 @@ local function UpdateHud()
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 		if v["Type"] == "OptionsButton" and v["Api"]["Name"] ~= "Text GUI" then
 			if v["Api"]["Enabled"] then
-				table.insert(tableofmodules, {["Text"] = v["Api"]["Name"], ["ExtraText"] = v["Api"]["GetExtraText"]})
+				local blacklisted = table.find(TextGuiCircleObject["CircleList"]["ObjectList"], v["Api"]["Name"]) and TextGuiCircleObject["CircleList"]["ObjectListEnabled"][table.find(TextGuiCircleObject["CircleList"]["ObjectList"], v["Api"]["Name"])]
+				if not blacklisted then
+					table.insert(tableofmodules, {["Text"] = v["Api"]["Name"], ["ExtraText"] = v["Api"]["GetExtraText"]})
+				end
 			end
 		end
 	end
@@ -862,6 +858,13 @@ TextGui.CreateToggle({
 		onebackground.Visible = callback
 	end
 })
+TextGuiCircleObject = TextGui.CreateCircleWindow({
+	["Name"] = "Blacklist",
+	["Type"] = "Blacklist",
+	["UpdateFunction"] = function()
+		GuiLibrary["UpdateHudEvent"]:Fire()
+	end
+})
 
 local healthColorToPosition = {
 	[Vector3.new(Color3.fromRGB(255, 28, 0).r,
@@ -908,6 +911,11 @@ local TargetInfo = GuiLibrary.CreateCustomWindow({
 	["Name"] = "Target Info",
 	["Icon"] = "vape/assets/TargetInfoIcon1.png",
 	["IconSize"] = 16
+})
+local TargetInfoDisplayNames = TargetInfo.CreateToggle({
+	["Name"] = "Use Display Name",
+	["Function"] = function() end,
+	["Default"] = true
 })
 local targetinfobkg1 = Instance.new("Frame")
 targetinfobkg1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
@@ -1001,11 +1009,12 @@ shared.VapeTargetInfo = {
 	["UpdateInfo"] = function(tab, targetsize)
 		targetinfobkg3.Visible = (targetsize > 0) or (TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.new(0, 220, 0, 0))
 		for i,v in pairs(tab) do
+			local plr = game:GetService("Players"):FindFirstChild(i)
 			targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
 			targethealthgreen:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
 			targethealth.Text = (math.floor((v["Health"] / 5) * 10) / 10).." hp"
 			targethealthgreen.BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])
-			targetname.Text = i
+			targetname.Text = (TargetInfoDisplayNames["Enabled"] and plr and plr.DisplayName or i)
 		end
 	end,
 	["Object"] = TargetInfo
@@ -1111,6 +1120,11 @@ GuiLibrary["UpdateUI"] = function()
 					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end
 			end
+			if v["Type"] == "CircleListFrame" then
+				if v["Object"].CircleWindow.Visible then
+					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				end
+			end
 			if (v["Type"] == "Button" or v["Type"] == "ButtonMain") and v["Api"]["Enabled"] then
 				buttons = buttons + 1
 				local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * tabsortorder[i]) or 0)
@@ -1121,7 +1135,7 @@ GuiLibrary["UpdateUI"] = function()
 					v["Object"].ButtonIcon.ImageColor3 = newcolor
 				end
 			end
-			if v["Type"] == "OptionsButton" or v["Type"] == "TargetButton" then
+			if v["Type"] == "OptionsButton" then
 				if v["Api"]["Enabled"] then
 					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end
@@ -1150,7 +1164,6 @@ GuiLibrary["UpdateUI"] = function()
 		local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
 		if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
 		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(rainbowcolor, 0.7, 0.9) or Color3.fromRGB(199, 199, 199))
-		ProfilesTextList["Object"].AddBoxBKG.AddButton.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		for i3, v3 in pairs(ProfilesTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
 		--	pcall(function()
 				if v3:IsA("TextButton") and v3.ItemText.Text == GuiLibrary["CurrentProfile"] then
