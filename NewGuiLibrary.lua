@@ -708,7 +708,7 @@ api["CreateMainWindow"] = function()
 	uilistlayout2.Parent = children2
 	uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
 		if children2.Visible then
-			windowtitle.Size = UDim2.new(0, 220, 0, 476 * (1 / api["MainRescale"].Scale))
+			windowtitle.Size = UDim2.new(0, 220, 0, 476)
 		end
 	end)
 	uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
@@ -767,7 +767,7 @@ api["CreateMainWindow"] = function()
 		windowbackbutton.Visible = true
 		settingstext.Visible = true
 		settingsexit.Visible = true
-		windowtitle.Size = UDim2.new(0, 220, 0, 476 * (1 / api["MainRescale"].Scale))
+		windowtitle.Size = UDim2.new(0, 220, 0, 476)
 		windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 	end)
 
@@ -1759,7 +1759,8 @@ api["CreateCustomWindow"] = function(argstablemain)
 	uilistlayout.Parent = children2
 	uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
 		if children2.Visible then
-			windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
+			windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+			
 		end
 	end)
 	dragGUI(windowtitle)
@@ -1811,7 +1812,7 @@ api["CreateCustomWindow"] = function(argstablemain)
 		else
 			children2.Visible = true
 			children.Visible = false
-			windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
+			windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 		end
 	end
 
@@ -2766,7 +2767,7 @@ api["CreateWindow"] = function(argstablemain2)
 	uilistlayout.Parent = children
 	uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
 		if children.Visible then
-			windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y, 0, 605))
+			windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 0, 605))
 			children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			--560
 		end
@@ -2784,7 +2785,7 @@ api["CreateWindow"] = function(argstablemain2)
 			children.Visible = not children.Visible
 			if children.Visible then
 				expandbutton2.Image = getcustomassetfunc("vape/assets/DownArrow.png")
-				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y, 0, 605))
+				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 0, 605))
 				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			else
 				expandbutton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
@@ -2849,7 +2850,8 @@ api["CreateWindow"] = function(argstablemain2)
 		uilistlayout2.Parent = children2
 		uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
 			if children2.Visible then
-				windowtitle.Size = UDim2.new(0, 220, 0, 85 + uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(85 + (uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale)), 0, 605))
+				children.CanvasSize = UDim2.new(0, 0, 0, (uilistlayout2.AbsoluteContentSize.Y + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale))
 			end
 		end)
 		local bindbkg = Instance.new("TextButton")
@@ -2965,12 +2967,12 @@ api["CreateWindow"] = function(argstablemain2)
 					if v:IsA("TextButton") then
 						v.Visible = true
 					end
-				end
+				end	
 				windowicon.Visible = true
 				windowbackbutton.Visible = false
 				children2.Visible = false
 				noexpand = false
-				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y, 0, 605))
+				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 0, 605))
 				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			else
 				for i,v in pairs(children:GetChildren()) do
@@ -2984,8 +2986,8 @@ api["CreateWindow"] = function(argstablemain2)
 				children2.Visible = true
 				noexpand = true
 				--windowtitle.Size = UDim2.new(0, 220, 0, 85 + uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
-				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(85 + uilistlayout2.AbsoluteContentSize.Y, 0, 605))
-				children.CanvasSize = UDim2.new(0, 0, 0, (uilistlayout2.AbsoluteContentSize.Y + 10) * (1 / api["MainRescale"].Scale))
+				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(85 + (uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale)), 0, 605))
+				children.CanvasSize = UDim2.new(0, 0, 0, (uilistlayout2.AbsoluteContentSize.Y + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale))
 				currentexpandedbutton = buttonapi
 			end
 		end
@@ -4000,7 +4002,7 @@ api["CreateWindow"] = function(argstablemain2)
 			local expandbutton2 = Instance.new("ImageLabel")
 			expandbutton2.Active = false
 			expandbutton2.Size = UDim2.new(0, 9, 0, 4)
-			expandbutton2.Image = getcustomassetfunc("vape/assets/DownArrow.png")
+			expandbutton2.Image = getcustomassetfunc("vapeprivate/assets/DownArrow.png")
 			expandbutton2.ZIndex = 5
 			expandbutton2.Position = UDim2.new(1, -19, 1, -16)
 			expandbutton2.Name = "ExpandButton2"
@@ -4016,7 +4018,7 @@ api["CreateWindow"] = function(argstablemain2)
 			drop1:GetPropertyChangedSignal("Text"):connect(function()
 				drop2.Text = drop1.Text
 			end)
-			drop2.ExpandButton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
+			drop2.ExpandButton2.Image = getcustomassetfunc("vapeprivate/assets/UpArrow.png")
 			drop2.ExpandButton2.ZIndex = 10
 			local thing = Instance.new("Frame")
 			thing.Size = UDim2.new(1, 2, 1, 2)
@@ -4049,11 +4051,15 @@ api["CreateWindow"] = function(argstablemain2)
 			drop2.Parent = dropframe
 			drop2.MouseButton1Click:connect(function()
 				dropframe.Visible = not dropframe.Visible
-				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 12 or 0) + 10)
+				local num = (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 9 * (api["MainRescale"].Scale) or 0) + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale)
+				children.CanvasSize = UDim2.new(0, 0, 0, num)
+				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 			end)
 			drop1.MouseButton1Click:connect(function()
 				dropframe.Visible = not dropframe.Visible
-				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 12 or 0) + 10)
+				local num = (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 9 * (api["MainRescale"].Scale) or 0) + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale)
+				children.CanvasSize = UDim2.new(0, 0, 0, num)
+				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 			end)
 			drop1.MouseEnter:connect(function()
 				thing.BackgroundColor3 = Color3.fromRGB(49, 48, 49)
@@ -4116,7 +4122,9 @@ api["CreateWindow"] = function(argstablemain2)
 						dropapi["Value"] = listobj
 						drop1.Text = "   "..argstable["Name"].." - "..listobj
 						dropframe.Visible = false
-						children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 12 or 0) + 10)
+						local num = (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 9 or 0) + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale)
+						children.CanvasSize = UDim2.new(0, 0, 0, num)
+						windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 						argstable["Function"](listobj)
 						dropapi["UpdateList"](list)
 						api["UpdateHudEvent"]:Fire()
