@@ -4002,7 +4002,7 @@ api["CreateWindow"] = function(argstablemain2)
 			local expandbutton2 = Instance.new("ImageLabel")
 			expandbutton2.Active = false
 			expandbutton2.Size = UDim2.new(0, 9, 0, 4)
-			expandbutton2.Image = getcustomassetfunc("vapeprivate/assets/DownArrow.png")
+			expandbutton2.Image = getcustomassetfunc("vape/assets/DownArrow.png")
 			expandbutton2.ZIndex = 5
 			expandbutton2.Position = UDim2.new(1, -19, 1, -16)
 			expandbutton2.Name = "ExpandButton2"
@@ -4018,7 +4018,7 @@ api["CreateWindow"] = function(argstablemain2)
 			drop1:GetPropertyChangedSignal("Text"):connect(function()
 				drop2.Text = drop1.Text
 			end)
-			drop2.ExpandButton2.Image = getcustomassetfunc("vapeprivate/assets/UpArrow.png")
+			drop2.ExpandButton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
 			drop2.ExpandButton2.ZIndex = 10
 			local thing = Instance.new("Frame")
 			thing.Size = UDim2.new(1, 2, 1, 2)
