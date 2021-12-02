@@ -426,7 +426,26 @@ local OnlineProfilesFrame = Instance.new("Frame")
 OnlineProfilesFrame.Size = UDim2.new(0, 660, 0, 445)
 OnlineProfilesFrame.Position = UDim2.new(0.5, -330, 0.5, -223)
 OnlineProfilesFrame.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
-OnlineProfilesFrame.Parent = GuiLibrary["MainGui"].OnlineProfiles
+OnlineProfilesFrame.Parent = GuiLibrary["MainGui"].ScaledGui.OnlineProfiles
+local OnlineProfilesExitButton = Instance.new("ImageButton")
+OnlineProfilesExitButton.Name = "OnlineProfilesExitButton"
+OnlineProfilesExitButton.ImageColor3 = Color3.fromRGB(121, 121, 121)
+OnlineProfilesExitButton.Size = UDim2.new(0, 24, 0, 24)
+OnlineProfilesExitButton.AutoButtonColor = false
+OnlineProfilesExitButton.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
+OnlineProfilesExitButton.Visible = true
+OnlineProfilesExitButton.Position = UDim2.new(1, -31, 0, 8)
+OnlineProfilesExitButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+OnlineProfilesExitButton.Parent = OnlineProfilesFrame
+local OnlineProfilesExitButtonround = Instance.new("UICorner")
+OnlineProfilesExitButtonround.CornerRadius = UDim.new(0, 16)
+OnlineProfilesExitButtonround.Parent = OnlineProfilesExitButton
+OnlineProfilesExitButton.MouseEnter:connect(function()
+	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+end)
+OnlineProfilesExitButton.MouseLeave:connect(function()
+	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+end)
 local OnlineProfilesFrameShadow = Instance.new("ImageLabel")
 OnlineProfilesFrameShadow.AnchorPoint = Vector2.new(0.5, 0.5)
 OnlineProfilesFrameShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -505,8 +524,8 @@ local OnlineProfilesFrameCorner = Instance.new("UICorner")
 OnlineProfilesFrameCorner.CornerRadius = UDim.new(0, 4)
 OnlineProfilesFrameCorner.Parent = OnlineProfilesFrame
 OnlineProfilesButton.MouseButton1Click:connect(function()
-	GuiLibrary["MainGui"].OnlineProfiles.Visible = true
-	GuiLibrary["MainGui"].ClickGui.Visible = false
+	GuiLibrary["MainGui"].ScaledGui.OnlineProfiles.Visible = true
+	GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = false
 	if profilesloaded == false then
 		local onlineprofiles = {}
 		local success, result = pcall(function()
@@ -585,6 +604,10 @@ OnlineProfilesButton.MouseButton1Click:connect(function()
 		end
 		profilesloaded = true
 	end
+end)
+OnlineProfilesExitButton.MouseButton1Click:connect(function()
+	GuiLibrary["MainGui"].ScaledGui.OnlineProfiles.Visible = false
+	GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = true
 end)
 
 GUI.CreateDivider()
@@ -1371,7 +1394,7 @@ else
 	shared.VapeSwitchServers = nil
 end
 if shared.VapeOpenGui then
-	GuiLibrary["MainGui"].ClickGui.Visible = true
+	GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = true
 	GuiLibrary["MainBlur"].Enabled = true	
 	shared.VapeOpenGui = nil
 end

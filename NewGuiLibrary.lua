@@ -133,6 +133,11 @@ api["UpdateHudEvent"] = Instance.new("BindableEvent")
 api["SelfDestructEvent"] = Instance.new("BindableEvent")
 api["LoadSettingsEvent"] = Instance.new("BindableEvent")
 
+local scaledgui = Instance.new("Frame")
+scaledgui.Name = "ScaledGui"
+scaledgui.Size = UDim2.new(1, 0, 1, 0)
+scaledgui.BackgroundTransparency = 1
+scaledgui.Parent = api["MainGui"]
 local clickgui = Instance.new("Frame")
 clickgui.Name = "ClickGui"
 clickgui.Size = UDim2.new(1, 0, 1, 0)
@@ -140,13 +145,13 @@ clickgui.BackgroundTransparency = 1
 clickgui.BorderSizePixel = 0
 clickgui.BackgroundColor3 = Color3.fromRGB(79, 83, 166)
 clickgui.Visible = false
-clickgui.Parent = api["MainGui"]
+clickgui.Parent = scaledgui
 local OnlineProfilesBigFrame = Instance.new("Frame")
 OnlineProfilesBigFrame.Size = UDim2.new(1, 0, 1, 0)
 OnlineProfilesBigFrame.Name = "OnlineProfiles"
 OnlineProfilesBigFrame.BackgroundTransparency = 1
 OnlineProfilesBigFrame.Visible = false
-OnlineProfilesBigFrame.Parent = api["MainGui"]
+OnlineProfilesBigFrame.Parent = scaledgui
 local notificationwindow = Instance.new("Frame")
 notificationwindow.BackgroundTransparency = 1
 notificationwindow.Active = false
@@ -196,13 +201,16 @@ hudgui.Name = "HudGui"
 hudgui.Size = UDim2.new(1, 0, 1, 0)
 hudgui.BackgroundTransparency = 1
 hudgui.Visible = true
-hudgui.Parent = api["MainGui"]
+hudgui.Parent = scaledgui
 api["MainBlur"] = Instance.new("BlurEffect")
 api["MainBlur"].Size = 25
 api["MainBlur"].Parent = game:GetService("Lighting")
 api["MainBlur"].Enabled = false
 api["MainRescale"] = Instance.new("UIScale")
-api["MainRescale"].Parent = api["MainGui"]
+api["MainRescale"].Parent = scaledgui
+api["MainRescale"]:GetPropertyChangedSignal("Scale"):connect(function()
+	vertext.Position = UDim2.new(1 / api["MainRescale"].Scale, -(vertextsize.X) - 20, 1 / api["MainRescale"].Scale, -25)
+end)
 
 local function dragGUI(gui, tab)
 	spawn(function()
@@ -2909,6 +2917,7 @@ api["CreateWindow"] = function(argstablemain2)
 		end
 		buttonapi["Enabled"] = false
 		buttonapi["Keybind"] = ""
+		buttonapi["Children"] = children2
 		buttonapi["Name"] = argstablemain["Name"]
 		buttonapi["HasExtraText"] = type(argstablemain["ExtraText"]) == "function"
 		buttonapi["GetExtraText"] = (buttonapi["HasExtraText"] and argstablemain["ExtraText"] or function() return "" end)
