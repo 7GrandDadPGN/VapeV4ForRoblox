@@ -1109,10 +1109,10 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 						
 						if isAlive(plr) and plr ~= lplr then
 							local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-							local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1200) * (1 / GuiLibrary["MainRescale"].Scale)
+							local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
 							local headPos, headVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position + Vector3.new(0, 1 + plr.Character.Humanoid.HipHeight, 0))
 							local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 1 + plr.Character.Humanoid.HipHeight, 0))
-							rootPos = rootPos * (1 / GuiLibrary["MainRescale"].Scale)
+							rootPos = rootPos
 							if rootVis then
 								if ESPHealthBar["Enabled"] then
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
@@ -1175,22 +1175,22 @@ local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOpt
 							line9.Parent = thing
 						end
 						
-						if isAlive(plr) and plr ~= lplr and plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 then
+						if isAlive(plr) and plr ~= lplr then
 							local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-							if rootVis and plr.Character:FindFirstChild("Torso") and plr.Character:FindFirstChild("Left Arm") and plr.Character:FindFirstChild("Right Arm") and plr.Character:FindFirstChild("Left Leg") and plr.Character:FindFirstChild("Right Leg") and plr.Character:FindFirstChild("Head") then
+							if rootVis and plr.Character:FindFirstChild((plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Torso" or "UpperTorso")) and plr.Character:FindFirstChild((plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Left Arm" or "LeftHand")) and plr.Character:FindFirstChild((plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Right Arm" or "RightHand")) and plr.Character:FindFirstChild((plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Left Leg" or "LeftFoot")) and plr.Character:FindFirstChild((plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Right Leg" or "RightFoot")) and plr.Character:FindFirstChild("Head") then
 								thing.Visible = true
 								local head = CalculateObjectPosition((plr.Character["Head"].CFrame).p)
 								local headfront = CalculateObjectPosition((plr.Character["Head"].CFrame * CFrame.new(0, 0, -0.5)).p)
-								local toplefttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(-1.5, 1, 0)).p)
-								local toprighttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(1.5, 1, 0)).p)
-								local toptorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(0, 1, 0)).p)
-								local bottomtorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(0, -1, 0)).p)
-								local bottomlefttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(-0.5, -1, 0)).p)
-								local bottomrighttorso = CalculateObjectPosition((plr.Character["Torso"].CFrame * CFrame.new(0.5, -1, 0)).p)
-								local leftarm = CalculateObjectPosition((plr.Character["Left Arm"].CFrame * CFrame.new(0, -0.8, 0)).p)
-								local rightarm = CalculateObjectPosition((plr.Character["Right Arm"].CFrame * CFrame.new(0, -0.8, 0)).p)
-								local leftleg = CalculateObjectPosition((plr.Character["Left Leg"].CFrame * CFrame.new(0, -0.8, 0)).p)
-								local rightleg = CalculateObjectPosition((plr.Character["Right Leg"].CFrame * CFrame.new(0, -0.8, 0)).p)
+								local toplefttorso = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Torso" or "UpperTorso")].CFrame * CFrame.new(-1.5, 1, 0)).p)
+								local toprighttorso = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Torso" or "UpperTorso")].CFrame * CFrame.new(1.5, 1, 0)).p)
+								local toptorso = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, 1, 0)).p)
+								local bottomtorso = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, -1, 0)).p)
+								local bottomlefttorso = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Torso" or "UpperTorso")].CFrame * CFrame.new(-0.5, -1, 0)).p)
+								local bottomrighttorso = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Torso" or "UpperTorso")].CFrame * CFrame.new(0.5, -1, 0)).p)
+								local leftarm = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Left Arm" or "LeftHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
+								local rightarm = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Right Arm" or "RightHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
+								local leftleg = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Left Leg" or "LeftFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
+								local rightleg = CalculateObjectPosition((plr.Character[(plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and "Right Leg" or "RightFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
 								CalculateLine(toplefttorso, toprighttorso, thing.TopTorsoLine)
 								CalculateLine(toptorso, bottomtorso, thing.MiddleTorsoLine)
 								CalculateLine(bottomlefttorso, bottomrighttorso, thing.BottomTorsoLine)
@@ -1445,7 +1445,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 					
 					if isAlive(plr) and plr ~= lplr then
 						local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
-						headPos = headPos * (1 / GuiLibrary["MainRescale"].Scale)
+						headPos = headPos
 						
 						if headVis then
 							local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
@@ -1733,6 +1733,8 @@ players.PlayerRemoving:connect(function(plr)
 end)
 local TracersColor = {["Value"] = 0.44}
 local TracersTransparency = {["Value"] = 1}
+local TracersStartPosition = {["Value"] = "Middle"}
+local TracersEndPosition = {["Value"] = "Head"}
 local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Tracers", 
 	["Function"] = function(callback) 
@@ -1757,18 +1759,18 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 						end
 						
 						if isAlive(plr) and plr ~= lplr then
-							local rootScrPos = cam:WorldToViewportPoint(plr.Character.Head.Position)
-							local tempPos = cam.CFrame:pointToObjectSpace(plr.Character.Head.Position)
+							local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and plr.Character.Head or plr.Character.HumanoidRootPart).Position)
+							local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and plr.Character.Head or plr.Character.HumanoidRootPart).Position)
 							if rootScrPos.Z < 0 then
 								tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
 							end
 							local tracerPos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
 							local screensize = cam.ViewportSize
-							local startVector = Vector2.new(screensize.X / 2, screensize.Y / 2)
+							local startVector = Vector2.new(screensize.X / 2, (TracersStartPosition["Value"] == "Middle" and screensize.Y / 2 or screensize.Y))
 							local endVector = Vector2.new(tracerPos.X, tracerPos.Y)
 							local Distance = (startVector - endVector).Magnitude
-							startVector = startVector * (1 / GuiLibrary["MainRescale"].Scale)
-							endVector = endVector * (1 / GuiLibrary["MainRescale"].Scale)
+							startVector = startVector
+							endVector = endVector
 							thing.Visible = true
 							thing.BackgroundTransparency = TracersTransparency["Value"] / 100
 							thing.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(TracersColor["Hue"], TracersColor["Sat"], TracersColor["Value"])
@@ -1783,6 +1785,16 @@ local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Creat
 			TracersFolder:ClearAllChildren()
 		end
 	end
+})
+TracersStartPosition = Tracers.CreateDropdown({
+	["Name"] = "Start Position",
+	["List"] = {"Middle", "Bottom"},
+	["Function"] = function() end
+})
+TracersEndPosition = Tracers.CreateDropdown({
+	["Name"] = "End Position",
+	["List"] = {"Head", "Torso"},
+	["Function"] = function() end
 })
 TracersColor = Tracers.CreateColorSlider({
 	["Name"] = "Player Color", 
@@ -1970,9 +1982,6 @@ local PlayerState = {} do
 
 		cameraCFrame = cam.CFrame
 		cameraFocus = cam.Focus
-
-		mouseIconEnabled = uis.MouseIconEnabled
-		uis.MouseIconEnabled = true
 
 		mouseBehavior = uis.MouseBehavior
 		uis.MouseBehavior = Enum.MouseBehavior.Default
