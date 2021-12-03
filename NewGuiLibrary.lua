@@ -1888,7 +1888,10 @@ api["CreateCustomWindow"] = function(argstablemain)
 		windowtitle.Name = "CircleWindow"
 		windowtitle.Visible = false
 		windowtitle.ZIndex = 3
-		windowtitle.Parent = frame
+		windowtitle.Parent = clickgui
+		frame:GetPropertyChangedSignal("AbsolutePosition"):connect(function()
+			windowtitle.Position = UDim2.new(0, frame.Size.X.Offset + frame.AbsolutePosition.X + 2, 0, frame.AbsolutePosition.Y)
+		end)
 		local windowshadow = Instance.new("ImageLabel")
 		windowshadow.AnchorPoint = Vector2.new(0.5, 0.5)
 		windowshadow.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -2230,7 +2233,7 @@ api["CreateCustomWindow"] = function(argstablemain)
 			end
 		end)
 	
-		api["ObjectsThatCanBeSaved"][argstablemain["Name"].."CircleListFrame"] = {["Type"] = "CircleListFrame", ["Object"] = frame, ["Api"] = buttonreturned}
+		api["ObjectsThatCanBeSaved"][argstablemain["Name"].."CircleListFrame"] = {["Type"] = "CircleListFrame", ["Object"] = frame, ["Object2"] = windowtitle, ["Api"] = buttonreturned}
 	
 		return buttonreturned
 	end
@@ -3250,10 +3253,13 @@ api["CreateWindow"] = function(argstablemain2)
 			windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			windowtitle.Size = UDim2.new(0, 220, 0, 41)
 			windowtitle.Position = UDim2.new(1, 1, 0, 0)
-			windowtitle.Name = "TargetWindow"
+			windowtitle.Name = argstablemain["Name"].."TargetWindow"
 			windowtitle.Visible = false
 			windowtitle.ZIndex = 3
-			windowtitle.Parent = frame
+			windowtitle.Parent = clickgui
+			frame:GetPropertyChangedSignal("AbsolutePosition"):connect(function()
+				windowtitle.Position = UDim2.new(0, frame.Size.X.Offset + frame.AbsolutePosition.X + 2, 0, frame.AbsolutePosition.Y)
+			end)
 			local windowshadow = Instance.new("ImageLabel")
 			windowshadow.AnchorPoint = Vector2.new(0.5, 0.5)
 			windowshadow.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -3568,7 +3574,7 @@ api["CreateWindow"] = function(argstablemain2)
 				end
 			end)
 
-			api["ObjectsThatCanBeSaved"][argstablemain["Name"].."TargetFrame"] = {["Type"] = "TargetFrame", ["Object"] = frame, ["Api"] = buttonreturned}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"].."TargetFrame"] = {["Type"] = "TargetFrame", ["Object"] = frame, ["Object2"] = windowtitle, ["Api"] = buttonreturned}
 
 			return buttonreturned
 		end
@@ -3637,7 +3643,10 @@ api["CreateWindow"] = function(argstablemain2)
 			windowtitle.Name = "CircleWindow"
 			windowtitle.Visible = false
 			windowtitle.ZIndex = 3
-			windowtitle.Parent = frame
+			windowtitle.Parent = clickgui
+			frame:GetPropertyChangedSignal("AbsolutePosition"):connect(function()
+				windowtitle.Position = UDim2.new(0, frame.Size.X.Offset + frame.AbsolutePosition.X + 2, 0, frame.AbsolutePosition.Y)
+			end)
 			local windowshadow = Instance.new("ImageLabel")
 			windowshadow.AnchorPoint = Vector2.new(0.5, 0.5)
 			windowshadow.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -3979,7 +3988,7 @@ api["CreateWindow"] = function(argstablemain2)
 				end
 			end)
 
-			api["ObjectsThatCanBeSaved"][argstablemain["Name"].."CircleListFrame"] = {["Type"] = "CircleListFrame", ["Object"] = frame, ["Api"] = buttonreturned}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"].."CircleListFrame"] = {["Type"] = "CircleListFrame", ["Object"] = frame, ["Object2"] = windowtitle, ["Api"] = buttonreturned}
 
 			return buttonreturned
 		end
