@@ -1139,12 +1139,17 @@ GuiLibrary["UpdateUI"] = function()
 		local buttons = 0
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "TargetFrame" then
-				if v["Object"].TargetWindow.Visible then
+				if v["Object2"].Visible then
 					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end
 			end
+			if v["Type"] == "TargetButton" then
+				if v["Api"]["Enabled"] then
+					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				end
+			end
 			if v["Type"] == "CircleListFrame" then
-				if v["Object"].CircleWindow.Visible then
+				if v["Object2"].Visible then
 					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				end
 			end
