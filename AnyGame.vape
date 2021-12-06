@@ -2057,6 +2057,21 @@ freecamspeed = Freecam.CreateSlider({
 	["Default"] = 75
 })
 
+local Panic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Panic", 
+	["Function"] = function(callback)
+		if callback then
+			for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
+				if v["Type"] == "Button" or v["Type"] == "OptionsButton" then
+					if v["Api"]["Enabled"] then
+						v["Api"]["ToggleButton"]()
+					end
+				end
+			end
+		end
+	end
+}) 
+
 local ChatSpammer = {["Enabled"] = false}
 local ChatSpammerDelay = {["Value"] = 10}
 local ChatSpammerHideWait = {["Enabled"] = true}
@@ -2126,18 +2141,3 @@ ChatSpammerMessages = ChatSpammer.CreateTextList({
 	["TempText"] = "message to spam",
 	["Function"] = function() end
 })
-
-local Panic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "Panic", 
-	["Function"] = function(callback)
-		if callback then
-			for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-				if v["Type"] == "Button" or v["Type"] == "OptionsButton" then
-					if v["Api"]["Enabled"] then
-						v["Api"]["ToggleButton"]()
-					end
-				end
-			end
-		end
-	end
-}) 
