@@ -2057,6 +2057,76 @@ freecamspeed = Freecam.CreateSlider({
 	["Default"] = 75
 })
 
+local ChatSpammer = {["Enabled"] = false}
+local ChatSpammerDelay = {["Value"] = 10}
+local ChatSpammerHideWait = {["Enabled"] = true}
+local ChatSpammerMessages = {["ObjectList"] = {}}
+local chatspammerfirstexecute = true
+local waitnum = 0
+ChatSpammer = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "ChatSpammer",
+	["Function"] = function(callback)
+		if callback then
+			if chatspammerfirstexecute then
+				lplr.PlayerGui:WaitForChild("Chat", 10)
+			end
+			if lplr.PlayerGui:FindFirstChild("Chat") and lplr.PlayerGui.Chat:FindFirstChild("Frame") and lplr.PlayerGui.Chat.Frame:FindFirstChild("ChatChannelParentFrame") and game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") then
+				spawn(function()
+					repeat
+						if ChatSpammer["Enabled"] then
+							pcall(function()
+								game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages["ObjectList"] > 0 and ChatSpammerMessages["ObjectList"][math.random(1, #ChatSpammerMessages["ObjectList"])] or "vxpe on top"), "All")
+								local framelabel = lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFrame["Frame_MessageLogDisplay"].Scroller.ChildAdded:Wait()
+								local textlabel = framelabel:WaitForChild("TextLabel")
+								if textlabel.Text:find("You must wait") then
+									waitnum = tonumber(textlabel.Text:sub(15, textlabel.Text:len() - 40))
+									if ChatSpammerHideWait["Enabled"] then
+										framelabel.Size = UDim2.new(0, 0, 0, 0)
+										framelabel:GetPropertyChangedSignal("Size"):connect(function()
+											framelabel.Size = UDim2.new(0, 0, 0, 0)
+										end)
+									end
+								end
+							end)
+						end
+						if waitnum ~= 0 then
+							wait(waitnum)
+							waitnum = 0
+						else
+							wait(ChatSpammerDelay["Value"] / 10)
+						end
+					until ChatSpammer["Enabled"] == false
+				end)				
+			else
+				createwarning("ChatSpammer", "Default chat not found.", 3)
+				if ChatSpammer["Enabled"] then
+					ChatSpammer["ToggleButton"](false)
+				end
+			end
+		else
+			waitnum = 0
+		end
+	end,
+	["HoverText"] = "Spams chat with text of your choice (Default Chat Only)"
+})
+ChatSpammerDelay = ChatSpammer.CreateSlider({
+	["Name"] = "Delay",
+	["Min"] = 1,
+	["Max"] = 50,
+	["Default"] = 10,
+	["Function"] = function() end
+})
+ChatSpammerHideWait = ChatSpammer.CreateToggle({
+	["Name"] = "Hide Wait Message",
+	["Function"] = function() end,
+	["Default"] = true
+})
+ChatSpammerMessages = ChatSpammer.CreateTextList({
+	["Name"] = "Message",
+	["TempText"] = "message to spam",
+	["Function"] = function() end
+})
+
 local Panic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Panic", 
 	["Function"] = function(callback)
