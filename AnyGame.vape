@@ -2093,7 +2093,7 @@ ChatSpammer = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].Create
 								game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages["ObjectList"] > 0 and ChatSpammerMessages["ObjectList"][math.random(1, #ChatSpammerMessages["ObjectList"])] or "vxpe on top"), "All")
 								local framelabel = lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFrame["Frame_MessageLogDisplay"].Scroller.ChildAdded:Wait()
 								local textlabel = framelabel:WaitForChild("TextLabel")
-								if textlabel.Text:find("You must wait") then
+								if textlabel.Text:sub(1, 13) == "You must wait" then
 									waitnum = tonumber(textlabel.Text:sub(15, textlabel.Text:len() - 40))
 									if ChatSpammerHideWait["Enabled"] then
 										framelabel.Size = UDim2.new(0, 0, 0, 0)
