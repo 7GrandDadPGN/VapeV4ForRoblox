@@ -4510,9 +4510,6 @@ api["CreateWindow"] = function(argstablemain2)
 			end
 			frame.MouseLeave:connect(function()
 				hoverbox.Visible = false
-				if buttonapi["Enabled"] == false then
-					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
-				end
 			end)
 			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Slider"] = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
 			return sliderapi
