@@ -899,12 +899,16 @@ api["CreateMainWindow"] = function()
 		toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
 		toggleframe1.MouseEnter:connect(function()
 			if buttonapi["Enabled"] == false then
-				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+				pcall(function()
+					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+				end
 			end
 		end)
 		toggleframe1.MouseLeave:connect(function()
 			if buttonapi["Enabled"] == false then
-				game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+				pcall(function()
+					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+				end
 			end
 		end)
 
@@ -5593,7 +5597,7 @@ api["CreateNotification"] = function(top, bottom, duration, customicon)
 		frame2.Parent = frame
 		local icon = Instance.new("ImageLabel")
 		icon.Name = "IconLabel"
-		icon.Image = getcustomassetfunc(customicon or "vape/assets/InfoNotification.png")
+		icon.Image = getcustomassetfunc(customicon and "vape/"..customicon or "vape/assets/InfoNotification.png")
 		icon.BackgroundTransparency = 1
 		icon.Position = UDim2.new(0, -6, 0, -8)
 		icon.Size = UDim2.new(0, 60, 0, 60)
