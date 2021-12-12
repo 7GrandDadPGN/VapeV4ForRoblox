@@ -901,14 +901,14 @@ api["CreateMainWindow"] = function()
 			if buttonapi["Enabled"] == false then
 				pcall(function()
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
-				end
+				end)
 			end
 		end)
 		toggleframe1.MouseLeave:connect(function()
 			if buttonapi["Enabled"] == false then
 				pcall(function()
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
-				end
+				end)
 			end
 		end)
 
