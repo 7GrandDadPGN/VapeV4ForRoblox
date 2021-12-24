@@ -1,4 +1,4 @@
-repeat wait() until game:IsLoaded() == true
+repeat task.wait() until game:IsLoaded() == true
 
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
@@ -88,10 +88,10 @@ checkpublicrepo = function(id)
 			textlabel.TextColor3 = Color3.new(1, 1, 1)
 			textlabel.Position = UDim2.new(0, 0, 0, -36)
 			textlabel.Parent = GuiLibrary["MainGui"]
-			wait(2)
+			task.wait(2)
 			textlabel:Remove()
 		end)
-		wait(2)
+		task.wait(2)
 		return checkpublicrepo(id)
 	end
 	if req.StatusCode == 200 then
@@ -113,7 +113,7 @@ local function getcustomassetfunc(path)
 			textlabel.TextColor3 = Color3.new(1, 1, 1)
 			textlabel.Position = UDim2.new(0, 0, 0, -36)
 			textlabel.Parent = GuiLibrary["MainGui"]
-			repeat wait() until isfile(path)
+			repeat task.wait() until isfile(path)
 			textlabel:Remove()
 		end)
 		local req = requestfunc({
@@ -320,7 +320,7 @@ ProfilesTextList = Profiles.CreateTextList({
 				GuiLibrary["KeybindCaptured"] = true
 				spawn(function()
 					bindtext2.Visible = true
-					repeat wait() until GuiLibrary["PressedKeybindKey"] ~= ""
+					repeat task.wait() until GuiLibrary["PressedKeybindKey"] ~= ""
 					local key = (GuiLibrary["PressedKeybindKey"] == GuiLibrary["Profiles"][profilename]["Keybind"] and "" or GuiLibrary["PressedKeybindKey"])
 					if key == "" then
 						GuiLibrary["Profiles"][profilename]["Keybind"] = key
@@ -393,7 +393,7 @@ OnlineProfilesButton.Name = "OnlineProfilesButton"
 OnlineProfilesButton.LayoutOrder = 1
 OnlineProfilesButton.AutoButtonColor = false
 OnlineProfilesButton.Size = UDim2.new(0, 45, 0, 29)
-OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
 OnlineProfilesButton.Active = false
 OnlineProfilesButton.Text = ""
 OnlineProfilesButton.ZIndex = 4
@@ -402,7 +402,7 @@ OnlineProfilesButton.TextXAlignment = Enum.TextXAlignment.Left
 OnlineProfilesButton.Position = UDim2.new(0, 166, 0, 6)
 OnlineProfilesButton.Parent = ProfilesTextList["Object"]
 local OnlineProfilesButtonBKG = Instance.new("Frame")
-OnlineProfilesButtonBKG.BackgroundColor3 = Color3.fromRGB(38, 37, 38)
+OnlineProfilesButtonBKG.BackgroundColor3 = Color3.fromRGB(240, 228, 240)
 OnlineProfilesButtonBKG.Size = UDim2.new(0, 47, 0, 31)
 OnlineProfilesButtonBKG.Position = UDim2.new(0, 165, 0, 5)
 OnlineProfilesButtonBKG.ZIndex = 3
@@ -941,7 +941,7 @@ local TargetInfoDisplayNames = TargetInfo.CreateToggle({
 	["Default"] = true
 })
 local targetinfobkg1 = Instance.new("Frame")
-targetinfobkg1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+targetinfobkg1.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
 targetinfobkg1.BorderSizePixel = 0
 targetinfobkg1.Size = UDim2.new(0, 220, 0, 72)
 targetinfobkg1.Position = UDim2.new(0, 0, 0, 0)
@@ -952,7 +952,7 @@ targetinfobkg2.Position = UDim2.new(0, 0, 0, -6)
 targetinfobkg2.Size = UDim2.new(0, 220, 0, 86)
 targetinfobkg2.Parent = targetinfobkg1
 local targetinfobkg3 = Instance.new("Frame")
-targetinfobkg3.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+targetinfobkg3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
 targetinfobkg3.Size = UDim2.new(0, 220, 0, 80)
 targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
 targetinfobkg3.Name = "MainInfo"
@@ -960,9 +960,9 @@ targetinfobkg3.Parent = targetinfobkg1
 local targetname = Instance.new("TextLabel")
 targetname.TextSize = 17
 targetname.Font = Enum.Font.SourceSans
-targetname.TextColor3 = Color3.fromRGB(162, 162, 162)
+targetname.TextColor3 = Color3.fromRGB(40, 40, 40)
 targetname.Position = UDim2.new(0, 72, 0, 7)
-targetname.TextStrokeTransparency = 0.75
+targetname.TextStrokeTransparency = 1
 targetname.BackgroundTransparency = 1
 targetname.Size = UDim2.new(0, 80, 0, 16)
 targetname.TextScaled = true
@@ -1120,7 +1120,7 @@ local tabcategorycolor = {
 
 GuiLibrary["UpdateUI"] = function()
 	pcall(function()
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(1, 0, 1)
 		onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		onetext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		local newtext = ""
@@ -1220,7 +1220,7 @@ local rescale = GUISettings.CreateToggle({
 	["Name"] = "Rescale", 
 	["Function"] = function(callback) 
 		GuiLibrary["MainRescale"].Scale = (callback and math.clamp(cam.ViewportSize.X / 1920, 0.5, 1) or 0.99)
-		wait(0.01)
+		task.wait(0.01)
 		GuiLibrary["MainRescale"].Scale = (callback and math.clamp(cam.ViewportSize.X / 1920, 0.5, 1) or 1)
 	end,
 	["Default"] = true
@@ -1274,8 +1274,12 @@ local GUIbind = GUI.CreateGUIBind()
 
 local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
+		local teleportstr = 'shared.VapeSwitchServers = true if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end'
+		if shared.VapeDeveloper then
+			teleportstr = 'shared.VapeDeveloper = true '..teleportstr
+		end
 		GuiLibrary["SaveSettings"]()
-        queueteleport('shared.VapeSwitchServers = true wait(1) if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end')
+		queueteleport(teleportstr)
     end
 end)
 
@@ -1405,7 +1409,7 @@ if shared.VapeOpenGui then
 end
 
 spawn(function()
-	while wait(10) do
+	while task.wait(10) do
 		if not selfdestruct then
 			GuiLibrary["SaveSettings"]()
 		end
