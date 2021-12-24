@@ -4433,6 +4433,7 @@ if shared.VapeExecuted then
 				local slider2 = Instance.new("Frame")
 				slider2.Size = UDim2.new(math.clamp(((argstable["Default"] or argstable["Min"]) / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
 				slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				slider2.BorderSizePixel = 0
 				slider2.Name = "FillSlider"
 				slider2.Parent = slider1
 				local slider3 = Instance.new("ImageButton")
