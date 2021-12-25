@@ -2770,6 +2770,7 @@ if shared.VapeExecuted then
 		children.BorderSizePixel = 0
 		children.ScrollBarThickness = 3
 		children.ScrollBarImageTransparency = 0.8
+		children.ScrollBarImageColor3 = Color3.new(0, 0, 0)
 		children.Size = UDim2.new(1, 0, 1, -45)
 		children.ClipsDescendants = true
 		children.Position = UDim2.new(0, 0, 0, 41)
@@ -4447,6 +4448,7 @@ if shared.VapeExecuted then
 				slider3.Name = "ButtonSlider"
 				sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
 				sliderapi["Max"] = argstable["Max"]
+				sliderapi["Object"] = frame
 				sliderapi["SetValue"] = function(val)
 				--	val = math.clamp(val, argstable["Min"], argstable["Max"])
 					sliderapi["Value"] = val
