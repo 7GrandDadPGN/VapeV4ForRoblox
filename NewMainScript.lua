@@ -1268,7 +1268,7 @@ ToggleNotifications = GUISettings.CreateToggle({
 })
 ToggleNotifications["Object"].BackgroundTransparency = 0
 ToggleNotifications["Object"].BorderSizePixel = 0
-ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 
 local GUIbind = GUI.CreateGUIBind()
 

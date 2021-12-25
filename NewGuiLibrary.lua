@@ -1014,7 +1014,7 @@ if shared.VapeExecuted then
 				windowbackbutton2.Parent = windowtitle
 				button.MouseEnter:connect(function() 
 					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(240, 234, 240)}):Play()
-					buttontext.TextColor3 = Color3.fromRGB(207, 207, 207)
+					buttontext.TextColor3 = Color3.fromRGB(100, 100, 100)
 				end)
 				button.MouseLeave:connect(function() 
 					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230)}):Play()
@@ -1151,7 +1151,7 @@ if shared.VapeExecuted then
 					local toggleframe2 = Instance.new("Frame")
 					toggleframe2.Size = UDim2.new(0, 199, 0, 26)
 					toggleframe2.Position = UDim2.new(0, 11, 0, 1)
-					toggleframe2.BackgroundColor3 = Color3.fromRGB(38, 37, 38)
+					toggleframe2.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
 					toggleframe2.Name = "ToggleFrame2"
 					toggleframe2.Parent = buttontext
 					local toggleframe1 = Instance.new("TextButton")
