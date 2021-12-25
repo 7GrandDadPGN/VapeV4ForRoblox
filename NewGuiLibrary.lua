@@ -2769,7 +2769,7 @@ if shared.VapeExecuted then
 		children.BackgroundTransparency = 1
 		children.BorderSizePixel = 0
 		children.ScrollBarThickness = 3
-		children.ScrollBarImageTransparency = 0.7
+		children.ScrollBarImageTransparency = 0.2
 		children.ScrollBarImageColor3 = Color3.new(0, 0, 0)
 		children.Size = UDim2.new(1, 0, 1, -45)
 		children.ClipsDescendants = true
