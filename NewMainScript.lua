@@ -393,7 +393,7 @@ OnlineProfilesButton.Name = "OnlineProfilesButton"
 OnlineProfilesButton.LayoutOrder = 1
 OnlineProfilesButton.AutoButtonColor = false
 OnlineProfilesButton.Size = UDim2.new(0, 45, 0, 29)
-OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
+OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 OnlineProfilesButton.Active = false
 OnlineProfilesButton.Text = ""
 OnlineProfilesButton.ZIndex = 4
@@ -402,7 +402,7 @@ OnlineProfilesButton.TextXAlignment = Enum.TextXAlignment.Left
 OnlineProfilesButton.Position = UDim2.new(0, 166, 0, 6)
 OnlineProfilesButton.Parent = ProfilesTextList["Object"]
 local OnlineProfilesButtonBKG = Instance.new("Frame")
-OnlineProfilesButtonBKG.BackgroundColor3 = Color3.fromRGB(240, 228, 240)
+OnlineProfilesButtonBKG.BackgroundColor3 = Color3.fromRGB(38, 37, 38)
 OnlineProfilesButtonBKG.Size = UDim2.new(0, 47, 0, 31)
 OnlineProfilesButtonBKG.Position = UDim2.new(0, 165, 0, 5)
 OnlineProfilesButtonBKG.ZIndex = 3
@@ -941,7 +941,7 @@ local TargetInfoDisplayNames = TargetInfo.CreateToggle({
 	["Default"] = true
 })
 local targetinfobkg1 = Instance.new("Frame")
-targetinfobkg1.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+targetinfobkg1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 targetinfobkg1.BorderSizePixel = 0
 targetinfobkg1.Size = UDim2.new(0, 220, 0, 72)
 targetinfobkg1.Position = UDim2.new(0, 0, 0, 0)
@@ -952,7 +952,7 @@ targetinfobkg2.Position = UDim2.new(0, 0, 0, -6)
 targetinfobkg2.Size = UDim2.new(0, 220, 0, 86)
 targetinfobkg2.Parent = targetinfobkg1
 local targetinfobkg3 = Instance.new("Frame")
-targetinfobkg3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+targetinfobkg3.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 targetinfobkg3.Size = UDim2.new(0, 220, 0, 80)
 targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
 targetinfobkg3.Name = "MainInfo"
@@ -960,9 +960,9 @@ targetinfobkg3.Parent = targetinfobkg1
 local targetname = Instance.new("TextLabel")
 targetname.TextSize = 17
 targetname.Font = Enum.Font.SourceSans
-targetname.TextColor3 = Color3.fromRGB(40, 40, 40)
+targetname.TextColor3 = Color3.fromRGB(162, 162, 162)
 targetname.Position = UDim2.new(0, 72, 0, 7)
-targetname.TextStrokeTransparency = 1
+targetname.TextStrokeTransparency = 0.75
 targetname.BackgroundTransparency = 1
 targetname.Size = UDim2.new(0, 80, 0, 16)
 targetname.TextScaled = true
@@ -1120,7 +1120,7 @@ local tabcategorycolor = {
 
 GuiLibrary["UpdateUI"] = function()
 	pcall(function()
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(1, 0, 1)
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		onetext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		local newtext = ""
@@ -1268,7 +1268,7 @@ ToggleNotifications = GUISettings.CreateToggle({
 })
 ToggleNotifications["Object"].BackgroundTransparency = 0
 ToggleNotifications["Object"].BorderSizePixel = 0
-ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 
 local GUIbind = GUI.CreateGUIBind()
 
