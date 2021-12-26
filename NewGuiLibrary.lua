@@ -112,7 +112,7 @@ if shared.VapeExecuted then
 				textlabel.TextStrokeTransparency = 0
 				textlabel.TextSize = 30
 				textlabel.Font = Enum.Font.SourceSans
-				textlabel.TextColor3 = Color3.new(0.2, 0.2, 0.2)
+				textlabel.TextColor3 = Color3.new(1, 1, 1)
 				textlabel.Position = UDim2.new(0, 0, 0, -36)
 				textlabel.Parent = api["MainGui"]
 				repeat wait() until isfile(path)
@@ -159,11 +159,11 @@ if shared.VapeExecuted then
 	notificationwindow.Size = UDim2.new(1, 0, 1, 0)
 	notificationwindow.Parent = api["MainGui"]
 	local hoverbox = Instance.new("TextLabel")
-	hoverbox.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+	hoverbox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	hoverbox.Active = false
 	hoverbox.Text = "  ".."Placeholder"
 	hoverbox.ZIndex = 5
-	hoverbox.TextColor3 = Color3.fromRGB(60, 60, 60)
+	hoverbox.TextColor3 = Color3.fromRGB(162, 162, 162)
 	hoverbox.Font = Enum.Font.SourceSans
 	hoverbox.TextXAlignment = Enum.TextXAlignment.Left
 	hoverbox.TextSize = 15
@@ -177,7 +177,7 @@ if shared.VapeExecuted then
 	vertext.Name = "Version"
 	vertext.Size = UDim2.new(0, vertextsize.X, 0, 20)
 	vertext.Font = Enum.Font.SourceSans
-	vertext.TextColor3 = Color3.new(0.2, 0.2, 0.2)
+	vertext.TextColor3 = Color3.new(1, 1, 1)
 	vertext.Active = false
 	vertext.TextSize = 25
 	vertext.BackgroundTransparency = 1
@@ -473,7 +473,7 @@ if shared.VapeExecuted then
 	api["CreateMainWindow"] = function()
 		local windowapi = {}
 		local windowtitle = Instance.new("Frame")
-		windowtitle.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+		windowtitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		windowtitle.Size = UDim2.new(0, 220, 0, 45)
 		windowtitle.Position = UDim2.new(0, 6, 0, 6)
 		windowtitle.Name = "MainWindow"
@@ -516,7 +516,7 @@ if shared.VapeExecuted then
 		settingstext.TextSize = 17
 		settingstext.Text = "Settings"
 		settingstext.Visible = false
-		settingstext.TextColor3 = Color3.fromRGB(60, 60, 60)
+		settingstext.TextColor3 = Color3.fromRGB(201, 201, 201)
 		settingstext.Parent = windowtitle
 		local settingswheel = Instance.new("ImageButton")
 		settingswheel.Name = "SettingsWheel"
@@ -567,12 +567,12 @@ if shared.VapeExecuted then
 				local hover3textsize = game:GetService("TextService"):GetTextSize("Discord set to clipboard!", 16, Enum.Font.SourceSans, Vector2.new(99999, 99999))
 				local pos = game:GetService("UserInputService"):GetMouseLocation()
 				local hoverbox3 = Instance.new("TextLabel")
-				hoverbox3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				hoverbox3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				hoverbox3.Active = false
 				hoverbox3.Text = "Discord set to clipboard!"
 				hoverbox3.ZIndex = 5
 				hoverbox3.Size = UDim2.new(0, 13 + hover3textsize.X, 0, hover3textsize.Y + 5)
-				hoverbox3.TextColor3 = Color3.fromRGB(80, 80, 80)
+				hoverbox3.TextColor3 = Color3.fromRGB(200, 200, 200)
 				hoverbox3.Position = UDim2.new(0, pos.X + 16, 0, pos.Y - (hoverbox3.Size.Y.Offset / 2) - 26)
 				hoverbox3.Font = Enum.Font.SourceSans
 				hoverbox3.TextSize = 16
@@ -594,7 +594,7 @@ if shared.VapeExecuted then
 		settingsexit.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
 		settingsexit.Visible = false
 		settingsexit.Position = UDim2.new(1, -31, 0, 8)
-		settingsexit.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+		settingsexit.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		settingsexit.Parent = windowtitle
 		local settingsexitround = Instance.new("UICorner")
 		settingsexitround.CornerRadius = UDim.new(0, 16)
@@ -603,7 +603,7 @@ if shared.VapeExecuted then
 			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		end)
 		settingsexit.MouseLeave:connect(function()
-			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 		end)
 		local children = Instance.new("Frame")
 		children.BackgroundTransparency = 1
@@ -614,7 +614,7 @@ if shared.VapeExecuted then
 		local extraframe = Instance.new("Frame")
 		extraframe.Size = UDim2.new(0, 220, 0, 40)
 		extraframe.BorderSizePixel = 0
-		extraframe.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+		extraframe.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		extraframe.LayoutOrder = 99999
 		extraframe.Name = "Extras"
 		extraframe.Parent = children
@@ -630,7 +630,7 @@ if shared.VapeExecuted then
 		overlaysbkg.Visible = false
 		overlaysbkg.Parent = windowtitle
 		local overlaystitle = Instance.new("Frame")
-		overlaystitle.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+		overlaystitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		overlaystitle.Size = UDim2.new(0, 220, 0, 45)
 		overlaystitle.Position = UDim2.new(0, 0, 1, -45)
 		overlaystitle.Parent = overlaysbkg
@@ -650,7 +650,7 @@ if shared.VapeExecuted then
 		overlaysexit.AutoButtonColor = false
 		overlaysexit.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
 		overlaysexit.Position = UDim2.new(1, -32, 0, 9)
-		overlaysexit.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+		overlaysexit.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		overlaysexit.Parent = overlaystitle
 		local overlaysexitround = Instance.new("UICorner")
 		overlaysexitround.CornerRadius = UDim.new(0, 16)
@@ -659,7 +659,7 @@ if shared.VapeExecuted then
 			game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		end)
 		overlaysexit.MouseLeave:connect(function()
-			game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+			game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 		end)
 		local overlaysbutton = Instance.new("ImageButton")
 		overlaysbutton.Size = UDim2.new(0, 12, 0, 10)
@@ -678,7 +678,7 @@ if shared.VapeExecuted then
 		overlaystext.Font = Enum.Font.SourceSans
 		overlaystext.TextSize = 17
 		overlaystext.Text = "Overlays"
-		overlaystext.TextColor3 = Color3.fromRGB(60, 60, 60)
+		overlaystext.TextColor3 = Color3.fromRGB(201, 201, 201)
 		overlaystext.Parent = overlaystitle
 		local overlayschildren = Instance.new("Frame")
 		overlayschildren.BackgroundTransparency = 1
@@ -697,7 +697,7 @@ if shared.VapeExecuted then
 		local divider3 = Instance.new("Frame")
 		divider3.Size = UDim2.new(1, 0, 0, 1)
 		divider3.Name = "Divider"
-		divider3.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
+		divider3.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 		divider3.BorderSizePixel = 0
 		divider3.Parent = children2
 		local windowcorner = Instance.new("UICorner")
@@ -753,7 +753,7 @@ if shared.VapeExecuted then
 			settingstext.Visible = false
 			settingsexit.Visible = false
 			windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
-			windowtitle.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+			windowtitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		end)
 		windowbackbutton.MouseEnter:connect(function()
 			windowbackbutton.ImageTransparency = 0
@@ -777,7 +777,7 @@ if shared.VapeExecuted then
 			settingstext.Visible = true
 			settingsexit.Visible = true
 			windowtitle.Size = UDim2.new(0, 220, 0, 476)
-			windowtitle.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		end)
 
 		settingsexit.MouseButton1Click:connect(function()
@@ -789,7 +789,7 @@ if shared.VapeExecuted then
 			settingstext.Visible = false
 			settingsexit.Visible = false
 			windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
-			windowtitle.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+			windowtitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		end)
 
 		overlaysbutton.MouseButton1Click:connect(function()
@@ -828,7 +828,7 @@ if shared.VapeExecuted then
 			buttontext.LayoutOrder = amount
 			buttontext.Size = UDim2.new(1, 0, 0, 40)
 			buttontext.Active = false
-			buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+			buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 			buttontext.TextSize = 17
 			buttontext.Font = Enum.Font.SourceSans
 			buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -852,7 +852,7 @@ if shared.VapeExecuted then
 			toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 			toggleframe2.Active = false
 			toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-			toggleframe2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			toggleframe2.BorderSizePixel = 0
 			toggleframe2.Parent = toggleframe1
 			local uicorner = Instance.new("UICorner")
@@ -889,7 +889,7 @@ if shared.VapeExecuted then
 					else
 						toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 					end
-				--	toggleframe1.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
+				--	toggleframe1.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 					toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 				end
 				argstable["Function"](buttonapi["Enabled"])
@@ -923,7 +923,7 @@ if shared.VapeExecuted then
 			if text then
 				local dividerlabel = Instance.new("TextLabel")
 				dividerlabel.Size = UDim2.new(1, 0, 0, 30)
-				dividerlabel.BackgroundColor3 = Color3.fromRGB(220, 220, 220) 
+				dividerlabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20) 
 				dividerlabel.BorderSizePixel = 0
 				dividerlabel.TextColor3 = Color3.fromRGB(85, 84, 85)
 				dividerlabel.TextSize = 14
@@ -937,7 +937,7 @@ if shared.VapeExecuted then
 			divider.Size = UDim2.new(1, 0, 0, 1)
 			divider.Name = "Divider"
 			divider.LayoutOrder = amount + (text and 1 or 0)
-			divider.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
+			divider.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 			divider.BorderSizePixel = 0
 			divider.Parent = children
 		end
@@ -956,7 +956,7 @@ if shared.VapeExecuted then
 				local divider = Instance.new("Frame")
 				divider.Size = UDim2.new(1, 0, 0, 1)
 				divider.Name = "Divider"
-				divider.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
+				divider.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 				divider.BorderSizePixel = 0
 				divider.Parent = children3
 				local uilistlayout3 = Instance.new("UIListLayout")
@@ -967,7 +967,7 @@ if shared.VapeExecuted then
 				button.AutoButtonColor = false
 				button.Size = UDim2.new(1, 0, 0, 40)
 				button.BorderSizePixel = 0
-				button.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				button.Text = ""
 				button.LayoutOrder = amount
 				button.Parent = children2
@@ -977,7 +977,7 @@ if shared.VapeExecuted then
 				buttontext.Text = text
 				buttontext.Size = UDim2.new(0, 120, 0, 38)
 				buttontext.Active = false
-				buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+				buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 				buttontext.TextSize = 17
 				buttontext.Font = Enum.Font.SourceSans
 				buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -1013,12 +1013,12 @@ if shared.VapeExecuted then
 				windowbackbutton2.Image = getcustomassetfunc("vape/assets/BackIcon.png")
 				windowbackbutton2.Parent = windowtitle
 				button.MouseEnter:connect(function() 
-					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(240, 234, 240)}):Play()
-					buttontext.TextColor3 = Color3.fromRGB(100, 100, 100)
+					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
+					buttontext.TextColor3 = Color3.fromRGB(207, 207, 207)
 				end)
 				button.MouseLeave:connect(function() 
-					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230)}):Play()
-					buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+					buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 				end)
 				button.MouseButton1Click:connect(function()
 					children2.Visible = false
@@ -1045,7 +1045,7 @@ if shared.VapeExecuted then
 					buttontext.LayoutOrder = amount
 					buttontext.Size = UDim2.new(1, 0, 0, 30)
 					buttontext.Active = false
-					buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+					buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 					buttontext.TextSize = 17
 					buttontext.Font = Enum.Font.SourceSans
 					buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -1070,7 +1070,7 @@ if shared.VapeExecuted then
 					toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 					toggleframe2.Active = false
 					toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-					toggleframe2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+					toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					toggleframe2.BorderSizePixel = 0
 					toggleframe2.Parent = toggleframe1
 					local uicorner = Instance.new("UICorner")
@@ -1151,18 +1151,18 @@ if shared.VapeExecuted then
 					local toggleframe2 = Instance.new("Frame")
 					toggleframe2.Size = UDim2.new(0, 199, 0, 26)
 					toggleframe2.Position = UDim2.new(0, 11, 0, 1)
-					toggleframe2.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
+					toggleframe2.BackgroundColor3 = Color3.fromRGB(38, 37, 38)
 					toggleframe2.Name = "ToggleFrame2"
 					toggleframe2.Parent = buttontext
 					local toggleframe1 = Instance.new("TextButton")
 					toggleframe1.AutoButtonColor = false
 					toggleframe1.Size = UDim2.new(0, 195, 0, 22)
-					toggleframe1.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+					toggleframe1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					toggleframe1.BorderSizePixel = 0
 					toggleframe1.Text = argstable["Name"]:upper()
 					toggleframe1.Font = Enum.Font.SourceSans
 					toggleframe1.TextSize = 17
-					toggleframe1.TextColor3 = Color3.fromRGB(80, 80, 80)
+					toggleframe1.TextColor3 = Color3.fromRGB(151, 151, 151)
 					toggleframe1.Name = "ToggleFrame1"
 					toggleframe1.Position = UDim2.new(0, 2, 0, 2)
 					toggleframe1.Parent = toggleframe2
@@ -1175,10 +1175,10 @@ if shared.VapeExecuted then
 			
 					toggleframe1.MouseButton1Click:connect(function() argstable["Function"]() end)
 					toggleframe1.MouseEnter:connect(function()
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(240, 234, 240)}):Play()
+						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
 					end)
 					toggleframe1.MouseLeave:connect(function()
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230)}):Play()
+						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 					end)
 					
 					return buttonapi
@@ -1190,7 +1190,7 @@ if shared.VapeExecuted then
 				divider.Size = UDim2.new(1, 0, 0, 1)
 				divider.Name = "Divider"
 				divider.LayoutOrder = amount
-				divider.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
+				divider.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 				divider.BorderSizePixel = 0
 				divider.Parent = children2
 			end
@@ -1202,7 +1202,7 @@ if shared.VapeExecuted then
 			frame.Size = UDim2.new(0, 220, 0, 40)
 			frame.BackgroundTransparency = 1
 			frame.TextSize = 17
-			frame.TextColor3 = Color3.fromRGB(80, 80, 80)
+			frame.TextColor3 = Color3.fromRGB(151, 151, 151)
 			frame.Font = Enum.Font.SourceSans
 			frame.Text = "   Rebind GUI"
 			frame.LayoutOrder = amount2
@@ -1242,8 +1242,8 @@ if shared.VapeExecuted then
 			bindtext2.Size = UDim2.new(0, 150, 0, 33)
 			bindtext2.Font = Enum.Font.SourceSans
 			bindtext2.TextSize = 17
-			bindtext2.TextColor3 = Color3.fromRGB(60, 60, 60)
-			bindtext2.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
+			bindtext2.TextColor3 = Color3.fromRGB(201, 201, 201)
+			bindtext2.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 			bindtext2.BorderSizePixel = 0
 			bindtext2.Visible = false
 			bindtext2.Parent = frame
@@ -1345,7 +1345,7 @@ if shared.VapeExecuted then
 			text1.TextXAlignment = Enum.TextXAlignment.Left
 			text1.Text = "     "..name
 			text1.Size = UDim2.new(1, 0, 0, 25)
-			text1.TextColor3 = Color3.fromRGB(80, 80, 80)
+			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text1.BackgroundTransparency = 1
 			text1.TextSize = 14
 			text1.Parent = frame
@@ -1387,7 +1387,7 @@ if shared.VapeExecuted then
 			local slider3 = Instance.new("ImageButton")
 			slider3.AutoButtonColor = false
 			slider3.Size = UDim2.new(0, 26, 0, 12)
-			slider3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			slider3.BorderSizePixel = 0
 			slider3.ZIndex = 2
 			slider3.Image = getcustomassetfunc("vape/assets/ColorSlider1.png")
@@ -1505,7 +1505,7 @@ if shared.VapeExecuted then
 			buttontext.LayoutOrder = amount
 			buttontext.Size = UDim2.new(1, 0, 0, 30)
 			buttontext.Active = false
-			buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+			buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 			buttontext.TextSize = 17
 			buttontext.Font = Enum.Font.SourceSans
 			buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -1530,7 +1530,7 @@ if shared.VapeExecuted then
 			toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 			toggleframe2.Active = false
 			toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-			toggleframe2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			toggleframe2.BorderSizePixel = 0
 			toggleframe2.Parent = toggleframe1
 			local uicorner = Instance.new("UICorner")
@@ -1603,7 +1603,7 @@ if shared.VapeExecuted then
 			button.AutoButtonColor = false
 			button.Size = UDim2.new(1, 0, 0, 40)
 			button.BorderSizePixel = 0
-			button.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			button.Text = ""
 			button.LayoutOrder = amount
 			button.Parent = children
@@ -1613,7 +1613,7 @@ if shared.VapeExecuted then
 			buttontext.Text = argstable["Name"]
 			buttontext.Size = UDim2.new(0, 120, 0, 38)
 			buttontext.Active = false
-			buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+			buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 			buttontext.TextSize = 17
 			buttontext.Font = Enum.Font.SourceSans
 			buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -1644,15 +1644,15 @@ if shared.VapeExecuted then
 				if overlaysbkg.Visible == false then
 					buttonapi["Enabled"] = not buttonapi["Enabled"]
 					if buttonapi["Enabled"] then
-						button.BackgroundColor3 = Color3.fromRGB(240, 234, 240)
+						button.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 						buttontext.TextColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 						arrow:TweenPosition(UDim2.new(1, -14, 0, 16), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.2, true)
 						if buttonicon then
 							buttonicon.ImageColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 						end
 					else
-						button.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
-						buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+						button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+						buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 						arrow:TweenPosition(UDim2.new(1, -20, 0, 16), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.2, true)
 						if buttonicon then
 							buttonicon.ImageColor3 = Color3.fromRGB(207, 207, 207)
@@ -1667,7 +1667,7 @@ if shared.VapeExecuted then
 			button.MouseEnter:connect(function() 
 				if overlaysbkg.Visible == false then
 					if not buttonapi["Enabled"] then
-						game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(240, 234, 240)}):Play()
+						game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
 						buttontext.TextColor3 = Color3.fromRGB(207, 207, 207)
 						if buttonicon then
 							buttonicon.ImageColor3 = Color3.fromRGB(207, 207, 207)
@@ -1678,10 +1678,10 @@ if shared.VapeExecuted then
 			button.MouseLeave:connect(function() 
 				if overlaysbkg.Visible == false then
 					if not buttonapi["Enabled"] then
-						game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230)}):Play()
-						buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+						game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+						buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 						if buttonicon then
-							buttonicon.ImageColor3 = Color3.fromRGB(80, 80, 80)
+							buttonicon.ImageColor3 = Color3.fromRGB(162, 162, 162)
 						end
 					end
 				end
@@ -1699,7 +1699,7 @@ if shared.VapeExecuted then
 		local windowtitle = Instance.new("TextButton")
 		windowtitle.Text = ""
 		windowtitle.AutoButtonColor = false
-		windowtitle.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+		windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		windowtitle.Size = UDim2.new(0, 220, 0, 45)
 		windowtitle.Position = UDim2.new(0, 223, 0, 6)
 		windowtitle.Name = "MainWindow"
@@ -1733,7 +1733,7 @@ if shared.VapeExecuted then
 		windowtext.Font = Enum.Font.SourceSans
 		windowtext.TextSize = 17
 		windowtext.Text = argstablemain["Name"]
-		windowtext.TextColor3 = Color3.fromRGB(60, 60, 60)
+		windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 		windowtext.Parent = windowtitle
 		local expandbutton = Instance.new("ImageButton")
 		expandbutton.AutoButtonColor = false
@@ -1847,7 +1847,7 @@ if shared.VapeExecuted then
 			drop1.Parent = frame
 			drop1.BorderSizePixel = 0
 			drop1.ZIndex = 2
-			drop1.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			drop1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			drop1.TextSize = 17
 			drop1.TextXAlignment = Enum.TextXAlignment.Left
 			drop1.Text = ""
@@ -1867,7 +1867,7 @@ if shared.VapeExecuted then
 			targettext.TextSize = 17
 			targettext.RichText = true
 			targettext.TextColor3 = Color3.new(205, 205, 205)
-			targettext.Text = "  "..argstablemain3["Name"].." \n "..'<font color="rgb(80, 80, 80)">None</font>'
+			targettext.Text = "  "..argstablemain3["Name"].." \n "..'<font color="rgb(151, 151, 151)">None</font>'
 			targettext.Font = Enum.Font.SourceSans
 			targettext.TextXAlignment = Enum.TextXAlignment.Left
 			targettext.Parent = drop1
@@ -1887,7 +1887,7 @@ if shared.VapeExecuted then
 			local windowtitle = Instance.new("TextButton")
 			windowtitle.Text = ""
 			windowtitle.AutoButtonColor = false
-			windowtitle.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			windowtitle.Size = UDim2.new(0, 220, 0, 41)
 			windowtitle.Position = UDim2.new(1, 1, 0, 0)
 			windowtitle.Name = "CircleWindow"
@@ -1911,7 +1911,7 @@ if shared.VapeExecuted then
 			local windowicon = Instance.new("ImageLabel")
 			windowicon.Size = UDim2.new(0, 18, 0, 16)
 			windowicon.Image = getcustomassetfunc("vape/assets/CircleList"..(argstablemain3["Type"] == "Blacklist" and "Blacklist" or "Whitelist")..".png")
-			windowicon.ImageColor3 = Color3.fromRGB(80, 80, 80)
+			windowicon.ImageColor3 = Color3.fromRGB(200, 200, 200)
 			windowicon.ZIndex = 3
 			windowicon.Name = "WindowIcon"
 			windowicon.BackgroundTransparency = 1
@@ -1927,7 +1927,7 @@ if shared.VapeExecuted then
 			windowtext.Font = Enum.Font.SourceSans
 			windowtext.TextSize = 17
 			windowtext.Text = argstablemain3["Name"]
-			windowtext.TextColor3 = Color3.fromRGB(60, 60, 60)
+			windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 			windowtext.Parent = windowtitle
 			local children = Instance.new("Frame")
 			children.BackgroundTransparency = 1
@@ -1960,7 +1960,7 @@ if shared.VapeExecuted then
 				if argstablemain3["UpdateFunction"] then
 					argstablemain3["UpdateFunction"]()
 				end
-				targettext.Text = "  "..argstablemain3["Name"].." \n "..'<font color="rgb(80, 80, 80)">'..str..'</font>'
+				targettext.Text = "  "..argstablemain3["Name"].." \n "..'<font color="rgb(151, 151, 151)">'..str..'</font>'
 			end
 		
 			windowapi3["CreateCircleTextList"] = function(argstable)
@@ -1990,8 +1990,8 @@ if shared.VapeExecuted then
 				textbox.TextXAlignment = Enum.TextXAlignment.Left
 				textbox.Name = "AddBox"
 				textbox.BackgroundTransparency = 1
-				textbox.TextColor3 = Color3.new(0.2, 0.2, 0.2)
-				textbox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+				textbox.TextColor3 = Color3.new(1, 1, 1)
+				textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 				textbox.Font = Enum.Font.SourceSans
 				textbox.Text = ""
 				textbox.PlaceholderText = "Add entry..."
@@ -2001,7 +2001,7 @@ if shared.VapeExecuted then
 				addbutton.BorderSizePixel = 0
 				addbutton.Name = "AddButton"
 				addbutton.ZIndex = 6
-				addbutton.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+				addbutton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 				addbutton.Position = UDim2.new(0, (argstable["Name"] == "ProfilesList" and 124 or 174), 0, 8)
 				addbutton.AutoButtonColor = false
 				addbutton.Size = UDim2.new(0, 16, 0, 16)
@@ -2053,7 +2053,7 @@ if shared.VapeExecuted then
 						itemframe.Size = UDim2.new(0, 200, 0, 33)
 						itemframe.Text = ""
 						itemframe.AutoButtonColor = false
-						itemframe.BackgroundColor3 = (hoveredover[i] and Color3.fromRGB(230, 224, 230) or Color3.fromRGB(240, 234, 240))
+						itemframe.BackgroundColor3 = (hoveredover[i] and Color3.fromRGB(26, 25, 26) or Color3.fromRGB(31, 30, 31))
 						itemframe.BorderSizePixel = 0
 						itemframe.ZIndex = 5
 						itemframe.Parent = scrollframe
@@ -2093,11 +2093,11 @@ if shared.VapeExecuted then
 							friendcircle2.BackgroundColor3 = itemframe.BackgroundColor3
 						end)
 						itemframe.MouseEnter:connect(function()
-							itemframe.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+							itemframe.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 							hoveredover[i] = true
 						end)
 						itemframe.MouseLeave:connect(function()
-							itemframe.BackgroundColor3 = Color3.fromRGB(240, 234, 240)
+							itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 							hoveredover[i] = nil
 						end)
 						itemframe.MouseButton1Click:connect(function()
@@ -2148,7 +2148,7 @@ if shared.VapeExecuted then
 				buttontext.LayoutOrder = amount
 				buttontext.AutoButtonColor = false
 				buttontext.Size = UDim2.new(0, 45, 0, 29)
-				buttontext.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				buttontext.Active = false
 				buttontext.Text = ""
 				buttontext.ZIndex = 4
@@ -2199,9 +2199,9 @@ if shared.VapeExecuted then
 						end
 					else
 						if not first then
-							game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230)}):Play()
+							game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 						else
-							buttontext.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+							buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 						end
 					end
 					buttonimage.ImageColor3 = (buttonapi["Enabled"] and Color3.new(1, 1, 1) or Color3.fromRGB(121, 121, 121))
@@ -2260,10 +2260,10 @@ if shared.VapeExecuted then
 			drop1.Parent = frame
 			drop1.BorderSizePixel = 0
 			drop1.ZIndex = 2
-			drop1.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			drop1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			drop1.TextSize = 17
 			drop1.TextXAlignment = Enum.TextXAlignment.Left
-			drop1.TextColor3 = Color3.fromRGB(80, 80, 80)
+			drop1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			drop1.Text = "   "..argstable["Name"].." - "..(list ~= {} and list[1] or "")
 			drop1.TextTruncate = Enum.TextTruncate.AtEnd
 			drop1.Font = Enum.Font.SourceSans
@@ -2275,7 +2275,7 @@ if shared.VapeExecuted then
 			expandbutton2.Position = UDim2.new(1, -19, 1, -16)
 			expandbutton2.Name = "ExpandButton2"
 			expandbutton2.BackgroundTransparency = 0
-			expandbutton2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			expandbutton2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			expandbutton2.BorderSizePixel = 0
 			expandbutton2.Parent = drop1
 			local drop2 = drop1:Clone()
@@ -2307,7 +2307,7 @@ if shared.VapeExecuted then
 			dropframe.Position = UDim2.new(0, 0, 0, 0)
 			dropframe.Size = UDim2.new(1, 0, 0, 0)
 			dropframe.BackgroundTransparency = 0
-			dropframe.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			dropframe.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			dropframe.Visible = false
 			local uicorner3 = Instance.new("UICorner")
 			uicorner3.CornerRadius = UDim.new(0, 6)
@@ -2367,13 +2367,13 @@ if shared.VapeExecuted then
 					dropframe.Size = UDim2.new(0, 198, 0, placeholder + 23)
 					drop2.Text = "   "..listobj
 					drop2.LayoutOrder = numbe
-					drop2.TextColor3 = Color3.fromRGB(80, 80, 80)
+					drop2.TextColor3 = Color3.fromRGB(162, 162, 162)
 					drop2.AutoButtonColor = false
 					drop2.TextXAlignment = Enum.TextXAlignment.Left
 					drop2.TextYAlignment = Enum.TextYAlignment.Top
 					drop2.Size = UDim2.new(0, 198, 0, 19)
 					drop2.Position = UDim2.new(0, 0, 0, placeholder)
-					drop2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+					drop2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					drop2.Font = Enum.Font.SourceSans
 					drop2.TextSize = 17
 					drop2.ZIndex = 4
@@ -2391,10 +2391,10 @@ if shared.VapeExecuted then
 						api["UpdateHudEvent"]:Fire()
 					end)
 					drop2.MouseEnter:connect(function()
-						drop2.BackgroundColor3 = Color3.fromRGB(240, 234, 240)
+						drop2.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 					end)
 					drop2.MouseLeave:connect(function()
-						drop2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+						drop2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					end)
 					placeholder = placeholder + 19
 				end
@@ -2429,7 +2429,7 @@ if shared.VapeExecuted then
 			text1.TextXAlignment = Enum.TextXAlignment.Left
 			text1.Text = "   "..argstable["Name"]
 			text1.Size = UDim2.new(1, 0, 0, 25)
-			text1.TextColor3 = Color3.fromRGB(80, 80, 80)
+			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text1.BackgroundTransparency = 1
 			text1.TextSize = 16
 			text1.Parent = frame
@@ -2456,7 +2456,7 @@ if shared.VapeExecuted then
 			local slider3 = Instance.new("ImageButton")
 			slider3.AutoButtonColor = false
 			slider3.Size = UDim2.new(0, 24, 0, 16)
-			slider3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			slider3.BorderSizePixel = 0
 			slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
 			slider3.Position = UDim2.new(0.44, -11, 0, -7)
@@ -2579,7 +2579,7 @@ if shared.VapeExecuted then
 			buttontext.LayoutOrder = amount
 			buttontext.Size = UDim2.new(1, 0, 0, 30)
 			buttontext.Active = false
-			buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+			buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 			buttontext.TextSize = 17
 			buttontext.Font = Enum.Font.SourceSans
 			buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -2604,7 +2604,7 @@ if shared.VapeExecuted then
 			toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 			toggleframe2.Active = false
 			toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-			toggleframe2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			toggleframe2.BorderSizePixel = 0
 			toggleframe2.Parent = toggleframe1
 			local uicorner = Instance.new("UICorner")
@@ -2699,7 +2699,7 @@ if shared.VapeExecuted then
 		local windowtitle = Instance.new("TextButton")
 		windowtitle.Text = ""
 		windowtitle.AutoButtonColor = false
-		windowtitle.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+		windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		windowtitle.Size = UDim2.new(0, 220, 0, 41)
 		windowtitle.Position = UDim2.new(0, 223, 0, 6)
 		windowtitle.Name = "MainWindow"
@@ -2723,7 +2723,7 @@ if shared.VapeExecuted then
 		windowicon.Name = "WindowIcon"
 		windowicon.BackgroundTransparency = 1
 		windowicon.Position = UDim2.new(0, 10, 0, 13)
-		windowicon.ImageColor3 = Color3.fromRGB(60, 60, 60)
+		windowicon.ImageColor3 = Color3.fromRGB(200, 200, 200)
 		windowicon.Parent = windowtitle
 		local windowbackbutton = Instance.new("ImageButton")
 		windowbackbutton.Size = UDim2.new(0, 16, 0, 16)
@@ -2746,7 +2746,7 @@ if shared.VapeExecuted then
 		windowtext.Font = Enum.Font.SourceSans
 		windowtext.TextSize = 17
 		windowtext.Text = argstablemain2["Name"]
-		windowtext.TextColor3 = Color3.fromRGB(60, 60, 60)
+		windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 		windowtext.Parent = windowtitle
 		local expandbutton = Instance.new("TextButton")
 		expandbutton.Text = ""
@@ -2769,8 +2769,7 @@ if shared.VapeExecuted then
 		children.BackgroundTransparency = 1
 		children.BorderSizePixel = 0
 		children.ScrollBarThickness = 3
-		children.ScrollBarImageTransparency = 0.2
-		children.ScrollBarImageColor3 = Color3.new(0, 0, 0)
+		children.ScrollBarImageTransparency = 0.8
 		children.Size = UDim2.new(1, 0, 1, -45)
 		children.ClipsDescendants = true
 		children.Position = UDim2.new(0, 0, 0, 41)
@@ -2819,12 +2818,12 @@ if shared.VapeExecuted then
 			local buttonapi = {}
 			local amount = #children:GetChildren()
 			local button = Instance.new("TextButton")
-			local currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(240, 234, 240)})
+			local currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)})
 			button.Name = argstablemain["Name"].."Button"
 			button.AutoButtonColor = false
 			button.Size = UDim2.new(1, 0, 0, 40)
 			button.BorderSizePixel = 0
-			button.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			button.Text = ""
 			button.LayoutOrder = amount
 			button.Parent = children
@@ -2849,7 +2848,7 @@ if shared.VapeExecuted then
 			buttontext.Text = argstablemain["Name"]
 			buttontext.Size = UDim2.new(0, 118, 0, 39)
 			buttontext.Active = false
-			buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+			buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 			buttontext.TextSize = 17
 			buttontext.Font = Enum.Font.SourceSans
 			buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -2904,8 +2903,8 @@ if shared.VapeExecuted then
 			bindtext2.Size = UDim2.new(0, 150, 0, 40)
 			bindtext2.Font = Enum.Font.SourceSans
 			bindtext2.TextSize = 17
-			bindtext2.TextColor3 = Color3.fromRGB(60, 60, 60)
-			bindtext2.BackgroundColor3 = Color3.fromRGB(210, 210, 210)
+			bindtext2.TextColor3 = Color3.fromRGB(201, 201, 201)
+			bindtext2.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 			bindtext2.BorderSizePixel = 0
 			bindtext2.Visible = false
 			bindtext2.Parent = button
@@ -2967,10 +2966,10 @@ if shared.VapeExecuted then
 					bindtext.TextColor3 = Color3.fromRGB(45, 45, 45)
 					bindimg.ImageColor3 = Color3.fromRGB(45, 45, 45)
 				else
-					button.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+					button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					buttonactiveborder.Visible = false
 					button2.Image = getcustomassetfunc("vape/assets/MoreButton1.png")
-					buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+					buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 					bindbkg.BackgroundTransparency = 0.95
 					bindtext.TextColor3 = Color3.fromRGB(88, 88, 88)
 					bindimg.ImageColor3 = Color3.fromRGB(88, 88, 88)
@@ -3034,8 +3033,8 @@ if shared.VapeExecuted then
 				textbox.TextXAlignment = Enum.TextXAlignment.Left
 				textbox.Name = "AddBox"
 				textbox.BackgroundTransparency = 1
-				textbox.TextColor3 = Color3.new(0.2, 0.2, 0.2)
-				textbox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+				textbox.TextColor3 = Color3.new(1, 1, 1)
+				textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 				textbox.Font = Enum.Font.SourceSans
 				textbox.Text = ""
 				textbox.PlaceholderText = argstable["TempText"]
@@ -3044,7 +3043,7 @@ if shared.VapeExecuted then
 				local addbutton = Instance.new("ImageButton")
 				addbutton.BorderSizePixel = 0
 				addbutton.Name = "AddButton"
-				addbutton.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				addbutton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				addbutton.Position = UDim2.new(0, 174, 0, 8)
 				addbutton.AutoButtonColor = false
 				addbutton.Size = UDim2.new(0, 16, 0, 16)
@@ -3090,7 +3089,7 @@ if shared.VapeExecuted then
 					for i,v in pairs(textapi["ObjectList"]) do
 						local itemframe = Instance.new("TextButton")
 						itemframe.Size = UDim2.new(0, 200, 0, 33)
-						itemframe.BackgroundColor3 = Color3.fromRGB(240, 234, 240)
+						itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 						itemframe.BorderSizePixel = 0
 						itemframe.Text = ""
 						itemframe.AutoButtonColor = false
@@ -3166,8 +3165,8 @@ if shared.VapeExecuted then
 				textbox.Name = "AddBox"
 				textbox.ClearTextOnFocus = false
 				textbox.BackgroundTransparency = 1
-				textbox.TextColor3 = Color3.new(0.2, 0.2, 0.2)
-				textbox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+				textbox.TextColor3 = Color3.new(1, 1, 1)
+				textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 				textbox.Font = Enum.Font.SourceSans
 				textbox.Text = ""
 				textbox.PlaceholderText = argstable["TempText"]
@@ -3213,7 +3212,7 @@ if shared.VapeExecuted then
 				drop1.Parent = frame
 				drop1.BorderSizePixel = 0
 				drop1.ZIndex = 2
-				drop1.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				drop1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				drop1.TextSize = 17
 				drop1.TextXAlignment = Enum.TextXAlignment.Left
 				drop1.Text = ""
@@ -3225,7 +3224,7 @@ if shared.VapeExecuted then
 				targettext.TextSize = 17
 				targettext.RichText = true
 				targettext.TextColor3 = Color3.new(205, 205, 205)
-				targettext.Text = "  Target : \n "..'<font color="rgb(80, 80, 80)">Ignore none</font>'
+				targettext.Text = "  Target : \n "..'<font color="rgb(151, 151, 151)">Ignore none</font>'
 				targettext.Font = Enum.Font.SourceSans
 				targettext.TextXAlignment = Enum.TextXAlignment.Left
 				targettext.Parent = drop1
@@ -3256,7 +3255,7 @@ if shared.VapeExecuted then
 				local windowtitle = Instance.new("TextButton")
 				windowtitle.Text = ""
 				windowtitle.AutoButtonColor = false
-				windowtitle.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				windowtitle.Size = UDim2.new(0, 220, 0, 41)
 				windowtitle.Position = UDim2.new(1, 1, 0, 0)
 				windowtitle.Name = argstablemain["Name"].."TargetWindow"
@@ -3280,7 +3279,7 @@ if shared.VapeExecuted then
 				local windowicon = Instance.new("ImageLabel")
 				windowicon.Size = UDim2.new(0, 18, 0, 16)
 				windowicon.Image = getcustomassetfunc("vape/assets/TargetIcon.png")
-				windowicon.ImageColor3 = Color3.fromRGB(80, 80, 80)
+				windowicon.ImageColor3 = Color3.fromRGB(200, 200, 200)
 				windowicon.ZIndex = 3
 				windowicon.Name = "WindowIcon"
 				windowicon.BackgroundTransparency = 1
@@ -3296,7 +3295,7 @@ if shared.VapeExecuted then
 				windowtext.Font = Enum.Font.SourceSans
 				windowtext.TextSize = 17
 				windowtext.Text = "Target settings"
-				windowtext.TextColor3 = Color3.fromRGB(60, 60, 60)
+				windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 				windowtext.Parent = windowtitle
 				local children = Instance.new("Frame")
 				children.BackgroundTransparency = 1
@@ -3328,7 +3327,7 @@ if shared.VapeExecuted then
 					if argstablemain3["UpdateFunction"] then
 						argstablemain3["UpdateFunction"]()
 					end
-					targettext.Text = "  Target : \n "..'<font size="'..(buttonreturned["Invisible"]["Enabled"] and buttonreturned["Naked"]["Enabled"] and buttonreturned["Walls"]["Enabled"] and 14 or 17)..'" color="rgb(80, 80, 80)">'.."Ignore "..((buttonreturned["Invisible"]["Enabled"] or buttonreturned["Naked"]["Enabled"] or buttonreturned["Walls"]["Enabled"]) and "" or "none")..(buttonreturned["Invisible"]["Enabled"] and "invisible" or "")..(buttonreturned["Naked"]["Enabled"] and ((buttonreturned["Invisible"]["Enabled"]) and ", " or "").."naked" or "")..(buttonreturned["Walls"]["Enabled"] and ((buttonreturned["Invisible"]["Enabled"] or buttonreturned["Naked"]["Enabled"]) and ", " or "").."behind walls" or "")..'</font>'
+					targettext.Text = "  Target : \n "..'<font size="'..(buttonreturned["Invisible"]["Enabled"] and buttonreturned["Naked"]["Enabled"] and buttonreturned["Walls"]["Enabled"] and 14 or 17)..'" color="rgb(151, 151, 151)">'.."Ignore "..((buttonreturned["Invisible"]["Enabled"] or buttonreturned["Naked"]["Enabled"] or buttonreturned["Walls"]["Enabled"]) and "" or "none")..(buttonreturned["Invisible"]["Enabled"] and "invisible" or "")..(buttonreturned["Naked"]["Enabled"] and ((buttonreturned["Invisible"]["Enabled"]) and ", " or "").."naked" or "")..(buttonreturned["Walls"]["Enabled"] and ((buttonreturned["Invisible"]["Enabled"] or buttonreturned["Naked"]["Enabled"]) and ", " or "").."behind walls" or "")..'</font>'
 				end
 
 				windowapi["CreateToggle"] = function(argstable)
@@ -3344,7 +3343,7 @@ if shared.VapeExecuted then
 					buttontext.LayoutOrder = amount
 					buttontext.Size = UDim2.new(1, 0, 0, 30)
 					buttontext.Active = false
-					buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+					buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 					buttontext.TextSize = 17
 					buttontext.ZIndex = 3
 					buttontext.Font = Enum.Font.SourceSans
@@ -3373,7 +3372,7 @@ if shared.VapeExecuted then
 					toggleframe2.Active = false
 					toggleframe2.ZIndex = 3
 					toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-					toggleframe2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+					toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					toggleframe2.BorderSizePixel = 0
 					toggleframe2.Parent = toggleframe1
 					local uicorner = Instance.new("UICorner")
@@ -3446,7 +3445,7 @@ if shared.VapeExecuted then
 					buttontext.LayoutOrder = amount
 					buttontext.AutoButtonColor = false
 					buttontext.Size = UDim2.new(0, 45, 0, 29)
-					buttontext.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+					buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					buttontext.Active = false
 					buttontext.Text = ""
 					buttontext.ZIndex = 4
@@ -3497,9 +3496,9 @@ if shared.VapeExecuted then
 							end
 						else
 							if not first then
-								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230)}):Play()
+								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 							else
-								buttontext.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+								buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 							end
 						end
 						buttonimage.ImageColor3 = (buttonapi["Enabled"] and Color3.new(1, 1, 1) or Color3.fromRGB(121, 121, 121))
@@ -3603,7 +3602,7 @@ if shared.VapeExecuted then
 				drop1.Parent = frame
 				drop1.BorderSizePixel = 0
 				drop1.ZIndex = 2
-				drop1.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				drop1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				drop1.TextSize = 17
 				drop1.TextXAlignment = Enum.TextXAlignment.Left
 				drop1.Text = ""
@@ -3623,7 +3622,7 @@ if shared.VapeExecuted then
 				targettext.TextSize = 17
 				targettext.RichText = true
 				targettext.TextColor3 = Color3.new(205, 205, 205)
-				targettext.Text = "  "..argstablemain3["Name"].." \n "..'<font color="rgb(80, 80, 80)">None</font>'
+				targettext.Text = "  "..argstablemain3["Name"].." \n "..'<font color="rgb(151, 151, 151)">None</font>'
 				targettext.Font = Enum.Font.SourceSans
 				targettext.TextXAlignment = Enum.TextXAlignment.Left
 				targettext.Parent = drop1
@@ -3643,7 +3642,7 @@ if shared.VapeExecuted then
 				local windowtitle = Instance.new("TextButton")
 				windowtitle.Text = ""
 				windowtitle.AutoButtonColor = false
-				windowtitle.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				windowtitle.Size = UDim2.new(0, 220, 0, 41)
 				windowtitle.Position = UDim2.new(1, 1, 0, 0)
 				windowtitle.Name = "CircleWindow"
@@ -3667,7 +3666,7 @@ if shared.VapeExecuted then
 				local windowicon = Instance.new("ImageLabel")
 				windowicon.Size = UDim2.new(0, 18, 0, 16)
 				windowicon.Image = getcustomassetfunc("vape/assets/CircleList"..(argstablemain3["Type"] == "Blacklist" and "Blacklist" or "Whitelist")..".png")
-				windowicon.ImageColor3 = Color3.fromRGB(80, 80, 80)
+				windowicon.ImageColor3 = Color3.fromRGB(200, 200, 200)
 				windowicon.ZIndex = 3
 				windowicon.Name = "WindowIcon"
 				windowicon.BackgroundTransparency = 1
@@ -3683,7 +3682,7 @@ if shared.VapeExecuted then
 				windowtext.Font = Enum.Font.SourceSans
 				windowtext.TextSize = 17
 				windowtext.Text = argstablemain3["Name"]
-				windowtext.TextColor3 = Color3.fromRGB(60, 60, 60)
+				windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 				windowtext.Parent = windowtitle
 				local children = Instance.new("Frame")
 				children.BackgroundTransparency = 1
@@ -3716,7 +3715,7 @@ if shared.VapeExecuted then
 					if argstablemain3["UpdateFunction"] then
 						argstablemain3["UpdateFunction"]()
 					end
-					targettext.Text = "  "..argstablemain3["Name"].." \n "..'<font color="rgb(80, 80, 80)">'..str..'</font>'
+					targettext.Text = "  "..argstablemain3["Name"].." \n "..'<font color="rgb(151, 151, 151)">'..str..'</font>'
 				end
 
 				windowapi["CreateCircleTextList"] = function(argstable)
@@ -3746,8 +3745,8 @@ if shared.VapeExecuted then
 					textbox.TextXAlignment = Enum.TextXAlignment.Left
 					textbox.Name = "AddBox"
 					textbox.BackgroundTransparency = 1
-					textbox.TextColor3 = Color3.new(0.2, 0.2, 0.2)
-					textbox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+					textbox.TextColor3 = Color3.new(1, 1, 1)
+					textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 					textbox.Font = Enum.Font.SourceSans
 					textbox.Text = ""
 					textbox.PlaceholderText = "Add entry..."
@@ -3757,7 +3756,7 @@ if shared.VapeExecuted then
 					addbutton.BorderSizePixel = 0
 					addbutton.Name = "AddButton"
 					addbutton.ZIndex = 6
-					addbutton.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+					addbutton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 					addbutton.Position = UDim2.new(0, (argstable["Name"] == "ProfilesList" and 124 or 174), 0, 8)
 					addbutton.AutoButtonColor = false
 					addbutton.Size = UDim2.new(0, 16, 0, 16)
@@ -3809,7 +3808,7 @@ if shared.VapeExecuted then
 							itemframe.Size = UDim2.new(0, 200, 0, 33)
 							itemframe.Text = ""
 							itemframe.AutoButtonColor = false
-							itemframe.BackgroundColor3 = (hoveredover[i] and Color3.fromRGB(230, 224, 230) or Color3.fromRGB(240, 234, 240))
+							itemframe.BackgroundColor3 = (hoveredover[i] and Color3.fromRGB(26, 25, 26) or Color3.fromRGB(31, 30, 31))
 							itemframe.BorderSizePixel = 0
 							itemframe.ZIndex = 5
 							itemframe.Parent = scrollframe
@@ -3849,11 +3848,11 @@ if shared.VapeExecuted then
 								friendcircle2.BackgroundColor3 = itemframe.BackgroundColor3
 							end)
 							itemframe.MouseEnter:connect(function()
-								itemframe.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+								itemframe.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 								hoveredover[i] = true
 							end)
 							itemframe.MouseLeave:connect(function()
-								itemframe.BackgroundColor3 = Color3.fromRGB(240, 234, 240)
+								itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 								hoveredover[i] = nil
 							end)
 							itemframe.MouseButton1Click:connect(function()
@@ -3904,7 +3903,7 @@ if shared.VapeExecuted then
 					buttontext.LayoutOrder = amount
 					buttontext.AutoButtonColor = false
 					buttontext.Size = UDim2.new(0, 45, 0, 29)
-					buttontext.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+					buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					buttontext.Active = false
 					buttontext.Text = ""
 					buttontext.ZIndex = 4
@@ -3955,9 +3954,9 @@ if shared.VapeExecuted then
 							end
 						else
 							if not first then
-								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230)}):Play()
+								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 							else
-								buttontext.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+								buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 							end
 						end
 						buttonimage.ImageColor3 = (buttonapi["Enabled"] and Color3.new(1, 1, 1) or Color3.fromRGB(121, 121, 121))
@@ -4016,10 +4015,10 @@ if shared.VapeExecuted then
 				drop1.Parent = frame
 				drop1.BorderSizePixel = 0
 				drop1.ZIndex = 2
-				drop1.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				drop1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				drop1.TextSize = 17
 				drop1.TextXAlignment = Enum.TextXAlignment.Left
-				drop1.TextColor3 = Color3.fromRGB(80, 80, 80)
+				drop1.TextColor3 = Color3.fromRGB(162, 162, 162)
 				drop1.Text = "   "..argstable["Name"].." - "..(list ~= {} and list[1] or "")
 				drop1.TextTruncate = Enum.TextTruncate.AtEnd
 				drop1.Font = Enum.Font.SourceSans
@@ -4031,7 +4030,7 @@ if shared.VapeExecuted then
 				expandbutton2.Position = UDim2.new(1, -19, 1, -16)
 				expandbutton2.Name = "ExpandButton2"
 				expandbutton2.BackgroundTransparency = 0
-				expandbutton2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				expandbutton2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				expandbutton2.BorderSizePixel = 0
 				expandbutton2.Parent = drop1
 				local drop2 = drop1:Clone()
@@ -4063,7 +4062,7 @@ if shared.VapeExecuted then
 				dropframe.Position = UDim2.new(0, 0, 0, 0)
 				dropframe.Size = UDim2.new(1, 0, 0, 0)
 				dropframe.BackgroundTransparency = 0
-				dropframe.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				dropframe.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				dropframe.Visible = false
 				local uicorner3 = Instance.new("UICorner")
 				uicorner3.CornerRadius = UDim.new(0, 6)
@@ -4129,13 +4128,13 @@ if shared.VapeExecuted then
 						dropframe.Size = UDim2.new(0, 198, 0, placeholder + 21)
 						drop2.Text = "   "..listobj
 						drop2.LayoutOrder = numbe
-						drop2.TextColor3 = Color3.fromRGB(80, 80, 80)
+						drop2.TextColor3 = Color3.fromRGB(162, 162, 162)
 						drop2.AutoButtonColor = false
 						drop2.BackgroundTransparency = 1
 						drop2.TextXAlignment = Enum.TextXAlignment.Left
 						drop2.Size = UDim2.new(0, 198, 0, 21)
 						drop2.Position = UDim2.new(0, 2, 0, placeholder - 4)
-						drop2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+						drop2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 						drop2.Font = Enum.Font.SourceSans
 						drop2.TextSize = 17
 						drop2.ZIndex = 8
@@ -4188,7 +4187,7 @@ if shared.VapeExecuted then
 				text1.TextXAlignment = Enum.TextXAlignment.Left
 				text1.Text = "    "..argstable["Name"]
 				text1.Size = UDim2.new(1, 0, 0, 27)
-				text1.TextColor3 = Color3.fromRGB(80, 80, 80)
+				text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 				text1.BackgroundTransparency = 1
 				text1.TextSize = 14
 				text1.Parent = frame
@@ -4215,7 +4214,7 @@ if shared.VapeExecuted then
 				local slider3 = Instance.new("ImageButton")
 				slider3.AutoButtonColor = false
 				slider3.Size = UDim2.new(0, 24, 0, 16)
-				slider3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				slider3.BorderSizePixel = 0
 				slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
 				slider3.Position = UDim2.new(0.44, -11, 0, -7)
@@ -4226,10 +4225,10 @@ if shared.VapeExecuted then
 				slidersat.Name = frame.Name.."Saturation"
 				slidersat.BackgroundTransparency = 0
 				slidersat.Visible = false
-				slidersat.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+				slidersat.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 				slidersat.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0.4, 1, 1))})
 				slidersat.Slider.ButtonSlider.Position = UDim2.new(0.95, -11, 0, -7)
-				slidersat.Slider.ButtonSlider.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+				slidersat.Slider.ButtonSlider.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 				slidersat.Frame:Remove()
 				slidersat.Parent = children2
 				local sliderval = frame:Clone()
@@ -4237,10 +4236,10 @@ if shared.VapeExecuted then
 				sliderval.Name = frame.Name.."Vibrance"
 				sliderval.BackgroundTransparency = 0
 				sliderval.Visible = false
-				sliderval.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+				sliderval.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 				sliderval.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0.4, 1, 1))})
 				sliderval.Slider.ButtonSlider.Position = UDim2.new(0.95, -11, 0, -7)
-				sliderval.Slider.ButtonSlider.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+				sliderval.Slider.ButtonSlider.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 				sliderval.Frame:Remove()
 				sliderval.Parent = children2
 				local sliderexpand = Instance.new("ImageButton")
@@ -4385,7 +4384,7 @@ if shared.VapeExecuted then
 				text1.TextXAlignment = Enum.TextXAlignment.Left
 				text1.Text = "   "..argstable["Name"]
 				text1.Size = UDim2.new(1, 0, 0, 25)
-				text1.TextColor3 = Color3.fromRGB(80, 80, 80)
+				text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 				text1.BackgroundTransparency = 1
 				text1.TextSize = 17
 				text1.Parent = frame
@@ -4396,7 +4395,7 @@ if shared.VapeExecuted then
 				text2.Text = tostring((argstable["Default"] or argstable["Min"])) .. ".0 "..(argstable["Percent"] and "%" or " ").." "
 				text2.Size = UDim2.new(0, 40, 0, 25)
 				text2.Position = UDim2.new(1, -40, 0, 0)
-				text2.TextColor3 = Color3.fromRGB(80, 80, 80)
+				text2.TextColor3 = Color3.fromRGB(162, 162, 162)
 				text2.BackgroundTransparency = 1
 				text2.TextSize = 17
 				text2.Parent = frame
@@ -4434,21 +4433,20 @@ if shared.VapeExecuted then
 				local slider2 = Instance.new("Frame")
 				slider2.Size = UDim2.new(math.clamp(((argstable["Default"] or argstable["Min"]) / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
 				slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-				slider2.BorderSizePixel = 0
 				slider2.Name = "FillSlider"
 				slider2.Parent = slider1
 				local slider3 = Instance.new("ImageButton")
 				slider3.AutoButtonColor = false
 				slider3.Size = UDim2.new(0, 24, 0, 16)
-				slider3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				slider3.BorderSizePixel = 0
 				slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
 				slider3.Position = UDim2.new(1, -11, 0, -7)
 				slider3.Parent = slider2
 				slider3.Name = "ButtonSlider"
+				sliderapi["Object"] = frame
 				sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
 				sliderapi["Max"] = argstable["Max"]
-				sliderapi["Object"] = frame
 				sliderapi["SetValue"] = function(val)
 				--	val = math.clamp(val, argstable["Min"], argstable["Max"])
 					sliderapi["Value"] = val
@@ -4535,7 +4533,7 @@ if shared.VapeExecuted then
 				text1.TextXAlignment = Enum.TextXAlignment.Left
 				text1.Text = "   "..argstable["Name"]
 				text1.Size = UDim2.new(1, 0, 0, 25)
-				text1.TextColor3 = Color3.fromRGB(80, 80, 80)
+				text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 				text1.BackgroundTransparency = 1
 				text1.TextSize = 17
 				text1.Parent = frame
@@ -4545,13 +4543,13 @@ if shared.VapeExecuted then
 				local text2string = tostring((argstable["Default2"] or argstable["Max"]) / 10)
 				text2.Text = (argstable["Decimal"] and (text2string:len() > 1 and text2string or text2string..".0   ") or (argstable["Default2"] or argstable["Max"]) .. ".0   ")
 				text2.Size = UDim2.new(1, 0, 0, 25)
-				text2.TextColor3 = Color3.fromRGB(80, 80, 80)
+				text2.TextColor3 = Color3.fromRGB(162, 162, 162)
 				text2.BackgroundTransparency = 1
 				text2.TextSize = 17
 				text2.Parent = frame
 				local text3 = Instance.new("TextLabel")
 				text3.Font = Enum.Font.SourceSans
-				text3.TextColor3 = Color3.fromRGB(80, 80, 80)
+				text3.TextColor3 = Color3.fromRGB(162, 162, 162)
 				text3.BackgroundTransparency = 1
 				text3.TextXAlignment = Enum.TextXAlignment.Right
 				text3.Size = UDim2.new(1, -77, 0, 25)
@@ -4581,7 +4579,7 @@ if shared.VapeExecuted then
 				local slider3 = Instance.new("ImageButton")
 				slider3.AutoButtonColor = false
 				slider3.Size = UDim2.new(0, 15, 0, 16)
-				slider3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				slider3.BorderSizePixel = 0
 				slider3.Image = getcustomassetfunc("vape/assets/SliderArrow1.png")
 				slider3.Position = UDim2.new(1, -7, 1, -9)
@@ -4603,6 +4601,7 @@ if shared.VapeExecuted then
 				slider4.Position = UDim2.new((argstable["Default2"] and (argstable["Default2"] == argstable["Max"] and 1 or argstable["Default2"]/argstable["Max"]) or 1), -8, 1, -9)
 				slider2.Size = UDim2.new(0, slider4.AbsolutePosition.X - slider3.AbsolutePosition.X, 1, 0)
 				slider2.Position = UDim2.new(slider3.Position.X.Scale, 0, 0, 0)
+				sliderapi["Object"] = frame
 				sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
 				sliderapi["Value2"] = (argstable["Default2"] or argstable["Max"])
 				sliderapi["Max"] = argstable["Max"]
@@ -4686,7 +4685,7 @@ if shared.VapeExecuted then
 				buttontext.LayoutOrder = amount
 				buttontext.Size = UDim2.new(1, 0, 0, 30)
 				buttontext.Active = false
-				buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+				buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 				buttontext.TextSize = 17
 				buttontext.Font = Enum.Font.SourceSans
 				buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -4711,7 +4710,7 @@ if shared.VapeExecuted then
 				toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 				toggleframe2.Active = false
 				toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-				toggleframe2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+				toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				toggleframe2.BorderSizePixel = 0
 				toggleframe2.Parent = toggleframe1
 				local uicorner = Instance.new("UICorner")
@@ -4785,7 +4784,7 @@ if shared.VapeExecuted then
 			button.MouseEnter:connect(function() 
 				bindbkg.Visible = true
 				if not buttonapi["Enabled"] then
-					currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(240, 234, 240)})
+					currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)})
 					currenttween:Play()
 				end
 			end)
@@ -4795,7 +4794,7 @@ if shared.VapeExecuted then
 					bindbkg.Visible = false 
 				end
 				if not buttonapi["Enabled"] then
-					currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(230, 224, 230)})
+					currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)})
 					currenttween:Play()
 				end
 			end)
@@ -4843,7 +4842,7 @@ if shared.VapeExecuted then
 		local windowtitle = Instance.new("TextButton")
 		windowtitle.Text = ""
 		windowtitle.AutoButtonColor = false
-		windowtitle.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+		windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		windowtitle.Size = UDim2.new(0, 220, 0, 41)
 		windowtitle.Position = UDim2.new(0, 223, 0, 6)
 		windowtitle.Name = "MainWindow"
@@ -4864,7 +4863,7 @@ if shared.VapeExecuted then
 		local windowicon = Instance.new("ImageLabel")
 		windowicon.Size = UDim2.new(0, argstablemain["IconSize"], 0, 16)
 		windowicon.Image = getcustomassetfunc(argstablemain["Icon"])
-		windowicon.ImageColor3 = Color3.fromRGB(80, 80, 80)
+		windowicon.ImageColor3 = Color3.fromRGB(200, 200, 200)
 		windowicon.Name = "WindowIcon"
 		windowicon.BackgroundTransparency = 1
 		windowicon.Position = UDim2.new(0, 10, 0, 13)
@@ -4878,7 +4877,7 @@ if shared.VapeExecuted then
 		windowtext.Font = Enum.Font.SourceSans
 		windowtext.TextSize = 17
 		windowtext.Text = argstablemain["Name"]
-		windowtext.TextColor3 = Color3.fromRGB(60, 60, 60)
+		windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 		windowtext.Parent = windowtitle
 		local expandbutton = Instance.new("TextButton")
 		expandbutton.Text = ""
@@ -4986,7 +4985,7 @@ if shared.VapeExecuted then
 			text1.TextXAlignment = Enum.TextXAlignment.Left
 			text1.Text = "    "..argstable["Name"]
 			text1.Size = UDim2.new(1, 0, 0, 27)
-			text1.TextColor3 = Color3.fromRGB(80, 80, 80)
+			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text1.BackgroundTransparency = 1
 			text1.TextSize = 14
 			text1.Parent = frame
@@ -5013,7 +5012,7 @@ if shared.VapeExecuted then
 			local slider3 = Instance.new("ImageButton")
 			slider3.AutoButtonColor = false
 			slider3.Size = UDim2.new(0, 24, 0, 16)
-			slider3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			slider3.BorderSizePixel = 0
 			slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
 			slider3.Position = UDim2.new(0.44, -11, 0, -7)
@@ -5024,10 +5023,10 @@ if shared.VapeExecuted then
 			slidersat.Name = frame.Name.."Saturation"
 			slidersat.BackgroundTransparency = 0
 			slidersat.Visible = false
-			slidersat.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+			slidersat.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 			slidersat.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0.4, 1, 1))})
 			slidersat.Slider.ButtonSlider.Position = UDim2.new(0.95, -11, 0, -7)
-			slidersat.Slider.ButtonSlider.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+			slidersat.Slider.ButtonSlider.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 			slidersat.Frame:Remove()
 			slidersat.Parent = children2
 			local sliderval = frame:Clone()
@@ -5035,10 +5034,10 @@ if shared.VapeExecuted then
 			sliderval.Name = frame.Name.."Vibrance"
 			sliderval.BackgroundTransparency = 0
 			sliderval.Visible = false
-			sliderval.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+			sliderval.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 			sliderval.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0.4, 1, 1))})
 			sliderval.Slider.ButtonSlider.Position = UDim2.new(0.95, -11, 0, -7)
-			sliderval.Slider.ButtonSlider.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+			sliderval.Slider.ButtonSlider.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 			sliderval.Frame:Remove()
 			sliderval.Parent = children2
 			local sliderexpand = Instance.new("ImageButton")
@@ -5180,7 +5179,7 @@ if shared.VapeExecuted then
 			buttontext.LayoutOrder = amount
 			buttontext.Size = UDim2.new(1, 0, 0, 30)
 			buttontext.Active = false
-			buttontext.TextColor3 = Color3.fromRGB(80, 80, 80)
+			buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 			buttontext.TextSize = 17
 			buttontext.Font = Enum.Font.SourceSans
 			buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -5205,7 +5204,7 @@ if shared.VapeExecuted then
 			toggleframe2.Size = UDim2.new(0, 8, 0, 8)
 			toggleframe2.Active = false
 			toggleframe2.Position = UDim2.new(0, 2, 0, 2)
-			toggleframe2.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+			toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			toggleframe2.BorderSizePixel = 0
 			toggleframe2.Parent = toggleframe1
 			local uicorner = Instance.new("UICorner")
@@ -5294,8 +5293,8 @@ if shared.VapeExecuted then
 			textbox.TextXAlignment = Enum.TextXAlignment.Left
 			textbox.Name = "AddBox"
 			textbox.BackgroundTransparency = 1
-			textbox.TextColor3 = Color3.new(0.2, 0.2, 0.2)
-			textbox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+			textbox.TextColor3 = Color3.new(1, 1, 1)
+			textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 			textbox.Font = Enum.Font.SourceSans
 			textbox.Text = ""
 			textbox.PlaceholderText = argstable["TempText"]
@@ -5304,7 +5303,7 @@ if shared.VapeExecuted then
 			local addbutton = Instance.new("ImageButton")
 			addbutton.BorderSizePixel = 0
 			addbutton.Name = "AddButton"
-			addbutton.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+			addbutton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 			addbutton.Position = UDim2.new(0, (argstable["Name"] == "ProfilesList" and 124 or 174), 0, 8)
 			addbutton.AutoButtonColor = false
 			addbutton.Size = UDim2.new(0, 16, 0, 16)
@@ -5349,7 +5348,7 @@ if shared.VapeExecuted then
 					itemframe.Size = UDim2.new(0, 200, 0, 33)
 					itemframe.Text = ""
 					itemframe.AutoButtonColor = false
-					itemframe.BackgroundColor3 = Color3.fromRGB(240, 234, 240)
+					itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 					itemframe.BorderSizePixel = 0
 					itemframe.Parent = scrollframe
 					local itemcorner = Instance.new("UICorner")
@@ -5422,8 +5421,8 @@ if shared.VapeExecuted then
 			textbox.TextXAlignment = Enum.TextXAlignment.Left
 			textbox.Name = "AddBox"
 			textbox.BackgroundTransparency = 1
-			textbox.TextColor3 = Color3.new(0.2, 0.2, 0.2)
-			textbox.PlaceholderColor3 = Color3.fromRGB(80, 80, 80)
+			textbox.TextColor3 = Color3.new(1, 1, 1)
+			textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 			textbox.Font = Enum.Font.SourceSans
 			textbox.Text = ""
 			textbox.PlaceholderText = argstable["TempText"]
@@ -5432,7 +5431,7 @@ if shared.VapeExecuted then
 			local addbutton = Instance.new("ImageButton")
 			addbutton.BorderSizePixel = 0
 			addbutton.Name = "AddButton"
-			addbutton.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+			addbutton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 			addbutton.Position = UDim2.new(0, (argstable["Name"] == "ProfilesList" and 124 or 174), 0, 8)
 			addbutton.AutoButtonColor = false
 			addbutton.Size = UDim2.new(0, 16, 0, 16)
@@ -5483,7 +5482,7 @@ if shared.VapeExecuted then
 					itemframe.Size = UDim2.new(0, 200, 0, 33)
 					itemframe.Text = ""
 					itemframe.AutoButtonColor = false
-					itemframe.BackgroundColor3 = (hoveredover[i] and Color3.fromRGB(230, 224, 230) or Color3.fromRGB(240, 234, 240))
+					itemframe.BackgroundColor3 = (hoveredover[i] and Color3.fromRGB(26, 25, 26) or Color3.fromRGB(31, 30, 31))
 					itemframe.BorderSizePixel = 0
 					itemframe.Parent = scrollframe
 					local itemcorner = Instance.new("UICorner")
@@ -5520,11 +5519,11 @@ if shared.VapeExecuted then
 						friendcircle2.BackgroundColor3 = itemframe.BackgroundColor3
 					end)
 					itemframe.MouseEnter:connect(function()
-						itemframe.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+						itemframe.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 						hoveredover[i] = true
 					end)
 					itemframe.MouseLeave:connect(function()
-						itemframe.BackgroundColor3 = Color3.fromRGB(240, 234, 240)
+						itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 						hoveredover[i] = nil
 					end)
 					itemframe.MouseButton1Click:connect(function()
@@ -5583,7 +5582,7 @@ if shared.VapeExecuted then
 			frame.Size = UDim2.new(0, 266, 0, 75)
 			frame.Position = UDim2.new(1, 0, 1, -(150 + 80 * offset))
 			frame.BackgroundTransparency = 0.5
-			frame.BackgroundColor3 = Color3.new(0.9, 0.9, 0.9)
+			frame.BackgroundColor3 = Color3.new(0, 0,0)
 			frame.BorderSizePixel = 0
 			frame.Parent = notificationwindow
 			frame.Visible = api["Notifications"]
@@ -5591,7 +5590,7 @@ if shared.VapeExecuted then
 			uicorner.CornerRadius = UDim.new(0, 6)
 			uicorner.Parent = frame
 			local frame2 = Instance.new("Frame")
-			frame2.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+			frame2.BackgroundColor3 = Color3.new(1, 1, 1)
 			frame2.Size = UDim2.new(1, 0, 0, 2)
 			frame2.Position = UDim2.new(0, 0, 1, -2)
 			frame2.BorderSizePixel = 0
@@ -5613,7 +5612,7 @@ if shared.VapeExecuted then
 			textlabel1.Font = Enum.Font.Nunito
 			textlabel1.TextSize = 18
 			textlabel1.RichText = true
-			textlabel1.TextColor3 = Color3.new(0.2, 0.2, 0.2)
+			textlabel1.TextColor3 = Color3.new(1, 1, 1)
 			textlabel1.BackgroundTransparency = 1
 			textlabel1.Position = UDim2.new(0, 46, 0, 12)
 			textlabel1.TextXAlignment = Enum.TextXAlignment.Left
@@ -5623,7 +5622,7 @@ if shared.VapeExecuted then
 			local textlabel2 = textlabel1:Clone()
 			textlabel2.Position = UDim2.new(0, 46, 0, 40)
 			textlabel2.Font = Enum.Font.Nunito
-			textlabel2.TextColor3 = Color3.new(0.2, 0.2, 0.2)
+			textlabel2.TextColor3 = Color3.new(0.5, 0.5, 0.5)
 			textlabel2.RichText = true
 			textlabel2.Text = bottom
 			textlabel2.Parent = frame
