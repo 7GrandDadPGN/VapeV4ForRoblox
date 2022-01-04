@@ -11,6 +11,7 @@ if shared.VapeExecuted then
 		["Profiles"] = {
 			["default"] = {["Keybind"] = "", ["Selected"] = true}
 		},
+		["RainbowSpeed"] = 1,
 		["GUIKeybind"] = "RightShift",
 		["CurrentProfile"] = "default",
 		["KeybindCaptured"] = false,
@@ -39,11 +40,12 @@ if shared.VapeExecuted then
 
 	coroutine.resume(coroutine.create(function()
 		repeat
-			for i = 0, 1, 0.01 do
-				wait(0.01)
-				rainbowvalue = i
+			task.wait(0.01)
+			rainbowvalue = rainbowvalue + 0.005 * api["RainbowSpeed"]
+			if rainbowvalue > 1 then
+				rainbowvalue = rainbowvalue - 1
 			end
-		until true == false
+		until not shared.VapeExecuted
 	end))
 
 	local holdingshift = false
@@ -1135,6 +1137,155 @@ if shared.VapeExecuted then
 					return buttonapi
 				end
 
+				windowapi3["CreateSlider"] = function(argstable)
+				
+					local sliderapi = {}
+					local amount2 = #children3:GetChildren()
+					local frame = Instance.new("Frame")
+					frame.Size = UDim2.new(0, 220, 0, 50)
+					frame.BackgroundTransparency = 1
+					frame.ClipsDescendants = true
+					frame.LayoutOrder = amount2
+					frame.Name = argstable["Name"]
+					frame.Parent = children3
+					local text1 = Instance.new("TextLabel")
+					text1.Font = Enum.Font.SourceSans
+					text1.TextXAlignment = Enum.TextXAlignment.Left
+					text1.Text = "   "..argstable["Name"]
+					text1.Size = UDim2.new(1, 0, 0, 25)
+					text1.TextColor3 = Color3.fromRGB(162, 162, 162)
+					text1.BackgroundTransparency = 1
+					text1.TextSize = 17
+					text1.Parent = frame
+					local text2 = Instance.new("TextButton")
+					text2.Font = Enum.Font.SourceSans
+					text2.AutoButtonColor = false
+					text2.TextXAlignment = Enum.TextXAlignment.Right
+					text2.Text = tostring((argstable["Default"] or argstable["Min"])) .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+					text2.Size = UDim2.new(0, 40, 0, 25)
+					text2.Position = UDim2.new(1, -40, 0, 0)
+					text2.TextColor3 = Color3.fromRGB(162, 162, 162)
+					text2.BackgroundTransparency = 1
+					text2.TextSize = 17
+					text2.Parent = frame
+					local text3 = Instance.new("TextBox")
+					text3.Visible = false
+					text3.Font = Enum.Font.SourceSans
+					text3.TextXAlignment = Enum.TextXAlignment.Right
+					text3.BackgroundTransparency = 1
+					text3.TextColor3 = Color3.fromRGB(160, 160, 160)
+					text3.Text = ""
+					text3.Position = UDim2.new(1, -40, 0, 0)
+					text3.Size = UDim2.new(0, 40, 0, 25)
+					text3.TextSize = 17
+					text3.Parent = frame
+					local textdown = Instance.new("Frame")
+					textdown.BackgroundColor3 = Color3.fromRGB(37, 36, 37)
+					textdown.Size = UDim2.new(0, 30, 0, 2)
+					textdown.Position = UDim2.new(1, -38, 1, -4)
+					textdown.Visible = false
+					textdown.BorderSizePixel = 0
+					textdown.Parent = text2
+					local textdown2 = Instance.new("Frame")
+					textdown2.BackgroundColor3 = Color3.fromRGB(41, 41, 41)
+					textdown2.Size = UDim2.new(0, 30, 0, 2)
+					textdown2.Position = UDim2.new(1, -38, 1, -4)
+					textdown2.BorderSizePixel = 0
+					textdown2.Parent = text3
+					local slider1 = Instance.new("Frame")
+					slider1.Size = UDim2.new(0, 200, 0, 2)
+					slider1.BorderSizePixel = 0
+					slider1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+					slider1.Position = UDim2.new(0, 10, 0, 32)
+					slider1.Name = "Slider"
+					slider1.Parent = frame
+					local slider2 = Instance.new("Frame")
+					slider2.Size = UDim2.new(math.clamp(((argstable["Default"] or argstable["Min"]) / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
+					slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					slider2.Name = "FillSlider"
+					slider2.Parent = slider1
+					local slider3 = Instance.new("ImageButton")
+					slider3.AutoButtonColor = false
+					slider3.Size = UDim2.new(0, 24, 0, 16)
+					slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+					slider3.BorderSizePixel = 0
+					slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
+					slider3.Position = UDim2.new(1, -11, 0, -7)
+					slider3.Parent = slider2
+					slider3.Name = "ButtonSlider"
+					sliderapi["Object"] = frame
+					sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+					sliderapi["Max"] = argstable["Max"]
+					sliderapi["SetValue"] = function(val)
+					--	val = math.clamp(val, argstable["Min"], argstable["Max"])
+						sliderapi["Value"] = val
+						slider2.Size = UDim2.new(math.clamp((val / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
+						text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+						argstable["Function"](val)
+					end
+					slider3.MouseButton1Down:Connect(function()
+						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+						sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
+						text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+						slider2.Size = UDim2.new(xscale2,0,1,0)
+						local move
+						local kill
+						move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+							if input.UserInputType == Enum.UserInputType.MouseMovement then
+								local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+								sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
+								text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+								slider2.Size = UDim2.new(xscale2,0,1,0)
+							end
+						end)
+						kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+							if input.UserInputType == Enum.UserInputType.MouseButton1 then
+								capturedslider = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
+								move:Disconnect()
+								kill:Disconnect()
+							end
+						end)
+					end)
+					text2.MouseEnter:connect(function()
+						textdown.Visible = true
+					end)
+					text2.MouseLeave:connect(function()
+						textdown.Visible = false
+					end)
+					text2.MouseButton1Click:connect(function()
+						text3.Visible = true
+						text2.Visible = false
+						text3:CaptureFocus()
+						text3.Text = text2.Text
+					end)
+					text3.FocusLost:connect(function(enter)
+						text3.Visible = false
+						text2.Visible = true
+						if enter then
+							sliderapi["SetValue"](tonumber(text3.Text))
+						end
+					end)
+					frame.MouseEnter:connect(function()
+						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
+							hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
+							local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+							hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+							hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
+						end
+					end)
+					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
+						frame.MouseMoved:connect(function(x, y)
+							hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
+							hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
+						end)
+					end
+					frame.MouseLeave:connect(function()
+						hoverbox.Visible = false
+					end)
+					api["ObjectsThatCanBeSaved"][argstable["Name"].."Slider"] = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
+					return sliderapi
+				end
+
 				windowapi3["CreateButton2"] = function(argstable)
 					local buttonapi = {}
 					local currentanim
@@ -1237,16 +1388,24 @@ if shared.VapeExecuted then
 			bindtext.Size = UDim2.new(1, 0, 1, 0)
 			bindtext.TextColor3 = Color3.fromRGB(225, 225, 225)
 			bindtext.Visible = (api["GUIKeybind"] ~= "")
-			local bindtext2 = Instance.new("TextLabel")
-			bindtext2.Text = "PRESS A KEY TO BIND"
-			bindtext2.Size = UDim2.new(0, 150, 0, 33)
-			bindtext2.Font = Enum.Font.SourceSans
-			bindtext2.TextSize = 17
-			bindtext2.TextColor3 = Color3.fromRGB(201, 201, 201)
-			bindtext2.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
-			bindtext2.BorderSizePixel = 0
+			local bindtext2 = Instance.new("ImageLabel")
+			bindtext2.Size = UDim2.new(0, 154, 0, 41)
+			bindtext2.Image = getcustomassetfunc("vape/assets/BindBackground.png")
+			bindtext2.BackgroundTransparency = 1
+			bindtext2.ScaleType = Enum.ScaleType.Slice
+			bindtext2.SliceCenter = Rect.new(0, 0, 140, 41)
 			bindtext2.Visible = false
 			bindtext2.Parent = frame
+			local bindtext3 = Instance.new("TextLabel")
+			bindtext3.Text = "  PRESS  KEY TO BIND"
+			bindtext3.Size = UDim2.new(0, 150, 0, 33)
+			bindtext3.Font = Enum.Font.SourceSans
+			bindtext3.TextXAlignment = Enum.TextXAlignment.Left
+			bindtext3.TextSize = 17
+			bindtext3.TextColor3 = Color3.fromRGB(201, 201, 201)
+			bindtext3.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
+			bindtext3.BorderSizePixel = 0
+			bindtext3.Parent = bindtext2
 			local bindround = Instance.new("UICorner")
 			bindround.CornerRadius = UDim.new(0, 6)
 			bindround.Parent = bindbkg
@@ -2898,16 +3057,24 @@ if shared.VapeExecuted then
 			bindtext.Size = UDim2.new(1, 0, 1, 0)
 			bindtext.TextColor3 = Color3.fromRGB(85, 85, 85)
 			bindtext.Visible = false
-			local bindtext2 = Instance.new("TextLabel")
-			bindtext2.Text = "PRESS A KEY TO BIND"
-			bindtext2.Size = UDim2.new(0, 150, 0, 40)
-			bindtext2.Font = Enum.Font.SourceSans
-			bindtext2.TextSize = 17
-			bindtext2.TextColor3 = Color3.fromRGB(201, 201, 201)
-			bindtext2.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
-			bindtext2.BorderSizePixel = 0
+			local bindtext2 = Instance.new("ImageLabel")
+			bindtext2.Size = UDim2.new(0, 156, 0, 39)
+			bindtext2.Image = getcustomassetfunc("vape/assets/BindBackground.png")
+			bindtext2.BackgroundTransparency = 1
+			bindtext2.ScaleType = Enum.ScaleType.Slice
+			bindtext2.SliceCenter = Rect.new(0, 0, 140, 39)
 			bindtext2.Visible = false
 			bindtext2.Parent = button
+			local bindtext3 = Instance.new("TextLabel")
+			bindtext3.Text = "   PRESS  KEY TO BIND"
+			bindtext3.Size = UDim2.new(1, 0, 1, 0)
+			bindtext3.Font = Enum.Font.SourceSans
+			bindtext3.TextXAlignment = Enum.TextXAlignment.Left
+			bindtext3.TextSize = 17
+			bindtext3.TextColor3 = Color3.fromRGB(201, 201, 201)
+			bindtext3.BackgroundTransparency = 1
+			bindtext3.BorderSizePixel = 0
+			bindtext3.Parent = bindtext2
 			local bindround = Instance.new("UICorner")
 			bindround.CornerRadius = UDim.new(0, 6)
 			bindround.Parent = bindbkg
@@ -4803,10 +4970,15 @@ if shared.VapeExecuted then
 					api["KeybindCaptured"] = true
 					spawn(function()
 						bindtext2.Visible = true
-						repeat wait() until api["PressedKeybindKey"] ~= ""
+						bindtext3.Text = "   PRESS A KEY TO BIND"
+						bindtext2.Size = UDim2.new(0, 154, 0, 41)
+						repeat wait() bindtext2.Visible = true until api["PressedKeybindKey"] ~= ""
 						buttonapi["SetKeybind"]((api["PressedKeybindKey"] == buttonapi["Keybind"] and "" or api["PressedKeybindKey"]))
 						api["PressedKeybindKey"] = ""
 						api["KeybindCaptured"] = false
+						bindtext3.Text = (buttonapi["Keybind"] == "" and "   BIND REMOVED" or "   BOUND TO "..buttonapi["Keybind"]:upper())
+						bindtext2.Size = UDim2.new(0, game:GetService("TextService"):GetTextSize(bindtext3.Text, bindtext3.TextSize, bindtext3.Font, Vector2.new(10000, 100000)).X + 20, 0, 41)
+						wait(1)
 						bindtext2.Visible = false
 					end)
 				end
