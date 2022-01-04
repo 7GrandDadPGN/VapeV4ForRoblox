@@ -42,7 +42,7 @@ end
 if shared.VapeDeveloper and pcall(function() readfile("vape/CustomModules/6872274481.vape") end) then
 	loadstring(readfile("vape/CustomModules/6872274481.vape"))()
 else
-	local publicrepo = checkpublicrepo(game.PlaceId)
+	local publicrepo = checkpublicrepo(6872274481)
 	if publicrepo then
 		loadstring(publicrepo)()
 	end
