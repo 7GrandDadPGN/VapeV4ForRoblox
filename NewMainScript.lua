@@ -1113,9 +1113,9 @@ local tabsortorder = {
 local tabcategorycolor = {
 	["CombatWindow"] = Color3.fromRGB(214, 27, 6),
 	["BlatantWindow"] = Color3.fromRGB(219, 21, 133),
-	["RenderWindow"] = Color3.fromRGB(0, 255, 0),
-	["UtilityWindow"] = Color3.fromRGB(0, 193, 22),
-	["WorldWindow"] = Color3.fromRGB(231, 6, 112)
+	["RenderWindow"] = Color3.fromRGB(135, 14, 165),
+	["UtilityWindow"] = Color3.fromRGB(27, 145, 68),
+	["WorldWindow"] = Color3.fromRGB(70, 73, 16)
 }
 
 GuiLibrary["UpdateUI"] = function()
@@ -1269,6 +1269,15 @@ ToggleNotifications = GUISettings.CreateToggle({
 ToggleNotifications["Object"].BackgroundTransparency = 0
 ToggleNotifications["Object"].BorderSizePixel = 0
 ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+GUISettings.CreateSlider({
+	["Name"] = "Rainbow Speed",
+	["Function"] = function(val)
+		GuiLibrary["RainbowSpeed"] = val / 10
+	end,
+	["Min"] = 1,
+	["Max"] = 100,
+	["Default"] = 10
+})
 
 local GUIbind = GUI.CreateGUIBind()
 
