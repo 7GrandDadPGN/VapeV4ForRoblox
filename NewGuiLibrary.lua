@@ -276,6 +276,9 @@ if shared.VapeExecuted then
 				if v["Type"] == "ColorSliderMain" then
 					WindowTable[i] = {["Type"] = "ColorSliderMain", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
 				end
+				if v["Type"] == "SliderMain" then
+					WindowTable[i] = {["Type"] = "SliderMain", ["Value"] = v["Api"]["Value"]}
+				end
 				if (v["Type"] == "Button" or v["Type"] == "Toggle" or v["Type"] == "ExtrasButton" or v["Type"] == "TargetButton") then
 					api["Settings"][i] = {["Type"] = "Button", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
 				end
@@ -356,6 +359,10 @@ if shared.VapeExecuted then
 				if v["Type"] == "ColorSliderMain" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"])
 					api["ObjectsThatCanBeSaved"][i]["Api"]["SetRainbow"](v["RainbowValue"])
+				--	api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -7, 0, -7)
+				end
+				if v["Type"] == "SliderMain" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
+					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"])
 				--	api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -7, 0, -7)
 				end
 				if v["Type"] == "GUIKeybind" then
@@ -1986,6 +1993,155 @@ if shared.VapeExecuted then
 				children.Visible = false
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			end
+		end
+
+		windowapi["CreateSlider"] = function(argstable)
+				
+			local sliderapi = {}
+			local amount2 = #children2:GetChildren()
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(0, 220, 0, 50)
+			frame.BackgroundTransparency = 1
+			frame.ClipsDescendants = true
+			frame.LayoutOrder = amount2
+			frame.Name = argstable["Name"]
+			frame.Parent = children2
+			local text1 = Instance.new("TextLabel")
+			text1.Font = Enum.Font.SourceSans
+			text1.TextXAlignment = Enum.TextXAlignment.Left
+			text1.Text = "   "..argstable["Name"]
+			text1.Size = UDim2.new(1, 0, 0, 25)
+			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
+			text1.BackgroundTransparency = 1
+			text1.TextSize = 17
+			text1.Parent = frame
+			local text2 = Instance.new("TextButton")
+			text2.Font = Enum.Font.SourceSans
+			text2.AutoButtonColor = false
+			text2.TextXAlignment = Enum.TextXAlignment.Right
+			text2.Text = tostring((argstable["Default"] or argstable["Min"])) .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+			text2.Size = UDim2.new(0, 40, 0, 25)
+			text2.Position = UDim2.new(1, -40, 0, 0)
+			text2.TextColor3 = Color3.fromRGB(162, 162, 162)
+			text2.BackgroundTransparency = 1
+			text2.TextSize = 17
+			text2.Parent = frame
+			local text3 = Instance.new("TextBox")
+			text3.Visible = false
+			text3.Font = Enum.Font.SourceSans
+			text3.TextXAlignment = Enum.TextXAlignment.Right
+			text3.BackgroundTransparency = 1
+			text3.TextColor3 = Color3.fromRGB(160, 160, 160)
+			text3.Text = ""
+			text3.Position = UDim2.new(1, -40, 0, 0)
+			text3.Size = UDim2.new(0, 40, 0, 25)
+			text3.TextSize = 17
+			text3.Parent = frame
+			local textdown = Instance.new("Frame")
+			textdown.BackgroundColor3 = Color3.fromRGB(37, 36, 37)
+			textdown.Size = UDim2.new(0, 30, 0, 2)
+			textdown.Position = UDim2.new(1, -38, 1, -4)
+			textdown.Visible = false
+			textdown.BorderSizePixel = 0
+			textdown.Parent = text2
+			local textdown2 = Instance.new("Frame")
+			textdown2.BackgroundColor3 = Color3.fromRGB(41, 41, 41)
+			textdown2.Size = UDim2.new(0, 30, 0, 2)
+			textdown2.Position = UDim2.new(1, -38, 1, -4)
+			textdown2.BorderSizePixel = 0
+			textdown2.Parent = text3
+			local slider1 = Instance.new("Frame")
+			slider1.Size = UDim2.new(0, 200, 0, 2)
+			slider1.BorderSizePixel = 0
+			slider1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+			slider1.Position = UDim2.new(0, 10, 0, 32)
+			slider1.Name = "Slider"
+			slider1.Parent = frame
+			local slider2 = Instance.new("Frame")
+			slider2.Size = UDim2.new(math.clamp(((argstable["Default"] or argstable["Min"]) / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
+			slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+			slider2.Name = "FillSlider"
+			slider2.Parent = slider1
+			local slider3 = Instance.new("ImageButton")
+			slider3.AutoButtonColor = false
+			slider3.Size = UDim2.new(0, 24, 0, 16)
+			slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+			slider3.BorderSizePixel = 0
+			slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
+			slider3.Position = UDim2.new(1, -11, 0, -7)
+			slider3.Parent = slider2
+			slider3.Name = "ButtonSlider"
+			sliderapi["Object"] = frame
+			sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+			sliderapi["Max"] = argstable["Max"]
+			sliderapi["SetValue"] = function(val)
+			--	val = math.clamp(val, argstable["Min"], argstable["Max"])
+				sliderapi["Value"] = val
+				slider2.Size = UDim2.new(math.clamp((val / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
+				text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+				argstable["Function"](val)
+			end
+			slider3.MouseButton1Down:Connect(function()
+				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+				sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
+				text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+				slider2.Size = UDim2.new(xscale2,0,1,0)
+				local move
+				local kill
+				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseMovement then
+						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+						sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
+						text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+						slider2.Size = UDim2.new(xscale2,0,1,0)
+					end
+				end)
+				kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						capturedslider = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
+						move:Disconnect()
+						kill:Disconnect()
+					end
+				end)
+			end)
+			text2.MouseEnter:connect(function()
+				textdown.Visible = true
+			end)
+			text2.MouseLeave:connect(function()
+				textdown.Visible = false
+			end)
+			text2.MouseButton1Click:connect(function()
+				text3.Visible = true
+				text2.Visible = false
+				text3:CaptureFocus()
+				text3.Text = text2.Text
+			end)
+			text3.FocusLost:connect(function(enter)
+				text3.Visible = false
+				text2.Visible = true
+				if enter then
+					sliderapi["SetValue"](tonumber(text3.Text))
+				end
+			end)
+			frame.MouseEnter:connect(function()
+				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
+					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
+					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
+				end
+			end)
+			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
+				frame.MouseMoved:connect(function(x, y)
+					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
+					hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
+				end)
+			end
+			frame.MouseLeave:connect(function()
+				hoverbox.Visible = false
+			end)
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Slider"] = {["Type"] = "SliderMain", ["Object"] = frame, ["Api"] = sliderapi}
+			return sliderapi
 		end
 
 		windowapi["CreateCircleWindow"] = function(argstablemain3)

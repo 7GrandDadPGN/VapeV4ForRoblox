@@ -631,6 +631,7 @@ local rainbowval = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHS
 local rainbowval2 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0.42)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 0.42))})
 local rainbowval3 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 1))})
 local guicolorslider = {["RainbowValue"] = false}
+local textguiscaleslider = {["Value"] = 10}
 
 local onething = Instance.new("ImageLabel")
 onething.Parent = TextGui.GetCustomChildren()
@@ -706,6 +707,13 @@ onebackground.BackgroundColor3 = Color3.new(0, 0, 0)
 onebackground.Visible = false 
 onebackground.Parent = TextGui.GetCustomChildren()
 onebackground.ZIndex = 0
+local onescale = Instance.new("UIScale")
+onescale.Parent = TextGui.GetCustomChildren()
+onescale:GetPropertyChangedSignal("Scale"):connect(function()
+	local childrenobj = TextGui.GetCustomChildren()
+	local check = (childrenobj.Parent.Position.X.Offset + childrenobj.Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2)
+	childrenobj.Position = UDim2.new((check and -(onescale.Scale - 1) or 0), (check and 0 or -6 * (onescale.Scale - 1)), 1, -6 * (onescale.Scale - 1))
+end)
 onetext3:GetPropertyChangedSignal("Text"):connect(function() onetext4.Text = onetext3.Text end)
 onetext:GetPropertyChangedSignal("Size"):connect(function()
 	onebackground.Position = onething.Position - UDim2.new(0, (onetext.Position.X.Offset == -154 and 10 or 0), 0, 0)
@@ -716,7 +724,10 @@ onetext:GetPropertyChangedSignal("Position"):connect(function()
 	onebackground.Size = UDim2.new(0, onetext.Size.X.Offset, 0, onetext.Size.Y.Offset + (onething.Visible and 27 or 0))
 end)
 TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(function()
-	if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
+	local childrenobj = TextGui.GetCustomChildren()
+	local check = (childrenobj.Parent.Position.X.Offset + childrenobj.Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2)
+	childrenobj.Position = UDim2.new((check and -(onescale.Scale - 1) or 0), (check and 0 or -6 * (onescale.Scale - 1)), 1, -6 * (onescale.Scale - 1))
+	if check then
 		onetext.TextXAlignment = Enum.TextXAlignment.Right
 		onetext2.TextXAlignment = Enum.TextXAlignment.Right
 		onetext3.TextXAlignment = Enum.TextXAlignment.Right
@@ -886,6 +897,15 @@ TextGuiCircleObject = TextGui.CreateCircleWindow({
 	["Type"] = "Blacklist",
 	["UpdateFunction"] = function()
 		GuiLibrary["UpdateHudEvent"]:Fire()
+	end
+})
+textguiscaleslider = TextGui.CreateSlider({
+	["Name"] = "Scale",
+	["Min"] = 1,
+	["Max"] = 50,
+	["Default"] = 10,
+	["Function"] = function(val)
+		onescale.Scale = val / 10
 	end
 })
 
@@ -1179,7 +1199,7 @@ GuiLibrary["UpdateUI"] = function()
 			if (v["Type"] == "Toggle" or v["Type"] == "ToggleMain") and v["Api"]["Enabled"] then
 					v["Object"].ToggleFrame1.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 			end
-			if v["Type"] == "Slider" then
+			if v["Type"] == "Slider" or v["Type"] == "SliderMain" then
 				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 				v["Object"].Slider.FillSlider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 			end
