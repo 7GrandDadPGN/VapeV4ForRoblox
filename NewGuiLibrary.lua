@@ -257,7 +257,7 @@ if shared.VapeExecuted then
 
 	api["SaveSettings"] = function()
 		if loadedsuccessfully then
-			writefile("vape/Profiles/"..game.PlaceId..".vapeprofiles", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
+			writefile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
 			local WindowTable = {}
 			for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
 				if v["Type"] == "Window" then
@@ -308,14 +308,14 @@ if shared.VapeExecuted then
 				end
 			end
 			WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = api["GUIKeybind"]}
-			writefile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..game.PlaceId..".vapeprofile", game:GetService("HttpService"):JSONEncode(api["Settings"]))
+			writefile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile", game:GetService("HttpService"):JSONEncode(api["Settings"]))
 			writefile("vape/Profiles/GUIPositions.vapeprofile", game:GetService("HttpService"):JSONEncode(WindowTable))
 		end
 	end
 
 	api["LoadSettings"] = function()
 		local success2, result2 = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..game.PlaceId..".vapeprofiles"))
+			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles"))
 		end)
 		if success2 and type(result2) == "table" then
 			api["Profiles"] = result2
@@ -371,7 +371,7 @@ if shared.VapeExecuted then
 			end
 		end
 		local success, result = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..game.PlaceId..".vapeprofile"))
+			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile"))
 		end)
 		if success and type(result) == "table" then
 			api["LoadSettingsEvent"]:Fire(result)
@@ -462,7 +462,7 @@ if shared.VapeExecuted then
 	api["SwitchProfile"] = function(profilename)
 		api["Profiles"][api["CurrentProfile"]]["Selected"] = false
 		api["Profiles"][profilename]["Selected"] = true
-		if (not isfile("vape/Profiles/"..(profilename == "default" and "" or profilename)..game.PlaceId..".vapeprofile")) then
+		if (not isfile("vape/Profiles/"..(profilename == "default" and "" or profilename)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile")) then
 			local realprofile = api["CurrentProfile"]
 			api["CurrentProfile"] = profilename
 			api["SaveSettings"]()

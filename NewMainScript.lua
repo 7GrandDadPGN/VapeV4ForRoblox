@@ -1314,7 +1314,6 @@ end)
 
 GuiLibrary["SelfDestruct"] = function()
 	game:GetService("UserInputService").OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.None
-	GuiLibrary["SelfDestructEvent"]:Fire()
 	selfdestruct = true
 	GuiLibrary["SaveSettings"]()
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
@@ -1322,6 +1321,7 @@ GuiLibrary["SelfDestruct"] = function()
 			v["Api"]["ToggleButton"](false)
 		end
 	end
+	GuiLibrary["SelfDestructEvent"]:Fire()
 	shared.VapeExecuted = nil
 	shared.VapeSwitchServers = nil
 	shared.GuiLibrary = nil

@@ -31,14 +31,7 @@ checkpublicrepo = function(id)
 	return nil
 end
 
-for i,v in pairs(listfiles("vape/Profiles")) do
-	local str = v:sub(15, v:len())
-	local newstr = str:gsub("6872274481", game.PlaceId)
-	if str:match("6872274481") and (not pcall(function() readfile("vape/Profiles/"..newstr) end)) then
-		writefile("vape/Profiles/"..newstr, readfile(v))
-	end
-end
-
+shared.CustomSaveVape = 6872274481
 if shared.VapeDeveloper then
 	if pcall(function() readfile("vape/CustomModules/6872274481.vape") end) then
 		loadstring(readfile("vape/CustomModules/6872274481.vape"))()
