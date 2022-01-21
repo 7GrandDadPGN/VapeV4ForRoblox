@@ -573,7 +573,7 @@ runcode(function()
 								v18.Position = newpos;
 								v18.Parent = workspace.BlockContainer;
 								predictedBlocks[newpos] = v18
-								skywars["EventHandler"].BlockPlace(newpos)
+								skywars["EventHandler"].BlockPlace(newpos, game:GetService("HttpService"):GenerateGUID(false))
 								equipItem(olditemname)
 							end
 						end
