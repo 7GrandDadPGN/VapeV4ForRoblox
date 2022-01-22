@@ -29,6 +29,11 @@ local function UnbindFromRenderStep(name)
 	end
 end
 
+local function addvectortocframe(cframe, vec)
+	local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = cframe:GetComponents()
+	return CFrame.new(x + vec.X, y + vec.Y, z + vec.Z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
+end
+
 local function BindToStepped(name, num, func)
 	if StepTable[name] == nil then
 		StepTable[name] = game:GetService("RunService").Stepped:connect(func)
