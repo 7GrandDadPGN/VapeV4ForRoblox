@@ -522,6 +522,7 @@ runcode(function()
 	local scaffoldposcheck = tick()
 	local scaffoldstopmotionpos = Vector3.new(0, 0, 0)
 	local oldpos
+	local olditem
 	local Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Scaffold",
 		["Function"] = function(callback)
@@ -534,6 +535,7 @@ runcode(function()
 					if helditem and helditem.Block then
 						block, otherblock = getItem(helditem.Name)
 					end
+
 					if block and isAlive() and handcheck then
 						if uis:IsKeyDown(Enum.KeyCode.Space) then
 							if scaffoldstopmotionval == false then
@@ -575,12 +577,14 @@ runcode(function()
 								predictedBlocks[newpos] = v18
 								skywars["EventHandler"].BlockPlace(newpos, game:GetService("HttpService"):GenerateGUID(false))
 								equipItem(olditemname)
+								oldpos = newpos
 							end
 						end
 					end
 				end)
 			else
 				UnbindFromStepped("Scaffold")
+				olditem = nil
 				scaffoldtext.Visible = false
 			end
 		end
@@ -675,7 +679,6 @@ runcode(function()
 			end
 		end
 	})
-end)
 
 runcode(function()
 	local AutoReport = {["Enabled"] = false}
@@ -686,7 +689,7 @@ runcode(function()
 			if callback then
 				spawn(function()
 					repeat
-						wait(0.8 + (math.random(1, 10) / 10))
+						wait(0.2 + (math.random(1, 10) / 10))
 						local plr
 						repeat wait() plr = game.Players:GetChildren()[math.random(1, #game.Players:GetChildren())] until plr ~= oldplr and plr ~= lplr
 						skywars["EventHandler"].Report:fire(plr.UserId)
@@ -729,6 +732,102 @@ runcode(function()
 				end
 			end
 		end
+	})
+end)
+
+GuiLibrary["RemoveObject"]("FlyOptionsButton")
+local flymissile
+runcode(function()
+	local OldNoFallFunction
+	local flyspeed = {["Value"] = 40}
+	local flyverticalspeed = {["Value"] = 40}
+	local flyupanddown = {["Enabled"] = true}
+	local flypop = {["Enabled"] = true}
+	local olddeflate
+	local flyposy = 0
+	local flyrequests = 0
+	local flytime = 60
+	local flylimit = false
+	local flyup = false
+	local flydown = false
+	local tnttimer = 0
+	local flypress
+	local flyendpress
+
+	fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Fly",
+		["Function"] = function(callback)
+			if callback then
+				if isAlive() then
+					spawn(function()
+						flyposy = lplr.Character.HumanoidRootPart.Position.Y
+						repeat task.wait() flyposy = lplr.Character.HumanoidRootPart.Position.Y until flyposy == lplr.Character.HumanoidRootPart.Position.Y
+					end)
+				end
+				flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
+					if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+						if input1.KeyCode == Enum.KeyCode.Space then
+							flyup = true
+						end
+						if input1.KeyCode == Enum.KeyCode.LeftShift then
+							flydown = true
+						end
+					end
+				end)
+				flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
+					if input1.KeyCode == Enum.KeyCode.Space then
+						flyup = false
+					end
+					if input1.KeyCode == Enum.KeyCode.LeftShift then
+						flydown = false
+					end
+				end)
+				if isAlive() then
+					flyposy = lplr.Character.HumanoidRootPart.Position.Y
+				end
+				BindToStepped("Fly", 1, function(time, delta) 
+					if isAlive() and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+						if flyup then
+							flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * 1
+						end
+						if flydown then
+							flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * 1
+						end
+						local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * 1
+						lplr.Character.HumanoidRootPart.Transparency = 1
+						lplr.Character.HumanoidRootPart.CFrame = addvectortocframe(lplr.Character.HumanoidRootPart.CFrame, Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z))
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+					end
+				end)
+			else
+				flyup = false
+				flydown = false
+				flypress:Disconnect()
+				flyendpress:Disconnect()
+				UnbindFromStepped("Fly")
+				olddeflate = nil
+			end
+		end,
+		["HoverText"] = "Makes you go zoom (Balloons or TNT Required)"
+	})
+	flyspeed = fly.CreateSlider({
+		["Name"] = "Speed",
+		["Min"] = 1,
+		["Max"] = 54,
+		["Function"] = function(val) end, 
+		["Default"] = 54
+	})
+	flyverticalspeed = fly.CreateSlider({
+		["Name"] = "Vertical Speed",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Function"] = function(val) end, 
+		["Default"] = 44
+	})
+	flyupanddown = fly.CreateToggle({
+		["Name"] = "Y Level",
+		["Function"] = function() end, 
+		["Default"] = true
 	})
 end)
 
@@ -1140,9 +1239,11 @@ runcode(function()
 	local ignoredplayers = {}
 
 	local function toxicfindstr(str, tab)
-		for i,v in pairs(tab) do
-			if str:lower():find(v) then
-				return true
+		if tab then
+			for i,v in pairs(tab) do
+				if str:lower():find(v) then
+					return true
+				end
 			end
 		end
 		return false
