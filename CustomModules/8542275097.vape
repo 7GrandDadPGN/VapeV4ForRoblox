@@ -684,6 +684,7 @@ runcode(function()
 			end
 		end
 	})
+end)
 
 	runcode(function()
 		local AutoReport = {["Enabled"] = false}
