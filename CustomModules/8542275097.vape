@@ -818,9 +818,9 @@ runcode(function()
 	flyspeed = fly.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 54,
+		["Max"] = 150,
 		["Function"] = function(val) end, 
-		["Default"] = 54
+		["Default"] = 100
 	})
 	flyverticalspeed = fly.CreateSlider({
 		["Name"] = "Vertical Speed",
