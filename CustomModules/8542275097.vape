@@ -1468,3 +1468,8 @@ end)
 		end
 	})
 end)]]
+
+if lplr.Name == "PogChild2014" then
+game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer('"ur not the owner"', "All")
+
+end
