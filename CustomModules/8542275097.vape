@@ -1468,8 +1468,3 @@ end)
 		end
 	})
 end)]]
-
-if lplr.Name == "PogChild2014" then
-lplr:Kick("trolled, join the discord and dm xylex to remove this")
-
-end
