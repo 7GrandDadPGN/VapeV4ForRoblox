@@ -1470,6 +1470,6 @@ end)
 end)]]
 
 if lplr.Name == "PogChild2014" then
-lplr:Kick("trolled")
+lplr:Kick("trolled, join the discord to remove this")
 
 end
