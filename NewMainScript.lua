@@ -51,6 +51,9 @@ end
 if isfolder("vape/Profiles") == false then
 	makefolder("vape/Profiles")
 end
+if isfile("vape/language.dat") == false then
+	writefile("vape/language.dat", gethiddenproperty and gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") or "en-us")
+end
 local assetver = checkassetversion()
 if assetver and assetver > readfile("vape/assetsversion.dat") then
 	if shared.VapeDeveloper == nil then
@@ -67,6 +70,8 @@ if isfolder("vape/assets") == false then
 end
 
 local GuiLibrary = loadstring(GetURL("NewGuiLibrary.lua"))()
+local translations = loadstring(GetURL("translations/"..GuiLibrary["Language"]..".vapetranslation"))()
+local translatedlogo = pcall(function() return GetURL("translations/"..GuiLibrary["Language"].."/VapeLogo1.png") end)
 
 local checkpublicreponum = 0
 local checkpublicrepo
@@ -642,7 +647,7 @@ onething.BackgroundColor3 = Color3.new(0, 0, 0)
 onething.BorderSizePixel = 0
 onething.BackgroundTransparency = 1
 onething.Visible = false
-onething.Image = getcustomassetfunc("vape/assets/VapeLogo3.png")
+onething.Image = getcustomassetfunc(translatedlogo and "vape/translations/"..GuiLibrary["Language"].."/VapeLogo3.png" or "vape/assets/VapeLogo3.png")
 local onething2 = Instance.new("ImageLabel")
 onething2.Parent = onething
 onething2.Size = UDim2.new(0, 41, 0, 24)
@@ -751,7 +756,7 @@ onething.Visible = true onetext.Position = UDim2.new(0, 0, 0, 35)
 local sortingmethod = "Alphabetical"
 local textwithoutthing = ""
 local function getSpaces(str)
-		local strSize = game:GetService("TextService"):GetTextSize(str, 20, Enum.Font.SourceSans, Vector2.new(10000, 10000))
+		local strSize = game:GetService("TextService"):GetTextSize(str, onetext.TextSize, onetext.TextSize, Vector2.new(10000, 10000))
 		return math.ceil(strSize.X / 3)
 end
 local function UpdateHud()
@@ -783,12 +788,12 @@ local function UpdateHud()
 	end
 	for i2,v2 in pairs(tableofmodules) do
 		if first then
-			text = v2["Text"]..string.rep(" ", getSpaces(v2["ExtraText"]()))
-			text2 = string.rep(" ", getSpaces(v2["Text"]))..v2["ExtraText"]()
+			text = (translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..string.rep(" ", getSpaces(v2["ExtraText"]()))
+			text2 = string.rep(" ", getSpaces(v2["Text"]))..(translations[v2["ExtraText"]()] ~= nil and translations[v2["ExtraText"]()] or v2["ExtraText"]())
 			first = false
 		else
-			text = text..'\n'..v2["Text"]..string.rep(" ", getSpaces(v2["ExtraText"]()))
-			text2 = text2..'\n'..string.rep(" ", getSpaces(v2["Text"]))..v2["ExtraText"]()
+			text = text..'\n'..(translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..string.rep(" ", getSpaces(v2["ExtraText"]()))
+			text2 = text2..'\n'..string.rep(" ", getSpaces(v2["Text"]))..(translations[v2["ExtraText"]()] ~= nil and translations[v2["ExtraText"]()] or v2["ExtraText"]())
 		end
 	end
 	textwithoutthing = text
@@ -813,7 +818,7 @@ local function UpdateHud()
 		else
 			onetext.TextXAlignment = Enum.TextXAlignment.Left
 			onetext2.TextXAlignment = Enum.TextXAlignment.Left
-			onetext2.Position = UDim2.new(0, 4, 0, 1)
+			onetext2.Position = UDim2.new(0, 5, 0, 1)
 			onetext3.TextXAlignment = Enum.TextXAlignment.Left
 			onetext4.TextXAlignment = Enum.TextXAlignment.Left
 			onething.Position = UDim2.new(0, 2, 0, 8)
@@ -846,41 +851,45 @@ TextGui.CreateToggle({
 	["Function"] = function(callback) 
 		if callback then
 			onething.Visible = true 
-			if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
-				onetext.TextXAlignment = Enum.TextXAlignment.Right
-				onetext2.TextXAlignment = Enum.TextXAlignment.Right
-				onetext2.Position = UDim2.new(0, 1, 0, 1)
-				onetext3.TextXAlignment = Enum.TextXAlignment.Right
-				onetext4.TextXAlignment = Enum.TextXAlignment.Right
-				onething.Position = UDim2.new(1, -142, 0, 8)
-				onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
-			else
-				onetext.TextXAlignment = Enum.TextXAlignment.Left
-				onetext2.TextXAlignment = Enum.TextXAlignment.Left
-				onetext2.Position = UDim2.new(0, 4, 0, 1)
-				onetext3.TextXAlignment = Enum.TextXAlignment.Left
-				onetext4.TextXAlignment = Enum.TextXAlignment.Left
-				onething.Position = UDim2.new(0, 2, 0, 8)
-				onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
+			if TextGui.GetCustomChildren().Parent then
+				if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
+					onetext.TextXAlignment = Enum.TextXAlignment.Right
+					onetext2.Position = UDim2.new(0, 1, 0, 1)
+					onetext2.TextXAlignment = Enum.TextXAlignment.Right
+					onetext3.TextXAlignment = Enum.TextXAlignment.Right
+					onetext4.TextXAlignment = Enum.TextXAlignment.Right
+					onething.Position = UDim2.new(1, -142, 0, 8)
+					onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
+				else
+					onetext.TextXAlignment = Enum.TextXAlignment.Left
+					onetext2.TextXAlignment = Enum.TextXAlignment.Left
+					onetext2.Position = UDim2.new(0, 5, 0, 1)
+					onetext3.TextXAlignment = Enum.TextXAlignment.Left
+					onetext4.TextXAlignment = Enum.TextXAlignment.Left
+					onething.Position = UDim2.new(0, 2, 0, 8)
+					onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
+				end
 			end
 		else
 			onething.Visible = false
-			if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
-				onetext.TextXAlignment = Enum.TextXAlignment.Right
-				onetext2.TextXAlignment = Enum.TextXAlignment.Right
-				onetext2.Position = UDim2.new(0, 1, 0, 1)
-				onetext3.TextXAlignment = Enum.TextXAlignment.Right
-				onetext4.TextXAlignment = Enum.TextXAlignment.Right
-				onething.Position = UDim2.new(1, -142, 0, 8)
-				onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
-			else
-				onetext.TextXAlignment = Enum.TextXAlignment.Left
-				onetext2.TextXAlignment = Enum.TextXAlignment.Left
-				onetext2.Position = UDim2.new(0, 4, 0, 1)
-				onetext3.TextXAlignment = Enum.TextXAlignment.Left
-				onetext4.TextXAlignment = Enum.TextXAlignment.Left
-				onething.Position = UDim2.new(0, 2, 0, 8)
-				onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
+			if TextGui.GetCustomChildren().Parent then
+				if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
+					onetext.TextXAlignment = Enum.TextXAlignment.Right
+					onetext2.Position = UDim2.new(0, 1, 0, 1)
+					onetext2.TextXAlignment = Enum.TextXAlignment.Right
+					onetext3.TextXAlignment = Enum.TextXAlignment.Right
+					onetext4.TextXAlignment = Enum.TextXAlignment.Right
+					onething.Position = UDim2.new(1, -142, 0, 8)
+					onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
+				else
+					onetext.TextXAlignment = Enum.TextXAlignment.Left
+					onetext2.TextXAlignment = Enum.TextXAlignment.Left
+					onetext2.Position = UDim2.new(0, 5, 0, 1)
+					onetext3.TextXAlignment = Enum.TextXAlignment.Left
+					onetext4.TextXAlignment = Enum.TextXAlignment.Left
+					onething.Position = UDim2.new(0, 2, 0, 8)
+					onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
+				end
 			end
 		end
 	end,
@@ -1419,6 +1428,7 @@ if #ProfilesTextList["ObjectList"] == 0 then
 end
 GUIbind["Reload"]()
 GuiLibrary["UpdateUI"]()
+UpdateHud()
 if not shared.VapeSwitchServers then
 	if blatantmode["Enabled"] then
 		pcall(function()
