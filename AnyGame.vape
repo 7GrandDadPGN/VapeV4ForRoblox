@@ -13,6 +13,8 @@ local requestfunc = syn and syn.request or http and http.request or http_request
 local getasset = getsynasset or getcustomasset
 
 local RenderStepTable = {}
+local StepTable = {}
+
 local function BindToRenderStep(name, num, func)
 	if RenderStepTable[name] == nil then
 		RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
@@ -25,9 +27,21 @@ local function UnbindFromRenderStep(name)
 	end
 end
 
+local function BindToStepped(name, num, func)
+	if StepTable[name] == nil then
+		StepTable[name] = game:GetService("RunService").Stepped:connect(func)
+	end
+end
+local function UnbindFromStepped(name)
+	if StepTable[name] then
+		StepTable[name]:Disconnect()
+		StepTable[name] = nil
+	end
+end
+
 local function createwarning(title, text, delay)
 	pcall(function()
-		local frame = GuiLibrary["CreateNotification"](title, text, delay, "vape/assets/WarningNotification.png")
+		local frame = GuiLibrary["CreateNotification"](title, text, delay, "assets/WarningNotification.png")
 		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
 		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
 	end)
@@ -387,22 +401,44 @@ end
 
 local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 local autoclicker = {["Enabled"] = false}
+local autoclickermode = {["Value"] = "Sword"}
 local autoclickertick = tick()
 autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "AutoClicker", 
 	["Function"] = function(callback)
 		if callback then
 			BindToRenderStep("AutoClicker", 1, function() 
-				local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-				if tool and isAlive() and uis:IsMouseButtonPressed(0) and autoclickertick <= tick() then
-					tool:Activate()
-					autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
+				if isAlive() and autoclickertick <= tick() then
+					if autoclickermode["Value"] == "Sword" then
+						local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
+						if tool and uis:IsMouseButtonPressed(0) then
+							tool:Activate()
+							autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
+						end
+					else
+						if mouse1click and iswindowactive then
+							if iswindowactive() and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false then
+								mouse1click()
+								autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]()) * Random.new().NextNumber(Random.new(), 0.75, 1)
+							end
+						else
+							createwarning("AutoClicker", "Input Functions not found.", 5)
+							if autoclicker["Enabled"] then
+								autoclicker["ToggleButton"](false)
+							end
+						end
+					end
 				end
 			end)
 		else
 			UnbindFromRenderStep("AutoClicker")
 		end
 	end
+})
+autoclickermode = autoclicker.CreateDropdown({
+	["Name"] = "Mode",
+	["List"] = {"Sword", "RealClick"},
+	["Function"] = function() end
 })
 autoclickercps = autoclicker.CreateTwoSlider({
 	["Name"] = "CPS",
@@ -488,6 +524,7 @@ local flyspeed = {["Value"] = 1}
 local flyverticalspeed = {["Value"] = 1}
 local flyupanddown = {["Enabled"] = false}
 local flymethod = {["Value"] = "Normal"}
+local flykeys = {["Value"] = "Space/LeftControl"}
 local flyposy = 0
 local flyup = false
 local flydown = false
@@ -503,23 +540,25 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 			end
 			flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
 				if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
-					if input1.KeyCode == Enum.KeyCode.Space then
+					local divided = flykeys["Value"]:split("/")
+					if input1.KeyCode == Enum.KeyCode[divided[1]] then
 						flyup = true
 					end
-					if input1.KeyCode == Enum.KeyCode.LeftControl then
+					if input1.KeyCode == Enum.KeyCode[divided[2]] then
 						flydown = true
 					end
 				end
 			end)
 			flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
-				if input1.KeyCode == Enum.KeyCode.Space then
+				local divided = flykeys["Value"]:split("/")
+				if input1.KeyCode == Enum.KeyCode[divided[1]] then
 					flyup = false
 				end
-				if input1.KeyCode == Enum.KeyCode.LeftControl then
+				if input1.KeyCode == Enum.KeyCode[divided[2]] then
 					flydown = false
 				end
 			end)
-			BindToRenderStep("Fly", 1, function(delta) 
+			BindToStepped("Fly", 1, function(time, delta) 
 				if isAlive() then
 					if flymethod["Value"] == "Normal" then
 						if (bodyvelofly == nil or bodyvelofly ~= nil and bodyvelofly.Parent ~= lplr.Character.HumanoidRootPart) then
@@ -529,7 +568,9 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 						else
 							bodyvelofly.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
 						end
-					elseif flymethod["Value"] == "AntiCheat" then
+					elseif flymethod["Value"] == "AntiCheat B" then
+						lplr.Character.HumanoidRootPart.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, 0.85 + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+					elseif flymethod["Value"] == "AntiCheat A" then
 						if (bodyvelofly ~= nil) then
 							bodyvelofly:Remove()
 						end
@@ -553,19 +594,24 @@ local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOp
 			flydown = false
 			flypress:Disconnect()
 			flyendpress:Disconnect()
-			UnbindFromRenderStep("Fly")
+			UnbindFromStepped("Fly")
 		end
 	end,
-	["ExtraText"] = function() return " "..flymethod["Value"] end
+	["ExtraText"] = function() return flymethod["Value"] end
 })
 flymethod = fly.CreateDropdown({
 	["Name"] = "Mode", 
-	["List"] = {"Normal", "AntiCheat"},
+	["List"] = {"Normal", "AntiCheat A", "AntiCheat B"},
 	["Function"] = function(val)
 		if isAlive() then
 			flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
 		end
 	end
+})
+flykeys = fly.CreateDropdown({
+	["Name"] = "Keys", 
+	["List"] = {"Space/LeftControl", "Space/LeftShift", "E/Q", "Space/Q"},
+	["Function"] = function(val) end
 })
 flyspeed = fly.CreateSlider({
 	["Name"] = "Speed",
@@ -704,7 +750,8 @@ local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Cre
 			BindToRenderStep("LongJump", 1, function() 
 				if isAlive() then
 					if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-						lplr.Character.HumanoidRootPart.Velocity = lplr.Character.HumanoidRootPart.Velocity + lplr.Character.Humanoid.MoveDirection * (longjumpboost["Value"] / 50)
+						local velo = lplr.Character.Humanoid.MoveDirection * longjumpboost["Value"]
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(velo.X, lplr.Character.HumanoidRootPart.Velocity.Y, velo.Z)
 					end
 				end
 			end)
@@ -732,11 +779,12 @@ HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		if callback then
 			highjumpbound = false
 			if HighJumpMethod["Value"] == "Toggle" then
+				if HighJumpTick > tick()  then
+					createwarning("LongJump", "Wait "..math.round(HighJumpTick - tick()).." before retoggling.", 1)
+				end
 				if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
 					HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-				else
-					createwarning("LongJump", "Wait "..math.round(HighJumpTick - tick()).." before retoggling.", 1)
 				end
 				HighJump["ToggleButton"](false)
 			else
@@ -775,27 +823,122 @@ HighJumpDelay = HighJump.CreateSlider({
 	["Function"] = function(val) end,
 })
 
-local phase
-GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+
+local phase = {["Enabled"] = false}
+local spidergoinup = false
+local holdingshift = false
+local phasemode = {["Value"] = "Normal"}
+local phaselimit = {["Value"] = 1}
+
+phase = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Phase", 
 	["Function"] = function(callback)
 		if callback then
-			phase = game:GetService('RunService').Stepped:Connect(function()
+			BindToStepped("Phase", 1, function()
 				if isAlive() then
-					for i, part in pairs(lplr.Character:GetDescendants()) do
-						if part:IsA("BasePart") and part.CanCollide == true then
-							part.CanCollide = false
+					if phasemode["Value"] == "Normal" then
+						for i, part in pairs(lplr.Character:GetDescendants()) do
+							if part:IsA("BasePart") and part.CanCollide == true then
+								part.CanCollide = (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] and (not holdingshift))
+							end
+						end
+					else
+						local chars = {}
+						for i,v in pairs(players:GetChildren()) do
+							table.insert(chars, v.Character)
+						end
+						local pos = lplr.Character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
+						local pos2 = lplr.Character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
+						local pos3 = lplr.Character.Head.CFrame.p
+						local raycastparameters = RaycastParams.new()
+						raycastparameters.FilterDescendantsInstances = chars
+						raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
+						local newray = workspace:Raycast(pos3, lplr.Character.Humanoid.MoveDirection, raycastparameters)
+						if newray and (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] and holdingshift or GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] == false) then
+							local dir = newray.Normal.Z ~= 0 and "Z" or "X"
+							if newray.Instance.Size[dir] <= phaselimit["Value"] then
+								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (newray.Normal * (-(newray.Instance.Size[dir]) - 2))
+							end
+							--[[if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -6)) then
+								phasedelay = tick() + 0.075
+								phasedelay2 = tick() + 0.1
+								slowdownspeed = true
+								nocheck = true
+								lplr.Character.HumanoidRootPart.CFrame = addvectortocframe(lplr.Character.HumanoidRootPart.CFrame, (newray.Normal * -2.5))
+							end]]
 						end
 					end
 				end
 			end)
 		else
-			phase:Disconnect()
+			UnbindFromStepped("Phase")
 		end
 	end,
-	["HoverText"] = "Lets you phase/clip through walls"
+	["HoverText"] = "Lets you Phase/Clip through walls. (Hold shift to use phase over spider)"
 })
+phasemode = phase.CreateDropdown({
+	["Name"] = "Mode",
+	["List"] = {"Normal", "AntiCheat"},
+	["Function"] = function(val) 
+		if phaselimit["Object"] then
+			phaselimit["Object"].Visible = val == "AntiCheat"
+		end
+	end
+})
+phaselimit = phase.CreateSlider({
+	["Name"] = "Studs",
+	["Function"] = function() end,
+	["Min"] = 1,
+	["Max"] = 20,
+	["Default"] = 5,
+})
+phaselimit["Object"].Visible = phasemode["Value"] == "AntiCheat"
 
+
+runcode(function()
+	local spiderspeed = {["Value"] = 0}
+	Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Spider",
+		["Function"] = function(callback)
+			if callback then
+				BindToStepped("Spider", 1, function()
+					if isAlive() then
+						local chars = {}
+						for i,v in pairs(players:GetChildren()) do
+							table.insert(chars, v.Character)
+						end
+						local vec = (lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) and lplr.Character.Humanoid.MoveDirection.Unit * 2 or Vector3.new(0, 0, 0))
+						local raycastparameters = RaycastParams.new()
+						raycastparameters.FilterDescendantsInstances = chars
+						raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
+						local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, vec + Vector3.new(0, 0.1, 0), raycastparameters)
+						local newray2 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, vec - Vector3.new(0, lplr.Character.Humanoid.HipHeight, 0), raycastparameters)
+						if spidergoinup and (not newray) and (not newray2) then
+							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 0, lplr.Character.HumanoidRootPart.Velocity.Z)
+						end
+						spidergoinup = ((newray or newray2) and true or false)
+						holdingshift = uis:IsKeyDown(Enum.KeyCode.LeftShift)
+						if (newray or newray2) and (newray or newray2).Normal.Y == 0 then
+							if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] and holdingshift == false or GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false) then
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X - (lplr.Character.HumanoidRootPart.CFrame.lookVector.X / 2), spiderspeed["Value"], lplr.Character.HumanoidRootPart.Velocity.Z - (lplr.Character.HumanoidRootPart.CFrame.lookVector.Z / 2))
+							end
+						end
+					end
+				end)
+			else
+				UnbindFromStepped("Spider")
+			end
+		end,
+		["HoverText"] = "Lets you climb up walls"
+	})
+	spiderspeed = Spider.CreateSlider({
+		["Name"] = "Speed",
+		["Min"] = 0,
+		["Max"] = 100,
+		["Function"] = function() end,
+		["Default"] = 30
+	})
+end)
 
 local speedval = {["Value"] = 1}
 local speedmethod = {["Value"] = "AntiCheat A"}
@@ -821,10 +964,16 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 							bodyvelo:Remove()
 						end
 						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
+					elseif speedmethod["Value"] == "AntiCheat C" then
+						if (bodyvelo ~= nil) then
+							bodyvelo:Remove()
+						end
+						local newvelo = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 					end
 					if speedjump["Enabled"] then
 						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-							if speedmethod["Value"] == "AntiCheat A" then
+							if speedmethod["Value"] == "AntiCheat A" or speedmethod["Value"] == "AntiCheat C" then
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
 							elseif speedmethod["Value"] == "AntiCheat B" then
 								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0.2, 0)
@@ -844,7 +993,7 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 })
 speedmethod = speed.CreateDropdown({
 	["Name"] = "Mode", 
-	["List"] = {"AntiCheat A", "AntiCheat B"},
+	["List"] = {"AntiCheat A", "AntiCheat B", "AntiCheat C"},
 	["Function"] = function(val) end
 })
 speedval = speed.CreateSlider({
@@ -1977,7 +2126,6 @@ local PlayerState = {} do
 		cam.FieldOfView = 70
 
 		cameraType = cam.CameraType
-		print(cam.CameraType)
 		cam.CameraType = Enum.CameraType.Custom
 
 		cameraCFrame = cam.CFrame
@@ -1985,6 +2133,9 @@ local PlayerState = {} do
 
 		mouseBehavior = uis.MouseBehavior
 		uis.MouseBehavior = Enum.MouseBehavior.Default
+
+		mouseIconEnabled = uis.MouseIconEnabled
+		uis.MouseIconEnabled = true
 	end
 
 	function PlayerState.Pop()
