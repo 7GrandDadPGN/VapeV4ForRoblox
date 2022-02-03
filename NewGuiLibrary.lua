@@ -3192,7 +3192,12 @@ if shared.VapeExecuted then
 			end
 			table.sort(sorttable1)
 			for i2,v2 in pairs(sorttable1) do
-				children[v2].LayoutOrder = i2
+				if v2:find("Button") then
+					local findstr = v2:gsub("Button", "Children")
+					children[v2].LayoutOrder = (table.find(sorttable1, findstr) and table.find(sorttable1, findstr) - 6 or i2)
+				else
+					children[v2].LayoutOrder = i2
+				end
 			end
 			local uilistlayout2 = Instance.new("UIListLayout")
 			uilistlayout2.SortOrder = Enum.SortOrder.LayoutOrder
