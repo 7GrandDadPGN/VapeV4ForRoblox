@@ -56,6 +56,9 @@ end
 if isfile("vape/language.dat") == false then
 	writefile("vape/language.dat", gethiddenproperty and gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") or "en-us")
 end
+if not pcall(function() return GetURL("vape/translations/"..readfile("vape/language.dat")..".vapetranslation") end) then
+	writefile("vape/language.dat", "en-us")
+end
 local assetver = checkassetversion()
 if assetver and assetver > readfile("vape/assetsversion.dat") then
 	if shared.VapeDeveloper == nil then
