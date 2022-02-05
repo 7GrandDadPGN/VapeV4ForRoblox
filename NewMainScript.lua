@@ -54,7 +54,7 @@ if isfolder("vape/Profiles") == false then
 	makefolder("vape/Profiles")
 end
 if isfile("vape/language.dat") == false then
-	local suc, res = pcall(function() return gethiddenproperty and gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") or "en-us" end)
+	local suc, res = pcall(function() return gethiddenproperty and gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") end)
 	writefile("vape/language.dat", suc and res or "en-us")
 end
 if not pcall(function() return GetURL("vape/translations/"..readfile("vape/language.dat")..".vapetranslation") end) then
@@ -1418,7 +1418,7 @@ GeneralSettings.CreateButton2({
 })
 
 loadstring(GetURL("AnyGame.vape"))()
-if pcall(function() readfile("vape/CustomModules/"..game.PlaceId..".vape") end) then
+if isfile("vape/CustomModules/"..game.PlaceId..".vape") then
 	loadstring(readfile("vape/CustomModules/"..game.PlaceId..".vape"))()
 else
 	local publicrepo = checkpublicrepo(game.PlaceId)
