@@ -54,7 +54,7 @@ if isfolder("vape/Profiles") == false then
 	makefolder("vape/Profiles")
 end
 if isfile("vape/language.dat") == false then
-	local suc, res = pcall(function() return gethiddenproperty and gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") end)
+	local suc, res = pcall(function() return gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") end)
 	writefile("vape/language.dat", suc and res or "en-us")
 end
 if not pcall(function() return GetURL("vape/translations/"..readfile("vape/language.dat")..".vapetranslation") end) then
