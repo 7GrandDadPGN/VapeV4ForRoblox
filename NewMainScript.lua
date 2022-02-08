@@ -1438,7 +1438,7 @@ UpdateHud()
 if not shared.VapeSwitchServers then
 	if blatantmode["Enabled"] then
 		pcall(function()
-			local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 4, "assets/WarningNotification.png")
+			local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 5.5, "assets/WarningNotification.png")
 			frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
 			frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
 		end)

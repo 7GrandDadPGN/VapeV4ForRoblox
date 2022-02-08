@@ -214,6 +214,7 @@ runcode(function()
         local Events = require(game:GetService("ReplicatedStorage").TS.events).GlobalEvents.client
 		skywars = {
 			["EventHandler"] = Events,
+			["BlockFunctionHandler"] = require(lplr.PlayerScripts.TS.events).Functions,
 			["HotbarController"] = Flamework.resolveDependency("client/controllers/hotbar-controller@HotbarController"),
 			["ReplicaHandler"] = require(lplr.PlayerScripts.TS.replicas).Replicas,
 			["BlockUtil"] = require(game:GetService("ReplicatedStorage").TS.util["block-util"]).BlockUtil,
@@ -322,7 +323,7 @@ runcode(function()
 					if isAlive() and autoclickermousedown and autoclickertick <= tick() and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false then
 						autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
 						if skywars["HotbarController"]:getHeldItemInfo() and skywars["HotbarController"]:getHeldItemInfo().Melee then
-							skywars["MeleeController"]:strike({UserInputType = Enum.UserInputType.MouseButton1})
+							skywars["MeleeController"]:strike()
 						end
 					end
 				end)
@@ -711,6 +712,112 @@ runcode(function()
 end)
 
 runcode(function()
+	local targetstrafe = {["Enabled"] = false}
+	local targetstrafespeed = {["Value"] = 40}
+	local targetstrafejump = {["Value"] = 40}
+	local targetstrafedistance = {["Value"] = 12}
+	local targetstrafenum = 0
+	local flip = false
+	local lastreal
+	local old = nil
+	targetstrafe = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "TargetStrafe",
+		["Function"] = function(callback)
+			if callback then
+					BindToStepped("TargetStrafe", 1, function(lol, delta)
+						local plr = GetNearestHumanoidToPosition(true, targetstrafedistance["Value"] + 6)
+						if isAlive() and plr and (not GuiLibrary["ObjectsThatCanBeSaved"]["ScaffoldOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
+							if (Vector3.new(0, lplr.Character.HumanoidRootPart.Position.Y, 0) - Vector3.new(0, plr.Character.HumanoidRootPart.Position.Y, 0)).magnitude <= (targetstrafejump["Value"] / 5) then
+								if plr ~= old then
+									old = plr
+									local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, lplr.Character.HumanoidRootPart.Position)
+									local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-270)
+									targetstrafenum = math.deg(num)
+								end
+								local raycastparameters = RaycastParams.new()
+								raycastparameters.FilterDescendantsInstances = {workspace.BlockContainer}
+								raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+								local newray = workspace:Raycast(plr.Character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
+								strafing = newray ~= nil
+								if newray ~= nil then
+									local allowed = false
+									if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) then
+										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, targetstrafejump["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
+									end
+									lastreal = plr.Character.HumanoidRootPart.Position
+									local playerpos = plr.Character.HumanoidRootPart.Position
+									local newpos = Vector3.new(playerpos.X, lplr.Character.HumanoidRootPart.Position.Y, playerpos.Z) + (CFrame.Angles(0, math.rad(targetstrafenum), 0) * CFrame.new(0, 0, targetstrafedistance["Value"])).p
+									local ray = workspace:Raycast(Vector3.new(playerpos.X, lplr.Character.HumanoidRootPart.Position.Y, playerpos.Z), (CFrame.Angles(0, math.rad(targetstrafenum), 0) * CFrame.new(0, 0, targetstrafedistance["Value"])).p, raycastparameters)
+									if ray and ray.Position then
+										local num = math.clamp((newpos - ray.Position).magnitude - 2, 1, 10000)
+										newpos = Vector3.new(playerpos.X, lplr.Character.HumanoidRootPart.Position.Y, playerpos.Z) + (CFrame.Angles(0, math.rad(targetstrafenum), 0) * CFrame.new(0, 0, num)).p
+									end
+									local newcframe = CFrame.new(newpos, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
+									if (lplr.Character.HumanoidRootPart.CFrame.p - newpos).magnitude <= 5 then
+										local vec = (newpos - lplr.Character.HumanoidRootPart.Position)
+										strafevelo = Vector3.new(vec.X, lplr.Character.HumanoidRootPart.Velocity.Y, vec.Z) 
+										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(vec.X, lplr.Character.HumanoidRootPart.Velocity.Y, vec.Z)
+										lplr.Character.HumanoidRootPart.CFrame = newcframe
+										allowed = true
+									else
+										local newpos3 = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe, 15 * delta)
+										local vec = (newpos3.p - lplr.Character.HumanoidRootPart.Position)
+										strafevelo = Vector3.new(vec.X, lplr.Character.HumanoidRootPart.Velocity.Y, vec.Z)
+										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(vec.X, lplr.Character.HumanoidRootPart.Velocity.Y, vec.Z)
+										lplr.Character.HumanoidRootPart.CFrame = newpos3
+									end
+									if allowed then
+										targetstrafenum = (flip and targetstrafenum - (targetstrafespeed["Value"] / 10) or targetstrafenum + (targetstrafespeed["Value"] / 10))
+										if targetstrafenum >= 999999 then
+											targetstrafenum = 0
+										end
+										if targetstrafenum < -999999 then
+											targetstrafenum = 0
+										end
+									end
+								else
+									if lastreal then
+										lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(CFrame.new(lastreal), 15 * delta)
+									end
+								end
+							end
+						else
+							strafing = false
+							old = nil
+							lastreal = nil
+						end
+					end)
+				else
+					UnbindFromStepped("TargetStrafe")
+					strafing = false
+				end
+		end,
+		["HoverText"] = "Automatically moves around attacking players"
+	})
+	targetstrafespeed = targetstrafe.CreateSlider({
+		["Name"] = "Speed",
+		["Min"] = 1,
+		["Max"] = 80,
+		["Default"] = 80,
+		["Function"] = function() end
+	})
+	targetstrafejump = targetstrafe.CreateSlider({
+		["Name"] = "Jump Height",
+		["Min"] = 1,
+		["Max"] = 60,
+		["Default"] = 40,
+		["Function"] = function() end
+	})
+	targetstrafedistance = targetstrafe.CreateSlider({
+		["Name"] = "Distance",
+		["Min"] = 1,
+		["Max"] = 12,
+		["Default"] = 8,
+		["Function"] = function() end
+	})
+end)
+
+runcode(function()
 	local ChestOpen
 	local ChestStealer = {["Enabled"] = false}
 	local ChestBlacklist = {}
@@ -748,58 +855,62 @@ runcode(function()
 			end
 		end
 	})
-end)
 
-	runcode(function()
-		local AutoReport = {["Enabled"] = false}
-		local oldplr 
-		AutoReport = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-			["Name"] = "AutoReport",
-			["Function"] = function(callback)
-				if callback then
-					spawn(function()
-						repeat
-							wait(0.2 + (math.random(1, 10) / 10))
-							local plr
-							repeat wait() plr = game.Players:GetChildren()[math.random(1, #game.Players:GetChildren())] until plr ~= oldplr and plr ~= lplr
-							skywars["EventHandler"].Report:fire(plr.UserId)
-							--print(plr.Name, "reported")
-						until (not AutoReport["Enabled"])
-					end)
-				end
-			end
-		})
-	end)
-
-
-runcode(function()
-	local InvMove = {["Enabled"] = false}
-	local oldplr 
-	local connection
-	InvMove = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "InvWalk",
+	local DropStealer = {["Enabled"] = false}
+	DropStealer = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "DropStealer",
 		["Function"] = function(callback)
 			if callback then
-				connection = game:GetService("ContextActionService").BoundActionAdded:connect(function(name)
-					if name == "SinkAction" then
-						game:GetService("ContextActionService"):UnbindAction("SinkAction")
-					end
+				spawn(function()
+					repeat
+						wait(0.2)
+						if isAlive() then
+							for i,v in pairs(workspace:GetChildren()) do
+								if v.Name == "Handle" then
+									firetouchinterest(lplr.Character.HumanoidRootPart, workspace.Handle, 1)
+									firetouchinterest(lplr.Character.HumanoidRootPart, workspace.Handle, 0)
+								end
+							end
+						end
+					until (not DropStealer["Enabled"])
 				end)
-				if game:GetService("ContextActionService"):GetBoundActionInfo("SinkAction").inputTypes ~= nil then
-					game:GetService("ContextActionService"):UnbindAction("SinkAction")
-				end
-			else
-				if connection then
-					connection:Disconnect()
-				end
-				if skywars["ScreenController"]:isFocused() then
-					local v30 = {};
-					local v31 = Enum.PlayerActions:GetEnumItems();
-					table.move(v31, 1, #v31, #v30 + 1, v30);
-					game:GetService("ContextActionService"):BindAction("SinkAction", function()
-						return Enum.ContextActionResult.Sink;
-					end, false, unpack(v30));
-				end
+			end
+		end
+	})
+end)
+
+runcode(function()
+	local Godmode = {["Enabled"] = false}
+	Godmode = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Godmode",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					pcall(function()
+						lplr.Character:WaitForChild("Hitbox"):Remove()
+					end)
+				end)
+			end
+		end
+	})
+end)
+
+runcode(function()
+	local AutoReport = {["Enabled"] = false}
+	local oldplr 
+	AutoReport = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoReport",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						wait(0.2 + (math.random(1, 10) / 10))
+						local plr
+						repeat wait() plr = game.Players:GetChildren()[math.random(1, #game.Players:GetChildren())] until plr ~= oldplr and plr ~= lplr
+						skywars["EventHandler"].Report:fire(plr.UserId)
+						--print(plr.Name, "reported")
+					until (not AutoReport["Enabled"])
+				end)
 			end
 		end
 	})
@@ -858,10 +969,10 @@ runcode(function()
 				BindToStepped("Fly", 1, function(time, delta) 
 					if isAlive() and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						if flyup then
-							flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * 1
+							flyposy = flyposy + (1 * ((flyverticalspeed["Value"] - 16) * delta)) * 1
 						end
 						if flydown then
-							flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta)) * 1
+							flyposy = flyposy - (1 * ((flyverticalspeed["Value"] - 16) * delta)) * 1
 						end
 						local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta)) * 1
 						lplr.Character.HumanoidRootPart.Transparency = 1
@@ -1320,7 +1431,7 @@ runcode(function()
 	end
 
 	skywars["EventHandler"].GameEnded:connect(function(winstuff)
-		local v14 = #winstuff.placements > 0 and winstuff.placements[1] or nil;
+		local v14 = winstuff and winstuff.placements and #winstuff.placements > 0 and winstuff.placements[1] or nil;
 		if v14 == lplr and victorysaid == false then
 			victorysaid = true
 			if AutoToxic["Enabled"] then
@@ -1441,23 +1552,71 @@ runcode(function()
 	AutoToxicPhrases5["Object"].AddBoxBKG.AddBox.TextSize = 12
 end)
 
---[[runcode(function()
+runcode(function()
 	local NoFall = {["Enabled"] = false}
 	local nofallconnection
 	local debounce = false
+	local pos = CFrame.new(0, 500, 0)
 	NoFall = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "NoFall",
 		["Function"] = function(callback)
 			if callback then
 				if isAlive() then
-					nofallconnection = lplr.Character.Humanoid.StateChanged:connect(function(oldstate, newstate)
-						if newstate == Enum.HumanoidStateType.Landed then
-							lplr.Character.Humanoid:ChangeState(0)
-							lplr.Character.Humanoid:SetStateEnabled(7, false)
-							wait(0.1)
-							--lplr.Character.Humanoid:SetStateEnabled(7, true)
-						end
+					spawn(function()
+						repeat
+							task.wait()
+							if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+								lplr.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, false)
+								local ray
+								local ray2
+								pos = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 70, 0)
+								local start = lplr.Character.HumanoidRootPart.CFrame
+								ray = nil
+								repeat
+									task.wait()
+									local raycastparameters = RaycastParams.new()
+									raycastparameters.FilterDescendantsInstances = {workspace.BlockContainer}
+									raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+									ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -lplr.Character.Humanoid.HipHeight, 0), raycastparameters)
+								until ray ~= nil
+								local oldlanded = (ray and ray.Position and ray.Position + Vector3.new(0, lplr.Character.Humanoid.HipHeight * 2, 0) or lplr.Character.HumanoidRootPart.CFrame.p)
+								if (start.p.Y - oldlanded.Y > 10) then
+									local flyenabled = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]
+									if GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] then
+										GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["ToggleButton"](false)
+									end
+									lplr.Character.HumanoidRootPart.CFrame = pos
+									task.wait(0.04)
+									lplr.Character.HumanoidRootPart.CFrame = CFrame.new(oldlanded, oldlanded + lplr.Character.HumanoidRootPart.CFrame.lookVector)
+									lplr.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, true)
+									lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+									lplr.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, false)
+									task.wait(0.1)
+									lplr.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, true)
+									if flyenabled and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
+										GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["ToggleButton"](false)
+									end
+								else
+									lplr.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, true)
+									lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+								end
+								task.wait(0.3)
+							end
+						until (not NoFall["Enabled"])
 					end)
+					
+						--[[if newstate == Enum.HumanoidStateType.Landed and debounce == false then
+							debounce = true
+							local oldlanded = lplr.Character.HumanoidRootPart.CFrame
+							lplr.Character.Humanoid:SetStateEnabled(7, false)
+							lplr.Character.Humanoid:ChangeState(4)
+							lplr.Character.HumanoidRootPart.CFrame = pos
+							task.wait(0.1)
+							lplr.Character.Humanoid:SetStateEnabled(7, true)
+							lplr.Character.HumanoidRootPart.CFrame = oldlanded
+							task.wait(0.1)
+							debounce = false
+						end]]
 				end
 			else
 				lplr.Character.Humanoid:SetStateEnabled(7, true)
@@ -1467,4 +1626,203 @@ end)
 			end
 		end
 	})
-end)]]
+end)
+runcode(function()
+	local antivoidpart
+	local antivoidmethod = {["Value"] = "Dynamic"}
+	local antivoidnew = {["Enabled"] = false}
+	local antivoidnewdelay = {["Value"] = 10}
+	local antitransparent = {["Enabled"] = false}
+	local AntiVoid = {["Enabled"] = false}
+	local lastvalidpos
+	AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AntiVoid", 
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat task.wait() until antivoidypos ~= 0
+					repeat
+						task.wait(0.2)
+						if AntiVoid["Enabled"] and isAlive() then
+							local raycastparameters = RaycastParams.new()
+							raycastparameters.FilterDescendantsInstances = {workspace.BlockContainer, antivoidpart}
+							raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+							local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
+							if newray and newray.Instance == antivoidpart then
+								
+							else
+								lastvalidpos = CFrame.new(newray and newray.Position and (newray.Position + Vector3.new(0, lplr.Character.Humanoid.HipHeight * 2, 0)) or lplr.Character.HumanoidRootPart.CFrame.p)
+							end
+						end
+					until AntiVoid["Enabled"] == false
+				end)
+				spawn(function()
+					repeat task.wait() until antivoidypos ~= 0
+					antivoidpart = Instance.new("Part")
+					antivoidpart.CanCollide = false
+					antivoidpart.Size = Vector3.new(10000, 1, 10000)
+					antivoidpart.Anchored = true
+					antivoidpart.Transparency = (antitransparent["Enabled"] and 1 or 0.5)
+					antivoidpart.Position = Vector3.new(0, 0, 0)
+					connectionstodisconnect[#connectionstodisconnect + 1] = antivoidpart.Touched:connect(function(touchedpart)
+						if touchedpart.Parent == lplr.Character and isAlive() then
+							if antivoidnew["Enabled"] then
+								lplr.Character.HumanoidRootPart.CFrame = lastvalidpos + Vector3.new(0, 500, 0)
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+								task.wait(0.1)
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+								task.wait(0.1)
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+								task.wait(0.1)
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+								lplr.Character.HumanoidRootPart.CFrame = lastvalidpos
+							else
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 100) or 100), 0)
+							end
+						end
+					end)
+					antivoidpart.Parent = workspace
+				end)
+			else
+				if antivoidpart then
+					antivoidpart:Remove() 
+				end
+			end
+		end, 
+		["HoverText"] = "Gives you a chance to get on land (Bouncing Twice, abusing, or bad luck will lead to lagbacks)"
+	})
+	antivoidmethod = AntiVoid.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Dynamic", "Set"},
+		["Function"] = function() end
+	})
+	antivoidnew = AntiVoid.CreateToggle({
+		["Name"] = "Lagback Mode",
+		["Function"] = function(callback) 
+			if antivoidnewdelay["Object"] then
+				antivoidnewdelay["Object"].Visible = callback
+			end
+		end,
+		["Default"] = true
+	})
+	antivoidnewdelay = AntiVoid.CreateSlider({
+		["Name"] = "Freeze Delay",
+		["Min"] = 6,
+		["Max"] = 30,
+		["Default"] = 10,
+		["Function"] = function() end
+	})
+	antivoidnewdelay["Object"].Visible = antivoidnew["Enabled"]
+	antitransparent = AntiVoid.CreateToggle({
+		["Name"] = "Invisible",
+		["Function"] = function(callback) 
+			if antivoidpart then
+				antivoidpart.Transparency = (callback and 1 or 0.5)
+			end
+		end,
+		["Default"] = true
+	})
+end)
+
+runcode(function()
+	local BetterFP = {["Enabled"] = false}
+	--assign vars
+	local currentfp
+	local currentfptool
+	local modificationcframe = {CFrame = CFrame.new(0, 0, 0), Remove = function() end}
+	local oldswinganim
+	local currentlyswinging = false
+	BetterFP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({ -- create button
+		["Name"] = "BetterFP",
+		["Function"] = function(callback)
+			if callback then
+				modificationcframe = Instance.new("Part") --cool part so we can use tweenservice for animations
+				modificationcframe.CFrame = CFrame.new(0, 0, 0)
+				modificationcframe.Anchored = true
+				oldswinganim = skywars["MeleeController"].playAnimation
+				skywars["MeleeController"].playAnimation = function(Self, ...) -- attack anim hook for first person
+					if currentlyswinging == false then
+						spawn(function()
+							currentlyswinging = true
+							game:GetService("TweenService"):Create(modificationcframe, TweenInfo.new(0.1, Enum.EasingStyle.Linear), {CFrame = CFrame.new(0, 0, -3) * CFrame.Angles(math.rad(-40), 0, math.rad(-60))}):Play()
+							task.wait(0.1)
+							game:GetService("TweenService"):Create(modificationcframe, TweenInfo.new(0.1, Enum.EasingStyle.Linear), {CFrame = CFrame.Angles(0, 0, 0)}):Play()
+							task.wait(0.1)
+							currentlyswinging = false
+						end)
+					end
+					return oldswinganim(Self, ...)
+				end
+				BindToRenderStep("BetterFP", 1, function() --renderstep moment
+					if lplr.Character then
+						local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+						if tool then
+							tool.Handle.LocalTransparencyModifier = ((cam.CFrame.Position - cam.Focus.Position).Magnitude <= 0.6 and 1 or 0) --are they in first person, hide ugly tool models :puke:
+							for i,v in pairs(tool.Handle:GetChildren()) do
+								if v:IsA("Texture") then
+									v.Transparency = 1
+								end
+							end
+							if (cam.CFrame.Position - cam.Focus.Position).Magnitude <= 0.6 then
+								if currentfp ~= tool.Name then
+									if currentfptool then
+										currentfptool:Remove()
+										currentfptool = nil
+									end
+									local clone = tool.Handle:Clone()
+									clone.Parent = cam
+									clone.LocalTransparencyModifier = 0
+									clone.Anchored = true
+									for i,v in pairs(clone:GetChildren()) do
+										if v:IsA("Texture") then
+											v.Transparency = 0
+										end
+									end
+									currentfptool = clone
+									currentfp = tool.Name
+								end
+							else
+								currentfp = nil
+								if currentfptool then
+									currentfptool:Remove()
+									currentfptool = nil
+								end
+							end
+						else
+							currentfp = nil
+							if currentfptool then
+								currentfptool:Remove()
+								currentfptool = nil
+							end
+						end
+						if currentfptool then
+							currentfptool.LocalTransparencyModifier = 0
+							currentfptool.CFrame = (cam.CFrame * (CFrame.new(3, -0.8, -3) * CFrame.Angles(0, math.rad(90), 0) * modificationcframe.CFrame))--clone located at camera
+						end
+					end
+				end)
+			else
+				UnbindFromRenderStep("BetterFP") -- renderstep moment
+				currentfp = nil
+				if currentfptool then
+					currentfptool:Remove()
+				end
+				if modificationcframe then
+					modificationcframe:Remove()
+				end
+				skywars["MeleeController"].playAnimation = oldswinganim
+				oldswinganim = nil
+				local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+				if tool then
+					tool.Handle.LocalTransparencyModifier = 0 -- reset transparency
+					for i,v in pairs(tool.Handle:GetChildren()) do
+						if v:IsA("Texture") then
+							v.Transparency = 0
+						end
+					end
+				end
+			end
+		end,
+		["HoverText"] = "Makes first person better (better viewmodel)"
+	})
+end)
