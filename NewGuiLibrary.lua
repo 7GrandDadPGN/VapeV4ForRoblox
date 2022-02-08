@@ -1417,7 +1417,7 @@ if shared.VapeExecuted then
 			bindtext3.Font = Enum.Font.SourceSans
 			bindtext3.TextXAlignment = Enum.TextXAlignment.Left
 			bindtext3.TextSize = 17
-			bindtext3.TextColor3 = Color3.fromRGB(201, 201, 201)
+			bindtext3.TextColor3 = Color3.fromRGB(44, 44, 44)
 			bindtext3.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
 			bindtext3.BorderSizePixel = 0
 			bindtext3.Parent = bindtext2
@@ -3218,6 +3218,11 @@ if shared.VapeExecuted then
 			bindbkg.BackgroundTransparency = 0.95
 			bindbkg.Visible = false
 			bindbkg.Parent = button
+			local bindbkg2 = bindbkg:Clone()
+			bindbkg2.BackgroundTransparency = 1
+			bindbkg2.ZIndex = 2
+			bindbkg2.Text = "x"
+			bindbkg2.Parent = button
 			local bindimg = Instance.new("ImageLabel")
 			bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
 			bindimg.BackgroundTransparency = 1
@@ -3241,7 +3246,7 @@ if shared.VapeExecuted then
 			bindtext2.Image = getcustomassetfunc("vape/assets/BindBackground.png")
 			bindtext2.BackgroundTransparency = 1
 			bindtext2.ScaleType = Enum.ScaleType.Slice
-			bindtext2.SliceCenter = Rect.new(0, 0, 140, 39)
+			bindtext2.SliceCenter = Rect.new(0, 0, 140, 40)
 			bindtext2.Visible = false
 			bindtext2.Parent = button
 			local bindtext3 = Instance.new("TextLabel")
@@ -3250,7 +3255,7 @@ if shared.VapeExecuted then
 			bindtext3.Font = Enum.Font.SourceSans
 			bindtext3.TextXAlignment = Enum.TextXAlignment.Left
 			bindtext3.TextSize = 17
-			bindtext3.TextColor3 = Color3.fromRGB(201, 201, 201)
+			bindtext3.TextColor3 = Color3.fromRGB(44, 44, 44)
 			bindtext3.BackgroundTransparency = 1
 			bindtext3.BorderSizePixel = 0
 			bindtext3.Parent = bindtext2
@@ -5144,19 +5149,32 @@ if shared.VapeExecuted then
 					currenttween:Play()
 				end
 			end)
+			bindbkg2.MouseButton1Click:connect(function()
+				api["PressedKeybindKey"] = buttonapi["Keybind"]
+				if buttonapi["Keybind"] == "" then
+					api["KeybindCaptured"] = false
+					api["PressedKeybindKey"] = "A"
+				end
+				bindbkg2.Visible = false
+			end)
 			bindbkg.MouseButton1Click:connect(function()
 				if api["KeybindCaptured"] == false then
 					api["KeybindCaptured"] = true
 					spawn(function()
+						bindimg.Visible = false
+						bindbkg2.Visible = true
 						bindtext2.Visible = true
 						bindtext3.Text = "   PRESS A KEY TO BIND"
-						bindtext2.Size = UDim2.new(0, 154, 0, 41)
+						bindtext2.Size = UDim2.new(0, 154, 0, 40)
 						repeat wait() bindtext2.Visible = true until api["PressedKeybindKey"] ~= ""
-						buttonapi["SetKeybind"]((api["PressedKeybindKey"] == buttonapi["Keybind"] and "" or api["PressedKeybindKey"]))
+						if api["KeybindCaptured"] then
+							buttonapi["SetKeybind"]((api["PressedKeybindKey"] == buttonapi["Keybind"] and "" or api["PressedKeybindKey"]))
+						end
 						api["PressedKeybindKey"] = ""
 						api["KeybindCaptured"] = false
+						bindbkg2.Visible = false
 						bindtext3.Text = (buttonapi["Keybind"] == "" and "   BIND REMOVED" or "   BOUND TO "..buttonapi["Keybind"]:upper())
-						bindtext2.Size = UDim2.new(0, game:GetService("TextService"):GetTextSize(bindtext3.Text, bindtext3.TextSize, bindtext3.Font, Vector2.new(10000, 100000)).X + 20, 0, 41)
+						bindtext2.Size = UDim2.new(0, game:GetService("TextService"):GetTextSize(bindtext3.Text, bindtext3.TextSize, bindtext3.Font, Vector2.new(10000, 100000)).X + 20, 0, 40)
 						wait(1)
 						bindtext2.Visible = false
 					end)
@@ -5921,9 +5939,41 @@ if shared.VapeExecuted then
 		return windowapi
 	end
 
+	local function bettertween(obj, newpos, dir, style, tim, override)
+		spawn(function()
+			local frame = Instance.new("Frame")
+			frame.Visible = false
+			frame.Position = obj.Position
+			frame.Parent = api["MainGui"]
+			frame:GetPropertyChangedSignal("Position"):connect(function()
+				obj.Position = UDim2.new(obj.Position.X.Scale, obj.Position.X.Offset, frame.Position.Y.Scale, frame.Position.Y.Offset)
+			end)
+			frame:TweenPosition(newpos, dir, style, tim, override)
+			frame.Parent = nil
+			task.wait(tim)
+			frame:Remove()
+		end)
+	end
+
+	local function bettertween2(obj, newpos, dir, style, tim, override)
+		spawn(function()
+			local frame = Instance.new("Frame")
+			frame.Visible = false
+			frame.Position = obj.Position
+			frame.Parent = api["MainGui"]
+			frame:GetPropertyChangedSignal("Position"):connect(function()
+				obj.Position = UDim2.new(frame.Position.X.Scale, frame.Position.X.Offset, obj.Position.Y.Scale, obj.Position.Y.Offset)
+			end)
+			frame:TweenPosition(newpos, dir, style, tim, override)
+			frame.Parent = nil
+			task.wait(tim)
+			frame:Remove()
+		end)
+	end
+
 	notificationwindow.ChildRemoved:connect(function()
 		for i,v in pairs(notificationwindow:GetChildren()) do
-			v.Position = UDim2.new(1, v.Position.X.Offset, 1, -(150 + 80 * (i - 1)))
+			bettertween(v, UDim2.new(1, v.Position.X.Offset, 1, -(150 + 80 * (i - 1))), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
 		end
 	end)
 
@@ -5932,25 +5982,44 @@ if shared.VapeExecuted then
 			local frame = Instance.new("Frame")
 			frame.Size = UDim2.new(0, 266, 0, 75)
 			frame.Position = UDim2.new(1, 0, 1, -(150 + 80 * offset))
-			frame.BackgroundTransparency = 0.5
+			frame.BackgroundTransparency = 1
 			frame.BackgroundColor3 = Color3.new(0, 0,0)
 			frame.BorderSizePixel = 0
 			frame.Parent = notificationwindow
 			frame.Visible = api["Notifications"]
+			frame.ClipsDescendants = false
+			local image = Instance.new("ImageLabel")
+			image.SliceCenter = Rect.new(67, 59, 323, 120)
+			image.Position = UDim2.new(0, -61, 0, -50)
+			image.BackgroundTransparency = 1
+			image.Name = "Frame"
+			image.ScaleType = Enum.ScaleType.Slice
+			image.Image = getcustomassetfunc("vape/assets/NotificationBackground.png")
+			image.Size = UDim2.new(1, 61, 0, 159)
+			image.Parent = frame
 			local uicorner = Instance.new("UICorner")
 			uicorner.CornerRadius = UDim.new(0, 6)
 			uicorner.Parent = frame
-			local frame2 = Instance.new("Frame")
+			local frame2 = Instance.new("ImageLabel")
 			frame2.BackgroundColor3 = Color3.new(1, 1, 1)
-			frame2.Size = UDim2.new(1, 0, 0, 2)
-			frame2.Position = UDim2.new(0, 0, 1, -2)
+			frame2.Name = "Frame"
+			frame2:GetPropertyChangedSignal("BackgroundColor3"):connect(function()
+				frame2.ImageColor3 = frame2.BackgroundColor3
+			end)
+			frame2.BackgroundTransparency = 1
+			frame2.SliceCenter = Rect.new(2, 0, 224, 2)
+			frame2.Size = UDim2.new(1, -61, 0, 2)
+			frame2.ScaleType = Enum.ScaleType.Slice
+			frame2.Position = UDim2.new(0, 63, 1, -36)
+			frame2.ZIndex = 2
+			frame2.Image = getcustomassetfunc("vape/assets/NotificationBar.png")
 			frame2.BorderSizePixel = 0
-			frame2.Parent = frame
+			frame2.Parent = image
 			local icon = Instance.new("ImageLabel")
 			icon.Name = "IconLabel"
 			icon.Image = getcustomassetfunc(customicon and "vape/"..customicon or "vape/assets/InfoNotification.png")
 			icon.BackgroundTransparency = 1
-			icon.Position = UDim2.new(0, -6, 0, -8)
+			icon.Position = UDim2.new(0, -6, 0, -6)
 			icon.Size = UDim2.new(0, 60, 0, 60)
 			icon.Parent = frame
 			local icon2 = icon:Clone()
@@ -5960,31 +6029,39 @@ if shared.VapeExecuted then
 			icon2.ImageTransparency = 0.5
 			icon2.Parent = icon
 			local textlabel1 = Instance.new("TextLabel")
-			textlabel1.Font = Enum.Font.Nunito
-			textlabel1.TextSize = 18
+			textlabel1.Font = Enum.Font.Gotham
+			textlabel1.TextSize = 13
 			textlabel1.RichText = true
+			textlabel1.TextTransparency = 0.1
 			textlabel1.TextColor3 = Color3.new(1, 1, 1)
 			textlabel1.BackgroundTransparency = 1
-			textlabel1.Position = UDim2.new(0, 46, 0, 12)
+			textlabel1.Position = UDim2.new(0, 46, 0, 18)
 			textlabel1.TextXAlignment = Enum.TextXAlignment.Left
 			textlabel1.TextYAlignment = Enum.TextYAlignment.Top
 			textlabel1.Text = "<b>"..(translations[top] ~= nil and translations[top] or top).."</b>"
 			textlabel1.Parent = frame
 			local textlabel2 = textlabel1:Clone()
-			textlabel2.Position = UDim2.new(0, 46, 0, 40)
-			textlabel2.Font = Enum.Font.Nunito
+			textlabel2.Position = UDim2.new(0, 46, 0, 44)
+			textlabel2.Font = Enum.Font.Gotham
+			textlabel2.TextTransparency = 0
 			textlabel2.TextColor3 = Color3.new(0.5, 0.5, 0.5)
 			textlabel2.RichText = true
 			textlabel2.Text = bottom
 			textlabel2.Parent = frame
+			local textlabel3 = textlabel2:Clone()
+			textlabel3.Position = UDim2.new(0, 1, 0, 1)
+			textlabel3.TextTransparency = 0.5
+			textlabel3.TextColor3 = Color3.new(0, 0, 0)
+			textlabel3.ZIndex = -1
+			textlabel3.Parent = textlabel2
 			spawn(function()
 				pcall(function()
-					frame:TweenPosition(UDim2.new(1, -262, 1, -(150 + 80 * offset)), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
-					wait(0.1)
-					frame2:TweenSize(UDim2.new(0, 0, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, duration, true)
+					bettertween2(frame, UDim2.new(1, -262, 1, -(150 + 80 * offset)), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
+					wait(0.15)
+					frame2:TweenSize(UDim2.new(0, 0, 0, 2), Enum.EasingDirection.In, Enum.EasingStyle.Linear, duration, true)
 					wait(duration)
-					frame:TweenPosition(UDim2.new(1, 0, 1, frame.Position.Y.Offset), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
-					wait(0.1)
+					bettertween2(frame, UDim2.new(1, 0, 1, frame.Position.Y.Offset), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
+					wait(0.15)
 					frame:Remove()
 				end)
 			end)
@@ -5993,7 +6070,7 @@ if shared.VapeExecuted then
 
 	api["LoadedAnimation"] = function(enabled)
 		if enabled then
-			api["CreateNotification"]("Finished Loading", "Press "..string.upper(api["GUIKeybind"]).." to open GUI", 4)
+			api["CreateNotification"]("Finished Loading", "Press "..string.upper(api["GUIKeybind"]).." to open GUI", 9.5)
 		end
 	end
 

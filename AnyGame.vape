@@ -743,20 +743,38 @@ killauracframe = Killaura.CreateToggle({
 })
 
 local longjumpboost = {["Value"] = 1}
-local longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+local longjumpdisabler = {["Enabled"] = false}
+local longjumpfall = false
+local longjumpjump = {["Enabled"] = false}
+local longjump = {["Enabled"] = false}
+longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "LongJump", 
 	["Function"] = function(callback)
 		if callback then
+			if longjumpjump then
+				if isAlive() then
+					lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+				end
+			end
 			BindToRenderStep("LongJump", 1, function() 
 				if isAlive() then
 					if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 						local velo = lplr.Character.Humanoid.MoveDirection * longjumpboost["Value"]
 						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(velo.X, lplr.Character.HumanoidRootPart.Velocity.Y, velo.Z)
 					end
+					if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+						longjumpfall = true
+					else
+						if longjumpfall and longjumpdisabler["Enabled"] then
+							longjumpfall = false
+							longjump["ToggleButton"](true)
+						end
+					end
 				end
 			end)
 		else
 			UnbindFromRenderStep("LongJump")
+			longjumpfall = false
 		end
 	end
 })
@@ -765,6 +783,18 @@ longjumpboost = longjump.CreateSlider({
 	["Min"] = 1,
 	["Max"] = 150, 
 	["Function"] = function(val) end
+})
+longjumpjump = longjump.CreateToggle({
+	["Name"] = "Jump",
+	["Function"] = function()
+	end,
+	["Default"] = true
+})
+longjumpdisabler = longjump.CreateToggle({
+	["Name"] = "Auto Disable",
+	["Function"] = function()
+	end,
+	["Default"] = true
 })
 
 local HighJumpMethod = {["Value"] = "Toggle"}
