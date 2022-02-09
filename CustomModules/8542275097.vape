@@ -206,36 +206,49 @@ end
 
 local skywars = {}
 local getfunctions
-local healthtable = {}
 runcode(function()
     getfunctions = function()
 		local Flamework = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@flamework"].core.out).Flamework
 		repeat task.wait() until Flamework.isInitialized
+		local controllers = {}
+		local controllerids = {}
+		local eventnames = {}
+		for i,v in pairs(debug.getupvalue(Flamework.createDependency, 2).idToObj) do
+			controllers[tostring(v)] = v
+			controllerids[tostring(v)] = i 
+			local controllerevents = {}
+			for i2,v2 in pairs(v) do
+				if type(v2) == "function" then
+					local eventsfound = {}
+					for i3,v3 in pairs(debug.getconstants(v2)) do
+						if tostring(v3):find("-") == 9 then
+							table.insert(eventsfound, tostring(v3))
+						end
+					end
+					if #eventsfound > 0 then
+						controllerevents[i2] = eventsfound
+					end
+				end
+			end
+			eventnames[tostring(v)] = controllerevents
+		end
         local Events = require(game:GetService("ReplicatedStorage").TS.events).GlobalEvents.client
 		skywars = {
 			["EventHandler"] = Events,
+			["Events"] = eventnames,
 			["BlockFunctionHandler"] = require(lplr.PlayerScripts.TS.events).Functions,
-			["HotbarController"] = Flamework.resolveDependency("client/controllers/hotbar-controller@HotbarController"),
-			["ReplicaHandler"] = require(lplr.PlayerScripts.TS.replicas).Replicas,
+			["HotbarController"] = controllers["HotbarController"],
+			--["ReplicaHandler"] = require(lplr.PlayerScripts.TS.replicas).Replicas,
 			["BlockUtil"] = require(game:GetService("ReplicatedStorage").TS.util["block-util"]).BlockUtil,
-			["ScreenController"] = Flamework.resolveDependency("client/controllers/screen-controller@ScreenController"),
-			["MeleeController"] = Flamework.resolveDependency("client/controllers/melee-controller@MeleeController"),
-			["ItemTable"] = require(game:GetService("ReplicatedStorage").TS.item.item).Items
+			["ScreenController"] = controllers["ScreenController"],
+			["MeleeController"] = Flamework.resolveDependency(controllerids["MeleeController"]),
+			["ItemTable"] = require(game:GetService("ReplicatedStorage").TS.item.item).Items,
+			["HealthController"] = Flamework.resolveDependency(controllerids["HealthController"])
 		}
     end
 end)
 
 getfunctions()
-local playerhealthconnection = skywars["ReplicaHandler"].PlayerHealth.Changed:Connect(function(p6, p7)
-	healthtable = p7
-end)
-healthtable = skywars["ReplicaHandler"].PlayerHealth:GetValue()
-GuiLibrary["SelfDestructEvent"].Event:connect(function()
-	if playerhealthconnection then
-		playerhealthconnection:Disconnect()
-	end
-end)
-
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	if chatconnection then
 		chatconnection:Disconnect()
@@ -285,7 +298,7 @@ local function getHeldItem()
 end
 
 local function equipItem(itemnam)
-	game:GetService("ReplicatedStorage"):FindFirstChild("events-shared/events@GlobalEvents").UpdateActiveItemType:FireServer(itemnam)
+	skywars["EventHandler"][skywars["Events"].HotbarController.updateActiveItem[1]]:fire(itemnam)
 end
 
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
@@ -323,7 +336,9 @@ runcode(function()
 					if isAlive() and autoclickermousedown and autoclickertick <= tick() and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false then
 						autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
 						if skywars["HotbarController"]:getHeldItemInfo() and skywars["HotbarController"]:getHeldItemInfo().Melee then
-							skywars["MeleeController"]:strike()
+							skywars["MeleeController"]:strike({
+								UserInputType = Enum.UserInputType.MouseButton1
+							})
 						end
 					end
 				end)
@@ -468,7 +483,7 @@ runcode(function()
 						if handcheck then
 							targettable[plr.Name] = {
 								["UserId"] = plr.UserId,
-								["Health"] = (healthtable[tostring(plr.UserId)] or 100),
+								["Health"] = (skywars["HealthController"]:getHealth(plr) or 100),
 								["MaxHealth"] = 100
 							}
 							targetsize = targetsize + 1
@@ -489,7 +504,7 @@ runcode(function()
 						if sword then
 							for i,plr in pairs(plrs) do
 								equipItem(sword.Name)
-								skywars["EventHandler"].PlayerMelee:fire(plr)
+								skywars["EventHandler"][skywars["Events"].MeleeController.strikeDesktop[1]]:fire(plr)
 								equipItem(olditemname)
 							end
 						end
@@ -562,7 +577,7 @@ end)
 
 runcode(function()
 	local predictedBlocks = {}
-	connectionstodisconnect[#connectionstodisconnect + 1] = skywars["EventHandler"].BlockAdded:connect(function(block)
+	connectionstodisconnect[#connectionstodisconnect + 1] = skywars["EventHandler"][skywars["Events"].BlockController.bindControls[1]]:connect(function(block)
 		local realblock = predictedBlocks[block]
 		if not realblock then
 			return nil
@@ -645,7 +660,7 @@ runcode(function()
 								v18.Position = newpos;
 								v18.Parent = workspace.BlockContainer;
 								predictedBlocks[newpos] = v18
-								skywars["EventHandler"].BlockPlace(newpos, game:GetService("HttpService"):GenerateGUID(false))
+								skywars["EventHandler"][skywars["Events"].BlockController.placeBlock[1]](newpos, game:GetService("HttpService"):GenerateGUID(false))
 								equipItem(olditemname)
 								oldpos = newpos
 							end
@@ -720,6 +735,7 @@ runcode(function()
 	local flip = false
 	local lastreal
 	local old = nil
+	local part
 	targetstrafe = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "TargetStrafe",
 		["Function"] = function(callback)
@@ -727,11 +743,11 @@ runcode(function()
 					BindToStepped("TargetStrafe", 1, function(lol, delta)
 						local plr = GetNearestHumanoidToPosition(true, targetstrafedistance["Value"] + 6)
 						if isAlive() and plr and (not GuiLibrary["ObjectsThatCanBeSaved"]["ScaffoldOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
-							if (Vector3.new(0, lplr.Character.HumanoidRootPart.Position.Y, 0) - Vector3.new(0, plr.Character.HumanoidRootPart.Position.Y, 0)).magnitude <= (targetstrafejump["Value"] / 5) then
+							if (lplr.Character.HumanoidRootPart.Position.Y - plr.Character.HumanoidRootPart.Position.Y) >= -15 then
 								if plr ~= old then
 									old = plr
 									local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, lplr.Character.HumanoidRootPart.Position)
-									local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-270)
+									local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-90)
 									targetstrafenum = math.deg(num)
 								end
 								local raycastparameters = RaycastParams.new()
@@ -740,44 +756,58 @@ runcode(function()
 								local newray = workspace:Raycast(plr.Character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
 								strafing = newray ~= nil
 								if newray ~= nil then
-									local allowed = false
 									if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) then
 										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, targetstrafejump["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
 									end
 									lastreal = plr.Character.HumanoidRootPart.Position
-									local playerpos = plr.Character.HumanoidRootPart.Position
-									local newpos = Vector3.new(playerpos.X, lplr.Character.HumanoidRootPart.Position.Y, playerpos.Z) + (CFrame.Angles(0, math.rad(targetstrafenum), 0) * CFrame.new(0, 0, targetstrafedistance["Value"])).p
-									local ray = workspace:Raycast(Vector3.new(playerpos.X, lplr.Character.HumanoidRootPart.Position.Y, playerpos.Z), (CFrame.Angles(0, math.rad(targetstrafenum), 0) * CFrame.new(0, 0, targetstrafedistance["Value"])).p, raycastparameters)
+									local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, lplr.Character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
+									local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"]
+									local ray = workspace:Raycast(playerpos, (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * (targetstrafedistance["Value"] + 1)), raycastparameters)
+									local times = 1
 									if ray and ray.Position then
-										local num = math.clamp((newpos - ray.Position).magnitude - 2, 1, 10000)
-										newpos = Vector3.new(playerpos.X, lplr.Character.HumanoidRootPart.Position.Y, playerpos.Z) + (CFrame.Angles(0, math.rad(targetstrafenum), 0) * CFrame.new(0, 0, num)).p
+										times = 1 + (((playerpos - ray.Position).Magnitude) / 20)
+										newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * math.clamp(((playerpos - ray.Position).Magnitude - 3), 1, targetstrafedistance["Value"])
 									end
-									local newcframe = CFrame.new(newpos, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-									if (lplr.Character.HumanoidRootPart.CFrame.p - newpos).magnitude <= 5 then
-										local vec = (newpos - lplr.Character.HumanoidRootPart.Position)
-										strafevelo = Vector3.new(vec.X, lplr.Character.HumanoidRootPart.Velocity.Y, vec.Z) 
-										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(vec.X, lplr.Character.HumanoidRootPart.Velocity.Y, vec.Z)
-										lplr.Character.HumanoidRootPart.CFrame = newcframe
-										allowed = true
+									local newray2 = workspace:Raycast(newpos, Vector3.new(0, -1000, 0), raycastparameters)
+									if newray2 ~= nil then
+										local newcframe = CFrame.new(newpos, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
+										if (lplr.Character.HumanoidRootPart.Position - newpos).Magnitude <= 5 then
+											lplr.Character.HumanoidRootPart.CFrame = newcframe
+										else
+											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe, math.clamp(17 * delta, 0, 1))
+										end
 									else
-										local newpos3 = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe, 15 * delta)
-										local vec = (newpos3.p - lplr.Character.HumanoidRootPart.Position)
-										strafevelo = Vector3.new(vec.X, lplr.Character.HumanoidRootPart.Velocity.Y, vec.Z)
-										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(vec.X, lplr.Character.HumanoidRootPart.Velocity.Y, vec.Z)
-										lplr.Character.HumanoidRootPart.CFrame = newpos3
+										local passed = false
+										local newpos3 = newpos
+										for i = 4, targetstrafedistance["Value"], 4 do
+											local betterpos = playerpos + (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * math.clamp((targetstrafedistance["Value"] - i), 1, targetstrafedistance["Value"]))
+											local newray3 = workspace:Raycast(betterpos, Vector3.new(0, -1000, 0), raycastparameters)
+											if newray3 then
+												newpos3 = betterpos
+												passed = true
+												break
+											end
+										end
+										if not passed then
+											newpos3 = playerpos + (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * 1)
+										end
+										local newcframe2 = CFrame.new(newpos3, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
+										if (lplr.Character.HumanoidRootPart.Position - newpos3).Magnitude <= 5 then
+											lplr.Character.HumanoidRootPart.CFrame = newcframe2
+										else
+											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe2, math.clamp(17 * delta, 0, 1))
+										end
 									end
-									if allowed then
-										targetstrafenum = (flip and targetstrafenum - (targetstrafespeed["Value"] / 10) or targetstrafenum + (targetstrafespeed["Value"] / 10))
-										if targetstrafenum >= 999999 then
-											targetstrafenum = 0
-										end
-										if targetstrafenum < -999999 then
-											targetstrafenum = 0
-										end
+									targetstrafenum = (flip and targetstrafenum - ((targetstrafespeed["Value"] / 10) * times) or targetstrafenum + ((targetstrafespeed["Value"] / 10) * times))
+									if targetstrafenum >= 999999 then
+										targetstrafenum = 0
+									end
+									if targetstrafenum < -999999 then
+										targetstrafenum = 0
 									end
 								else
 									if lastreal then
-										lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(CFrame.new(lastreal), 15 * delta)
+										--lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(CFrame.new(lastreal), 15 * delta)
 									end
 								end
 							end
@@ -825,13 +855,13 @@ runcode(function()
 		["Name"] = "ChestStealer",
 		["Function"] = function(callback)
 			if callback then
-				ChestOpen = skywars["EventHandler"].ChestUpdated:connect(function(one, two, three)
+				ChestOpen = skywars["EventHandler"][skywars["Events"].ChestController.onStart[1]]:connect(function(one, two, three)
 					if ChestBlacklist[one] == nil then
 						ChestBlacklist[one] = true
 						for i,v in pairs(two) do
-							skywars["EventHandler"].ChestUpdate(one, v.Type, -v.Quantity)
+							skywars["EventHandler"][skywars["Events"].ChestController.updateChest[1]](one, v.Type, -v.Quantity)
 						end
-						skywars["EventHandler"].ChestClose(one)
+						skywars["EventHandler"][skywars["Events"].ChestController.closeChest[1]](one)
 					end
 				end)
 				spawn(function()
@@ -841,7 +871,7 @@ runcode(function()
 							for i,v in pairs(workspace.BlockContainer.Map.Chests:GetChildren()) do
 								if v.PrimaryPart then
 									if (lplr.Character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 10 and ChestBlacklist[v] == nil then
-										skywars["EventHandler"].ChestOpen(v)
+										skywars["EventHandler"][skywars["Events"].ChestController.openChest[1]](v)
 									end
 								end
 							end
@@ -907,7 +937,7 @@ runcode(function()
 						wait(0.2 + (math.random(1, 10) / 10))
 						local plr
 						repeat wait() plr = game.Players:GetChildren()[math.random(1, #game.Players:GetChildren())] until plr ~= oldplr and plr ~= lplr
-						skywars["EventHandler"].Report:fire(plr.UserId)
+						skywars["EventHandler"][skywars["Events"].ReportController.submitReport[1]]:fire(plr.UserId)
 						--print(plr.Name, "reported")
 					until (not AutoReport["Enabled"])
 				end)
@@ -1137,9 +1167,9 @@ runcode(function()
 								rootPos = rootPos
 								if rootVis then
 									if ESPHealthBar["Enabled"] then
-										local color = HealthbarColorTransferFunction((healthtable[tostring(plr.UserId)] or 100) / 100)
+										local color = HealthbarColorTransferFunction((skywars["HealthController"]:getHealth(plr) or 100) / 100)
 										thing.HealthLineMain.BackgroundColor3 = color
-										thing.HealthLineMain.Size = UDim2.new(0, 1, math.clamp((healthtable[tostring(plr.UserId)] or 100) / 100, 0, 1), (math.clamp((healthtable[tostring(plr.UserId)] or 100) / 100, 0, 1) == 0 and 0 or -2))
+										thing.HealthLineMain.Size = UDim2.new(0, 1, math.clamp((skywars["HealthController"]:getHealth(plr) or 100) / 100, 0, 1), (math.clamp((skywars["HealthController"]:getHealth(plr) or 100) / 100, 0, 1) == 0 and 0 or -2))
 									end
 									thing.Visible = rootVis
 									thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
@@ -1341,10 +1371,10 @@ runcode(function()
 							if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
 								local rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
 								if NameTagsHealth["Enabled"] then
-									rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name).." "..math.floor((healthtable[tostring(plr.UserId)] or 100))
+									rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name).." "..math.floor((skywars["HealthController"]:getHealth(plr) or 100))
 								end
-								local color = HealthbarColorTransferFunction((healthtable[tostring(plr.UserId)] or 100) / 100)
-								local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor((healthtable[tostring(plr.UserId)] or 100)).."</font>" or '')
+								local color = HealthbarColorTransferFunction((skywars["HealthController"]:getHealth(plr) or 100) / 100)
+								local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor((skywars["HealthController"]:getHealth(plr) or 100)).."</font>" or '')
 								local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 								thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 								thing.Text = modifiedText
@@ -1362,9 +1392,9 @@ runcode(function()
 							headPos = headPos
 							
 							if headVis then
-								local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor((healthtable[tostring(plr.UserId)] or 100)) or "")
-								local color = HealthbarColorTransferFunction((healthtable[tostring(plr.UserId)] or 100) / 100)
-								local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor((healthtable[tostring(plr.UserId)] or 100)).."</font>" or '')
+								local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor((skywars["HealthController"]:getHealth(plr) or 100)) or "")
+								local color = HealthbarColorTransferFunction((skywars["HealthController"]:getHealth(plr) or 100) / 100)
+								local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor((skywars["HealthController"]:getHealth(plr) or 100)).."</font>" or '')
 								local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 								thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 								thing.Text = modifiedText
@@ -1430,7 +1460,7 @@ runcode(function()
 		return false
 	end
 
-	skywars["EventHandler"].GameEnded:connect(function(winstuff)
+	skywars["EventHandler"][skywars["Events"].GameController.onStart[2]]:connect(function(winstuff)
 		local v14 = winstuff and winstuff.placements and #winstuff.placements > 0 and winstuff.placements[1] or nil;
 		if v14 == lplr and victorysaid == false then
 			victorysaid = true
@@ -1468,7 +1498,7 @@ runcode(function()
 
 	local justsaid = ""
 	local leavesaid = false
-		connectionstodisconnect[#connectionstodisconnect + 1] = skywars["EventHandler"].PlayerDeath:connect(function(p7, p8)
+		connectionstodisconnect[#connectionstodisconnect + 1] = skywars["EventHandler"][skywars["Events"].GameController.onStart[1]]:connect(function(p7, p8)
 			if p7 == lplr and leavesaid == false then
 				leavesaid = true
 				if AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
@@ -1565,7 +1595,7 @@ runcode(function()
 					spawn(function()
 						repeat
 							task.wait()
-							if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+							if isAlive() and lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
 								lplr.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, false)
 								local ray
 								local ray2
@@ -1586,7 +1616,7 @@ runcode(function()
 										GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["ToggleButton"](false)
 									end
 									lplr.Character.HumanoidRootPart.CFrame = pos
-									task.wait(0.04)
+									task.wait(0.1)
 									lplr.Character.HumanoidRootPart.CFrame = CFrame.new(oldlanded, oldlanded + lplr.Character.HumanoidRootPart.CFrame.lookVector)
 									lplr.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, true)
 									lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
@@ -1756,7 +1786,7 @@ runcode(function()
 				BindToRenderStep("BetterFP", 1, function() --renderstep moment
 					if lplr.Character then
 						local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
-						if tool then
+						if tool and tool:FindFirstChild("Handle") then
 							tool.Handle.LocalTransparencyModifier = ((cam.CFrame.Position - cam.Focus.Position).Magnitude <= 0.6 and 1 or 0) --are they in first person, hide ugly tool models :puke:
 							for i,v in pairs(tool.Handle:GetChildren()) do
 								if v:IsA("Texture") then
