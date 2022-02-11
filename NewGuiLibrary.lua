@@ -155,6 +155,52 @@ if shared.VapeExecuted then
 	clickgui.BackgroundColor3 = Color3.fromRGB(79, 83, 166)
 	clickgui.Visible = false
 	clickgui.Parent = scaledgui
+	local searchbarmain = Instance.new("Frame")
+	searchbarmain.Size = UDim2.new(0, 220, 0, 45)
+	searchbarmain.Position = UDim2.new(0.5, -110, 0, -23)
+	searchbarmain.ClipsDescendants = false
+	searchbarmain.ZIndex = 10
+	searchbarmain.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	searchbarmain.Parent = clickgui
+	local searchbarchildren = Instance.new("Frame")
+	searchbarchildren.Size = UDim2.new(1, 0, 1, -45)
+	searchbarchildren.Position = UDim2.new(0, 0, 0, 45)
+	searchbarchildren.BackgroundTransparency = 1
+	searchbarchildren.ZIndex = 10
+	searchbarchildren.Parent = searchbarmain
+	local searchbaricon = Instance.new("ImageLabel")
+	searchbaricon.BackgroundTransparency = 1
+	searchbaricon.ZIndex = 10
+	searchbaricon.Image = getcustomassetfunc("vape/assets/SearchBarIcon.png")
+	searchbaricon.Size = UDim2.new(0, 14, 0, 14)
+	searchbaricon.Position = UDim2.new(1, -32, 0, 14)
+	searchbaricon.Parent = searchbarmain
+	local searchbar = Instance.new("TextBox")
+	searchbar.PlaceholderText = ""
+	searchbar.Text = ""
+	searchbar.ZIndex = 10
+	searchbar.TextColor3 = Color3.fromRGB(121, 121, 121)
+	searchbar.Size = UDim2.new(1, -13, 0, 43)
+	searchbar.Font = Enum.Font.Gotham
+	searchbar.TextXAlignment = Enum.TextXAlignment.Left
+	searchbar.TextSize = 15
+	searchbar.Position = UDim2.new(0, 13, 0, 0)
+	searchbar.BackgroundTransparency = 1
+	searchbar.Parent = searchbarmain
+	local searchbarshadow = Instance.new("ImageLabel")
+	searchbarshadow.AnchorPoint = Vector2.new(0.5, 0.5)
+	searchbarshadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	searchbarshadow.Image = getcustomassetfunc("vape/assets/WindowBlur.png")
+	searchbarshadow.BackgroundTransparency = 1
+	searchbarshadow.ZIndex = -1
+	searchbarshadow.Size = UDim2.new(1, 6, 1, 6)
+	searchbarshadow.ImageColor3 = Color3.new(0, 0, 0)
+	searchbarshadow.ScaleType = Enum.ScaleType.Slice
+	searchbarshadow.SliceCenter = Rect.new(10, 10, 118, 118)
+	searchbarshadow.Parent = searchbarmain
+	local searchbarround = Instance.new("UICorner")
+	searchbarround.CornerRadius = UDim.new(0, 5)
+	searchbarround.Parent = searchbarmain
 	local OnlineProfilesBigFrame = Instance.new("Frame")
 	OnlineProfilesBigFrame.Size = UDim2.new(1, 0, 1, 0)
 	OnlineProfilesBigFrame.Name = "OnlineProfiles"
@@ -170,7 +216,7 @@ if shared.VapeExecuted then
 	hoverbox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	hoverbox.Active = false
 	hoverbox.Text = "  ".."Placeholder"
-	hoverbox.ZIndex = 5
+	hoverbox.ZIndex = 11
 	hoverbox.TextColor3 = Color3.fromRGB(162, 162, 162)
 	hoverbox.Font = Enum.Font.SourceSans
 	hoverbox.TextXAlignment = Enum.TextXAlignment.Left
@@ -180,6 +226,26 @@ if shared.VapeExecuted then
 	local hoverround = Instance.new("UICorner")
 	hoverround.CornerRadius = UDim.new(0, 5)
 	hoverround.Parent = hoverbox
+	local hoverbox2 = hoverbox:Clone()
+	hoverbox2.ZIndex = -1
+	hoverbox2.Size = UDim2.new(1, 2, 1, 2)
+	hoverbox2.Text = ""
+	hoverbox2.Visible = true
+	hoverbox2.BackgroundColor3 = Color3.fromRGB(32, 35, 36)
+	hoverbox2.Position = UDim2.new(0, -1, 0, -1)
+	hoverbox2.Parent = hoverbox
+	local hoverboxshadow = Instance.new("ImageLabel")
+	hoverboxshadow.AnchorPoint = Vector2.new(0.5, 0.5)
+	hoverboxshadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	hoverboxshadow.Image = getcustomassetfunc("vape/assets/WindowBlur.png")
+	hoverboxshadow.BackgroundTransparency = 1
+	hoverboxshadow.ZIndex = -1
+	hoverboxshadow.Visible = true
+	hoverboxshadow.Size = UDim2.new(1, 6, 1, 6)
+	hoverboxshadow.ImageColor3 = Color3.new(0, 0, 0)
+	hoverboxshadow.ScaleType = Enum.ScaleType.Slice
+	hoverboxshadow.SliceCenter = Rect.new(10, 10, 118, 118)
+	hoverboxshadow.Parent = hoverbox
 	local vertextsize = game:GetService("TextService"):GetTextSize(VERSION, 25, Enum.Font.SourceSans, Vector2.new(99999, 99999))
 	local vertext = Instance.new("TextLabel")
 	vertext.Name = "Version"
@@ -3276,6 +3342,7 @@ if shared.VapeExecuted then
 			end
 			buttonapi["Enabled"] = false
 			buttonapi["Keybind"] = ""
+			buttonapi["HoverText"] = argstablemain["HoverText"]
 			buttonapi["Children"] = children2
 			buttonapi["Name"] = argstablemain["Name"]
 			buttonapi["HasExtraText"] = type(argstablemain["ExtraText"]) == "function"
@@ -6117,6 +6184,78 @@ if shared.VapeExecuted then
 		if input1.KeyCode == Enum.KeyCode.LeftShift then
 			holdingshift = false
 		end
+	end)
+
+	searchbar:GetPropertyChangedSignal("Text"):connect(function()
+		searchbarchildren:ClearAllChildren()
+		if searchbar.Text == "" then
+			searchbarmain.Size = UDim2.new(0, 220, 0, 45)
+		else
+			local optionbuttons = {}
+			for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
+				if i:find("OptionsButton") and i:sub(1, searchbar.Text:len()):lower() == searchbar.Text:lower() then
+					local button = Instance.new("TextButton")
+					button.Name = v["Object"].Name
+					button.AutoButtonColor = false
+					button.Active = true
+					button.Size = UDim2.new(1, 0, 0, 40)
+					button.BorderSizePixel = 0
+					button.Position = UDim2.new(0, 0, 0, 40 * #optionbuttons)
+					button.ZIndex = 10
+					button.BackgroundColor3 = v["Object"].BackgroundColor3
+					button.Text = ""
+					button.LayoutOrder = amount
+					button.Parent = searchbarchildren
+					v["Object"]:GetPropertyChangedSignal("BackgroundColor3"):connect(function()
+						button.BackgroundColor3 = v["Object"].BackgroundColor3
+					end)
+					local buttonactiveborder = Instance.new("Frame")
+					buttonactiveborder.BackgroundTransparency = 0.75
+					buttonactiveborder.BackgroundColor3 = Color3.new(0, 0, 0)
+					buttonactiveborder.BorderSizePixel = 0
+					buttonactiveborder.Size = UDim2.new(1, 0, 0, 1)
+					buttonactiveborder.Position = UDim2.new(0, 0, 1, -1)
+					buttonactiveborder.ZIndex = 10
+					buttonactiveborder.Visible = false
+					buttonactiveborder.Parent = button
+					local button2 = Instance.new("ImageButton")
+					button2.BackgroundTransparency = 1
+					button2.Size = UDim2.new(0, 10, 0, 20)
+					button2.Position = UDim2.new(1, -24, 0, 10)
+					button2.Name = "OptionsButton"
+					button2.ZIndex = 10
+					button2.Image = v["Object"].OptionsButton.Image
+					button2.Parent = button
+					v["Object"].OptionsButton:GetPropertyChangedSignal("Image"):connect(function()
+						button2.Image = v["Object"].OptionsButton.Image
+					end)
+					local buttontext = Instance.new("TextLabel")
+					buttontext.BackgroundTransparency = 1
+					buttontext.Name = "ButtonText"
+					buttontext.Text = (translations[v["Object"].Name:gsub("Button", "")] ~= nil and translations[v["Object"].Name:gsub("Button", "")] or v["Object"].Name:gsub("Button", ""))
+					buttontext.Size = UDim2.new(0, 118, 0, 39)
+					buttontext.Active = false
+					buttontext.ZIndex = 10
+					buttontext.TextColor3 = v["Object"].ButtonText.TextColor3
+					v["Object"].ButtonText:GetPropertyChangedSignal("TextColor3"):connect(function()
+						buttontext.TextColor3 = v["Object"].ButtonText.TextColor3
+					end)
+					buttontext.TextSize = 17
+					buttontext.Font = Enum.Font.SourceSans
+					buttontext.TextXAlignment = Enum.TextXAlignment.Left
+					buttontext.Position = UDim2.new(0, 12, 0, 0)
+					buttontext.Parent = button
+					button.MouseButton1Click:connect(function()
+						v["Api"]["ToggleButton"](false)
+					end)
+					table.insert(optionbuttons, v)
+				end
+			end
+			searchbarmain.Size = UDim2.new(0, 220, 0, 49 + (40 * #optionbuttons))
+		end
+	end)
+	searchbar.FocusLost:connect(function()
+		
 	end)
 
 	return api
