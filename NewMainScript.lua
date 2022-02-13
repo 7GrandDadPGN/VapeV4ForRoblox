@@ -57,7 +57,7 @@ if isfile("vape/language.dat") == false then
 	local suc, res = pcall(function() return gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") end)
 	writefile("vape/language.dat", suc and res or "en-us")
 end
-if not pcall(function() return GetURL("vape/translations/"..readfile("vape/language.dat")..".vapetranslation") end) then
+if not pcall(function() return GetURL("translations/"..readfile("vape/language.dat")..".vapetranslation") end) then
 	writefile("vape/language.dat", "en-us")
 end
 local assetver = checkassetversion()
@@ -1401,7 +1401,7 @@ GUISettings.CreateButton2({
 				movedown = true
 				num = 6
 			end
-			v2.Position = UDim2.new(0, num, 0, (movedown and (storedpos[num] and (storedpos[num] + 9) or 400) or 6))
+			v2.Position = UDim2.new(0, num, 0, (movedown and (storedpos[num] and (storedpos[num] + 9) or 400) or 39))
 			if not storedpos[num] then
 				storedpos[num] = v2.AbsoluteSize.Y
 				if v2.Name == "MainWindow" then
