@@ -785,8 +785,8 @@ local function UpdateHud()
 		table.sort(tableofmodules, function(a, b) return a["Text"]:lower() < b["Text"]:lower() end)
 	else
 		table.sort(tableofmodules, function(a, b) 
-			local textsize1 = a["Text"]..(a["ExtraText"] and a["ExtraText"]() or "")
-			local textsize2 = b["Text"]..(b["ExtraText"] and b["ExtraText"]() or "")
+			local textsize1 = (translations[a["Text"]] ~= nil and translations[a["Text"]] or a["Text"])..(a["ExtraText"] and a["ExtraText"]() or "")
+			local textsize2 = (translations[b["Text"]] ~= nil and translations[b["Text"]] or b["Text"])..(b["ExtraText"] and b["ExtraText"]() or "")
 			textsize1 = game:GetService("TextService"):GetTextSize(textsize1, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
 			textsize2 = game:GetService("TextService"):GetTextSize(textsize2, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
 			return textsize1.X > textsize2.X 
