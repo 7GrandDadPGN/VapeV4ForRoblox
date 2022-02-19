@@ -25,6 +25,9 @@ if shared.VapeExecuted then
 
 	local function GetURL(scripturl)
 		if shared.VapeDeveloper then
+			if not isfile("vape/"..scripturl) then
+				error("File not found : vape/"..scripturl)
+			end
 			return readfile("vape/"..scripturl)
 		else
 			local res = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
@@ -329,7 +332,7 @@ if shared.VapeExecuted then
 
 	api["SaveSettings"] = function()
 		if loadedsuccessfully then
-			writefile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
+			writefile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
 			local WindowTable = {}
 			for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
 				if v["Type"] == "Window" then
@@ -380,21 +383,34 @@ if shared.VapeExecuted then
 				end
 			end
 			WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = api["GUIKeybind"]}
-			writefile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile", game:GetService("HttpService"):JSONEncode(api["Settings"]))
-			writefile("vape/Profiles/GUIPositions.vapeprofile", game:GetService("HttpService"):JSONEncode(WindowTable))
+			writefile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", game:GetService("HttpService"):JSONEncode(api["Settings"]))
+			writefile("vape/Profiles/GUIPositions.vapeprofile.txt", game:GetService("HttpService"):JSONEncode(WindowTable))
 		end
 	end
 
 	api["LoadSettings"] = function()
+		if listfiles then
+			for i,v in pairs(listfiles("vape/Profiles")) do 
+				local newstr = v:gsub("vape/Profiles", ""):sub(2, v:len())
+				local ext = (v:len() >= 12 and v:sub(v:len() - 12, v:len()))
+				if (ext and ext:find("vapeprofile") and ext:find("txt") == nil) then
+					writefile("vape/Profiles/"..newstr..".txt", readfile("vape/Profiles/"..newstr))
+					if delfile then
+						print("wrote:", "vape/Profiles/"..newstr..".txt")
+						delfile("vape/Profiles/"..newstr)
+					end
+				end
+			end
+		end
 		local success2, result2 = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles"))
+			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
 		end)
 		if success2 and type(result2) == "table" then
 			api["Profiles"] = result2
 		end
 		getprofile()
 		local success3, result3 = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/GUIPositions.vapeprofile"))
+			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/GUIPositions.vapeprofile.txt"))
 		end)
 		if success3 and type(result3) == "table" then
 			for i,v in pairs(result3) do
@@ -443,7 +459,7 @@ if shared.VapeExecuted then
 			end
 		end
 		local success, result = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile"))
+			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
 		end)
 		if success and type(result) == "table" then
 			api["LoadSettingsEvent"]:Fire(result)
@@ -536,7 +552,7 @@ if shared.VapeExecuted then
 	api["SwitchProfile"] = function(profilename)
 		api["Profiles"][api["CurrentProfile"]]["Selected"] = false
 		api["Profiles"][profilename]["Selected"] = true
-		if (not isfile("vape/Profiles/"..(profilename == "default" and "" or profilename)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile")) then
+		if (not isfile("vape/Profiles/"..(profilename == "default" and "" or profilename)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt")) then
 			local realprofile = api["CurrentProfile"]
 			api["CurrentProfile"] = profilename
 			api["SaveSettings"]()
@@ -3252,7 +3268,7 @@ if shared.VapeExecuted then
 			children2.Parent = children
 			local sorttable1 = {}
 			for i,v in pairs(children:GetChildren()) do
-				if v:IsA("TextButton") or v:IsA("Frame") then
+				if v:IsA("TextButton") then
 					table.insert(sorttable1, v.Name)
 				end
 			end
@@ -3260,7 +3276,11 @@ if shared.VapeExecuted then
 			for i2,v2 in pairs(sorttable1) do
 				if v2:find("Button") then
 					local findstr = v2:gsub("Button", "Children")
-					children[v2].LayoutOrder = (table.find(sorttable1, findstr) and table.find(sorttable1, findstr) - 6 or i2)
+					local sortnum = i2
+					if children:FindFirstChild(findstr) then
+						children[findstr].LayoutOrder = sortnum + 1
+					end
+					children[v2].LayoutOrder = sortnum
 				else
 					children[v2].LayoutOrder = i2
 				end
