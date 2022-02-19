@@ -2,6 +2,9 @@ repeat task.wait() until game:IsLoaded() == true
 
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
+		if not isfile("vape/"..scripturl) then
+			error("File not found : vape/"..scripturl)
+		end
 		return readfile("vape/"..scripturl)
 	else
 		local res = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
@@ -595,7 +598,7 @@ OnlineProfilesButton.MouseButton1Click:connect(function()
 					profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 				end)
 				profiledownload.MouseButton1Click:connect(function()
-					writefile("vape/Profiles/"..v2["ProfileName"]..tostring(game.PlaceId)..".vapeprofile", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles/"..v2["OnlineProfileName"], true)))
+					writefile("vape/Profiles/"..v2["ProfileName"]..tostring(game.PlaceId)..".vapeprofile.txt", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles/"..v2["OnlineProfileName"], true)))
 					GuiLibrary["Profiles"][v2["ProfileName"]] = {["Keybind"] = "", ["Selected"] = false}
 					if table.find(ProfilesTextList["ObjectList"], v2["ProfileName"]) == nil then
 						table.insert(ProfilesTextList["ObjectList"], v2["ProfileName"])
@@ -703,14 +706,6 @@ onetext2.TextYAlignment = Enum.TextYAlignment.Top
 onetext2.TextColor3 = Color3.new(0, 0, 0)
 onetext2.Font = Enum.Font.SourceSans
 onetext2.TextSize = 23
-local onetext3 = onetext:Clone()
-onetext3.Name = "ExtraText"
-onetext3.Position = UDim2.new(0, 0, 0, 0)
-onetext3.TextColor3 = Color3.new(0.65, 0.65, 0.65)
-onetext3.Parent = onetext
-local onetext4 = onetext3.ExtraText
-onetext4.TextColor3 = Color3.new(0, 0, 0)
-onetext4.TextTransparency = 0.5
 local onebackground = Instance.new("Frame")
 onebackground.BackgroundTransparency = 0.5
 onebackground.BorderSizePixel = 0
@@ -725,7 +720,6 @@ onescale:GetPropertyChangedSignal("Scale"):connect(function()
 	local check = (childrenobj.Parent.Position.X.Offset + childrenobj.Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2)
 	childrenobj.Position = UDim2.new((check and -(onescale.Scale - 1) or 0), (check and 0 or -6 * (onescale.Scale - 1)), 1, -6 * (onescale.Scale - 1))
 end)
-onetext3:GetPropertyChangedSignal("Text"):connect(function() onetext4.Text = onetext3.Text end)
 onetext:GetPropertyChangedSignal("Size"):connect(function()
 	onebackground.Position = onething.Position - UDim2.new(0, (onetext.Position.X.Offset == -154 and 10 or 0), 0, 0)
 	onebackground.Size = UDim2.new(0, onetext.Size.X.Offset, 0, onetext.Size.Y.Offset + (onething.Visible and 27 or 0))
@@ -741,17 +735,13 @@ TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(
 	if check then
 		onetext.TextXAlignment = Enum.TextXAlignment.Right
 		onetext2.TextXAlignment = Enum.TextXAlignment.Right
-		onetext3.TextXAlignment = Enum.TextXAlignment.Right
-		onetext4.TextXAlignment = Enum.TextXAlignment.Right
 		onetext2.Position = UDim2.new(0, 1, 0, 1)
 		onething.Position = UDim2.new(1, -142, 0, 8)
 		onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
 	else
 		onetext.TextXAlignment = Enum.TextXAlignment.Left
 		onetext2.TextXAlignment = Enum.TextXAlignment.Left
-		onetext2.Position = UDim2.new(0, 4, 0, 1)
-		onetext3.TextXAlignment = Enum.TextXAlignment.Left
-		onetext4.TextXAlignment = Enum.TextXAlignment.Left
+		onetext2.Position = UDim2.new(0, 5, 0, 1)
 		onething.Position = UDim2.new(0, 2, 0, 8)
 		onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
 	end
@@ -794,39 +784,31 @@ local function UpdateHud()
 	end
 	for i2,v2 in pairs(tableofmodules) do
 		if first then
-			text = (translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..string.rep(" ", getSpaces(v2["ExtraText"]()))
-			text2 = string.rep(" ", getSpaces(v2["Text"]))..(translations[v2["ExtraText"]()] ~= nil and translations[v2["ExtraText"]()] or v2["ExtraText"]())
+			text = (translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or "")
 			first = false
 		else
-			text = text..'\n'..(translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..string.rep(" ", getSpaces(v2["ExtraText"]()))
-			text2 = text2..'\n'..string.rep(" ", getSpaces(v2["Text"]))..(translations[v2["ExtraText"]()] ~= nil and translations[v2["ExtraText"]()] or v2["ExtraText"]())
+			text = text..'\n'..(translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or "")
 		end
 	end
 	textwithoutthing = text
 	onetext.Text = text
-	onetext2.Text = text
-	onetext3.Text = text2
+	onetext2.Text = text:gsub(":", " ")
 	local newsize = game:GetService("TextService"):GetTextSize(text, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
 	if text == "" then
 		newsize = Vector2.new(0, 0)
 	end
 	onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
-	onetext3.Size = UDim2.new(0, 154, 0, newsize.Y)
 	if TextGui.GetCustomChildren().Parent then
 		if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
 			onetext.TextXAlignment = Enum.TextXAlignment.Right
-			onetext2.Position = UDim2.new(0, 1, 0, 1)
 			onetext2.TextXAlignment = Enum.TextXAlignment.Right
-			onetext3.TextXAlignment = Enum.TextXAlignment.Right
-			onetext4.TextXAlignment = Enum.TextXAlignment.Right
+			onetext2.Position = UDim2.new(0, 1, 0, 1)
 			onething.Position = UDim2.new(1, -142, 0, 8)
 			onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
 		else
 			onetext.TextXAlignment = Enum.TextXAlignment.Left
 			onetext2.TextXAlignment = Enum.TextXAlignment.Left
 			onetext2.Position = UDim2.new(0, 5, 0, 1)
-			onetext3.TextXAlignment = Enum.TextXAlignment.Left
-			onetext4.TextXAlignment = Enum.TextXAlignment.Left
 			onething.Position = UDim2.new(0, 2, 0, 8)
 			onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
 		end
@@ -845,7 +827,7 @@ TextGui.CreateDropdown({
 })
 TextGui.CreateToggle({
 	["Name"] = "Shadow", 
-	["Function"] = function(callback) onetext2.Visible = callback onetext4.Visible = callback onething3.Visible = callback end,
+	["Function"] = function(callback) onetext2.Visible = callback onething3.Visible = callback end,
 	["HoverText"] = "Renders shadowed text."
 })
 local TextGuiUseCategoryColor = TextGui.CreateToggle({
@@ -862,16 +844,12 @@ TextGui.CreateToggle({
 					onetext.TextXAlignment = Enum.TextXAlignment.Right
 					onetext2.Position = UDim2.new(0, 1, 0, 1)
 					onetext2.TextXAlignment = Enum.TextXAlignment.Right
-					onetext3.TextXAlignment = Enum.TextXAlignment.Right
-					onetext4.TextXAlignment = Enum.TextXAlignment.Right
 					onething.Position = UDim2.new(1, -142, 0, 8)
 					onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
 				else
 					onetext.TextXAlignment = Enum.TextXAlignment.Left
 					onetext2.TextXAlignment = Enum.TextXAlignment.Left
 					onetext2.Position = UDim2.new(0, 5, 0, 1)
-					onetext3.TextXAlignment = Enum.TextXAlignment.Left
-					onetext4.TextXAlignment = Enum.TextXAlignment.Left
 					onething.Position = UDim2.new(0, 2, 0, 8)
 					onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
 				end
@@ -883,16 +861,12 @@ TextGui.CreateToggle({
 					onetext.TextXAlignment = Enum.TextXAlignment.Right
 					onetext2.Position = UDim2.new(0, 1, 0, 1)
 					onetext2.TextXAlignment = Enum.TextXAlignment.Right
-					onetext3.TextXAlignment = Enum.TextXAlignment.Right
-					onetext4.TextXAlignment = Enum.TextXAlignment.Right
 					onething.Position = UDim2.new(1, -142, 0, 8)
 					onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
 				else
 					onetext.TextXAlignment = Enum.TextXAlignment.Left
 					onetext2.TextXAlignment = Enum.TextXAlignment.Left
 					onetext2.Position = UDim2.new(0, 5, 0, 1)
-					onetext3.TextXAlignment = Enum.TextXAlignment.Left
-					onetext4.TextXAlignment = Enum.TextXAlignment.Left
 					onething.Position = UDim2.new(0, 2, 0, 8)
 					onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
 				end
@@ -1164,10 +1138,12 @@ GuiLibrary["UpdateUI"] = function()
 			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * i2) or 0)
 			if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
 			local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
-			if TextGuiUseCategoryColor["Enabled"] and GuiLibrary["ObjectsThatCanBeSaved"][v2:gsub(" ", "").."OptionsButton"] and tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][v2:gsub(" ", "").."OptionsButton"]["Object"].Parent.Parent.Name.."Window"] then
-				newcolor = tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][v2:gsub(" ", "").."OptionsButton"]["Object"].Parent.Parent.Name.."Window"]
+			local splittext = v2:split(":")
+			splittext = #splittext > 1 and {splittext[1], " "..splittext[2]} or {v2, ""}
+			if TextGuiUseCategoryColor["Enabled"] and GuiLibrary["ObjectsThatCanBeSaved"][splittext[1].."OptionsButton"] and tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][splittext[1].."OptionsButton"]["Object"].Parent.Parent.Name.."Window"] then
+				newcolor = tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][splittext[1].."OptionsButton"]["Object"].Parent.Parent.Name.."Window"]
 			end
-			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..v2..'</font>'
+			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..splittext[1]..'</font><font color="rgb(170, 170, 170)">'..splittext[2]..'</font>'
 			newfirst = true
 		end
 		onetext.Text = newtext
@@ -1354,7 +1330,7 @@ ModuleSettings.CreateButton2({
 	["Name"] = "RESET CURRENT PROFILE", 
 	["Function"] = function()
 		GuiLibrary["SelfDestruct"]()
-		delfile("vape/Profiles/"..(GuiLibrary["CurrentProfile"] == "default" and "" or GuiLibrary["CurrentProfile"])..game.PlaceId..".vapeprofile")
+		delfile("vape/Profiles/"..(GuiLibrary["CurrentProfile"] == "default" and "" or GuiLibrary["CurrentProfile"])..game.PlaceId..".vapeprofile.txt")
 		shared.VapeSwitchServers = true
 		shared.VapeOpenGui = true
 		loadstring(GetURL("NewMainScript.lua"))()
