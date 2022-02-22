@@ -389,7 +389,7 @@ if shared.VapeExecuted then
 	end
 
 	api["LoadSettings"] = function()
-		if listfiles then
+		if identifyexecutor and identifyexecutor():find("ScriptWare") == nil and listfiles then
 			for i,v in pairs(listfiles("vape/Profiles")) do 
 				local newstr = v:gsub("vape/Profiles", ""):sub(2, v:len())
 				local ext = (v:len() >= 12 and v:sub(v:len() - 12, v:len()))
