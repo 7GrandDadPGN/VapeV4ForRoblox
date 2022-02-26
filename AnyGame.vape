@@ -315,9 +315,9 @@ local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].Cre
 	end,
 	["ExtraText"] = function() 
 		if aimmethod["Value"]:match("FindPartOnRay") then
-			return " Ray"
+			return "Ray"
 		else
-			return " "..string.gsub(aimmethod["Value"], "PointToRay", "") 
+			return string.gsub(aimmethod["Value"], "PointToRay", "") 
 		end
 	end
 })
@@ -631,6 +631,7 @@ flyupanddown = fly.CreateToggle({
 })
 
 local hitboxexpand = {["Value"] = 1}
+local hitboxoption = {["Value"] = "HumanoidRootPart"}
 local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "HitBoxes", 
 	["Function"] = function(callback)
@@ -638,7 +639,11 @@ local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Crea
 			BindToRenderStep("HitBoxes", 1, function() 
 				for i,plr in pairs(players:GetChildren()) do
 					if isPlayerTargetable(plr, true, true) and isAlive(plr) then
-						plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.6), 2 + (hitboxexpand["Value"] * 0.6), 1 + (hitboxexpand["Value"] * 0.6))
+						if hitboxoption["Value"] == "HumanoidRootPart" then
+							plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.6), 2 + (hitboxexpand["Value"] * 0.6), 1 + (hitboxexpand["Value"] * 0.6))
+						else
+							plr.Character.Head.Size = Vector3.new(1 + (hitboxexpand["Value"] * 0.6), 1 + (hitboxexpand["Value"] * 0.6), 1 + (hitboxexpand["Value"] * 0.6))
+						end
 					end
 				end
 			end)
@@ -647,6 +652,7 @@ local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Crea
 			for i,plr in pairs(players:GetChildren()) do
 				if isAlive(plr) then
 					plr.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+					plr.Character.Head.Size = Vector3.new(1, 1, 1)
 				end
 			end
 		end
@@ -657,6 +663,18 @@ hitboxexpand = Hitbox.CreateSlider({
 	["Min"] = 1,
 	["Max"] = 30,
 	["Function"] = function(val) end
+})
+hitboxoption = Hitbox.CreateDropdown({
+	["Name"] = "Expand part",
+	["List"] = {"HumanoidRootPart", "Head"},
+	["Function"] = function()
+		for i,plr in pairs(players:GetChildren()) do
+			if isAlive(plr) then
+				plr.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+				plr.Character.Head.Size = Vector3.new(1, 1, 1)
+			end
+		end
+	end
 })
 
 local killauraaps = {["GetRandomValue"] = function() return 1 end}
@@ -1429,7 +1447,10 @@ players.PlayerRemoving:connect(function(plr)
 	end
 end)
 local ChamsColor = {["Value"] = 0.44}
+local ChamsOutlineColor = {["Value"] = 0.44}
+local ChamsBetter = {["Enabled"] = false}
 local ChamsTransparency = {["Value"] = 1}
+local ChamsOutlineTransparency = {["Value"] = 1}
 local ChamsOnTop = {["Enabled"] = true}
 local chamobjects = {["Head"] = true, ["Torso"] = true, ["UpperTorso"] = true, ["LowerTorso"] = true, ["Left Arm"] = true, ["Left Leg"] = true, ["Right Arm"] = true, ["Right Leg"] = true, ["LeftLowerLeg"] = true, ["RightLowerLeg"] = true, ["LeftUpperLeg"] = true, ["RightUpperLeg"] = true, ["LeftFoot"] = true, ["RightFoot"] = true, ["LeftLowerArm"] = true, ["RightLowerArm"] = true, ["LeftUpperArm"] = true, ["RightUpperArm"] = true, ["LeftHand"] = true, ["RightHand"] = true}
 local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
@@ -1438,6 +1459,29 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 		if callback then
 			BindToRenderStep("Chams", 500, function()
 				for i,plr in pairs(players:GetChildren()) do
+					if ChamsBetter["Enabled"] then
+						local thing
+						if ChamsFolder:FindFirstChild(plr.Name) then
+							thing = ChamsFolder[plr.Name]
+							thing.Enabled = false
+							thing.FillColor = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Hue"], ChamsColor["Sat"], ChamsColor["Value"])
+							thing.OutlineColor = Color3.fromHSV(ChamsOutlineColor["Hue"], ChamsOutlineColor["Sat"], ChamsOutlineColor["Value"])
+						end
+
+						if isAlive(plr) and plr ~= lplr then
+							if ChamsFolder:FindFirstChild(plr.Name) == nil then
+								local chamfolder = Instance.new("Highlight")
+								chamfolder.Name = plr.Name
+								chamfolder.Parent = ChamsFolder
+								thing = chamfolder
+							end
+							thing.Enabled = true
+							thing.Adornee = plr.Character
+							thing.OutlineTransparency = ChamsOutlineTransparency["Value"] / 100
+							thing.DepthMode = Enum.HighlightDepthMode[(ChamsOnTop["Enabled"] and "AlwaysOnTop" or "Occluded")]
+							thing.FillTransparency = ChamsTransparency["Value"] / 100
+						end
+					else
 						local thing
 						if ChamsFolder:FindFirstChild(plr.Name) then
 							thing = ChamsFolder[plr.Name]
@@ -1475,6 +1519,7 @@ local Chams = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateO
 								end
 							end
 						end
+					end
 				end
 			end)
 		else
@@ -1488,6 +1533,10 @@ ChamsColor = Chams.CreateColorSlider({
 	["Name"] = "Player Color", 
 	["Function"] = function(val) end
 })
+ChamsOutlineColor = Chams.CreateColorSlider({
+	["Name"] = "Outline Player Color", 
+	["Function"] = function(val) end
+})
 ChamsTransparency = Chams.CreateSlider({
 	["Name"] = "Transparency", 
 	["Min"] = 1,
@@ -1495,6 +1544,129 @@ ChamsTransparency = Chams.CreateSlider({
 	["Function"] = function(val) end,
 	["Default"] = 50
 })
+ChamsOutlineTransparency = Chams.CreateSlider({
+	["Name"] = "Outline Transparency", 
+	["Min"] = 1,
+	["Max"] = 100, 
+	["Function"] = function(val) end,
+	["Default"] = 1
+})
+ChamsBetter = Chams.CreateToggle({
+	["Name"] = "New Highlight Chams",
+	["Function"] = function(callback)
+		if callback then
+			local suc = pcall(function() return readfile("vape/Profiles/HighlightCheck.vapesetting.txt") end)
+			if not suc then
+				if ChamsBetter["Enabled"] then
+					ChamsBetter["ToggleButton"](false)
+				end
+				local frame = Instance.new("Frame")
+				frame.Size = UDim2.new(0, 660, 0, 445)
+				frame.Position = UDim2.new(0.5, -330, 0.5, -223)
+				frame.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+				frame.Parent = GuiLibrary["MainGui"].ScaledGui
+				local frameIcon = Instance.new("ImageLabel")
+				frameIcon.Size = UDim2.new(0, 19, 0, 16)
+				frameIcon.Image = getcustomassetfunc("vape/assets/ProfilesIcon.png")
+				frameIcon.Name = "WindowIcon"
+				frameIcon.BackgroundTransparency = 1
+				frameIcon.Position = UDim2.new(0, 10, 0, 13)
+				frameIcon.ImageColor3 = Color3.fromRGB(200, 200, 200)
+				frameIcon.Parent = frame
+				local frameText = Instance.new("TextLabel")
+				frameText.Size = UDim2.new(0, 155, 0, 41)
+				frameText.BackgroundTransparency = 1
+				frameText.Name = "WindowTitle"
+				frameText.Position = UDim2.new(0, 36, 0, 0)
+				frameText.TextXAlignment = Enum.TextXAlignment.Left
+				frameText.Font = Enum.Font.SourceSans
+				frameText.TextSize = 17
+				frameText.Text = "Highlight"
+				frameText.TextColor3 = Color3.fromRGB(201, 201, 201)
+				frameText.Parent = frame
+				local frameCorner = Instance.new("UICorner")
+				frameCorner.CornerRadius = UDim.new(0, 4)
+				frameCorner.Parent = frame
+				local frameShadow = Instance.new("ImageLabel")
+				frameShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+				frameShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+				frameShadow.Image = getcustomassetfunc("vape/assets/WindowBlur.png")
+				frameShadow.BackgroundTransparency = 1
+				frameShadow.ZIndex = -1
+				frameShadow.Size = UDim2.new(1, 6, 1, 6)
+				frameShadow.ImageColor3 = Color3.new(0, 0, 0)
+				frameShadow.ScaleType = Enum.ScaleType.Slice
+				frameShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+				frameShadow.Parent = frame
+				local frameExitButton = Instance.new("ImageButton")
+				frameExitButton.Name = "frameExitButton"
+				frameExitButton.ImageColor3 = Color3.fromRGB(121, 121, 121)
+				frameExitButton.Size = UDim2.new(0, 24, 0, 24)
+				frameExitButton.AutoButtonColor = false
+				frameExitButton.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
+				frameExitButton.Visible = true
+				frameExitButton.Position = UDim2.new(1, -31, 0, 8)
+				frameExitButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+				frameExitButton.Parent = frame
+				frameExitButton.MouseButton1Click:connect(function()
+					frame:Remove()
+				end)
+				local frametextlab = Instance.new("TextLabel")
+				frametextlab.TextSize = 18
+				frametextlab.BackgroundTransparency = 1
+				frametextlab.Position = UDim2.new(0, 0, 0, 41)
+				frametextlab.TextYAlignment = Enum.TextYAlignment.Top
+				frametextlab.Size = UDim2.new(1, 0, 1, -41)
+				frametextlab.TextColor3 = Color3.new(1, 1, 1)
+				frametextlab.Font = Enum.Font.SourceSans
+				frametextlab.Text = "\nSteps to enable Highlights\nClick the button below to get the link for the steps, click the done button when you have done the steps."
+				frametextlab.Parent = frame
+				local framebutton1 = Instance.new("TextButton")
+				framebutton1.Text = "Copy Steps to Clipboard"
+				framebutton1.AutoButtonColor = false
+				framebutton1.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+				framebutton1.BorderSizePixel = 0
+				framebutton1.TextColor3 = Color3.new(1, 1, 1)
+				framebutton1.Size = UDim2.new(0, 200, 0, 50)
+				framebutton1.Position = UDim2.new(0.5, -100, 0, 150)
+				framebutton1.Parent = frame
+				framebutton1.MouseButton1Click:connect(function()
+					spawn(function()
+						setclipboard("https://github.com/7GrandDadPGN/VapeV4ForRoblox/wiki/Turning-on-Highlights")
+						framebutton1.Text = "Copied to clipboard!"
+						task.wait(3)
+						framebutton1.Text = "Copy Steps to Clipboard"
+					end)
+				end)
+				local framebutton2 = framebutton1:Clone()
+				framebutton2.Text = "Done"
+				framebutton2.Position = UDim2.new(0.5, -100, 0, 210)
+				framebutton2.Parent = frame
+				framebutton2.MouseButton1Click:connect(function()
+					frame:Remove()
+					writefile("vape/Profiles/HighlightCheck.vapesetting.txt", "")
+					if ChamsBetter["Enabled"] == false then
+						ChamsBetter["ToggleButton"](false)
+					end
+				end)
+				local frameExitButtonround = Instance.new("UICorner")
+				frameExitButtonround.CornerRadius = UDim.new(0, 16)
+				frameExitButtonround.Parent = frameExitButton
+				frameExitButton.MouseEnter:connect(function()
+					game:GetService("TweenService"):Create(frameExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+				end)
+				frameExitButton.MouseLeave:connect(function()
+					game:GetService("TweenService"):Create(frameExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+				end)
+			end
+		end
+		ChamsFolder:ClearAllChildren()
+		if ChamsOutlineTransparency["Object"] then 
+			ChamsOutlineTransparency["Object"].Visible = callback
+		end
+	end
+})
+ChamsOutlineTransparency["Object"].Visible = ChamsBetter["Enabled"]
 ChamsOnTop = Chams.CreateToggle({
 	["Name"] = "Bypass Walls", 
 	["Function"] = function() end
