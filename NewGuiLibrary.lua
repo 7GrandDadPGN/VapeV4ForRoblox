@@ -6051,7 +6051,9 @@ if shared.VapeExecuted then
 			frame:GetPropertyChangedSignal("Position"):connect(function()
 				obj.Position = UDim2.new(frame.Position.X.Scale, frame.Position.X.Offset, obj.Position.Y.Scale, obj.Position.Y.Offset)
 			end)
-			frame:TweenPosition(newpos, dir, style, tim, override)
+			pcall(function()
+				frame:TweenPosition(newpos, dir, style, tim, override)
+			end)
 			frame.Parent = nil
 			task.wait(tim)
 			frame:Remove()
