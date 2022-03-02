@@ -241,6 +241,17 @@ FriendsTextList = Friends.CreateCircleTextList({
 		obj.ItemText.Size = UDim2.new(0, 157, 0, 33)
 	end
 })
+FriendsTextList.FriendRefresh = Instance.new("BindableEvent")
+spawn(function()
+	local currentval = #FriendsTextList["ObjectList"]
+	repeat
+		task.wait(0.1)
+		if currentval ~= #FriendsTextList["ObjectList"] then
+			FriendsTextList.FriendRefresh:Fire()
+		end
+		currentval = #FriendsTextList["ObjectList"]
+	until (not shared.VapeExecuted)
+end)
 Friends.CreateToggle({
 	["Name"] = "Use Friends",
 	["Function"] = function(callback) end,
