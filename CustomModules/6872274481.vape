@@ -59,7 +59,7 @@ local oldchanneltabs = {}
 local connectionstodisconnect = {}
 local anticheatfunny = false
 local anticheatfunnyyes = false
-local networkownerfunc = (not (identifyexecutor and identifyexecutor():find("ScriptWare"))) and isnetworkowner
+local networkownerfunc = isnetworkowner
 local projtable = {
 	["arrow"] = true,
 	["crossbow_arrow"] = true,
@@ -932,6 +932,7 @@ runcode(function()
             end,
             ["getItemMetadata"] = require(game:GetService("ReplicatedStorage").TS.item["item-meta"]).getItemMeta,
 			["GrimReaperController"] = KnitClient.Controllers.GrimReaperController,
+			["GuitarHealRemote"] = getremote(debug.getconstants(KnitClient.Controllers.GuitarController.performHeal)),
 			["HighlightController"] = KnitClient.Controllers.EntityHighlightController,
             ["ItemTable"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.item["item-meta"]).getItemMeta, 1),
 			["JuggernautRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.JuggernautController.KnitStart)[1])[4])),
@@ -1762,12 +1763,12 @@ local function vischeck(pos, pos2, ignore)
 	return not unpack(vistab)
 end
 
-local function GetAllNearestHumanoidToPosition(player, distance, amount)
+local function GetAllNearestHumanoidToPosition(player, distance, amount, targetcheck)
 	local returnedplayer = {}
 	local currentamount = 0
     if entity.isAlive then -- alive check
         for i, v in pairs(entity.entityList) do -- loop through players
-            if v.Targetable and targetCheck(v, true) and currentamount < amount then -- checks
+            if (targetcheck == nil and v.Targetable or targetcheck) and targetCheck(v, true) and currentamount < amount then -- checks
                 local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= distance then -- mag check
                     table.insert(returnedplayer, v)
@@ -5674,7 +5675,7 @@ runcode(function()
 								end
 							end
 							bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-							bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((bedwars["ClientStoreHandler"]:getState().Game.queueType == nil or bedwars["ClientStoreHandler"]:getState().Game.queueType:find("skywars")) and 48) or (longjumpticktimer >= tick() and 20) or speedval["Value"]) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
+							bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((bedwars["ClientStoreHandler"]:getState().Game.queueType == nil or bedwars["ClientStoreHandler"]:getState().Game.queueType:find("skywars")) and 48) or (longjumpticktimer >= tick() and 32) or speedval["Value"]) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
 						end
 						if (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
 							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
@@ -7322,10 +7323,10 @@ runcode(function()
 		["Function"] = function(callback) 
 			if callback then
 				BindToRenderStep("NameTags", 500, function()
-					for i,plr in pairs(players:GetChildren()) do
+					for i,plr in pairs(entity.entityList) do
 							local thing
-							if NameTagsFolder:FindFirstChild(plr.Name) then
-								thing = NameTagsFolder[plr.Name]
+							if NameTagsFolder:FindFirstChild(plr.Player.Name) then
+								thing = NameTagsFolder[plr.Player.Name]
 								thing.Visible = false
 							else
 								thing = Instance.new("TextLabel")
@@ -7334,7 +7335,7 @@ runcode(function()
 								thing.BorderSizePixel = 0
 								thing.Visible = false
 								thing.RichText = true
-								thing.Name = plr.Name
+								thing.Name = plr.Player.Name
 								thing.Font = Enum.Font.SourceSans
 								thing.TextSize = 14
 								if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
@@ -7343,18 +7344,18 @@ runcode(function()
 									if bountyhunter and bountyhunter.Adornee.Parent.Name == plr.Name then
 										istarget = true
 									end
-									local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and '['..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'] ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
+									local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and '['..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'] ' or '')..(NameTagsDisplayName["Enabled"] and plr.Player.DisplayName ~= nil and plr.Player.DisplayName or plr.Player.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-									local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+									local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.Player.DisplayName ~= nil and plr.Player.DisplayName or plr.Player.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 									local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = modifiedText
 								else
-									local nametagSize = game:GetService("TextService"):GetTextSize(plr.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+									local nametagSize = game:GetService("TextService"):GetTextSize(plr.Player.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
-									thing.Text = plr.Name
+									thing.Text = plr.Player.Name
 								end
-								thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
+								thing.TextColor3 = getPlayerColor(plr.Player) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
 								thing.Parent = NameTagsFolder
 								local hand = Instance.new("ImageLabel")
 								hand.Size = UDim2.new(0, 30, 0, 30)
@@ -7377,11 +7378,11 @@ runcode(function()
 								boots.Parent = thing
 							end
 							
-							if isAlive(plr) and ((not NameTagsTeammates["Enabled"]) and shared.vapeteamcheck(plr) or NameTagsTeammates["Enabled"]) and plr ~= lplr then
+							if ((not NameTagsTeammates["Enabled"]) and plr.Targetable or NameTagsTeammates["Enabled"]) and plr.Player ~= lplr then
 								local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
 								
 								if headVis then
-									local inventory = bedwars["getInventory"](plr)
+									local inventory = bedwars["getInventory"](plr.Player)
 									if inventory.hand then
 										thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
 										if thing.Hand.Image:find("rbxasset://") then
@@ -7419,10 +7420,10 @@ runcode(function()
 									if bountyhunter and bountyhunter.Adornee.Parent.Name == plr.Name then
 										istarget = true
 									end
-									local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-									local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-									if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
-										displaynamestr2 = getNametagString(plr)
+									local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.Player.DisplayName ~= nil and plr.Player.DisplayName or plr.Player.Name)
+									local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.Player.DisplayName ~= nil and plr.Player.DisplayName or plr.Player.Name)
+									if bedwars["CheckPlayerType"](plr.Player) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Player.Name..plr.Player.UserId)] then
+										displaynamestr2 = getNametagString(plr.Player)
 										displaynamestr = removeTags(displaynamestr2)
 									end
 									local blocksaway = math.floor(((entity.isAlive and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
@@ -7432,7 +7433,7 @@ runcode(function()
 									local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = modifiedText
-									thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
+									thing.TextColor3 = getPlayerColor(plr.Player) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
 									thing.Visible = headVis
 									thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
 								end
@@ -8124,7 +8125,23 @@ runcode(function()
 			lplr:Move(Vector3.new(0, 0, 0), false)
 			changed = true
 			local oldcamcframe = cam.CFrame
-			repeat task.wait() clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame until (networkownerfunc and networkownerfunc(oldchar.HumanoidRootPart) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic)
+			repeat 
+				task.wait() 
+				if clone:FindFirstChild("HumanoidRootPart") then 
+					clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
+				end 
+				if networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then
+					if lagbackcurrent == false then
+						lagbacknum = tick() + 8
+						lagbackcurrent = true
+					end
+					if lagbacknum <= tick() then
+						sethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
+					end
+				else
+					lagbackcurrent = false
+				end
+			until (networkownerfunc and networkownerfunc(oldchar.HumanoidRootPart) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic)
 			lplr.Character = clone
 			spawn(function()
 				repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
@@ -8343,15 +8360,19 @@ runcode(function()
 						char:WaitForChild("RightUpperLeg", 10)
 						char:WaitForChild("UpperTorso", 10)
 						char:WaitForChild("LowerTorso", 10)
-						char:WaitForChild("HumanoidRootPart", 10)
+						local root = char:WaitForChild("HumanoidRootPart", 20)
 						char:WaitForChild("Head", 10)
 						task.wait(0.2)
-						if changed == false then
-							if char ~= clone and char:FindFirstChild("ClonedCharacter") == nil then
-								spawn(disablestuff)
+						if root ~= nil then
+							if changed == false then
+								if char ~= clone and char:FindFirstChild("ClonedCharacter") == nil then
+									spawn(disablestuff)
+								end
+							else
+								changed = false
 							end
 						else
-							changed = false
+							createwarning("AnticheatBypass", "ur root no load L", 30)
 						end
 					end)
 				end)
@@ -8535,6 +8556,49 @@ runcode(function()
 				end
 			end
 		end
+	})
+end)
+
+runcode(function()
+	local function GetTeammateThatNeedsMost()
+		local plrs = GetAllNearestHumanoidToPosition(true, 30, 1000, true)
+		local lowest, lowestplayer = 10000, nil
+		for i,v in pairs(plrs) do
+			if not v.Targetable then
+				if v.Character:GetAttribute("Health") <= lowest and v.Character:GetAttribute("Health") < v.Character:GetAttribute("MaxHealth") then
+					lowest = v.Character:GetAttribute("Health")
+					lowestplayer = v
+				end
+			end
+		end
+		return lowestplayer
+	end
+
+	local AutoGuitar = {["Enabled"] = false}
+	local healtick = tick()
+	AutoGuitar = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoGuitar",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait(0.1)
+						if getItem("guitar") then
+							local plr = GetTeammateThatNeedsMost()
+							if plr and tick() <= healtick then
+								bedwars["ClientHandler"]:Get(bedwars["GuitarHealRemote"]):SendToServer({
+									healTarget = plr.Character
+								})
+								healtick = tick() + 2
+							end
+						end
+					until (not AutoGuitar["Enabled"])
+				end)
+			else
+
+			end
+		end,
+		["HoverText"] = "Automatically Heals Teammates around you"
 	})
 end)
 
