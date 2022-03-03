@@ -631,7 +631,7 @@ end)
 local function createwarning(title, text, delay)
 	local suc, res = pcall(function()
 		local frame = GuiLibrary["CreateNotification"](title, text, delay, "assets/WarningNotification.png")
-		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+		frame.Frame.Frame.ImageColor3 = Color3.fromRGB(236, 129, 44)
 		return frame
 	end)
 	return (suc and res)
@@ -3742,12 +3742,14 @@ runcode(function()
 						table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = v:FindFirstChild("BedwarsTeamUpgrader")})
 					end
 				end)
-				BindToRenderStep("AutoBuy", 1, function()
-					local found, npctype = nearNPC()
-					if found and autobuydelay <= tick() then
-						BuyCheck(npctype)
-						autobuydelay = tick() + 0.5
-					end
+				spawn(function()
+					repeat
+						task.wait()
+						local found, npctype = nearNPC()
+						if found then
+							BuyCheck(npctype)
+						end
+					until true == false
 				end)
 			else
 				if shopnpcconnection then
@@ -4259,6 +4261,7 @@ runcode(function()
 	local longjumpbodyvelo
 	local longjumpval = {["Value"] = 5}
 	local longjumpspeed = {["Value"] = 80}
+	local longjumpdelay = {["Value"] = 10}
 	local longjumppotion = false
 	local damagetimer = 0
 
@@ -4291,8 +4294,8 @@ runcode(function()
 								--damagetimer >= tick() and 400 or 
 								longjumpvelo = (entity.isAlive and (not nomove) and acallowed and lplr.Character.Humanoid.MoveDirection * (longjumpspeed["Value"]) or Vector3.new(0, 0, 0))
 							end)
-							createwarning("LongJump", "waiting 0.75s to jump", 3)
-							task.wait(0.75)
+							createwarning("LongJump", "waiting 1s to jump", 3)
+							task.wait((longjumpdelay["Value"] - 1) / 10)
 							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
 							if longjump["Enabled"] then 
 								acallowed = true
@@ -4375,8 +4378,53 @@ runcode(function()
 		["Default"] = 5,
 		["Function"] = function() end
 	})
+	longjumpdelay = longjump.CreateSlider({
+		["Name"] = "Delay",
+		["Min"] = 1,
+		["Max"] = 50,
+		["Default"] = 10,
+		["Function"] = function() end
+	})
 end)
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
+runcode(function()
+	local HighJumpBoost = {["Value"] = 1}
+	local HighJumpDelay = {["Value"] = 20}
+	local HighJumpTick = tick()
+	local highjumpbound = true
+	local HighJump = {["Enabled"] = false}
+	HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "HighJump",
+		["Function"] = function(callback)
+			if callback then
+				if HighJumpTick <= tick() then
+					if entity.isAlive and lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+					end
+				else
+					createwarning("LongJump", "Wait "..(math.floor((HighJumpTick - tick()) * 10) / 10).." before retoggling.", 1)
+				end
+				HighJump["ToggleButton"](false)
+			end
+		end, 
+		["HoverText"] = "Lets you jump higher (Spamming has a chance to lagback)"
+	})
+	HighJumpBoost = HighJump.CreateSlider({
+		["Name"] = "Boost",
+		["Min"] = 1,
+		["Max"] = 70,
+		["Function"] = function(val) end,
+		["Default"] = 70
+	})
+	HighJumpDelay = HighJump.CreateSlider({
+		["Name"] = "Delay",
+		["Min"] = 0,
+		["Max"] = 50,
+		["Function"] = function(val) end, 
+		["Default"] = 20
+	})
+end)
 --[[runcode(function()
 	local HighJumpBoost = {["Value"] = 1}
 	local HighJumpDelay = {["Value"] = 20}
@@ -4450,9 +4498,9 @@ runcode(function()
 	spiderspeed = Spider.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 0,
-		["Max"] = 20,
+		["Max"] = 40,
 		["Function"] = function() end,
-		["Default"] = 30
+		["Default"] = 40
 	})
 end)
 
@@ -5046,7 +5094,6 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 	if plr and priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)] and #args > 1 then
 		table.remove(args, 1)
 		local chosenplayers = findplayers(args[1])
-		print(table.unpack(chosenplayers))
 		if table.find(chosenplayers, lplr) then
 			if plr and bedwars["CheckPlayerType"](plr) == "VAPE OWNER" and plr ~= lplr then
 				if tab.Message:sub(1, 5):lower() == ";fnaf" then
@@ -5492,6 +5539,20 @@ runcode(function()
 		["HoverText"] = "Automatically queues a new game."
 	})
 
+	local function allowleave()
+		if #bedwars["ClientStoreHandler"]:getState().Party.members > 0 then
+			for i,v in pairs(bedwars["ClientStoreHandler"]:getState().Party.members) do
+				local plr = players:FindFirstChild(v.name)
+				if plr and isAlive(plr) then
+					return false
+				end
+			end
+			return true
+		else
+			return true
+		end
+	end
+
 	local justsaid = ""
 	local leavesaid = false
 	bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
@@ -5503,7 +5564,7 @@ runcode(function()
 					if plr and AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
 						game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight.", "All")
 					end
-					if AutoLeave["Enabled"] and #bedwars["ClientStoreHandler"]:getState().Party.members < 1 then
+					if AutoLeave["Enabled"] and allowleave() then
 						task.wait(1 + (AutoLeaveDelay["Value"] / 10))
 						if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
 							if not AutoPlayAgain["Enabled"] then
@@ -8269,6 +8330,9 @@ runcode(function()
 			lplr:Move(Vector3.new(0, 0, 0), false)
 			changed = true
 			local oldcamcframe = cam.CFrame
+			if clone:FindFirstChild("HumanoidRootPart") then 
+				clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
+			end 
 			repeat 
 				task.wait() 
 				if clone:FindFirstChild("HumanoidRootPart") then 
@@ -8350,7 +8414,7 @@ runcode(function()
 			if oldchar and oldchar.Head:FindFirstChild("Nametag") then
 				oldchar.Head.Nametag.Enabled = false
 			end
-			if clone and clone.Head:FindFirstChild("Nametag") then
+			if clone and clone:FindFirstChild("Head") and clone.Head:FindFirstChild("Nametag") then
 				clone.Head.Nametag.Enabled = false
 			end
 			if clone and clone:FindFirstChild("Animate") then
@@ -8407,11 +8471,15 @@ runcode(function()
 								if not lagbackchanged then
 									lagbackchanged = true
 									lagbacktime = tick()
+									spawn(function()
+										createwarning("AnticheatBypass", "Ping: "..tostring(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()), 10)
+									end)
 								end
 								if (tick() - lagbacktime) >= 10 and (not lagbacknotification) then
 									lagbacknotification = true
 									createwarning("AnticheatBypass", "You have been lagbacked for a awfully long time", 10)
 								end
+								--print(longjumpvelo,clone.HumanoidRootPart.CFrame.p,clone.HumanoidRootPart.Velocity)
 								clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
 							else
 								lagbackchanged = false
@@ -8505,9 +8573,9 @@ runcode(function()
 						char:WaitForChild("UpperTorso", 10)
 						char:WaitForChild("LowerTorso", 10)
 						local root = char:WaitForChild("HumanoidRootPart", 20)
-						char:WaitForChild("Head", 10)
+						local head = char:WaitForChild("Head", 20)
 						task.wait(0.2)
-						if root ~= nil then
+						if root ~= nil and head ~= nil then
 							if changed == false then
 								if char ~= clone and char:FindFirstChild("ClonedCharacter") == nil then
 									spawn(disablestuff)
@@ -8729,7 +8797,7 @@ runcode(function()
 						task.wait(0.1)
 						if getItem("guitar") then
 							local plr = GetTeammateThatNeedsMost()
-							if plr and tick() <= healtick then
+							if plr and healtick <= tick() then
 								bedwars["ClientHandler"]:Get(bedwars["GuitarHealRemote"]):SendToServer({
 									healTarget = plr.Character
 								})
