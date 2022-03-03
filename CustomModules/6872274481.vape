@@ -4466,6 +4466,7 @@ runcode(function()
     local killauramethod = {["Value"] = "Normal"}
 	local killauraothermethod = {["Value"] = "Normal"}
     local killauraanimmethod = {["Value"] = "Normal"}
+	local killauraaps = {["GetRandomValue"] = function() return 1 end}
     local killaurarange = {["Value"] = 14}
     local killauraangle = {["Value"] = 360}
     local killauratargets = {["Value"] = 10}
@@ -4652,7 +4653,7 @@ runcode(function()
 				end)
                 spawn(function()
 					repeat
-						task.wait(0.1)
+						task.wait(1 / killauraaps["GetRandomValue"]())
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
@@ -4716,6 +4717,14 @@ runcode(function()
         ["HoverText"] = "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder"
     })
     killauratargetframe = Killaura.CreateTargetWindow({})
+	killauraaps = Killaura.CreateTwoSlider({
+		["Name"] = "Attacks per second",
+		["Min"] = 1,
+		["Max"] = 20,
+		["Function"] = function(val) end,
+		["Default"] = 10,
+		["Default2"] = 10
+	})
     killaurarange = Killaura.CreateSlider({
         ["Name"] = "Attack range",
         ["Min"] = 1,
@@ -5483,23 +5492,21 @@ runcode(function()
 	bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
 			if leavesaid == false and (p7.entityInstance == lplr.Character or p7.entityInstance == oldchar) then
-				if p7.fromEntity and (p7.fromEntity == lplr.Character or p7.fromEntity == oldchar) then
-					local plr = players:GetPlayerFromCharacter(p7.fromEntity or lplr.Character)
-					if (bedwars["ClientStoreHandler"]:getState().Game.queueType:find("skywars") or lplr.leaderstats.Bed.Value ~= "✅") then
-						leavesaid = true
-						if plr and AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
-							game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight.", "All")
-						end
-						if AutoLeave["Enabled"] and #bedwars["ClientStoreHandler"]:getState().Party.members < 1 then
-							task.wait(1 + (AutoLeaveDelay["Value"] / 10))
-							if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
-								if not AutoPlayAgain["Enabled"] then
-									bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
-								else
-									bedwars["LobbyClientEvents"].joinQueue:fire({
-										queueType = bedwars["ClientStoreHandler"]:getState().Game.queueType
-									})
-								end
+				local plr = players:GetPlayerFromCharacter(p7.fromEntity or lplr.Character)
+				if (bedwars["ClientStoreHandler"]:getState().Game.queueType:find("skywars") or lplr.leaderstats.Bed.Value ~= "✅") then
+					leavesaid = true
+					if plr and AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
+						game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight.", "All")
+					end
+					if AutoLeave["Enabled"] and #bedwars["ClientStoreHandler"]:getState().Party.members < 1 then
+						task.wait(1 + (AutoLeaveDelay["Value"] / 10))
+						if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
+							if not AutoPlayAgain["Enabled"] then
+								bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+							else
+								bedwars["LobbyClientEvents"].joinQueue:fire({
+									queueType = bedwars["ClientStoreHandler"]:getState().Game.queueType
+								})
 							end
 						end
 					end
@@ -7323,10 +7330,10 @@ runcode(function()
 		["Function"] = function(callback) 
 			if callback then
 				BindToRenderStep("NameTags", 500, function()
-					for i,plr in pairs(entity.entityList) do
+					for i,plr in pairs(players:GetChildren()) do
 							local thing
-							if NameTagsFolder:FindFirstChild(plr.Player.Name) then
-								thing = NameTagsFolder[plr.Player.Name]
+							if NameTagsFolder:FindFirstChild(plr.Name) then
+								thing = NameTagsFolder[plr.Name]
 								thing.Visible = false
 							else
 								thing = Instance.new("TextLabel")
@@ -7335,7 +7342,7 @@ runcode(function()
 								thing.BorderSizePixel = 0
 								thing.Visible = false
 								thing.RichText = true
-								thing.Name = plr.Player.Name
+								thing.Name = plr.Name
 								thing.Font = Enum.Font.SourceSans
 								thing.TextSize = 14
 								if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
@@ -7344,18 +7351,18 @@ runcode(function()
 									if bountyhunter and bountyhunter.Adornee.Parent.Name == plr.Name then
 										istarget = true
 									end
-									local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and '['..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'] ' or '')..(NameTagsDisplayName["Enabled"] and plr.Player.DisplayName ~= nil and plr.Player.DisplayName or plr.Player.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
+									local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and '['..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'] ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-									local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.Player.DisplayName ~= nil and plr.Player.DisplayName or plr.Player.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+									local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 									local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = modifiedText
 								else
-									local nametagSize = game:GetService("TextService"):GetTextSize(plr.Player.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+									local nametagSize = game:GetService("TextService"):GetTextSize(plr.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
-									thing.Text = plr.Player.Name
+									thing.Text = plr.Name
 								end
-								thing.TextColor3 = getPlayerColor(plr.Player) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
+								thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
 								thing.Parent = NameTagsFolder
 								local hand = Instance.new("ImageLabel")
 								hand.Size = UDim2.new(0, 30, 0, 30)
@@ -7378,11 +7385,11 @@ runcode(function()
 								boots.Parent = thing
 							end
 							
-							if ((not NameTagsTeammates["Enabled"]) and plr.Targetable or NameTagsTeammates["Enabled"]) and plr.Player ~= lplr then
+							if isAlive(plr) and ((not NameTagsTeammates["Enabled"]) and shared.vapeteamcheck(plr) or NameTagsTeammates["Enabled"]) and plr ~= lplr then
 								local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
 								
 								if headVis then
-									local inventory = bedwars["getInventory"](plr.Player)
+									local inventory = bedwars["getInventory"](plr)
 									if inventory.hand then
 										thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
 										if thing.Hand.Image:find("rbxasset://") then
@@ -7420,10 +7427,10 @@ runcode(function()
 									if bountyhunter and bountyhunter.Adornee.Parent.Name == plr.Name then
 										istarget = true
 									end
-									local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.Player.DisplayName ~= nil and plr.Player.DisplayName or plr.Player.Name)
-									local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.Player.DisplayName ~= nil and plr.Player.DisplayName or plr.Player.Name)
-									if bedwars["CheckPlayerType"](plr.Player) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Player.Name..plr.Player.UserId)] then
-										displaynamestr2 = getNametagString(plr.Player)
+									local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+									local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+									if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
+										displaynamestr2 = getNametagString(plr)
 										displaynamestr = removeTags(displaynamestr2)
 									end
 									local blocksaway = math.floor(((entity.isAlive and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
@@ -7433,7 +7440,7 @@ runcode(function()
 									local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = modifiedText
-									thing.TextColor3 = getPlayerColor(plr.Player) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
+									thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
 									thing.Visible = headVis
 									thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
 								end
@@ -7475,6 +7482,138 @@ runcode(function()
 		["Name"] = "Equipment",
 		["Function"] = function() end,
 		["Default"] = true
+	})
+end)
+
+runcode(function()
+	local function getallblocks2(pos, normal)
+		local blocks = {}
+		local lastfound = nil
+		for i = 1, 20 do
+			local blockpos = (pos + (Vector3.FromNormalId(normal) * (i * 3)))
+			local extrablock = getblock(blockpos)
+			local covered = true
+			if extrablock and extrablock.Parent ~= nil and (covered or covered == false and lastblock == nil) then
+				if bedwars["BlockController"]:isBlockBreakable({["blockPosition"] = blockpos}, lplr) then
+					table.insert(blocks, extrablock.Name)
+				else
+					table.insert(blocks, "unbreakable")
+					break
+				end
+				lastfound = extrablock
+				if covered == false then
+					break
+				end
+			else
+				break
+			end
+		end
+		return blocks
+	end
+
+	local function getallbedblocks(pos)
+		local blocks = {}
+		for i,v in pairs(normalsides) do
+			for i2,v2 in pairs(getallblocks2(pos, v)) do	
+				if table.find(blocks, v2) == nil and v2 ~= "bed" then
+					table.insert(blocks, v2)
+				end
+			end
+		end
+		return blocks
+	end
+
+	local function refreshAdornee(v)
+		local bedblocks = getallbedblocks(v.Adornee.Position)
+		local otherside = getotherbed(v.Adornee.Position)
+		if otherside then
+			local bedblocks2 = getallbedblocks(otherside)
+			for i2,v2 in pairs(bedblocks2) do
+				if table.find(bedblocks, v2) == nil then
+					table.insert(bedblocks, v2)
+				end
+			end
+		end
+		for i2,v2 in pairs(v.Frame:GetChildren()) do
+			if v2:IsA("ImageLabel") then
+				v2:Remove()
+			end
+		end
+		for i3,v3 in pairs(bedblocks) do
+			local blockimage = Instance.new("ImageLabel")
+			blockimage.Size = UDim2.new(0, 32, 0, 32)
+			blockimage.BackgroundTransparency = 1
+			blockimage.Image = bedwars["getIcon"]({itemType = v3}, true)
+			blockimage.Parent = v.Frame
+		end
+	end
+
+	local BedPlatesFolder = Instance.new("Folder")
+	BedPlatesFolder.Name = "BedPlatesFolder"
+	BedPlatesFolder.Parent = GuiLibrary["MainGui"]
+	local BedPlates = {["Enabled"] = false}
+	bedwars["ClientHandlerDamageBlock"]:WaitFor("PlaceBlockEvent"):andThen(function(p4)
+		connectionstodisconnect[#connectionstodisconnect + 1] = p4:Connect(function(p5)
+			for i,v in pairs(BedPlatesFolder:GetChildren()) do 
+				if v.Adornee then
+					if ((p5.blockRef.blockPosition * 3) - v.Adornee.Position).magnitude <= 20 then
+						refreshAdornee(v)
+					end
+				end
+			end
+		end)
+	end)
+	bedwars["ClientHandlerDamageBlock"]:WaitFor("BreakBlockEvent"):andThen(function(p4)
+		connectionstodisconnect[#connectionstodisconnect + 1] = p4:Connect(function(p5)
+			for i,v in pairs(BedPlatesFolder:GetChildren()) do 
+				if v.Adornee then
+					if ((p5.blockRef.blockPosition * 3) - v.Adornee.Position).magnitude <= 20 then
+						refreshAdornee(v)
+					end
+				end
+			end
+		end)
+	end)
+	BedPlates = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "BedPlates",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat task.wait() until #bedwars["BedTable"] > 0
+					if BedPlates["Enabled"] then
+						for i,v in pairs(bedwars["BedTable"]) do
+							local billboard = Instance.new("BillboardGui")
+							billboard.Parent = BedPlatesFolder
+							billboard.Name = "bed"
+							billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 1.5)
+							billboard.Size = UDim2.new(0, 42, 0, 42)
+							billboard.AlwaysOnTop = true
+							billboard.Adornee = v
+							local frame = Instance.new("Frame")
+							frame.Size = UDim2.new(1, 0, 1, 0)
+							frame.BackgroundColor3 = Color3.new(0, 0, 0)
+							frame.BackgroundTransparency = 0.5
+							frame.Parent = billboard
+							local uilistlayout = Instance.new("UIListLayout")
+							uilistlayout.FillDirection = Enum.FillDirection.Horizontal
+							uilistlayout.Padding = UDim.new(0, 4)
+							uilistlayout.VerticalAlignment = Enum.VerticalAlignment.Center
+							uilistlayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+							uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+								billboard.Size = UDim2.new(0, math.clamp(uilistlayout.AbsoluteContentSize.X + 12, 42, 1000000), 0, 42)
+							end)
+							uilistlayout.Parent = frame
+							local uicorner = Instance.new("UICorner")
+							uicorner.CornerRadius = UDim.new(0, 4)
+							uicorner.Parent = frame
+							refreshAdornee(billboard)
+						end
+					end
+				end)
+			else
+				BedPlatesFolder:ClearAllChildren()
+			end
+		end
 	})
 end)
 
