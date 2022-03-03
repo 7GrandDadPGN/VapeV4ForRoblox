@@ -80,7 +80,7 @@ do
             end
         end)
         entity.entityConnections[#entity.entityConnections + 1] = plr:GetPropertyChangedSignal("Team"):connect(function()
-            print(plr.Name, plr.Team.Name)
+            --print(plr.Name, plr.Team.Name)
             if localcheck then
                 entity.fullEntityRefresh()
             else
