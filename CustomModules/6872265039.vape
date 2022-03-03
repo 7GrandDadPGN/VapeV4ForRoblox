@@ -268,7 +268,7 @@ runcode(function()
 							if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
 								if bedwars["CheckPlayerType"](players[MessageData.FromSpeaker]) == "VAPE PRIVATE" then
 									MessageData.ExtraData = {
-										NameColor = players[MessageData.FromSpeaker].TeamColor.Color,
+										NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
 										Tags = {
 											{
 												TagColor = Color3.new(0.7, 0, 1),
@@ -279,7 +279,7 @@ runcode(function()
 								end
 								if bedwars["CheckPlayerType"](players[MessageData.FromSpeaker]) == "VAPE OWNER" then
 									MessageData.ExtraData = {
-										NameColor = players[MessageData.FromSpeaker].TeamColor.Color,
+										NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
 										Tags = {
 											{
 												TagColor = Color3.new(1, 0.3, 0.3),
@@ -323,7 +323,7 @@ end)
 local function getNametagString(plr)
 	local nametag = ""
 	if bedwars["CheckPlayerType"](plr) == "VAPE PRIVATE" then
-		nametag = '<font color="rgb(130, 0, 255)">[VAPE PRIVATE] '..(plr.DisplayName or plr.Name)..'</font>'
+		nametag = '<font color="rgb(127, 0, 255)">[VAPE PRIVATE] '..(plr.DisplayName or plr.Name)..'</font>'
 	end
 	if bedwars["CheckPlayerType"](plr) == "VAPE OWNER" then
 		nametag = '<font color="rgb(255, 80, 80)">[VAPE OWNER] '..(plr.DisplayName or plr.Name)..'</font>'
@@ -341,19 +341,89 @@ local function getNametagString(plr)
 	return nametag
 end
 
+while game:IsLoaded() == false do wait() end
+local player = game:GetService("Players").LocalPlayer
+local players = game:GetService("Players")
+
+local function Cape(char, texture)
+	for i,v in pairs(char:GetDescendants()) do
+		if v.Name == "Cape" then
+			v:Remove()
+		end
+	end
+			local hum = char:WaitForChild("Humanoid")
+			local torso = nil
+			if hum.RigType == Enum.HumanoidRigType.R15 then
+			torso = char:WaitForChild("UpperTorso")
+			else
+			torso = char:WaitForChild("Torso")
+			end
+			local p = Instance.new("Part", torso.Parent)
+			p.Name = "Cape"
+			p.Anchored = false
+			p.CanCollide = false
+			p.TopSurface = 0
+			p.BottomSurface = 0
+			p.FormFactor = "Custom"
+			p.Size = Vector3.new(0.2,0.2,0.2)
+			p.Transparency = 1
+			local decal = Instance.new("Decal", p)
+			decal.Texture = texture
+			decal.Face = "Back"
+			local msh = Instance.new("BlockMesh", p)
+			msh.Scale = Vector3.new(9,17.5,0.5)
+			local motor = Instance.new("Motor", p)
+			motor.Part0 = p
+			motor.Part1 = torso
+			motor.MaxVelocity = 0.01
+			motor.C0 = CFrame.new(0,2,0) * CFrame.Angles(0,math.rad(90),0)
+			motor.C1 = CFrame.new(0,1,0.45) * CFrame.Angles(0,math.rad(90),0)
+			local wave = false
+			repeat wait(1/44)
+				decal.Transparency = torso.Transparency
+				local ang = 0.1
+				local oldmag = torso.Velocity.magnitude
+				local mv = 0.002
+				if wave then
+					ang = ang + ((torso.Velocity.magnitude/10) * 0.05) + 0.05
+					wave = false
+				else
+					wave = true
+				end
+				ang = ang + math.min(torso.Velocity.magnitude/11, 0.5)
+				motor.MaxVelocity = math.min((torso.Velocity.magnitude/111), 0.04) --+ mv
+				motor.DesiredAngle = -ang
+				if motor.CurrentAngle < -0.2 and motor.DesiredAngle > -0.2 then
+					motor.MaxVelocity = 0.04
+				end
+				repeat wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) >= (torso.Velocity.magnitude/10) + 1
+				if torso.Velocity.magnitude < 0.1 then
+					wait(0.1)
+				end
+			until not p or p.Parent ~= torso.Parent
+end	
+
 local function renderNametag(plr)
 	if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
 		local nametag = getNametagString(plr)
 		plr.CharacterAdded:connect(function(char)
-			spawn(function()
-				local head = char:WaitForChild("Head")
-				bedwars["getEntityTable"].getEntity(head):setNametag(nametag)
-			end)
+			if char ~= oldchar then
+				spawn(function()
+					pcall(function() 
+						bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
+						Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
+					end)
+				end)
+			end
 		end)
 		spawn(function()
-			if plr.Character then
-				local head = plr.Character:WaitForChild("Head")
-				bedwars["getEntityTable"].getEntity(head):setNametag(nametag)
+			if plr.Character and plr.Character ~= oldchar then
+				spawn(function()
+					pcall(function() 
+						bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
+						Cape(plr.Character, getcustomassetfunc("vape/assets/VapeCape.png"))
+					end)
+				end)
 			end
 		end)
 	end
