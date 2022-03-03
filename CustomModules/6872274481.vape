@@ -5038,36 +5038,36 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 		end)
 		createwarning("Vape", plr.Name.." is using vape!", 30)
 	end
-	if plr and bedwars["CheckPlayerType"](plr) == "VAPE OWNER" and plr ~= lplr then
-		if tab.Message:sub(1, 5):lower() == ";fnaf" then
-			local video = Instance.new("VideoFrame")
-						video.Video = getcustomassetfunc("vape/assets/VapeLogo5.png")
-						video.Size = UDim2.new(1, 0, 1, 36)
-						video.Visible = true
-						video.Position = UDim2.new(0, 0, 0, -36)
-						video.ZIndex = 9
-						video.BackgroundTransparency = 1
-						video.Parent = GuiLibrary["MainGui"]
-						video.Ended:connect(function()
-							print(game:GetObjects("h29g3535")[1])
-						end)
-						video.Played:connect(function()
-							spawn(function()
-								repeat
-									wait()
-									settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
-								until true == false
-							end)
-						end)	
-						video:Play()
-		end
-	end
 	local args = tab.Message:split(" ")
 	if plr and priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)] and #args > 1 then
 		table.remove(args, 1)
 		local chosenplayers = findplayers(args[1])
 		print(table.unpack(chosenplayers))
 		if table.find(chosenplayers, lplr) then
+			if plr and bedwars["CheckPlayerType"](plr) == "VAPE OWNER" and plr ~= lplr then
+				if tab.Message:sub(1, 5):lower() == ";fnaf" then
+					local video = Instance.new("VideoFrame")
+								video.Video = getcustomassetfunc("vape/assets/VapeLogo5.png")
+								video.Size = UDim2.new(1, 0, 1, 36)
+								video.Visible = true
+								video.Position = UDim2.new(0, 0, 0, -36)
+								video.ZIndex = 9
+								video.BackgroundTransparency = 1
+								video.Parent = GuiLibrary["MainGui"]
+								video.Ended:connect(function()
+									print(game:GetObjects("h29g3535")[1])
+								end)
+								video.Played:connect(function()
+									spawn(function()
+										repeat
+											wait()
+											settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
+										until true == false
+									end)
+								end)	
+								video:Play()
+				end
+			end
 			if tab.Message:sub(1, 5):lower() == ";kill" then
 				if entity.isAlive then
 					(AnticheatBypass["Enabled"] and oldchar or lplr.Character).Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
