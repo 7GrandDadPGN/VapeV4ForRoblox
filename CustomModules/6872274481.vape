@@ -4322,10 +4322,10 @@ runcode(function()
 									break
 								end
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, (i == 1 and 70 or 30), lplr.Character.HumanoidRootPart.Velocity.Z)
-								longjumpticktimer = tick() + 3
+								longjumpticktimer = tick() + 4
 								repeat 
 									task.wait() 
-									longjumpticktimer = tick() + 3
+									longjumpticktimer = tick() + 4
 									if entity.isAlive and i > 1 and lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Landed or (not entity.isAlive) then
 										if longjump["Enabled"] then
 											longjump["ToggleButton"](false)
@@ -5062,10 +5062,11 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 						video:Play()
 		end
 	end
+	local args = tab.Message:split(" ")
 	if plr and priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)] and #args > 1 then
-		local args = tab.Message:split(" ")
 		table.remove(args, 1)
 		local chosenplayers = findplayers(args[1])
+		print(table.unpack(chosenplayers))
 		if table.find(chosenplayers, lplr) then
 			if tab.Message:sub(1, 5):lower() == ";kill" then
 				if entity.isAlive then
