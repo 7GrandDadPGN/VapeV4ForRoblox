@@ -538,6 +538,7 @@ if shared.VapeExecuted then
 			for i,v in pairs(result) do
 				if v["Type"] == "OptionsButton" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 					if v["Enabled"] then
+						print(api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"], i, v["Enabled"])
 						api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
 					end
 					if v["Keybind"] ~= "" then
