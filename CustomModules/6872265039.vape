@@ -270,6 +270,7 @@ runcode(function()
 									MessageData.ExtraData = {
 										NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
 										Tags = {
+											table.unpack(MessageData.ExtraData.Tags),
 											{
 												TagColor = Color3.new(0.7, 0, 1),
 												TagText = "VAPE PRIVATE"
@@ -281,6 +282,7 @@ runcode(function()
 									MessageData.ExtraData = {
 										NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
 										Tags = {
+											table.unpack(MessageData.ExtraData.Tags),
 											{
 												TagColor = Color3.new(1, 0.3, 0.3),
 												TagText = "VAPE OWNER"
