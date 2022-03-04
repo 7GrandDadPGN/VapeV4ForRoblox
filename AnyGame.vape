@@ -2494,3 +2494,33 @@ ChatSpammerMessages = ChatSpammer.CreateTextList({
 	["TempText"] = "message to spam",
 	["Function"] = function() end
 })
+
+runcode(function()
+	local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
+	local oldmove
+	local SafeWalk = {["Enabled"] = false}
+	SafeWalk = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "SafeWalk",
+		["Function"] = function(callback)
+			if callback then
+				oldmove = controlmodule.moveFunction
+				controlmodule.moveFunction = function(Self, vec, facecam)
+					if isAlive() then
+						local raycastparameters = RaycastParams.new()
+						raycastparameters.FilterDescendantsInstances = {lplr.Character}
+						raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
+						local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), raycastparameters)
+						local ray2 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -lplr.Character.Humanoid.HipHeight * 2, 0), raycastparameters)
+						if ray == nil and ray2 then
+							vec = Vector3.new(0, 0, 0)
+						end
+					end
+					return oldmove(Self, vec, facecam)
+				end
+			else
+				controlmodule.moveFunction = oldmove
+			end
+		end,
+		["HoverText"] = "lets you not walk off because you are bad"
+	})
+end)
