@@ -2651,7 +2651,7 @@ runcode(function()
 					spawn(function()
 						repeat
 							task.wait()
-						until uis:IsKeyDown(Enum.KeyCode[FieldOfView["Keybind"] or "C"]) == false
+						until uis:IsKeyDown(Enum.KeyCode[FieldOfView["Keybind"] ~= "" and FieldOfView["Keybind"] or "C"]) == false
 						if FieldOfView["Enabled"] then
 							FieldOfView["ToggleButton"](false)
 						end
