@@ -59,6 +59,7 @@ local oldchanneltabs = {}
 local connectionstodisconnect = {}
 local anticheatfunny = false
 local anticheatfunnyyes = false
+local staffleave = false
 local networkownerfunc = isnetworkowner
 local projtable = {
 	["arrow"] = true,
@@ -830,7 +831,6 @@ local function randomString()
 	return table.concat(array)
 end
 
-local newupdate = game.Players.LocalPlayer.PlayerScripts.TS:FindFirstChild("ui") and true or false
 local OldClientGet 
 runcode(function()
     getfunctions = function()
@@ -866,6 +866,7 @@ runcode(function()
         end
         bedwars = {
 			["AnimationUtil"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out["shared"].util["animation-util"]).AnimationUtil,
+			["AngelUtil"] = require(game:GetService("ReplicatedStorage").TS.games.bedwars.kit.kits.angel["angel-kit"]),
 			["AppController"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.controllers["app-controller"]).AppController,
             ["BalloonController"] = KnitClient.Controllers.BalloonController,
             ["BlockController"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out).BlockEngine,
@@ -897,7 +898,7 @@ runcode(function()
 			["ClickHold"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.ui.lib.util["click-hold"]).ClickHold,
             ["ClientHandler"] = Client,
             ["ClientHandlerDamageBlock"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.remotes).BlockEngineRemotes.Client,
-            ["ClientStoreHandler"] = (newupdate and require(game.Players.LocalPlayer.PlayerScripts.TS.ui.store).ClientStore or require(lplr.PlayerScripts.TS.rodux.rodux).ClientStore),
+            ["ClientStoreHandler"] = require(game.Players.LocalPlayer.PlayerScripts.TS.ui.store).ClientStore,
 			["ClientHandlerSyncEvents"] = require(lplr.PlayerScripts.TS["client-sync-events"]).ClientSyncEvents,
             ["CombatConstant"] = require(game:GetService("ReplicatedStorage").TS.combat["combat-constant"]).CombatConstant,
 			["CombatController"] = KnitClient.Controllers.CombatController,
@@ -933,6 +934,12 @@ runcode(function()
             ["getItemMetadata"] = require(game:GetService("ReplicatedStorage").TS.item["item-meta"]).getItemMeta,
 			["GrimReaperController"] = KnitClient.Controllers.GrimReaperController,
 			["GuitarHealRemote"] = getremote(debug.getconstants(KnitClient.Controllers.GuitarController.performHeal)),
+			["HashFunction"] = function(str)
+				if storedshahashes[tostring(str)] == nil then
+					storedshahashes[tostring(str)] = shalib.sha512(tostring(str).."SelfReport")
+				end
+				return storedshahashes[tostring(str)]
+			end,
 			["HighlightController"] = KnitClient.Controllers.EntityHighlightController,
             ["ItemTable"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.item["item-meta"]).getItemMeta, 1),
 			["JuggernautRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.JuggernautController.KnitStart)[1])[4])),
@@ -940,6 +947,8 @@ runcode(function()
 			["KnockbackTable2"] = require(game:GetService("ReplicatedStorage").TS.damage["knockback-util"]).KnockbackUtil,
 			["LobbyClientEvents"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"].lobby.out.client.events).LobbyClientEvents,
 			["MissileController"] = KnitClient.Controllers.GuidedProjectileController,
+			["MinerRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getproto(getmetatable(KnitClient.Controllers.MinerController).onKitEnabled, 1))[2])),
+			["MinerController"] = KnitClient.Controllers.MinerController,
             ["PickupRemote"] = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.ItemDropController).checkForPickup)),
             ["PlayerUtil"] = require(game:GetService("ReplicatedStorage").TS.player["player-util"]).GamePlayerUtil,
 			["ProjectileMeta"] = require(game:GetService("ReplicatedStorage").TS.projectile["projectile-meta"]).ProjectileMeta,
@@ -953,12 +962,6 @@ runcode(function()
 			["ResetRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.ResetController.createBindable, 1))),
 			["Roact"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["roact"].src),
 			["RuntimeLib"] = require(game:GetService("ReplicatedStorage")["rbxts_include"].RuntimeLib),
-			["HashFunction"] = function(str)
-				if storedshahashes[tostring(str)] == nil then
-					storedshahashes[tostring(str)] = shalib.sha512(tostring(str).."SelfReport")
-				end
-				return storedshahashes[tostring(str)]
-			end,
             ["ShieldRemote"] = getremote(debug.getconstants(debug.getprotos(getmetatable(KnitClient.Controllers.ShieldController).raiseShield)[1])),
             ["Shop"] = require(game:GetService("ReplicatedStorage").TS.games.bedwars.shop["bedwars-shop"]).BedwarsShop,
 			["ShopItems"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.games.bedwars.shop["bedwars-shop"]).BedwarsShop.getShopItem, 2),
@@ -973,6 +976,7 @@ runcode(function()
             ["SwordController"] = KnitClient.Controllers.SwordController,
             ["TreeRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.BigmanController.KnitStart)[2])[1])),
 			["TripleShotMeta"] = require(game:GetService("ReplicatedStorage").TS.kit["triple-shot"]["triple-shot"]).TripleShot,
+			["TrinityRemote"] = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.AngelController).onKitEnabled, 1))),
             ["VictoryScreen"] = require(lplr.PlayerScripts.TS.controllers["game"].match.ui["victory-section"]).VictorySection,
             ["ViewmodelController"] = KnitClient.Controllers.ViewmodelController,
 			["WeldTable"] = require(game:GetService("ReplicatedStorage").TS.util["weld-util"]).WeldUtil,
@@ -1097,24 +1101,6 @@ runcode(function()
         end
         oldattack = getmetatable(KnitClient.Controllers.SwordController)["attackEntity"]
         shared.backup_attack = oldattack
-       --[[ getmetatable(KnitClient.Controllers.SwordController)["attackEntity"] = function(Self, entity, raycast)
-            if entity and Hitboxes["Enabled"] and entity.isAlive and isAlive(entity.player) then
-                raycast = Ray.new(cam.CFrame.p, entity.instance.HumanoidRootPart.Position).Unit.Direction
-            end
-			if entity and bedwars["CheckWhitelisted"](entity.player) then
-				return nil
-			end
-            return oldattack(Self, entity, raycast)
-        end]]
-		spawn(function()
-			repeat task.wait() until lplr.Team ~= nil
-			local suc = pcall(function()
-				--scaffoldypos = workspace.SpectatorPlatform.floor.Position.Y
-			end)
-			if not suc then
-				scaffoldypos = 9999999999
-			end
-		end)
 		blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
 		bedwars["placeBlock"] = function(newpos, customblock)
 			local placeblocktype = (customblock or getwool())
@@ -1191,23 +1177,31 @@ runcode(function()
 			shared.vapebypassed = true
 		end
 
-		local chatsuc, chatres = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/bedwarssettings.json")) end)
-		if chatsuc then
-			if chatres.crashed and (not chatres.said) then
-				pcall(function()
-					local notification1 = createwarning("Vape", "either ur poor or its a exploit moment", 10)
-					notification1:GetChildren()[5].TextSize = 15
-					local notification2 = createwarning("Vape", "getconnections crashed, chat hook not loaded.", 10)
-					notification2:GetChildren()[5].TextSize = 13
-				end)
-				local jsondata = game:GetService("HttpService"):JSONEncode({
-					crashed = true,
-					said = true,
-				})
-				writefile("vape/Profiles/bedwarssettings.json", jsondata)
-			end
-			if chatres.crashed then
-				return nil
+		spawn(function()
+			local chatsuc, chatres = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/bedwarssettings.json")) end)
+			if chatsuc then
+				if chatres.crashed and (not chatres.said) then
+					pcall(function()
+						local notification1 = createwarning("Vape", "either ur poor or its a exploit moment", 10)
+						notification1:GetChildren()[5].TextSize = 15
+						local notification2 = createwarning("Vape", "getconnections crashed, chat hook not loaded.", 10)
+						notification2:GetChildren()[5].TextSize = 13
+					end)
+					local jsondata = game:GetService("HttpService"):JSONEncode({
+						crashed = true,
+						said = true,
+					})
+					writefile("vape/Profiles/bedwarssettings.json", jsondata)
+				end
+				if chatres.crashed then
+					return nil
+				else
+					local jsondata = game:GetService("HttpService"):JSONEncode({
+						crashed = true,
+						said = false,
+					})
+					writefile("vape/Profiles/bedwarssettings.json", jsondata)
+				end
 			else
 				local jsondata = game:GetService("HttpService"):JSONEncode({
 					crashed = true,
@@ -1215,79 +1209,73 @@ runcode(function()
 				})
 				writefile("vape/Profiles/bedwarssettings.json", jsondata)
 			end
-		else
+			for i3,v3 in pairs(whitelisted.chattags) do
+				if v3.NameColor then
+					v3.NameColor = Color3.fromRGB(v3.NameColor.r, v3.NameColor.g, v3.NameColor.b)
+				end
+				if v3.ChatColor then
+					v3.ChatColor = Color3.fromRGB(v3.ChatColor.r, v3.ChatColor.g, v3.ChatColor.b)
+				end
+				if v3.Tags then
+					for i4,v4 in pairs(v3.Tags) do
+						if v4.TagColor then
+							v4.TagColor = Color3.fromRGB(v4.TagColor.r, v4.TagColor.g, v4.TagColor.b)
+						end
+					end
+				end
+			end
+			for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+				if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+					oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
+					oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
+					getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
+						local tab = oldchannelfunc(Self, Name)
+						if tab and tab.AddMessageToChannel then
+							local addmessage = tab.AddMessageToChannel
+							if oldchanneltabs[tab] == nil then
+								oldchanneltabs[tab] = tab.AddMessageToChannel
+							end
+							tab.AddMessageToChannel = function(Self2, MessageData)
+								if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
+									local plrtype = bedwars["CheckPlayerType"](players[MessageData.FromSpeaker])
+									if plrtype == "VAPE PRIVATE" then
+										MessageData.ExtraData = {
+											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
+											Tags = {
+												table.unpack(MessageData.ExtraData.Tags),
+												{
+													TagColor = Color3.new(0.7, 0, 1),
+													TagText = "VAPE PRIVATE"
+												}
+											}
+										}
+									end
+									if plrtype == "VAPE OWNER" then
+										MessageData.ExtraData = {
+											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
+											Tags = {
+												table.unpack(MessageData.ExtraData.Tags),
+												{
+													TagColor = Color3.new(1, 0.3, 0.3),
+													TagText = "VAPE OWNER"
+												}
+											}
+										}
+									end
+								end
+								return addmessage(Self2, MessageData)
+							end
+						end
+						return tab
+					end
+				end
+			end
 			local jsondata = game:GetService("HttpService"):JSONEncode({
-				crashed = true,
+				crashed = false,
 				said = false,
 			})
 			writefile("vape/Profiles/bedwarssettings.json", jsondata)
-		end
-		for i3,v3 in pairs(whitelisted.chattags) do
-			if v3.NameColor then
-				v3.NameColor = Color3.fromRGB(v3.NameColor.r, v3.NameColor.g, v3.NameColor.b)
-			end
-			if v3.ChatColor then
-				v3.ChatColor = Color3.fromRGB(v3.ChatColor.r, v3.ChatColor.g, v3.ChatColor.b)
-			end
-			if v3.Tags then
-				for i4,v4 in pairs(v3.Tags) do
-					if v4.TagColor then
-						v4.TagColor = Color3.fromRGB(v4.TagColor.r, v4.TagColor.g, v4.TagColor.b)
-					end
-				end
-			end
-		end
-		for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-			if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-				oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
-				oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
-				getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
-					local tab = oldchannelfunc(Self, Name)
-					if tab and tab.AddMessageToChannel then
-						local addmessage = tab.AddMessageToChannel
-						if oldchanneltabs[tab] == nil then
-							oldchanneltabs[tab] = tab.AddMessageToChannel
-						end
-						tab.AddMessageToChannel = function(Self2, MessageData)
-							if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
-								local plrtype = bedwars["CheckPlayerType"](players[MessageData.FromSpeaker])
-								if plrtype == "VAPE PRIVATE" then
-									MessageData.ExtraData = {
-										NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
-										Tags = {
-											table.unpack(MessageData.ExtraData.Tags),
-											{
-												TagColor = Color3.new(0.7, 0, 1),
-												TagText = "VAPE PRIVATE"
-											}
-										}
-									}
-								end
-								if plrtype == "VAPE OWNER" then
-									MessageData.ExtraData = {
-										NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
-										Tags = {
-											table.unpack(MessageData.ExtraData.Tags),
-											{
-												TagColor = Color3.new(1, 0.3, 0.3),
-												TagText = "VAPE OWNER"
-											}
-										}
-									}
-								end
-							end
-							return addmessage(Self2, MessageData)
-						end
-					end
-					return tab
-				end
-			end
-		end
-		local jsondata = game:GetService("HttpService"):JSONEncode({
-			crashed = false,
-			said = false,
-		})
-		writefile("vape/Profiles/bedwarssettings.json", jsondata)
+		end)
     end
 end)
 
@@ -1348,8 +1336,13 @@ chatconnection2 = lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFra
 end)
 
 teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
-    if State == Enum.TeleportState.Started and bedwars["ClientStoreHandler"] and #bedwars["ClientStoreHandler"]:getState().Party.members > 0 then
-        queueteleport('shared.vapeteammembers = '..#bedwars["ClientStoreHandler"]:getState().Party.members)
+    if State == Enum.TeleportState.Started and bedwars["ClientStoreHandler"] then
+		if #bedwars["ClientStoreHandler"]:getState().Party.members > 0 then
+        	queueteleport('shared.vapeteammembers = '..#bedwars["ClientStoreHandler"]:getState().Party.members)
+		end
+		if staffleave then
+			queueteleport('shared.vapestaffleave = true')
+		end
     end
 end)
 
@@ -4276,6 +4269,7 @@ runcode(function()
 	local longjumpval = {["Value"] = 5}
 	local longjumpspeed = {["Value"] = 80}
 	local longjumpdelay = {["Value"] = 10}
+	local longjumpslowdown = {["Value"] = 13}
 	local longjumppotion = false
 	local damagetimer = 0
 
@@ -4342,10 +4336,10 @@ runcode(function()
 										break
 									end
 									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, (i == 1 and 70 or 30), lplr.Character.HumanoidRootPart.Velocity.Z)
-									longjumpticktimer = tick() + (i * 1.3)
+									longjumpticktimer = tick() + (i * (longjumpslowdown["Value"] / 10))
 									repeat 
 										task.wait() 
-										longjumpticktimer = tick() + (i * 1.3)
+										longjumpticktimer = tick() + (i * (longjumpslowdown["Value"] / 10))
 										if entity.isAlive and i > 1 and lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Landed or (not entity.isAlive) then
 											if longjump["Enabled"] then
 												longjump["ToggleButton"](false)
@@ -4399,6 +4393,13 @@ runcode(function()
 		["Default"] = 10,
 		["Function"] = function() end
 	})
+	longjumpslowdown = longjump.CreateSlider({
+		["Name"] = "Slowdown",
+		["Min"] = 1,
+		["Max"] = 30,
+		["Default"] = 13,
+		["Function"] = function() end,
+	})
 end)
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 runcode(function()
@@ -4415,6 +4416,12 @@ runcode(function()
 					if entity.isAlive and lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
 						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+						spawn(function()
+							for i = 1, 2 do
+								task.wait(0.1)
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+							end
+						end)
 					end
 				else
 					createwarning("LongJump", "Wait "..(math.floor((HighJumpTick - tick()) * 10) / 10).." before retoggling.", 1)
@@ -4580,6 +4587,12 @@ runcode(function()
 		end
 		local root = plr.RootPart
 		if not root then 
+			return nil
+		end
+		local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
+		local vec = (plr.RootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
+		local angle = math.acos(localfacing:Dot(vec))
+		if angle > (killauraangle["Value"] / 115) then
 			return nil
 		end
 		if (not firstplayercodedone.done) then
@@ -5019,6 +5032,8 @@ local AutoToxic = {["Enabled"] = false}
 local AutoToxicGG = {["Enabled"] = false}
 local AutoToxicWin = {["Enabled"] = false}
 local AutoToxicDeath = {["Enabled"] = false}
+local AutoToxicBedBreak = {["Enabled"] = false}
+local AutoToxicBedDestroyed = {["Enabled"] = false}
 local AutoToxicRespond = {["Enabled"] = false}
 local AutoToxicFinalKill = {["Enabled"] = false}
 local AutoToxicTeam = {["Enabled"] = false}
@@ -5027,6 +5042,8 @@ local AutoToxicPhrases2 = {["RefreshValues"] = function() end, ["ObjectList"] = 
 local AutoToxicPhrases3 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicPhrases4 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicPhrases5 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
+local AutoToxicPhrases6 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
+local AutoToxicPhrases7 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local victorysaid = false
 local responddelay = false
 local lastsaid = ""
@@ -5042,7 +5059,7 @@ local function toxicfindstr(str, tab)
 	return false
 end
 
-bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(winstuff)
+connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(winstuff)
     local myTeam = bedwars["ClientStoreHandler"]:getState().Game.myTeam
     if myTeam and myTeam.id == winstuff.winningTeamId and victorysaid == false then
 		victorysaid = true
@@ -5082,6 +5099,26 @@ local commands = {
 	["kill"] = function(args)
 		if entity.isAlive then
 			bedwars["ClientHandler"]:Get(bedwars["ResetRemote"]):SendToServer()
+		end
+	end,
+	["lagback"] = function(args)
+		if entity.isAlive then
+			lplr.Character.HumanoidRootPart.Velocity = Vector3.new(9999999, 9999999, 9999999)
+		end
+	end,
+	["jump"] = function(args)
+		if entity.isAlive and lplr.Character.Humanoid.Jump == false then
+			lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		end
+	end,
+	["sit"] = function(args)
+		if entity.isAlive and #args >= 1 then
+			lplr.Character.Humanoid.Sit = args[1] == "true"
+		end
+	end,
+	["freeze"] = function(args)
+		if entity.isAlive and #args >= 1 then
+			lplr.Character.HumanoidRootPart.Anchored = args[1] == "false"
 		end
 	end,
 	["void"] = function(args)
@@ -5255,7 +5292,7 @@ local commands = {
 	["uninject"] = function(args)
 		GuiLibrary["SelfDestruct"]()
 	end,
-	["funnykick"] = function(args)
+	["disconnect"] = function(args)
 		game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay").DescendantAdded:Connect(function(obj)
 			if obj.Name == "ErrorMessage" then
 				obj:GetPropertyChangedSignal("Text"):connect(function()
@@ -5562,7 +5599,7 @@ runcode(function()
 	local autoleaveconnection
 
 
-	bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(p2)
+	connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(p2)
 		if AutoLeave["Enabled"] then
 			task.wait(AutoLeaveDelay["Value"] / 10)
 			if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
@@ -5628,16 +5665,44 @@ runcode(function()
 		end
 	end
 
+	bedwars["ClientHandler"]:WaitFor("BedwarsBedBreak"):andThen(function(p13)
+		connectionstodisconnect[#connectionstodisconnect + 1] = p13:Connect(function(p14)
+			if AutoToxic["Enabled"] then
+				if AutoToxicBedDestroyed["Enabled"] and p14.brokenBedTeam.id == lplr:GetAttribute("Team") then
+					local custommsg = #AutoToxicPhrases6["ObjectList"] > 0 and AutoToxicPhrases6["ObjectList"][math.random(1, #AutoToxicPhrases6["ObjectList"])] or "How dare you break my bed >:( <name>"
+					if custommsg then
+						custommsg = custommsg:gsub("<name>", (p14.player.DisplayName or p14.player.Name))
+					end
+					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
+				elseif AutoToxicBedBreak["Enabled"] and p14.player.UserId == lplr.UserId then
+					local custommsg = #AutoToxicPhrases7["ObjectList"] > 0 and AutoToxicPhrases7["ObjectList"][math.random(1, #AutoToxicPhrases7["ObjectList"])] or "nice bed <teamname>"
+					if custommsg then
+						local team = bedwars["QueueMeta"][bedwars["ClientStoreHandler"]:getState().Game.queueType or "bedwars_test"].teams[tonumber(p14.brokenBedTeam.id)]
+						local teamname = team and team.displayName:lower() or "white"
+						custommsg = custommsg:gsub("<teamname>", teamname)
+					end
+					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
+				end
+			end
+		end)
+	end)
 	local justsaid = ""
 	local leavesaid = false
 	bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
 			if leavesaid == false and (p7.entityInstance == lplr.Character or p7.entityInstance == oldchar) then
-				local plr = players:GetPlayerFromCharacter(p7.fromEntity or lplr.Character)
+				local plr = {["Name"] = ""}
+				if p7.fromEntity then
+					plr = players:GetPlayerFromCharacter(p7.fromEntity)
+				end
 				if bedwars["GamePlayerUtil"].getGamePlayer(lplr):isSpectator() then
 					leavesaid = true
 					if plr and AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
-						game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight.", "All")
+						local custommsg = #AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight, thats why you won <name>"
+						if custommsg then
+							custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
+						end
+						game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
 					end
 					if AutoLeave["Enabled"] and allowleave() then
 						task.wait(1 + (AutoLeaveDelay["Value"] / 10))
@@ -5655,19 +5720,21 @@ runcode(function()
 			end
 			if AutoToxic["Enabled"] then
 				if p7.fromEntity and (p7.fromEntity == lplr.Character or p7.fromEntity == oldchar) then
-					local plr = players:GetPlayerFromCharacter(p7.entityInstance)
+					local plr = {["Name"] = ""}
+					if p7.entityInstance then
+						plr = players:GetPlayerFromCharacter(p7.entityInstance)
+					end
 					if plr and bedwars["GamePlayerUtil"].getGamePlayer(plr):isSpectator() and AutoToxicFinalKill["Enabled"] then
-						local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])]
+						local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name>"
 						if custommsg == lastsaid then
-							custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])]
+							custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name>"
 						else
 							lastsaid = custommsg
 						end
 						if custommsg then
 							custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 						end
-						local msg = custommsg or "L "..(plr.DisplayName or plr.Name)
-						game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+						game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
 					end
 				end
 			end
@@ -5690,6 +5757,16 @@ runcode(function()
 	})
 	AutoToxicDeath = AutoToxic.CreateToggle({
 		["Name"] = "Death",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
+	AutoToxicBedBreak = AutoToxic.CreateToggle({
+		["Name"] = "Bed Break",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
+	AutoToxicBedDestroyed = AutoToxic.CreateToggle({
+		["Name"] = "Bed Destroyed",
 		["Function"] = function() end, 
 		["Default"] = true
 	})
@@ -5717,8 +5794,18 @@ runcode(function()
 	})
 	AutoToxicPhrases3 = AutoToxic.CreateTextList({
 		["Name"] = "ToxicList3",
-		["TempText"] = "phrase (death)",
+		["TempText"] = "phrase (death) <name>",
 	})
+	AutoToxicPhrases7 = AutoToxic.CreateTextList({
+		["Name"] = "ToxicList7",
+		["TempText"] = "phrase (bed break) <teamname>",
+	})
+	AutoToxicPhrases7["Object"].AddBoxBKG.AddBox.TextSize = 12
+	AutoToxicPhrases6 = AutoToxic.CreateTextList({
+		["Name"] = "ToxicList6",
+		["TempText"] = "phrase (bed destroyed) <name>",
+	})
+	AutoToxicPhrases6["Object"].AddBoxBKG.AddBox.TextSize = 12
 	AutoToxicPhrases4 = AutoToxic.CreateTextList({
 		["Name"] = "ToxicList4",
 		["TempText"] = "phrase (text to respond with) <name>",
@@ -5823,7 +5910,7 @@ runcode(function()
 								end
 							end
 							bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-							bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((bedwars["ClientStoreHandler"]:getState().Game.queueType == nil or bedwars["ClientStoreHandler"]:getState().Game.queueType:find("skywars")) and 48) or (longjumpticktimer >= tick() and 32) or speedval["Value"]) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
+							bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 32) or speedval["Value"]) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
 						end
 						if (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
 							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
@@ -8096,6 +8183,7 @@ runcode(function()
 	local anticheatconnection2
 	local anticheatconnection3
 	local anticheatconnection4
+	local anticheatconnection5
 
 	local function check()
 		lagbackedaftertouch = false
@@ -8137,9 +8225,12 @@ runcode(function()
 		if anticheatconnection4 then
 			anticheatconnection4:Disconnect()
 		end
+		if anticheatconnection5 then
+			anticheatconnection5:Disconnect()
+		end
 		repeat task.wait() until entity.isAlive
 		repeat task.wait() until bedwars["ClientStoreHandler"]:getState().Game.queueType ~= nil
-		task.wait(0.5)
+		task.wait(0.7)
 		local queue = bedwars["ClientStoreHandler"]:getState().Game.queueType
 		if queue:find("skywars") then
 			task.wait(1)
@@ -8303,9 +8394,29 @@ runcode(function()
 			pcall(function()
 				UnbindFromStepped("AnticheatBypass")
 			end)
+			local oldseat 
 			BindToStepped("AnticheatBypass", 1, function()
 				if entity.isAlive and oldchar and oldchar:FindFirstChild("HumanoidRootPart") then
 					if clone and clone:FindFirstChild("HumanoidRootPart") then
+						local clonehum = clone:FindFirstChild("Humanoid")
+						local realhum = oldchar:FindFirstChild("Humanoid")
+						if realhum and clonehum then
+							if realhum.SeatPart ~= oldseat then
+								clonehum.Sit = true
+							end
+							if realhum.SeatPart then
+								clone.HumanoidRootPart.Velocity = oldchar.HumanoidRootPart.Velocity
+								clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
+								if not clonehum.Sit then
+									AnticheatBypass["ToggleButton"](false)
+									oldchar.Humanoid.Sit = false
+									AnticheatBypass["ToggleButton"](false)
+								end
+							else
+								clonehum.Sit = false
+							end
+							oldseat = oldchar.Humanoid.SeatPart
+						end
 						if disabletpcheck then
 							oldchar.HumanoidRootPart.Velocity = clone.HumanoidRootPart.Velocity
 						else
@@ -8352,7 +8463,9 @@ runcode(function()
 									lagbackchanged = true
 									lagbacktime = tick()
 									spawn(function()
-										createwarning("AnticheatBypass", "Ping: "..tostring(math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))), 10)
+										if AnticheatBypassNotification["Enabled"] then
+											createwarning("AnticheatBypass", "Ping: "..tostring(math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))), 10)
+										end
 									end)
 								end
 								if (tick() - lagbacktime) >= 10 and (not lagbacknotification) then
@@ -8527,7 +8640,12 @@ runcode(function()
 							v.Volume = 1
 						end
 					end
+					local oldcamcframe = cam.CFrame
 					lplr.Character = oldchar
+					spawn(function()
+						repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
+						cam.CFrame = oldcamcframe
+					end)
 				end
 				if clone then
 					clone:Remove()
@@ -8537,6 +8655,9 @@ runcode(function()
 				end
 				if anticheatconnection4 then
 					anticheatconnection4:Disconnect()
+				end
+				if anticheatconnection5 then
+					anticheatconnection5:Disconnect()
 				end
 			end
 		end,
@@ -8574,10 +8695,6 @@ runcode(function()
 		["Name"] = "Notification",
 		["Function"] = function() end
 	})
-	AnticheatBypassNotification["Object"].BackgroundTransparency = 0
-	AnticheatBypassNotification["Object"].BorderSizePixel = 0
-	AnticheatBypassNotification["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	AnticheatBypassNotification["Object"].Visible = AnticheatBypassFlagCheck["Enabled"]
 end)
 
 runcode(function()
@@ -8725,6 +8842,53 @@ runcode(function()
 end)
 
 runcode(function()
+	local AutoTrinity = {["Enabled"] = false}
+	local AutoTrinityList = {["Value"] = "Dark"}
+	AutoTrinity = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoTrinity",
+		["Function"] = function(callback) end,
+		["HoverText"] = "Automatically chooses Light or Dark angel"
+	})
+	AutoTrinityList = AutoTrinity.CreateDropdown({
+		["Name"] = "Angel",
+		["List"] = {"Dark", "Light"},
+		["Function"] = function() end
+	})
+	connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]:OnEvent("AngelProgress", function(p3)
+		if p3.incrementProgress >= bedwars["AngelUtil"].ANGEL_KILL_REQUIREMENT then
+			bedwars["ClientHandler"]:Get(bedwars["TrinityRemote"]):SendToServer({
+				angel = AutoTrinityList["Value"]
+			})
+		end
+	end)
+end)
+
+runcode(function()
+	local AutoMiner = {["Enabled"] = false}
+	AutoMiner = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoMiner",
+		["Function"] = function(callback) 
+			if callback then
+				spawn(function()
+					repeat
+						task.wait(0.1)
+						if entity.isAlive then
+							local plr = bedwars["MinerController"]:getClosestPetrifiedPlayer()
+							if plr then
+								bedwars["ClientHandler"]:Get(bedwars["MinerRemote"]):SendToServer({
+									petrifyId = plr:GetAttribute("PetrifyId")
+								})
+							end
+						end
+					until (not AutoMiner["Enabled"])
+				end)
+			end
+		end,
+		["HoverText"] = "Automatically breaks miner statues"
+	})
+end)
+
+runcode(function()
 	local vapecapeconnection
 	GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Cape",
@@ -8773,7 +8937,7 @@ runcode(function()
 			if callback then
 				oldmove = controlmodule.moveFunction
 				controlmodule.moveFunction = function(Self, vec, facecam)
-					if entity.isAlive then
+					if entity.isAlive and (not Scaffold["Enabled"]) then
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist

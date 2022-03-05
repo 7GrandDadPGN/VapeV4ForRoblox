@@ -1,5 +1,6 @@
 if shared.VapeExecuted then
-	local VERSION = "v4.07"
+	local VERSION = "v4.07"..(shared.VapePrivate and " PRIVATE" or "")
+	local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
 	local rainbowvalue = 0
 	local cam = game:GetService("Workspace").CurrentCamera
 	local getasset = getsynasset or getcustomasset
@@ -332,7 +333,7 @@ if shared.VapeExecuted then
 
 	api["SaveSettings"] = function()
 		if loadedsuccessfully then
-			writefile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
+			writefile(customdir.."Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", game:GetService("HttpService"):JSONEncode(api["Profiles"]))
 			local WindowTable = {}
 			for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
 				if v["Type"] == "Window" then
@@ -383,34 +384,45 @@ if shared.VapeExecuted then
 				end
 			end
 			WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = api["GUIKeybind"]}
-			writefile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", game:GetService("HttpService"):JSONEncode(api["Settings"]))
-			writefile("vape/Profiles/GUIPositions.vapeprofile.txt", game:GetService("HttpService"):JSONEncode(WindowTable))
+			writefile(customdir.."Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", game:GetService("HttpService"):JSONEncode(api["Settings"]))
+			writefile(customdir.."Profiles/GUIPositions.vapeprofile.txt", game:GetService("HttpService"):JSONEncode(WindowTable))
 		end
 	end
 
 	api["LoadSettings"] = function()
 		if identifyexecutor and identifyexecutor():find("ScriptWare") == nil and listfiles then
-			for i,v in pairs(listfiles("vape/Profiles")) do 
-				local newstr = v:gsub("vape/Profiles", ""):sub(2, v:len())
+			for i,v in pairs(listfiles(customdir.."Profiles")) do 
+				local newstr = v:gsub(customdir.."Profiles", ""):sub(2, v:len())
 				local ext = (v:len() >= 12 and v:sub(v:len() - 12, v:len()))
 				if (ext and ext:find("vapeprofile") and ext:find("txt") == nil) then
-					writefile("vape/Profiles/"..newstr..".txt", readfile("vape/Profiles/"..newstr))
+					writefile(customdir.."Profiles/"..newstr..".txt", readfile(customdir.."Profiles/"..newstr))
 					if delfile then
-						print("wrote:", "vape/Profiles/"..newstr..".txt")
-						delfile("vape/Profiles/"..newstr)
+						print("wrote:", customdir.."Profiles/"..newstr..".txt")
+						delfile(customdir.."Profiles/"..newstr)
 					end
 				end
 			end
 		end
+		if shared.VapePrivate then
+			if isfile("vapeprivate/Profiles/GUIPositions.vapeprofile.txt") == false and isfile("vape/Profiles/GUIPositions.vapeprofile.txt") then
+				writefile("vapeprivate/Profiles/GUIPositions.vapeprofile.txt", readfile("vape/Profiles/GUIPositions.vapeprofile.txt"))
+			end
+			if isfile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") == false and isfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") then
+				writefile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", readfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
+			end
+			if isfile("vapeprivate/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") == false and isfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") then
+				writefile("vapeprivate/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
+			end
+		end
 		local success2, result2 = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
+			return game:GetService("HttpService"):JSONDecode(readfile(customdir.."Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
 		end)
 		if success2 and type(result2) == "table" then
 			api["Profiles"] = result2
 		end
 		getprofile()
 		local success3, result3 = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/GUIPositions.vapeprofile.txt"))
+			return game:GetService("HttpService"):JSONDecode(readfile(customdir.."Profiles/GUIPositions.vapeprofile.txt"))
 		end)
 		if success3 and type(result3) == "table" then
 			for i,v in pairs(result3) do
@@ -459,7 +471,7 @@ if shared.VapeExecuted then
 			end
 		end
 		local success, result = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
+			return game:GetService("HttpService"):JSONDecode(readfile(customdir.."Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
 		end)
 		if success and type(result) == "table" then
 			api["LoadSettingsEvent"]:Fire(result)
@@ -538,7 +550,7 @@ if shared.VapeExecuted then
 			for i,v in pairs(result) do
 				if v["Type"] == "OptionsButton" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 					if v["Enabled"] then
-						print(api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"], i, v["Enabled"])
+						--print(api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"], i, v["Enabled"])
 						api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
 					end
 					if v["Keybind"] ~= "" then
@@ -553,15 +565,17 @@ if shared.VapeExecuted then
 	api["SwitchProfile"] = function(profilename)
 		api["Profiles"][api["CurrentProfile"]]["Selected"] = false
 		api["Profiles"][profilename]["Selected"] = true
-		if (not isfile("vape/Profiles/"..(profilename == "default" and "" or profilename)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt")) then
+		if (not isfile(customdir.."Profiles/"..(profilename == "default" and "" or profilename)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt")) then
 			local realprofile = api["CurrentProfile"]
 			api["CurrentProfile"] = profilename
 			api["SaveSettings"]()
 			api["CurrentProfile"] = realprofile
 		end
+		local vapeprivate = shared.VapePrivate
 		api["SelfDestruct"]()
 		shared.VapeSwitchServers = true
 		shared.VapeOpenGui = (clickgui.Visible)
+		shared.VapePrivate = vapeprivate
 		loadstring(GetURL("NewMainScript.lua"))()
 	end
 
@@ -3551,7 +3565,7 @@ if shared.VapeExecuted then
 						deletebutton.Size = UDim2.new(0, 6, 0, 6)
 						deletebutton.BackgroundTransparency = 1
 						deletebutton.AutoButtonColor = false
-						deletebutton.ZIndex = 2
+						deletebutton.ZIndex = 1
 						deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
 						deletebutton.Position = UDim2.new(1, -16, 0, 14)
 						deletebutton.Parent = itemframe
@@ -4546,7 +4560,9 @@ if shared.VapeExecuted then
 				frame.MouseLeave:connect(function()
 					hoverbox.Visible = false
 					if buttonapi["Enabled"] == false then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						pcall(function()
+							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						end)
 					end
 				end)
 				local placeholder = 0
@@ -4800,7 +4816,9 @@ if shared.VapeExecuted then
 				frame.MouseLeave:connect(function()
 					hoverbox.Visible = false
 					if buttonapi["Enabled"] == false then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						pcall(function()
+							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						end)
 					end
 				end)
 				api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."SliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Object2"] = slidersat, ["Object3"] = sliderval, ["Api"] = sliderapi}
@@ -5401,6 +5419,7 @@ if shared.VapeExecuted then
 		windowapi["ExpandToggle"] = function()
 			if noexpand == false then
 				children.Visible = not children.Visible
+				children2.Visible = false
 				if children.Visible then
 					expandbutton2.Image = getcustomassetfunc("vape/assets/DownArrow.png")
 					windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
@@ -5411,11 +5430,16 @@ if shared.VapeExecuted then
 			end
 		end
 
+		uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+			if children2.Visible then
+				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout2.AbsoluteContentSize.Y)
+			end
+		end)
 		settingsbutton.MouseButton1Click:connect(function()
 			if children.Visible then
 				children.Visible = false
 				children2.Visible = true
-				windowtitle.Size = UDim2.new(0, 220, 0, 476)
+				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout2.AbsoluteContentSize.Y)
 			else
 				children.Visible = true
 				children2.Visible = false
@@ -5615,7 +5639,7 @@ if shared.VapeExecuted then
 			end
 			frame.MouseLeave:connect(function()
 				hoverbox.Visible = false
-				if buttonapi["Enabled"] == false then
+				if buttonapi and buttonapi["Enabled"] == false then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 				end
 			end)
@@ -5826,7 +5850,7 @@ if shared.VapeExecuted then
 					deletebutton.Size = UDim2.new(0, 6, 0, 6)
 					deletebutton.BackgroundTransparency = 1
 					deletebutton.AutoButtonColor = false
-					deletebutton.ZIndex = 2
+					deletebutton.ZIndex = 1
 					deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
 					deletebutton.Position = UDim2.new(1, -16, 0, 14)
 					deletebutton.Parent = itemframe

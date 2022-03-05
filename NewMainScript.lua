@@ -1,5 +1,5 @@
 repeat task.wait() until game:IsLoaded() == true
-
+local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		if not isfile("vape/"..scripturl) then
@@ -44,17 +44,20 @@ else
 	shared.VapeExecuted = true
 end
 
+if isfolder(customdir:gsub("/", "")) == false then
+	makefolder(customdir:gsub("/", ""))
+end
 if isfolder("vape") == false then
 	makefolder("vape")
 end
 if isfile("vape/assetsversion.dat") == false then
 	writefile("vape/assetsversion.dat", "1")
 end
-if isfolder("vape/CustomModules") == false then
-	makefolder("vape/CustomModules")
+if isfolder(customdir.."CustomModules") == false then
+	makefolder(customdir.."CustomModules")
 end
-if isfolder("vape/Profiles") == false then
-	makefolder("vape/Profiles")
+if isfolder(customdir.."Profiles") == false then
+	makefolder(customdir.."Profiles")
 end
 if isfile("vape/language.dat") == false then
 	local suc, res = pcall(function() return gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") end)
@@ -421,24 +424,23 @@ OnlineProfilesButton.Size = UDim2.new(0, 45, 0, 29)
 OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 OnlineProfilesButton.Active = false
 OnlineProfilesButton.Text = ""
-OnlineProfilesButton.ZIndex = 4
+OnlineProfilesButton.ZIndex = 1
 OnlineProfilesButton.Font = Enum.Font.SourceSans
 OnlineProfilesButton.TextXAlignment = Enum.TextXAlignment.Left
 OnlineProfilesButton.Position = UDim2.new(0, 166, 0, 6)
 OnlineProfilesButton.Parent = ProfilesTextList["Object"]
-local OnlineProfilesButtonBKG = Instance.new("Frame")
-OnlineProfilesButtonBKG.BackgroundColor3 = Color3.fromRGB(38, 37, 38)
-OnlineProfilesButtonBKG.Size = UDim2.new(0, 47, 0, 31)
-OnlineProfilesButtonBKG.Position = UDim2.new(0, 165, 0, 5)
-OnlineProfilesButtonBKG.ZIndex = 3
-OnlineProfilesButtonBKG.Parent = ProfilesTextList["Object"]
+local OnlineProfilesButtonBKG = Instance.new("UIStroke")
+OnlineProfilesButtonBKG.Color = Color3.fromRGB(38, 37, 38)
+OnlineProfilesButtonBKG.Thickness = 1
+OnlineProfilesButtonBKG.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+OnlineProfilesButtonBKG.Parent = OnlineProfilesButton
 local OnlineProfilesButtonImage = Instance.new("ImageLabel")
 OnlineProfilesButtonImage.BackgroundTransparency = 1
 OnlineProfilesButtonImage.Position = UDim2.new(0, 14, 0, 7)
 OnlineProfilesButtonImage.Size = UDim2.new(0, 17, 0, 16)
 OnlineProfilesButtonImage.Image = getcustomassetfunc("vape/assets/OnlineProfilesButton.png")
 OnlineProfilesButtonImage.ImageColor3 = Color3.fromRGB(121, 121, 121)
-OnlineProfilesButtonImage.ZIndex = 5
+OnlineProfilesButtonImage.ZIndex = 1
 OnlineProfilesButtonImage.Active = false
 OnlineProfilesButtonImage.Parent = OnlineProfilesButton
 local OnlineProfilesbuttonround1 = Instance.new("UICorner")
@@ -609,7 +611,7 @@ OnlineProfilesButton.MouseButton1Click:connect(function()
 					profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 				end)
 				profiledownload.MouseButton1Click:connect(function()
-					writefile("vape/Profiles/"..v2["ProfileName"]..tostring(game.PlaceId)..".vapeprofile.txt", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles/"..v2["OnlineProfileName"], true)))
+					writefile(customdir.."Profiles/"..v2["ProfileName"]..tostring(game.PlaceId)..".vapeprofile.txt", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles/"..v2["OnlineProfileName"], true)))
 					GuiLibrary["Profiles"][v2["ProfileName"]] = {["Keybind"] = "", ["Selected"] = false}
 					if table.find(ProfilesTextList["ObjectList"], v2["ProfileName"]) == nil then
 						table.insert(ProfilesTextList["ObjectList"], v2["ProfileName"])
@@ -718,47 +720,57 @@ onetext2.TextColor3 = Color3.new(0, 0, 0)
 onetext2.Font = Enum.Font.SourceSans
 onetext2.TextSize = 23
 local onebackground = Instance.new("Frame")
-onebackground.BackgroundTransparency = 0.5
+onebackground.BackgroundTransparency = 1
 onebackground.BorderSizePixel = 0
 onebackground.BackgroundColor3 = Color3.new(0, 0, 0)
+onebackground.Size = UDim2.new(1, 0, 1, 0)
 onebackground.Visible = false 
 onebackground.Parent = TextGui.GetCustomChildren()
 onebackground.ZIndex = 0
+local onebackgroundsort = Instance.new("UIListLayout")
+onebackgroundsort.FillDirection = Enum.FillDirection.Vertical
+onebackgroundsort.SortOrder = Enum.SortOrder.LayoutOrder
+onebackgroundsort.Padding = UDim.new(0, 0)
+onebackgroundsort.Parent = onebackground
 local onescale = Instance.new("UIScale")
 onescale.Parent = TextGui.GetCustomChildren()
-onescale:GetPropertyChangedSignal("Scale"):connect(function()
-	local childrenobj = TextGui.GetCustomChildren()
-	local check = (childrenobj.Parent.Position.X.Offset + childrenobj.Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2)
-	childrenobj.Position = UDim2.new((check and -(onescale.Scale - 1) or 0), (check and 0 or -6 * (onescale.Scale - 1)), 1, -6 * (onescale.Scale - 1))
-end)
-onetext:GetPropertyChangedSignal("Size"):connect(function()
-	onebackground.Position = onething.Position - UDim2.new(0, (onetext.Position.X.Offset == -154 and 10 or 0), 0, 0)
-	onebackground.Size = UDim2.new(0, onetext.Size.X.Offset, 0, onetext.Size.Y.Offset + (onething.Visible and 27 or 0))
-end)
-onetext:GetPropertyChangedSignal("Position"):connect(function()
-	onebackground.Position = onething.Position - UDim2.new(0, (onetext.Position.X.Offset == -154 and 10 or 0), 0, 0)
-	onebackground.Size = UDim2.new(0, onetext.Size.X.Offset, 0, onetext.Size.Y.Offset + (onething.Visible and 27 or 0))
-end)
-TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(function()
-	local childrenobj = TextGui.GetCustomChildren()
-	local check = (childrenobj.Parent.Position.X.Offset + childrenobj.Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2)
-	childrenobj.Position = UDim2.new((check and -(onescale.Scale - 1) or 0), (check and 0 or -6 * (onescale.Scale - 1)), 1, -6 * (onescale.Scale - 1))
-	if check then
-		onetext.TextXAlignment = Enum.TextXAlignment.Right
-		onetext2.TextXAlignment = Enum.TextXAlignment.Right
-		onetext2.Position = UDim2.new(0, 1, 0, 1)
-		onething.Position = UDim2.new(1, -142, 0, 8)
-		onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
-	else
-		onetext.TextXAlignment = Enum.TextXAlignment.Left
-		onetext2.TextXAlignment = Enum.TextXAlignment.Left
-		onetext2.Position = UDim2.new(0, 5, 0, 1)
-		onething.Position = UDim2.new(0, 2, 0, 8)
-		onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
+local textguirenderbkg = {["Enabled"] = false}
+local function refreshbars(textlists)
+	for i,v in pairs(onebackground:GetChildren()) do
+		if v:IsA("Frame") then
+			v:Remove()
+		end
 	end
-end)
+	for i2,v2 in pairs(textlists) do
+		local newstr = v2:gsub(":", " ")
+		local textsize = game:GetService("TextService"):GetTextSize(newstr, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
+		local frame = Instance.new("Frame")
+		frame.BorderSizePixel = 0
+		frame.BackgroundTransparency = 0.62
+		frame.BackgroundColor3 = Color3.new(0,0,0)
+		frame.Visible = true
+		frame.ZIndex = 0
+		frame.LayoutOrder = i2
+		frame.Size = UDim2.new(0, textsize.X + 8, 0, textsize.Y - (onescale.Scale - 1))
+		frame.Parent = onebackground
+		local colorframe = Instance.new("Frame")
+		colorframe.Size = UDim2.new(0, 2, 1, 0)
+		colorframe.Position = (onebackgroundsort.HorizontalAlignment == Enum.HorizontalAlignment.Left and UDim2.new(0, 0, 0, 0) or UDim2.new(1, -2, 0, 0))
+		colorframe.BorderSizePixel = 0
+		colorframe.Name = "ColorFrame"
+		colorframe.Parent = frame
+		local extraframe = Instance.new("Frame")
+		extraframe.BorderSizePixel = 0
+		extraframe.BackgroundTransparency = 0.96
+		extraframe.BackgroundColor3 = Color3.new(0, 0, 0)
+		extraframe.ZIndex = 0
+		extraframe.Size = UDim2.new(1, 0, 0, 2)
+		extraframe.Position = UDim2.new(0, 0, 1, -1)
+		extraframe.Parent = frame
+	end
+end
 
-onething.Visible = true onetext.Position = UDim2.new(0, 0, 0, 35)
+onething.Visible = true onetext.Position = UDim2.new(0, 0, 0, 41)
 
 local sortingmethod = "Alphabetical"
 local textwithoutthing = ""
@@ -793,6 +805,7 @@ local function UpdateHud()
 			return textsize1.X > textsize2.X 
 		end)
 	end
+	local textlists = {}
 	for i2,v2 in pairs(tableofmodules) do
 		if first then
 			text = (translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or "")
@@ -800,6 +813,7 @@ local function UpdateHud()
 		else
 			text = text..'\n'..(translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or "")
 		end
+		table.insert(textlists, (translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or ""))
 	end
 	textwithoutthing = text
 	onetext.Text = text
@@ -815,18 +829,30 @@ local function UpdateHud()
 			onetext2.TextXAlignment = Enum.TextXAlignment.Right
 			onetext2.Position = UDim2.new(0, 1, 0, 1)
 			onething.Position = UDim2.new(1, -142, 0, 8)
-			onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
+			onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5))
+			onebackgroundsort.HorizontalAlignment = Enum.HorizontalAlignment.Right
+			onebackground.Position = onetext.Position + UDim2.new(0, -60, 0, 2)
 		else
 			onetext.TextXAlignment = Enum.TextXAlignment.Left
 			onetext2.TextXAlignment = Enum.TextXAlignment.Left
 			onetext2.Position = UDim2.new(0, 5, 0, 1)
 			onething.Position = UDim2.new(0, 2, 0, 8)
-			onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
+			onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5))
+			onebackgroundsort.HorizontalAlignment = Enum.HorizontalAlignment.Left
+			onebackground.Position = onetext.Position + UDim2.new(0, -1, 0, 2)
 		end
 	end
+	refreshbars(textlists)
 	GuiLibrary["UpdateUI"]()
 end
 
+TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(UpdateHud)
+onescale:GetPropertyChangedSignal("Scale"):connect(function()
+	local childrenobj = TextGui.GetCustomChildren()
+	local check = (childrenobj.Parent.Position.X.Offset + childrenobj.Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2)
+	childrenobj.Position = UDim2.new((check and -(onescale.Scale - 1) or 0), (check and 0 or -6 * (onescale.Scale - 1)), 1, -6 * (onescale.Scale - 1))
+	UpdateHud()
+end)
 GuiLibrary["UpdateHudEvent"].Event:connect(UpdateHud)
 TextGui.CreateDropdown({
 	["Name"] = "Sort",
@@ -848,48 +874,16 @@ local TextGuiUseCategoryColor = TextGui.CreateToggle({
 TextGui.CreateToggle({
 	["Name"] = "Watermark", 
 	["Function"] = function(callback) 
-		if callback then
-			onething.Visible = true 
-			if TextGui.GetCustomChildren().Parent then
-				if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
-					onetext.TextXAlignment = Enum.TextXAlignment.Right
-					onetext2.Position = UDim2.new(0, 1, 0, 1)
-					onetext2.TextXAlignment = Enum.TextXAlignment.Right
-					onething.Position = UDim2.new(1, -142, 0, 8)
-					onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
-				else
-					onetext.TextXAlignment = Enum.TextXAlignment.Left
-					onetext2.TextXAlignment = Enum.TextXAlignment.Left
-					onetext2.Position = UDim2.new(0, 5, 0, 1)
-					onething.Position = UDim2.new(0, 2, 0, 8)
-					onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
-				end
-			end
-		else
-			onething.Visible = false
-			if TextGui.GetCustomChildren().Parent then
-				if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
-					onetext.TextXAlignment = Enum.TextXAlignment.Right
-					onetext2.Position = UDim2.new(0, 1, 0, 1)
-					onetext2.TextXAlignment = Enum.TextXAlignment.Right
-					onething.Position = UDim2.new(1, -142, 0, 8)
-					onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and 35 or 5))
-				else
-					onetext.TextXAlignment = Enum.TextXAlignment.Left
-					onetext2.TextXAlignment = Enum.TextXAlignment.Left
-					onetext2.Position = UDim2.new(0, 5, 0, 1)
-					onething.Position = UDim2.new(0, 2, 0, 8)
-					onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and 35 or 5))
-				end
-			end
-		end
+		onething.Visible = callback
+		UpdateHud()
 	end,
 	["HoverText"] = "Renders a vape watermark"
 })
-TextGui.CreateToggle({
+textguirenderbkg = TextGui.CreateToggle({
 	["Name"] = "Render background", 
 	["Function"] = function(callback)
 		onebackground.Visible = callback
+		UpdateHud()
 	end
 })
 TextGuiCircleObject = TextGui.CreateCircleWindow({
@@ -1145,6 +1139,7 @@ GuiLibrary["UpdateUI"] = function()
 		onetext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		local newtext = ""
 		local newfirst = false
+		local colorforindex = {}
 		for i2,v2 in pairs(textwithoutthing:split("\n")) do
 			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * i2) or 0)
 			if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
@@ -1156,6 +1151,14 @@ GuiLibrary["UpdateUI"] = function()
 			end
 			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..splittext[1]..'</font><font color="rgb(170, 170, 170)">'..splittext[2]..'</font>'
 			newfirst = true
+			colorforindex[i2] = newcolor
+		end
+		if onebackground then
+			for i3,v3 in pairs(onebackground:GetChildren()) do
+				if v3:IsA("Frame") and colorforindex[v3.LayoutOrder] then
+					v3.ColorFrame.BackgroundColor3 = colorforindex[v3.LayoutOrder]
+				end
+			end
 		end
 		onetext.Text = newtext
 		local buttons = 0
@@ -1309,6 +1312,9 @@ local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(f
 		if shared.VapeDeveloper then
 			teleportstr = 'shared.VapeDeveloper = true '..teleportstr
 		end
+		if shared.VapePrivate then
+			teleportstr = 'shared.VapePrivate = true '..teleportstr
+		end
 		GuiLibrary["SaveSettings"]()
 		queueteleport(teleportstr)
     end
@@ -1325,6 +1331,7 @@ GuiLibrary["SelfDestruct"] = function()
 	end
 	GuiLibrary["SelfDestructEvent"]:Fire()
 	shared.VapeExecuted = nil
+	shared.VapePrivate = nil
 	shared.VapeSwitchServers = nil
 	shared.GuiLibrary = nil
 	GuiLibrary["KeyInputHandler"]:Disconnect()
@@ -1340,10 +1347,12 @@ end
 ModuleSettings.CreateButton2({
 	["Name"] = "RESET CURRENT PROFILE", 
 	["Function"] = function()
+		local vapeprivate = shared.VapePrivate
 		GuiLibrary["SelfDestruct"]()
-		delfile("vape/Profiles/"..(GuiLibrary["CurrentProfile"] == "default" and "" or GuiLibrary["CurrentProfile"])..game.PlaceId..".vapeprofile.txt")
+		delfile(customdir.."Profiles/"..(GuiLibrary["CurrentProfile"] == "default" and "" or GuiLibrary["CurrentProfile"])..game.PlaceId..".vapeprofile.txt")
 		shared.VapeSwitchServers = true
 		shared.VapeOpenGui = true
+		shared.VapePrivate = vapeprivate
 		loadstring(GetURL("NewMainScript.lua"))()
 	end
 })
@@ -1413,6 +1422,11 @@ else
 		loadstring(publicrepo)()
 	end
 end
+if shared.VapePrivate then
+	if pcall(function() readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape") end) then
+		loadstring(readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape"))()
+	end	
+end
 
 GuiLibrary["LoadSettings"]()
 if #ProfilesTextList["ObjectList"] == 0 then
@@ -1426,8 +1440,7 @@ if not shared.VapeSwitchServers then
 	if blatantmode["Enabled"] then
 		pcall(function()
 			local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 5.5, "assets/WarningNotification.png")
-			frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
-			frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+			frame.Frame.Frame.ImageColor3 = Color3.fromRGB(236, 129, 44)
 		end)
 	end
 	GuiLibrary["LoadedAnimation"](welcomemsg["Enabled"])
