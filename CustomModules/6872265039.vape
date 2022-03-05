@@ -133,11 +133,12 @@ local function isAlive(plr)
 end
 
 local function createwarning(title, text, delay)
-	pcall(function()
+	local suc, res = pcall(function()
 		local frame = GuiLibrary["CreateNotification"](title, text, delay, "assets/WarningNotification.png")
-		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
-		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+		frame.Frame.Frame.ImageColor3 = Color3.fromRGB(236, 129, 44)
+		return frame
 	end)
+	return (suc and res)
 end
 
 local newupdate = game.Players.LocalPlayer.PlayerScripts.TS:WaitForChild("ui", 3) and true or false
@@ -153,8 +154,10 @@ runcode(function()
         local OldClientGet = getmetatable(Client).Get
 		local OldClientWaitFor = getmetatable(Client).WaitFor
         bedwars = {
+			["BedwarsKits"] = require(game:GetService("ReplicatedStorage").TS.games.bedwars.kit["bedwars-kit-shop"]).BedwarsKitShop,
             ["ClientHandler"] = Client,
             ["ClientStoreHandler"] = (newupdate and require(game.Players.LocalPlayer.PlayerScripts.TS.ui.store).ClientStore or require(lplr.PlayerScripts.TS.rodux.rodux).ClientStore),
+			["KitMeta"] = require(game:GetService("ReplicatedStorage").TS.games.bedwars.kit["bedwars-kit-meta"]).BedwarsKitMeta,
 			["LobbyClientEvents"] = (newupdate and require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"].lobby.out.client.events).LobbyClientEvents),
             ["sprintTable"] = KnitClient.Controllers.SprintController,
 			["WeldTable"] = require(game:GetService("ReplicatedStorage").TS.util["weld-util"]).WeldUtil,
@@ -444,18 +447,10 @@ GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
-GuiLibrary["RemoveObject"]("ArrowsOptionsButton")
-GuiLibrary["RemoveObject"]("HealthOptionsButton")
-GuiLibrary["RemoveObject"]("ESPOptionsButton")
-GuiLibrary["RemoveObject"]("ChamsOptionsButton")
-GuiLibrary["RemoveObject"]("FullbrightOptionsButton")
-GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
-GuiLibrary["RemoveObject"]("SearchOptionsButton")
-GuiLibrary["RemoveObject"]("TracersOptionsButton")
-GuiLibrary["RemoveObject"]("XrayOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
-
+GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
+GuiLibrary["RemoveObject"]("SpiderOptionsButton")
 --[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
 if place.Updated ~= "2021-11-12T18:26:09.8908284Z" then
 	local image = Instance.new("ImageLabel")
@@ -623,320 +618,86 @@ JoinQueueDelay = JoinQueue.CreateSlider({
 	["Default"] = 1
 })
 
-local speed = {["Enabled"] = false}
-local speedval = {["Value"] = 1}
-local bodyvelo
-local Scaffold = {["Enabled"] = false}
-speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "Speed",
-	["Function"] = function(callback)
-		if callback then
-			BindToRenderStep("Speed", 1, function(delta)
-				if isAlive() and matchState ~= 0 then
-					if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
-						bodyvelo = Instance.new("BodyVelocity")
-						bodyvelo.Parent = lplr.Character.HumanoidRootPart
-						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
-					else
-						bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or speedval["Value"]) * (jumpcheck and 1.15 or 1)) * (slowdownspeed and 0.6 or 1)
-					end
-					if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing then
-						bodyvelo.MaxForce = Vector3.new(0, 0, 0)
-					else
-						bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
-					end
-				end
-			end)
-		else
-			if bodyvelo then
-				bodyvelo:Remove()
-			end
-			UnbindFromRenderStep("Speed")
-		end
-	end, 
-	["HoverText"] = "Increases your movement."
-})
-speedval = speed.CreateSlider({
-	["Name"] = "Speed",
-	["Min"] = 1,
-	["Max"] = 28,
-	["Function"] = function(val) end,
-	["Default"] = 28
-})
-
-local flyspeed = {["Value"] = 1}
-local flyverticalspeed = {["Value"] = 1}
-local flyupanddown = {["Enabled"] = false}
-local flyposy = 0
-local flyup = false
-local flydown = false
-local flypress
-local flyendpress
-local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "Fly", 
-	["Function"] = function(callback)
-		if callback then
-			if isAlive() then
-				flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
-			end
-			flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
-				if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
-					if input1.KeyCode == Enum.KeyCode.Space then
-						flyup = true
-					end
-					if input1.KeyCode == Enum.KeyCode.LeftShift then
-						flydown = true
-					end
-				end
-			end)
-			flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
-				if input1.KeyCode == Enum.KeyCode.Space then
-					flyup = false
-				end
-				if input1.KeyCode == Enum.KeyCode.LeftShift then
-					flydown = false
-				end
-			end)
-			BindToRenderStep("Fly", 1, function(delta) 
-				if isAlive() then
-						if (bodyvelofly ~= nil) then
-							bodyvelofly:Remove()
-						end
-						if flyup then
-							flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
-						end
-						if flydown then
-							flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
-						end
-						local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
-						lplr.Character.HumanoidRootPart.CFrame = addvectortocframe(lplr.Character.HumanoidRootPart.CFrame, Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z))
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-				end
-			end)
-		else
-			flyup = false
-			flydown = false
-			flypress:Disconnect()
-			flyendpress:Disconnect()
-			UnbindFromRenderStep("Fly")
-		end
-	end,
-})
-flyspeed = fly.CreateSlider({
-	["Name"] = "Speed",
-	["Min"] = 1,
-	["Max"] = 40, 
-	["Function"] = function(val) end,
-	["Default"] = 40
-})
-flyverticalspeed = fly.CreateSlider({
-	["Name"] = "Vertical Speed",
-	["Min"] = 1,
-	["Max"] = 40, 
-	["Function"] = function(val) end,
-	["Default"] = 40
-})
-flyupanddown = fly.CreateToggle({
-	["Name"] = "Y Level", 
-	["Function"] = function() end,
-	["Default"] = true,
-	["HoverText"] = "testing123"
-})
-
-GuiLibrary["RemoveObject"]("NickHiderOptionsButton")
 runcode(function()
-	local NickHider = {["Enabled"] = false}
-	local NickHiderBox = {["Value"] = ""}
-	local newname
-	local newid
-	local newdisplayname
-	local nickeduser = {}
-	local nickconnections = {}
-	local nickedmodel 
-	local oldmodel = {}
-	local nickhidercharadded
-	local nickhiderdescendantsadded
-	local OldNameCall = nil
+	local AutoKitTextList = {["ObjectList"] = {}, ["RefreshValues"] = function() end}
 
-	local function findclosestitem(name)
-		local close
-		return close
-	end
-
-	local function dostuff()
-		spawn(function()
-			local hum = lplr.Character:WaitForChild("Humanoid")
-			local rootpart = lplr.Character:WaitForChild("HumanoidRootPart")
-			local changedface = false
-			for i,v in pairs(lplr.Character:GetChildren()) do
-				if v:IsA("Accessory") and v:GetAttribute("ArmorSlot") == nil and v:GetAttribute("ItemData") == nil then
-					v.Handle.Transparency = 1
-				end
-				if v:IsA("LocalScript") and v.Name:find("Animate") then
-					oldmodel["animate"] = v
-				end
-				if v:IsA("BodyColors") then
-					oldmodel["bodycolors"] = v
-				end
-				if v.Name == "Head" and v:FindFirstChild("face") then
-					oldmodel["face"] = v.face
-				end
-				if v:IsA("Shirt") then
-					oldmodel["shirt"] = v
-				end
-				if v:IsA("Pants") then
-					oldmodel["pants"] = v
-				end
-			end
-			for i,v in pairs(nickedmodel:GetChildren()) do
-				if v:IsA("Folder") and v.Name:match("R15") and oldmodel["animate"] then
-					for i2,v2 in pairs(v:GetChildren()) do
-						if oldmodel["animate"]:FindFirstChild(v2.Name) then
-							oldmodel["animate"][v2.Name]:Remove()
-						end
-						v2:Clone().Parent = oldmodel["animate"]
+	local function betterfindkit()
+		local tab = {}
+		local tab2 = {}
+		if #AutoKitTextList["ObjectList"] > 0 then
+			for i,v in pairs(AutoKitTextList["ObjectList"]) do
+				local splitstr = v:split(" : ")
+				if #splitstr > 1 then
+					tab[tonumber(splitstr[2])] = splitstr[1]:lower()
+					if #splitstr > 2 then
+						tab2[tonumber(splitstr[2])] = splitstr[3]:lower() == "true"
 					end
 				end
-				if v:IsA("Shirt") then
-					if oldmodel["shirt"] then
-						oldmodel["shirt"].ShirtTemplate = v.ShirtTemplate
-					else
-						v:Clone().Parent = lplr.Character
-					end
-				end
-				if v:IsA("Pants") then
-					if oldmodel["pants"] then
-						oldmodel["pants"].PantsTemplate = v.PantsTemplate
-					else
-						v:Clone().Parent = lplr.Character
-					end
-				end
-				if v.Name == "face" and oldmodel["face"] then
-					oldmodel["face"].Texture = v.Texture
-					changedface = true
-				end
-				if v:IsA("BodyColors") and oldmodel["bodycolors"] then
-					oldmodel["bodycolors"].HeadColor3 = v.HeadColor3
-					oldmodel["bodycolors"].LeftArmColor3 = v.LeftArmColor3
-					oldmodel["bodycolors"].RightArmColor3 = v.RightArmColor3
-					oldmodel["bodycolors"].LeftLegColor3 = v.LeftLegColor3
-					oldmodel["bodycolors"].RightLegColor3 = v.RightLegColor3
-					oldmodel["bodycolors"].TorsoColor3 = v.TorsoColor3
-				end
-				if v:IsA("Accessory") then
-					local temp = v:Clone()
-					lplr.Character.Humanoid:AddAccessory(temp)
-				end
 			end
-			if oldmodel["face"] and changedface == false then
-				oldmodel["face"].Texture = "rbxasset://textures/face.png"
-			end
-			bedwars["WeldTable"].weldCharacterAccessories(lplr.Character)
-		end)
+		else
+			tab = {
+				[1] = "Trinity",
+				[2] = "Grim Reaper",
+				[3] = "Infernal Shielder",
+				[4] = "Eldertree",
+				[5] = "Melody"
+			}
+			tab2 = {}
+		end
+		return tab, tab2
 	end
 
-	local function plrthing(obj, property, revert)
-		if (NickHider["Enabled"] or revert) and nickeduser ~= {} and nickeduser ~= nil then
-			obj[property] = obj[property]:gsub((revert and newname or lplr.Name), (revert and lplr.Name or nickeduser["Username"]))
-			obj[property] = obj[property]:gsub((revert and newdisplayname or lplr.DisplayName), (revert and lplr.DisplayName or nickeduser["DisplayName"]))
-			obj[property] = obj[property]:gsub((revert and newid or lplr.UserId), (revert and lplr.UserId or nickeduser["Id"]))
-		end
+	local AutoKit = {["Enabled"] = false}
+	local ownedkits = {}
+	local ownedkitsamount = 0
+	for i3,v3 in pairs(bedwars["BedwarsKits"].FreeKits) do
+		ownedkitsamount = ownedkitsamount + 1
+		ownedkits[bedwars["KitMeta"][v3].name:lower()] = v3
 	end
-
-	local function newobj(v, revert)
-		if v:IsA("TextLabel") or v:IsA("TextButton") then
-			plrthing(v, "Text", revert)
-			if (not revert) then
-				table.insert(nickconnections, v:GetPropertyChangedSignal("Text"):connect(function()
-					plrthing(v, "Text", revert)
-				end))
-			end
-		end
-		if v:IsA("ImageLabel") then
-			plrthing(v, "Image", revert)
-			if (not revert) then
-				table.insert(nickconnections, v:GetPropertyChangedSignal("Image"):connect(function()
-					plrthing(v, "Image", revert)
-				end))
-			end
-		end
-	end
-
-	NickHider = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "NickHider",
+	AutoKit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoKit",
 		["Function"] = function(callback)
-			if callback and nickeduser ~= {} and nickeduser ~= nil and NickHiderBox["Value"] ~= "" then
-				if not OldNameCall then
-					OldNameCall = hookmetamethod(game, "__namecall", function(...)
-						local Args = {...}
-						local Self = Args[1]
-						local NamecallMethod = getnamecallmethod()
-					
-						if not checkcaller() and Self == textservice and NamecallMethod == "GetTextSize" and NickHider["Enabled"] and nickeduser ~= {} and nickeduser ~= nil then
-							Args[2] = Args[2]:gsub(lplr.Name, nickeduser["Username"])
-							Args[2] = Args[2]:gsub(lplr.DisplayName, nickeduser["DisplayName"])
+			if callback then
+				spawn(function()
+					repeat task.wait() until ownedkitsamount > 0
+					local tab, tab2 = betterfindkit()
+					for i,v in pairs(tab) do
+						if ownedkits[v] then
+							bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync({
+								kit = ownedkits[v]
+							})
+							print(tab2[i] and true or false)
+							bedwars["ClientHandler"]:Get("BedwarsSetUseKitSkin"):CallServerAsync({
+								useKitSkin = tab2[i] and true or false
+							})
+							return
 						end
-					
-						return OldNameCall(unpack(Args))
-					end)
-				end
-				nickedmodel = game:GetService('Players'):GetCharacterAppearanceAsync(nickeduser.Id)
-				newname = nickeduser["Username"]
-				newdisplayname = nickeduser["DisplayName"]
-				newid = nickeduser["Id"]
-				repeat task.wait() until nickedmodel ~= nil
-				if isAlive() then
-					dostuff()
-				end
-				for i,v in pairs(game:GetDescendants()) do
-					newobj(v)
-				end
-				nickhidercharadded = lplr.CharacterAdded:connect(dostuff)
-				nickhiderdescendantsadded = game.DescendantAdded:connect(newobj)
-			else
-				if nickhidercharadded then
-					nickhidercharadded:Disconnect()
-				end
-				if nickhiderdescendantsadded then
-					nickhiderdescendantsadded:Disconnect()
-				end
-				if nickeduser == {} or nickeduser == nil or NickHiderBox["Value"] == "" then
-					createwarning("NickHider", "No User or Invalid User Id", 4)
-				end
-				nickedmodel = game:GetService('Players'):GetCharacterAppearanceAsync(lplr.UserId)
-				repeat task.wait() until nickedmodel ~= nil
-				if isAlive() then
-					dostuff()
-				end
-				for i2,v2 in pairs(nickconnections) do
-					v2:Disconnect()
-				end
-				for i,v in pairs(game:GetDescendants()) do
-					newobj(v, true)
-				end
+					end
+					local rand = math.random(1, ownedkitsamount)
+					local ownedkitsnum = 0
+					for i2,v2 in pairs(ownedkits) do
+						ownedkitsnum = ownedkitsnum + 1
+						if ownedkitsnum == rand then
+							bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync({
+								kit = v2
+							})
+							bedwars["ClientHandler"]:Get("BedwarsSetUseKitSkin"):CallServerAsync({
+								useKitSkin = false
+							})
+						end
+					end
+				end)
 			end
 		end,
-		["HoverText"] = "Disguises as the UserId in the text box (Client Side)"
+		["HoverText"] = "Automatically Equips kits in a list."
 	})
-	NickHiderBox = NickHider.CreateTextBox({
-		["Name"] = "UserBox",
-		["TempText"] = "User (userid)",
-		["FocusLost"] = function()
-			local success, result = pcall(function()
-				return game:GetService("UserService"):GetUserInfosByUserIdsAsync({ tonumber(NickHiderBox["Value"]) })
-			end)
-			 
-			if success and #result > 0 then
-				nickeduser = result[1]
-				if NickHider["Enabled"] then
-					NickHider["ToggleButton"](false)
-					NickHider["ToggleButton"](true)
-				end
-			else
-				if NickHider["Enabled"] then
-					createwarning("NickHider", "Invalid User Id", 4)
-				end
-			end
-		end
+	AutoKitTextList = AutoKit.CreateTextList({
+		["Name"] = "KitList",
+		["TempText"] = "kit name : prio : kitskin",
 	})
 end)
+
+
+if shared.vapestaffleave then
+	createwarning("Vape", "Staff Detected in your game.", 20)
+end
