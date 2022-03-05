@@ -2097,8 +2097,8 @@ runcode(function()
 						local targetsize = 0
 						local plr = GetNearestHumanoidToPosition(AimAssistTargetFrame["Players"]["Enabled"], 30)
 						if plr then
-							targettable[plr.Name] = {
-								["UserId"] = plr.UserId,
+							targettable[plr.Player.Name] = {
+								["UserId"] = plr.Player.UserId,
 								["Health"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.Health or 0),
 								["MaxHealth"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.MaxHealth or 0)
 							}
