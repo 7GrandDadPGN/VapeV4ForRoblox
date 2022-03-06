@@ -9206,110 +9206,30 @@ fpsdestroyer = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].Creat
 					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["ToggleButton"](false)
 				end
 				spawn(function()
-					if hide["Enabled"] then
+					repeat task.wait() until entity.isAlive
+					spawn(function()
 						repeat
 							task.wait()
-							if isAlive() then
-								local raycastpa = RaycastParams.new()
-								raycastpa.FilterDescendantsInstances = {workspace.Map.Blocks}
-								raycastpa.FilterType = Enum.RaycastFilterType.Whitelist
-								local raycast = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -lplr.Character.Humanoid.HipHeight - 1, 0), raycastpa)
-								local ye = {}
-								for i,v in pairs(fpspositions) do
-									local regionparts = workspace:FindPartsInRegion3WithWhiteList(Region3.new(lplr.Character.HumanoidRootPart.Position - v, lplr.Character.HumanoidRootPart.Position - (v - Vector3.new(0, 1, 0))), {workspace.Map.Blocks})
-									if unpack(regionparts) then
-										ye[i] = true
-									end
-								end
-								if (raycast and #ye == #fpspositions) or fpsdestroyer["Enabled"] == false then
-									break	
-								end
-							end
-						until fpsdestroyer["Enabled"] == false
-					end
-					if fpsdestroyer["Enabled"] then
-						wait(0.1)
-						if hide["Enabled"] then
-							local old = CFrame.new(lplr.Character.HumanoidRootPart.CFrame.p)
-							BindToStepped("lol", 1, function()
-								if isAlive() then
-									lplr.Character.Humanoid.PlatformStand = true
-									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-									lplr.Character.HumanoidRootPart.CanCollide = false
-									lplr.Character.UpperTorso.CanCollide = false
-									lplr.Character.Head.CanCollide = false
-									lplr.Character.HumanoidRootPart.CFrame = old * CFrame.Angles(math.rad(160), 0, 0)
-								end
-							end)
-							local anim = Instance.new("Animation")
-							anim.AnimationId = "rbxassetid://7344363114"
-							local realanim2 = lplr.Character.Humanoid.Animator:LoadAnimation(anim)
-							realanim2:Play(0, 1, 1)
-							wait(1.5)
-							realanim2:AdjustSpeed(0)
-							wait(1)
-						end
-						spawn(function()
-							for i = 1, 256 do
-								task.wait(0.06)
-								spawn(function()
-								local anim = Instance.new("Animation")
-								anim.AnimationId = "rbxassetid://7303852773"
-								local ok = game.Players.LocalPlayer.Character.Humanoid.Animator:LoadAnimation(anim)
-								ok:Play(0, 0.0001, 0.5)
-								ok:GetMarkerReachedSignal("spawn_blowtorch"):Wait()
-								local old = ok.TimePosition - 0.02
-								repeat
-									task.wait()
-									ok.TimePosition = old
-									until true == false
-							
-									end)
-							end
-						end)
-						repeat
-							task.wait()
-							if hide["Enabled"] then
-								if trolled == false and matchState ~= 0 then
-									UnbindFromStepped("lol")
-									UnbindFromStepped("lol")
-									local oldpos = lplr.Character.HumanoidRootPart.Position
-									trolled = true
-									local delayed = 0
-									repeat wait(0.1)
-										if delayed < 10 then
-											delayed = delayed + 1
-										end
-									until (lplr.Character.HumanoidRootPart.Position - oldpos).magnitude > 10 or delayed >= 10
-									wait(0.2)
-									old = CFrame.new(lplr.Character.HumanoidRootPart.CFrame.p)
-									BindToStepped("lol", 1, function()
-										if isAlive() then
-											lplr.Character.Humanoid.PlatformStand = true
-											lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-											lplr.Character.HumanoidRootPart.CanCollide = false
-											lplr.Character.UpperTorso.CanCollide = false
-											lplr.Character.Head.CanCollide = false
-											lplr.Character.HumanoidRootPart.CFrame = old * CFrame.Angles(math.rad(160), 0, 0)
-										end
-									end)
-								end
-								if respawned then
-									respawned = false
-									UnbindFromStepped("lol")
-									foreveron = false
-									spawn(function()
-										fpsdestroyer["ToggleButton"](false)
-										fpsdestroyer["ToggleButton"](false)
-									end)
-									break
-								end
-								task.wait()
-							end
 							if anticrash["Enabled"] == false then
 								anticrash["ToggleButton"](false)
 							end
-						until true == false	
+						until true == false
+					end)
+					for i = 1, 256 do
+						task.wait(0.06)
+						spawn(function()
+							local anim = Instance.new("Animation")
+							anim.AnimationId = "rbxassetid://7303852773"
+							local ok = game.Players.LocalPlayer.Character.Humanoid.Animator:LoadAnimation(anim)
+							ok:Play(0, 0.0001, 0.5)
+							ok:GetMarkerReachedSignal("spawn_blowtorch"):Wait()
+							print("a")
+							local old = ok.TimePosition - 0.02
+							repeat
+								task.wait()
+								ok.TimePosition = old
+							until true == false
+						end)
 					end
 				end)
 			end
