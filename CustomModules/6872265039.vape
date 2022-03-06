@@ -700,7 +700,8 @@ end)
 
 if shared.vapestaffleave then
 	local warning = createwarning("Vape", "Staff Detected\n"..shared.vapestaffleave, 60)
-	warning:GetChildren()[5].TextSize = 12
-	warning:GetChildren()[5].TextLabel.TextSize = 12
-	warning:GetChildren()[5].Position = warning:GetChildren()[5].Position - UDim2.new(0, 0, 0, 4)
+	local warningtext = warning:GetChildren()[5]
+	warningtext.TextSize = 12
+	warningtext.TextLabel.TextSize = 12
+	warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
 end
