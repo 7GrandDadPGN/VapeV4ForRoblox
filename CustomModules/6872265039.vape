@@ -699,5 +699,5 @@ end)
 
 
 if shared.vapestaffleave then
-	createwarning("Vape", "Staff Detected in your game.", 20)
+	createwarning("Vape", "Staff Detected "..shared.vapestaffleave, 60)
 end
