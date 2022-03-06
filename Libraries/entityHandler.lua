@@ -46,6 +46,7 @@ do
                     if localcheck then
                         entity.isAlive = true
                     else
+                        print(entity.isPlayerTargetable(plr), plr, plr.Team, lplr.Team)
                         table.insert(entity.entityList, {
                             Player = plr,
                             Character = char,
@@ -80,7 +81,6 @@ do
             end
         end)
         entity.entityConnections[#entity.entityConnections + 1] = plr:GetPropertyChangedSignal("Team"):connect(function()
-            --print(plr.Name, plr.Team.Name)
             if localcheck then
                 entity.fullEntityRefresh()
             else
