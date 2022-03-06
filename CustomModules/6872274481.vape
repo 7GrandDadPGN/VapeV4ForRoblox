@@ -8966,7 +8966,8 @@ runcode(function()
 end)
 
 
-local anticheatdisabler = {["Enabled"] = false}
+runcode(function()
+	local anticheatdisabler = {["Enabled"] = false}
 local anticheatdisablerauto = {["Enabled"] = false}
 local anticheatdisablerconnection
 local anticheatdisablerconnection2
@@ -9604,3 +9605,4 @@ local autowinfunc
 			["HoverText"] = "Makes speed check more stupid (you are a pirate)"
 		})
 	end)
+end)
