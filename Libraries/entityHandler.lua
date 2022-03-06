@@ -98,6 +98,7 @@ do
         entity.entityConnections = {}
         for i2,v2 in pairs(game:GetService("Players"):GetChildren()) do entity.entityAdded(v2, v2 == lplr) end
         entity.entityConnections[#entity.entityConnections + 1] = game:GetService("Players").PlayerAdded:connect(function(v2) entity.entityAdded(v2, v2 == lplr) end)
+        entity.entityConnections[#entity.entityConnections + 1] = game:GetService("Players").PlayerRemoving:connect(function(v2) entity.removeEntity(v2) end)
     end
 end
 
