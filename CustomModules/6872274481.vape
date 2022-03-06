@@ -1518,7 +1518,6 @@ end
 
 shared.vapeteamcheck = function(plr)
 	repeat task.wait() until bedwars["PlayerUtil"].getGamePlayer(lplr):getTeamId() and bedwars["PlayerUtil"].getGamePlayer(plr):getTeamId()
-	print(bedwars["PlayerUtil"].getGamePlayer(plr):getTeamId(), bedwars["PlayerUtil"].getGamePlayer(lplr):getTeamId())
 	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and bedwars["PlayerUtil"].getGamePlayer(lplr):getTeamId() ~= bedwars["PlayerUtil"].getGamePlayer(plr):getTeamId() or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
 end
 
@@ -1531,6 +1530,7 @@ do
 		entity.fullEntityRefresh()
 	end)
 	entity.isPlayerTargetable = function(plr)
+		print(lplr ~= plr, shared.vapeteamcheck(plr), friendCheck(plr) == nil)
 		return lplr ~= plr and shared.vapeteamcheck(plr) and friendCheck(plr) == nil
 	end
 	local oldcharacteradded = entity.characterAdded
