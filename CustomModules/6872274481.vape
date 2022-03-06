@@ -5604,6 +5604,7 @@ runcode(function()
 			task.wait(AutoLeaveDelay["Value"] / 10)
 			if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
 				if not AutoPlayAgain["Enabled"] then
+					print("leave1")
 					bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 				else
 					bedwars["LobbyClientEvents"].joinQueue:fire({
@@ -5619,15 +5620,21 @@ runcode(function()
 			if callback then
 				autoleaveconnection = players.PlayerAdded:connect(function(plr)
 					pcall(function()
+						print(plr.Name, plr.ClassName, plr:IsInGroup(5774246), plr:GetRankInGroup(5774246))
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-							bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+							print("leave2")
+							createwarning("Vape", plr.Name.." is in your game", 60)
+							--bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 						end
 					end)
 				end)
 				pcall(function()
 					for i, plr in pairs(players:GetChildren()) do
+						print(plr.Name, plr:IsInGroup(5774246), plr:GetRankInGroup(5774246))
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-							bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+							print("leave3")
+							createwarning("Vape", plr.Name.." is in your game", 60)
+							--bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 						end
 					end
 				end)
@@ -5708,6 +5715,7 @@ runcode(function()
 						task.wait(1 + (AutoLeaveDelay["Value"] / 10))
 						if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
 							if not AutoPlayAgain["Enabled"] then
+								print("leave4w")
 								bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 							else
 								bedwars["LobbyClientEvents"].joinQueue:fire({
@@ -8956,3 +8964,643 @@ runcode(function()
 		["HoverText"] = "lets you not walk off because you are bad"
 	})
 end)
+
+
+local anticheatdisabler = {["Enabled"] = false}
+local anticheatdisablerauto = {["Enabled"] = false}
+local anticheatdisablerconnection
+local anticheatdisablerconnection2
+local bypassed = false
+anticheatdisabler = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "FloatDisabler",
+	["Function"] = function(callback)
+		if callback then
+			local balloonitem = getItem("balloon")
+			if balloonitem then
+				local oldfunc3 = bedwars["BalloonController"].hookBalloon
+				local oldfunc4 = bedwars["BalloonController"].enableBalloonPhysics
+				local oldfunc5 = bedwars["BalloonController"].deflateBalloon
+				bedwars["BalloonController"].inflateBalloon()
+				bedwars["BalloonController"].enableBalloonPhysics = function() end
+				bedwars["BalloonController"].deflateBalloon = function() end
+				bedwars["BalloonController"].hookBalloon = function(Self, plr, attachment, balloon)
+					print(plr)
+					balloon:WaitForChild("Balloon").CFrame = CFrame.new(0, -1995, 0)
+					balloon.Balloon:ClearAllChildren()
+					local threadidentity = syn and syn.set_thread_identity or setidentity
+					threadidentity(7)
+					spawn(function()
+						wait(0.5)
+						createwarning("AnticheatDisabler", "Disabled Anticheat!", 5)
+						bypassed = true
+					end)
+					threadidentity(2)
+					bedwars["BalloonController"].hookBalloon = oldfunc3
+					bedwars["BalloonController"].enableBalloonPhysics = oldfunc4
+				end
+			end
+			anticheatdisabler["ToggleButton"](true)
+		end
+	end
+})
+local disabledebounce = false
+anticheatdisablerauto = anticheatdisabler.CreateToggle({
+	["Name"] = "Auto Disable",
+	["Function"] = function(callback)
+		if callback then
+			if isAlive() and lplr.Character.InventoryFolder.Value then
+				if anticheatdisablerconnection2 then
+					anticheatdisablerconnection2:Disconnect()
+				end
+				anticheatdisablerconnection2 = lplr.Character.InventoryFolder.Value.ChildAdded:connect(function(p3)
+					if p3.Name == "balloon" and disabledebounce == false then
+						disabledebounce = true
+						anticheatdisabler["ToggleButton"](false)
+						task.delay(0.1, function()
+							disabledebounce = false
+						end)
+					end
+				end)
+			end
+			anticheatdisablerconnection = game:GetService("ReplicatedStorage").Inventories.ChildAdded:connect(function(folder)
+				if folder.Name == lplr.Name then
+					if anticheatdisablerconnection2 then
+						anticheatdisablerconnection2:Disconnect()
+					end
+					anticheatdisablerconnection2 = folder.ChildAdded:connect(function(p3)
+						if p3.Name == "balloon" and disabledebounce == false then
+							disabledebounce = true
+							anticheatdisabler["ToggleButton"](false)
+							task.delay(0.1, function()
+								disabledebounce = false
+							end)
+						end
+					end)
+				end
+			end)
+		else
+			if anticheatdisablerconnection then
+				anticheatdisablerconnection:Disconnect()
+			end
+			if anticheatdisablerconnection2 then
+				anticheatdisablerconnection2:Disconnect()
+			end
+		end
+	end,
+})
+
+local BedVideoToggle = {["Enabled"] = false}
+local BedVideo
+local BedExploit = {["Enabled"] = false}
+local victorysaid = false
+local currentGameTime = 0
+spawn(function()
+	repeat wait() until matchState ~= 0
+	repeat
+		wait(1)
+		currentGameTime = currentGameTime + 1
+	until matchState ~= 1
+end)
+
+local function data(p2)
+	if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
+		local winstreak = bedwars["ClientStoreHandler"]:getState().Leaderboard.queues[bedwars["ClientStoreHandler"]:getState().Game.queueType]
+		winstreak = (winstreak and winstreak.currentWinStreak + 1 or 1)
+		local tab = {
+			["content"] = nil,
+			["embeds"] = {
+				{
+					["title"] = "Match Won",
+					["description"] = 'Username : **'..lplr.Name..'**\nTime : **'..tostring(currentGameTime)..'s**\nRanking: ``'..p2.newLeaderboardPosition..'``\nWinStreak: ``'..winstreak..'``\nWins: ``'..bedwars["ClientStoreHandler"]:getState().Leaderboard.globalStats.wins..'``\nXP: ``'..math.floor(bedwars["ClientStoreHandler"]:getState().BattlePass.experience)..'``\nMode: ``'..bedwars["ClientStoreHandler"]:getState().Game.queueType..'``',
+					["color"] = 1376000,
+					["thumbnail"] = {
+						["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId="..lplr.UserId.."&width=420&height=420&format=png"
+					},
+					["footer"] = {
+						["text"] = "Copied from Fern#5747"
+					},
+					["timestamp"] = DateTime.now():ToIsoDate()
+				}
+			}
+		}
+		local tabjson = game:GetService("HttpService"):JSONEncode(tab)
+
+	end
+end
+
+local function data2(plr)
+	if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
+		local tab = {
+			["content"] = "@everyone",
+			["embeds"] = {
+				{
+					["title"] = "Crashed Star Creator",
+					["description"] = 'Crashed : ``'..plr.Name..'``\nPlayer That Crashed : ``'..lplr.Name..'``',
+					["color"] = 16771840,
+					["thumbnail"] = {
+						["url"] = "https://www.roblox.com/headshot-thumbnail/image?userId="..plr.UserId.."&width=420&height=420&format=png"
+					},
+					["footer"] = {
+						["text"] = "Made by 7GrandDad#6656"
+					},
+					["timestamp"] = DateTime.now():ToIsoDate()
+				}
+			}
+		}
+		local tabjson = game:GetService("HttpService"):JSONEncode(tab)
+
+	end
+end
+
+local justsaid = ""
+players.PlayerRemoving:connect(function(plr)
+	if BedExploit["Enabled"] then
+		createwarning("AutoWin", "Killed "..plr.Name, 5)
+		bedwars["SoundManager"]:playSound(bedwars["SoundList"].KILL)
+	end
+	if plr:IsInGroup(4199740) and justsaid ~= plr.Name and fpsdestroyer["Enabled"] then
+		data2(plr)
+		justsaid = plr.Name
+	end
+end)
+
+bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(p2)
+	local myTeam = bedwars["ClientStoreHandler"]:getState().Game.myTeam;
+	if myTeam and myTeam.id == p2.winningTeamId and victorysaid == false then
+		victorysaid = true
+		if BedExploit["Enabled"] then
+			data(p2)
+			wait(1)
+			bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+		end
+	end
+end)
+
+local oldfunc
+local anticrash = {["Enabled"] = true}
+anticrash = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "AntiCrash",
+	["Function"] = function(callback)
+		if callback then
+			for i,v in pairs(players:GetChildren()) do
+				if v.Character then
+					for i2,v2 in pairs(v.Character:GetChildren()) do
+						if v2.Name == "SprayCan" or v2.Name == "RepairEnchantTableHammer" or v2.Name == "BlowTorch" then
+							v2:Remove()
+						end
+					end
+				end
+			end
+			oldfunc = bedwars["GameAnimationUtil"].getAssetId
+			oldsoundmanager = bedwars["SoundManager"].playSound
+			bedwars["SoundManager"].playSound = function(Self, soundid, tab, ...)
+				if soundid == bedwars["SoundList"].ENCHANT_TABLE_REPAIR_HAMMER_1 or soundid == bedwars["SoundList"].ENCHANT_TABLE_REPAIR_HAMMER_2 or soundid == bedwars["SoundList"].ENCHANT_TABLE_REPAIR_HAMMER_3 or soundid == bedwars["SoundList"].ENCHANT_TABLE_REPAIR_HAMMER_4 or soundid == bedwars["SoundList"].SPRAY or soundid == bedwars["SoundList"].ENCHANT_TABLE_REPAIRED then
+					return 
+				end
+				return oldsoundmanager(Self, soundid, tab, ...)
+			end
+			bedwars["GameAnimationUtil"].getAssetId = function(id) 
+				if id == 21 then
+					return ""
+				end
+				if id == 24 then
+					return ""
+				end
+				if id == 76 then
+					return ""
+				end
+				return oldfunc(id)
+			end
+		else
+			bedwars["SoundManager"].playSound = oldsoundmanager
+			bedwars["GameAnimationUtil"].getAssetId = oldfunc
+		end
+	end,
+})
+local fpspositions = {
+	Vector3.new(0, 9, 0),
+	Vector3.new(9, 9, 0),
+	Vector3.new(0, 9, 9),
+	Vector3.new(-9, 9, 0),
+	Vector3.new(0, 9, -9),
+}
+local foreveron = false
+local charadded = lplr.CharacterAdded:connect(function()
+	if matchState ~= 0 then
+		respawned = true
+	end
+end)
+local trolled = false
+local hide = {["Enabled"] = true}
+fpsdestroyer = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "FPSDestroyer",
+	["Function"] = function(callback)
+		if callback then
+			if foreveron == false then
+				foreveron = true
+				if GuiLibrary["ObjectsThatCanBeSaved"]["AnticheatBypassOptionsButton"]["Api"]["Enabled"] then
+					GuiLibrary["ObjectsThatCanBeSaved"]["AnticheatBypassOptionsButton"]["Api"]["ToggleButton"](false)
+				end
+				if GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Enabled"] then
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["ToggleButton"](false)
+				end
+				spawn(function()
+					if hide["Enabled"] then
+						repeat
+							task.wait()
+							if isAlive() then
+								local raycastpa = RaycastParams.new()
+								raycastpa.FilterDescendantsInstances = {workspace.Map.Blocks}
+								raycastpa.FilterType = Enum.RaycastFilterType.Whitelist
+								local raycast = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -lplr.Character.Humanoid.HipHeight - 1, 0), raycastpa)
+								local ye = {}
+								for i,v in pairs(fpspositions) do
+									local regionparts = workspace:FindPartsInRegion3WithWhiteList(Region3.new(lplr.Character.HumanoidRootPart.Position - v, lplr.Character.HumanoidRootPart.Position - (v - Vector3.new(0, 1, 0))), {workspace.Map.Blocks})
+									if unpack(regionparts) then
+										ye[i] = true
+									end
+								end
+								if (raycast and #ye == #fpspositions) or fpsdestroyer["Enabled"] == false then
+									break	
+								end
+							end
+						until fpsdestroyer["Enabled"] == false
+					end
+					if fpsdestroyer["Enabled"] then
+						wait(0.1)
+						if hide["Enabled"] then
+							local old = CFrame.new(lplr.Character.HumanoidRootPart.CFrame.p)
+							BindToStepped("lol", 1, function()
+								if isAlive() then
+									lplr.Character.Humanoid.PlatformStand = true
+									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+									lplr.Character.HumanoidRootPart.CanCollide = false
+									lplr.Character.UpperTorso.CanCollide = false
+									lplr.Character.Head.CanCollide = false
+									lplr.Character.HumanoidRootPart.CFrame = old * CFrame.Angles(math.rad(160), 0, 0)
+								end
+							end)
+							local anim = Instance.new("Animation")
+							anim.AnimationId = "rbxassetid://7344363114"
+							local realanim2 = lplr.Character.Humanoid.Animator:LoadAnimation(anim)
+							realanim2:Play(0, 1, 1)
+							wait(1.5)
+							realanim2:AdjustSpeed(0)
+							wait(1)
+						end
+						spawn(function()
+							for i = 1, 256 do
+								task.wait(0.06)
+								spawn(function()
+								local anim = Instance.new("Animation")
+								anim.AnimationId = "rbxassetid://7303852773"
+								local ok = game.Players.LocalPlayer.Character.Humanoid.Animator:LoadAnimation(anim)
+								ok:Play(0, 0.0001, 0.5)
+								ok:GetMarkerReachedSignal("spawn_blowtorch"):Wait()
+								local old = ok.TimePosition - 0.02
+								repeat
+									task.wait()
+									ok.TimePosition = old
+									until true == false
+							
+									end)
+							end
+						end)
+						repeat
+							if hide["Enabled"] then
+								if trolled == false and matchState ~= 0 then
+									UnbindFromStepped("lol")
+									UnbindFromStepped("lol")
+									local oldpos = lplr.Character.HumanoidRootPart.Position
+									trolled = true
+									local delayed = 0
+									repeat wait(0.1)
+										if delayed < 10 then
+											delayed = delayed + 1
+										end
+									until (lplr.Character.HumanoidRootPart.Position - oldpos).magnitude > 10 or delayed >= 10
+									wait(0.2)
+									old = CFrame.new(lplr.Character.HumanoidRootPart.CFrame.p)
+									BindToStepped("lol", 1, function()
+										if isAlive() then
+											lplr.Character.Humanoid.PlatformStand = true
+											lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+											lplr.Character.HumanoidRootPart.CanCollide = false
+											lplr.Character.UpperTorso.CanCollide = false
+											lplr.Character.Head.CanCollide = false
+											lplr.Character.HumanoidRootPart.CFrame = old * CFrame.Angles(math.rad(160), 0, 0)
+										end
+									end)
+								end
+								if respawned then
+									respawned = false
+									UnbindFromStepped("lol")
+									foreveron = false
+									spawn(function()
+										fpsdestroyer["ToggleButton"](false)
+										fpsdestroyer["ToggleButton"](false)
+									end)
+									break
+								end
+								task.wait()
+							end
+							if anticrash["Enabled"] == false then
+								anticrash["ToggleButton"](false)
+							end
+						until true == false	
+					end
+				end)
+			end
+		else
+			--[[UnbindFromStepped("lol")
+			if isAlive() then
+				lplr.Character.Humanoid.PlatformStand = false
+				lplr.Character.HumanoidRootPart.CanCollide = true
+			end
+			spawn(function()
+				for i2 = 1, 3 do
+					wait(0.1)
+					for i,v in pairs(lplr.Character.Humanoid.Animator:GetPlayingAnimationTracks()) do
+						if v.Animation.AnimationId == "rbxassetid://7344997658" or v.Animation.AnimationId == "rbxassetid://8255572687" or v.Animation.AnimationId == "rbxassetid://7303852773" or v.Animation.AnimationId == "rbxassetid://7344363114" then
+							v:Stop(1)
+						end
+					end
+				end
+			end)]]
+		end
+	end
+})
+hide = fpsdestroyer.CreateToggle({
+	["Name"] = "Hide",
+	["Function"] = function() end
+})
+
+GuiLibrary["RemoveObject"]("FlyOptionsButton")
+local flymissile
+runcode(function()
+	local OldNoFallFunction
+	local flyspeed = {["Value"] = 40}
+	local flyverticalspeed = {["Value"] = 40}
+	local flyupanddown = {["Enabled"] = true}
+	local flypop = {["Enabled"] = true}
+	local flyautodamage = {["Enabled"] = true}
+	local olddeflate
+	local flyrequests = 0
+	local flytime = 60
+	local flylimit = false
+	local flyup = false
+	local flydown = false
+	local tnttimer = 0
+	local flypress
+	local flyendpress
+	local flycorountine
+
+	local function buyballoons()
+		if isAlive() and fly["Enabled"] then
+			if getItem("balloon") then
+				bedwars["BalloonController"]["inflateBalloon"]()
+			end
+		end
+	end
+
+	bedwars["ClientHandler"]:WaitFor("BalloonPopped"):andThen(function(p6)
+		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
+			buyballoons()
+		end)
+	end)
+
+
+	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p3)
+		connectionstodisconnect[#connectionstodisconnect + 1] = p3:Connect(function(p4)
+			if isAlive() and (not bypassed) and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) and (p4.entityInstance == (AnticheatBypass["Enabled"] and oldchar or lplr.Character)) and (p4.fromEntity ~= (AnticheatBypass["Enabled"] and oldchar or lplr.Character) or p4.damageType ~= 1) then
+				if tnttimer <= tick() then
+					spawn(function()
+						repeat task.wait() until tnttimer <= tick()
+						if fly["Enabled"] then
+							fly["ToggleButton"](false)
+						end
+					end)
+				end
+				tnttimer = tick() + 2.9
+				if fly["Enabled"] then
+					createwarning("Damage Fly", "You can fly for 3 seconds", 3)
+				end
+			end
+		end)
+	end)
+
+	fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Fly",
+		["Function"] = function(callback)
+			if callback then
+				olddeflate = bedwars["BalloonController"]["deflateBalloon"]
+				bedwars["BalloonController"]["deflateBalloon"] = function() end
+				flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
+					if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+						if input1.KeyCode == Enum.KeyCode.Space then
+							flyup = true
+						end
+						if input1.KeyCode == Enum.KeyCode.LeftShift then
+							flydown = true
+						end
+					end
+				end)
+				flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
+					if input1.KeyCode == Enum.KeyCode.Space then
+						flyup = false
+					end
+					if input1.KeyCode == Enum.KeyCode.LeftShift then
+						flydown = false
+					end
+				end)
+				if flyautodamage["Enabled"] and isAlive() and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
+					if getEquipped()["Object"] then 
+						local raycastparameters = RaycastParams.new()
+						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
+						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+						local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -66, 0), raycastparameters)
+						if getEquipped()["Object"].Name == "fireball" and newray ~= nil then
+							bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(getEquipped()["Object"], "fireball", "fireball", lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
+						elseif getEquipped()["Object"].Name == "tnt" then
+							local newpos = getScaffold(lplr.Character.Head.CFrame.lookVector * -2 + lplr.Character.Head.Position - Vector3.new(0, 3, 0), false)
+							spawn(function()
+								bedwars["placeBlock"](newpos, "tnt")
+							end)
+						else
+							buyballoons()
+						end
+					else
+						buyballoons()
+					end
+				end
+				local mass = lplr.Character.HumanoidRootPart:GetMass() - 1.4
+				BindToStepped("Fly", 1, function(time, delta) 
+					if isAlive() and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
+						local allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao or bypassed) and 1 or 0)
+						local flypos = lplr.Character.Humanoid.MoveDirection * flyspeed["Value"] * allowed
+						lplr.Character.HumanoidRootPart.Transparency = 1
+						lplr.Character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						flyvelo = flypos + Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+					end
+				end)
+			else
+				flyup = false
+				flydown = false
+				flypress:Disconnect()
+				flyendpress:Disconnect()
+				UnbindFromStepped("Fly")
+				if flypop["Enabled"] then
+					if isAlive() and lplr.Character:GetAttribute("InflatedBalloons") then
+						for i = 1, lplr.Character:GetAttribute("InflatedBalloons") do
+							olddeflate()
+						end
+					end
+				end
+				bedwars["BalloonController"]["deflateBalloon"] = olddeflate
+				olddeflate = nil
+			end
+		end,
+		["HoverText"] = "Makes you go zoom (Balloons or TNT Required)"
+	})
+	flyspeed = fly.CreateSlider({
+		["Name"] = "Speed",
+		["Min"] = 1,
+		["Max"] = 60,
+		["Function"] = function(val) end, 
+		["Default"] = 60
+	})
+	flyverticalspeed = fly.CreateSlider({
+		["Name"] = "Vertical Speed",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Function"] = function(val) end, 
+		["Default"] = 44
+	})
+	flyupanddown = fly.CreateToggle({
+		["Name"] = "Y Level",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
+	flypop = fly.CreateToggle({
+		["Name"] = "Pop Balloon",
+		["Function"] = function() end, 
+		["Default"] = true,
+		["HoverText"] = "Pops balloons when fly is disabled."
+	})
+	flyautodamage = fly.CreateToggle({
+		["Name"] = "AutoDamage",
+		["Function"] = function() end, 
+		["Default"] = true,
+		["HoverText"] = "Automatically damages urself with fireballs or tnt when its in your hand."
+	})
+end)
+local autowinfunc
+	autowinfunc = function()
+		if fpsdestroyer["Enabled"] == false then
+			fpsdestroyer["ToggleButton"](true)
+		end
+		spawn(function()
+			if (BedVideo == nil or (BedVideo == nil or (BedVideo and BedVideo.Parent == nil))) and BedExploit["Enabled"] and BedVideoToggle["Enabled"] then
+				BedVideo = Instance.new("VideoFrame")
+				BedVideo.Video = getcustomassetfunc("vapeprivate/assets/chips.webm")
+				BedVideo.Size = UDim2.new(1, 0, 1, 36)
+				BedVideo.Position = UDim2.new(0, 0, 0, -36)
+				BedVideo.BorderSizePixel = 0
+				BedVideo.ZIndex = 0
+				BedVideo.Volume = 0.25
+				BedVideo.Looped = true
+				BedVideo.Parent = game.Players.LocalPlayer.PlayerGui:GetChildren()[2]
+				BedVideo:Play()
+			end
+		end)
+	end
+
+	BedExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoWin", 
+		["Function"] = function(callback)
+			if callback then
+				autowinfunc()
+			else
+				if BedVideo ~= nil then
+					BedVideo:Destroy()
+				end
+			end
+		end,
+		["HoverText"] = "Automatically wins 60% of the time"
+	})
+	BedVideoToggle = BedExploit.CreateToggle({
+		["Name"] = "Chips Video", 
+		["Function"] = function(callback) 
+			if callback then
+				spawn(function()
+					if (BedVideo == nil or (BedVideo == nil or (BedVideo and BedVideo.Parent == nil))) and BedExploit["Enabled"] and BedVideoToggle["Enabled"] then
+						BedVideo = Instance.new("VideoFrame")
+						BedVideo.Video = getcustomassetfunc("vapeprivate/assets/chips.webm")
+						BedVideo.Size = UDim2.new(1, 0, 1, 36)
+						BedVideo.Position = UDim2.new(0, 0, 0, -36)
+						BedVideo.BorderSizePixel = 0
+						BedVideo.ZIndex = 0
+						BedVideo.Volume = 0.25
+						BedVideo.Looped = true
+						BedVideo.Parent = game.Players.LocalPlayer.PlayerGui:GetChildren()[2]
+						BedVideo:Play()
+					end
+				end)
+			else
+				if BedVideo ~= nil then
+					BedVideo:Destroy()
+				end
+			end
+		end
+	})
+
+	runcode(function()
+		local SpeedDisabler = {["Enabled"] = false}
+		local speeddisablertable = {}
+		local speeddisablerconnection1
+		local speeddisablerconnection2
+		SpeedDisabler =  GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+			["Name"] = "SpeedDisabler",
+			["Function"] = function(callback)
+				if callback then
+					speeddisablerconnection1 = workspace.Map.Blocks.ChildAdded:connect(function(obj)
+						if obj.Name == "cannon" then
+							table.insert(speeddisablertable, obj)
+						end
+					end)
+					speeddisablerconnection2 = workspace.Map.Blocks.ChildRemoved:connect(function(obj)
+						if obj.Name == "cannon" and table.find(speeddisablertable, obj) then
+							table.remove(speeddisablertable, table.find(speeddisablertable, obj))
+						end
+					end)
+					for i,v in pairs(workspace.Map.Blocks:GetChildren()) do
+						if v.Name == "cannon" then
+							table.insert(speeddisablertable, v)
+						end
+					end
+					spawn(function()
+						repeat
+							task.wait()
+							for i2,v2 in pairs(speeddisablertable) do
+								if isAlive() and (lplr.Character.HumanoidRootPart.Position - v2.Position).magnitude <= 10 then
+									bedwars["ClientHandler"]:Get(bedwars["CannonFireSelfRemote"]):CallServer({
+										cannonBlockPos = v2.Position / 3
+									})
+								end
+							end
+						until (not SpeedDisabler["Enabled"])
+					end)
+				else
+					if speeddisablerconnection1 then
+						speeddisablerconnection1:Disconnect()
+					end
+					if speeddisablerconnection2 then
+						speeddisablerconnection2:Disconnect()
+					end
+					speeddisablertable = {}
+				end
+			end,
+			["HoverText"] = "Makes speed check more stupid (you are a pirate)"
+		})
+	end)
