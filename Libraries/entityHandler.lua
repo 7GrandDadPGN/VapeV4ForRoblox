@@ -46,7 +46,6 @@ do
                     if localcheck then
                         entity.isAlive = true
                     else
-                        print(entity.isPlayerTargetable(plr), plr, plr.Team, lplr.Team)
                         table.insert(entity.entityList, {
                             Player = plr,
                             Character = char,
