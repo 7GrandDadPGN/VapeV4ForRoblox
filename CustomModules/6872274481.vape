@@ -943,6 +943,8 @@ runcode(function()
 			["HighlightController"] = KnitClient.Controllers.EntityHighlightController,
             ["ItemTable"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.item["item-meta"]).getItemMeta, 1),
 			["JuggernautRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.JuggernautController.KnitStart)[1])[4])),
+			["KatanaController"] = KnitClient.Controllers.KatanaController,
+			["KatanaRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.KatanaController.onEnable, 4))),
             ["KnockbackTable"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.damage["knockback-util"]).KnockbackUtil.calculateKnockbackVelocity, 1),
 			["KnockbackTable2"] = require(game:GetService("ReplicatedStorage").TS.damage["knockback-util"]).KnockbackUtil,
 			["LobbyClientEvents"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"].lobby.out.client.events).LobbyClientEvents,
@@ -2627,15 +2629,20 @@ runcode(function()
 	local Sprint = {["Enabled"] = false}
 	Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Sprint",
-		["Function"] = function()
-			spawn(function()
-				repeat
-					task.wait()
-					if bedwars["sprintTable"].sprinting == false then
-						getmetatable(bedwars["sprintTable"])["startSprinting"](bedwars["sprintTable"])
-					end
-				until Sprint["Enabled"] == false
-			end)
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait()
+						if Sprint["Enabled"] == false then break end
+						if bedwars["sprintTable"].sprinting == false then
+							bedwars["sprintTable"]:startSprinting()
+						end
+					until Sprint["Enabled"] == false
+				end)
+			else
+				bedwars["sprintTable"]:stopSprinting()
+			end
 		end,
 		["HoverText"] = "Sets your sprinting to true."
 	})
@@ -2801,7 +2808,11 @@ runcode(function()
 									end
 								end
 							else
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 100) or 100), 0)
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 70) or 70), 0)
+								for i = 1, 2 do
+									task.wait(0.1)
+									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 70) or 70), 0)
+								end
 							end
 						end
 					end)
@@ -3683,8 +3694,10 @@ runcode(function()
 							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 								upgradeId = "generator", 
 								tier = CurrentUpgrades["generator"] and CurrentUpgrades["generator"] + 1 or 0
-							}):andThen(function()
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+							}):andThen(function(suc)
+								if suc then
+									bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+								end
 							end)
 						end
 					end
@@ -3694,8 +3707,10 @@ runcode(function()
 							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 								upgradeId = "armor", 
 								tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 0
-							}):andThen(function()
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+							}):andThen(function(suc)
+								if suc then
+									bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+								end
 							end)
 						end
 					end
@@ -3705,8 +3720,10 @@ runcode(function()
 							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 								upgradeId = "damage", 
 								tier = CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 1 or 0
-							}):andThen(function()
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+							}):andThen(function(suc)
+								if suc then
+									bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+								end
 							end)
 						end
 					end
@@ -3716,8 +3733,10 @@ runcode(function()
 							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 								upgradeId = "break", 
 								tier = CurrentUpgrades["break"] and CurrentUpgrades["break"] + 1 or 0
-							}):andThen(function()
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+							}):andThen(function(suc)
+								if suc then
+									bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+								end
 							end)
 						end
 					end
@@ -3727,8 +3746,10 @@ runcode(function()
 							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 								upgradeId = "alarm", 
 								tier = CurrentUpgrades["alarm"] and CurrentUpgrades["alarm"] + 1 or 0
-							}):andThen(function()
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+							}):andThen(function(suc)
+								if suc then
+									bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+								end
 							end)
 						end
 					end
@@ -3738,8 +3759,10 @@ runcode(function()
 							bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 								upgradeId = "armory", 
 								tier = CurrentUpgrades["armory"] and CurrentUpgrades["armory"] + 1 or 0
-							}):andThen(function()
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+							}):andThen(function(suc)
+								if suc then
+									bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+								end
 							end)
 						end
 					end
@@ -4284,9 +4307,9 @@ runcode(function()
 	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p3)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p3:Connect(function(p4)
 			if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) and (p4.entityInstance == (AnticheatBypass["Enabled"] and oldchar or lplr.Character)) and p4.damageType ~= 1 then
-				damagetimer = tick() + 0.5
+				damagetimer = tick() + 0.7
 				if fly["Enabled"] then
-					createwarning("LongJump", "Speed increased for 0.5 seconds", 3)
+					createwarning("LongJump", "Speed increased for 0.7 seconds", 3)
 				end
 			end
 		end)
@@ -4305,17 +4328,31 @@ runcode(function()
 						spawn(function()
 							local nomove = false
 							local acallowed = false
+							local damagetroll = false
 							BindToStepped("LongJump", 1, function()
 								disabletpcheck = damagetimer >= tick()
 								--damagetimer >= tick() and 400 or 
-								longjumpvelo = (entity.isAlive and (not nomove) and acallowed and lplr.Character.Humanoid.MoveDirection * (longjumpspeed["Value"]) or Vector3.new(0, 0, 0))
+								longjumpvelo = (entity.isAlive and (not nomove) and acallowed and lplr.Character.Humanoid.MoveDirection * (damagetimer >= tick() and 400 or longjumpspeed["Value"]) or Vector3.new(0, 0, 0))
 							end)
-							createwarning("LongJump", "waiting "..(math.floor((longjumpdelay["Value"] / 10) * 100) / 100).."s to jump", 3)
-							task.wait((longjumpdelay["Value"] - 1) / 10)
+							if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
+								if getEquipped()["Object"] then 
+									local raycastparameters = RaycastParams.new()
+									raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
+									raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+									local newray = workspace:Raycast((AnticheatBypass["Enabled"] and oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -66, 0), raycastparameters)
+									if getEquipped()["Object"].Name == "fireball" and newray ~= nil then
+										damagetroll = true
+									elseif getEquipped()["Object"].Name == "tnt" then
+										damagetroll = true
+									end
+								end
+							end
+							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
+							task.wait(((longjumpdelay["Value"] - 1) / 10) + (damagetroll and 2 or 0))
 							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
 							if longjump["Enabled"] then 
 								acallowed = true
-								--[[if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
+								if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
 									if getEquipped()["Object"] then 
 										local raycastparameters = RaycastParams.new()
 										raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
@@ -4326,13 +4363,13 @@ runcode(function()
 											bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(getEquipped()["Object"], "fireball", "fireball", (AnticheatBypass["Enabled"] and oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
 										elseif getEquipped()["Object"].Name == "tnt" then
 											nomove = true
-											local newpos = getScaffold(lplr.Character.Head.CFrame.lookVector * -2 + lplr.Character.Head.Position - Vector3.new(0, 3, 0), false)
+											local newpos = getScaffold(lplr.Character.Head.CFrame.lookVector * -6 + lplr.Character.Head.Position - Vector3.new(0, 3, 0), false)
 											spawn(function()
 												bedwars["placeBlock"](newpos, "tnt")
 											end)
 										end
 									end
-								end]]
+								end
 								local megacheck = bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")
 								local funnycheck = nomove
 								if nomove then
@@ -5604,6 +5641,7 @@ runcode(function()
 	local AutoLeave = {["Enabled"] = false}
 	local AutoLeaveDelay = {["Value"] = 1}
 	local AutoPlayAgain = {["Enabled"] = false}
+	local AutoLeaveStaff = {["Enabled"] = true}
 	local autoleaveconnection
 
 
@@ -5628,16 +5666,32 @@ runcode(function()
 				autoleaveconnection = players.PlayerAdded:connect(function(plr)
 					pcall(function()
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-							staffleave = plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name
-							bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+							if AutoLeaveStaff["Enabled"] then
+								staffleave = plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name
+								bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+							else
+								local warning = createwarning("Vape", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
+								local warningtext = warning:GetChildren()[5]
+								warningtext.TextSize = 12
+								warningtext.TextLabel.TextSize = 12
+								warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+							end
 						end
 					end)
 				end)
 				pcall(function()
 					for i, plr in pairs(players:GetChildren()) do
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-							staffleave = plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name
-							bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+							if AutoLeaveStaff["Enabled"] then
+								staffleave = plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name
+								bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+							else
+								local warning = createwarning("Vape", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
+								local warningtext = warning:GetChildren()[5]
+								warningtext.TextSize = 12
+								warningtext.TextLabel.TextSize = 12
+								warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+							end
 						end
 					end
 				end)
@@ -5659,6 +5713,12 @@ runcode(function()
 		["Name"] = "Play Again",
 		["Function"] = function() end,
 		["HoverText"] = "Automatically queues a new game."
+	})
+	AutoLeaveStaff = AutoLeave.CreateToggle({
+		["Name"] = "Staff",
+		["Function"] = function() end,
+		["HoverText"] = "Automatically leaves when staff joins",
+		["Default"] = true
 	})
 
 	local function allowleave()
@@ -7129,112 +7189,6 @@ runcode(function()
 	})
 end)
 
-runcode(function()
-	local GrabTreeOrbs = {["Enabled"] = false}
-	GrabTreeOrbs = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoTreeOrb", 
-		["Function"] = function(callback)
-			if callback then
-				spawn(function()
-					repeat
-						task.wait()
-						local itemdrops = collectionservice:GetTagged("treeOrb")
-						for i,v in pairs(itemdrops) do
-							if entity.isAlive and GrabTreeOrbs["Enabled"] and v:FindFirstChild("Spirit") and (lplr.Character.HumanoidRootPart.Position - v.Spirit.Position).magnitude <= 20 then
-								if bedwars["ClientHandler"]:Get(bedwars["TreeRemote"]):CallServer({
-									treeOrbSecret = v:GetAttribute("TreeOrbSecret")
-								}) then
-									v:Destroy()
-									collectionservice:RemoveTag(v, "treeOrb")
-								end
-							end
-						end
-					until GrabTreeOrbs["Enabled"] == false
-				end)
-			end
-		end,
-		["HoverText"] = "Automatically grabs tree orbs."
-	})
-
-	local juggernautdelay = tick()
-	local GrabJuggernaut = {["Enabled"] = false}
-	GrabJuggernaut = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoJuggernaut", 
-		["Function"] = function(callback)
-			if callback then
-				spawn(function()
-					repeat
-						task.wait()
-						local itemdrops = collectionservice:GetTagged("juggernaut-crate")
-						for i,v in pairs(itemdrops) do
-							if entity.isAlive and GrabJuggernaut["Enabled"] and(lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 and (not lplr.Character:GetAttribute("Juggernaut")) and juggernautdelay <= tick() then
-								juggernautdelay = tick() + 0.5
-								bedwars["ClientHandler"]:Get(bedwars["JuggernautRemote"]):SendToServer({
-									blockInstance = v
-								})
-							end
-						end
-					until GrabJuggernaut["Enabled"] == false
-				end)
-			end
-		end,
-		["HoverText"] = "Automatically grabs Juggernaut Crates."
-	})
-
-	local GrabSouls = {["Enabled"] = false}
-	GrabSouls = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoSoul", 
-		["Function"] = function(callback)
-			if callback then
-				spawn(function()
-					repeat
-						task.wait()
-						local itemdrops = bedwars["GrimReaperController"].soulsByPosition
-						for i,v in pairs(itemdrops) do
-							if entity.isAlive and GrabSouls["Enabled"] and  v.PrimaryPart and (lplr.Character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 120 and (not lplr.Character:GetAttribute("GrimReaperChannel")) then
-								bedwars["ClientHandler"]:Get(bedwars["ConsumeSoulRemote"]):CallServer({
-									secret = v:GetAttribute("GrimReaperSoulSecret")
-								})
-								v:Destroy()
-							end
-						end
-					until GrabSouls["Enabled"] == false
-				end)
-			end
-		end,
-		["HoverText"] = "Automatically grabs Grim Reaper Souls."
-	})
-
-	local GrabCrops = {["Enabled"] = false}
-	GrabCrops = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoHarvest", 
-		["Function"] = function(callback)
-			if callback then
-				spawn(function()
-					repeat
-						task.wait()
-						local itemdrops = collectionservice:GetTagged("BedwarsHarvestableCrop")
-						for i,v in pairs(itemdrops) do
-							if entity.isAlive and GrabCrops["Enabled"] and (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
-								bedwars["ClientHandler"]:Get("BedwarsHarvestCrop"):CallServerAsync({
-									position = bedwars["BlockController"]:getBlockPosition(v.Position)
-								}):andThen(function(suc)
-									if suc then
-										bedwars["GameAnimationUtil"].playAnimation(lplr.Character, 1)
-										bedwars["SoundManager"]:playSound(bedwars["SoundList"].CROP_HARVEST)
-									end
-								end)
-							end
-						end
-					until GrabCrops["Enabled"] == false
-				end)
-			end
-		end,
-		["HoverText"] = "Automatically grabs Farmer Crops."
-	})
-end)
-
-
 --local BuyArrows = {["Enabled"] = false}
 --local BowAura = {["Enabled"] = false}
 --local bowaurarange = {["Value"] = 50}
@@ -7549,6 +7503,27 @@ runcode(function()
         return (str:gsub("<[^<>]->", ""))
     end
 
+	local kititems = {
+		["jade"] = "jade_hammer",
+		["archer"] = "tactical_crossbow",
+		["angel"] = "",
+		["cowgirl"] = "lasso",
+		["dasher"] = "wood_dao",
+		["axolotl"] = "axolotl",
+		["yeti"] = "snowball",
+		["smoke"] = "smoke_block",
+		["trapper"] = "snap_trap",
+		["pyro"] = "flamethrower",
+		["daven"] = "cannon",
+		["regent"] = "void_axe", 
+		["baker"] = "apple",
+		["builder"] = "builder_hammer",
+		["farmer_cletus"] = "carrot_seeds",
+		["melody"] = "guitar",
+		["barbarian"] = "rageblade",
+		["gingerbread_man"] = "gumdrop_bounce_pad"
+	}
+
 	local NameTagsFolder = Instance.new("Folder")
 	NameTagsFolder.Name = "NameTagsFolder"
 	NameTagsFolder.Parent = GuiLibrary["MainGui"]
@@ -7621,6 +7596,16 @@ runcode(function()
 								boots.Name = "Boots"
 								boots.Position = UDim2.new(0, 65, 0, -30)
 								boots.Parent = thing
+								local kit = hand:Clone()
+								kit.Name = "Kit"
+								spawn(function()
+									repeat task.wait() until plr:GetAttribute("PlayingAsKit") ~= ""
+									if kit then
+										kit.Image = kititems[plr:GetAttribute("PlayingAsKit")] and bedwars["getIcon"]({itemType = kititems[plr:GetAttribute("PlayingAsKit")]}, NameTagsShowInventory["Enabled"]) or ""
+									end
+								end)
+								kit.Position = UDim2.new(0, -30, 0, -65)
+								kit.Parent = thing
 							end
 							
 							if isAlive(plr) and ((not NameTagsTeammates["Enabled"]) and shared.vapeteamcheck(plr) or NameTagsTeammates["Enabled"]) and plr ~= lplr then
@@ -8809,6 +8794,100 @@ runcode(function()
 end)
 
 runcode(function()
+	local autoheal = {["Enabled"] = false}
+	local autohealval = {["Value"] = 100}
+	local autohealallowed = true
+	local autohealbound = false
+	local autohealconnection2
+	autoheal = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoHeal",
+		["Function"] = function(callback)
+			if callback then
+				autohealbound = true
+				autohealallowed = true
+				
+				autohealconnection = lplr.CharacterAdded:Connect(function(char)
+					if autohealconnection2 then
+						autohealconnection2:Disconnect()
+					end
+					autohealconnection2 = char:GetAttributeChangedSignal("Health"):connect(function()
+						if entity.isAlive and autohealallowed then
+							local item = getItem("big_shield") or getItem("mini_shield") or getItem("apple")
+							if item then
+								if item["itemType"] == "apple" then
+									if lplr.Character:GetAttribute("Health") <= (lplr.Character:GetAttribute("MaxHealth") - (100 - autohealval["Value"])) then
+										autohealallowed = false
+										bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServerAsync({
+											["item"] = item["tool"]
+										}):andThen(function()
+											autohealallowed = true
+										end)
+									end
+								else
+									if lplr.Character:GetAttribute("Shield_POTION") and lplr.Character:GetAttribute("Shield_POTION") == 0 then
+										autohealallowed = false
+										bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServerAsync({
+											["item"] = item["tool"]
+										}):andThen(function()
+											autohealallowed = true
+										end)
+									end
+								end
+							end
+						end
+					end)
+				end)
+				if lplr.Character then
+					autohealconnection2 = lplr.Character:GetAttributeChangedSignal("Health"):connect(function()
+						if entity.isAlive and autohealallowed then
+							local item = getItem("big_shield") or getItem("mini_shield") or getItem("apple")
+							if item then
+								if item["itemType"] == "apple" then
+									if lplr.Character:GetAttribute("Health") <= (lplr.Character:GetAttribute("MaxHealth") - (100 - autohealval["Value"])) then
+										autohealallowed = false
+										bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServerAsync({
+											["item"] = item["tool"]
+										}):andThen(function()
+											autohealallowed = true
+										end)
+									end
+								else
+									if lplr.Character:GetAttribute("Shield_POTION") and lplr.Character:GetAttribute("Shield_POTION") == 0 then
+										autohealallowed = false
+										bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServerAsync({
+											["item"] = item["tool"]
+										}):andThen(function()
+											autohealallowed = true
+										end)
+									end
+								end
+							end
+						end
+					end)
+				end
+			else
+				if autohealconnection then
+					autohealconnection:Disconnect()
+				end
+				if autohealconnection2 then
+					autohealconnection2:Disconnect()
+				end
+			end
+		end,
+		["HoverText"] = "Automatically heals for you when health or shield is under threshold."
+	})
+	autohealval = autoheal.CreateSlider({
+		["Name"] = "Health",
+		["Min"] = 1,
+		["Max"] = 99,
+		["Default"] = 70,
+		["Function"] = function() end
+	})
+end)
+
+runcode(function()
+	local AutoKit = {["Enabled"] = false}
+	local AutoKitTrinity = {["Value"] = "Dark"}
 	local function GetTeammateThatNeedsMost()
 		local plrs = GetAllNearestHumanoidToPosition(true, 30, 1000, true)
 		local lowest, lowestplayer = 10000, nil
@@ -8823,78 +8902,156 @@ runcode(function()
 		return lowestplayer
 	end
 
-	local AutoGuitar = {["Enabled"] = false}
-	local healtick = tick()
-	AutoGuitar = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoGuitar",
-		["Function"] = function(callback)
-			if callback then
-				spawn(function()
-					repeat
-						task.wait(0.1)
-						if getItem("guitar") then
-							local plr = GetTeammateThatNeedsMost()
-							if plr and healtick <= tick() then
-								bedwars["ClientHandler"]:Get(bedwars["GuitarHealRemote"]):SendToServer({
-									healTarget = plr.Character
-								})
-								healtick = tick() + 2
-							end
-						end
-					until (not AutoGuitar["Enabled"])
-				end)
-			else
-
-			end
-		end,
-		["HoverText"] = "Automatically Heals Teammates around you"
-	})
-end)
-
-runcode(function()
-	local AutoTrinity = {["Enabled"] = false}
-	local AutoTrinityList = {["Value"] = "Dark"}
-	AutoTrinity = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoTrinity",
-		["Function"] = function(callback) end,
-		["HoverText"] = "Automatically chooses Light or Dark angel"
-	})
-	AutoTrinityList = AutoTrinity.CreateDropdown({
-		["Name"] = "Angel",
-		["List"] = {"Dark", "Light"},
-		["Function"] = function() end
-	})
 	connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]:OnEvent("AngelProgress", function(p3)
-		if p3.incrementProgress >= bedwars["AngelUtil"].ANGEL_KILL_REQUIREMENT then
+		if p3.incrementProgress >= bedwars["AngelUtil"].ANGEL_KILL_REQUIREMENT and AutoKit["Enabled"] then
 			bedwars["ClientHandler"]:Get(bedwars["TrinityRemote"]):SendToServer({
 				angel = AutoTrinityList["Value"]
 			})
 		end
 	end)
-end)
 
-runcode(function()
-	local AutoMiner = {["Enabled"] = false}
-	AutoMiner = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoMiner",
-		["Function"] = function(callback) 
+	AutoKit = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoKit",
+		["Function"] = function(callback)
 			if callback then
 				spawn(function()
-					repeat
-						task.wait(0.1)
-						if entity.isAlive then
-							local plr = bedwars["MinerController"]:getClosestPetrifiedPlayer()
-							if plr then
-								bedwars["ClientHandler"]:Get(bedwars["MinerRemote"]):SendToServer({
-									petrifyId = plr:GetAttribute("PetrifyId")
-								})
-							end
+					repeat task.wait() until kit ~= ""
+					if AutoKit["Enabled"] then
+						if kit == "melody" then
+							spawn(function()
+								repeat
+									task.wait(0.1)
+									if getItem("guitar") then
+										local plr = GetTeammateThatNeedsMost()
+										if plr and healtick <= tick() then
+											bedwars["ClientHandler"]:Get(bedwars["GuitarHealRemote"]):SendToServer({
+												healTarget = plr.Character
+											})
+											healtick = tick() + 2
+										end
+									end
+								until (not AutoKit["Enabled"])
+							end)
+						elseif kit == "bigman" then
+							spawn(function()
+								repeat
+									task.wait()
+									local itemdrops = collectionservice:GetTagged("treeOrb")
+									for i,v in pairs(itemdrops) do
+										if entity.isAlive and GrabTreeOrbs["Enabled"] and v:FindFirstChild("Spirit") and (lplr.Character.HumanoidRootPart.Position - v.Spirit.Position).magnitude <= 20 then
+											if bedwars["ClientHandler"]:Get(bedwars["TreeRemote"]):CallServer({
+												treeOrbSecret = v:GetAttribute("TreeOrbSecret")
+											}) then
+												v:Destroy()
+												collectionservice:RemoveTag(v, "treeOrb")
+											end
+										end
+									end
+								until (not AutoKit["Enabled"])
+							end)
+						elseif kit == "grim_reaper" then
+							spawn(function()
+								repeat
+									task.wait()
+									local itemdrops = bedwars["GrimReaperController"].soulsByPosition
+									for i,v in pairs(itemdrops) do
+										if entity.isAlive and GrabSouls["Enabled"] and  v.PrimaryPart and (lplr.Character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 120 and (not lplr.Character:GetAttribute("GrimReaperChannel")) then
+											bedwars["ClientHandler"]:Get(bedwars["ConsumeSoulRemote"]):CallServer({
+												secret = v:GetAttribute("GrimReaperSoulSecret")
+											})
+											v:Destroy()
+										end
+									end
+								until (not AutoKit["Enabled"])
+							end)
+						elseif kit == "farmer_cletus" then 
+							spawn(function()
+								repeat
+									task.wait()
+									local itemdrops = collectionservice:GetTagged("BedwarsHarvestableCrop")
+									for i,v in pairs(itemdrops) do
+										if entity.isAlive and GrabCrops["Enabled"] and (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
+											bedwars["ClientHandler"]:Get("BedwarsHarvestCrop"):CallServerAsync({
+												position = bedwars["BlockController"]:getBlockPosition(v.Position)
+											}):andThen(function(suc)
+												if suc then
+													bedwars["GameAnimationUtil"].playAnimation(lplr.Character, 1)
+													bedwars["SoundManager"]:playSound(bedwars["SoundList"].CROP_HARVEST)
+												end
+											end)
+										end
+									end
+								until (not AutoKit["Enabled"])
+							end)
+						elseif kit == "miner" then
+							spawn(function()
+								repeat
+									task.wait(0.1)
+									if entity.isAlive then
+										local plr = bedwars["MinerController"]:getClosestPetrifiedPlayer()
+										if plr then
+											bedwars["ClientHandler"]:Get(bedwars["MinerRemote"]):SendToServer({
+												petrifyId = plr:GetAttribute("PetrifyId")
+											})
+										end
+									end
+								until (not AutoKit["Enabled"])
+							end)
+						elseif kit == "dasher" then
+							spawn(function()
+								repeat
+									task.wait(0.1)
+									local dao = getItemNear("dao")
+									if entity.isAlive and lplr.Character:GetAttribute("CanDashNext") and lplr.Character:GetAttribute("CanDashNext") < workspace:GetServerTimeNow() and dao then
+										local plr = GetNearestHumanoidToPosition(true, 50)
+										if plr then
+											bedwars["ClientHandler"]:Get(bedwars["KatanaRemote"]):SendToServer({
+												direction = CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.CFrame.p),
+												origin = lplr.Character.HumanoidRootPart.Position,
+												weapon = dao.itemType
+											})
+										end
+									end
+								until (not AutoKit["Enabled"])
+							end)
 						end
-					until (not AutoMiner["Enabled"])
+					end
 				end)
 			end
 		end,
-		["HoverText"] = "Automatically breaks miner statues"
+		["HoverText"] = "Automatically uses a kits ability"
+	})
+	AutoKitTrinity = AutoKit.CreateDropdown({
+		["Name"] = "Angel",
+		["List"] = {"Dark", "Light"},
+		["Function"] = function() end
+	})
+end)
+
+runcode(function()
+	local juggernautdelay = tick()
+	local GrabJuggernaut = {["Enabled"] = false}
+	GrabJuggernaut = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoJuggernaut", 
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait()
+						local itemdrops = collectionservice:GetTagged("juggernaut-crate")
+						for i,v in pairs(itemdrops) do
+							if entity.isAlive and GrabJuggernaut["Enabled"] and(lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 and (not lplr.Character:GetAttribute("Juggernaut")) and juggernautdelay <= tick() then
+								juggernautdelay = tick() + 0.5
+								bedwars["ClientHandler"]:Get(bedwars["JuggernautRemote"]):SendToServer({
+									blockInstance = v
+								})
+							end
+						end
+					until GrabJuggernaut["Enabled"] == false
+				end)
+			end
+		end,
+		["HoverText"] = "Automatically grabs Juggernaut Crates."
 	})
 end)
 
