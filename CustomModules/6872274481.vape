@@ -59,7 +59,7 @@ local oldchanneltabs = {}
 local connectionstodisconnect = {}
 local anticheatfunny = false
 local anticheatfunnyyes = false
-local staffleave = false
+local staffleave
 local networkownerfunc = isnetworkowner
 local projtable = {
 	["arrow"] = true,
@@ -1341,7 +1341,7 @@ teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(functio
         	queueteleport('shared.vapeteammembers = '..#bedwars["ClientStoreHandler"]:getState().Party.members)
 		end
 		if staffleave then
-			queueteleport('shared.vapestaffleave = true')
+			queueteleport('shared.vapestaffleave = "'..staffleave..'"')
 		end
     end
 end)
@@ -5604,7 +5604,6 @@ runcode(function()
 			task.wait(AutoLeaveDelay["Value"] / 10)
 			if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
 				if not AutoPlayAgain["Enabled"] then
-					print("leave1")
 					bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 				else
 					bedwars["LobbyClientEvents"].joinQueue:fire({
@@ -5620,21 +5619,17 @@ runcode(function()
 			if callback then
 				autoleaveconnection = players.PlayerAdded:connect(function(plr)
 					pcall(function()
-						print(plr.Name, plr.ClassName, plr:IsInGroup(5774246), plr:GetRankInGroup(5774246))
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-							print("leave2")
-							createwarning("Vape", plr.Name.." is in your game", 60)
-							--bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+							staffleave = plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name
+							bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 						end
 					end)
 				end)
 				pcall(function()
 					for i, plr in pairs(players:GetChildren()) do
-						print(plr.Name, plr:IsInGroup(5774246), plr:GetRankInGroup(5774246))
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
-							print("leave3")
-							createwarning("Vape", plr.Name.." is in your game", 60)
-							--bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
+							staffleave = plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name
+							bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 						end
 					end
 				end)
@@ -5715,7 +5710,6 @@ runcode(function()
 						task.wait(1 + (AutoLeaveDelay["Value"] / 10))
 						if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
 							if not AutoPlayAgain["Enabled"] then
-								print("leave4w")
 								bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 							else
 								bedwars["LobbyClientEvents"].joinQueue:fire({
@@ -8963,139 +8957,4 @@ runcode(function()
 		end,
 		["HoverText"] = "lets you not walk off because you are bad"
 	})
-end)
-
-
-runcode(function()
-	local anticheatdisabler = {["Enabled"] = false}
-local anticheatdisablerauto = {["Enabled"] = false}
-local anticheatdisablerconnection
-local anticheatdisablerconnection2
-local bypassed = false
-anticheatdisabler = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "FloatDisabler",
-	["Function"] = function(callback)
-		if callback then
-			local balloonitem = getItem("balloon")
-			if balloonitem then
-				local oldfunc3 = bedwars["BalloonController"].hookBalloon
-				local oldfunc4 = bedwars["BalloonController"].enableBalloonPhysics
-				local oldfunc5 = bedwars["BalloonController"].deflateBalloon
-				bedwars["BalloonController"].inflateBalloon()
-				bedwars["BalloonController"].enableBalloonPhysics = function() end
-				bedwars["BalloonController"].deflateBalloon = function() end
-				bedwars["BalloonController"].hookBalloon = function(Self, plr, attachment, balloon)
-					print(plr)
-					balloon:WaitForChild("Balloon").CFrame = CFrame.new(0, -1995, 0)
-					balloon.Balloon:ClearAllChildren()
-					local threadidentity = syn and syn.set_thread_identity or setidentity
-					threadidentity(7)
-					spawn(function()
-						wait(0.5)
-						createwarning("AnticheatDisabler", "Disabled Anticheat!", 5)
-						bypassed = true
-					end)
-					threadidentity(2)
-					bedwars["BalloonController"].hookBalloon = oldfunc3
-					bedwars["BalloonController"].enableBalloonPhysics = oldfunc4
-				end
-			end
-			anticheatdisabler["ToggleButton"](true)
-		end
-	end
-})
-local disabledebounce = false
-anticheatdisablerauto = anticheatdisabler.CreateToggle({
-	["Name"] = "Auto Disable",
-	["Function"] = function(callback)
-		if callback then
-			if isAlive() and lplr.Character.InventoryFolder.Value then
-				if anticheatdisablerconnection2 then
-					anticheatdisablerconnection2:Disconnect()
-				end
-				anticheatdisablerconnection2 = lplr.Character.InventoryFolder.Value.ChildAdded:connect(function(p3)
-					if p3.Name == "balloon" and disabledebounce == false then
-						disabledebounce = true
-						anticheatdisabler["ToggleButton"](false)
-						task.delay(0.1, function()
-							disabledebounce = false
-						end)
-					end
-				end)
-			end
-			anticheatdisablerconnection = game:GetService("ReplicatedStorage").Inventories.ChildAdded:connect(function(folder)
-				if folder.Name == lplr.Name then
-					if anticheatdisablerconnection2 then
-						anticheatdisablerconnection2:Disconnect()
-					end
-					anticheatdisablerconnection2 = folder.ChildAdded:connect(function(p3)
-						if p3.Name == "balloon" and disabledebounce == false then
-							disabledebounce = true
-							anticheatdisabler["ToggleButton"](false)
-							task.delay(0.1, function()
-								disabledebounce = false
-							end)
-						end
-					end)
-				end
-			end)
-		else
-			if anticheatdisablerconnection then
-				anticheatdisablerconnection:Disconnect()
-			end
-			if anticheatdisablerconnection2 then
-				anticheatdisablerconnection2:Disconnect()
-			end
-		end
-	end,
-})
-	runcode(function()
-		local SpeedDisabler = {["Enabled"] = false}
-		local speeddisablertable = {}
-		local speeddisablerconnection1
-		local speeddisablerconnection2
-		SpeedDisabler =  GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-			["Name"] = "SpeedDisabler",
-			["Function"] = function(callback)
-				if callback then
-					speeddisablerconnection1 = workspace.Map.Blocks.ChildAdded:connect(function(obj)
-						if obj.Name == "cannon" then
-							table.insert(speeddisablertable, obj)
-						end
-					end)
-					speeddisablerconnection2 = workspace.Map.Blocks.ChildRemoved:connect(function(obj)
-						if obj.Name == "cannon" and table.find(speeddisablertable, obj) then
-							table.remove(speeddisablertable, table.find(speeddisablertable, obj))
-						end
-					end)
-					for i,v in pairs(workspace.Map.Blocks:GetChildren()) do
-						if v.Name == "cannon" then
-							table.insert(speeddisablertable, v)
-						end
-					end
-					spawn(function()
-						repeat
-							task.wait()
-							for i2,v2 in pairs(speeddisablertable) do
-								if isAlive() and (lplr.Character.HumanoidRootPart.Position - v2.Position).magnitude <= 10 then
-									bedwars["ClientHandler"]:Get(bedwars["CannonFireSelfRemote"]):CallServer({
-										cannonBlockPos = v2.Position / 3
-									})
-								end
-							end
-						until (not SpeedDisabler["Enabled"])
-					end)
-				else
-					if speeddisablerconnection1 then
-						speeddisablerconnection1:Disconnect()
-					end
-					if speeddisablerconnection2 then
-						speeddisablerconnection2:Disconnect()
-					end
-					speeddisablertable = {}
-				end
-			end,
-			["HoverText"] = "Makes speed check more stupid (you are a pirate)"
-		})
-	end)
 end)
