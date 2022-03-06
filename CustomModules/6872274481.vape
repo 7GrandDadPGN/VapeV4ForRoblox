@@ -9268,6 +9268,7 @@ fpsdestroyer = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].Creat
 							end
 						end)
 						repeat
+							task.wait()
 							if hide["Enabled"] then
 								if trolled == false and matchState ~= 0 then
 									UnbindFromStepped("lol")
