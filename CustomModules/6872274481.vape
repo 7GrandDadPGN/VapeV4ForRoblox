@@ -1532,7 +1532,7 @@ shared.vapeteamcheck = function(plr)
 end
 
 local function targetCheck(plr, check)
-	return (check and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("ForceField") == nil or check == false)
+	return (check and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("ForceField") == nil or check == false)
 end
 
 do
