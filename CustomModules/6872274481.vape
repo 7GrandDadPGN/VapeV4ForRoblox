@@ -8938,7 +8938,7 @@ runcode(function()
 									task.wait()
 									local itemdrops = collectionservice:GetTagged("treeOrb")
 									for i,v in pairs(itemdrops) do
-										if entity.isAlive and GrabTreeOrbs["Enabled"] and v:FindFirstChild("Spirit") and (lplr.Character.HumanoidRootPart.Position - v.Spirit.Position).magnitude <= 20 then
+										if entity.isAlive and AutoKit["Enabled"] and v:FindFirstChild("Spirit") and (lplr.Character.HumanoidRootPart.Position - v.Spirit.Position).magnitude <= 20 then
 											if bedwars["ClientHandler"]:Get(bedwars["TreeRemote"]):CallServer({
 												treeOrbSecret = v:GetAttribute("TreeOrbSecret")
 											}) then
@@ -8955,7 +8955,7 @@ runcode(function()
 									task.wait()
 									local itemdrops = bedwars["GrimReaperController"].soulsByPosition
 									for i,v in pairs(itemdrops) do
-										if entity.isAlive and GrabSouls["Enabled"] and  v.PrimaryPart and (lplr.Character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 120 and (not lplr.Character:GetAttribute("GrimReaperChannel")) then
+										if entity.isAlive and AutoKit["Enabled"] and v.PrimaryPart and (lplr.Character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 120 and (not lplr.Character:GetAttribute("GrimReaperChannel")) then
 											bedwars["ClientHandler"]:Get(bedwars["ConsumeSoulRemote"]):CallServer({
 												secret = v:GetAttribute("GrimReaperSoulSecret")
 											})
@@ -8970,7 +8970,7 @@ runcode(function()
 									task.wait()
 									local itemdrops = collectionservice:GetTagged("BedwarsHarvestableCrop")
 									for i,v in pairs(itemdrops) do
-										if entity.isAlive and GrabCrops["Enabled"] and (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
+										if entity.isAlive and AutoKit["Enabled"] and (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
 											bedwars["ClientHandler"]:Get("BedwarsHarvestCrop"):CallServerAsync({
 												position = bedwars["BlockController"]:getBlockPosition(v.Position)
 											}):andThen(function(suc)
@@ -9121,5 +9121,67 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "lets you not walk off because you are bad"
+	})
+end)
+
+runcode(function()
+	local Breadcrumbs = {["Enabled"] = false}
+	local breadcrumbtrail
+	local breadcrumbattachment
+	local breadcrumbattachment2
+	Breadcrumbs = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Breadcrumbs",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait(0.3)
+						if (not Breadcrumbs["Enabled"]) then return end
+						if entity.isAlive then
+							if breadcrumbtrail == nil then
+								breadcrumbattachment = Instance.new("Attachment")
+								breadcrumbattachment.Position = Vector3.new(0, 0.07 - 2.9, 0.5)
+								breadcrumbattachment2 = Instance.new("Attachment")
+								breadcrumbattachment2.Position = Vector3.new(0, -0.07 - 2.9, 0.5)
+								breadcrumbtrail = Instance.new("Trail")
+								breadcrumbtrail.Attachment0 = breadcrumbattachment 
+								breadcrumbtrail.Attachment1 = breadcrumbattachment2
+								breadcrumbtrail.Color = ColorSequence.new(Color3.new(1, 0, 0), Color3.new(0, 0, 1))
+								breadcrumbtrail.FaceCamera = true
+								breadcrumbtrail.Lifetime = 2
+								breadcrumbtrail.Enabled = true
+							else
+								local trailfound = false
+								for i,v in pairs(lplr.Character:GetChildren()) do
+									if v:IsA("Trail") then
+										if trailfound then
+											v:Remove()
+										else
+											trailfound = true
+										end
+									end
+								end
+								breadcrumbattachment.Parent = lplr.Character.HumanoidRootPart
+								breadcrumbattachment2.Parent = lplr.Character.HumanoidRootPart
+								breadcrumbtrail.Parent = lplr.Character
+							end
+						end
+					until (not Breadcrumbs["Enabled"])
+				end)
+			else
+				if breadcrumbtrail then
+					breadcrumbtrail:Remove()
+					if entity.isAlive then 
+						for i,v in pairs(lplr.Character:GetChildren()) do
+							if v:IsA("Trail") then
+								v:Remove()
+							end
+						end
+					end
+					breadcrumbtrail = nil
+				end
+			end
+		end,
+		["HoverText"] = "Shows a trail behind your character"
 	})
 end)
