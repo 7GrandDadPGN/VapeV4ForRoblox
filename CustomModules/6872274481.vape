@@ -983,78 +983,7 @@ runcode(function()
             ["ViewmodelController"] = KnitClient.Controllers.ViewmodelController,
 			["WeldTable"] = require(game:GetService("ReplicatedStorage").TS.util["weld-util"]).WeldUtil,
         }
-		oldshoot = bedwars["BowTable"]["calculateImportantLaunchValues"]
-		local function projvischeck(launchpos, targetpos)
-			local direction = Ray.new(launchpos, (targetpos + Vector3.new(0, 0, 0) - launchpos).unit).Unit.Direction
-			local raycastparameters = RaycastParams.new()
-			raycastparameters.FilterDescendantsInstances = {lplr.Character, workspace.BedAlarmZones, workspace.ProjectileTargeting, workspace.Camera, workspace.Balloons, workspace.BalloonRoots, workspace.GameSounds}
-			raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
-			local newray = workspace:Raycast(launchpos, direction * 10000, raycastparameters)
-			if newray and newray.Instance then
-				local plr = bedwars["getEntityTable"].getEntity(newray.Instance)
-				if plr then return true end
-			end
-			return false
-		end
 
-		local bowmodifications = function(bowtable, projmeta, worldmeta, ...)
-			if FastConsume["Enabled"] and FastConsumeProjectile["Enabled"] then
-				projmeta.velocityMultiplier = math.clamp(projmeta.velocityMultiplier * (40 / math.clamp(FastConsumeVal["Value"], 1, 40)), 0, 1)
-			end
-			if ProjectileAimbot["Enabled"] then
-				local plr = GetNearestHumanoidToMouse(true, aimfov["Value"], false)
-				if plr then
-					tar = plr.Character.HumanoidRootPart
-					if aimvischeck["Enabled"] then
-						local launchPosition = bowtable:getLaunchPosition()
-					
-					end
-				else
-					tar = nil
-				end
-				if tar and projtable[projmeta.projectile] then
-						local launchPosition = bowtable:getLaunchPosition()
-						if not launchPosition then
-							return nil
-						end
-						local realLaunchPosition = launchPosition + Vector3.new(0, 2, 0)
-						local proj = projmeta:getProjectileMeta();
-						if p26 then
-							local v58 = proj.predictionLifetimeSec;
-						else
-							v58 = proj.lifetimeSec;
-						end;
-						local v59 = v58;
-						if v59 == nil then
-							v59 = 3;
-						end;
-						local v60 = proj.launchVelocity;
-						if v60 == nil then
-							v60 = 100;
-						end;
-						local projGravity = proj.gravitationalAcceleration;
-						if projGravity == nil then
-							projGravity = 196.2;
-						end;
-						local multi = (10 / v60) + 0.0005
-						if projmeta.projectile == "arrow" then
-							multi = multi + 0.002
-						end
-						local velocalc = (multi / 6) + (aimbotping * 0.00001)
-						local lookvec = (plr.Character.Humanoid.MoveDirection * (plr.Character.Humanoid.WalkSpeed * 1.5))
-						local realTargetPosition = (tar.Position + Vector3.new(0, 2, 0.5)) + (lookvec * ((realLaunchPosition - tar.Position).magnitude * velocalc))
-						local v65 = Ray.new(realLaunchPosition, (realTargetPosition + Vector3.new(0, (realLaunchPosition - realTargetPosition).magnitude * multi, 0) - realLaunchPosition).unit)
-						return {
-							initialVelocity = (realLaunchPosition + (v65.Unit.Direction).Unit * ((Vector3.new(0, 0, 0) - realLaunchPosition).Magnitude) - realLaunchPosition).Unit * (v60 * projmeta.velocityMultiplier), 
-							positionFrom = realLaunchPosition, 
-							deltaT = v59, 
-							gravitationalAcceleration = projGravity * projmeta.gravityMultiplier
-						};
-				end
-			end
-			return oldshoot(bowtable, projmeta, worldmeta, ...)
-		end
-		bedwars["BowTable"]["calculateImportantLaunchValues"] = bowmodifications
 		local oldbreak = getmetatable(bedwars["ClientHandlerDamageBlock"]).Get
 		getmetatable(bedwars["ClientHandlerDamageBlock"]).Get = function(Self, remotename, ...)
 			local res = oldbreak(Self, remotename, ...)
@@ -2713,42 +2642,6 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "Chokes all incoming packets (blatant mode required)\nPlease do not turn this on if you do not know what you are doing."
-	})
-end)
-
-runcode(function()
-
-	ProjectileAimbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "BowAimbot",
-		["Function"] = function(callback) 
-			if callback then
-				spawn(function()
-					repeat
-						task.wait(1)
-						aimbotping = tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())
-						aimbotping = math.floor(aimbotping)
-					until ProjectileAimbot["Enabled"] == false
-				end)
-				
-			else
-
-				tar = nil 
-				shoothook = nil
-			end
-		end,
-		["HoverText"] = "Auto Aims bow at closest player."
-	})
-	aimfov = ProjectileAimbot.CreateSlider({
-		["Name"] = "FOV",
-		["Min"] = 0,
-		["Max"] = 1000,
-		["Function"] = function(val) end, 
-		["Default"] = 1000
-	})
-	aimvischeck = ProjectileAimbot.CreateToggle({
-		["Name"] = "Visible Check",
-		["Function"] = function() end,
-		["Default"] = true
 	})
 end)
 
@@ -6023,9 +5916,9 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 36,
+		["Max"] = 54,
 		["Function"] = function(val) end,
-		["Default"] = 36
+		["Default"] = 54
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
