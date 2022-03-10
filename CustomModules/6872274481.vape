@@ -882,7 +882,7 @@ runcode(function()
 			["CheckWhitelisted"] = function(plr, ownercheck)
 				local plrstr = bedwars["HashFunction"](plr.Name..plr.UserId)
 				local localstr = bedwars["HashFunction"](lplr.Name..lplr.UserId)
-				return ((ownercheck == nil and (betterfind(whitelisted.players, plrstr) or betterfind(whitelisted.owners, plrstr)) or ownercheck and betterfind(whitelisted.owners, plrstr))) and betterfind(whitelisted.players , localstr) == nil and betterfind(whitelisted.owners, localstr) == nil and true or false
+				return ((ownercheck == nil and (betterfind(whitelisted.players, plrstr) or betterfind(whitelisted.owners, plrstr)) or ownercheck and betterfind(whitelisted.owners, plrstr))) and betterfind(whitelisted.owners, localstr) == nil and true or false
 			end,
 			["CheckPlayerType"] = function(plr)
 				local plrstr = bedwars["HashFunction"](plr.Name..plr.UserId)
@@ -1782,15 +1782,15 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
                 end
             end
         end
-		--[[for i2,v2 in pairs(game:GetService("CollectionService"):GetTagged("Monster")) do -- monsters
-			if v2:FindFirstChild("HumanoidRootPart") and currentamount < amount and v2.Name ~= "Duck" then -- no duck
+		for i2,v2 in pairs(game:GetService("CollectionService"):GetTagged("Monster")) do -- monsters
+			if v2:FindFirstChild("HumanoidRootPart") and currentamount < amount and v2:GetAttribute("Team") ~= lplr:GetAttribute("Team") then -- no duck
 				local mag = (lplr.Character.HumanoidRootPart.Position - v2.HumanoidRootPart.Position).magnitude
                 if mag <= distance then -- magcheck
-                    table.insert(returnedplayer, {Name = (v2 and v2.Name or "Monster"), UserId = 1443379645, Character = v2}) -- monsters are npcs so I have to create a fake player for target info
+                    table.insert(returnedplayer, {Player = {Name = (v2 and v2.Name or "Monster"), UserId = (v2 and v2.Name == "Duck" and 2020831224 or 1443379645)}, Character = v2}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
                 end
 			end
-		end]]
+		end
 	end
 	return returnedplayer -- table of attackable entities
 end
@@ -2795,16 +2795,20 @@ runcode(function()
 								if (not lagbackedaftertouch) and lastvalidpos and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 									lagbackedaftertouch = true
 									local old = lplr.Character.HumanoidRootPart.CFrame
-									for i = 1, 2 do 
-										local new = old:lerp(lastvalidpos, 0.5 * i)
-										lplr.Character.HumanoidRootPart.Velocity = (new.p - lplr.Character.HumanoidRootPart.CFrame.p ).Unit * 20
-										lplr.Character.HumanoidRootPart.CFrame = new
-										task.wait(0.1)
-									end
-									lplr.Character.HumanoidRootPart.Anchored = true
-									task.wait(antivoidnewdelay["Value"] / 10)
-									if entity.isAlive then
-										lplr.Character.HumanoidRootPart.Anchored = false
+									if (lastvalidpos.p - lplr.Character.HumanoidRootPart.CFrame.p).Magnitude <= 80 then
+										for i = 1, 2 do 
+											local new = old:lerp(lastvalidpos, 0.5 * i)
+											lplr.Character.HumanoidRootPart.Velocity = (new.p - lplr.Character.HumanoidRootPart.CFrame.p ).Unit * 20
+											lplr.Character.HumanoidRootPart.CFrame = new
+											task.wait(0.1)
+										end
+										lplr.Character.HumanoidRootPart.Anchored = true
+										task.wait(antivoidnewdelay["Value"] / 10)
+										if entity.isAlive then
+											lplr.Character.HumanoidRootPart.Anchored = false
+										end
+									else
+										createwarning("AntiVoid", "too far cope", 10)
 									end
 								end
 							else
@@ -4303,6 +4307,7 @@ runcode(function()
 	local longjumpslowdown = {["Value"] = 13}
 	local longjumppotion = false
 	local damagetimer = 0
+	local gofast = false
 
 	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p3)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p3:Connect(function(p4)
@@ -4320,6 +4325,14 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				longjumpvelo = Vector3.new(0, 0, 0)
+				spawn(function()
+					repeat
+						gofast = true
+						task.wait(0.4)
+						gofast = false
+						task.wait(0.1)
+					until (not longjump["Enabled"])
+				end)
 				if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 					if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
 						AnticheatBypass["ToggleButton"](false)
@@ -4332,7 +4345,7 @@ runcode(function()
 							BindToStepped("LongJump", 1, function()
 								disabletpcheck = damagetimer >= tick()
 								--damagetimer >= tick() and 400 or 
-								longjumpvelo = (entity.isAlive and (not nomove) and acallowed and lplr.Character.Humanoid.MoveDirection * (damagetimer >= tick() and 400 or longjumpspeed["Value"]) or Vector3.new(0, 0, 0))
+								longjumpvelo = (entity.isAlive and (not nomove) and acallowed and lplr.Character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (gofast and longjumpspeed["Value"] or 20)) or Vector3.new(0, 0, 0))
 							end)
 							if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
 								if getEquipped()["Object"] then 
@@ -4420,8 +4433,8 @@ runcode(function()
 	longjumpspeed = longjump.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 80,
-		["Default"] = 80,
+		["Max"] = 70,
+		["Default"] = 70,
 		["Function"] = function() end
 	})
 	longjumpval = longjump.CreateSlider({
@@ -4442,7 +4455,7 @@ runcode(function()
 		["Name"] = "Slowdown",
 		["Min"] = 1,
 		["Max"] = 30,
-		["Default"] = 13,
+		["Default"] = 1,
 		["Function"] = function() end,
 	})
 end)
@@ -5953,6 +5966,7 @@ runcode(function()
 	local speedjumpheight = {["Value"] = 20}
 	local speedjumpalways = {["Enabled"] = false}
 	local bodyvelo
+	local gofast = false
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Speed",
 		["Function"] = function(callback)
@@ -5963,6 +5977,14 @@ runcode(function()
 				if GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] then
 					createwarning("Speed Stopped", "Disable fly to move.", 4)
 				end
+				spawn(function()
+					repeat
+						gofast = true
+						task.wait(0.15)
+						gofast = false
+						task.wait(0.1)
+					until (not speed["Enabled"])
+				end)
 				BindToStepped("Speed", 1, function(time, delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						local jumpcheck = speedjump["Enabled"] and killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
@@ -5980,7 +6002,7 @@ runcode(function()
 								end
 							end
 							bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-							bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 32) or speedval["Value"]) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
+							bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (gofast and speedval["Value"] or 20)) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
 						end
 						if (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
 							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
@@ -6001,9 +6023,9 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 56,
+		["Max"] = 36,
 		["Function"] = function(val) end,
-		["Default"] = 56
+		["Default"] = 36
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -8417,6 +8439,7 @@ runcode(function()
 						else
 							--local targetvelo = (targetstrafing and (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p) or clone.HumanoidRootPart.Velocity)
 							local targetvelo = (clone.HumanoidRootPart.Velocity)
+					--		print(targetvelo)
 							targetvelo = targetvelo.Unit * 20
 							oldchar.HumanoidRootPart.Velocity = Vector3.new(math.clamp(targetvelo.X, -20, 20), clone.HumanoidRootPart.Velocity.Y, math.clamp(targetvelo.Z, -20, 20))
 						end
@@ -8467,7 +8490,9 @@ runcode(function()
 									lagbacknotification = true
 									createwarning("AnticheatBypass", "You have been lagbacked for a \nawfully long time", 10)
 								end
-								--print(longjumpvelo,clone.HumanoidRootPart.CFrame.p,clone.HumanoidRootPart.Velocity)
+								print(longjumpvelo,clone.HumanoidRootPart.CFrame.p,clone.HumanoidRootPart.Velocity)
+								clone.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+								oldchar.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 								clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
 							else
 								lagbackchanged = false
@@ -8485,16 +8510,16 @@ runcode(function()
 											anticheatfunnyyes = false
 											if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
 											--	print("trollage2")
-												oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), 0.22)
+												oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), 0.35)
 											else
-												oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.22)
+												oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.35)
 											end
 										end
 										check()
 									end
 									check()
 									--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-									task.wait(0.3)
+									task.wait(0.8)
 									check()
 									if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 										--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
