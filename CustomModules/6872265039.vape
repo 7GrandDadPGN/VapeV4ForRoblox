@@ -662,9 +662,9 @@ runcode(function()
 					repeat task.wait() until ownedkitsamount > 0
 					local tab, tab2 = betterfindkit()
 					for i,v in pairs(tab) do
-						if ownedkits[v] then
+						if ownedkits[v:lower()] then
 							bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync({
-								kit = ownedkits[v]
+								kit = ownedkits[v:lower()]
 							})
 							print(tab2[i] and true or false)
 							bedwars["ClientHandler"]:Get("BedwarsSetUseKitSkin"):CallServerAsync({
