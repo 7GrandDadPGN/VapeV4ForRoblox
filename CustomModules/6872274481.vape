@@ -61,6 +61,7 @@ local anticheatfunny = false
 local anticheatfunnyyes = false
 local staffleave
 local networkownerfunc = isnetworkowner
+local vapeusers = {}
 local projtable = {
 	["arrow"] = true,
 	["crossbow_arrow"] = true,
@@ -1193,6 +1194,18 @@ runcode(function()
 											}
 										}
 									end
+									if vapeusers[tostring(players[MessageData.FromSpeaker])] then
+										MessageData.ExtraData = {
+											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
+											Tags = {
+												table.unpack(MessageData.ExtraData.Tags),
+												{
+													TagColor = Color3.new(1, 1, 0),
+													TagText = "VAPE USER"
+												}
+											}
+										}
+									end
 								end
 								return addmessage(Self2, MessageData)
 							end
@@ -1290,10 +1303,13 @@ getfunctions()
 local function getNametagString(plr)
 	local nametag = ""
 	if bedwars["CheckPlayerType"](plr) == "VAPE PRIVATE" then
-		nametag = '<font color="rgb(127, 0, 255)">[VAPE PRIVATE] '..(plr.DisplayName or plr.Name)..'</font>'
+		nametag = '<font color="rgb(127, 0, 255)">[VAPE PRIVATE] '..(plr.Name)..'</font>'
 	end
 	if bedwars["CheckPlayerType"](plr) == "VAPE OWNER" then
 		nametag = '<font color="rgb(255, 80, 80)">[VAPE OWNER] '..(plr.DisplayName or plr.Name)..'</font>'
+	end
+	if vapeusers[tostring(plr)] then
+		nametag = '<font color="rgb(255, 255, 0)">[VAPE USER] '..(plr.DisplayName or plr.Name)..'</font>'
 	end
 	if whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
 		local data = whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]
@@ -2688,7 +2704,7 @@ runcode(function()
 								if (not lagbackedaftertouch) and lastvalidpos and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 									lagbackedaftertouch = true
 									local old = lplr.Character.HumanoidRootPart.CFrame
-									if (lastvalidpos.p - lplr.Character.HumanoidRootPart.CFrame.p).Magnitude <= 80 then
+									if (lastvalidpos.p - lplr.Character.HumanoidRootPart.CFrame.p).Magnitude <= 60 then
 										for i = 1, 2 do 
 											local new = old:lerp(lastvalidpos, 0.5 * i)
 											lplr.Character.HumanoidRootPart.Velocity = (new.p - lplr.Character.HumanoidRootPart.CFrame.p ).Unit * 20
@@ -3385,13 +3401,6 @@ runcode(function()
 
 	local function buyitem(itemtab, sucfunc, amount)
 		if getItem(itemtab.itemType) == nil or amount then
-			if itemtab.itemType == "emerald_sword" or itemtab.itemType == "ice_sword" then
-				local sword, swordnum = getSword()
-				if sword.itemType ~= "emerald_sword" or sword.itemType ~= "ice_sword" then
-					local swordSlot = swordnum
-					sword["tool"]:Remove()
-				end
-			end
 			bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
 				shopItem = itemtab
 			}):andThen(function(p11)
@@ -4128,7 +4137,7 @@ runcode(function()
 				spawn(function()
 					repeat
 						gofast = true
-						task.wait(0.4)
+						task.wait(0.5)
 						gofast = false
 						task.wait(0.1)
 					until (not longjump["Enabled"])
@@ -5253,6 +5262,7 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 			end)
 		end)
 		createwarning("Vape", plr.Name.." is using vape!", 60)
+		vapeusers[plr.Name] = true
 	end
 	local args = tab.Message:split(" ")
 	--priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)]
@@ -5802,7 +5812,7 @@ runcode(function()
 								end
 							end
 							bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-							bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (gofast and speedval["Value"] or 20)) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
+							bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or speedval["Value"]) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
 						end
 						if (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
 							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
@@ -7474,7 +7484,7 @@ runcode(function()
 									end
 									local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
 									local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-									if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
+									if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] or vapeusers[plr.Name] then
 										displaynamestr2 = getNametagString(plr)
 										displaynamestr = removeTags(displaynamestr2)
 									end
@@ -8936,7 +8946,10 @@ runcode(function()
 						local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), raycastparameters)
 						local ray2 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -lplr.Character.Humanoid.HipHeight * 2, 0), raycastparameters)
 						if ray == nil and ray2 then
-							vec = Vector3.new(0, 0, 0)
+							local ray3 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position + (vec * 1.8), Vector3.new(0, -1000, 0), raycastparameters)
+							if ray3 == nil then 
+								vec = Vector3.new(0, 0, 0)
+							end
 						end
 					end
 					return oldmove(Self, vec, facecam)
@@ -8979,7 +8992,7 @@ runcode(function()
 								local trailfound = false
 								for i,v in pairs(lplr.Character:GetChildren()) do
 									if v:IsA("Trail") then
-										if trailfound then
+										if trailfound then	
 											v:Remove()
 										else
 											trailfound = true
