@@ -9064,6 +9064,9 @@ runcode(function()
 	})
 end)
 
+pcall(function()
+	GuiLibrary["RemoveObject"]("BreadcrumbsOptionsButton")
+end)
 runcode(function()
 	local Breadcrumbs = {["Enabled"] = false}
 	local BreadcrumbsLifetime = {["Value"] = 20}
