@@ -295,6 +295,66 @@ GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
 	["Priority"] = 1
 })
 
+
+local function Cape(char, texture)
+	for i,v in pairs(char:GetDescendants()) do
+		if v.Name == "Cape" then
+			v:Remove()
+		end
+	end
+			local hum = char:WaitForChild("Humanoid")
+			local torso = nil
+			if hum.RigType == Enum.HumanoidRigType.R15 then
+			torso = char:WaitForChild("UpperTorso")
+			else
+			torso = char:WaitForChild("Torso")
+			end
+			local p = Instance.new("Part", torso.Parent)
+			p.Name = "Cape"
+			p.Anchored = false
+			p.CanCollide = false
+			p.TopSurface = 0
+			p.BottomSurface = 0
+			p.FormFactor = "Custom"
+			p.Size = Vector3.new(0.2,0.2,0.2)
+			p.Transparency = 1
+			local decal = Instance.new("Decal", p)
+			decal.Texture = texture
+			decal.Face = "Back"
+			local msh = Instance.new("BlockMesh", p)
+			msh.Scale = Vector3.new(9,17.5,0.5)
+			local motor = Instance.new("Motor", p)
+			motor.Part0 = p
+			motor.Part1 = torso
+			motor.MaxVelocity = 0.01
+			motor.C0 = CFrame.new(0,2,0) * CFrame.Angles(0,math.rad(90),0)
+			motor.C1 = CFrame.new(0,1,0.45) * CFrame.Angles(0,math.rad(90),0)
+			local wave = false
+			repeat wait(1/44)
+				decal.Transparency = torso.Transparency
+				local ang = 0.1
+				local oldmag = torso.Velocity.magnitude
+				local mv = 0.002
+				if wave then
+					ang = ang + ((torso.Velocity.magnitude/10) * 0.05) + 0.05
+					wave = false
+				else
+					wave = true
+				end
+				ang = ang + math.min(torso.Velocity.magnitude/11, 0.5)
+				motor.MaxVelocity = math.min((torso.Velocity.magnitude/111), 0.04) --+ mv
+				motor.DesiredAngle = -ang
+				if motor.CurrentAngle < -0.2 and motor.DesiredAngle > -0.2 then
+					motor.MaxVelocity = 0.04
+				end
+				repeat wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) >= (torso.Velocity.magnitude/10) + 1
+				if torso.Velocity.magnitude < 0.1 then
+					wait(0.1)
+				end
+			until not p or p.Parent ~= torso.Parent
+end
+
+
 local aimfov = {["Value"] = 1}
 local aimvischeck = {["Enabled"] = false}
 local aimheadshotchance = {["Value"] = 1}
@@ -310,7 +370,7 @@ local old2 = meta.__index
 local hook
 
 local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "AimAssist", 
+	["Name"] = "SilentAim", 
 	["Function"] = function(callback) 
 		if callback then
 			kek() 
@@ -528,115 +588,110 @@ ClickTP = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpti
 	["HoverText"] = "Teleports to where your mouse is."
 })
 
-local flyspeed = {["Value"] = 1}
-local flyverticalspeed = {["Value"] = 1}
-local flyupanddown = {["Enabled"] = false}
-local flymethod = {["Value"] = "Normal"}
-local flykeys = {["Value"] = "Space/LeftControl"}
-local flyposy = 0
-local flyup = false
-local flydown = false
-local flypress
-local flyendpress
-local bodyvelofly
-local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "Fly", 
-	["Function"] = function(callback)
-		if callback then
+runcode(function()
+	local flyspeed = {["Value"] = 1}
+	local flyverticalspeed = {["Value"] = 1}
+	local flyupanddown = {["Enabled"] = false}
+	local flymethod = {["Value"] = "Normal"}
+	local flykeys = {["Value"] = "Space/LeftControl"}
+	local flyposy = 0
+	local flyup = false
+	local flydown = false
+	local flypress
+	local flyendpress
+	local bodyvelofly
+	local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Fly", 
+		["Function"] = function(callback)
+			if callback then
+				if isAlive() then
+					flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+				end
+				flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
+					if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+						local divided = flykeys["Value"]:split("/")
+						if input1.KeyCode == Enum.KeyCode[divided[1]] then
+							flyup = true
+						end
+						if input1.KeyCode == Enum.KeyCode[divided[2]] then
+							flydown = true
+						end
+					end
+				end)
+				flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
+					local divided = flykeys["Value"]:split("/")
+					if input1.KeyCode == Enum.KeyCode[divided[1]] then
+						flyup = false
+					end
+					if input1.KeyCode == Enum.KeyCode[divided[2]] then
+						flydown = false
+					end
+				end)
+				BindToStepped("Fly", 1, function(time, delta) 
+					if isAlive() then
+						if flymethod["Value"] == "Normal" then
+							lplr.Character.HumanoidRootPart.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, 0.85 + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+						elseif flymethod["Value"] == "AntiCheat A" then
+							if (bodyvelofly ~= nil) then
+								bodyvelofly:Remove()
+							end
+							if flyup then
+								flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+							end
+							if flydown then
+								flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+							end
+							local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
+							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+						elseif flymethod["Value"] == "Jump" then
+							if lplr.Character.HumanoidRootPart.Velocity.Y < -(lplr.Character.Humanoid.JumpPower - ((flyup and flyverticalspeed["Value"] or 0) - (flydown and flyverticalspeed["Value"] or 0))) then
+								lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+							end
+						end
+					end
+				end)
+			else
+				flyup = false
+				flydown = false
+				flypress:Disconnect()
+				flyendpress:Disconnect()
+				UnbindFromStepped("Fly")
+			end
+		end,
+		["ExtraText"] = function() return flymethod["Value"] end
+	})
+	flymethod = fly.CreateDropdown({
+		["Name"] = "Mode", 
+		["List"] = {"Normal", "AntiCheat A", "Jump"},
+		["Function"] = function(val)
 			if isAlive() then
 				flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
 			end
-			flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
-				if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
-					local divided = flykeys["Value"]:split("/")
-					if input1.KeyCode == Enum.KeyCode[divided[1]] then
-						flyup = true
-					end
-					if input1.KeyCode == Enum.KeyCode[divided[2]] then
-						flydown = true
-					end
-				end
-			end)
-			flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
-				local divided = flykeys["Value"]:split("/")
-				if input1.KeyCode == Enum.KeyCode[divided[1]] then
-					flyup = false
-				end
-				if input1.KeyCode == Enum.KeyCode[divided[2]] then
-					flydown = false
-				end
-			end)
-			BindToStepped("Fly", 1, function(time, delta) 
-				if isAlive() then
-					if flymethod["Value"] == "Normal" then
-						if (bodyvelofly == nil or bodyvelofly ~= nil and bodyvelofly.Parent ~= lplr.Character.HumanoidRootPart) then
-							bodyvelofly = Instance.new("BodyVelocity")
-							bodyvelofly.Parent = lplr.Character.HumanoidRootPart
-							bodyvelofly.MaxForce = Vector3.new(100000, 100000, 100000)
-						else
-							bodyvelofly.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
-						end
-					elseif flymethod["Value"] == "AntiCheat B" then
-						lplr.Character.HumanoidRootPart.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, 0.85 + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
-					elseif flymethod["Value"] == "AntiCheat A" then
-						if (bodyvelofly ~= nil) then
-							bodyvelofly:Remove()
-						end
-						if flyup then
-							flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
-						end
-						if flydown then
-							flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
-						end
-						local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
-						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-					end
-				end
-			end)
-		else
-			if bodyvelofly then
-				bodyvelofly:Remove()
-			end
-			flyup = false
-			flydown = false
-			flypress:Disconnect()
-			flyendpress:Disconnect()
-			UnbindFromStepped("Fly")
 		end
-	end,
-	["ExtraText"] = function() return flymethod["Value"] end
-})
-flymethod = fly.CreateDropdown({
-	["Name"] = "Mode", 
-	["List"] = {"Normal", "AntiCheat A", "AntiCheat B"},
-	["Function"] = function(val)
-		if isAlive() then
-			flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
-		end
-	end
-})
-flykeys = fly.CreateDropdown({
-	["Name"] = "Keys", 
-	["List"] = {"Space/LeftControl", "Space/LeftShift", "E/Q", "Space/Q"},
-	["Function"] = function(val) end
-})
-flyspeed = fly.CreateSlider({
-	["Name"] = "Speed",
-	["Min"] = 1,
-	["Max"] = 150, 
-	["Function"] = function(val) end
-})
-flyverticalspeed = fly.CreateSlider({
-	["Name"] = "Vertical Speed",
-	["Min"] = 1,
-	["Max"] = 150, 
-	["Function"] = function(val) end
-})
-flyupanddown = fly.CreateToggle({
-	["Name"] = "Y Level", 
-	["Function"] = function() end
-})
+	})
+	flykeys = fly.CreateDropdown({
+		["Name"] = "Keys", 
+		["List"] = {"Space/LeftControl", "Space/LeftShift", "E/Q", "Space/Q"},
+		["Function"] = function(val) end
+	})
+	flyspeed = fly.CreateSlider({
+		["Name"] = "Speed",
+		["Min"] = 1,
+		["Max"] = 150, 
+		["Function"] = function(val) end
+	})
+	flyverticalspeed = fly.CreateSlider({
+		["Name"] = "Vertical Speed",
+		["Min"] = 1,
+		["Max"] = 150, 
+		["Function"] = function(val) end
+	})
+	flyupanddown = fly.CreateToggle({
+		["Name"] = "Y Level", 
+		["Function"] = function() end
+	})
+end)
 
 local hitboxexpand = {["Value"] = 1}
 local hitboxoption = {["Value"] = "HumanoidRootPart"}
@@ -998,34 +1053,48 @@ end)
 
 local speedval = {["Value"] = 1}
 local speedmethod = {["Value"] = "AntiCheat A"}
+local speeddelay = {["Value"] = 0.7}
+local speedwallcheck = {["Enabled"] = true}
 local speedjump = {["Enabled"] = false}
 local bodyvelo
+local speeddelayval = tick()
 
 local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Speed", 
 	["Function"] = function(callback)
 		if callback then
-			BindToRenderStep("Speed", 1, function(delta)
+			BindToStepped("Speed", 1, function(time, delta)
 				if isAlive() then
-					if speedmethod["Value"] == "AntiCheat A" then
-						if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
-							bodyvelo = Instance.new("BodyVelocity")
-							bodyvelo.Parent = lplr.Character.HumanoidRootPart
-							bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
-						else
-							bodyvelo.Velocity = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
-						end
-					elseif speedmethod["Value"] == "AntiCheat B" then
-						if (bodyvelo ~= nil) then
-							bodyvelo:Remove()
-						end
-						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
-					elseif speedmethod["Value"] == "AntiCheat C" then
+					if speedmethod["Value"] == "Velocity" then
 						if (bodyvelo ~= nil) then
 							bodyvelo:Remove()
 						end
 						local newvelo = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
 						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
+					elseif speedmethod["Value"] == "CFrame" then
+						if (bodyvelo ~= nil) then
+							bodyvelo:Remove()
+						end
+						local newpos = (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
+						if speedwallcheck["Enabled"] then
+							local raycastparameters = RaycastParams.new()
+							raycastparameters.FilterDescendantsInstances = {lplr.Character}
+							local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
+							if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
+						end
+						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+					elseif speedmethod["Value"] == "TP" then
+						if speeddelayval <= tick() then
+							speeddelayval = tick() + (speeddelay["Value"] / 10)
+							local newpos = (lplr.Character.Humanoid.MoveDirection * speedval["Value"])
+							if speedwallcheck["Enabled"] then
+								local raycastparameters = RaycastParams.new()
+								raycastparameters.FilterDescendantsInstances = {lplr.Character}
+								local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
+								if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
+							end
+							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+						end
 					end
 					if speedjump["Enabled"] then
 						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
@@ -1039,24 +1108,41 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 				end
 			end)
 		else
+			speeddelayval = 0
 			if bodyvelo then
 				bodyvelo:Remove()
 			end
-			UnbindFromRenderStep("Speed")
+			UnbindFromStepped("Speed")
 		end
 	end,
 	["ExtraText"] = function() return " "..speedmethod["Value"] end
 })
 speedmethod = speed.CreateDropdown({
 	["Name"] = "Mode", 
-	["List"] = {"AntiCheat A", "AntiCheat B", "AntiCheat C"},
-	["Function"] = function(val) end
+	["List"] = {"Velocity", "CFrame", "TP"},
+	["Function"] = function(val)
+		speeddelay["Object"].Visible = val == "TP"
+	end
 })
 speedval = speed.CreateSlider({
 	["Name"] = "Speed", 
 	["Min"] = 1,
 	["Max"] = 150, 
 	["Function"] = function(val) end
+})
+speeddelay = speed.CreateSlider({
+	["Name"] = "Delay", 
+	["Min"] = 1,
+	["Max"] = 50, 
+	["Function"] = function(val)
+		speeddelayval = tick() + (val / 10)
+	end,
+	["Default"] = 7
+})
+speedwallcheck = speed.CreateToggle({
+	["Name"] = "Wall Check",
+	["Function"] = function() end,
+	["Default"] = true
 })
 speedjump = speed.CreateToggle({
 	["Name"] = "AutoJump", 
@@ -1847,6 +1933,7 @@ NameTagsDistance = NameTags.CreateToggle({
 local SearchTextList = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local searchColor = {["Value"] = 0.44}
 local searchModule = {["Enabled"] = false}
+local searchNewHighlight = {["Enabled"] = false}
 local searchFolder = Instance.new("Folder")
 searchFolder.Name = "SearchFolder"
 searchFolder.Parent = GuiLibrary["MainGui"]
@@ -1865,36 +1952,14 @@ local searchRefresh = function()
 	if searchModule["Enabled"] then
 		for i,v in pairs(workspace:GetDescendants()) do
 			if (v:IsA("BasePart") or v:IsA("Model")) and table.find(SearchTextList["ObjectList"], v.Name) and searchFindBoxHandle(v) == nil then
-				local oldparent = v.Parent
-				local boxhandle = Instance.new("BoxHandleAdornment")
-				boxhandle.Name = v.Name
-				boxhandle.AlwaysOnTop = true
-				boxhandle.Color3 = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
-				boxhandle.Adornee = v
-				boxhandle.ZIndex = 10
-				local modelpos, modelsize
-				spawn(function()
-					repeat
-						wait(0.2)
-						if v.ClassName == "Model" then
-							modelpos, modelsize = v:GetBoundingBox()
-						end
-						boxhandle.Size = (v.ClassName == "Model" and modelsize or v.Size)
-					until boxhandle == nil or v.Parent ~= oldparent
-				end)
-				boxhandle.Transparency = 0.5
-				boxhandle.Parent = searchFolder
-			end
-		end
-	end
-end
-searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "Search", 
-	["Function"] = function(callback) 
-		if callback then
-			searchRefresh()
-			searchAdd = workspace.DescendantAdded:connect(function(v)
-				if (v:IsA("BasePart") or v:IsA("Model")) and table.find(SearchTextList["ObjectList"], v.Name) and searchFindBoxHandle(v) == nil then
+				if searchNewHighlight["Enabled"] then
+					local highlight = Instance.new("Highlight")
+					highlight.Name = v.Name
+					highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+					highlight.FillColor = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
+					highlight.Adornee = v
+					highlight.Parent = searchFolder
+				else
 					local oldparent = v.Parent
 					local boxhandle = Instance.new("BoxHandleAdornment")
 					boxhandle.Name = v.Name
@@ -1914,6 +1979,46 @@ searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 					end)
 					boxhandle.Transparency = 0.5
 					boxhandle.Parent = searchFolder
+				end
+			end
+		end
+	end
+end
+searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	["Name"] = "Search", 
+	["Function"] = function(callback) 
+		if callback then
+			searchRefresh()
+			searchAdd = workspace.DescendantAdded:connect(function(v)
+				if (v:IsA("BasePart") or v:IsA("Model")) and table.find(SearchTextList["ObjectList"], v.Name) and searchFindBoxHandle(v) == nil then
+					if searchNewHighlight["Enabled"] then
+						local highlight = Instance.new("Highlight")
+						highlight.Name = v.Name
+						highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+						highlight.FillColor = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
+						highlight.Adornee = v
+						highlight.Parent = searchFolder
+					else
+						local oldparent = v.Parent
+						local boxhandle = Instance.new("BoxHandleAdornment")
+						boxhandle.Name = v.Name
+						boxhandle.AlwaysOnTop = true
+						boxhandle.Color3 = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
+						boxhandle.Adornee = v
+						boxhandle.ZIndex = 10
+						local modelpos, modelsize
+						spawn(function()
+							repeat
+								wait(0.2)
+								if v.ClassName == "Model" then
+									modelpos, modelsize = v:GetBoundingBox()
+								end
+								boxhandle.Size = (v.ClassName == "Model" and modelsize or v.Size)
+							until boxhandle == nil or v.Parent ~= oldparent
+						end)
+						boxhandle.Transparency = 0.5
+						boxhandle.Parent = searchFolder
+					end
 				end
 			end)
 			searchRemove = workspace.DescendantRemoving:connect(function(v)
@@ -1938,8 +2043,121 @@ searchColor = searchModule.CreateColorSlider({
 	["Name"] = "new part color", 
 	["Function"] = function(hue, sat, val)
 		for i,v in pairs(searchFolder:GetChildren()) do
-			v.Color3 = Color3.fromHSV(hue, sat, val)
+			v[v:IsA("Highlight") and "FillColor" or "Color3"] = Color3.fromHSV(hue, sat, val)
 		end
+	end
+})
+searchNewHighlight = searchModule.CreateToggle({
+	["Name"] = "New Highlight Chams",
+	["Function"] = function(callback)
+		if callback then
+			local suc = pcall(function() return readfile("vape/Profiles/HighlightCheck.vapesetting.txt") end)
+			if not suc then
+				if searchNewHighlight["Enabled"] then
+					searchNewHighlight["ToggleButton"](false)
+				end
+				local frame = Instance.new("Frame")
+				frame.Size = UDim2.new(0, 660, 0, 445)
+				frame.Position = UDim2.new(0.5, -330, 0.5, -223)
+				frame.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+				frame.Parent = GuiLibrary["MainGui"].ScaledGui
+				local frameIcon = Instance.new("ImageLabel")
+				frameIcon.Size = UDim2.new(0, 19, 0, 16)
+				frameIcon.Image = getcustomassetfunc("vape/assets/ProfilesIcon.png")
+				frameIcon.Name = "WindowIcon"
+				frameIcon.BackgroundTransparency = 1
+				frameIcon.Position = UDim2.new(0, 10, 0, 13)
+				frameIcon.ImageColor3 = Color3.fromRGB(200, 200, 200)
+				frameIcon.Parent = frame
+				local frameText = Instance.new("TextLabel")
+				frameText.Size = UDim2.new(0, 155, 0, 41)
+				frameText.BackgroundTransparency = 1
+				frameText.Name = "WindowTitle"
+				frameText.Position = UDim2.new(0, 36, 0, 0)
+				frameText.TextXAlignment = Enum.TextXAlignment.Left
+				frameText.Font = Enum.Font.SourceSans
+				frameText.TextSize = 17
+				frameText.Text = "Highlight"
+				frameText.TextColor3 = Color3.fromRGB(201, 201, 201)
+				frameText.Parent = frame
+				local frameCorner = Instance.new("UICorner")
+				frameCorner.CornerRadius = UDim.new(0, 4)
+				frameCorner.Parent = frame
+				local frameShadow = Instance.new("ImageLabel")
+				frameShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+				frameShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+				frameShadow.Image = getcustomassetfunc("vape/assets/WindowBlur.png")
+				frameShadow.BackgroundTransparency = 1
+				frameShadow.ZIndex = -1
+				frameShadow.Size = UDim2.new(1, 6, 1, 6)
+				frameShadow.ImageColor3 = Color3.new(0, 0, 0)
+				frameShadow.ScaleType = Enum.ScaleType.Slice
+				frameShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+				frameShadow.Parent = frame
+				local frameExitButton = Instance.new("ImageButton")
+				frameExitButton.Name = "frameExitButton"
+				frameExitButton.ImageColor3 = Color3.fromRGB(121, 121, 121)
+				frameExitButton.Size = UDim2.new(0, 24, 0, 24)
+				frameExitButton.AutoButtonColor = false
+				frameExitButton.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
+				frameExitButton.Visible = true
+				frameExitButton.Position = UDim2.new(1, -31, 0, 8)
+				frameExitButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+				frameExitButton.Parent = frame
+				frameExitButton.MouseButton1Click:connect(function()
+					frame:Remove()
+				end)
+				local frametextlab = Instance.new("TextLabel")
+				frametextlab.TextSize = 18
+				frametextlab.BackgroundTransparency = 1
+				frametextlab.Position = UDim2.new(0, 0, 0, 41)
+				frametextlab.TextYAlignment = Enum.TextYAlignment.Top
+				frametextlab.Size = UDim2.new(1, 0, 1, -41)
+				frametextlab.TextColor3 = Color3.new(1, 1, 1)
+				frametextlab.Font = Enum.Font.SourceSans
+				frametextlab.Text = "\nSteps to enable Highlights\nClick the button below to get the link for the steps, click the done button when you have done the steps."
+				frametextlab.Parent = frame
+				local framebutton1 = Instance.new("TextButton")
+				framebutton1.Text = "Copy Steps to Clipboard"
+				framebutton1.AutoButtonColor = false
+				framebutton1.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+				framebutton1.BorderSizePixel = 0
+				framebutton1.TextColor3 = Color3.new(1, 1, 1)
+				framebutton1.Size = UDim2.new(0, 200, 0, 50)
+				framebutton1.Position = UDim2.new(0.5, -100, 0, 150)
+				framebutton1.Parent = frame
+				framebutton1.MouseButton1Click:connect(function()
+					spawn(function()
+						setclipboard("https://github.com/7GrandDadPGN/VapeV4ForRoblox/wiki/Turning-on-Highlights")
+						framebutton1.Text = "Copied to clipboard!"
+						task.wait(3)
+						framebutton1.Text = "Copy Steps to Clipboard"
+					end)
+				end)
+				local framebutton2 = framebutton1:Clone()
+				framebutton2.Text = "Done"
+				framebutton2.Position = UDim2.new(0.5, -100, 0, 210)
+				framebutton2.Parent = frame
+				framebutton2.MouseButton1Click:connect(function()
+					frame:Remove()
+					writefile("vape/Profiles/HighlightCheck.vapesetting.txt", "")
+					if searchNewHighlight["Enabled"] == false then
+						searchNewHighlight["ToggleButton"](false)
+					end
+				end)
+				local frameExitButtonround = Instance.new("UICorner")
+				frameExitButtonround.CornerRadius = UDim.new(0, 16)
+				frameExitButtonround.Parent = frameExitButton
+				frameExitButton.MouseEnter:connect(function()
+					game:GetService("TweenService"):Create(frameExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+				end)
+				frameExitButton.MouseLeave:connect(function()
+					game:GetService("TweenService"):Create(frameExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+				end)
+			end
+		end
+		searchFolder:ClearAllChildren()
+		searchRefresh()
 	end
 })
 SearchTextList = searchModule.CreateTextList({
@@ -1952,6 +2170,7 @@ SearchTextList = searchModule.CreateTextList({
 		searchRefresh()
 	end
 })
+
 
 local XrayAdd
 local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
@@ -2427,5 +2646,112 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "lets you not walk off because you are bad"
+	})
+end)
+
+runcode(function()
+	local vapecapeconnection
+	GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Cape",
+		["Function"] = function(callback)
+			if callback then
+				vapecapeconnection = lplr.CharacterAdded:connect(function(char)
+					spawn(function()
+						pcall(function() 
+							Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
+						end)
+					end)
+				end)
+				if lplr.Character then
+					spawn(function()
+						pcall(function() 
+							Cape(lplr.Character, getcustomassetfunc("vape/assets/VapeCape.png"))
+						end)
+					end)
+				end
+			else
+				if vapecapeconnection then
+					vapecapeconnection:Disconnect()
+				end
+				if lplr.Character then
+					for i,v in pairs(lplr.Character:GetDescendants()) do
+						if v.Name == "Cape" then
+							v:Remove()
+						end
+					end
+				end
+			end
+		end
+	})
+end)
+
+
+runcode(function()
+	local Breadcrumbs = {["Enabled"] = false}
+	local BreadcrumbsLifetime = {["Value"] = 20}
+	local breadcrumbtrail
+	local breadcrumbattachment
+	local breadcrumbattachment2
+	Breadcrumbs = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Breadcrumbs",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait(0.3)
+						if (not Breadcrumbs["Enabled"]) then return end
+						if isAlive() then
+							if breadcrumbtrail == nil then
+								breadcrumbattachment = Instance.new("Attachment")
+								breadcrumbattachment.Position = Vector3.new(0, 0.07 - 2.9, 0.5)
+								breadcrumbattachment2 = Instance.new("Attachment")
+								breadcrumbattachment2.Position = Vector3.new(0, -0.07 - 2.9, 0.5)
+								breadcrumbtrail = Instance.new("Trail")
+								breadcrumbtrail.Attachment0 = breadcrumbattachment 
+								breadcrumbtrail.Attachment1 = breadcrumbattachment2
+								breadcrumbtrail.Color = ColorSequence.new(Color3.new(1, 0, 0), Color3.new(0, 0, 1))
+								breadcrumbtrail.FaceCamera = true
+								breadcrumbtrail.Lifetime = BreadcrumbsLifetime["Value"] / 10
+								breadcrumbtrail.Enabled = true
+							else
+								local trailfound = false
+								for i,v in pairs(lplr.Character:GetChildren()) do
+									if v:IsA("Trail") then
+										if trailfound then	
+											v:Remove()
+										else
+											trailfound = true
+										end
+									end
+								end
+								breadcrumbattachment.Parent = lplr.Character.HumanoidRootPart
+								breadcrumbattachment2.Parent = lplr.Character.HumanoidRootPart
+								breadcrumbtrail.Parent = lplr.Character
+							end
+						end
+					until (not Breadcrumbs["Enabled"])
+				end)
+			else
+				if breadcrumbtrail then
+					breadcrumbtrail:Remove()
+					if isAlive() then 
+						for i,v in pairs(lplr.Character:GetChildren()) do
+							if v:IsA("Trail") then
+								v:Remove()
+							end
+						end
+					end
+					breadcrumbtrail = nil
+				end
+			end
+		end,
+		["HoverText"] = "Shows a trail behind your character"
+	})
+	BreadcrumbsLifetime = Breadcrumbs.CreateSlider({
+		["Name"] = "Lifetime",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Function"] = function(val) end,
+		["Default"] = 20
 	})
 end)

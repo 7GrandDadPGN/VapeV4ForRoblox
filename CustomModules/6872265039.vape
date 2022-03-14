@@ -13,7 +13,25 @@ local robloxfriends = {}
 local bedwars = {}
 local getfunctions
 local origC0 = nil
-local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
+local betterisfile = function(file)
+	local suc, res = pcall(function() return readfile(file) end)
+	return suc and res ~= nil
+end
+local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function(tab)
+	if tab.Method == "GET" then
+		return {
+			Body = game:HttpGet(tab.Url, true),
+			Headers = {},
+			StatusCode = 200
+		}
+	else
+		return {
+			Body = "bad exploit",
+			Headers = {},
+			StatusCode = 404
+		}
+	end
+end 
 local getasset = getsynasset or getcustomasset
 local storedshahashes = {}
 local oldchanneltab
@@ -101,7 +119,7 @@ local function getremote(tab)
 end
 
 local function getcustomassetfunc(path)
-	if not isfile(path) then
+	if not betterisfile(path) then
 		spawn(function()
 			local textlabel = Instance.new("TextLabel")
 			textlabel.Size = UDim2.new(1, 0, 0, 36)
@@ -113,7 +131,7 @@ local function getcustomassetfunc(path)
 			textlabel.TextColor3 = Color3.new(1, 1, 1)
 			textlabel.Position = UDim2.new(0, 0, 0, -36)
 			textlabel.Parent = GuiLibrary["MainGui"]
-			repeat task.wait() until isfile(path)
+			repeat task.wait() until betterisfile(path)
 			textlabel:Remove()
 		end)
 		local req = requestfunc({
@@ -210,23 +228,31 @@ runcode(function()
 			end)
 			shared.vapebypassed = true
 		end
-		local chatsuc, chatres = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/bedwarssettings.json")) end)
-		if chatsuc then
-			if chatres.crashed and (not chatres.said) then
-				pcall(function()
-					local notification1 = createwarning("Vape", "either ur poor or its a exploit moment", 10)
-					notification1:GetChildren()[5].TextSize = 15
-					local notification2 = createwarning("Vape", "getconnections crashed, chat hook not loaded.", 10)
-					notification2:GetChildren()[5].TextSize = 13
-				end)
-				local jsondata = game:GetService("HttpService"):JSONEncode({
-					crashed = true,
-					said = true,
-				})
-				writefile("vape/Profiles/bedwarssettings.json", jsondata)
-			end
-			if chatres.crashed then
-				return nil
+		spawn(function()
+			local chatsuc, chatres = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/bedwarssettings.json")) end)
+			if chatsuc then
+				if chatres.crashed and (not chatres.said) then
+					pcall(function()
+						local notification1 = createwarning("Vape", "either ur poor or its a exploit moment", 10)
+						notification1:GetChildren()[5].TextSize = 15
+						local notification2 = createwarning("Vape", "getconnections crashed, chat hook not loaded.", 10)
+						notification2:GetChildren()[5].TextSize = 13
+					end)
+					local jsondata = game:GetService("HttpService"):JSONEncode({
+						crashed = true,
+						said = true,
+					})
+					writefile("vape/Profiles/bedwarssettings.json", jsondata)
+				end
+				if chatres.crashed then
+					return nil
+				else
+					local jsondata = game:GetService("HttpService"):JSONEncode({
+						crashed = true,
+						said = false,
+					})
+					writefile("vape/Profiles/bedwarssettings.json", jsondata)
+				end
 			else
 				local jsondata = game:GetService("HttpService"):JSONEncode({
 					crashed = true,
@@ -234,81 +260,75 @@ runcode(function()
 				})
 				writefile("vape/Profiles/bedwarssettings.json", jsondata)
 			end
-		else
+			for i3,v3 in pairs(whitelisted.chattags) do
+				if v3.NameColor then
+					v3.NameColor = Color3.fromRGB(v3.NameColor.r, v3.NameColor.g, v3.NameColor.b)
+				end
+				if v3.ChatColor then
+					v3.ChatColor = Color3.fromRGB(v3.ChatColor.r, v3.ChatColor.g, v3.ChatColor.b)
+				end
+				if v3.Tags then
+					for i4,v4 in pairs(v3.Tags) do
+						if v4.TagColor then
+							v4.TagColor = Color3.fromRGB(v4.TagColor.r, v4.TagColor.g, v4.TagColor.b)
+						end
+					end
+				end
+			end
+			for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+				if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+					oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
+					oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
+					getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
+						local tab = oldchannelfunc(Self, Name)
+						if tab and tab.AddMessageToChannel then
+							local addmessage = tab.AddMessageToChannel
+							if oldchanneltabs[tab] == nil then
+								oldchanneltabs[tab] = tab.AddMessageToChannel
+							end
+							tab.AddMessageToChannel = function(Self2, MessageData)
+								if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
+									if bedwars["CheckPlayerType"](players[MessageData.FromSpeaker]) == "VAPE PRIVATE" then
+										MessageData.ExtraData = {
+											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
+											Tags = {
+												table.unpack(MessageData.ExtraData.Tags),
+												{
+													TagColor = Color3.new(0.7, 0, 1),
+													TagText = "VAPE PRIVATE"
+												}
+											}
+										}
+									end
+									if bedwars["CheckPlayerType"](players[MessageData.FromSpeaker]) == "VAPE OWNER" then
+										MessageData.ExtraData = {
+											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
+											Tags = {
+												table.unpack(MessageData.ExtraData.Tags),
+												{
+													TagColor = Color3.new(1, 0.3, 0.3),
+													TagText = "VAPE OWNER"
+												}
+											}
+										}
+									end
+									if whitelisted.chattags[bedwars["HashFunction"](players[MessageData.FromSpeaker].Name..players[MessageData.FromSpeaker].UserId)] then
+										MessageData.ExtraData = whitelisted.chattags[bedwars["HashFunction"](players[MessageData.FromSpeaker].Name..players[MessageData.FromSpeaker].UserId)]
+									end
+								end
+								return addmessage(Self2, MessageData)
+							end
+						end
+						return tab
+					end
+				end
+			end
 			local jsondata = game:GetService("HttpService"):JSONEncode({
-				crashed = true,
+				crashed = false,
 				said = false,
 			})
 			writefile("vape/Profiles/bedwarssettings.json", jsondata)
-		end
-		for i3,v3 in pairs(whitelisted.chattags) do
-			if v3.NameColor then
-				v3.NameColor = Color3.fromRGB(v3.NameColor.r, v3.NameColor.g, v3.NameColor.b)
-			end
-			if v3.ChatColor then
-				v3.ChatColor = Color3.fromRGB(v3.ChatColor.r, v3.ChatColor.g, v3.ChatColor.b)
-			end
-			if v3.Tags then
-				for i4,v4 in pairs(v3.Tags) do
-					if v4.TagColor then
-						v4.TagColor = Color3.fromRGB(v4.TagColor.r, v4.TagColor.g, v4.TagColor.b)
-					end
-				end
-			end
-		end
-		for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-			if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-				oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
-				oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
-				getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
-					local tab = oldchannelfunc(Self, Name)
-					if tab and tab.AddMessageToChannel then
-						local addmessage = tab.AddMessageToChannel
-						if oldchanneltabs[tab] == nil then
-							oldchanneltabs[tab] = tab.AddMessageToChannel
-						end
-						tab.AddMessageToChannel = function(Self2, MessageData)
-							if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
-								if bedwars["CheckPlayerType"](players[MessageData.FromSpeaker]) == "VAPE PRIVATE" then
-									MessageData.ExtraData = {
-										NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
-										Tags = {
-											table.unpack(MessageData.ExtraData.Tags),
-											{
-												TagColor = Color3.new(0.7, 0, 1),
-												TagText = "VAPE PRIVATE"
-											}
-										}
-									}
-								end
-								if bedwars["CheckPlayerType"](players[MessageData.FromSpeaker]) == "VAPE OWNER" then
-									MessageData.ExtraData = {
-										NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
-										Tags = {
-											table.unpack(MessageData.ExtraData.Tags),
-											{
-												TagColor = Color3.new(1, 0.3, 0.3),
-												TagText = "VAPE OWNER"
-											}
-										}
-									}
-								end
-								if whitelisted.chattags[bedwars["HashFunction"](players[MessageData.FromSpeaker].Name..players[MessageData.FromSpeaker].UserId)] then
-									MessageData.ExtraData = whitelisted.chattags[bedwars["HashFunction"](players[MessageData.FromSpeaker].Name..players[MessageData.FromSpeaker].UserId)]
-								end
-							end
-							return addmessage(Self2, MessageData)
-						end
-					end
-					return tab
-				end
-			end
-		end
-		local jsondata = game:GetService("HttpService"):JSONEncode({
-			crashed = false,
-			said = false,
-		})
-		writefile("vape/Profiles/bedwarssettings.json", jsondata)
+		end)
 	end
 end)
 getfunctions()
@@ -666,7 +686,6 @@ runcode(function()
 							bedwars["ClientHandler"]:Get("BedwarsActivateKit"):CallServerAsync({
 								kit = ownedkits[v:lower()]
 							})
-							print(tab2[i] and true or false)
 							bedwars["ClientHandler"]:Get("BedwarsSetUseKitSkin"):CallServerAsync({
 								useKitSkin = tab2[i] and true or false
 							})

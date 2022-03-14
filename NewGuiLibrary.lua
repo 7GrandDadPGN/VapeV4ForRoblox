@@ -3,8 +3,26 @@ if shared.VapeExecuted then
 	local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
 	local rainbowvalue = 0
 	local cam = game:GetService("Workspace").CurrentCamera
-	local getasset = getsynasset or getcustomasset
-	local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
+	local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
+	local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function(tab)
+		if tab.Method == "GET" then
+			return {
+				Body = game:HttpGet(tab.Url, true),
+				Headers = {},
+				StatusCode = 200
+			}
+		else
+			return {
+				Body = "bad exploit",
+				Headers = {},
+				StatusCode = 404
+			}
+		end
+	end 
+	local betterisfile = function(file)
+		local suc, res = pcall(function() return readfile(file) end)
+		return suc and res ~= nil
+	end
 	local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 	local loadedsuccessfully = false
 	local api = {
@@ -13,7 +31,7 @@ if shared.VapeExecuted then
 			["default"] = {["Keybind"] = "", ["Selected"] = true}
 		},
 		["RainbowSpeed"] = 1,
-		["Language"] = isfile("vape/language.dat") and readfile("vape/language.dat") or "en-us",
+		["Language"] = betterisfile("vape/language.dat") and readfile("vape/language.dat") or "en-us",
 		["GUIKeybind"] = "RightShift",
 		["CurrentProfile"] = "default",
 		["KeybindCaptured"] = false,
@@ -26,7 +44,7 @@ if shared.VapeExecuted then
 
 	local function GetURL(scripturl)
 		if shared.VapeDeveloper then
-			if not isfile("vape/"..scripturl) then
+			if not betterisfile("vape/"..scripturl) then
 				error("File not found : vape/"..scripturl)
 			end
 			return readfile("vape/"..scripturl)
@@ -38,7 +56,7 @@ if shared.VapeExecuted then
 	end
 
 	local translations = loadstring(GetURL("translations/"..api["Language"]..".vapetranslation") or GetURL("translations/en-us.vapetranslation"))()
-	local translatedlogo = pcall(function() return GetURL("translations/"..api["Language"].."/VapeLogo1.png") end)
+	local translatedlogo, res = pcall(function() return GetURL("translations/"..api["Language"].."/VapeLogo1.png") end)
 
 	local function getprofile()
 		for i,v in pairs(api["Profiles"]) do
@@ -115,7 +133,7 @@ if shared.VapeExecuted then
 
 	local cachedassets = {}
 	local function getcustomassetfunc(path)
-		if not isfile(path) then
+		if not betterisfile(path) then
 			spawn(function()
 				local textlabel = Instance.new("TextLabel")
 				textlabel.Size = UDim2.new(1, 0, 0, 36)
@@ -127,7 +145,7 @@ if shared.VapeExecuted then
 				textlabel.TextColor3 = Color3.new(1, 1, 1)
 				textlabel.Position = UDim2.new(0, 0, 0, -36)
 				textlabel.Parent = api["MainGui"]
-				repeat wait() until isfile(path)
+				repeat wait() until betterisfile(path)
 				textlabel:Remove()
 			end)
 			local req = requestfunc({
@@ -404,13 +422,13 @@ if shared.VapeExecuted then
 			end
 		end
 		if shared.VapePrivate then
-			if isfile("vapeprivate/Profiles/GUIPositions.vapeprofile.txt") == false and isfile("vape/Profiles/GUIPositions.vapeprofile.txt") then
+			if betterisfile("vapeprivate/Profiles/GUIPositions.vapeprofile.txt") == false and betterisfile("vape/Profiles/GUIPositions.vapeprofile.txt") then
 				writefile("vapeprivate/Profiles/GUIPositions.vapeprofile.txt", readfile("vape/Profiles/GUIPositions.vapeprofile.txt"))
 			end
-			if isfile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") == false and isfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") then
+			if betterisfile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") == false and betterisfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") then
 				writefile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", readfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
 			end
-			if isfile("vapeprivate/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") == false and isfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") then
+			if betterisfile("vapeprivate/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") == false and betterisfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") then
 				writefile("vapeprivate/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", readfile("vape/Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
 			end
 		end
@@ -565,7 +583,7 @@ if shared.VapeExecuted then
 	api["SwitchProfile"] = function(profilename)
 		api["Profiles"][api["CurrentProfile"]]["Selected"] = false
 		api["Profiles"][profilename]["Selected"] = true
-		if (not isfile(customdir.."Profiles/"..(profilename == "default" and "" or profilename)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt")) then
+		if (not betterisfile(customdir.."Profiles/"..(profilename == "default" and "" or profilename)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt")) then
 			local realprofile = api["CurrentProfile"]
 			api["CurrentProfile"] = profilename
 			api["SaveSettings"]()
@@ -6303,6 +6321,9 @@ if shared.VapeExecuted then
 	end)
 	searchbar.FocusLost:connect(function()
 		
+	end)
+	api["MainRescale"]:GetPropertyChangedSignal("Scale"):connect(function()
+		searchbarmain.Position = UDim2.new(0.5 / api["MainRescale"].Scale, -110, 0, -23)
 	end)
 
 	return api

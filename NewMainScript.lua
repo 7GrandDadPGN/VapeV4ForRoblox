@@ -1,8 +1,12 @@
 repeat task.wait() until game:IsLoaded() == true
 local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
+local betterisfile = function(file)
+	local suc, res = pcall(function() return readfile(file) end)
+	return suc and res ~= nil
+end
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
-		if not isfile("vape/"..scripturl) then
+		if not betterisfile("vape/"..scripturl) then
 			error("File not found : vape/"..scripturl)
 		end
 		return readfile("vape/"..scripturl)
@@ -12,13 +16,23 @@ local function GetURL(scripturl)
 		return res
 	end
 end
-local getasset = getsynasset or getcustomasset
-if getasset == nil and getgenv().getcustomasset == nil then
-	getgenv().getcustomasset = function(location) return "rbxasset://"..location end
-	getasset = getgenv().getcustomasset
-end
-local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport
-local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
+local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
+local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
+local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function(tab)
+	if tab.Method == "GET" then
+		return {
+			Body = game:HttpGet(tab.Url, true),
+			Headers = {},
+			StatusCode = 200
+		}
+	else
+		return {
+			Body = "bad exploit",
+			Headers = {},
+			StatusCode = 404
+		}
+	end
+end 
 
 local function checkassetversion()
 	local req = requestfunc({
@@ -50,7 +64,7 @@ end
 if isfolder("vape") == false then
 	makefolder("vape")
 end
-if isfile("vape/assetsversion.dat") == false then
+if not betterisfile("vape/assetsversion.dat") then
 	writefile("vape/assetsversion.dat", "1")
 end
 if isfolder(customdir.."CustomModules") == false then
@@ -59,7 +73,7 @@ end
 if isfolder(customdir.."Profiles") == false then
 	makefolder(customdir.."Profiles")
 end
-if isfile("vape/language.dat") == false then
+if not betterisfile("vape/language.dat") then
 	local suc, res = pcall(function() return gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") end)
 	writefile("vape/language.dat", suc and res or "en-us")
 end
@@ -118,7 +132,7 @@ checkpublicrepo = function(id)
 end
 
 local function getcustomassetfunc(path)
-	if not isfile(path) then
+	if not betterisfile(path) then
 		spawn(function()
 			local textlabel = Instance.new("TextLabel")
 			textlabel.Size = UDim2.new(1, 0, 0, 36)
@@ -130,7 +144,7 @@ local function getcustomassetfunc(path)
 			textlabel.TextColor3 = Color3.new(1, 1, 1)
 			textlabel.Position = UDim2.new(0, 0, 0, -36)
 			textlabel.Parent = GuiLibrary["MainGui"]
-			repeat task.wait() until isfile(path)
+			repeat task.wait() until betterisfile(path)
 			textlabel:Remove()
 		end)
 		local req = requestfunc({
@@ -1414,7 +1428,7 @@ GeneralSettings.CreateButton2({
 })
 
 loadstring(GetURL("AnyGame.vape"))()
-if isfile("vape/CustomModules/"..game.PlaceId..".vape") then
+if betterisfile("vape/CustomModules/"..game.PlaceId..".vape") then
 	loadstring(readfile("vape/CustomModules/"..game.PlaceId..".vape"))()
 else
 	local publicrepo = checkpublicrepo(game.PlaceId)
