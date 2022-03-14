@@ -457,7 +457,7 @@ end
 for i,v in pairs(players:GetChildren()) do renderNametag(v) end
 players.PlayerAdded:connect(renderNametag)
 
-GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
+GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
 GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("ReachOptionsButton")

@@ -2035,7 +2035,7 @@ runcode(function()
 	})
 end)
 
-GuiLibrary["RemoveObject"]("AimAssistOptionsButton")
+GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
 runcode(function()
 	local AimAssist = {["Enabled"] = false}
 	local AimAssistClickAim = {["Enabled"] = false}
