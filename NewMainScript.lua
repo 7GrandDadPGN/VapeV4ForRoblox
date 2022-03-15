@@ -1336,7 +1336,7 @@ end)
 
 GuiLibrary["SelfDestruct"] = function()
 	game:GetService("UserInputService").OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.None
-	selfdestruct = true
+	shared.VapeExecuted = nil
 	GuiLibrary["SaveSettings"]()
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 		if (v["Type"] == "Button" or v["Type"] == "OptionsButton") and v["Api"]["Enabled"] then
@@ -1344,10 +1344,12 @@ GuiLibrary["SelfDestruct"] = function()
 		end
 	end
 	GuiLibrary["SelfDestructEvent"]:Fire()
-	shared.VapeExecuted = nil
 	shared.VapePrivate = nil
 	shared.VapeSwitchServers = nil
 	shared.GuiLibrary = nil
+	shared.VapeIndependent = nil
+	shared.VapeManualLoad = nil
+	shared.CustomSaveVape = nil
 	GuiLibrary["KeyInputHandler"]:Disconnect()
 	GuiLibrary["KeyInputHandler2"]:Disconnect()
 	if MiddleClickInput then
@@ -1427,50 +1429,93 @@ GeneralSettings.CreateButton2({
 	["Function"] = GuiLibrary["SelfDestruct"]
 })
 
-loadstring(GetURL("AnyGame.vape"))()
-if betterisfile("vape/CustomModules/"..game.PlaceId..".vape") then
-	loadstring(readfile("vape/CustomModules/"..game.PlaceId..".vape"))()
-else
-	local publicrepo = checkpublicrepo(game.PlaceId)
-	if publicrepo then
-		loadstring(publicrepo)()
-	end
-end
-if shared.VapePrivate then
-	if pcall(function() readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape") end) then
-		loadstring(readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape"))()
-	end	
-end
+if shared.VapeIndependent then
+	spawn(function()
+		repeat task.wait() until shared.VapeManualLoad
+		GuiLibrary["LoadSettings"]()
+		if #ProfilesTextList["ObjectList"] == 0 then
+			table.insert(ProfilesTextList["ObjectList"], "default")
+			ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
+		end
+		GUIbind["Reload"]()
+		GuiLibrary["UpdateUI"]()
+		UpdateHud()
+		if not shared.VapeSwitchServers then
+			if blatantmode["Enabled"] then
+				pcall(function()
+					local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 5.5, "assets/WarningNotification.png")
+					frame.Frame.Frame.ImageColor3 = Color3.fromRGB(236, 129, 44)
+				end)
+			end
+			GuiLibrary["LoadedAnimation"](welcomemsg["Enabled"])
+		else
+			shared.VapeSwitchServers = nil
+		end
+		if shared.VapeOpenGui then
+			GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = true
+			GuiLibrary["MainBlur"].Enabled = true	
+			shared.VapeOpenGui = nil
+		end
 
-GuiLibrary["LoadSettings"]()
-if #ProfilesTextList["ObjectList"] == 0 then
-	table.insert(ProfilesTextList["ObjectList"], "default")
-	ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
-end
-GUIbind["Reload"]()
-GuiLibrary["UpdateUI"]()
-UpdateHud()
-if not shared.VapeSwitchServers then
-	if blatantmode["Enabled"] then
-		pcall(function()
-			local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 5.5, "assets/WarningNotification.png")
-			frame.Frame.Frame.ImageColor3 = Color3.fromRGB(236, 129, 44)
+		spawn(function()
+			while task.wait(10) do
+				if shared.VapeExecuted then
+					GuiLibrary["SaveSettings"]()
+				else
+					break
+				end 
+			end
 		end)
-	end
-	GuiLibrary["LoadedAnimation"](welcomemsg["Enabled"])
+	end)
+	return GuiLibrary
 else
-	shared.VapeSwitchServers = nil
-end
-if shared.VapeOpenGui then
-	GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = true
-	GuiLibrary["MainBlur"].Enabled = true	
-	shared.VapeOpenGui = nil
-end
-
-spawn(function()
-	while task.wait(10) do
-		if not selfdestruct then
-			GuiLibrary["SaveSettings"]()
+	loadstring(GetURL("AnyGame.vape"))()
+	if betterisfile("vape/CustomModules/"..game.PlaceId..".vape") then
+		loadstring(readfile("vape/CustomModules/"..game.PlaceId..".vape"))()
+	else
+		local publicrepo = checkpublicrepo(game.PlaceId)
+		if publicrepo then
+			loadstring(publicrepo)()
 		end
 	end
-end)
+	if shared.VapePrivate then
+		if pcall(function() readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape") end) then
+			loadstring(readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape"))()
+		end	
+	end
+
+	GuiLibrary["LoadSettings"]()
+	if #ProfilesTextList["ObjectList"] == 0 then
+		table.insert(ProfilesTextList["ObjectList"], "default")
+		ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
+	end
+	GUIbind["Reload"]()
+	GuiLibrary["UpdateUI"]()
+	UpdateHud()
+	if not shared.VapeSwitchServers then
+		if blatantmode["Enabled"] then
+			pcall(function()
+				local frame = GuiLibrary["CreateNotification"]("Blatant Enabled", "Vape is now in Blatant Mode.", 5.5, "assets/WarningNotification.png")
+				frame.Frame.Frame.ImageColor3 = Color3.fromRGB(236, 129, 44)
+			end)
+		end
+		GuiLibrary["LoadedAnimation"](welcomemsg["Enabled"])
+	else
+		shared.VapeSwitchServers = nil
+	end
+	if shared.VapeOpenGui then
+		GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = true
+		GuiLibrary["MainBlur"].Enabled = true	
+		shared.VapeOpenGui = nil
+	end
+
+	spawn(function()
+		while task.wait(10) do
+			if shared.VapeExecuted then
+				GuiLibrary["SaveSettings"]()
+			else
+				break
+			end 
+		end
+	end)
+end
