@@ -395,7 +395,7 @@ if shared.VapeExecuted then
 					api["Settings"][i] = {["Type"] = "Slider", ["Value"] = v["Api"]["Value"], ["OldMax"] = v["Api"]["Max"]}
 				end
 				if v["Type"] == "TwoSlider" then
-					api["Settings"][i] = {["Type"] = "TwoSlider", ["Value"] = v["Api"]["Value"], ["Value2"] = v["Api"]["Value2"], ["SliderPos1"] = v["Object"].Slider.ButtonSlider.Position.X.Scale, ["SliderPos2"] = v["Object"].Slider.ButtonSlider2.Position.X.Scale}
+					api["Settings"][i] = {["Type"] = "TwoSlider", ["Value"] = v["Api"]["Value"], ["Value2"] = v["Api"]["Value2"], ["SliderPos1"] = (v["Object"]:FindFirstChild("Slider") and v["Object"].Slider.ButtonSlider.Position.X.Scale or 0), ["SliderPos2"] = (v["Object"]:FindFirstChild("Slider") and v["Object"].Slider.ButtonSlider2.Position.X.Scale or 0)}
 				end
 				if v["Type"] == "ColorSlider" then
 					api["Settings"][i] = {["Type"] = "ColorSlider", ["Hue"] = v["Api"]["Hue"], ["Sat"] = v["Api"]["Sat"], ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
@@ -403,7 +403,7 @@ if shared.VapeExecuted then
 			end
 			WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = api["GUIKeybind"]}
 			writefile(customdir.."Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", game:GetService("HttpService"):JSONEncode(api["Settings"]))
-			writefile(customdir.."Profiles/GUIPositions.vapeprofile.txt", game:GetService("HttpService"):JSONEncode(WindowTable))
+			writefile(customdir.."Profiles/"..(shared.CustomSaveVape or "").."GUIPositions.vapeprofile.txt", game:GetService("HttpService"):JSONEncode(WindowTable))
 		end
 	end
 
@@ -422,8 +422,8 @@ if shared.VapeExecuted then
 			end
 		end
 		if shared.VapePrivate then
-			if betterisfile("vapeprivate/Profiles/GUIPositions.vapeprofile.txt") == false and betterisfile("vape/Profiles/GUIPositions.vapeprofile.txt") then
-				writefile("vapeprivate/Profiles/GUIPositions.vapeprofile.txt", readfile("vape/Profiles/GUIPositions.vapeprofile.txt"))
+			if betterisfile("vapeprivate/Profiles/"..(shared.CustomSaveVape or "").."GUIPositions.vapeprofile.txt") == false and betterisfile("vape/Profiles/"..(shared.CustomSaveVape or "").."GUIPositions.vapeprofile.txt") then
+				writefile("vapeprivate/Profiles/"..(shared.CustomSaveVape or "").."GUIPositions.vapeprofile.txt", readfile("vape/Profiles/"..(shared.CustomSaveVape or "").."GUIPositions.vapeprofile.txt"))
 			end
 			if betterisfile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") == false and betterisfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") then
 				writefile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", readfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
@@ -440,7 +440,7 @@ if shared.VapeExecuted then
 		end
 		getprofile()
 		local success3, result3 = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile(customdir.."Profiles/GUIPositions.vapeprofile.txt"))
+			return game:GetService("HttpService"):JSONDecode(readfile(customdir.."Profiles/"..(shared.CustomSaveVape or "").."GUIPositions.vapeprofile.txt"))
 		end)
 		if success3 and type(result3) == "table" then
 			for i,v in pairs(result3) do
@@ -590,11 +590,14 @@ if shared.VapeExecuted then
 			api["CurrentProfile"] = realprofile
 		end
 		local vapeprivate = shared.VapePrivate
+		local oldindependent = shared.VapeIndependent
 		api["SelfDestruct"]()
-		shared.VapeSwitchServers = true
-		shared.VapeOpenGui = (clickgui.Visible)
-		shared.VapePrivate = vapeprivate
-		loadstring(GetURL("NewMainScript.lua"))()
+		if not oldindependent then
+			shared.VapeSwitchServers = true
+			shared.VapeOpenGui = (clickgui.Visible)
+			shared.VapePrivate = vapeprivate
+			loadstring(GetURL("NewMainScript.lua"))()
+		end
 	end
 
 	api["RemoveObject"] = function(objname)
