@@ -591,6 +591,7 @@ ClickTP = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpti
 runcode(function()
 	local flyspeed = {["Value"] = 1}
 	local flyverticalspeed = {["Value"] = 1}
+	local flywall = {["Enabled"] = false}
 	local flyupanddown = {["Enabled"] = false}
 	local flymethod = {["Value"] = "Normal"}
 	local flykeys = {["Value"] = "Space/LeftControl"}
@@ -631,7 +632,7 @@ runcode(function()
 					if isAlive() then
 						if flymethod["Value"] == "Normal" then
 							lplr.Character.HumanoidRootPart.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, 0.85 + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
-						elseif flymethod["Value"] == "AntiCheat A" then
+						elseif flymethod["Value"] == "CFrame" then
 							if (bodyvelofly ~= nil) then
 								bodyvelofly:Remove()
 							end
@@ -642,7 +643,14 @@ runcode(function()
 								flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
 							end
 							local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
-							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+							flypos = Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+							if flywall["Enabled"] then
+								local raycastparameters = RaycastParams.new()
+								raycastparameters.FilterDescendantsInstances = {lplr.Character}
+								local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, flypos, raycastparameters)
+								if ray then flypos = (ray.Position - lplr.Character.HumanoidRootPart.Position) flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y end
+							end
+							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + flypos
 							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 						elseif flymethod["Value"] == "Jump" then
 							if lplr.Character.HumanoidRootPart.Velocity.Y < -(lplr.Character.Humanoid.JumpPower - ((flyup and flyverticalspeed["Value"] or 0) - (flydown and flyverticalspeed["Value"] or 0))) then
@@ -663,7 +671,7 @@ runcode(function()
 	})
 	flymethod = fly.CreateDropdown({
 		["Name"] = "Mode", 
-		["List"] = {"Normal", "AntiCheat A", "Jump"},
+		["List"] = {"Normal", "CFrame", "Jump"},
 		["Function"] = function(val)
 			if isAlive() then
 				flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
@@ -686,6 +694,11 @@ runcode(function()
 		["Min"] = 1,
 		["Max"] = 150, 
 		["Function"] = function(val) end
+	})
+	flywall = fly.CreateToggle({
+		["Name"] = "Wall Check",
+		["Function"] = function() end,
+		["Default"] = true
 	})
 	flyupanddown = fly.CreateToggle({
 		["Name"] = "Y Level", 
@@ -1098,11 +1111,7 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 					end
 					if speedjump["Enabled"] then
 						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-							if speedmethod["Value"] == "AntiCheat A" or speedmethod["Value"] == "AntiCheat C" then
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20, lplr.Character.HumanoidRootPart.Velocity.Z)
-							elseif speedmethod["Value"] == "AntiCheat B" then
-								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0.2, 0)
-							end
+							lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 						end
 					end
 				end
