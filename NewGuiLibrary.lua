@@ -403,7 +403,7 @@ if shared.VapeExecuted then
 			end
 			WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = api["GUIKeybind"]}
 			writefile(customdir.."Profiles/"..(api["CurrentProfile"] == "default" and "" or api["CurrentProfile"])..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", game:GetService("HttpService"):JSONEncode(api["Settings"]))
-			writefile(customdir.."Profiles/GUIPositions.vapeprofile.txt", game:GetService("HttpService"):JSONEncode(WindowTable))
+			writefile(customdir.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", game:GetService("HttpService"):JSONEncode(WindowTable))
 		end
 	end
 
@@ -415,15 +415,18 @@ if shared.VapeExecuted then
 				if (ext and ext:find("vapeprofile") and ext:find("txt") == nil) then
 					writefile(customdir.."Profiles/"..newstr..".txt", readfile(customdir.."Profiles/"..newstr))
 					if delfile then
-						print("wrote:", customdir.."Profiles/"..newstr..".txt")
 						delfile(customdir.."Profiles/"..newstr)
 					end
 				end
 			end
 		end
+		if betterisfile("vape/Profiles/GUIPositions.vapeprofile.txt") and game.GameId == 2619619496 then
+			writefile("vape/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", readfile("vape/Profiles/GUIPositions.vapeprofile.txt"))
+			if delfile then delfile("vape/Profiles/GUIPositions.vapeprofile.txt") end
+		end
 		if shared.VapePrivate then
-			if betterisfile("vapeprivate/Profiles/GUIPositions.vapeprofile.txt") == false and betterisfile("vape/Profiles/GUIPositions.vapeprofile.txt") then
-				writefile("vapeprivate/Profiles/GUIPositions.vapeprofile.txt", readfile("vape/Profiles/GUIPositions.vapeprofile.txt"))
+			if betterisfile("vapeprivate/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt") == false and betterisfile("vape/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt") then
+				writefile("vapeprivate/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", readfile("vape/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt"))
 			end
 			if betterisfile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") == false and betterisfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt") then
 				writefile("vapeprivate/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", readfile("vape/Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
@@ -440,7 +443,7 @@ if shared.VapeExecuted then
 		end
 		getprofile()
 		local success3, result3 = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile(customdir.."Profiles/GUIPositions.vapeprofile.txt"))
+			return game:GetService("HttpService"):JSONDecode(readfile(customdir.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt"))
 		end)
 		if success3 and type(result3) == "table" then
 			for i,v in pairs(result3) do
