@@ -5922,9 +5922,9 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 54,
+		["Max"] = 38,
 		["Function"] = function(val) end,
-		["Default"] = 54
+		["Default"] = 38
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -8408,7 +8408,7 @@ runcode(function()
 									lagbacknotification = true
 									createwarning("AnticheatBypass", "You have been lagbacked for a \nawfully long time", 10)
 								end
-								print(longjumpvelo,clone.HumanoidRootPart.CFrame.p,clone.HumanoidRootPart.Velocity)
+								--print(longjumpvelo,clone.HumanoidRootPart.CFrame.p,clone.HumanoidRootPart.Velocity)
 								clone.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 								oldchar.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 								clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
@@ -8437,7 +8437,7 @@ runcode(function()
 									end
 									check()
 									--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-									task.wait(0.7)
+									task.wait(0.48)
 									check()
 									if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 										--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
@@ -8557,7 +8557,12 @@ runcode(function()
 				bedwars["BowTable"].getLaunchPosition = oldlaunchpos
 				oldlaunchpos = nil
 				if clone and clone:FindFirstChild("Animate") and oldchar then
-					clone.Animate.Parent = oldchar	
+					local anim = clone:FindFirstChild("Animate")
+					anim.Parent = oldchar	
+					spawn(function()
+						anim.Disabled = true 
+						anim.Disabled = false
+					end)
 				end
 				if anticheatconnection then
 					anticheatconnection:Disconnect()
@@ -9135,4 +9140,101 @@ runcode(function()
 		["Function"] = function(val) end,
 		["Default"] = 20
 	})
+end)
+
+runcode(function()
+	--skidded off the devforum because I hate projectile math
+	local function FindLeadShot(targetPosition: Vector3, targetVelocity: Vector3, projectileSpeed: Number, shooterPosition: Vector3, shooterVelocity: Vector3, gravity: Number)
+		local distance = (targetPosition - shooterPosition).Magnitude
+
+		local p = targetPosition - shooterPosition
+		local v = targetVelocity - shooterVelocity
+		local a = Vector3.new()
+
+		local timeTaken = (distance / projectileSpeed)
+		
+		if gravity > 0 then
+			local timeTaken = projectileSpeed/gravity+math.sqrt(2*distance/gravity+projectileSpeed^2/gravity^2)
+		end
+
+		local goalX = targetPosition.X + v.X*timeTaken + 0.5 * a.X * timeTaken^2
+		local goalY = targetPosition.Y + v.Y*timeTaken + 0.5 * a.Y * timeTaken^2
+		local goalZ = targetPosition.Z + v.Z*timeTaken + 0.5 * a.Z * timeTaken^2
+		
+		return Vector3.new(goalX, goalY, goalZ)
+	end
+
+	local function calc2(delta, init, from, grav)
+		return -0.5 * grav * delta ^ 2 + init.Y * delta + from.Y;
+	end
+
+	local function calc(delta, init, from, grav)
+		local v39 = Vector3.new(0, calc2(delta, init, from, grav), 0)
+		local v40 = (Vector3.new(0, calc2(delta / 2, init, from, grav), 0) - from * 0.25 - v39 * 0.25) * 2
+		local v41 = CFrame.new(from, v40) * CFrame.new(Vector3.new(0.8, -0.6, 0)) * CFrame.Angles(0, math.pi / 2, 0)
+		local ok = CFrame.new(v39) * (v41 - v41.Position);
+		return ok.Y
+	end
+
+	local oldaim
+	local oldplr
+	local oldmove
+	local zerovelocheck = tick()
+	local BowAimbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "BowAimbot",
+		["Function"] = function(callback)
+			if callback then
+				oldaim = bedwars["BowTable"]["calculateImportantLaunchValues"]
+				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta, shootpospart, ...)
+					local plr = GetNearestHumanoidToMouse(true, 1000)--{Character = {Humanoid = {MoveDirection = Vector3.new(0, 0, 0)}, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.new(0, 0, 0)}}}-- GetNearestHumanoidToMouse(true, 1000)
+					if plr and projmeta.projectile:find("arrow") then
+						local shootpos = bowtable:getLaunchPosition(shootpospart);
+						if not shootpos then
+							return nil
+						end
+						local projmetatab = projmeta:getProjectileMeta();
+						local prediction = (worldmeta and projmetatab.predictionLifetimeSec or projmetatab.lifetimeSec or 3)
+						local launchvelo = (projmetatab.launchVelocity or 100)
+						local gravity = (projmetatab.gravitationalAcceleration or 196.2)
+						local multigrav = gravity * projmeta.gravityMultiplier
+						local offsetshootpos = shootpos + projmeta.fromPositionOffset
+						local pos = (plr.Character.HumanoidRootPart.Position) 
+						local ok = (offsetshootpos - pos).magnitude
+						local ok2 = (ok / launchvelo) / 1.5
+						if ok2 > 0.5 then ok2 = ok2 * (ok2 > 0.8 and 2 or 1.5) end
+						pos = pos + Vector3.new(0, ok2 * (gravity / 2), 0)
+						--pos = pos + Vector3.new(0, (offsetshootpos - pos).magnitude * ((launchvelo / ((launchvelo / gravity - 10) * 100000)) * gravity), 0)
+						if plr ~= oldplr then
+							oldmove = nil
+						end
+						if oldmove and (oldmove - plr.Character.Humanoid.MoveDirection).magnitude >= 0.9 then
+							print("no velo troll")
+							zerovelocheck = tick() + 0.4
+						end
+						local velo = (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 11, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
+						local calculated = FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.new(0, 0, 0), multigrav) 
+						local initialvelo = (calculated - offsetshootpos).Unit * launchvelo
+						--initialvelo = initialvelo + Vector3.new(0, (offsetshootpos.Y + initialvelo.Y) - hehe, 0)
+						--print((offsetshootpos.Y + initialvelo.Y) - hehe)
+						--initialvelo = Vector3.new(initialvelo.X, initialvelo.Y + math.clamp((initialvelo.Y - calc(prediction, initialvelo, offsetshootpos, gravity)) / 6, 0, 10000000), initialvelo.Z)
+						oldmove = plr.Character.Humanoid.MoveDirection
+						return {
+							initialVelocity = initialvelo,
+							positionFrom = offsetshootpos,
+							deltaT = prediction,
+							gravitationalAcceleration = multigrav,
+							drawDurationSeconds = projmeta.gravityMultiplier
+						}
+					end
+					return oldaim(bowtable, projmeta, worldmeta, shootpospart, ...)
+				end
+			else
+				bedwars["BowTable"]["calculateImportantLaunchValues"] = oldaim
+			end
+		end
+	})
+end)
+
+pcall(function()
+	GuiLibrary["RemoveObject"]("GravityOptionsButton")
 end)
