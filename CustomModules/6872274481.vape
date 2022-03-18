@@ -899,6 +899,7 @@ runcode(function()
             ["BedwarsKits"] = require(game:GetService("ReplicatedStorage").TS.games.bedwars.kit["bedwars-kit-shop"]).BedwarsKitShop,
             ["BlockBreaker"] = KnitClient.Controllers.BlockBreakController.blockBreaker,
             ["BowTable"] = KnitClient.Controllers.ProjectileController,
+			["BowConstantsTable"] = debug.getupvalue(KnitClient.Controllers.ProjectileController.enableBeam, 5),
 			["ChestController"] = KnitClient.Controllers.ChestController,
 			["CheckWhitelisted"] = function(plr, ownercheck)
 				local plrstr = bedwars["HashFunction"](plr.Name..plr.UserId)
@@ -998,13 +999,12 @@ runcode(function()
             ["SwingSwordRegion"] = getmetatable(KnitClient.Controllers.SwordController).swingSwordInRegion,
             ["SwordController"] = KnitClient.Controllers.SwordController,
             ["TreeRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.BigmanController.KnitStart)[2])[1])),
-			["TripleShotMeta"] = require(game:GetService("ReplicatedStorage").TS.kit["triple-shot"]["triple-shot"]).TripleShot,
+			--["TripleShotMeta"] = require(game:GetService("ReplicatedStorage").TS.kit["triple-shot"]["triple-shot"]).TripleShot,
 			["TrinityRemote"] = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.AngelController).onKitEnabled, 1))),
             ["VictoryScreen"] = require(lplr.PlayerScripts.TS.controllers["game"].match.ui["victory-section"]).VictorySection,
             ["ViewmodelController"] = KnitClient.Controllers.ViewmodelController,
 			["WeldTable"] = require(game:GetService("ReplicatedStorage").TS.util["weld-util"]).WeldUtil,
         }
-
 		local oldbreak = getmetatable(bedwars["ClientHandlerDamageBlock"]).Get
 		getmetatable(bedwars["ClientHandlerDamageBlock"]).Get = function(Self, remotename, ...)
 			local res = oldbreak(Self, remotename, ...)
@@ -4844,10 +4844,10 @@ runcode(function()
 		["Name"] = "FastConsume",
 		["Function"] = function(callback)
 			if callback then
-				oldchargetime = bedwars["TripleShotMeta"]["CHARGE_TIME"]
+				--oldchargetime = bedwars["TripleShotMeta"]["CHARGE_TIME"]
 				oldclickhold = bedwars["ClickHold"].startClick
 				oldclickhold2 = bedwars["ClickHold"].showProgress
-				bedwars["TripleShotMeta"]["CHARGE_TIME"] = 0
+				--bedwars["TripleShotMeta"]["CHARGE_TIME"] = 0
 				--[[bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, ...)
 					if FastConsumeProjectile["Enabled"] then
 						projmeta.velocityMultiplier = math.clamp(projmeta.velocityMultiplier * (40 / math.clamp(FastConsumeVal["Value"], 1, 40)), 0, 1)
@@ -4904,7 +4904,7 @@ runcode(function()
 				end
 			else
 				--bedwars["BowTable"]["calculateImportantLaunchValues"] = shoothook
-				bedwars["TripleShotMeta"]["CHARGE_TIME"] = oldchargetime
+				--bedwars["TripleShotMeta"]["CHARGE_TIME"] = oldchargetime
 				bedwars["ClickHold"].startClick = oldclickhold
 				bedwars["ClickHold"].showProgress = oldclickhold2
 				oldchargetime = nil
@@ -8105,7 +8105,7 @@ runcode(function()
 
 	local function check()
 		lagbackedaftertouch = false
-		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= 45 then
+		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= 50 then
 			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
 			lagbackedaftertouch = true
 		end
@@ -9144,6 +9144,47 @@ end)
 
 runcode(function()
 	--skidded off the devforum because I hate projectile math
+	-- Compute 2D launch angle
+	-- v: launch velocity
+	-- g: gravity (positive) e.g. 196.2
+	-- d: horizontal distance
+	-- h: vertical distance
+	-- higherArc: if true, use the higher arc. If false, use the lower arc.
+	local function LaunchAngle(v: number, g: number, d: number, h: number, higherArc: boolean)
+		local v2 = v * v
+		local v4 = v2 * v2
+		local root = math.sqrt(v4 - g*(g*d*d + 2*h*v2))
+		if not higherArc then root = -root end
+		return math.atan((v2 + root) / (g * d))
+	end
+
+	-- Compute 3D launch direction from
+	-- start: start position
+	-- target: target position
+	-- v: launch velocity
+	-- g: gravity (positive) e.g. 196.2
+	-- higherArc: if true, use the higher arc. If false, use the lower arc.
+	local function LaunchDirection(start, target, v, g, higherArc: boolean)
+		-- get the direction flattened:
+		local horizontal = Vector3.new(target.X - start.X, 0, target.Z - start.Z)
+		
+		local h = target.Y - start.Y
+		local d = horizontal.Magnitude
+		local a = LaunchAngle(v, g, d, h, higherArc)
+		
+		-- NaN ~= NaN, computation couldn't be done (e.g. because it's too far to launch)
+		if a ~= a then return nil end
+		
+		-- speed if we were just launching at a flat angle:
+		local vec = horizontal.Unit * v
+		
+		-- rotate around the axis perpendicular to that direction...
+		local rotAxis = Vector3.new(-horizontal.Z, 0, horizontal.X)
+		
+		-- ...by the angle amount
+		return CFrame.fromAxisAngle(rotAxis, a) * vec
+	end
+
 	local function FindLeadShot(targetPosition: Vector3, targetVelocity: Vector3, projectileSpeed: Number, shooterPosition: Vector3, shooterVelocity: Vector3, gravity: Number)
 		local distance = (targetPosition - shooterPosition).Magnitude
 
@@ -9164,22 +9205,11 @@ runcode(function()
 		return Vector3.new(goalX, goalY, goalZ)
 	end
 
-	local function calc2(delta, init, from, grav)
-		return -0.5 * grav * delta ^ 2 + init.Y * delta + from.Y;
-	end
-
-	local function calc(delta, init, from, grav)
-		local v39 = Vector3.new(0, calc2(delta, init, from, grav), 0)
-		local v40 = (Vector3.new(0, calc2(delta / 2, init, from, grav), 0) - from * 0.25 - v39 * 0.25) * 2
-		local v41 = CFrame.new(from, v40) * CFrame.new(Vector3.new(0.8, -0.6, 0)) * CFrame.Angles(0, math.pi / 2, 0)
-		local ok = CFrame.new(v39) * (v41 - v41.Position);
-		return ok.Y
-	end
-
 	local oldaim
 	local oldplr
 	local oldmove
 	local zerovelocheck = tick()
+	local oldbowx = 0.8
 	local BowAimbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "BowAimbot",
 		["Function"] = function(callback)
@@ -9187,8 +9217,8 @@ runcode(function()
 				oldaim = bedwars["BowTable"]["calculateImportantLaunchValues"]
 				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta, shootpospart, ...)
 					local plr = GetNearestHumanoidToMouse(true, 1000)--{Character = {Humanoid = {MoveDirection = Vector3.new(0, 0, 0)}, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.new(0, 0, 0)}}}-- GetNearestHumanoidToMouse(true, 1000)
-					if plr and projmeta.projectile:find("arrow") then
-						local shootpos = bowtable:getLaunchPosition(shootpospart);
+					if plr then
+						local shootpos = bowtable:getLaunchPosition(shootpospart)
 						if not shootpos then
 							return nil
 						end
@@ -9198,32 +9228,39 @@ runcode(function()
 						local gravity = (projmetatab.gravitationalAcceleration or 196.2)
 						local multigrav = gravity * projmeta.gravityMultiplier
 						local offsetshootpos = shootpos + projmeta.fromPositionOffset
-						local pos = (plr.Character.HumanoidRootPart.Position) 
-						local ok = (offsetshootpos - pos).magnitude
-						local ok2 = (ok / launchvelo) / 1.5
-						if ok2 > 0.5 then ok2 = ok2 * (ok2 > 0.8 and 2 or 1.5) end
-						pos = pos + Vector3.new(0, ok2 * (gravity / 2), 0)
+						local pos = (plr.Character.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
+						local newlook = CFrame.new(offsetshootpos, pos) * CFrame.new(Vector3.new(-bedwars["BowConstantsTable"].RelX, 0, 0))
+						pos = newlook.p + (newlook.lookVector * (offsetshootpos - pos).magnitude)
+					--print(CFrame.new(offsetshootpos, pos).lookVector, newlook.lookVector)
+					--	pos = pos
 						--pos = pos + Vector3.new(0, (offsetshootpos - pos).magnitude * ((launchvelo / ((launchvelo / gravity - 10) * 100000)) * gravity), 0)
+						oldplr = plr
 						if plr ~= oldplr then
 							oldmove = nil
 						end
-						if oldmove and (oldmove - plr.Character.Humanoid.MoveDirection).magnitude >= 0.9 then
-							print("no velo troll")
+						if oldmove and (oldmove - plr.Character.Humanoid.MoveDirection).magnitude >= 1.7 then
+							print("no velo troll", (oldmove - plr.Character.Humanoid.MoveDirection).magnitude)
 							zerovelocheck = tick() + 0.4
 						end
-						local velo = (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 11, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
-						local calculated = FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.new(0, 0, 0), multigrav) 
-						local initialvelo = (calculated - offsetshootpos).Unit * launchvelo
+						local velo = (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 40, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.2 or 0.3))
+						if projmeta.projectile == "telepearl" then
+							velo = Vector3.new(0, 0, 0)
+						end
+						local calculated2 = FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.new(0, 0, 0), multigrav) 
+						pos = pos + Vector3.new(0, velo.Y, 0)
+						local calculated = LaunchDirection(offsetshootpos, pos, launchvelo, gravity, false)
+						local initialvelo = calculated--(calculated - offsetshootpos).Unit * launchvelo
+						local initialvelo2 = (calculated2 - offsetshootpos).Unit * launchvelo
 						--initialvelo = initialvelo + Vector3.new(0, (offsetshootpos.Y + initialvelo.Y) - hehe, 0)
 						--print((offsetshootpos.Y + initialvelo.Y) - hehe)
 						--initialvelo = Vector3.new(initialvelo.X, initialvelo.Y + math.clamp((initialvelo.Y - calc(prediction, initialvelo, offsetshootpos, gravity)) / 6, 0, 10000000), initialvelo.Z)
 						oldmove = plr.Character.Humanoid.MoveDirection
 						return {
-							initialVelocity = initialvelo,
+							initialVelocity = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * launchvelo,
 							positionFrom = offsetshootpos,
 							deltaT = prediction,
 							gravitationalAcceleration = multigrav,
-							drawDurationSeconds = projmeta.gravityMultiplier
+							drawDurationSeconds = 5
 						}
 					end
 					return oldaim(bowtable, projmeta, worldmeta, shootpospart, ...)
