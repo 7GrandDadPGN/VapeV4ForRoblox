@@ -973,6 +973,7 @@ runcode(function()
 			["MissileController"] = KnitClient.Controllers.GuidedProjectileController,
 			["MinerRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getproto(getmetatable(KnitClient.Controllers.MinerController).onKitEnabled, 1))[2])),
 			["MinerController"] = KnitClient.Controllers.MinerController,
+			["ProdAnimations"] = require(game:GetService("ReplicatedStorage").TS.animation.definitions["prod-animations"]).ProdAnimations,
             ["PickupRemote"] = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.ItemDropController).checkForPickup)),
             ["PlayerUtil"] = require(game:GetService("ReplicatedStorage").TS.player["player-util"]).GamePlayerUtil,
 			["ProjectileMeta"] = require(game:GetService("ReplicatedStorage").TS.projectile["projectile-meta"]).ProjectileMeta,
@@ -5922,9 +5923,9 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 38,
+		["Max"] = 54,
 		["Function"] = function(val) end,
-		["Default"] = 38
+		["Default"] = 54
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -8239,6 +8240,10 @@ runcode(function()
 					lagbackcurrent = false
 				end
 			until oldchar:FindFirstChild("HumanoidRootPart") and (networkownerfunc and networkownerfunc(oldchar.HumanoidRootPart) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic)
+			local anim2 = Instance.new("Animation")
+			anim2.AnimationId = "http://www.roblox.com/asset/?id=4940563117"
+			local Loaded = lplr.Character.Humanoid.Animator:LoadAnimation(anim2)
+			Loaded:Play()
 			lplr.Character = clone
 			spawn(function()
 				repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
@@ -8339,8 +8344,7 @@ runcode(function()
 							oldchar.HumanoidRootPart.Velocity = clone.HumanoidRootPart.Velocity
 						else
 							--local targetvelo = (targetstrafing and (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p) or clone.HumanoidRootPart.Velocity)
-							local targetvelo = (clone.HumanoidRootPart.Velocity)
-					--		print(targetvelo)
+							local targetvelo = (clone.HumanoidRootPart.AssemblyLinearVelocity)
 							targetvelo = targetvelo.Unit * 20
 							oldchar.HumanoidRootPart.Velocity = Vector3.new(math.clamp(targetvelo.X, -20, 20), clone.HumanoidRootPart.Velocity.Y, math.clamp(targetvelo.Z, -20, 20))
 						end
@@ -8437,7 +8441,7 @@ runcode(function()
 									end
 									check()
 									--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-									task.wait(0.48)
+									task.wait(0.58)
 									check()
 									if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 										--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
@@ -8572,6 +8576,13 @@ runcode(function()
 				end
 				UnbindFromStepped("AnticheatBypass")
 				if oldchar then
+					if oldchar:FindFirstChild("Humanoid") then
+						for i2,v2 in pairs(oldchar.Humanoid.Animator:GetPlayingAnimationTracks()) do
+							if v2.Animation.AnimationId == "http://www.roblox.com/asset/?id=4940563117" then
+								v2:Stop()
+							end
+						end
+					end
 					for i,v in pairs(oldchar:GetDescendants()) do
 						if (v:IsA("BasePart") or v:IsA("Decal")) then
 							v.Transparency = (v.Name ~= "HumanoidRootPart" and 0 or 1)
