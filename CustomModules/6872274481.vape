@@ -18,7 +18,6 @@ local oldchar
 local matchState = 0
 local kit = ""
 local antivoidypos = 0
-local scaffoldypos = 9999
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -48,7 +47,6 @@ local oldshoot
 local oldbuyitem
 local chatconnection
 local blocktable
-local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 local blocks = {}
 local RenderStepTable = {}
 local StepTable = {}
@@ -59,16 +57,8 @@ local nobob = {["Enabled"] = false}
 local AnticheatBypass = {["Enabled"] = false}
 local disabletpcheck = false
 local oldbob
-local ProjectileAimbot = {["Enabled"] = false}
 local FastConsumeProjectile = {["Enabled"] = false}
 local FastConsume = {["Enabled"] = false}
-local aimfov = {["Value"] = 1}	
-local aimvischeck = {["Enabled"] = false}
-local tar = nil
-local shoothook
-local aimbotping
-local velodelay = tick()
-local velooldpos = Vector3.new(0, 0, 0)
 local autohealconnection
 local chatconnection2
 local oldchanneltab
@@ -80,12 +70,6 @@ local anticheatfunnyyes = false
 local staffleave
 local networkownerfunc = isnetworkowner
 local vapeusers = {}
-local projtable = {
-	["arrow"] = true,
-	["crossbow_arrow"] = true,
-	["firework_arrow"] = true,
-	["tactical_crossbow_arrow"] = true
-}
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		return readfile("vape/"..scripturl)
@@ -825,7 +809,6 @@ end
 
 local function hashvec(vec)
 	return {
-		["hash"] = bedwars["AttackHashFunction"](bedwars["AttackHashText"], bedwars["prepareHashing"](vec)), 
 		["value"] = vec
 	}
 end
@@ -1041,7 +1024,7 @@ runcode(function()
             return oldbob(Self, id, ...)
         end
         bedwars["AttackRemote"] = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.SwordController)["attackEntity"]))
-        for i,v in pairs(debug.getupvalues(getmetatable(KnitClient.Controllers.SwordController)["attackEntity"])) do
+      --[[  for i,v in pairs(debug.getupvalues(getmetatable(KnitClient.Controllers.SwordController)["attackEntity"])) do
             if tostring(v) == "AC" then
                 bedwars["AttackHashTable"] = v
                 for i2,v2 in pairs(v) do
@@ -1051,7 +1034,7 @@ runcode(function()
                     end
                 end
             end
-        end
+        end]]
         oldattack = getmetatable(KnitClient.Controllers.SwordController)["attackEntity"]
         shared.backup_attack = oldattack
 		blocktable = bedwars["BlockController2"].new(bedwars["BlockEngine"], getwool())
@@ -1588,6 +1571,7 @@ end
 
 local function isBlockCovered(pos)
 	local coveredsides = 0
+	local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 	for i, v in pairs(normalsides) do
 		local blockpos = (pos + (Vector3.FromNormalId(Enum.NormalId[v]) * 3))
 		local block = getblock(blockpos)
@@ -2867,6 +2851,7 @@ end)
 local function getbestside(pos)
 	local softest = 1000000
 	local softestside = Enum.NormalId.Top
+	local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 	for i,v in pairs(normalsides) do
 		local sidehardness = 0
 		for i2,v2 in pairs(getallblocks(pos, v)) do	
@@ -2887,6 +2872,7 @@ local function getbestside(pos)
 end
 
 local function getotherbed(pos)
+	local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 	for i,v in pairs(normalsides) do
 		local bedobj = getblock(pos + (Vector3.FromNormalId(Enum.NormalId[v]) * 3))
 		if bedobj and bedobj.Name == "bed" then
@@ -5860,6 +5846,7 @@ runcode(function()
 	local speedjump = {["Enabled"] = false}
 	local speedjumpheight = {["Value"] = 20}
 	local speedjumpalways = {["Enabled"] = false}
+	local speedtick = tick()
 	local bodyvelo
 	local gofast = false
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -5882,22 +5869,31 @@ runcode(function()
 				end)
 				BindToStepped("Speed", 1, function(time, delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-						local jumpcheck = speedjump["Enabled"] and killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
-						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
-						if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
-							bodyvelo = Instance.new("BodyVelocity")
-							bodyvelo.Parent = lplr.Character.HumanoidRootPart
-							bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+						if speedmode["Value"] == "CFrame" then
+							local newpos = ((lplr.Character.Humanoid.MoveDirection * (speedval["Value"] - lplr.Character.Humanoid.WalkSpeed)) * delta)
+							local raycastparameters = RaycastParams.new()
+							raycastparameters.FilterDescendantsInstances = {lplr.Character}
+							local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
+							if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
+							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
 						else
-							if bird then
-								lplr.Character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 32)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1)
-								if (not (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics)) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
-									local newvelo = lplr.Character.Humanoid.MoveDirection * 50
-									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
+							local jumpcheck = speedjump["Enabled"] and killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
+							local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
+							if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
+								bodyvelo = Instance.new("BodyVelocity")
+								bodyvelo.Parent = lplr.Character.HumanoidRootPart
+								bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+							else
+								if bird then
+									lplr.Character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 32)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1)
+									if (not (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics)) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
+										local newvelo = lplr.Character.Humanoid.MoveDirection * 50
+										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
+									end
 								end
+								bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
+								bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
 							end
-							bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-							bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
 						end
 						if (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
 							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
@@ -5917,8 +5913,12 @@ runcode(function()
 	})
 	speedmode = speed.CreateDropdown({
 		["Name"] = "Mode",
-		["List"] = {"Normal", "Inconsistent"},
-		["Function"] = function() end
+		["List"] = {"Normal", "Inconsistent", "CFrame"},
+		["Function"] = function()
+			if bodyvelo then
+				bodyvelo:Remove()
+			end	
+		end
 	})
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
@@ -6960,7 +6960,7 @@ runcode(function()
 							scaffoldstopmotionval = false
 						end
 						if getwool() or getEquipped()["Type"] == "block" then
-							if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil and lplr.Character.HumanoidRootPart.CFrame.p.Y < scaffoldypos then
+							if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil then
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
 								if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
 									lplr.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, lplr.Character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
@@ -6969,7 +6969,7 @@ runcode(function()
 						end
 						for i = 1, ScaffoldExpand["Value"] do
 							local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (lplr.Character.HumanoidRootPart.Velocity.Y < 2))
-							newpos = Vector3.new(newpos.X, math.clamp(newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 4 or 0), -999, scaffoldypos), newpos.Z)
+							newpos = Vector3.new(newpos.X, newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 4 or 0), newpos.Z)
 							if newpos ~= oldpos then
 								if not checkblocks(newpos) then
 									newpos = getnearestblock(newpos)
@@ -7658,6 +7658,7 @@ runcode(function()
 
 	local function getallbedblocks(pos)
 		local blocks = {}
+		local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 		for i,v in pairs(normalsides) do
 			for i2,v2 in pairs(getallblocks2(pos, v)) do	
 				if table.find(blocks, v2) == nil and v2 ~= "bed" then
@@ -8160,6 +8161,7 @@ runcode(function()
 		end
 		if lplr.Character and lplr.Character ~= clone then
 			oldchar = lplr.Character
+			shared.VapeRealCharacter = oldchar
 			oldchar.Archivable = true
 			pcall(function()
 				anticheatconnection3 = oldchar:WaitForChild("InventoryFolder", 20):GetPropertyChangedSignal("Value"):connect(function()
@@ -8486,6 +8488,7 @@ runcode(function()
 						end
 					end
 				end)
+				shared.VapeRealCharacter = nil
 				if lplr.Character ~= clone then
 					spawn(function()
 						repeat task.wait() until entity.isAlive
@@ -8522,6 +8525,7 @@ runcode(function()
 				end
 				anticheatconnection = lplr.CharacterAdded:connect(function(char)
 					spawn(function()
+						shared.VapeRealCharacter = nil
 						char:WaitForChild("Humanoid", 10)
 						char:WaitForChild("LeftHand", 10)
 						char:WaitForChild("RightHand", 10)
@@ -8554,6 +8558,7 @@ runcode(function()
 					end)
 				end)
 			else
+				shared.VapeRealCharacter = nil
 				if oldballoon then
 					bedwars["BalloonController"].hookBalloon = oldballoon
 					oldballoon = nil
