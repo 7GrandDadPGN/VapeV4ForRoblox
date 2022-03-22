@@ -718,7 +718,6 @@ runcode(function()
 	})
 end)
 
-
 if shared.vapestaffleave then
 	local warning = createwarning("Vape", "Staff Detected\n"..shared.vapestaffleave, 60)
 	local warningtext = warning:GetChildren()[5]
