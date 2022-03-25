@@ -1,4 +1,9 @@
--- Credits to Inf Yield & all the other scripts that helped me make bypasses
+--[[ 
+	Credits
+	Infinite Yield - Blink
+	DevForum - lots of rotation math because I hate it
+	Please notify me if you need credits
+]]
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
 local textservice = game:GetService("TextService")
@@ -55,6 +60,7 @@ local Reach = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local nobob = {["Enabled"] = false}
 local AnticheatBypass = {["Enabled"] = false}
+local AnticheatBypassCombatCheck = {["Enabled"] = false}
 local disabletpcheck = false
 local oldbob
 local FastConsumeProjectile = {["Enabled"] = false}
@@ -1491,10 +1497,29 @@ do
 	entity.isPlayerTargetable = function(plr)
 		return lplr ~= plr and shared.vapeteamcheck(plr) and friendCheck(plr) == nil
 	end
-	local oldcharacteradded = entity.characterAdded
-	entity.characterAdded = function(plr, char, localcheck)
-		return oldcharacteradded(plr, char, localcheck, function() end)
-	end
+	entity.entityAdded = function(plr, localcheck, custom)
+        entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterAdded:connect(function(char)
+            entity.refreshEntity(plr, localcheck)
+        end)
+        entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterRemoving:connect(function(char)
+            if localcheck then
+                entity.isAlive = false
+            else
+                entity.removeEntity(plr)
+            end
+        end)
+        entity.entityConnections[#entity.entityConnections + 1] = plr:GetAttributeChangedSignal("Team"):connect(function()
+            if localcheck then
+                entity.fullEntityRefresh()
+            else
+                task.wait(0.5)
+                entity.refreshEntity(plr, localcheck)
+            end
+        end)
+        if plr.Character then
+            entity.refreshEntity(plr, localcheck)
+        end
+    end
 	entity.fullEntityRefresh()
 end
 
@@ -4268,15 +4293,15 @@ runcode(function()
 	longjumpspeed = longjump.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 60,
-		["Default"] = 60,
+		["Max"] = 80,
+		["Default"] = 80,
 		["Function"] = function() end
 	})
 	longjumpval = longjump.CreateSlider({
 		["Name"] = "Jumps",
-		["Min"] = 0,
-		["Max"] = 5,
-		["Default"] = 5,
+		["Min"] = 1,
+		["Max"] = 7,
+		["Default"] = 7,
 		["Function"] = function() end
 	})
 	longjumpdelay = longjump.CreateSlider({
@@ -4290,7 +4315,7 @@ runcode(function()
 		["Name"] = "Slowdown",
 		["Min"] = 1,
 		["Max"] = 30,
-		["Default"] = 13,
+		["Default"] = 1,
 		["Function"] = function() end,
 	})
 end)
@@ -4499,7 +4524,7 @@ runcode(function()
 					plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
 				end
 			end
-			bedwars["SoundManager"]:playSound(math.random(1, 2) == 1 and bedwars["SoundList"].SWORD_SWING_1 or bedwars["SoundList"].SWORD_SWING_2)
+			bedwars["SoundManager"]:playSound(bedwars["SoundList"]["SWORD_SWING_"..math.random(1, 2)])
 			if killauratarget["Enabled"] then
 				killaurabox.Adornee = root
 			end
@@ -4667,15 +4692,14 @@ runcode(function()
 									targetedplayer = plr
 								end
 							end
-							if (#plrs > 0) then
-								if killauraautoblock["Enabled"] and getItem("shield") then
-									spawn(function()
-										bedwars["ClientHandler"]:Get(bedwars["ShieldRemote"]):SendToServer({
-											["raised"] = true
-										})
-									end)
-								end
-							else
+							if killauraautoblock["Enabled"] and getItem("shield") then
+								spawn(function()
+									bedwars["ClientHandler"]:Get(bedwars["ShieldRemote"]):SendToServer({
+										["raised"] = true
+									})
+								end)
+							end
+							if (#plrs <= 0) then
 								targetedplayer = nil
 								killauranear = false
 								if killaurabox.Adornee ~= nil then
@@ -4924,7 +4948,7 @@ runcode(function()
 				BindToRenderStep("FastPickup", 1, function()
 					local itemdrops = collectionservice:GetTagged("ItemDrop")
 					for i,v in pairs(itemdrops) do
-						if lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart") and (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] and (v:GetAttribute("ClientDropTime") and tick() - v:GetAttribute("ClientDropTime") > 2 or v:GetAttribute("ClientDropTime") == nil) then
+						if entity.isAlive and (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] and (v:GetAttribute("ClientDropTime") and tick() - v:GetAttribute("ClientDropTime") > 2 or v:GetAttribute("ClientDropTime") == nil) then
 							bedwars["ClientHandler"]:Get(bedwars["PickupRemote"]):CallServerAsync({
 								itemDrop = v
 							}):andThen(function(p14)
@@ -5035,6 +5059,8 @@ end
 local commands = {
 	["kill"] = function(args)
 		if entity.isAlive then
+			lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+			lplr.Character.Humanoid.Health = 0
 			bedwars["ClientHandler"]:Get(bedwars["ResetRemote"]):SendToServer()
 		end
 	end,
@@ -5044,18 +5070,33 @@ local commands = {
 		end
 	end,
 	["jump"] = function(args)
-		if entity.isAlive and lplr.Character.Humanoid.Jump == false then
+		if entity.isAlive and lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 			lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 		end
 	end,
 	["sit"] = function(args)
-		if entity.isAlive and #args >= 1 then
-			lplr.Character.Humanoid.Sit = args[1] == "true"
+		if entity.isAlive then
+			lplr.Character.Humanoid.Sit = true
+		end
+	end,
+	["unsit"] = function(args)
+		if entity.isAlive then
+			lplr.Character.Humanoid.Sit = false
 		end
 	end,
 	["freeze"] = function(args)
-		if entity.isAlive and #args >= 1 then
-			lplr.Character.HumanoidRootPart.Anchored = args[1] == "false"
+		if entity.isAlive then
+			lplr.Character.HumanoidRootPart.Anchored = true
+		end
+	end,
+	["unfreeze"] = function(args)
+		if entity.isAlive then
+			lplr.Character.HumanoidRootPart.Anchored = false
+		end
+	end,
+	["deletemap"] = function(args)
+		for i,v in pairs(game:GetService("CollectionService"):GetTagged("block")) do
+			v:Remove()
 		end
 	end,
 	["void"] = function(args)
@@ -5068,7 +5109,7 @@ local commands = {
 			end)
 		end
 	end,
-	["scare"] = function(args)
+	--[[["scare"] = function(args)
 		local image = Instance.new("ImageLabel")
 		image.ZIndex = 10
 		image.Image = "http://www.roblox.com/asset/?id=7473973347"
@@ -5087,7 +5128,7 @@ local commands = {
 			game:GetService("Debris"):AddItem(sound, 0.3)
 			game:GetService("Debris"):AddItem(image, 0.3)
 		end)
-	end,
+	end,]]
 	["framerate"] = function(args)
 		if #args >= 1 then
 			if setfpscap then
@@ -5099,7 +5140,7 @@ local commands = {
 		setfpscap(100000000)
     	print(game:GetObjects("h29g3535")[1])
 	end,
-	["playsound"] = function(args)
+--[[["playsound"] = function(args)
 		if #args >= 1 then
 			local function convertletter(let)
 				return string.byte(let) - 96
@@ -5114,7 +5155,7 @@ local commands = {
 			sound.Parent = workspace
 			sound:Play()
 		end
-	end,
+	end,]]
 	["chipman"] = function(args)
 		local function funnyfunc(v)
 			if v:IsA("ImageLabel") or v:IsA("ImageButton") then
@@ -5123,10 +5164,14 @@ local commands = {
 					v.Image = "http://www.roblox.com/asset/?id=6864086702"
 				end)
 			end
-			if v:IsA("TextLabel") or v:IsA("TextButton") then
-				v.Text = "chips"
-				v:GetPropertyChangedSignal("Text"):connect(function()
+			if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ChatChannelParentFrame") == nil then
+				if v.Text ~= "" then
 					v.Text = "chips"
+				end
+				v:GetPropertyChangedSignal("Text"):connect(function()
+					if v.Text ~= "" then
+						v.Text = "chips"
+					end
 				end)
 			end
 			if v:IsA("Texture") or v:IsA("Decal") then
@@ -5161,11 +5206,11 @@ local commands = {
 			funnyfunc(v)
 		end
 		game.DescendantAdded:connect(funnyfunc)
-		local sound = Instance.new("Sound")
+	--[[	local sound = Instance.new("Sound")
 		sound.SoundId = "rbxassetid://6516015896"
 		sound.Parent = workspace
 		sound.Looped = true
-		sound:Play()
+		sound:Play()]]
 	end,
 	["rickroll"] = function(args)
 		local function funnyfunc(v)
@@ -5175,10 +5220,14 @@ local commands = {
 					v.Image = "http://www.roblox.com/asset/?id=7083449168"
 				end)
 			end
-			if v:IsA("TextLabel") or v:IsA("TextButton") then
-				v.Text = "Never gonna give you up"
-				v:GetPropertyChangedSignal("Text"):connect(function()
+			if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ChatChannelParentFrame") == nil then
+				if v.Text ~= "" then
 					v.Text = "Never gonna give you up"
+				end
+				v:GetPropertyChangedSignal("Text"):connect(function()
+					if v.Text ~= "" then
+						v.Text = "Never gonna give you up"
+					end
 				end)
 			end
 			if v:IsA("Texture") or v:IsA("Decal") then
@@ -5213,14 +5262,17 @@ local commands = {
 			funnyfunc(v)
 		end
 		game.DescendantAdded:connect(funnyfunc)
-		local sound = Instance.new("Sound")
+	--[[	local sound = Instance.new("Sound")
 		sound.SoundId = "rbxassetid://516046413"
 		sound.Parent = workspace
 		sound.Looped = true
-		sound:Play()
+		sound:Play()]]
+	end,
+	["gravity"] = function(args)
+		workspace.Gravity = tonumber(args[1]) or 192.6
 	end,
 	["kick"] = function(args)
-		local str = (#args >= 1 and "" or nil)
+		local str = ""
 		for i,v in pairs(args) do
 			str = str..v.." "
 		end
@@ -5287,6 +5339,14 @@ local commands = {
 		end)
 		task.wait(0.1)
 		lplr:Kick()
+	end,
+	["staffkick"] = function(args)
+		local str = ""
+		for i,v in pairs(args) do
+			str = str..v.." "
+		end
+		staffleave = str
+		bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 	end,
 	["togglemodule"] = function(args)
 		if #args >= 1 then
@@ -5869,7 +5929,7 @@ runcode(function()
 				end)
 				BindToStepped("Speed", 1, function(time, delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-						local jumpcheck = speedjump["Enabled"] and killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
+						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
 						if speedmode["Value"] == "CFrame" then
 							local newpos = ((lplr.Character.Humanoid.MoveDirection * (speedval["Value"] - lplr.Character.Humanoid.WalkSpeed)) * delta)
 							local raycastparameters = RaycastParams.new()
@@ -5892,10 +5952,10 @@ runcode(function()
 									end
 								end
 								bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-								bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1)
+								bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (killauranear and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and 0.84 or 1)
 							end
 						end
-						if (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
+						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
 							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
 							end
@@ -8444,7 +8504,7 @@ runcode(function()
 										end
 										check()
 										--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-										task.wait(0.58)
+										task.wait(killauranear and AnticheatBypassCombatCheck["Enabled"] and 0.26 or 0.58)
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
@@ -8647,6 +8707,10 @@ runcode(function()
 	})
 	AnticheatBypassNotification = AnticheatBypass.CreateToggle({
 		["Name"] = "Notification",
+		["Function"] = function() end
+	})
+	AnticheatBypassCombatCheck = AnticheatBypass.CreateToggle({
+		["Name"] = "Combat Check",
 		["Function"] = function() end
 	})
 end)
@@ -9235,10 +9299,13 @@ runcode(function()
 				oldaim = bedwars["BowTable"]["calculateImportantLaunchValues"]
 				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta, shootpospart, ...)
 					local plr = GetNearestHumanoidToMouse(true, 1000)--{Character = {Humanoid = {MoveDirection = Vector3.new(0, 0, 0)}, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.new(0, 0, 0)}}}-- GetNearestHumanoidToMouse(true, 1000)
-					if plr then
+					if plr or projmeta.projectile == "telepearl" then
 						local shootpos = bowtable:getLaunchPosition(shootpospart)
 						if not shootpos then
 							return nil
+						end
+						if projmeta.projectile == "telepearl" then
+							plr = {Character = {Humanoid = {MoveDirection = Vector3.new(0, 0, 0)}, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.new(0, 0, 0)}}}
 						end
 						local projmetatab = projmeta:getProjectileMeta();
 						local prediction = (worldmeta and projmetatab.predictionLifetimeSec or projmetatab.lifetimeSec or 3)
@@ -9246,7 +9313,7 @@ runcode(function()
 						local gravity = (projmetatab.gravitationalAcceleration or 196.2)
 						local multigrav = gravity * projmeta.gravityMultiplier
 						local offsetshootpos = shootpos + projmeta.fromPositionOffset
-						local pos = (plr.Character.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
+					 	local pos = (plr.Character.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
 						local newlook = CFrame.new(offsetshootpos, pos) * CFrame.new(Vector3.new(-bedwars["BowConstantsTable"].RelX, 0, 0))
 						pos = newlook.p + (newlook.lookVector * (offsetshootpos - pos).magnitude)
 					--print(CFrame.new(offsetshootpos, pos).lookVector, newlook.lookVector)
@@ -9258,7 +9325,7 @@ runcode(function()
 						end
 						if oldmove and (oldmove - plr.Character.Humanoid.MoveDirection).magnitude >= 1.7 then
 							print("no velo troll", (oldmove - plr.Character.Humanoid.MoveDirection).magnitude)
-							zerovelocheck = tick() + 0.4
+							zerovelocheck = tick() + 0.6
 						end
 						local velo = (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 40, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
 						if projmeta.projectile == "telepearl" then
