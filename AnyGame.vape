@@ -1,4 +1,8 @@
--- Credits to Inf Yield & all the other scripts that helped me make bypasses
+--[[ 
+	Credits
+	Infinite Yield - Blink (backtrack), Freecam and SpinBot (spin / fling)
+	Please notify me if you need credits
+]]
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
 local textservice = game:GetService("TextService")
@@ -6,11 +10,46 @@ local lplr = players.LocalPlayer
 local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
+workspace:GetPropertyChangedSignal("CurrentCamera"):connect(function()
+	cam = (workspace.CurrentCamera or workspace:FindFirstChild("Camera") or Instance.new("Camera"))
+end)
 local targetinfo = shared.VapeTargetInfo
 local uis = game:GetService("UserInputService")
 local localmouse = lplr:GetMouse()
-local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
-local getasset = getsynasset or getcustomasset
+local betterisfile = function(file)
+	local suc, res = pcall(function() return readfile(file) end)
+	return suc and res ~= nil
+end
+local function GetURL(scripturl)
+	if shared.VapeDeveloper then
+		if not betterisfile("vape/"..scripturl) then
+			error("File not found : vape/"..scripturl)
+		end
+		return readfile("vape/"..scripturl)
+	else
+		local res = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
+		assert(res ~= "404: Not Found", "File not found")
+		return res
+	end
+end
+local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function(tab)
+	if tab.Method == "GET" then
+		return {
+			Body = game:HttpGet(tab.Url, true),
+			Headers = {},
+			StatusCode = 200
+		}
+	else
+		return {
+			Body = "bad exploit",
+			Headers = {},
+			StatusCode = 404
+		}
+	end
+end 
+local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
+local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
+local entity = loadstring(GetURL("Libraries/entityHandler.lua"))()
 
 local RenderStepTable = {}
 local StepTable = {}
@@ -93,7 +132,30 @@ shared.vapeteamcheck = function(plr)
 end
 
 local function targetCheck(plr, check)
-	return (check and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("ForceField") == nil or check == false)
+	if not check then
+		return true
+	end
+	local check2 = true
+	if check2 then
+		check = plr.Character ~= nil
+	end
+	if check2 then
+		check2 = plr.Character.Humanoid.GetState(plr.Character.Humanoid) ~= Enum.HumanoidStateType.Dead
+	end
+	if check2 then
+		check2 = plr.Character.FindFirstChild(plr.Character, "ForceField") == nil
+	end
+	return check2
+end
+
+do
+	GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendRefresh.Event:connect(function()
+		entity.fullEntityRefresh()
+	end)
+	entity.isPlayerTargetable = function(plr)
+		return lplr ~= plr and shared.vapeteamcheck(plr) and friendCheck(plr) == nil
+	end
+	entity.fullEntityRefresh()
 end
 
 local function isAlive(plr)
@@ -107,22 +169,26 @@ local function isPlayerTargetable(plr, target, friend)
     return plr ~= lplr and plr and (friend and friendCheck(plr) == nil or (not friend)) and isAlive(plr) and targetCheck(plr, target) and shared.vapeteamcheck(plr)
 end
 
-local function vischeck(char, part)
-	return not unpack(cam:GetPartsObscuringTarget({lplr.Character[part].Position, char[part].Position}, {lplr.Character, char}))
+local function vischeck(char, part, ignorelist)
+	local unpacked = unpack(cam.GetPartsObscuringTarget(cam, {lplr.Character[part].Position, char[part].Position}, {lplr.Character, char, cam, table.unpack(ignorelist or {})}))
+	return not unpacked
 end
 
 local function runcode(func)
 	func()
 end
 
-local function GetAllNearestHumanoidToPosition(player, distance, amount)
+local function GetAllNearestHumanoidToPosition(player, distance, amount, checkvis, vistab)
 	local returnedplayer = {}
 	local currentamount = 0
-    if isAlive() then
-        for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable((player and v or nil), true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and currentamount < amount then
+    if entity.isAlive then
+		for i, v in pairs(entity.entityList) do -- loop through players
+            if (targetcheck == nil and v.Targetable or targetcheck) and targetCheck(v, true) and currentamount < amount then -- checks
+				if checkvis then
+					if not vischeck(v.Character, "Head", vistab) then continue end
+				end
                 local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
-                if mag <= distance then
+                if mag <= distance then -- mag check
                     table.insert(returnedplayer, v)
 					currentamount = currentamount + 1
                 end
@@ -132,15 +198,18 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount)
 	return returnedplayer
 end
 
-local function GetNearestHumanoidToPosition(player, distance)
-	local closest, returnedplayer = distance, nil
-    if isAlive() then
-        for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable((player and v or nil), true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") then
+local function GetNearestHumanoidToPosition(player, distance, checkvis, vistab)
+	local closest, returnedplayer, targetpart = distance, nil, nil
+	if entity.isAlive then
+		for i, v in pairs(entity.entityList) do -- loop through players
+            if (targetcheck == nil and v.Targetable or targetcheck) and targetCheck(v, true) then -- checks
+				if checkvis then
+					if not vischeck(v.Character, "Head", vistab) then continue end
+				end
                 local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
-                if mag <= closest then
+                if mag <= closest then -- mag check
                     closest = mag
-                    returnedplayer = v
+					returnedplayer = v
                 end
             end
         end
@@ -148,18 +217,19 @@ local function GetNearestHumanoidToPosition(player, distance)
 	return returnedplayer
 end
 
-local function GetNearestHumanoidToMouse(player, distance, checkvis)
+local function GetNearestHumanoidToMouse(player, distance, checkvis, ignorelist)
     local closest, returnedplayer = distance, nil
-    if isAlive() then
-        for i, v in pairs(players:GetChildren()) do
-            if isPlayerTargetable((player and v or nil), true, true) and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") and (checkvis == false or checkvis and (vischeck(v.Character, "Head") or vischeck(v.Character, "HumanoidRootPart"))) then
-                local vec, vis = cam:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
-                if vis then
-                    local mag = (uis:GetMouseLocation() - Vector2.new(vec.X, vec.Y)).magnitude
-                    if mag <= closest then
-                        closest = mag
-                        returnedplayer = v
-                    end
+    if entity.isAlive then
+		for i, v in pairs(entity.entityList) do -- loop through players
+            if (targetcheck == nil and v.Targetable or targetcheck) and targetCheck(v, true) then -- checks
+				if checkvis then
+					if not vischeck(v.Character, "HumanoidRootPart") then continue end
+				end
+                local vec, vis = cam.WorldToScreenPoint(cam, v.Character.HumanoidRootPart.Position)
+				local mag = (uis.GetMouseLocation(uis) - Vector2.new(vec.X, vec.Y)).magnitude
+                if vis and mag <= closest then -- mag check
+                    closest = mag
+					returnedplayer = v
                 end
             end
         end
@@ -354,118 +424,323 @@ local function Cape(char, texture)
 			until not p or p.Parent ~= torso.Parent
 end
 
+runcode(function()
+	local aimfov = {["Value"] = 1}
+	local aimfovshow = {["Enabled"] = false}
+	local aimvischeck = {["Enabled"] = false}
+	local aimwallbang = {["Enabled"] = false}
+	local aimautofire = {["Enabled"] = false}
+	local aimsmartignore = {["Enabled"] = false}
+	local aimsmartab = {}
+	local aimfovframecolor = {["Value"] = 0.44}
+	local aimheadshotchance = {["Value"] = 1}
+	local aimassisttarget
+	local aimhitchance = {["Value"] = 1}
+	local aimmethod = {["Value"] = "FindPartOnRayWithIgnoreList"}
+	local aimmode = {["Value"] = "Legit"}
+	local aimtable = {["FindPartOnRayWithIgnoreList"] = 1, ["FindPartOnRayWithWhitelist"] = 1, ["Raycast"] = 2, ["FindPartOnRay"] = 1, ["ScreenPointToRay"] = 3, ["ViewportPointToRay"] = 3, ["Mouse"] = 4}
+	local aimignoredscripts = {["ObjectList"] = {}}
+	local aimbound
+	local shoottime = tick()
+	local aimfovframe
+	local pressed = false
+	local tar = nil
 
-local aimfov = {["Value"] = 1}
-local aimvischeck = {["Enabled"] = false}
-local aimheadshotchance = {["Value"] = 1}
-local aimhitchance = {["Value"] = 1}
-local aimmethod = {["Value"] = "FindPartOnRayWithIgnoreList"}
-local kek = function() end
-local kek2 = function() end
-local tar = nil
-local meta = getrawmetatable(game)
-setreadonly(meta, false)
-local old = meta.__namecall
-local old2 = meta.__index
-local hook
-
-local AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "SilentAim", 
-	["Function"] = function(callback) 
-		if callback then
-			kek() 
-		else
-			UnbindFromRenderStep("AimAssist") 
-			meta.__namecall = old
-			meta.__index = old2
-			tar = nil 
-		end
-	end,
-	["ExtraText"] = function() 
-		if aimmethod["Value"]:match("FindPartOnRay") then
-			return "Ray"
-		else
-			return string.gsub(aimmethod["Value"], "PointToRay", "") 
-		end
-	end
-})
-local aimassisttarget = AimAssist.CreateTargetWindow({})
-aimmethod = AimAssist.CreateDropdown({
-	["Name"] = "Method", 
-	["List"] = {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay", "Mouse"},
-	["Function"] = function(val) end
-})
-local aimtable = {["FindPartOnRayWithIgnoreList"] = 1, ["FindPartOnRayWithWhitelist"] = 1, ["Raycast"] = 2, ["FindPartOnRay"] = 1, ["ScreenPointToRay"] = 3, ["ViewportPointToRay"] = 3, ["Mouse"] = 4}
-aimfov = AimAssist.CreateSlider({
-	["Name"] = "FOV", 
-	["Min"] = 1, 
-	["Max"] = 1000, 
-	["Function"] = function(val) end
-})
-aimhitchance = AimAssist.CreateSlider({
-	["Name"] = "Hit Chance", 
-	["Min"] = 1, 
-	["Max"] = 100, 
-	["Function"] = function(val) end
-})
-aimheadshotchance = AimAssist.CreateSlider({
-	["Name"] = "Headshot Chance", 
-	["Min"] = 1,
-	["Max"] = 100, 
-	["Function"] = function(val) end
-})
-
-kek = function()
-	local old3
-	old3 = hookmetamethod(game, "__namecall", function(...)
-		local Namecallaimmethod = getnamecallmethod()
-		local Args = {...}
-		local scriptname = getcallingscript()
-
-		if tar then
-			if not checkcaller() and (scriptname and not scriptname.Name:match("Camera")) and Namecallaimmethod == aimmethod["Value"] then
-				if aimtable[aimmethod["Value"]] == 1 then
-				   Args[2] = Ray.new(Args[2].Origin, (tar.Position + Vector3.new(0, (Args[2].Origin - tar.Position).magnitude/10000, 0) - Args[2].Origin).unit * 10000)
-				   if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
-						return tar, tar.Position, (tar.Position + Vector3.new(0, (Args[2].Origin - tar.Position).magnitude/10000, 0) - Args[2].Origin).unit * 10000, tar.Material
-				   end
-				end
-				if aimtable[aimmethod["Value"]] == 2 then
-				   Args[3] = (tar.Position + Vector3.new(0, (Args[2] - tar.Position).magnitude/10000, 0) - Args[2]).unit * 10000
-				   if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
-						local haha = RaycastParams.new()
-						haha.FilterType = Enum.RaycastFilterType.Whitelist
-						haha.FilterDescendantsInstances = {tar}
-						Args[4] = haha
-				   end
-				end
-				if aimtable[aimmethod["Value"]] == 3 then
-					return Ray.new(cam.CFrame.p, (tar.Position + Vector3.new(0, (cam.CFrame.p - tar.Position).magnitude/10000, 0) - cam.CFrame.p).unit * 10000)
-				end
+	local function isNotHoveringOverGui()
+		local mousepos = game:GetService("UserInputService"):GetMouseLocation() - Vector2.new(0, 36)
+		for i,v in pairs(game:GetService("Players").LocalPlayer.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+			if v.Active and v.Visible and v:FindFirstAncestorOfClass("ScreenGui").Enabled then
+				return false
 			end
 		end
-
-		return old3(unpack(Args))
-	end)
-    BindToRenderStep("AimAssist", 1, function() 
-		local plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false and aimvischeck["Enabled"])
-		local targettable = {}
-		local targetsize = 0
-		if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
-			targettable[plr.Name] = {
-				["UserId"] = plr.UserId,
-				["Health"] = plr.Character.Humanoid.Health,
-				["MaxHealth"] = plr.Character.Humanoid.MaxHealth
-			}
-			targetsize = targetsize + 1
-			tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
-			targetinfo.UpdateInfo(targettable, targetsize)
-		else
-			tar = nil
-			targetinfo.UpdateInfo({}, 0)
+		for i,v in pairs(game:GetService("CoreGui"):GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+			if v.Active and v.Visible and v:FindFirstAncestorOfClass("ScreenGui").Enabled then
+				return false
+			end
 		end
-    end)
-end
+		return true
+	end
+
+	local AimAssist = {["Enabled"] = false}
+	AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "SilentAim", 
+		["Function"] = function(callback) 
+			if callback then
+				if not aimbound then
+					aimbound = true
+					local oldnamecall
+					oldnamecall = hookmetamethod(game, "__namecall", function(self, ...)
+						if (not AimAssist["Enabled"]) then
+							return oldnamecall(self, ...)
+						end
+						if checkcaller() then
+							return oldnamecall(self, ...)
+						end
+						local calling = getcallingscript() 
+						if calling then
+							local list = #aimignoredscripts["ObjectList"] > 0 and aimignoredscripts["ObjectList"] or {"ControlModule"}
+							if table.find(aimignoredscripts["ObjectList"], tostring(calling)) then
+								return oldnamecall(self, ...)
+							end
+						end
+						local NamecallMethod = getnamecallmethod()
+						if NamecallMethod ~= aimmethod["Value"] then
+							return oldnamecall(self, ...)
+						end
+						local Args = {...}
+						local plr
+						if aimmode["Value"] == "Legit" then
+							plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
+						else
+							plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
+						end
+						if not plr then
+							return oldnamecall(self, ...)
+						end
+						local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
+						local Args = {...}
+						if aimtable[aimmethod["Value"]] == 1 then
+							local mag = (Vector3.new(0, 0, 0) - Args[1].Direction).Magnitude
+							local direction = CFrame.lookAt(Args[1].Origin, tar.Position).lookVector * mag
+							Args[1] = Ray.new(Args[1].Origin, direction)
+							if aimwallbang["Enabled"] then
+								return tar, tar.Position, direction, tar.Material
+							end
+						elseif aimtable[aimmethod["Value"]] == 2 then
+							local mag = (Vector3.new(0, 0, 0) - Args[2]).Magnitude
+							local direction = CFrame.lookAt(Args[1], tar.Position).lookVector * mag
+							Args[2] = direction
+							if aimwallbang["Enabled"] then
+								local haha = RaycastParams.new()
+								haha.FilterType = Enum.RaycastFilterType.Whitelist
+								haha.FilterDescendantsInstances = {tar}
+								Args[3] = haha
+							end
+						elseif aimtable[aimmethod["Value"]] == 3 then
+							local direction = CFrame.lookAt(cam.CFrame.p, tar.Position).lookVector.Unit
+							return Ray.new(cam.CFrame.p, direction)
+						end
+						return oldnamecall(self, unpack(Args))
+					end)
+					local oldindex
+					oldindex = hookmetamethod(game, "__index", function(Self, Val)
+						if (not tar) or (not AimAssist["Enabled"]) then
+							return oldindex(Self, Val)
+						end
+						if checkcaller() then
+							return oldindex(Self, Val)
+						end
+						if aimmethod["Value"] ~= "Mouse" then
+							return oldindex(Self, Val)
+						end
+						local calling = getcallingscript() 
+						if calling then
+							local list = #aimignoredscripts["ObjectList"] > 0 and aimignoredscripts["ObjectList"] or {"ControlModule"}
+							if table.find(aimignoredscripts["ObjectList"], tostring(calling)) then
+								return oldindex(Self, Val)
+							end
+						end
+						local plr
+						if aimmode["Value"] == "Legit" then
+							plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
+						else
+							plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
+						end
+						if not plr then
+							return oldindex(Self, Val)
+						end
+						local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
+						if tostring(Val) == "Hit" then
+							return tar.CFrame
+						elseif tostring(Val) == "Target" then
+							return tar
+						elseif tostring(Val) == "UnitRay" then
+							local direction = CFrame.lookAt(Self.UnitRay.Origin, tar.Position).lookVector.Unit
+							return Ray.new(Self.UnitRay.Origin, direction)
+						end
+
+						return oldindex(Self, Val)
+					end)
+				end
+			--[[	BindToRenderStep("AimAssist", 1, function() 
+					if entity.isAlive then
+						local targettable = {}
+						local targetsize = 0
+						if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
+							targettable[plr.Player.Name] = {
+								["UserId"] = plr.Player.UserId,
+								["Health"] = plr.Character.Humanoid.Health,
+								["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+							}
+							targetsize = targetsize + 1
+							if aimautofire["Enabled"] then
+								if mouse1click and iswindowactive() and shoottime <= tick() and isNotHoveringOverGui() and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
+									if pressed then
+										mouse1release()
+									else
+										mouse1press()
+									end
+									pressed = not pressed
+									shoottime = tick() + 0.01
+								end
+							end
+							targetinfo.UpdateInfo(targettable, targetsize)
+						else
+							if pressed then
+								mouse1release()
+							end
+							pressed = false
+							tar = nil
+							targetinfo.UpdateInfo({}, 0)
+						end
+					end
+				end)]]
+			else
+			--	UnbindFromRenderStep("AimAssist") 
+				tar = nil 
+			end
+		end,
+		["ExtraText"] = function() 
+			return aimmethod["Value"]:gsub("FindPartOn", ""):gsub("PointToRay", "") 
+		end
+	})
+	aimassisttarget = AimAssist.CreateTargetWindow({})
+	aimmode = AimAssist.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Legit", "Blatant"},
+		["Function"] = function(val) 
+			if aimfovframe then
+				aimfovframe.Visible = val == "Legit"
+			end
+		end
+	})
+	aimmethod = AimAssist.CreateDropdown({
+		["Name"] = "Method", 
+		["List"] = {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay", "Mouse"},
+		["Function"] = function(val) end
+	})
+	aimfovframecolor = AimAssist.CreateColorSlider({
+		["Name"] = "Circle Color",
+		["Function"] = function(hue, sat, val)
+			if aimfovframe then
+				aimfovframe.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+			end
+		end
+	})
+	aimfov = AimAssist.CreateSlider({
+		["Name"] = "FOV", 
+		["Min"] = 1, 
+		["Max"] = 1000, 
+		["Function"] = function(val) 
+			if aimfovframe then
+				aimfovframe.Size = UDim2.new(0, val, 0, val)
+			end
+		end,
+		["Default"] = 80
+	})
+	aimhitchance = AimAssist.CreateSlider({
+		["Name"] = "Hit Chance", 
+		["Min"] = 1, 
+		["Max"] = 100, 
+		["Function"] = function(val) end,
+		["Default"] = 100,
+	})
+	aimheadshotchance = AimAssist.CreateSlider({
+		["Name"] = "Headshot Chance", 
+		["Min"] = 1,
+		["Max"] = 100, 
+		["Function"] = function(val) end,
+		["Default"] = 25
+	})
+	aimfovshow = AimAssist.CreateToggle({
+		["Name"] = "FOV Circle",
+		["Function"] = function(callback) 
+			if callback then
+				aimfovframe = Instance.new("Frame")
+				aimfovframe.BackgroundTransparency = 0.8
+				aimfovframe.ZIndex = -1
+				aimfovframe.Visible = aimmode["Value"] ~= "Blatant"
+				aimfovframe.BackgroundColor3 = Color3.fromHSV(aimfovframecolor["Hue"], aimfovframecolor["Sat"], aimfovframecolor["Value"])
+				aimfovframe.Size = UDim2.new(0, aimfov["Value"], 0, aimfov["Value"])
+				aimfovframe.AnchorPoint = Vector2.new(0.5, 0.5)
+				aimfovframe.Position = UDim2.new(0.5, 0, 0.5, 0)
+				aimfovframe.Parent = GuiLibrary["MainGui"]
+				local corner = Instance.new("UICorner")
+				corner.CornerRadius = UDim.new(0, 2048)
+				corner.Parent = aimfovframe
+			else
+				if aimfovframe then
+					aimfovframe:Remove()
+				end
+			end
+		end,
+	})
+	aimvischeck = AimAssist.CreateToggle({
+		["Name"] = "Wall Check",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+	aimwallbang = AimAssist.CreateToggle({
+		["Name"] = "Wall Bang",
+		["Function"] = function() end
+	})
+	aimautofire = AimAssist.CreateToggle({
+		["Name"] = "AutoFire",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait(0.01)
+						local plr
+						if aimmode["Value"] == "Legit" then
+							plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
+						else
+							plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
+						end
+						if plr then
+							if mouse1click and iswindowactive() and shoottime <= tick() and isNotHoveringOverGui() and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
+								if pressed then
+									mouse1release()
+								else
+									mouse1press()
+								end
+								pressed = not pressed
+								shoottime = tick() + 0.01
+							end
+						else
+							if pressed then
+								mouse1release()
+							end
+							pressed = false
+						end
+					until (not aimautofire["Enabled"])
+				end)
+			end
+		end,
+		["HoverText"] = "Automatically fires gun",
+	})
+	aimsmartignore = AimAssist.CreateToggle({
+		["Name"] = "Smart Ignore",
+		["Function"] = function(callback)
+			if callback then
+				for i,v in pairs(workspace:GetChildren()) do
+					if v.Name:lower():find("junk") or v.Name:lower():find("trash") or v.Name:lower():find("ignore") then
+						table.insert(aimsmartab, v)
+					end
+				end
+			else
+				table.clear(aimsmartab)
+			end
+		end,
+		["HoverText"] = "Ignores certain folders and what not with certain names"
+	})
+	aimignoredscripts = AimAssist.CreateTextList({
+		["Name"] = "Ignored Scripts",
+		["TempText"] = "ignored scripts", 
+		["AddFunction"] = function(user) end, 
+		["RemoveFunction"] = function(num) end
+	})
+end)
 
 local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 local autoclicker = {["Enabled"] = false}
@@ -476,7 +751,7 @@ autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 	["Function"] = function(callback)
 		if callback then
 			BindToRenderStep("AutoClicker", 1, function() 
-				if isAlive() and autoclickertick <= tick() then
+				if entity.isAlive and autoclickertick <= tick() then
 					if autoclickermode["Value"] == "Sword" then
 						local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
 						if tool and uis:IsMouseButtonPressed(0) then
@@ -524,7 +799,7 @@ local Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateO
 		if callback then
 			BindToRenderStep("Reach", 1, function() 
 				local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-				if tool and isAlive() then
+				if tool and entity.isAlive then
 					local touch = findTouchInterest(tool)
 					if touch then
 						local size = rawget(oldsize, tool.Name)
@@ -580,7 +855,7 @@ local ClickTP = {["Enabled"] = false}
 ClickTP = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "MouseTP", 
 	["Function"] = function(callback) 
-		if callback and isAlive() then
+		if callback and entity.isAlive then
 			lplr.Character.HumanoidRootPart.CFrame = CFrame.new(localmouse.Hit.p)
 			ClickTP["ToggleButton"](false)
 		end
@@ -594,33 +869,70 @@ runcode(function()
 	local flywall = {["Enabled"] = false}
 	local flyupanddown = {["Enabled"] = false}
 	local flymethod = {["Value"] = "Normal"}
+	local flymovemethod = {["Value"] = "MoveDirection"}
 	local flykeys = {["Value"] = "Space/LeftControl"}
+	local flyplatformtoggle = {["Enabled"] = false}
+	local flyplatformstanding = {["Enabled"] = false}
+	local flyplatform
 	local flyposy = 0
 	local flyup = false
 	local flydown = false
 	local flypress
 	local flyendpress
+	local flyjumpcf = CFrame.new(0, 0, 0)
+	local flyalivecheck = false
 	local bodyvelofly
+	local w = 0
+	local s = 0
+	local a = 0
+	local d = 0
 	local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Fly", 
 		["Function"] = function(callback)
 			if callback then
-				if isAlive() then
+				if entity.isAlive then
 					flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+					flyalivecheck = true
 				end
 				flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
-					if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
-						local divided = flykeys["Value"]:split("/")
-						if input1.KeyCode == Enum.KeyCode[divided[1]] then
-							flyup = true
+					if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+						if input1.KeyCode == Enum.KeyCode.W then
+							w = -1
 						end
-						if input1.KeyCode == Enum.KeyCode[divided[2]] then
-							flydown = true
+						if input1.KeyCode == Enum.KeyCode.S then
+							s = 1
+						end
+						if input1.KeyCode == Enum.KeyCode.A then
+							a = -1
+						end
+						if input1.KeyCode == Enum.KeyCode.D then
+							d = 1
+						end
+						if flyupanddown["Enabled"] then
+							local divided = flykeys["Value"]:split("/")
+							if input1.KeyCode == Enum.KeyCode[divided[1]] then
+								flyup = true
+							end
+							if input1.KeyCode == Enum.KeyCode[divided[2]] then
+								flydown = true
+							end
 						end
 					end
 				end)
 				flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
 					local divided = flykeys["Value"]:split("/")
+					if input1.KeyCode == Enum.KeyCode.W then
+						w = 0
+					end
+					if input1.KeyCode == Enum.KeyCode.S then
+						s = 0
+					end
+					if input1.KeyCode == Enum.KeyCode.A then
+						a = 0
+					end
+					if input1.KeyCode == Enum.KeyCode.D then
+						d = 0
+					end
 					if input1.KeyCode == Enum.KeyCode[divided[1]] then
 						flyup = false
 					end
@@ -628,43 +940,74 @@ runcode(function()
 						flydown = false
 					end
 				end)
+				if flymethod["Value"] == "Jump" and entity.isAlive then
+					lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+				end
 				BindToStepped("Fly", 1, function(time, delta) 
-					if isAlive() then
+					if entity.isAlive then
+						lplr.Character.Humanoid.PlatformStand = flyplatformstanding["Enabled"]
+						if flyalivecheck == false then
+							flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+							flyalivecheck = true
+						end
+						local movevec = (flymovemethod["Value"] == "Manual" and (not (w or s or a or d)) and Vector3.new(0, 0, 0) or lplr.Character.Humanoid.MoveDirection).Unit
+						movevec = movevec == movevec and movevec or Vector3.new(0, 0, 0)
 						if flymethod["Value"] == "Normal" then
-							lplr.Character.HumanoidRootPart.Velocity = (lplr.Character.Humanoid.MoveDirection * flyspeed["Value"]) + Vector3.new(0, 0.85 + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
-						elseif flymethod["Value"] == "CFrame" then
-							if (bodyvelofly ~= nil) then
-								bodyvelofly:Remove()
+							if flyplatformstanding["Enabled"] then
+								lplr.Character.HumanoidRootPart.CFrame = CFrame.new(lplr.Character.HumanoidRootPart.CFrame.p, lplr.Character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
 							end
+							lplr.Character.HumanoidRootPart.Velocity = (movevec * flyspeed["Value"]) + Vector3.new(0, 0.85 + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+						else
 							if flyup then
-								flyposy = flyposy + (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+								flyposy = flyposy + (flyverticalspeed["Value"] * delta)
 							end
 							if flydown then
-								flyposy = flyposy - (1 * (math.clamp(flyverticalspeed["Value"] - 16, 1, 150) * delta))
+								flyposy = flyposy - (flyverticalspeed["Value"] * delta)
 							end
-							local flypos = (lplr.Character.Humanoid.MoveDirection * (math.clamp(flyspeed["Value"] - 16, 1, 150) * delta))
+							local flypos = (movevec * (math.clamp(flyspeed["Value"] - lplr.Character.Humanoid.WalkSpeed, 0, 1000000000000) * delta))
 							flypos = Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 							if flywall["Enabled"] then
 								local raycastparameters = RaycastParams.new()
+								raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
 								raycastparameters.FilterDescendantsInstances = {lplr.Character}
 								local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, flypos, raycastparameters)
 								if ray then flypos = (ray.Position - lplr.Character.HumanoidRootPart.Position) flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y end
 							end
-							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + flypos
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-						elseif flymethod["Value"] == "Jump" then
-							if lplr.Character.HumanoidRootPart.Velocity.Y < -(lplr.Character.Humanoid.JumpPower - ((flyup and flyverticalspeed["Value"] or 0) - (flydown and flyverticalspeed["Value"] or 0))) then
-								lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+							if flymethod["Value"] ~= "Jump" then
+								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + flypos
+								if flyplatformstanding["Enabled"] then
+									lplr.Character.HumanoidRootPart.CFrame = CFrame.new(lplr.Character.HumanoidRootPart.CFrame.p, lplr.Character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
+								end
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+							else
+								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, 0, flypos.Z)
+								if lplr.Character.HumanoidRootPart.Velocity.Y < -(lplr.Character.Humanoid.JumpPower - ((flyup and flyverticalspeed["Value"] or 0) - (flydown and flyverticalspeed["Value"] or 0))) then
+									flyjumpcf = lplr.Character.HumanoidRootPart.CFrame * CFrame.new(0, -lplr.Character.Humanoid.HipHeight, 0)
+									lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+								end
 							end
 						end
+						if flyplatform then
+							flyplatform.CFrame = (flymethod["Value"] == "Jump" and flyjumpcf or lplr.Character.HumanoidRootPart.CFrame * CFrame.new(0, -lplr.Character.Humanoid.HipHeight * 2, 0))
+							flyplatform.Parent = cam
+						end
+					else
+						flyalivecheck = false
 					end
 				end)
 			else
 				flyup = false
 				flydown = false
+				flyalivecheck = false
 				flypress:Disconnect()
 				flyendpress:Disconnect()
 				UnbindFromStepped("Fly")
+				if entity.isAlive then
+					lplr.Character.Humanoid.PlatformStand = false
+				end
+				if flyplatform then
+					flyplatform:Remove()
+				end
 			end
 		end,
 		["ExtraText"] = function() return flymethod["Value"] end
@@ -673,10 +1016,15 @@ runcode(function()
 		["Name"] = "Mode", 
 		["List"] = {"Normal", "CFrame", "Jump"},
 		["Function"] = function(val)
-			if isAlive() then
+			if entity.isAlive then
 				flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
 			end
 		end
+	})
+	flymovemethod = fly.CreateDropdown({
+		["Name"] = "Movement", 
+		["List"] = {"MoveDirection", "Manual"},
+		["Function"] = function(val) end
 	})
 	flykeys = fly.CreateDropdown({
 		["Name"] = "Keys", 
@@ -700,6 +1048,26 @@ runcode(function()
 		["Function"] = function() end,
 		["Default"] = true
 	})
+	flyplatformtoggle = fly.CreateToggle({
+		["Name"] = "FloorPlatform", 
+		["Function"] = function(callback)
+			if callback then
+				flyplatform = Instance.new("Part")
+				flyplatform.Anchored = true
+				flyplatform.CanCollide = true
+				flyplatform.Size = Vector3.new(2, 1, 2)
+				flyplatform.Transparency = 1
+			else
+				if flyplatform then 
+					flyplatform:Remove() 
+				end
+			end
+		end
+	})
+	flyplatformstanding = fly.CreateToggle({
+		["Name"] = "PlatformStand",
+		["Function"] = function() end
+	})
 	flyupanddown = fly.CreateToggle({
 		["Name"] = "Y Level", 
 		["Function"] = function() end
@@ -713,12 +1081,12 @@ local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Crea
 	["Function"] = function(callback)
 		if callback then
 			BindToRenderStep("HitBoxes", 1, function() 
-				for i,plr in pairs(players:GetChildren()) do
-					if isPlayerTargetable(plr, true, true) and isAlive(plr) then
+				for i,plr in pairs(entity.entityList) do
+					if plr.Targetable then
 						if hitboxoption["Value"] == "HumanoidRootPart" then
-							plr.Character.HumanoidRootPart.Size = Vector3.new(2 + (hitboxexpand["Value"] * 0.6), 2 + (hitboxexpand["Value"] * 0.6), 1 + (hitboxexpand["Value"] * 0.6))
+							plr.Character.HumanoidRootPart.Size = Vector3.new(2 * (hitboxexpand["Value"] / 10), 2 * (hitboxexpand["Value"] / 10), 1 * (hitboxexpand["Value"] / 10))
 						else
-							plr.Character.Head.Size = Vector3.new(1 + (hitboxexpand["Value"] * 0.6), 1 + (hitboxexpand["Value"] * 0.6), 1 + (hitboxexpand["Value"] * 0.6))
+							plr.Character.Head.Size = Vector3.new((hitboxexpand["Value"] / 10), (hitboxexpand["Value"] / 10), (hitboxexpand["Value"] / 10))
 						end
 					end
 				end
@@ -736,8 +1104,8 @@ local Hitbox =  GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Crea
 })
 hitboxexpand = Hitbox.CreateSlider({
 	["Name"] = "Expand amount",
-	["Min"] = 1,
-	["Max"] = 30,
+	["Min"] = 10,
+	["Max"] = 50,
 	["Function"] = function(val) end
 })
 hitboxoption = Hitbox.CreateDropdown({
@@ -762,46 +1130,52 @@ local killauratargetframe = {["Players"] = {["Enabled"] = false}}
 local killauracframe = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local killauratick = tick()
+local killauranear = false
 Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Killaura", 
 	["Function"] = function(callback)
 		if callback then
 			BindToRenderStep("Killaura", 1, function() 
-				local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-				local plr = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
-				if tool and isAlive() and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
-					local touch = findTouchInterest(tool)
-					if touch then
-						local targettable = {}
-						local targetsize = 0
-						for i,v in pairs(plr) do
-							local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
-							local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
-							local angle = math.acos(localfacing:Dot(vec))
-							if angle <= (killauraangle["Value"] / 115) then
-								targettable[v.Name] = {
-									["UserId"] = v.UserId,
-									["Health"] = v.Character.Humanoid.Health,
-									["MaxHealth"] = v.Character.Humanoid.MaxHealth
-								}
-								targetsize = targetsize + 1
-								if killauracframe["Enabled"] then
-									lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(v.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, v.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+				killauranear = false
+				if entity.isAlive then
+					local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+					local plr = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
+					if tool and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
+						local touch = findTouchInterest(tool)
+						if touch then
+							local targettable = {}
+							local targetsize = 0
+							for i,v in pairs(plr) do
+								local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
+								local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
+								local angle = math.acos(localfacing:Dot(vec))
+								if angle <= (killauraangle["Value"] / 115) then
+									killauranear = true
+									targettable[v.Player.Name] = {
+										["UserId"] = v.Player.UserId,
+										["Health"] = v.Character.Humanoid.Health,
+										["MaxHealth"] = v.Character.Humanoid.MaxHealth
+									}
+									targetsize = targetsize + 1
+									if killauracframe["Enabled"] then
+										lplr.Character:SetPrimaryPartCFrame(CFrame.new(lplr.Character.PrimaryPart.Position, Vector3.new(v.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, v.Character:FindFirstChild("HumanoidRootPart").Position.Z)))
+									end
+									if killauratick <= tick() then
+										tool:Activate()
+										killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
+									end
+									firetouchinterest(touch.Parent, v.Character.HumanoidRootPart, 1)
+									firetouchinterest(touch.Parent, v.Character.HumanoidRootPart, 0)
 								end
-								if killauratick <= tick() then
-									tool:Activate()
-									killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
-								end
-								firetouchinterest(touch.Parent, v.Character.HumanoidRootPart, 1)
-								firetouchinterest(touch.Parent, v.Character.HumanoidRootPart, 0)
 							end
+							targetinfo.UpdateInfo(targettable, targetsize)
 						end
-						targetinfo.UpdateInfo(targettable, targetsize)
 					end
 				end
 			end)
 		else
 			UnbindFromRenderStep("Killaura")
+			killauranear = false
 		end
 	end,
 	["HoverText"] = "Attack players around you\nwithout aiming at them."
@@ -846,12 +1220,12 @@ longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	["Function"] = function(callback)
 		if callback then
 			if longjumpjump then
-				if isAlive() then
+				if entity.isAlive then
 					lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 			end
 			BindToRenderStep("LongJump", 1, function() 
-				if isAlive() then
+				if entity.isAlive then
 					if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 						local velo = lplr.Character.Humanoid.MoveDirection * longjumpboost["Value"]
 						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(velo.X, lplr.Character.HumanoidRootPart.Velocity.Y, velo.Z)
@@ -906,7 +1280,7 @@ HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				if HighJumpTick > tick()  then
 					createwarning("LongJump", "Wait "..math.round(HighJumpTick - tick()).." before retoggling.", 1)
 				end
-				if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
+				if HighJumpTick <= tick() and entity.isAlive and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
 					HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
 					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 				end
@@ -914,7 +1288,7 @@ HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 			else
 				highjumpbound = true
 				BindToRenderStep("HighJump", 1, function()
-					if HighJumpTick <= tick() and isAlive() and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and uis:IsKeyDown(Enum.KeyCode.Space) then
+					if HighJumpTick <= tick() and entity.isAlive and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and uis:IsKeyDown(Enum.KeyCode.Space) then
 						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
 						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 					end
@@ -953,16 +1327,18 @@ local spidergoinup = false
 local holdingshift = false
 local phasemode = {["Value"] = "Normal"}
 local phaselimit = {["Value"] = 1}
+local phaseparts = {}
 
 phase = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "Phase", 
 	["Function"] = function(callback)
 		if callback then
 			BindToStepped("Phase", 1, function()
-				if isAlive() then
+				if entity.isAlive then
 					if phasemode["Value"] == "Normal" then
 						for i, part in pairs(lplr.Character:GetDescendants()) do
 							if part:IsA("BasePart") and part.CanCollide == true then
+								phaseparts[part] = true
 								part.CanCollide = (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] and (not holdingshift))
 							end
 						end
@@ -996,6 +1372,12 @@ phase = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 			end)
 		else
 			UnbindFromStepped("Phase")
+			for i,v in pairs(phaseparts) do
+				if i then
+					i.CanCollide = true
+				end
+			end
+			table.clear(phaseparts)
 		end
 	end,
 	["HoverText"] = "Lets you Phase/Clip through walls. (Hold shift to use phase over spider)"
@@ -1026,7 +1408,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				BindToStepped("Spider", 1, function()
-					if isAlive() then
+					if entity.isAlive then
 						local chars = {}
 						for i,v in pairs(players:GetChildren()) do
 							table.insert(chars, v.Character)
@@ -1064,42 +1446,68 @@ runcode(function()
 	})
 end)
 
-local speedval = {["Value"] = 1}
-local speedmethod = {["Value"] = "AntiCheat A"}
-local speeddelay = {["Value"] = 0.7}
-local speedwallcheck = {["Enabled"] = true}
-local speedjump = {["Enabled"] = false}
-local bodyvelo
-local speeddelayval = tick()
+runcode(function()
+	local speedval = {["Value"] = 1}
+	local speedmethod = {["Value"] = "AntiCheat A"}
+	local speedmovemethod = {["Value"] = "MoveDirection"}
+	local speeddelay = {["Value"] = 0.7}
+	local speedwallcheck = {["Enabled"] = true}
+	local speedjump = {["Enabled"] = false}
+	local speedjumpheight = {["Value"] = 20}
+	local speedjumpalways = {["Enabled"] = false}
+	local speedup
+	local speeddown
+	local w = 0
+	local s = 0
+	local a = 0
+	local d = 0
+	local bodyvelo
+	local speeddelayval = tick()
 
-local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "Speed", 
-	["Function"] = function(callback)
-		if callback then
-			BindToStepped("Speed", 1, function(time, delta)
-				if isAlive() then
-					if speedmethod["Value"] == "Velocity" then
-						if (bodyvelo ~= nil) then
-							bodyvelo:Remove()
+	local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Speed", 
+		["Function"] = function(callback)
+			if callback then
+				speeddown = game:GetService("UserInputService").InputBegan:connect(function(input1)
+					if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+						if input1.KeyCode == Enum.KeyCode.W then
+							w = true
 						end
-						local newvelo = lplr.Character.Humanoid.MoveDirection * speedval["Value"]
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
-					elseif speedmethod["Value"] == "CFrame" then
-						if (bodyvelo ~= nil) then
-							bodyvelo:Remove()
+						if input1.KeyCode == Enum.KeyCode.S then
+							s = true
 						end
-						local newpos = (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] * delta))
-						if speedwallcheck["Enabled"] then
-							local raycastparameters = RaycastParams.new()
-							raycastparameters.FilterDescendantsInstances = {lplr.Character}
-							local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
-							if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
+						if input1.KeyCode == Enum.KeyCode.A then
+							a = true
 						end
-						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
-					elseif speedmethod["Value"] == "TP" then
-						if speeddelayval <= tick() then
-							speeddelayval = tick() + (speeddelay["Value"] / 10)
-							local newpos = (lplr.Character.Humanoid.MoveDirection * speedval["Value"])
+						if input1.KeyCode == Enum.KeyCode.D then
+							d = true
+						end
+					end
+				end)
+				speedup = game:GetService("UserInputService").InputEnded:connect(function(input1)
+					if input1.KeyCode == Enum.KeyCode.W then
+						w = false
+					end
+					if input1.KeyCode == Enum.KeyCode.S then
+						s = false
+					end
+					if input1.KeyCode == Enum.KeyCode.A then
+						a = false
+					end
+					if input1.KeyCode == Enum.KeyCode.D then
+						d = false
+					end
+				end)
+				BindToStepped("Speed", 1, function(time, delta)
+					if entity.isAlive then
+						local jumpcheck = killauranear and Killaura["Enabled"]
+						local movevec = (speedmovemethod["Value"] == "Manual" and (not (w or s or a or d)) and Vector3.new(0, 0, 0) or lplr.Character.Humanoid.MoveDirection).Unit
+						movevec = movevec == movevec and movevec or Vector3.new(0, 0, 0)
+						if speedmethod["Value"] == "Velocity" then
+							local newvelo = movevec * speedval["Value"]
+							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
+						elseif speedmethod["Value"] == "CFrame" then
+							local newpos = (movevec * (math.clamp(speedval["Value"] - lplr.Character.Humanoid.WalkSpeed, 0, 1000000000) * delta))
 							if speedwallcheck["Enabled"] then
 								local raycastparameters = RaycastParams.new()
 								raycastparameters.FilterDescendantsInstances = {lplr.Character}
@@ -1107,56 +1515,100 @@ local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].Create
 								if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
 							end
 							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+						elseif speedmethod["Value"] == "TP" then
+							if speeddelayval <= tick() then
+								speeddelayval = tick() + (speeddelay["Value"] / 10)
+								local newpos = (movevec * (math.clamp(speedval["Value"] - lplr.Character.Humanoid.WalkSpeed, 0, 1000000000)))
+								if speedwallcheck["Enabled"] then
+									local raycastparameters = RaycastParams.new()
+									raycastparameters.FilterDescendantsInstances = {lplr.Character}
+									local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
+									if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
+								end
+								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+							end
+						end
+						if speedjump["Enabled"] and (speedjumpalways["Enabled"] or jumpcheck) then
+							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
+							end
 						end
 					end
-					if speedjump["Enabled"] then
-						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-							lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-						end
-					end
+				end)
+			else
+				speeddelayval = 0
+				if speedup then
+					speedup:Disconnect()
 				end
-			end)
-		else
-			speeddelayval = 0
-			if bodyvelo then
-				bodyvelo:Remove()
+				if speeddown then
+					speeddown:Disconnect()
+				end
+				if bodyvelo then
+					bodyvelo:Remove()
+				end
+				UnbindFromStepped("Speed")
 			end
-			UnbindFromStepped("Speed")
+		end,
+		["ExtraText"] = function() return " "..speedmethod["Value"] end
+	})
+	speedmethod = speed.CreateDropdown({
+		["Name"] = "Mode", 
+		["List"] = {"Velocity", "CFrame", "TP"},
+		["Function"] = function(val)
+			speeddelay["Object"].Visible = val == "TP"
 		end
-	end,
-	["ExtraText"] = function() return " "..speedmethod["Value"] end
-})
-speedmethod = speed.CreateDropdown({
-	["Name"] = "Mode", 
-	["List"] = {"Velocity", "CFrame", "TP"},
-	["Function"] = function(val)
-		speeddelay["Object"].Visible = val == "TP"
-	end
-})
-speedval = speed.CreateSlider({
-	["Name"] = "Speed", 
-	["Min"] = 1,
-	["Max"] = 150, 
-	["Function"] = function(val) end
-})
-speeddelay = speed.CreateSlider({
-	["Name"] = "Delay", 
-	["Min"] = 1,
-	["Max"] = 50, 
-	["Function"] = function(val)
-		speeddelayval = tick() + (val / 10)
-	end,
-	["Default"] = 7
-})
-speedwallcheck = speed.CreateToggle({
-	["Name"] = "Wall Check",
-	["Function"] = function() end,
-	["Default"] = true
-})
-speedjump = speed.CreateToggle({
-	["Name"] = "AutoJump", 
-	["Function"] = function() end
-})
+	})
+	speedmovemethod = speed.CreateDropdown({
+		["Name"] = "Movement", 
+		["List"] = {"MoveDirection", "Manual"},
+		["Function"] = function(val) end
+	})
+	speedval = speed.CreateSlider({
+		["Name"] = "Speed", 
+		["Min"] = 1,
+		["Max"] = 150, 
+		["Function"] = function(val) end
+	})
+	speeddelay = speed.CreateSlider({
+		["Name"] = "Delay", 
+		["Min"] = 1,
+		["Max"] = 50, 
+		["Function"] = function(val)
+			speeddelayval = tick() + (val / 10)
+		end,
+		["Default"] = 7
+	})
+	speedjumpheight = speed.CreateSlider({
+		["Name"] = "Jump Height",
+		["Min"] = 0,
+		["Max"] = 30,
+		["Default"] = 25,
+		["Function"] = function() end
+	})
+	speedjump = speed.CreateToggle({
+		["Name"] = "AutoJump", 
+		["Function"] = function(callback) 
+			if speedjumpalways["Object"] then
+				speedjump["Object"].ToggleArrow.Visible = callback
+				speedjumpalways["Object"].Visible = callback
+			end
+		end,
+		["Default"] = true
+	})
+	speedjumpalways = speed.CreateToggle({
+		["Name"] = "Always Jump",
+		["Function"] = function() end
+	})
+	speedwallcheck = speed.CreateToggle({
+		["Name"] = "Wall Check",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+	speedjumpalways["Object"].BackgroundTransparency = 0
+	speedjumpalways["Object"].BorderSizePixel = 0
+	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	speedjumpalways["Object"].Visible = speedjump["Enabled"]
+end)
 
 runcode(function()
 	local bodyspin
@@ -1166,7 +1618,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				BindToRenderStep("SpinBot", 1, function()
-					if isAlive() then
+					if entity.isAlive then
 						if (bodyspin == nil or bodyspin ~= nil and bodyspin.Parent ~= lplr.Character.HumanoidRootPart) then
 							bodyspin = Instance.new("BodyAngularVelocity")
 							bodyspin.MaxTorque = Vector3.new(0, math.huge, 0)
@@ -1192,6 +1644,37 @@ runcode(function()
 		["Max"] = 100,
 		["Default"] = 40,
 		["Function"] = function() end
+	})
+end)
+
+runcode(function()
+	local oldgrav
+	local gravchanged = false
+	local gravconnection
+	local grav = {["Enabled"] = false}
+	local gravslider = {["Value"] = 100}
+	grav = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Gravity",
+		["Function"] = function(callback)
+			if callback then
+				oldgrav = workspace.Gravity
+				workspace.Gravity = gravslider["Value"]
+			else
+				workspace.Gravity = oldgrav
+			end
+		end,
+		["HoverText"] = "Changes workspace gravity"
+	})
+	gravslider = grav.CreateSlider({
+		["Name"] = "Gravity",
+		["Min"] = 0,
+		["Max"] = 192,
+		["Function"] = function(val) 
+			if grav["Enabled"] then
+				workspace.Gravity = val
+			end
+		end,
+		["Default"] = 192
 	})
 end)
 
@@ -1834,7 +2317,7 @@ local Health = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 		if callback then
 			HealthText.Visible = true
 			BindToRenderStep("Health", 1, function()
-				if isAlive() then
+				if entity.isAlive then
 					HealthText.Text = tostring(math.round(lplr.Character.Humanoid.Health)).."❤"
 				end
 			end)
@@ -1884,7 +2367,7 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 								rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name).." "..math.floor(plr.Character.Humanoid.Health)
 							end
 							local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-							local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+							local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 							local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 							thing.Text = modifiedText
@@ -1902,9 +2385,9 @@ local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Crea
 						headPos = headPos
 						
 						if headVis then
-							local rawText = (NameTagsDistance["Enabled"] and isAlive() and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
+							local rawText = (NameTagsDistance["Enabled"] and entity.isAlive and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 							local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-							local modifiedText = (NameTagsDistance["Enabled"] and isAlive() and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+							local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 							local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 							thing.Text = modifiedText
@@ -2629,7 +3112,10 @@ ChatSpammerMessages = ChatSpammer.CreateTextList({
 })
 
 runcode(function()
-	local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
+	local controlmodule = {}
+	pcall(function()
+		controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
+	end)
 	local oldmove
 	local SafeWalk = {["Enabled"] = false}
 	SafeWalk = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
@@ -2638,7 +3124,7 @@ runcode(function()
 			if callback then
 				oldmove = controlmodule.moveFunction
 				controlmodule.moveFunction = function(Self, vec, facecam)
-					if isAlive() then
+					if entity.isAlive then
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {lplr.Character}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
@@ -2709,7 +3195,7 @@ runcode(function()
 					repeat
 						task.wait(0.3)
 						if (not Breadcrumbs["Enabled"]) then return end
-						if isAlive() then
+						if entity.isAlive then
 							if breadcrumbtrail == nil then
 								breadcrumbattachment = Instance.new("Attachment")
 								breadcrumbattachment.Position = Vector3.new(0, 0.07 - 2.9, 0.5)
@@ -2743,7 +3229,7 @@ runcode(function()
 			else
 				if breadcrumbtrail then
 					breadcrumbtrail:Remove()
-					if isAlive() then 
+					if entity.isAlive then 
 						for i,v in pairs(lplr.Character:GetChildren()) do
 							if v:IsA("Trail") then
 								v:Remove()
