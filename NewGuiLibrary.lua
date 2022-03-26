@@ -21,7 +21,8 @@ if shared.VapeExecuted then
 	end 
 	local betterisfile = function(file)
 		local suc, res = pcall(function() return readfile(file) end)
-		return suc and res ~= nil
+		print(suc, res)
+return suc and res ~= nil
 	end
 	local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 	local loadedsuccessfully = false
