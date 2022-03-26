@@ -323,8 +323,8 @@ if shared.VapeExecuted then
 			gui.InputBegan:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and dragging == false then
 						dragStart = input.Position
-						local delta = (input.Position - dragStart) * (1 / api["MainRescale"].Scale)
-						if delta.Y <= 30 then
+						local delta = (dragStart - Vector3.new(gui.AbsolutePosition.X, gui.AbsolutePosition.Y, 0)) * (1 / api["MainRescale"].Scale)
+						if delta.Y <= 40 then
 							dragging = clickgui.Visible
 							startPos = gui.Position
 							

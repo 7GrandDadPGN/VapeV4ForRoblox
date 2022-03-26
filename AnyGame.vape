@@ -170,8 +170,12 @@ local function isPlayerTargetable(plr, target, friend)
 end
 
 local function vischeck(char, part, ignorelist)
-	local unpacked = unpack(cam.GetPartsObscuringTarget(cam, {lplr.Character[part].Position, char[part].Position}, {lplr.Character, char, cam, table.unpack(ignorelist or {})}))
-	return not unpacked
+	local rayparams = RaycastParams.new()
+	rayparams.FilterDescendantsInstances = {lplr.Character, char, cam, table.unpack(ignorelist or {})}
+	local ray = workspace.Raycast(workspace, cam.CFrame.p, CFrame.lookAt(cam.CFrame.p, char[part].Position).lookVector.Unit * (cam.CFrame.p - char[part].Position).Magnitude, rayparams)
+	return not ray
+--	local unpacked = unpack(cam.GetPartsObscuringTarget(cam, {lplr.Character[part].Position, char[part].Position}, {lplr.Character, char, cam, table.unpack(ignorelist or {})}))
+	--return not unpacked
 end
 
 local function runcode(func)
@@ -466,6 +470,9 @@ runcode(function()
 		["Name"] = "SilentAim", 
 		["Function"] = function(callback) 
 			if callback then
+				if aimfovframe then
+					aimfovframe.Visible = aimmode["Value"] ~= "Blatant"
+				end
 				if not aimbound then
 					aimbound = true
 					local oldnamecall
@@ -476,16 +483,18 @@ runcode(function()
 						if checkcaller() then
 							return oldnamecall(self, ...)
 						end
-						local calling = getcallingscript() 
-						if calling then
-							local list = #aimignoredscripts["ObjectList"] > 0 and aimignoredscripts["ObjectList"] or {"ControlModule"}
-							if table.find(aimignoredscripts["ObjectList"], tostring(calling)) then
-								return oldnamecall(self, ...)
-							end
-						end
 						local NamecallMethod = getnamecallmethod()
 						if NamecallMethod ~= aimmethod["Value"] then
 							return oldnamecall(self, ...)
+						end
+						local calling = getcallingscript() 
+						if calling then
+							local list = #aimignoredscripts["ObjectList"] > 0 and aimignoredscripts["ObjectList"] or {"ControlScript", "ControlModule"}
+							if table.find(list, tostring(calling)) then
+								return oldnamecall(self, ...)
+							else
+								print(calling)
+							end
 						end
 						local Args = {...}
 						local plr
@@ -536,7 +545,7 @@ runcode(function()
 						local calling = getcallingscript() 
 						if calling then
 							local list = #aimignoredscripts["ObjectList"] > 0 and aimignoredscripts["ObjectList"] or {"ControlModule"}
-							if table.find(aimignoredscripts["ObjectList"], tostring(calling)) then
+							if table.find(list, tostring(calling)) then
 								return oldindex(Self, Val)
 							end
 						end
@@ -659,7 +668,7 @@ runcode(function()
 				aimfovframe = Instance.new("Frame")
 				aimfovframe.BackgroundTransparency = 0.8
 				aimfovframe.ZIndex = -1
-				aimfovframe.Visible = aimmode["Value"] ~= "Blatant"
+				aimfovframe.Visible = aimmode["Value"] ~= "Blatant" and AimAssist["Enabled"]
 				aimfovframe.BackgroundColor3 = Color3.fromHSV(aimfovframecolor["Hue"], aimfovframecolor["Sat"], aimfovframecolor["Value"])
 				aimfovframe.Size = UDim2.new(0, aimfov["Value"], 0, aimfov["Value"])
 				aimfovframe.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -698,7 +707,7 @@ runcode(function()
 							plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
 						end
 						if plr then
-							if mouse1click and iswindowactive() and shoottime <= tick() and isNotHoveringOverGui() and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
+							if mouse1click and iswindowactive() and shoottime <= tick() and isNotHoveringOverGui() and GuiLibrary["MainGui"]:FindFirstChild("ScaledGui") and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
 								if pressed then
 									mouse1release()
 								else
