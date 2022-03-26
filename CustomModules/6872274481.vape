@@ -4471,6 +4471,7 @@ runcode(function()
     local killaurahandcheck = {["Enabled"] = false}
     local killaurabaguette = {["Enabled"] = false}
     local killauraanimation = {["Enabled"] = false}
+	local killauranovape = {["Enabled"] = false}
     local killauradelay = 0
     local Killauranear = false
     local killauraplaying = false
@@ -4501,6 +4502,9 @@ runcode(function()
 			return nil
 		end
 		if bedwars["CheckWhitelisted"](plr.Player) then
+			return nil
+		end
+		if killauranovape["Enabled"] and vapeusers[plr.Player.Name] then
 			return nil
 		end
 		local root = plr.RootPart
@@ -4843,6 +4847,13 @@ runcode(function()
         ["Function"] = function() end,
 		["HoverText"] = "Uses a custom animation for swinging"
     })
+	if bedwars["CheckPlayerType"](lplr) then
+		killauranovape = Killaura.CreateToggle({
+			["Name"] = "No Vape",
+			["Function"] = function() end,
+			["HoverText"] = "no hit vape user"
+		})
+	end
 end)
 
 runcode(function()
@@ -5396,6 +5407,22 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 	end
 	local args = tab.Message:split(" ")
 	--priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)]
+	if priolist[bedwars["CheckPlayerType"](lplr)] > 0 then
+		if tab.Message:len() >= 5 and tab.Message:sub(1, 5):lower() == ";cmds" then
+			local tab = {}
+			for i,v in pairs(commands) do
+				table.insert(tab, i)
+			end
+			table.sort(tab)
+			local str = ""
+			for i,v in pairs(tab) do
+				str = str..";"..v.."\n"
+			end
+			game.StarterGui:SetCore("ChatMakeSystemMessage",{
+                Text = 	str,
+            })
+		end
+	end
 	if plr and priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)] and #args > 1 then
 		table.remove(args, 1)
 		local chosenplayers = findplayers(args[1])
@@ -7892,7 +7919,7 @@ runcode(function()
 	
 									if isAlive(plr) then
 										projectilemodel:SetPrimaryPartCFrame(CFrame.new(plr.Character.HumanoidRootPart.CFrame.p, plr.Character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector))
-										task.wait(0.2)
+										task.wait(0.3)
 										bedwars["RavenTable"]:detonateRaven()
 									else
 										createwarning("RavenTP", "Player died before it could TP.", 3)
@@ -9314,6 +9341,9 @@ runcode(function()
 						local multigrav = gravity * projmeta.gravityMultiplier
 						local offsetshootpos = shootpos + projmeta.fromPositionOffset
 					 	local pos = (plr.Character.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
+						if (offsetshootpos - pos).magnitude >= launchvelo * 1.3 then
+							return oldaim(bowtable, projmeta, worldmeta, shootpospart, ...)
+						end
 						local newlook = CFrame.new(offsetshootpos, pos) * CFrame.new(Vector3.new(-bedwars["BowConstantsTable"].RelX, 0, 0))
 						pos = newlook.p + (newlook.lookVector * (offsetshootpos - pos).magnitude)
 					--print(CFrame.new(offsetshootpos, pos).lookVector, newlook.lookVector)
