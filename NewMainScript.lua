@@ -96,8 +96,8 @@ if isfolder("vape/assets") == false then
 end
 
 local GuiLibrary = loadstring(GetURL("NewGuiLibrary.lua"))()
-local translations = loadstring(GetURL("translations/"..GuiLibrary["Language"]..".vapetranslation"))()
-local translatedlogo = pcall(function() return GetURL("translations/"..GuiLibrary["Language"].."/VapeLogo1.png") end)
+local translations = {}--loadstring(GetURL("translations/"..GuiLibrary["Language"]..".vapetranslation"))()
+local translatedlogo = false--pcall(function() return GetURL("translations/"..GuiLibrary["Language"].."/VapeLogo1.png") end)
 
 local checkpublicreponum = 0
 local checkpublicrepo
