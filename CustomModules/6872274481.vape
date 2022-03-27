@@ -2754,10 +2754,10 @@ runcode(function()
 									end
 								end
 							else
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 70) or 70), 0)
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
 								for i = 1, 2 do
 									task.wait(0.1)
-									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 70) or 70), 0)
+									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
 								end
 							end
 						end
@@ -5407,7 +5407,7 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 	end
 	local args = tab.Message:split(" ")
 	--priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)]
-	if priolist[bedwars["CheckPlayerType"](lplr)] > 0 then
+	if priolist[bedwars["CheckPlayerType"](lplr)] > 0 and plr == lplr then
 		if tab.Message:len() >= 5 and tab.Message:sub(1, 5):lower() == ";cmds" then
 			local tab = {}
 			for i,v in pairs(commands) do
@@ -6060,10 +6060,9 @@ runcode(function()
 	local flypress
 	local flyendpress
 	local flycorountine
-	local flyupanddowntroll = 0
 
 	local function buyballoons()
-		if entity.isAlive and fly["Enabled"] then
+		if isAlive() and fly["Enabled"] then
 			if getItem("balloon") then
 				bedwars["BalloonController"]["inflateBalloon"]()
 			end
@@ -6076,32 +6075,37 @@ runcode(function()
 		end)
 	end)
 
-	local acbypasswasenabled = false
-	local speedwasenabled = false
+
+	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p3)
+		connectionstodisconnect[#connectionstodisconnect + 1] = p3:Connect(function(p4)
+			if isAlive() and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) and (p4.entityInstance == (AnticheatBypass["Enabled"] and oldchar or lplr.Character)) and (p4.fromEntity ~= (AnticheatBypass["Enabled"] and oldchar or lplr.Character) or p4.damageType ~= 1) then
+				if tnttimer <= tick() then
+					spawn(function()
+						repeat task.wait() until tnttimer <= tick()
+						if fly["Enabled"] then
+							fly["ToggleButton"](false)
+						end
+					end)
+				end
+				tnttimer = tick() + 2.9
+				if fly["Enabled"] then
+					createwarning("Damage Fly", "You can fly for 3 seconds", 3)
+				end
+			end
+		end)
+	end)
+	local flytog = false
+	local flytogtick = tick()
 	fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Fly",
 		["Function"] = function(callback)
 			if callback then
-				acbypasswasenabled = AnticheatBypass["Enabled"]
-				speedwasenabled = GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Enabled"]
-				if GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Enabled"] then
-					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["ToggleButton"](false)
+				if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
+				--	AnticheatBypass["ToggleButton"](false)
 				end
-				if AnticheatBypass["Enabled"] then
-					AnticheatBypass["ToggleButton"](false)
-				end
-				spawn(function()
-					repeat
-						repeat task.wait() if not fly["Enabled"] then break end until (lplr.Character.HumanoidRootPart.Velocity.Y < (-10.5 / (lplr.Character:GetAttribute("InflatedBalloons") or 1)))
-						if entity.isAlive and fly["Enabled"] then
-							if flydown == false then
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 20 + (flyup and flyverticalspeed["Value"] or 0), lplr.Character.HumanoidRootPart.Velocity.Z)
-							end
-						end
-					until fly["Enabled"] == false
-				end)
 				olddeflate = bedwars["BalloonController"]["deflateBalloon"]
 				bedwars["BalloonController"]["deflateBalloon"] = function() end
+				--buyballoons()
 				flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
 					if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.Space then
@@ -6120,34 +6124,23 @@ runcode(function()
 						flydown = false
 					end
 				end)
-				if bedwars["ClientStoreHandler"]:getState().Game.queueType == nil or (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
+				if flyautodamage["Enabled"] and isAlive() and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
 					buyballoons()
 				end
 				BindToStepped("Fly", 1, function(time, delta) 
-					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-                        if acbypasswasenabled then 
-                            local playermass = 0
-                            for v33, v34 in ipairs(lplr.Character:GetDescendants()) do
-                                if v34:IsA("BasePart") and v34.Name ~= "Balloon" then
-                                    playermass = playermass + v34.Mass
-                                end
-                            end
-                            local force = Vector3.new(0, math.max(0, workspace.Gravity * playermass * 0.85 - math.pow((lplr.Character.PrimaryPart.AssemblyLinearVelocity * Vector3.new(0, 1, 0)).Magnitude, 2) / 2 * 4.5 * math.sign(lplr.Character.PrimaryPart.AssemblyLinearVelocity.Y)), 0)
-                            local fakeballoonforce = lplr.Character.PrimaryPart:FindFirstChild("BalloonForce2")
-                            if fakeballoonforce then
-                                fakeballoonforce.Force = force
-                                return
-                            end
-                            local v36 = Instance.new("BodyForce")
-                            v36.Name = "BalloonForce2"
-                            v36.Force = force
-                            v36.Parent = lplr.Character.PrimaryPart
-                        end
+					if isAlive() and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+						local mass = (lplr.Character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
+						mass = mass + (flytog and -10 or 10)
+						if flytogtick <= tick() then
+							flytog = not flytog
+							flytogtick = tick() + 0.2
+						end
 						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 						local allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
 						local flypos = lplr.Character.Humanoid.MoveDirection * flyspeed["Value"] * allowed
 						lplr.Character.HumanoidRootPart.Transparency = 1
-						lplr.Character.HumanoidRootPart.Velocity = flypos + Vector3.new(0, lplr.Character.HumanoidRootPart.Velocity.Y, 0)
+						lplr.Character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						flyvelo = flypos + Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
 					end
 				end)
 			else
@@ -6155,21 +6148,9 @@ runcode(function()
 				flydown = false
 				flypress:Disconnect()
 				flyendpress:Disconnect()
-				if acbypasswasenabled then
-					if AnticheatBypass["Enabled"] == false then
-						AnticheatBypass["ToggleButton"](false)
-					end
-				end
-				if speedwasenabled then
-					if GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Enabled"] == false then
-						GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["ToggleButton"](false)
-					end
-				end
-				acbypasswaseanbled = false
-				speedwasenabled = false
 				UnbindFromStepped("Fly")
 				if flypop["Enabled"] then
-					if entity.isAlive and lplr.Character:GetAttribute("InflatedBalloons") then
+					if isAlive() and lplr.Character:GetAttribute("InflatedBalloons") then
 						for i = 1, lplr.Character:GetAttribute("InflatedBalloons") do
 							olddeflate()
 						end
@@ -6184,14 +6165,14 @@ runcode(function()
 	flyspeed = fly.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 20,
+		["Max"] = 70,
 		["Function"] = function(val) end, 
-		["Default"] = 20
+		["Default"] = 70
 	})
 	flyverticalspeed = fly.CreateSlider({
 		["Name"] = "Vertical Speed",
 		["Min"] = 1,
-		["Max"] = 60,
+		["Max"] = 100,
 		["Function"] = function(val) end, 
 		["Default"] = 44
 	})
@@ -8176,12 +8157,10 @@ end)
 
 runcode(function()
 	local AnticheatBypassTransparent = {["Enabled"] = false}
-
-
 	local AnticheatBypassFlagCheck = {["Enabled"] = false}
-
-
 	local AnticheatBypassNotification = {["Enabled"] = false}
+	local AnticheatBypassAnimation = {["Enabled"] = true}
+	local AnticheatBypassAnimationCustom = {["Value"] = ""}
 	local oldlaunchpos
 	local oldballoon
 	local clone
@@ -8191,6 +8170,7 @@ runcode(function()
 	local anticheatconnection3
 	local anticheatconnection4
 	local anticheatconnection5
+	local playedanim = ""
 
 	local function check()
 		lagbackedaftertouch = false
@@ -8267,6 +8247,11 @@ runcode(function()
 			clonevar.Name = "ClonedCharacter"
 			clonevar.Parent = clone
 			clone.Parent = workspace
+			for i,v in pairs(workspace:GetChildren()) do
+				if v:FindFirstChild("ClonedCharacter") and v ~= clone then
+					v:Remove()
+				end
+			end
 			if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
 				clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
 			end 
@@ -8329,10 +8314,13 @@ runcode(function()
 					lagbackcurrent = false
 				end
 			until oldchar:FindFirstChild("HumanoidRootPart") and (networkownerfunc and networkownerfunc(oldchar.HumanoidRootPart) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic)
-			local anim2 = Instance.new("Animation")
-			anim2.AnimationId = "http://www.roblox.com/asset/?id=4940563117"
-			local Loaded = lplr.Character.Humanoid.Animator:LoadAnimation(anim2)
-			Loaded:Play()
+			if AnticheatBypassAnimation["Enabled"] then
+				local anim2 = Instance.new("Animation")
+				anim2.AnimationId = AnticheatBypassAnimationCustom["Value"] ~= "" and AnticheatBypassAnimationCustom["Value"] or "http://www.roblox.com/asset/?id=4940563117"
+				playedanim = anim2.AnimationId
+				local Loaded = lplr.Character.Humanoid.Animator:LoadAnimation(anim2)
+				Loaded:Play()
+			end
 			lplr.Character = clone
 			spawn(function()
 				repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
@@ -8672,7 +8660,7 @@ runcode(function()
 				if oldchar then
 					if oldchar:FindFirstChild("Humanoid") then
 						for i2,v2 in pairs(oldchar.Humanoid.Animator:GetPlayingAnimationTracks()) do
-							if v2.Animation.AnimationId == "http://www.roblox.com/asset/?id=4940563117" then
+							if v2.Animation.AnimationId == playedanim then
 								v2:Stop()
 							end
 						end
@@ -8739,6 +8727,16 @@ runcode(function()
 	AnticheatBypassCombatCheck = AnticheatBypass.CreateToggle({
 		["Name"] = "Combat Check",
 		["Function"] = function() end
+	})
+	AnticheatBypassAnimation = AnticheatBypass.CreateToggle({
+		["Name"] = "Animation",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+	AnticheatBypassAnimationCustom = AnticheatBypass.CreateTextBox({
+		["Name"] = "Animation",
+		["TempText"] = "Animation Id",
+		["FocusLost"] = function(enter) end
 	})
 end)
 
@@ -9319,20 +9317,21 @@ runcode(function()
 	local oldmove
 	local zerovelocheck = tick()
 	local oldbowx = 0.8
+	local otherprojectiles = {["Enabled"] = false}
 	local BowAimbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "BowAimbot",
+		["Name"] = "ProjectileAimbot",
 		["Function"] = function(callback)
 			if callback then
 				oldaim = bedwars["BowTable"]["calculateImportantLaunchValues"]
 				bedwars["BowTable"]["calculateImportantLaunchValues"] = function(bowtable, projmeta, worldmeta, shootpospart, ...)
 					local plr = GetNearestHumanoidToMouse(true, 1000)--{Character = {Humanoid = {MoveDirection = Vector3.new(0, 0, 0)}, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.new(0, 0, 0)}}}-- GetNearestHumanoidToMouse(true, 1000)
-					if plr or projmeta.projectile == "telepearl" then
+					if plr then
 						local shootpos = bowtable:getLaunchPosition(shootpospart)
 						if not shootpos then
-							return nil
+							return oldaim(bowtable, projmeta, worldmeta, shootpospart, ...)
 						end
-						if projmeta.projectile == "telepearl" then
-							plr = {Character = {Humanoid = {MoveDirection = Vector3.new(0, 0, 0)}, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.new(0, 0, 0)}}}
+						if (not otherprojectiles["Enabled"]) and projmeta.projectile:find("arrow") == nil then
+							return oldaim(bowtable, projmeta, worldmeta, shootpospart, ...)
 						end
 						local projmetatab = projmeta:getProjectileMeta();
 						local prediction = (worldmeta and projmetatab.predictionLifetimeSec or projmetatab.lifetimeSec or 3)
@@ -9384,6 +9383,11 @@ runcode(function()
 				bedwars["BowTable"]["calculateImportantLaunchValues"] = oldaim
 			end
 		end
+	})
+	otherprojectiles = BowAimbot.CreateToggle({
+		["Name"] = "Other Projectiles",
+		["Function"] = function() end,
+		["Default"] = true
 	})
 end)
 
