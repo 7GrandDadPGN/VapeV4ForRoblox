@@ -683,7 +683,7 @@ end
 local function getSword()
 	local bestsword, bestswordslot, bestswordnum = nil, nil, 0
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
-		if v5["itemType"]:find("sword") or v5["itemType"]:find("blade") or v5["itemType"]:find("scythe") or v5["itemType"]:find("dao") then
+		if v5["itemType"]:find("sword") or v5["itemType"]:find("banana") or v5["itemType"]:find("blade") or v5["itemType"]:find("scythe") or v5["itemType"]:find("dao") then
 			local swordrank = bedwars["ItemTable"][v5["itemType"]]["sword"]["damage"]
 			if swordrank > bestswordnum then
 				bestswordnum = swordrank
