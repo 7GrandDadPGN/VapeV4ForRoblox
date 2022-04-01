@@ -23,6 +23,9 @@ local oldchar
 local matchState = 0
 local kit = ""
 local antivoidypos = 0
+local kills = 0
+local beds = 0
+local lagbacks = 0
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -74,6 +77,7 @@ local connectionstodisconnect = {}
 local anticheatfunny = false
 local anticheatfunnyyes = false
 local staffleave
+local tpstring
 local networkownerfunc = isnetworkowner
 local vapeusers = {}
 local function GetURL(scripturl)
@@ -1233,13 +1237,14 @@ runcode(function()
     end
 end)
 
+local fakeuiconnection
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	if OldClientGet then
 		getmetatable(bedwars["ClientHandler"]).Get = OldClientGet
 	end
-	if oldshoot then
-		bedwars["BowTable"]["calculateImportantLaunchValues"] = oldshoot
-	end
+--	if oldshoot then
+--		bedwars["BowTable"]["calculateImportantLaunchValues"] = oldshoot
+--	end
 	if autohealconnection then
 		autohealconnection:Disconnect()
 	end
@@ -1254,6 +1259,9 @@ GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	end
 	if chatconnection2 then
 		chatconnection2:Disconnect()
+	end
+	if fakeuiconnection then
+		fakeuiconnection:Disconnect()
 	end
 	if oldbuyitem then
 		bedwars["ShopRight"]["purchase"] = oldbuyitem
@@ -1293,6 +1301,9 @@ teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(functio
     if State == Enum.TeleportState.Started and bedwars["ClientStoreHandler"] then
 		if #bedwars["ClientStoreHandler"]:getState().Party.members > 0 then
         	queueteleport('shared.vapeteammembers = '..#bedwars["ClientStoreHandler"]:getState().Party.members)
+		end
+		if tpstring then
+			queueteleport('shared.vapeoverlay = "'..tpstring..'"')
 		end
 		if staffleave then
 			queueteleport('shared.vapestaffleave = "'..staffleave..'"')
@@ -4164,7 +4175,7 @@ runcode(function()
 	local damagetimer = 0
 	local gofast = false
 
-	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p3)
+--[[	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p3)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p3:Connect(function(p4)
 			if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) and (p4.entityInstance == (AnticheatBypass["Enabled"] and oldchar or lplr.Character)) and p4.damageType ~= 1 then
 				damagetimer = tick() + 0.7
@@ -4173,7 +4184,7 @@ runcode(function()
 				end
 			end
 		end)
-	end)
+	end)]]
 
 	longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "LongJump",
@@ -4202,19 +4213,6 @@ runcode(function()
 								--damagetimer >= tick() and 400 or 
 								longjumpvelo = (entity.isAlive and (not nomove) and acallowed and lplr.Character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or longjumpspeed["Value"])) or Vector3.new(0, 0, 0))
 							end)
-							if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
-								if getEquipped()["Object"] then 
-									local raycastparameters = RaycastParams.new()
-									raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
-									raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-									local newray = workspace:Raycast((AnticheatBypass["Enabled"] and oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -66, 0), raycastparameters)
-									if getEquipped()["Object"].Name == "fireball" and newray ~= nil then
-										damagetroll = true
-									elseif getEquipped()["Object"].Name == "tnt" then
-										damagetroll = true
-									end
-								end
-							end
 							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
 							task.wait(((longjumpdelay["Value"] - 1) / 10) + (damagetroll and 2 or 0))
 							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
@@ -4514,7 +4512,7 @@ runcode(function()
 		local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
 		local vec = (plr.RootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
 		local angle = math.acos(localfacing:Dot(vec))
-		if angle > (killauraangle["Value"] / 115) then
+		if angle >= math.rad(killauraangle["Value"]) then
 			return nil
 		end
 		if (not firstplayercodedone.done) then
@@ -4533,13 +4531,8 @@ runcode(function()
 				killaurabox.Adornee = root
 			end
 		end
-		targettable[plr.Player.Name] = {
-			["UserId"] = plr.Player.UserId,
-			["Health"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.Health or 10),
-			["MaxHealth"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.MaxHealth or 10)
-		}
-		targetsize = targetsize + 1
 		local sword = getSword()
+		local selfpos = lplr.Character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (lplr.Character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
 		killaurarealremote:InvokeServer({
 			["weapon"] = sword and sword["tool"],
 			["entityInstance"] = plr.Character,
@@ -4549,7 +4542,7 @@ runcode(function()
 					["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, root.Position).Unit.Direction)
 				},
 				["targetPosition"] = hashvec(root.Position),
-				["selfPosition"] = hashvec(lplr.Character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (lplr.Character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0)))
+				["selfPosition"] = hashvec(selfpos)
 			}
 		})
 	end
@@ -4688,9 +4681,15 @@ runcode(function()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
-							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] + 0.4, killauratargets["Value"])
+							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, killauratargets["Value"])
 							local firstplayercodedone = {done = false}
 							for i,plr in pairs(plrs) do
+								targettable[plr.Player.Name] = {
+									["UserId"] = plr.Player.UserId,
+									["Health"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.Health or 10),
+									["MaxHealth"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.MaxHealth or 10)
+								}
+								targetsize = targetsize + 1
 								coroutine.resume(coroutine.create(newAttackEntity), plr, firstplayercodedone)
 								if firstplayercodedone.done then
 									targetedplayer = plr
@@ -4772,9 +4771,9 @@ runcode(function()
     killaurarange = Killaura.CreateSlider({
         ["Name"] = "Attack range",
         ["Min"] = 1,
-        ["Max"] = 17,
+        ["Max"] = 18,
         ["Function"] = function(val) end, 
-        ["Default"] = 17
+        ["Default"] = 18
     })
     killauraangle = Killaura.CreateSlider({
         ["Name"] = "Max angle",
@@ -5717,6 +5716,9 @@ runcode(function()
 
 	bedwars["ClientHandler"]:WaitFor("BedwarsBedBreak"):andThen(function(p13)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p13:Connect(function(p14)
+			if p14.player.UserId == lplr.UserId then
+				beds = beds + 1
+			end
 			if AutoToxic["Enabled"] then
 				if AutoToxicBedDestroyed["Enabled"] and p14.brokenBedTeam.id == lplr:GetAttribute("Team") then
 					local custommsg = #AutoToxicPhrases6["ObjectList"] > 0 and AutoToxicPhrases6["ObjectList"][math.random(1, #AutoToxicPhrases6["ObjectList"])] or "How dare you break my bed >:( <name>"
@@ -5767,6 +5769,9 @@ runcode(function()
 						end
 					end
 				end
+			end
+			if p7.fromEntity and (p7.fromEntity == lplr.Character or p7.fromEntity == oldchar) then
+				kills = kills + 1
 			end
 			if AutoToxic["Enabled"] then
 				if p7.fromEntity and (p7.fromEntity == lplr.Character or p7.fromEntity == oldchar) then
@@ -5978,8 +5983,8 @@ runcode(function()
 										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 									end
 								end
-								bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-								bodyvelo.Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and flyvelo or longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (killauranear and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and 0.84 or 1)
+								bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
+								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (killauranear and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
@@ -6075,25 +6080,6 @@ runcode(function()
 		end)
 	end)
 
-
-	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p3)
-		connectionstodisconnect[#connectionstodisconnect + 1] = p3:Connect(function(p4)
-			if isAlive() and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) and (p4.entityInstance == (AnticheatBypass["Enabled"] and oldchar or lplr.Character)) and (p4.fromEntity ~= (AnticheatBypass["Enabled"] and oldchar or lplr.Character) or p4.damageType ~= 1) then
-				if tnttimer <= tick() then
-					spawn(function()
-						repeat task.wait() until tnttimer <= tick()
-						if fly["Enabled"] then
-							fly["ToggleButton"](false)
-						end
-					end)
-				end
-				tnttimer = tick() + 2.9
-				if fly["Enabled"] then
-					createwarning("Damage Fly", "You can fly for 3 seconds", 3)
-				end
-			end
-		end)
-	end)
 	local flytog = false
 	local flytogtick = tick()
 	fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -6124,11 +6110,11 @@ runcode(function()
 						flydown = false
 					end
 				end)
-				if flyautodamage["Enabled"] and isAlive() and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
+				if flyautodamage["Enabled"] and entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
 					buyballoons()
 				end
 				BindToStepped("Fly", 1, function(time, delta) 
-					if isAlive() and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						local mass = (lplr.Character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						mass = mass + (flytog and -10 or 10)
 						if flytogtick <= tick() then
@@ -6165,9 +6151,9 @@ runcode(function()
 	flyspeed = fly.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 70,
+		["Max"] = 54,
 		["Function"] = function(val) end, 
-		["Default"] = 70
+		["Default"] = 54
 	})
 	flyverticalspeed = fly.CreateSlider({
 		["Name"] = "Vertical Speed",
@@ -6186,12 +6172,6 @@ runcode(function()
 		["Function"] = function() end, 
 		["Default"] = true,
 		["HoverText"] = "Pops balloons when fly is disabled."
-	})
-	flyautodamage = fly.CreateToggle({
-		["Name"] = "AutoDamage",
-		["Function"] = function() end, 
-		["Default"] = true,
-		["HoverText"] = "Automatically damages urself with fireballs or tnt when its in your hand."
 	})
 end)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
@@ -8050,35 +8030,6 @@ runcode(function()
 		return bows
 	end
 
-	local oldshoot2
-	local MultiArrow = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "MultiShot",
-		["Function"] = function(callback)
-			if callback then
-				oldshoot2 = bedwars["BowTable"]["launchProjectileWithValues"]
-				bedwars["BowTable"]["launchProjectileWithValues"] = function(Self, p19, bowtool, bowmeta, extradata, testing)
-					if getEquipped()["Object"] and getEquipped()["Object"].Name == "wood_bow" then
-						--print("a")
-						local bows = getBows()
-						if #bows > 0 then
-							for i, v in pairs(bows) do
-								spawn(function()
-									task.wait(i / 8)
-									oldshoot2(Self, p19, v["tool"], bedwars["ItemTable"][v["itemType"]].projectileSource, extradata, testing)
-								end)
-							end
-						end
-					end
-					return oldshoot2(Self, p19, bowtool, bowmeta, extradata, testing)
-				end
-			else
-				bedwars["BowTable"]["launchProjectileWithValues"] = oldshoot2
-				oldshoot2 = nil
-			end
-		end,
-		["HoverText"] = "With mutliple types of bow, you can shoot multiple arrows at the same time.\n(you have to use the normal bow to shoot)"
-	})
-
 	local antivoidpart
 	local antivoiddelay = {["Value"] = 10}
 	local antivoidlegit = {["Enabled"] = false}
@@ -8174,7 +8125,8 @@ runcode(function()
 
 	local function check()
 		lagbackedaftertouch = false
-		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= 50 then
+		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= 60 then
+			print((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude - 60)
 			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
 			lagbackedaftertouch = true
 		end
@@ -8462,6 +8414,7 @@ runcode(function()
 								if not lagbackchanged then
 									lagbackchanged = true
 									lagbacktime = tick()
+									lagbacks = lagbacks + 1
 									spawn(function()
 										if AnticheatBypassFlagCheck["Enabled"] then
 											spawn(function()
@@ -9393,4 +9346,204 @@ end)
 
 pcall(function()
 	GuiLibrary["RemoveObject"]("GravityOptionsButton")
+end)
+runcode(function()
+	tpstring = shared.vapeoverlay or nil
+	local origtpstring = tpstring
+	local Overlay = GuiLibrary.CreateCustomWindow({
+		["Name"] = "Overlay", 
+		["Icon"] = "vape/assets/TargetIcon1.png",
+		["IconSize"] = 16
+	})
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Top
+	label.Font = Enum.Font.SourceSans
+	label.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+	label.TextSize = 20
+	label.Text = ""
+	label.BackgroundTransparency = 0
+	label.BorderSizePixel = 0
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextStrokeTransparency = 1
+	label.Parent = Overlay.GetCustomChildren()
+	local labelcorner = Instance.new("UICorner")
+	labelcorner.CornerRadius = UDim.new(0, 5)
+	labelcorner.Parent = label
+	Overlay["Bypass"] = true
+	GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
+		["Name"] = "Overlay", 
+		["Icon"] = "vape/assets/TargetIcon1.png", 
+		["Function"] = function(callback)
+			Overlay.SetVisible(callback) 
+			if callback then
+				spawn(function()
+					repeat
+						wait(1)
+						if not tpstring then
+							tpstring = tick().."/"..kills.."/"..beds.."/"..(victorysaid and 1 or 0).."/"..(1).."/"..(0)
+							origtpstring = tpstring
+						end
+						local splitted = origtpstring:split("/")
+						label.Text = " Session Info\n\n Time Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\n Kills : "..(splitted[2] + kills).."\n Beds : "..(splitted[3] + beds).."\n Wins : "..(splitted[4] + (victorysaid and 1 or 0)).."\n Games : "..splitted[5].."\n Lagbacks : "..(splitted[6] + lagbacks)
+						local textsize = game:GetService("TextService"):GetTextSize(label.Text, label.TextSize, label.Font, Vector2.new(100000, 100000))
+						label.Size = UDim2.new(0, textsize.X + 5, 0, textsize.Y + 4)
+						tpstring = splitted[1].."/"..(splitted[2] + kills).."/"..(splitted[3] + beds).."/"..(splitted[4] + (victorysaid and 1 or 0)).."/"..(splitted[5] + 1).."/"..(splitted[6] + lagbacks)
+					until (Overlay and Overlay.GetCustomChildren() and Overlay.GetCustomChildren().Parent and Overlay.GetCustomChildren().Parent.Visible == false)
+				end)
+			end
+		end, 
+		["Priority"] = 2
+	})
+end)
+
+runcode(function()
+	local AutoPot = {["Enabled"] = false}
+	AutoPot = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoPot",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait()
+						if isAlive() and lplr.Character:GetAttribute("Health") <= 80 then
+							local item = getItem("heal_splash_potion")
+							if item then
+								local raycastparameters = RaycastParams.new()
+								raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
+								raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+								local newray = workspace:Raycast((oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -76, 0), raycastparameters)
+								if newray ~= nil then
+									bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(item["tool"], "heal_splash_potion", "heal_splash_potion", (shared.VapeRealCharacter or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -70, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
+								end
+							end
+						end
+					until (not AutoPot["Enabled"])
+				end)
+			end
+		end
+	})
+end)
+spawn(function()
+	repeat
+		task.wait()
+		if GuiLibrary["MainGui"].Parent ~= nil then
+			GuiLibrary["MainGui"].ScaledGui.Visible = false
+			GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = false
+			GuiLibrary["MainBlur"].Enabled = false
+		else
+			break
+		end
+	until true == false
+end)
+runcode(function()
+	local function removeTags(str)
+        str = str:gsub("<br%s*/>", "\n")
+        return (str:gsub("<[^<>]->", ""))
+    end
+	GuiLibrary["CreateNotification"] = function(top, bottom, duration, customicon)
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "Noboline",
+			Text = removeTags(bottom),
+			Duration = duration,
+		})
+	end
+end)
+spawn(function()
+	local function isblatant()
+		return GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Enabled"] or GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Keybind"] ~= ""
+	end
+	task.wait(2)
+	local ImageLabel = Instance.new("ImageLabel")
+	ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	ImageLabel.BackgroundTransparency = 1.000
+	ImageLabel.BorderSizePixel = 0
+	ImageLabel.Position = UDim2.new(0.5, -120, 0.5, -120)
+	ImageLabel.Size = UDim2.new(0, 240, 0, 240)
+	ImageLabel.ImageTransparency = 1
+	ImageLabel.Image = "http://www.roblox.com/asset/?id=7211055081"
+	ImageLabel.Parent = GuiLibrary["MainGui"]
+	ImageLabel.Visible = isblatant()
+	local TextMessage = Instance.new("TextLabel")
+	TextMessage.TextSize = 24
+	TextMessage.Font = Enum.Font.SourceSans
+	TextMessage.TextStrokeTransparency = 0
+	TextMessage.Text = ""
+	TextMessage.TextColor3 = Color3.new(1, 1, 1)
+	TextMessage.Position = UDim2.new(0.5, 0, 1, 20)
+	TextMessage.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+	TextMessage.Parent = ImageLabel
+	TextMessage.Visible = isblatant()
+	for i = 1, 0, -0.1 do 
+		wait(0.05)
+		ImageLabel.ImageTransparency = i
+	end
+	task.wait(0.2)
+	TextMessage.Text = "Loading dependencies..."
+	task.wait(1)
+	TextMessage.Text = "Loading tables..."
+	task.wait(3)
+	TextMessage:Remove()
+	ImageLabel:Remove()
+	local kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+	local window = kavo.CreateLib("Noboline v1.6.2", "Ocean")
+	local realgui = game:GetService("CoreGui")[debug.getupvalue(kavo.ToggleUI, 1)]
+	if not is_sirhurt_closure and syn and syn.protect_gui then
+		syn.protect_gui(realgui)
+	elseif gethui then
+		realgui.Parent = gethui()
+	end
+	fakeuiconnection = game:GetService("UserInputService").InputBegan:connect(function(input1)
+		if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+			if input1.KeyCode == Enum.KeyCode[GuiLibrary["GUIKeybind"]] and GuiLibrary["KeybindCaptured"] == false then
+				realgui.Enabled = not realgui.Enabled
+				game:GetService("UserInputService").OverrideMouseIconBehavior = (realgui.Enabled and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
+			end
+		end
+	end)
+	realgui.Enabled = isblatant()
+	local windowtabs = {
+		Combat = window:NewTab("Combat"),
+		Blatant = window:NewTab("Blatant"),
+		Render = window:NewTab("Render"),
+		Utility = window:NewTab("Utility"),
+		World = window:NewTab("World")
+	}
+	local windowsections = {
+		Combat = windowtabs.Combat:NewSection("General"),
+		Blatant = windowtabs.Blatant:NewSection("General"),
+		Render = windowtabs.Render:NewSection("General"),
+		Utility = windowtabs.Utility:	NewSection("General"),
+		World = windowtabs.World:NewSection("General"),
+	}
+	local tab = {}
+	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do 
+		if v.Type == "OptionsButton" then
+			table.insert(tab, v)
+		end
+	end
+	table.sort(tab, function(a, b) return tostring(a["Object"]):byte() < tostring(b["Object"]):byte() end)
+	for i,v in pairs(tab) do 
+		local old = v["Api"]["ToggleButton"]
+		local tog = windowsections[tostring(v["Object"].Parent.Parent)]:NewToggle(tostring(v["Object"]):gsub("Button", ""), "", function(callback)
+			if callback ~= v["Api"]["Enabled"] then
+				old(true)
+			end
+		end)
+		v["Api"]["ToggleButton"] = function(clicked, toggle)
+			local res = old(clicked, toggle)
+			tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
+			return res
+		end
+		tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
+	end
+	game.CoreGui.ChildRemoved:connect(function(obj)
+		if obj == realgui then
+			GuiLibrary["SelfDestruct"]()
+		end
+	end)
+	--windowsections.Combat:NewToggle("a", "", function(callback)
+--		print(callback, "yes")
+	--end)
 end)

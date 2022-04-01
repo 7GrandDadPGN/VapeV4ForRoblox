@@ -13,6 +13,8 @@ local robloxfriends = {}
 local bedwars = {}
 local getfunctions
 local origC0 = nil
+local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
+local teleportfunc
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -337,6 +339,9 @@ GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	if chatconnection then
 		chatconnection:Disconnect()
 	end
+	if teleportfunc then
+		teleportfunc:Disconnect()
+	end
 	if oldchannelfunc and oldchanneltab then
 		oldchanneltab.GetChannel = oldchannelfunc
 	end
@@ -467,7 +472,7 @@ GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
-GuiLibrary["RemoveObject"]("SpeedOptionsButton")
+--GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
 GuiLibrary["RemoveObject"]("SpiderOptionsButton")
@@ -520,6 +525,14 @@ if place.Updated ~= "2021-11-12T18:26:09.8908284Z" then
         while true do end
     end)
 end]]
+
+teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+    if State == Enum.TeleportState.Started then
+		if shared.vapeoverlay then
+			queueteleport('shared.vapeoverlay = "'..shared.vapeoverlay..'"')
+		end
+    end
+end)
 
 local Sprint = {["Enabled"] = false}
 Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
@@ -725,3 +738,125 @@ if shared.vapestaffleave then
 	warningtext.TextLabel.TextSize = 12
 	warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
 end
+spawn(function()
+	repeat
+		task.wait()
+		if GuiLibrary["MainGui"].Parent ~= nil then
+			GuiLibrary["MainGui"].ScaledGui.Visible = false
+			GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = false
+			GuiLibrary["MainBlur"].Enabled = false
+		else
+			break
+		end
+	until true == false
+end)
+runcode(function()
+	local function removeTags(str)
+        str = str:gsub("<br%s*/>", "\n")
+        return (str:gsub("<[^<>]->", ""))
+    end
+	GuiLibrary["CreateNotification"] = function(top, bottom, duration, customicon)
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "Noboline",
+			Text = removeTags(bottom),
+			Duration = duration,
+		})
+	end
+end)
+spawn(function()
+	local function isblatant()
+		return GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Enabled"] or GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Keybind"] ~= ""
+	end
+	task.wait(2)
+	local ImageLabel = Instance.new("ImageLabel")
+	ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	ImageLabel.BackgroundTransparency = 1.000
+	ImageLabel.BorderSizePixel = 0
+	ImageLabel.Position = UDim2.new(0.5, -120, 0.5, -120)
+	ImageLabel.Size = UDim2.new(0, 240, 0, 240)
+	ImageLabel.ImageTransparency = 1
+	ImageLabel.Image = "http://www.roblox.com/asset/?id=7211055081"
+	ImageLabel.Parent = GuiLibrary["MainGui"]
+	ImageLabel.Visible = isblatant()
+	local TextMessage = Instance.new("TextLabel")
+	TextMessage.TextSize = 24
+	TextMessage.Font = Enum.Font.SourceSans
+	TextMessage.TextStrokeTransparency = 0
+	TextMessage.Text = ""
+	TextMessage.TextColor3 = Color3.new(1, 1, 1)
+	TextMessage.Position = UDim2.new(0.5, 0, 1, 20)
+	TextMessage.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+	TextMessage.Parent = ImageLabel
+	TextMessage.Visible = isblatant()
+	for i = 1, 0, -0.1 do 
+		wait(0.05)
+		ImageLabel.ImageTransparency = i
+	end
+	task.wait(0.2)
+	TextMessage.Text = "Loading dependencies..."
+	task.wait(1)
+	TextMessage.Text = "Loading tables..."
+	task.wait(3)
+	TextMessage:Remove()
+	ImageLabel:Remove()
+	local kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+	local window = kavo.CreateLib("Noboline v1.6.2", "Ocean")
+	local realgui = game:GetService("CoreGui")[debug.getupvalue(kavo.ToggleUI, 1)]
+	if not is_sirhurt_closure and syn and syn.protect_gui then
+		syn.protect_gui(realgui)
+	elseif gethui then
+		realgui.Parent = gethui()
+	end
+	fakeuiconnection = game:GetService("UserInputService").InputBegan:connect(function(input1)
+		if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+			if input1.KeyCode == Enum.KeyCode[GuiLibrary["GUIKeybind"]] and GuiLibrary["KeybindCaptured"] == false then
+				realgui.Enabled = not realgui.Enabled
+				game:GetService("UserInputService").OverrideMouseIconBehavior = (realgui.Enabled and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
+			end
+		end
+	end)
+	realgui.Enabled = isblatant()
+	local windowtabs = {
+		Combat = window:NewTab("Combat"),
+		Blatant = window:NewTab("Blatant"),
+		Render = window:NewTab("Render"),
+		Utility = window:NewTab("Utility"),
+		World = window:NewTab("World")
+	}
+	local windowsections = {
+		Combat = windowtabs.Combat:NewSection("General"),
+		Blatant = windowtabs.Blatant:NewSection("General"),
+		Render = windowtabs.Render:NewSection("General"),
+		Utility = windowtabs.Utility:	NewSection("General"),
+		World = windowtabs.World:NewSection("General"),
+	}
+	local tab = {}
+	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do 
+		if v.Type == "OptionsButton" then
+			table.insert(tab, v)
+		end
+	end
+	table.sort(tab, function(a, b) return tostring(a["Object"]):byte() < tostring(b["Object"]):byte() end)
+	for i,v in pairs(tab) do 
+		local old = v["Api"]["ToggleButton"]
+		local tog = windowsections[tostring(v["Object"].Parent.Parent)]:NewToggle(tostring(v["Object"]):gsub("Button", ""), "", function(callback)
+			if callback ~= v["Api"]["Enabled"] then
+				old(true)
+			end
+		end)
+		v["Api"]["ToggleButton"] = function(clicked, toggle)
+			local res = old(clicked, toggle)
+			tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
+			return res
+		end
+		tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
+	end
+	game.CoreGui.ChildRemoved:connect(function(obj)
+		if obj == realgui then
+			GuiLibrary["SelfDestruct"]()
+		end
+	end)
+	--windowsections.Combat:NewToggle("a", "", function(callback)
+--		print(callback, "yes")
+	--end)
+end)
