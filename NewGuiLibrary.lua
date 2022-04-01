@@ -1352,6 +1352,7 @@ if shared.VapeExecuted then
 					slider3.Name = "ButtonSlider"
 					sliderapi["Object"] = frame
 					sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+					sliderapi["Min"] = argstable["Min"]
 					sliderapi["Max"] = argstable["Max"]
 					sliderapi["SetValue"] = function(val)
 					--	val = math.clamp(val, argstable["Min"], argstable["Max"])
@@ -2203,6 +2204,7 @@ if shared.VapeExecuted then
 			slider3.Name = "ButtonSlider"
 			sliderapi["Object"] = frame
 			sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+			sliderapi["Min"] = argstable["Min"]
 			sliderapi["Max"] = argstable["Max"]
 			sliderapi["SetValue"] = function(val)
 			--	val = math.clamp(val, argstable["Min"], argstable["Max"])
@@ -4928,6 +4930,7 @@ if shared.VapeExecuted then
 				slider3.Name = "ButtonSlider"
 				sliderapi["Object"] = frame
 				sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+				sliderapi["Min"] = argstable["Min"]
 				sliderapi["Max"] = argstable["Max"]
 				sliderapi["SetValue"] = function(val)
 				--	val = math.clamp(val, argstable["Min"], argstable["Max"])
@@ -5329,7 +5332,7 @@ if shared.VapeExecuted then
 			end)
 			button.MouseButton2Click:connect(buttonapi["ExpandToggle"])
 			button2.MouseButton1Click:connect(buttonapi["ExpandToggle"])
-			api["ObjectsThatCanBeSaved"][argstablemain["Name"].."OptionsButton"] = {["Type"] = "OptionsButton", ["Object"] = button, ["Api"] = buttonapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"].."OptionsButton"] = {["Type"] = "OptionsButton", ["Object"] = button, ["ChildrenObject"] = children2, ["Api"] = buttonapi}
 
 			return buttonapi
 		end

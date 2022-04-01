@@ -2733,47 +2733,49 @@ runcode(function()
 				end)
 				spawn(function()
 					repeat task.wait() until antivoidypos ~= 0
-					local specialpos = (workspace.MapCFrames:FindFirstChild("center") and workspace.MapCFrames.center.Value.p == Vector3.new(77, 11, 35))
-					antivoidpart = Instance.new("Part")
-					antivoidpart.CanCollide = false
-					antivoidpart.Size = Vector3.new(10000, 1, 10000)
-					antivoidpart.Anchored = true
-					antivoidpart.Material = Enum.Material.Neon
-					antivoidpart.Color = Color3.fromHSV(anticolor["Hue"], anticolor["Sat"], anticolor["Value"])
-					antivoidpart.Transparency = 1 - (antitransparent["Value"] / 100)
-					antivoidpart.Position = Vector3.new(0, antivoidypos, 0)
-					connectionstodisconnect[#connectionstodisconnect + 1] = antivoidpart.Touched:connect(function(touchedpart)
-						if touchedpart.Parent == lplr.Character and entity.isAlive then
-							if AnticheatBypass["Enabled"] then
-								if (not lagbackedaftertouch) and lastvalidpos and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
-									lagbackedaftertouch = true
-									local old = lplr.Character.HumanoidRootPart.CFrame
-									if (lastvalidpos.p - lplr.Character.HumanoidRootPart.CFrame.p).Magnitude <= 60 then
-										for i = 1, 2 do 
-											local new = old:lerp(lastvalidpos, 0.5 * i)
-											lplr.Character.HumanoidRootPart.Velocity = (new.p - lplr.Character.HumanoidRootPart.CFrame.p ).Unit * 20
-											lplr.Character.HumanoidRootPart.CFrame = new
-											task.wait(0.1)
+					if AntiVoid["Enabled"] then
+						local specialpos = (workspace.MapCFrames:FindFirstChild("center") and workspace.MapCFrames.center.Value.p == Vector3.new(77, 11, 35))
+						antivoidpart = Instance.new("Part")
+						antivoidpart.CanCollide = false
+						antivoidpart.Size = Vector3.new(10000, 1, 10000)
+						antivoidpart.Anchored = true
+						antivoidpart.Material = Enum.Material.Neon
+						antivoidpart.Color = Color3.fromHSV(anticolor["Hue"], anticolor["Sat"], anticolor["Value"])
+						antivoidpart.Transparency = 1 - (antitransparent["Value"] / 100)
+						antivoidpart.Position = Vector3.new(0, antivoidypos, 0)
+						connectionstodisconnect[#connectionstodisconnect + 1] = antivoidpart.Touched:connect(function(touchedpart)
+							if touchedpart.Parent == lplr.Character and entity.isAlive then
+								if AnticheatBypass["Enabled"] then
+									if (not lagbackedaftertouch) and lastvalidpos and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
+										lagbackedaftertouch = true
+										local old = lplr.Character.HumanoidRootPart.CFrame
+										if (lastvalidpos.p - lplr.Character.HumanoidRootPart.CFrame.p).Magnitude <= 60 then
+											for i = 1, 2 do 
+												local new = old:lerp(lastvalidpos, 0.5 * i)
+												lplr.Character.HumanoidRootPart.Velocity = (new.p - lplr.Character.HumanoidRootPart.CFrame.p ).Unit * 20
+												lplr.Character.HumanoidRootPart.CFrame = new
+												task.wait(0.1)
+											end
+											lplr.Character.HumanoidRootPart.Anchored = true
+											task.wait(antivoidnewdelay["Value"] / 10)
+											if entity.isAlive then
+												lplr.Character.HumanoidRootPart.Anchored = false
+											end
+										else
+											createwarning("AntiVoid", "too far cope", 10)
 										end
-										lplr.Character.HumanoidRootPart.Anchored = true
-										task.wait(antivoidnewdelay["Value"] / 10)
-										if entity.isAlive then
-											lplr.Character.HumanoidRootPart.Anchored = false
-										end
-									else
-										createwarning("AntiVoid", "too far cope", 10)
+									end
+								else
+									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
+									for i = 1, 2 do
+										task.wait(0.1)
+										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
 									end
 								end
-							else
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
-								for i = 1, 2 do
-									task.wait(0.1)
-									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
-								end
 							end
-						end
-					end)
-					antivoidpart.Parent = workspace
+						end)
+						antivoidpart.Parent = workspace
+					end
 				end)
 			else
 				if antivoidpart then
@@ -9323,7 +9325,7 @@ runcode(function()
 						--initialvelo = Vector3.new(initialvelo.X, initialvelo.Y + math.clamp((initialvelo.Y - calc(prediction, initialvelo, offsetshootpos, gravity)) / 6, 0, 10000000), initialvelo.Z)
 						oldmove = plr.Character.Humanoid.MoveDirection
 						return {
-							initialVelocity = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * launchvelo,
+							initialVelocity = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (launchvelo - 0.2),
 							positionFrom = offsetshootpos,
 							deltaT = prediction,
 							gravitationalAcceleration = multigrav,
@@ -9440,6 +9442,8 @@ end)
 runcode(function()
 	local function removeTags(str)
         str = str:gsub("<br%s*/>", "\n")
+		str = str:gsub("Vape", "Noboline")
+		str = str:gsub("vape", "noboline")
         return (str:gsub("<[^<>]->", ""))
     end
 	GuiLibrary["CreateNotification"] = function(top, bottom, duration, customicon)
@@ -9486,7 +9490,7 @@ spawn(function()
 	task.wait(3)
 	TextMessage:Remove()
 	ImageLabel:Remove()
-	local kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+	local kavo = loadstring(GetURL("Libraries/kavo.lua"))()
 	local window = kavo.CreateLib("Noboline v1.6.2", "Ocean")
 	local realgui = game:GetService("CoreGui")[debug.getupvalue(kavo.ToggleUI, 1)]
 	if not is_sirhurt_closure and syn and syn.protect_gui then
@@ -9503,6 +9507,11 @@ spawn(function()
 		end
 	end)
 	realgui.Enabled = isblatant()
+	game.CoreGui.ChildRemoved:connect(function(obj)
+		if obj == realgui then
+			GuiLibrary["SelfDestruct"]()
+		end
+	end)
 	local windowtabs = {
 		Combat = window:NewTab("Combat"),
 		Blatant = window:NewTab("Blatant"),
@@ -9510,39 +9519,119 @@ spawn(function()
 		Utility = window:NewTab("Utility"),
 		World = window:NewTab("World")
 	}
-	local windowsections = {
-		Combat = windowtabs.Combat:NewSection("General"),
-		Blatant = windowtabs.Blatant:NewSection("General"),
-		Render = windowtabs.Render:NewSection("General"),
-		Utility = windowtabs.Utility:	NewSection("General"),
-		World = windowtabs.World:NewSection("General"),
-	}
+	local windowsections = {}
 	local tab = {}
+	local tab2 = {}
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do 
 		if v.Type == "OptionsButton" then
 			table.insert(tab, v)
 		end
-	end
-	table.sort(tab, function(a, b) return tostring(a["Object"]):byte() < tostring(b["Object"]):byte() end)
-	for i,v in pairs(tab) do 
-		local old = v["Api"]["ToggleButton"]
-		local tog = windowsections[tostring(v["Object"].Parent.Parent)]:NewToggle(tostring(v["Object"]):gsub("Button", ""), "", function(callback)
-			if callback ~= v["Api"]["Enabled"] then
-				old(true)
-			end
-		end)
-		v["Api"]["ToggleButton"] = function(clicked, toggle)
-			local res = old(clicked, toggle)
-			tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
-			return res
+		if v.Type == "Toggle" then
+			table.insert(tab2, v)
 		end
-		tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
-	end
-	game.CoreGui.ChildRemoved:connect(function(obj)
-		if obj == realgui then
-			GuiLibrary["SelfDestruct"]()
+		if v.Type == "Slider" then
+			table.insert(tab2, v)
 		end
+		if v.Type == "Dropdown" then
+			table.insert(tab2, v)
+		end
+		if v.Type == "ColorSlider" then
+			table.insert(tab2, v)
+		end
+	end
+	table.sort(tab, function(a, b) 
+		if a.Type ~= "OptionsButton" then
+			a = {Object = {Name = tostring(a["Object"].Parent):gsub("Children", "")..a["Object"].Name}}
+		else
+			a = {Object = {Name = a["Object"].Name}}
+		end
+		if b.Type ~= "OptionsButton" then
+			b = {Object = {Name = tostring(b["Object"].Parent):gsub("Children", "")..b["Object"].Name}}
+		else
+			b = {Object = {Name = b["Object"].Name}}
+		end
+		return a["Object"].Name:lower() < b["Object"].Name:lower() 
 	end)
+	table.sort(tab2, function(a, b) 
+		a = {Object = {Name = tostring(a["Object"].Parent):gsub("Children", "")..a["Object"].Name}}
+		b = {Object = {Name = tostring(b["Object"].Parent):gsub("Children", "")..b["Object"].Name}}
+		return a["Object"].Name:lower() < b["Object"].Name:lower() 
+	end)
+	for i,v in pairs(tab) do 
+		if v.Type == "OptionsButton" then 
+			local old = v["Api"]["ToggleButton"]
+			local newstr = tostring(v["Object"]):gsub("Button", "")
+			windowsections[newstr] = windowtabs[tostring(v["Object"].Parent.Parent)]:NewSection(newstr)
+			local tog = windowsections[newstr]:NewToggle(newstr, "", function(callback)
+				if callback ~= v["Api"]["Enabled"] then
+					old(true)
+				end
+			end)
+			local keybind = windowsections[newstr]:NewKeybind("Keybind", "", {Name = v["Api"]["Keybind"] ~= "" and v["Api"]["Keybind"] or "None"}, function(key)
+				GuiLibrary["KeybindCaptured"] = true
+				v["Api"]["SetKeybind"](key == "None" and "" or key)
+				task.delay(0.1, function() GuiLibrary["KeybindCaptured"] = false end)
+			end)
+			v["Api"]["ToggleButton"] = function(clicked, toggle)
+				local res = old(clicked, toggle)
+				tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
+				return res
+			end
+			tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
+		end
+	end
+	for i,v in pairs(tab2) do 
+		if v.Type == "Toggle" and tostring(v["Object"].Parent.Parent.Parent) ~= "ClickGui" and GuiLibrary["ObjectsThatCanBeSaved"][tostring(v["Object"].Parent):gsub("Children", "OptionsButton")] and GuiLibrary["ObjectsThatCanBeSaved"][tostring(v["Object"].Parent):gsub("Children", "OptionsButton")]["ChildrenObject"] == v["Object"].Parent then
+			local newstr = tostring(v["Object"].Parent):gsub("Children", "")
+			local old = v["Api"]["ToggleButton"]
+			local tog = windowsections[newstr]:NewToggle(tostring(v["Object"]):gsub("Button", ""), "", function(callback)
+				if callback ~= v["Api"]["Enabled"] then
+					old(true)
+				end
+			end)
+			v["Api"]["ToggleButton"] = function(clicked, toggle)
+				local res = old(clicked, toggle)
+				tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
+				return res
+			end
+			tog:UpdateToggle(tostring(v["Object"]):gsub("Button", ""), v["Api"]["Enabled"])
+		end
+		if v.Type == "Slider" and GuiLibrary["ObjectsThatCanBeSaved"][tostring(v["Object"].Parent):gsub("Children", "OptionsButton")] and GuiLibrary["ObjectsThatCanBeSaved"][tostring(v["Object"].Parent):gsub("Children", "OptionsButton")]["ChildrenObject"] == v["Object"].Parent then
+			local newstr = tostring(v["Object"].Parent):gsub("Children", "")
+			local old = v["Api"]["SetValue"]
+			local slider = windowsections[newstr]:NewSlider(v["Object"].Name, "", v["Api"]["Max"], v["Api"]["Min"], function(s) -- 500 (MaxValue) | 0 (MinValue)
+				if s ~= v["Api"]["Value"] then
+					old(s)
+				end
+			end)
+			v["Api"]["SetValue"] = function(value, ...)
+				local res = old(value, ...)
+				slider:UpdateSlider(value)
+				return res
+			end
+			v["Api"]["SetValue"](tonumber(v["Api"]["Value"]))
+		end
+		if v.Type == "ColorSlider" and GuiLibrary["ObjectsThatCanBeSaved"][tostring(v["Object"].Parent):gsub("Children", "OptionsButton")] and GuiLibrary["ObjectsThatCanBeSaved"][tostring(v["Object"].Parent):gsub("Children", "OptionsButton")]["ChildrenObject"] == v["Object"].Parent then
+			local newstr = tostring(v["Object"].Parent):gsub("Children", "")
+			local old = v["Api"]["SetValue"]
+			v["Api"]["RainbowValue"] = false
+			local slider = windowsections[newstr]:NewColorPicker(v["Object"].Name, "", Color3.fromHSV(v["Api"]["Hue"], v["Api"]["Sat"], v["Api"]["Value"]), function(col) -- 500 (MaxValue) | 0 (MinValue)
+				old(col:ToHSV())
+			end)
+			--v["Api"]["SetValue"](v["Api"]["Hue"], v["Api"]["Sat"], v["Api"]["Value"])
+		end
+		if v.Type == "Dropdown" and GuiLibrary["ObjectsThatCanBeSaved"][tostring(v["Object"].Parent):gsub("Children", "OptionsButton")] and GuiLibrary["ObjectsThatCanBeSaved"][tostring(v["Object"].Parent):gsub("Children", "OptionsButton")]["ChildrenObject"] == v["Object"].Parent then
+			local newstr = tostring(v["Object"].Parent):gsub("Children", "")
+			local old = v["Api"]["SetValue"]
+			local dropdown = windowsections[newstr]:NewDropdown(v["Object"].Name, "", debug.getupvalue(v["Api"]["SetValue"], 4)["List"], function(currentOption)
+				if currentOption ~= v["Api"]["Value"] then
+					v["Api"]["SetValue"](currentOption)
+				end
+			end)
+			dropdown:SetValue(v["Api"]["Value"])
+			--v["Api"]["SetValue"](v["Api"]["Hue"], v["Api"]["Sat"], v["Api"]["Value"])
+		end
+	end
 	--windowsections.Combat:NewToggle("a", "", function(callback)
 --		print(callback, "yes")
 	--end)
