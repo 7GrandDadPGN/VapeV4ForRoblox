@@ -4536,6 +4536,7 @@ runcode(function()
 		local sword = getSword()
 		local selfpos = lplr.Character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (lplr.Character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
 		killaurarealremote:InvokeServer({
+			["chargedAttack"] = {["chargeRatio"] = 0},
 			["weapon"] = sword and sword["tool"],
 			["entityInstance"] = plr.Character,
 			["validate"] = {
