@@ -532,7 +532,7 @@ teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(functio
 			queueteleport('shared.vapeoverlay = "'..shared.vapeoverlay..'"')
 		end
 		if shared.nobolineupdate then
-			queueteleport('shared.nobolineupdate = '..shared.nobolineupdate)
+			queueteleport('shared.nobolineupdate = '..tostring(shared.nobolineupdate))
 		end
     end
 end)
