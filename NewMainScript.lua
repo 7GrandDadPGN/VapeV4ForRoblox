@@ -1,4 +1,5 @@
 repeat task.wait() until game:IsLoaded() == true
+local injected = true
 local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
@@ -161,8 +162,10 @@ local workspace = game:GetService("Workspace")
 local cam = workspace.CurrentCamera
 local selfdestructsave = coroutine.create(function()
 	while task.wait(10) do
-		if GuiLibrary then
+		if GuiLibrary and injected then
 			GuiLibrary["SaveSettings"]()
+		else
+			break
 		end
 	end
 end)
@@ -1344,6 +1347,7 @@ GuiLibrary["SelfDestruct"] = function()
 	spawn(function()
 		coroutine.close(selfdestructsave)
 	end)
+	injected = false
 	GuiLibrary["SaveSettings"]()
 	game:GetService("UserInputService").OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.None
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
