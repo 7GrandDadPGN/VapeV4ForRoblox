@@ -161,7 +161,9 @@ local workspace = game:GetService("Workspace")
 local cam = workspace.CurrentCamera
 local selfdestructsave = coroutine.create(function()
 	while task.wait(10) do
-		GuiLibrary["SaveSettings"]()
+		if GuiLibrary then
+			GuiLibrary["SaveSettings"]()
+		end
 	end
 end)
 local GUI = GuiLibrary.CreateMainWindow()
