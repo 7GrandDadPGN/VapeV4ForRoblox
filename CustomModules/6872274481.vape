@@ -9891,6 +9891,7 @@ runcode(function()
                                 chinahatmesh.MeshId = "http://www.roblox.com/asset/?id=1778999"
                                 chinahatmesh.Scale = Vector3.new(3, 0.6, 3)
                                 local chinahatweld = Instance.new("WeldConstraint")
+								chinahatweld.Name = "WeldConstraint"
                                 chinahatweld.Parent = chinahattrail
                                 chinahatweld.Part0 = lplr.Character.Head
                                 chinahatweld.Part1 = chinahattrail
@@ -9907,6 +9908,12 @@ runcode(function()
 								end
 								chinahattrail = trailfound or chinahattrail
 								chinahattrail.Parent = lplr.Character
+								chinahattrail.WeldConstraint.Part0 = lplr.Character.Head
+							end
+						else
+							if chinahattrail then 
+								chinahattrail:Remove()
+								chinahattrail = nil
 							end
 						end
 					until (not ChinaHat["Enabled"])
