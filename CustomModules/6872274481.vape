@@ -9861,6 +9861,82 @@ runcode(function()
 		end
 	})
 end)
+
+runcode(function()
+	local ChinaHat = {["Enabled"] = false}
+	local ChinaHatColor = {["Hue"] = 1,["Sat"]=1,["Value"]=0.33}
+	local chinahattrail
+	local chinahatattachment
+	local chinahatattachment2
+	ChinaHat = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "ChinaHat",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait(0.3)
+						if (not ChinaHat["Enabled"]) then return end
+						if entity.isAlive then
+							if chinahattrail == nil then
+                                chinahattrail = Instance.new("Part")
+                                chinahattrail.CFrame = lplr.Character.Head.CFrame * CFrame.new(0, 1.1, 0)
+                                chinahattrail.Size = Vector3.new(3, 0.7, 3)
+                                chinahattrail.Name = "ChinaHat"
+                                chinahattrail.Material = Enum.Material.Neon
+                                chinahattrail.CanCollide = false
+                                chinahattrail.Transparency = 0.3
+                                local chinahatmesh = Instance.new("SpecialMesh")
+                                chinahatmesh.Parent = chinahattrail
+                                chinahatmesh.MeshType = "FileMesh"
+                                chinahatmesh.MeshId = "http://www.roblox.com/asset/?id=1778999"
+                                chinahatmesh.Scale = Vector3.new(3, 0.6, 3)
+                                local chinahatweld = Instance.new("WeldConstraint")
+                                chinahatweld.Parent = chinahattrail
+                                chinahatweld.Part0 = lplr.Character.Head
+                                chinahatweld.Part1 = chinahattrail
+							else
+								local trailfound
+								for i,v in pairs(lplr.Character:GetChildren()) do
+									if v:IsA("Part") and v.Name == "ChinaHat" then
+										if trailfound then	
+											v:Remove()
+										else
+											trailfound = v
+										end
+									end
+								end
+								chinahattrail = trailfound or chinahattrail
+								chinahattrail.Parent = lplr.Character
+							end
+						end
+					until (not ChinaHat["Enabled"])
+				end)
+			else
+				if chinahattrail then
+					chinahattrail:Remove()
+					if entity.isAlive then 
+						for i,v in pairs(lplr.Character:GetChildren()) do
+							if v:IsA("Part") and v.Name == "ChinaHat" then
+								v:Remove()
+							end
+						end
+					end
+					chinahattrail = nil
+				end
+			end
+		end,
+		["HoverText"] = "Shows a trail behind your character"
+	})
+	ChinaHatColor = ChinaHat.CreateColorSlider({
+		["Name"] = "Hat Color",
+		["Function"] = function(h, s, v) 
+			if chinahattrail then 
+				chinahattrail.Color = Color3.fromHSV(h, s, v)
+			end
+		end
+	})
+end)
+
 if shared.nobolineupdate then
 	spawn(function()
 		repeat
