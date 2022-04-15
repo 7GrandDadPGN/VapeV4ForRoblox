@@ -2799,6 +2799,7 @@ if shared.VapeExecuted then
 			local placeholder = 0
 			dropapi["Value"] = (list ~= {} and list[1] or "")
 			dropapi["Default"] = dropapi["Value"]
+			dropapi["Object"] = frame
 			dropapi["UpdateList"] = function(val)
 				placeholder = 25
 				list = val
@@ -4595,6 +4596,7 @@ if shared.VapeExecuted then
 				local placeholder = 0
 				dropapi["Value"] = (list ~= {} and list[1] or "")
 				dropapi["Default"] = dropapi["Value"]
+				dropapi["Object"] = frame
 				dropapi["UpdateList"] = function(val)
 					placeholder = 25
 					list = val
