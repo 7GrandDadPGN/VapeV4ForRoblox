@@ -10092,7 +10092,7 @@ runcode(function()
 				end
 			end
 		end,
-		["HoverText"] = "Shows a trail behind your character"
+		["HoverText"] = "Puts a china hat on your character"
 	})
 	ChinaHatColor = ChinaHat.CreateColorSlider({
 		["Name"] = "Hat Color",
