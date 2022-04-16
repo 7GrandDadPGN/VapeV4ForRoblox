@@ -4582,19 +4582,12 @@ runcode(function()
 		end)
 	end)]]
 
+	local oldgrav
 	longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "LongJump",
 		["Function"] = function(callback)
 			if callback then
 				longjumpvelo = Vector3.new(0, 0, 0)
-				spawn(function()
-					repeat
-						gofast = true
-						task.wait(0.47)
-						gofast = false
-						task.wait(0.1)
-					until (not longjump["Enabled"])
-				end)
 				if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 					if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
 						AnticheatBypass["ToggleButton"](false)
@@ -4637,7 +4630,13 @@ runcode(function()
 									repeat task.wait() until damagetimer >= tick()
 									nomove = false
 								end
+								oldgrav = workspace.Gravity
+								workspace.Gravity = 15
+								if (entity.isAlive and longjump["Enabled"]) then
+									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 15, lplr.Character.HumanoidRootPart.Velocity.Z)
+								end
 								for i = 1, longjumpval["Value"] do 
+									acallowed = true
 									if not (entity.isAlive and longjump["Enabled"]) then 
 										break
 									end
@@ -4660,19 +4659,8 @@ runcode(function()
 											until (not longjump["Enabled"])
 										end)
 									end
-									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, (i == 1 and 40 or 40), lplr.Character.HumanoidRootPart.Velocity.Z)
+									task.wait(0.3)
 									longjumpticktimer = tick() + (i * (longjumpslowdown["Value"] / 10))
-									repeat 
-										task.wait() 
-										longjumpticktimer = tick() + (i * (longjumpslowdown["Value"] / 10))
-										if entity.isAlive and i > 1 and lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Landed or (not entity.isAlive) then
-											if longjump["Enabled"] then
-												longjump["ToggleButton"](false)
-											end
-											return
-										end
-									until entity.isAlive and lplr.Character.HumanoidRootPart.Velocity.Y < (-30) or (not entity.isAlive)
-									acallowed = true
 								end
 								if longjump["Enabled"] then
 									longjump["ToggleButton"](false)
@@ -4690,6 +4678,7 @@ runcode(function()
 					end
 				end
 			else
+				workspace.Gravity = oldgrav
 				disabletpcheck = false
 				pcall(function()
 					UnbindFromStepped("LongJump")
@@ -4711,17 +4700,17 @@ runcode(function()
 		["Function"] = function() end
 	})
 	longjumpval = longjump.CreateSlider({
-		["Name"] = "Jumps",
+		["Name"] = "Time",
 		["Min"] = 1,
-		["Max"] = 10,
-		["Default"] = 10,
+		["Max"] = 6,
+		["Default"] = 6,
 		["Function"] = function() end
 	})
 	longjumpdelay = longjump.CreateSlider({
 		["Name"] = "Delay",
 		["Min"] = 1,
 		["Max"] = 50,
-		["Default"] = 10,
+		["Default"] = 6,
 		["Function"] = function() end
 	})
 	longjumpslowdown = longjump.CreateSlider({
@@ -8992,7 +8981,7 @@ runcode(function()
 										end
 										check()
 										--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-										task.wait(killauranear and AnticheatBypassCombatCheck["Enabled"] and 0.26 or 0.58)
+										task.wait(killauranear and AnticheatBypassCombatCheck["Enabled"] and 0.26 or 0.54)
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
