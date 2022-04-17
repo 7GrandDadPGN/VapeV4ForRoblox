@@ -3946,6 +3946,9 @@ runcode(function()
 						AutoBankConnection2:Disconnect()
 					end
 					AutoBankConnection2 = lplr.Character.InventoryFolder.Value.ChildAdded:connect(function(p3)
+						if echest == nil then 
+							echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
+						end
 						if (p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and echest and (not AutoBankTransmitted) then
 							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
 							refreshbank()
@@ -3958,6 +3961,9 @@ runcode(function()
 							AutoBankConnection2:Disconnect()
 						end
 						AutoBankConnection2 = folder.ChildAdded:connect(function(p3)
+							if echest == nil then 
+								echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
+							end	
 							if (p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and echest and (not AutoBankTransmitted) then
 								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
 								refreshbank()
@@ -4631,7 +4637,7 @@ runcode(function()
 									nomove = false
 								end
 								oldgrav = workspace.Gravity
-								workspace.Gravity = 15
+								workspace.Gravity = 18
 								if (entity.isAlive and longjump["Enabled"]) then
 									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 15, lplr.Character.HumanoidRootPart.Velocity.Z)
 								end
@@ -4659,7 +4665,7 @@ runcode(function()
 											until (not longjump["Enabled"])
 										end)
 									end
-									task.wait(0.3)
+									task.wait(0.275)
 									longjumpticktimer = tick() + (i * (longjumpslowdown["Value"] / 10))
 								end
 								if longjump["Enabled"] then
@@ -4695,8 +4701,8 @@ runcode(function()
 	longjumpspeed = longjump.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 80,
-		["Default"] = 80,
+		["Max"] = 75,
+		["Default"] = 75,
 		["Function"] = function() end
 	})
 	longjumpval = longjump.CreateSlider({
@@ -4710,14 +4716,14 @@ runcode(function()
 		["Name"] = "Delay",
 		["Min"] = 1,
 		["Max"] = 50,
-		["Default"] = 6,
+		["Default"] = 5,
 		["Function"] = function() end
 	})
 	longjumpslowdown = longjump.CreateSlider({
 		["Name"] = "Slowdown",
 		["Min"] = 1,
 		["Max"] = 30,
-		["Default"] = 1,
+		["Default"] = 2,
 		["Function"] = function() end,
 	})
 	longjumpautodisable = longjump.CreateToggle({
