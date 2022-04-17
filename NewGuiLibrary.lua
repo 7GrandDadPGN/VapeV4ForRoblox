@@ -393,7 +393,7 @@ if shared.VapeExecuted then
 					api["Settings"][i] = {["Type"] = "Dropdown", ["Value"] = v["Api"]["Value"]}
 				end
 				if v["Type"] == "Slider" then
-					api["Settings"][i] = {["Type"] = "Slider", ["Value"] = v["Api"]["Value"], ["OldMax"] = v["Api"]["Max"]}
+					api["Settings"][i] = {["Type"] = "Slider", ["Value"] = v["Api"]["Value"], ["OldMax"] = v["Api"]["Max"], ["OldDefault"] = v["Api"]["Default"]}
 				end
 				if v["Type"] == "TwoSlider" then
 					api["Settings"][i] = {["Type"] = "TwoSlider", ["Value"] = v["Api"]["Value"], ["Value2"] = v["Api"]["Value2"], ["SliderPos1"] = (v["Object"]:FindFirstChild("Slider") and v["Object"].Slider.ButtonSlider.Position.X.Scale or 0), ["SliderPos2"] = (v["Object"]:FindFirstChild("Slider") and v["Object"].Slider.ButtonSlider2.Position.X.Scale or 0)}
@@ -536,7 +536,7 @@ if shared.VapeExecuted then
 					end
 				end
 				if v["Type"] == "Slider" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["OldMax"] ~= api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] and v["Value"] > api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] and api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] or v["Value"])
+					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["OldMax"] ~= api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] and v["Value"] > api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] and api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] or (v["OldDefault"] ~= api["ObjectsThatCanBeSaved"][i]["Api"]["Default"] and v["Value"] == v["OldDefault"] and api["ObjectsThatCanBeSaved"][i]["Api"]["Default"] or v["Value"]))
 				end
 				if v["Type"] == "TextBox" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
 					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"])
@@ -1352,6 +1352,7 @@ if shared.VapeExecuted then
 					slider3.Name = "ButtonSlider"
 					sliderapi["Object"] = frame
 					sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+					sliderapi["Default"] = (argstable["Default"] or argstable["Min"])
 					sliderapi["Min"] = argstable["Min"]
 					sliderapi["Max"] = argstable["Max"]
 					sliderapi["SetValue"] = function(val)
@@ -2204,6 +2205,7 @@ if shared.VapeExecuted then
 			slider3.Name = "ButtonSlider"
 			sliderapi["Object"] = frame
 			sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+			sliderapi["Default"] = (argstable["Default"] or argstable["Min"])
 			sliderapi["Min"] = argstable["Min"]
 			sliderapi["Max"] = argstable["Max"]
 			sliderapi["SetValue"] = function(val)
@@ -4932,6 +4934,7 @@ if shared.VapeExecuted then
 				slider3.Name = "ButtonSlider"
 				sliderapi["Object"] = frame
 				sliderapi["Value"] = (argstable["Default"] or argstable["Min"])
+				sliderapi["Default"] = (argstable["Default"] or argstable["Min"])
 				sliderapi["Min"] = argstable["Min"]
 				sliderapi["Max"] = argstable["Max"]
 				sliderapi["SetValue"] = function(val)
