@@ -2758,8 +2758,8 @@ runcode(function()
 										lagbackedaftertouch = true
 										local old = lplr.Character.HumanoidRootPart.CFrame
 										if (lastvalidpos.p - lplr.Character.HumanoidRootPart.CFrame.p).Magnitude <= 60 then
-											for i = 1, 2 do 
-												local new = old:lerp(lastvalidpos, 0.5 * i)
+											for i = 1, 5 do 
+												local new = old:lerp(lastvalidpos, 0.2 * i)
 												lplr.Character.HumanoidRootPart.Velocity = (new.p - lplr.Character.HumanoidRootPart.CFrame.p ).Unit * 20
 												lplr.Character.HumanoidRootPart.CFrame = new
 												task.wait(0.1)
@@ -4007,15 +4007,6 @@ runcode(function()
 					until (not AutoBank["Enabled"])
 				end)
 			else
-				local echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
-				local chestitems = echest and echest:GetChildren() or {}
-				if #chestitems > 0 then
-					for i3,v3 in pairs(chestitems) do
-						if v3:IsA("Accessory") and (v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond") then
-							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
-						end
-					end
-				end
 				if autobankui then
 					autobankui:Remove()
 					autobankui = nil
@@ -4025,6 +4016,15 @@ runcode(function()
 				end
 				if AutoBankConnection2 then 
 					AutoBankConnection2:Disconnect()
+				end
+				local echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
+				local chestitems = echest and echest:GetChildren() or {}
+				if #chestitems > 0 then
+					for i3,v3 in pairs(chestitems) do
+						if v3:IsA("Accessory") and (v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond") then
+							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
+						end
+					end
 				end
 			end
 		end
@@ -4674,7 +4674,7 @@ runcode(function()
 											until (not longjump["Enabled"])
 										end)
 									end
-									task.wait(0.275)
+									task.wait(0.29)
 									longjumpticktimer = tick() + (i * (longjumpslowdown["Value"] / 10))
 								end
 								if longjump["Enabled"] then
@@ -8679,6 +8679,7 @@ runcode(function()
 		end)
 	end)	
 
+	local clonesuccess = false
 	local function disablestuff()
 		if anticheatconnection3 then
 			anticheatconnection3:Disconnect()
@@ -8689,6 +8690,7 @@ runcode(function()
 		if anticheatconnection5 then
 			anticheatconnection5:Disconnect()
 		end
+		print("stage 1")
 		repeat task.wait() until entity.isAlive
 		repeat task.wait() until bedwars["ClientStoreHandler"]:getState().Game.queueType ~= nil
 		task.wait(0.7)
@@ -8700,6 +8702,7 @@ runcode(function()
 			bedwars["BalloonController"].hookBalloon = oldballoon
 			oldballoon = nil
 		end
+		print("stage 2")
 		if lplr.Character and lplr.Character ~= clone then
 			oldchar = lplr.Character
 			shared.VapeRealCharacter = oldchar
@@ -8721,6 +8724,7 @@ runcode(function()
 			clonevar.Name = "ClonedCharacter"
 			clonevar.Parent = clone
 			clone.Parent = workspace
+			print("stage 3")
 			for i,v in pairs(workspace:GetChildren()) do
 				if v:FindFirstChild("ClonedCharacter") and v ~= clone then
 					v:Remove()
@@ -8765,7 +8769,8 @@ runcode(function()
 			end
 			bedwars["QueryUtil"]:setQueryIgnored(clone, true)
 			--bedwars["BlockController"]:setRaycastIgnore(clone, true)
-			lplr:Move(Vector3.new(0, 0, 0), false)
+			print("stage 4")
+			lplr:Move(Vector3.new(1, 0, 0), false)
 			changed = true
 			local oldcamcframe = cam.CFrame
 			if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
@@ -8788,6 +8793,7 @@ runcode(function()
 					lagbackcurrent = false
 				end
 			until oldchar:FindFirstChild("HumanoidRootPart") and (networkownerfunc and networkownerfunc(oldchar.HumanoidRootPart) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic)
+			print("stage 5")
 			if AnticheatBypassAnimation["Enabled"] then
 				local anim2 = Instance.new("Animation")
 				anim2.AnimationId = AnticheatBypassAnimationCustom["Value"] ~= "" and AnticheatBypassAnimationCustom["Value"] or "http://www.roblox.com/asset/?id=4940563117"
@@ -8800,6 +8806,7 @@ runcode(function()
 				repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
 				cam.CFrame = oldcamcframe
 			end)
+			print("stage 6")
 			--print("cloned")
 			game:GetService("RunService"):UnbindFromRenderStep("inflated-balloon:" .. lplr.Name)
 			game:GetService("RunService"):BindToRenderStep("inflated-balloon:"..lplr.Name, Enum.RenderPriority.Character.Value, function(p12)
@@ -8865,6 +8872,7 @@ runcode(function()
 			if clone and clone:FindFirstChild("Animate") then
 				clone.Animate.Disabled = false
 			end
+			print("stage 7")
 			pcall(function()
 				UnbindFromStepped("AnticheatBypass")
 			end)
@@ -8912,6 +8920,8 @@ runcode(function()
 			local lagbackchanged = false
 			local lagbacknotification = false
 			local amountoftimes = 0
+			print("stage 8")
+			clonesuccess = true
 			repeat
 				task.wait()
 				if entity.isAlive then
@@ -8986,16 +8996,16 @@ runcode(function()
 												anticheatfunnyyes = false
 												if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
 												--	print("trollage2")
-													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), 0.35)
+													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), 0.37)
 												else
-													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.4)
+													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.37)
 												end
 											end
 											check()
 										end
 										check()
 										--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-										task.wait(0.1)
+										task.wait(0.12)
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
@@ -9143,7 +9153,9 @@ runcode(function()
 						end
 					end
 					local oldcamcframe = cam.CFrame
-					lplr.Character = oldchar
+					if clonesuccess then
+						lplr.Character = oldchar
+					end
 					spawn(function()
 						repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
 						cam.CFrame = oldcamcframe
@@ -9614,7 +9626,7 @@ runcode(function()
 			if callback then
 				oldmove = controlmodule.moveFunction
 				controlmodule.moveFunction = function(Self, vec, facecam)
-					if entity.isAlive and (not Scaffold["Enabled"]) then
+					if entity.isAlive and (not Scaffold["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
@@ -10013,18 +10025,9 @@ spawn(function()
 	task.wait(2)
 	if isblatant() then 
 		lplr.CharacterAdded:connect(function(char)
-			if char:FindFirstChild("Bear Suit") == nil then 
+			if char:FindFirstChild("White Bunny Ears") == nil then 
 				spawn(function()
 					task.wait(2)
-					local obj = game:GetObjects("rbxassetid://9242177364")[1]
-					obj.Parent = char
-					obj.Handle.CFrame = char:WaitForChild("Head").CFrame
-					obj.Handle.Transparency = char == oldchar and 1 or 0
-					obj.Handle.CanCollide = false
-					local weld = Instance.new("Weld")
-					weld.Part0 = obj.Handle
-					weld.Part1 = char.Head
-					weld.Parent = char.Head
 					local obj2 = game:GetObjects("rbxassetid://6682341860")[1]
 					obj2.Parent = char
 					obj2.Handle.CFrame = char.Head.CFrame
@@ -10038,18 +10041,9 @@ spawn(function()
 				end)
 			end
 		end)
-		if entity.isAlive and lplr.Character:FindFirstChild("Bear Suit") == nil then
+		if entity.isAlive and lplr.Character:FindFirstChild("White Bunny Ears") == nil then
 			spawn(function()
 				task.wait(2)
-				local obj = game:GetObjects("rbxassetid://9242177364")[1]
-				obj.Parent = lplr.Character
-				obj.Handle.CFrame = lplr.Character:WaitForChild("Head").CFrame
-				obj.Handle.CanCollide = false
-				obj.Handle.Transparency = lplr.Character == oldchar and 1 or 0
-				local weld = Instance.new("Weld")
-				weld.Part0 = obj.Handle
-				weld.Part1 = lplr.Character.Head
-				weld.Parent = lplr.Character.Head
 				local obj2 = game:GetObjects("rbxassetid://6682341860")[1]
 				obj2.Parent = lplr.Character
 				obj2.Handle.CFrame = lplr.Character.Head.CFrame
