@@ -1367,7 +1367,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 								local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
 								local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
 								local angle = math.acos(localfacing:Dot(vec))
-								if angle >= math.rad(killauraangle["Value"]) then
+								if angle <= math.rad(killauraangle["Value"]) then
 									killauranear = true
 									targettable[v.Player.Name] = {
 										["UserId"] = v.Player.UserId,
@@ -3939,7 +3939,7 @@ runcode(function()
 	})
 end)
 
-runcode(function()
+--[[runcode(function()
 	local femboyconnection
 	GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "FemboyMode",
@@ -3994,4 +3994,4 @@ runcode(function()
 		end,
 		["HoverText"] = "femboy mode, will flag on all anticheats :troll: and remove most parts for everyone because fat roblox function"
 	})
-end)
+end)]]
