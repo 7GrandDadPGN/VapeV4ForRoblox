@@ -3912,20 +3912,11 @@ runcode(function()
 								breadcrumbtrail.FaceCamera = true
 								breadcrumbtrail.Lifetime = BreadcrumbsLifetime["Value"] / 10
 								breadcrumbtrail.Enabled = true
+								breadcrumbtrail.Parent = cam
 							else
-								local trailfound = false
-								for i,v in pairs(lplr.Character:GetChildren()) do
-									if v:IsA("Trail") then
-										if trailfound then	
-											v:Remove()
-										else
-											trailfound = true
-										end
-									end
-								end
 								breadcrumbattachment.Parent = lplr.Character.HumanoidRootPart
 								breadcrumbattachment2.Parent = lplr.Character.HumanoidRootPart
-								breadcrumbtrail.Parent = lplr.Character
+								breadcrumbtrail.Parent = cam
 							end
 						end
 					until (not Breadcrumbs["Enabled"])
@@ -3933,13 +3924,6 @@ runcode(function()
 			else
 				if breadcrumbtrail then
 					breadcrumbtrail:Remove()
-					if entity.isAlive then 
-						for i,v in pairs(lplr.Character:GetChildren()) do
-							if v:IsA("Trail") then
-								v:Remove()
-							end
-						end
-					end
 					breadcrumbtrail = nil
 				end
 			end
@@ -3952,5 +3936,62 @@ runcode(function()
 		["Max"] = 100,
 		["Function"] = function(val) end,
 		["Default"] = 20
+	})
+end)
+
+runcode(function()
+	local femboyconnection
+	GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "FemboyMode",
+		["Function"] = function(callback)
+			if callback then
+				local desc = Instance.new("HumanoidDescription")
+				local info = '{"SwimAnimation":1018554245,"JumpAnimation":754637084,"WalkAnimation":619512767,"RightLegColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"WidthScale":0.8799999952316284,"Face":236399287,"BodyTypeScale":0.6100000143051148,"RunAnimation":1018548665,"RightArmColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"ClimbAnimation":1018554668,"LeftArmColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"HeadColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"GraphicTShirt":0,"Torso":86499666,"HairAccessory":"8022084941","Head":86498113,"Shirt":0,"RightArm":86499698,"ProportionScale":0.12999999523162843,"RightLeg":27112068,"Pants":6474866173,"LeftLegColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"FallAnimation":754636589,"IdleAnimation":1018553897,"TorsoColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"DepthScale":0.9399999976158142,"LeftArm":86499716,"HeadScale":1,"HeightScale":1,"LeftLeg":27112056}'
+				local info2 = '[{"IsLayered":true,"Order":1,"AssetId":9367213925,"AccessoryType":{"Parent":"AccessoryType","EnumVal":"Shirt"}},{"IsLayered":true,"Order":1,"AssetId":9342333632,"AccessoryType":{"Parent":"AccessoryType","EnumVal":"DressSkirt"}},{"IsLayered":true,"Order":1,"AssetId":9239535402,"AccessoryType":{"Parent":"AccessoryType","EnumVal":"Pants"}},{"AssetId":8022084941,"AccessoryType":{"Parent":"AccessoryType","EnumVal":"Hair"},"IsLayered":false}]'
+				for i,v in pairs(game:GetService("HttpService"):JSONDecode(info)) do 
+					desc[i] = type(v) == "table" and Color3.new(v.R, v.G, v.B) or v
+				end
+				local newdesc = {}
+				for i,v in pairs(game:GetService("HttpService"):JSONDecode(info2)) do 
+					local newtab = {}
+					for i2,v2 in pairs(v) do 
+						newtab[i2] = type(v2) == "table" and Enum[v2.Parent][v2.EnumVal] or v2
+					end
+					newdesc[i] = newtab
+				end
+				desc:SetAccessories(newdesc, true)
+				if entity.isAlive then
+					for i,v in pairs(lplr.Character:GetChildren()) do 
+						if v:IsA("Shirt") or v:IsA("Pants") then 
+							v:Remove()
+						end
+					end
+					lplr.Character.Humanoid:ApplyDescriptionClientServer(desc)
+				end
+				femboyconnection = lplr.CharacterAdded:connect(function(char)
+					local hum = char:WaitForChild("Humanoid")
+					for i,v in pairs(char:GetChildren()) do 
+						if v:IsA("Shirt") or v:IsA("Pants") then 
+							v:Remove()
+						end
+					end
+					char.Humanoid:ApplyDescriptionClientServer(desc)
+				end)
+			else
+				if femboyconnection then
+					femboyconnection:Disconnect()
+				end
+				if entity.isAlive then
+					for i,v in pairs(lplr.Character:GetChildren()) do 
+						if v:IsA("Shirt") or v:IsA("Pants") then 
+							v:Remove()
+						end
+					end
+					local lplrdesc = game:GetService("Players"):GetHumanoidDescriptionFromUserId(lplr.UserId)
+					lplr.Character.Humanoid:ApplyDescriptionClientServer(lplrdesc)
+				end
+			end
+		end,
+		["HoverText"] = "femboy mode, will flag on all anticheats :troll: and remove most parts for everyone because fat roblox function"
 	})
 end)
