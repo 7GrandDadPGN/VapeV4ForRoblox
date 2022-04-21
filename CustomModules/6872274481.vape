@@ -3940,6 +3940,17 @@ runcode(function()
 				iron.Name = "iron"
 				iron.Parent = autobankui
 				local echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
+				if entity.isAlive and echest and lplr.Character.InventoryFolder.Value then
+					local inv = lplr.Character.InventoryFolder.Value
+					local chestitems = inv and inv:GetChildren() or {}
+					if #chestitems > 0 then
+						for i3,v3 in pairs(chestitems) do
+							if v3:IsA("Accessory") and (v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond") then
+								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3)
+							end
+						end
+					end
+				end
 				refreshbank()
 				if entity.isAlive and lplr.Character.InventoryFolder.Value then
 					if AutoBankConnection2 then
@@ -4022,7 +4033,9 @@ runcode(function()
 				if #chestitems > 0 then
 					for i3,v3 in pairs(chestitems) do
 						if v3:IsA("Accessory") and (v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond") then
-							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
+							spawn(function()
+								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
+							end)
 						end
 					end
 				end
@@ -5469,7 +5482,7 @@ connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]
                 end
 			end
 			if AutoToxicWin["Enabled"] then
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS", "All")
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS | vxpe.xyz", "All")
 			end
 		end
     end
@@ -5873,7 +5886,7 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 		if custommsg then
 			custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 		end
-		local msg = custommsg or "I dont care about the fact that I'm hacking, I care about how you died in a block game L "..(plr.DisplayName or plr.Name)
+		local msg = custommsg or "I dont care about the fact that I'm hacking, I care about how you died in a block game L "..(plr.DisplayName or plr.Name).." | vxpe.xyz"
 		game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
 		table.insert(ignoredplayers, plr.UserId)
 	end
@@ -6156,13 +6169,13 @@ runcode(function()
 			end
 			if AutoToxic["Enabled"] then
 				if AutoToxicBedDestroyed["Enabled"] and p14.brokenBedTeam.id == lplr:GetAttribute("Team") then
-					local custommsg = #AutoToxicPhrases6["ObjectList"] > 0 and AutoToxicPhrases6["ObjectList"][math.random(1, #AutoToxicPhrases6["ObjectList"])] or "How dare you break my bed >:( <name>"
+					local custommsg = #AutoToxicPhrases6["ObjectList"] > 0 and AutoToxicPhrases6["ObjectList"][math.random(1, #AutoToxicPhrases6["ObjectList"])] or "How dare you break my bed >:( <name> | vxpe.xyz"
 					if custommsg then
 						custommsg = custommsg:gsub("<name>", (p14.player.DisplayName or p14.player.Name))
 					end
 					game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
 				elseif AutoToxicBedBreak["Enabled"] and p14.player.UserId == lplr.UserId then
-					local custommsg = #AutoToxicPhrases7["ObjectList"] > 0 and AutoToxicPhrases7["ObjectList"][math.random(1, #AutoToxicPhrases7["ObjectList"])] or "nice bed <teamname>"
+					local custommsg = #AutoToxicPhrases7["ObjectList"] > 0 and AutoToxicPhrases7["ObjectList"][math.random(1, #AutoToxicPhrases7["ObjectList"])] or "nice bed <teamname> | vxpe.xyz"
 					if custommsg then
 						local team = bedwars["QueueMeta"][bedwars["ClientStoreHandler"]:getState().Game.queueType or "bedwars_test"].teams[tonumber(p14.brokenBedTeam.id)]
 						local teamname = team and team.displayName:lower() or "white"
@@ -6185,7 +6198,7 @@ runcode(function()
 				if bedwars["GamePlayerUtil"].getGamePlayer(lplr):isSpectator() then
 					leavesaid = true
 					if plr and AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
-						local custommsg = #AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight, thats why you won <name>"
+						local custommsg = #AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight, thats why you won <name> | vxpe.xyz"
 						if custommsg then
 							custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 						end
@@ -6215,9 +6228,9 @@ runcode(function()
 						plr = players:GetPlayerFromCharacter(p7.entityInstance)
 					end
 					if plr and bedwars["GamePlayerUtil"].getGamePlayer(plr):isSpectator() and AutoToxicFinalKill["Enabled"] then
-						local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name>"
+						local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe.xyz"
 						if custommsg == lastsaid then
-							custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name>"
+							custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe.xyz"
 						else
 							lastsaid = custommsg
 						end
@@ -8642,14 +8655,19 @@ runcode(function()
 	local anticheatconnection4
 	local anticheatconnection5
 	local playedanim = ""
+	local AnticheatBypassNumbers = {
+		TPSpeed = 0.1,
+		TPLerp = 0.4,
+		TPCheck = 15
+	}
 
 	local function check()
 		lagbackedaftertouch = false
-		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= 61 then
-			print((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude - 61)
-			local newpos = (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).Unit * 61
+		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
+			print((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude - AnticheatBypassNumbers.TPCheck)
+			local newpos = (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).Unit * AnticheatBypassNumbers.TPCheck
 			newpos = newpos == newpos and newpos or Vector3.new(0, 0, 0)
-			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame + ((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude <= 70 and newpos or Vector3.new(0, 0, 0))
+			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
 			lagbackedaftertouch = true
 		end
 	end
@@ -8883,6 +8901,7 @@ runcode(function()
 						local clonehum = clone:FindFirstChild("Humanoid")
 						local realhum = oldchar:FindFirstChild("Humanoid")
 						if realhum and clonehum then
+							clonehum.HipHeight = realhum.HipHeight
 							if realhum.SeatPart ~= oldseat then
 								clonehum.Sit = true
 							end
@@ -8983,7 +9002,7 @@ runcode(function()
 								lagbackchanged = false
 								lagbacknotification = false
 								if not shared.VapeOverrideAnticheatBypass then
-									if not disabletpcheck then
+									if (not disabletpcheck) and (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude >= 0.01 then
 										anticheatfunnyyes = true 
 										if clone.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 											amountoftimes = amountoftimes + 1
@@ -8996,16 +9015,16 @@ runcode(function()
 												anticheatfunnyyes = false
 												if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
 												--	print("trollage2")
-													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), 0.37)
+													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), AnticheatBypassNumbers.TPLerp)
 												else
-													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.37)
+													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, AnticheatBypassNumbers.TPLerp)
 												end
 											end
 											check()
 										end
 										check()
 										--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-										task.wait(0.12)
+										task.wait(AnticheatBypassNumbers.TPSpeed)
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
@@ -9970,6 +9989,7 @@ runcode(function()
                                 chinahattrail.Size = Vector3.new(3, 0.7, 3)
                                 chinahattrail.Name = "ChinaHat"
                                 chinahattrail.Material = Enum.Material.Neon
+								chinahattrail.Color = Color3.fromHSV(ChinaHatColor["Hue"], ChinaHatColor["Sat"], ChinaHatColor["Value"])
                                 chinahattrail.CanCollide = false
                                 chinahattrail.Transparency = 0.3
                                 local chinahatmesh = Instance.new("SpecialMesh")
@@ -10006,7 +10026,7 @@ runcode(function()
 				end
 			end
 		end,
-		["HoverText"] = "Puts a china hat on your character"
+		["HoverText"] = "Puts a china hat on your character (mastadawn ty for)"
 	})
 	ChinaHatColor = ChinaHat.CreateColorSlider({
 		["Name"] = "Hat Color",
@@ -10021,7 +10041,7 @@ end)
 local function isblatant()
 	return GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Enabled"] or GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Keybind"] ~= "" or GuiLibrary["ObjectsThatCanBeSaved"]["AnticheatBypassOptionsButton"]["Api"]["Enabled"] or GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"] or GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Keybind"] ~= ""
 end
-spawn(function()
+--[[spawn(function()
 	task.wait(2)
 	if isblatant() then 
 		lplr.CharacterAdded:connect(function(char)
@@ -10057,7 +10077,7 @@ spawn(function()
 			end)
 		end
 	end
-end)
+end)]]
 
 if shared.nobolineupdate then
 	spawn(function()
