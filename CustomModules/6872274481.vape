@@ -8996,7 +8996,7 @@ runcode(function()
 										end
 										check()
 										--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-										task.wait(AnticheatBypassNumbers.TPSpeed)
+										task.wait(killauranear and AnticheatBypassCombatCheck["Enabled"] and 0.2 or AnticheatBypassNumbers.TPSpeed)
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
@@ -9187,6 +9187,11 @@ runcode(function()
 	AnticheatBypassFlagCheck = AnticheatBypass.CreateToggle({
 		["Name"] = "Flag Check",
 		["Function"] = function(callback) end,
+		["Default"] = true
+	})
+	AnticheatBypassCombatCheck = AnticheatBypass.CreateToggle({
+		["Name"] = "Combat Check",
+		["Function"] = function() end,
 		["Default"] = true
 	})
 	AnticheatBypassNotification = AnticheatBypass.CreateToggle({
