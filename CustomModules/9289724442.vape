@@ -339,7 +339,6 @@ runcode(function()
 				local suc, result = pcall(function() return Inventory.inventoryController:getPlayerInventory() end)
 				return (suc and result:getAllItems() or {})
 			end,
-			RaycastUtil = require(game:GetService("ReplicatedStorage").TS.raycast["raycast-util"]).RaycastUtil
 		}
 	end
 end)
