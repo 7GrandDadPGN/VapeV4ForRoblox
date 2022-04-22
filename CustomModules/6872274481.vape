@@ -967,7 +967,6 @@ runcode(function()
 			["ResetRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.ResetController.createBindable, 1))),
 			["Roact"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["roact"].src),
 			["RuntimeLib"] = require(game:GetService("ReplicatedStorage")["rbxts_include"].RuntimeLib),
-            ["ShieldRemote"] = getremote(debug.getconstants(debug.getprotos(getmetatable(KnitClient.Controllers.ShieldController).raiseShield)[1])),
             ["Shop"] = require(game:GetService("ReplicatedStorage").TS.games.bedwars.shop["bedwars-shop"]).BedwarsShop,
 			["ShopItems"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.games.bedwars.shop["bedwars-shop"]).BedwarsShop.getShopItem, 2),
             ["ShopRight"] = require(lplr.PlayerScripts.TS.controllers.games.bedwars.shop.ui["item-shop"]["shop-left"]["shop-left"]).BedwarsItemShopLeft,
@@ -2147,7 +2146,6 @@ runcode(function()
 	local autoclickercps = {["GetRandomValue"] = function() return 1 end}
 	local autoclicker = {["Enabled"] = false}
 	local autoclickertick = tick()
-	local autoclickerautoblock = {["Enabled"] = false}
 	local autoclickerblocks = {["Enabled"] = false}
 	local autoclickermousedown = false
 	local autoclickerconnection1
@@ -2190,13 +2188,6 @@ runcode(function()
 						if getEquipped()["Type"] == "sword" then
 							bedwars["SwordController"]:swingSwordAtMouse()
 						end
-						if autoclickerautoblock["Enabled"] and getItem("shield") then
-							spawn(function()
-								bedwars["ClientHandler"]:Get(bedwars["ShieldRemote"]):SendToServer({
-									["raised"] = true
-								})
-							end)
-						end
 						if getEquipped()["Type"] == "block" and autoclickerblocks["Enabled"] and bedwars["BlockPlacementController"].blockPlacer then 
 							local mouseinfo = bedwars["BlockPlacementController"].blockPlacer.clientManager:getBlockSelector():getMouseInfo(0)
 							if mouseinfo then
@@ -2233,11 +2224,6 @@ runcode(function()
 		["Function"] = function(val) end,
 		["Default"] = 8,
 		["Default2"] = 12
-	})
-	autoclickerautoblock = autoclicker.CreateToggle({
-		["Name"] = "AutoBlock", 
-		["Function"] = function() end, 
-		["HoverText"] = "Makes you take less damage with inferno shielder (BLATANT)"
 	})
 	autoclickerblocks = autoclicker.CreateToggle({
 		["Name"] = "Place Blocks", 
@@ -2770,7 +2756,7 @@ runcode(function()
 												lplr.Character.HumanoidRootPart.Anchored = false
 											end
 										else
-											createwarning("AntiVoid", "Magnitude larger then 60, failed.", 10)
+											createwarning("AntiVoid", "Magnitude bigger then 60, failed.", 10)
 										end
 									end
 								else
@@ -4898,7 +4884,6 @@ runcode(function()
     local killauratargets = {["Value"] = 10}
     local killauramouse = {["Enabled"] = false}
     local killauracframe = {["Enabled"] = false}
-    local killauraautoblock = {["Enabled"] = false}
     local killauragui = {["Enabled"] = false}
     local killauratarget = {["Enabled"] = false}
     local killaurasound = {["Enabled"] = false}
@@ -5134,13 +5119,6 @@ runcode(function()
 									targetedplayer = plr
 								end
 							end
-							if killauraautoblock["Enabled"] and getItem("shield") then
-								spawn(function()
-									bedwars["ClientHandler"]:Get(bedwars["ShieldRemote"]):SendToServer({
-										["raised"] = true
-									})
-								end)
-							end
 							if (#plrs <= 0) then
 								targetedplayer = nil
 								killauranear = false
@@ -5196,7 +5174,7 @@ runcode(function()
                 end)
             end
         end,
-        ["HoverText"] = "Attack players around you\nwithout aiming at them.\nAutoBlock requires Inferno Shielder"
+        ["HoverText"] = "Attack players around you\nwithout aiming at them."
     })
     killauratargetframe = Killaura.CreateTargetWindow({})
 	killauraaps = Killaura.CreateTwoSlider({
@@ -5232,12 +5210,6 @@ runcode(function()
         ["Name"] = "Animation", 
         ["List"] = {"Normal", "Slow", "Vertical Spin", "Horizontal Spin"},
         ["Function"] = function(val) end
-    })
-    killauraautoblock = Killaura.CreateToggle({
-        ["Name"] = "AutoBlock",
-        ["Function"] = function() end,
-        ["Default"] = true,
-		["HoverText"] = "Makes you take less damage with inferno shielder (BLATANT)"
     })
     killauramouse = Killaura.CreateToggle({
         ["Name"] = "Require mouse down",
@@ -8656,9 +8628,9 @@ runcode(function()
 	local anticheatconnection5
 	local playedanim = ""
 	local AnticheatBypassNumbers = {
-		TPSpeed = 0.1,
+		TPSpeed = 0.4,
 		TPLerp = 0.4,
-		TPCheck = 15
+		TPCheck = 30
 	}
 
 	local function check()
