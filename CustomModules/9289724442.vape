@@ -1519,3 +1519,139 @@ runcode(function()
 		end
 	})
 end)
+
+runcode(function()
+	local speedval = {["Value"] = 1}
+	local speedmethod = {["Value"] = "AntiCheat A"}
+	local speedmovemethod = {["Value"] = "MoveDirection"}
+	local speeddelay = {["Value"] = 0.7}
+	local speedwallcheck = {["Enabled"] = true}
+	local speedjump = {["Enabled"] = false}
+	local speedjumpheight = {["Value"] = 20}
+	local speedjumpalways = {["Enabled"] = false}
+	local speedup
+	local speeddown
+	local oldwalkspeed
+	local w = 0
+	local s = 0
+	local a = 0
+	local d = 0
+	local bodyvelo
+	local speeddelayval = tick()
+
+	local speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Speed", 
+		["Function"] = function(callback)
+			if callback then
+				speeddown = game:GetService("UserInputService").InputBegan:connect(function(input1)
+					if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+						if input1.KeyCode == Enum.KeyCode.W then
+							w = true
+						end
+						if input1.KeyCode == Enum.KeyCode.S then
+							s = true
+						end
+						if input1.KeyCode == Enum.KeyCode.A then
+							a = true
+						end
+						if input1.KeyCode == Enum.KeyCode.D then
+							d = true
+						end
+					end
+				end)
+				speedup = game:GetService("UserInputService").InputEnded:connect(function(input1)
+					if input1.KeyCode == Enum.KeyCode.W then
+						w = false
+					end
+					if input1.KeyCode == Enum.KeyCode.S then
+						s = false
+					end
+					if input1.KeyCode == Enum.KeyCode.A then
+						a = false
+					end
+					if input1.KeyCode == Enum.KeyCode.D then
+						d = false
+					end
+				end)
+				BindToStepped("Speed", 1, function(time, delta)
+					if entity.isAlive then
+						local jumpcheck = killauranear and Killaura["Enabled"]
+						local movevec = (speedmovemethod["Value"] == "Manual" and (not (w or s or a or d)) and Vector3.new(0, 0, 0) or lplr.Character.Humanoid.MoveDirection).Unit
+						movevec = movevec == movevec and movevec or Vector3.new(0, 0, 0)
+						local newpos = (movevec * (math.clamp(speedval["Value"] - lplr.Character.Humanoid.WalkSpeed, 0, 1000000000) * delta))
+						if speedwallcheck["Enabled"] then
+							local raycastparameters = RaycastParams.new()
+							raycastparameters.FilterDescendantsInstances = {lplr.Character}
+							local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
+							if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
+						end
+						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+						if speedjump["Enabled"] and (speedjumpalways["Enabled"] or jumpcheck) then
+							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
+							end
+						end
+					end
+				end)
+			else
+				speeddelayval = 0
+				if speedup then
+					speedup:Disconnect()
+				end
+				if speeddown then
+					speeddown:Disconnect()
+				end
+				if bodyvelo then
+					bodyvelo:Remove()
+				end
+				if oldwalkspeed then
+					lplr.Character.Humanoid.WalkSpeed = oldwalkspeed
+					oldwalkspeed = nil
+				end
+				UnbindFromStepped("Speed")
+			end
+		end,
+		["ExtraText"] = function() return speedmethod["Value"] end
+	})
+	speedmovemethod = speed.CreateDropdown({
+		["Name"] = "Movement", 
+		["List"] = {"MoveDirection", "Manual"},
+		["Function"] = function(val) end
+	})
+	speedval = speed.CreateSlider({
+		["Name"] = "Speed", 
+		["Min"] = 1,
+		["Max"] = 38, 
+		["Function"] = function(val) end
+	})
+	speedjumpheight = speed.CreateSlider({
+		["Name"] = "Jump Height",
+		["Min"] = 0,
+		["Max"] = 30,
+		["Default"] = 25,
+		["Function"] = function() end
+	})
+	speedjump = speed.CreateToggle({
+		["Name"] = "AutoJump", 
+		["Function"] = function(callback) 
+			if speedjumpalways["Object"] then
+				speedjump["Object"].ToggleArrow.Visible = callback
+				speedjumpalways["Object"].Visible = callback
+			end
+		end,
+		["Default"] = true
+	})
+	speedjumpalways = speed.CreateToggle({
+		["Name"] = "Always Jump",
+		["Function"] = function() end
+	})
+	speedwallcheck = speed.CreateToggle({
+		["Name"] = "Wall Check",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+	speedjumpalways["Object"].BackgroundTransparency = 0
+	speedjumpalways["Object"].BorderSizePixel = 0
+	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	speedjumpalways["Object"].Visible = speedjump["Enabled"]
+end)
