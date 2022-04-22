@@ -7,7 +7,7 @@ local lplr = game:GetService("Players").LocalPlayer
 
 do
     entity.isPlayerTargetable = function(plr)
-        if plr.Team ~= lplr.Team then
+        if plr.Team ~= lplr.Team or lplr.Team == nil then
             return true
         end
     end
@@ -36,13 +36,13 @@ do
         entity.characterAdded(plr, plr.Character, localcheck)
     end
 
-    entity.characterAdded = function(plr, char, localcheck, customfunc)
+    entity.characterAdded = function(plr, char, localcheck)
         if char then
             spawn(function()
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10)
                 local hum = char:WaitForChild("Humanoid", 10)
-                if humrootpart then
+                if humrootpart and hum and head then
                     if localcheck then
                         entity.isAlive = true
                     else
@@ -50,9 +50,9 @@ do
                             Player = plr,
                             Character = char,
                             RootPart = humrootpart,
-                            Targetable = entity.isPlayerTargetable(plr)
+                            Targetable = entity.isPlayerTargetable(plr),
+                            Team = plr.Team
                         })
-                        customfunc()
                     end
                     entity.entityConnections[#entity.entityConnections + 1] = char.ChildRemoved:connect(function(part)
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
@@ -68,7 +68,7 @@ do
         end
     end
 
-    entity.entityAdded = function(plr, localcheck)
+    entity.entityAdded = function(plr, localcheck, custom)
         entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterAdded:connect(function(char)
             entity.refreshEntity(plr, localcheck)
         end)
