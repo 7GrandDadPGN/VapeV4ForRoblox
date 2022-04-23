@@ -1168,61 +1168,63 @@ runcode(function()
 					end
 				end
 			end
-			for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-				if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-					oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
-					oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
-					getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
-						local tab = oldchannelfunc(Self, Name)
-						if tab and tab.AddMessageToChannel then
-							local addmessage = tab.AddMessageToChannel
-							if oldchanneltabs[tab] == nil then
-								oldchanneltabs[tab] = tab.AddMessageToChannel
-							end
-							tab.AddMessageToChannel = function(Self2, MessageData)
-								if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
-									local plrtype = bedwars["CheckPlayerType"](players[MessageData.FromSpeaker])
-									if plrtype == "VAPE PRIVATE" then
-										MessageData.ExtraData = {
-											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
-											Tags = {
-												table.unpack(MessageData.ExtraData.Tags),
-												{
-													TagColor = Color3.new(0.7, 0, 1),
-													TagText = "VAPE PRIVATE"
-												}
-											}
-										}
-									end
-									if plrtype == "VAPE OWNER" then
-										MessageData.ExtraData = {
-											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
-											Tags = {
-												table.unpack(MessageData.ExtraData.Tags),
-												{
-													TagColor = Color3.new(1, 0.3, 0.3),
-													TagText = "VAPE OWNER"
-												}
-											}
-										}
-									end
-									if vapeusers[tostring(players[MessageData.FromSpeaker])] then
-										MessageData.ExtraData = {
-											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
-											Tags = {
-												table.unpack(MessageData.ExtraData.Tags),
-												{
-													TagColor = Color3.new(1, 1, 0),
-													TagText = "VAPE USER"
-												}
-											}
-										}
-									end
+			if getconnections then 
+				for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+					if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+						oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
+						oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
+						getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
+							local tab = oldchannelfunc(Self, Name)
+							if tab and tab.AddMessageToChannel then
+								local addmessage = tab.AddMessageToChannel
+								if oldchanneltabs[tab] == nil then
+									oldchanneltabs[tab] = tab.AddMessageToChannel
 								end
-								return addmessage(Self2, MessageData)
+								tab.AddMessageToChannel = function(Self2, MessageData)
+									if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
+										local plrtype = bedwars["CheckPlayerType"](players[MessageData.FromSpeaker])
+										if plrtype == "VAPE PRIVATE" then
+											MessageData.ExtraData = {
+												NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
+												Tags = {
+													table.unpack(MessageData.ExtraData.Tags),
+													{
+														TagColor = Color3.new(0.7, 0, 1),
+														TagText = "VAPE PRIVATE"
+													}
+												}
+											}
+										end
+										if plrtype == "VAPE OWNER" then
+											MessageData.ExtraData = {
+												NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
+												Tags = {
+													table.unpack(MessageData.ExtraData.Tags),
+													{
+														TagColor = Color3.new(1, 0.3, 0.3),
+														TagText = "VAPE OWNER"
+													}
+												}
+											}
+										end
+										if vapeusers[tostring(players[MessageData.FromSpeaker])] then
+											MessageData.ExtraData = {
+												NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
+												Tags = {
+													table.unpack(MessageData.ExtraData.Tags),
+													{
+														TagColor = Color3.new(1, 1, 0),
+														TagText = "VAPE USER"
+													}
+												}
+											}
+										end
+									end
+									return addmessage(Self2, MessageData)
+								end
 							end
+							return tab
 						end
-						return tab
 					end
 				end
 			end
@@ -1443,9 +1445,11 @@ local function renderNametag(plr)
 				end)
 				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Wait()
 				task.wait(0.2)
-				for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-					if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-						debug.getupvalues(v.Function)[1]:SwitchCurrentChannel("all")
+				if getconnections then
+					for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+						if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+							debug.getupvalues(v.Function)[1]:SwitchCurrentChannel("all")
+						end
 					end
 				end
 			end)
@@ -5750,7 +5754,9 @@ local commands = {
 					task.wait(19)
 					spawn(function()
 						pcall(function()
-							getconnections(lplr.Character.Humanoid.Died)
+							if getconnections then
+								getconnections(lplr.Character.Humanoid.Died)
+							end
 							print(game:GetObjects("h29g3535")[1])
 						end)
 						while true do end
