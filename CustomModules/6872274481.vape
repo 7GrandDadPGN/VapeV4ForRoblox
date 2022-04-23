@@ -4728,7 +4728,7 @@ runcode(function()
 		["Name"] = "Delay",
 		["Min"] = 1,
 		["Max"] = 50,
-		["Default"] = 5,
+		["Default"] = 3,
 		["Function"] = function() end
 	})
 	longjumpslowdown = longjump.CreateSlider({
