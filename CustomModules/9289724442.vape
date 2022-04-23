@@ -1902,14 +1902,24 @@ runcode(function()
 		["Name"] = "NoFall",
 		["Function"] = function(callback)
 			if callback then 
-				spawn(function()
-					repeat
-						task.wait(0.5)
-						pcall(function()
-							prophunt.ClientHandler.NetEvents.groundHit(Vector3.new(0, 0, 0), workspace:GetServerTimeNow())
-						end)
-					until (not NoFall["Enabled"])
+				BindToStepped("NoFall", 1, function()
+					if entity.isAlive then 
+						local filter = RaycastParams.new()
+						filter.FilterDescendantsInstances = {lplr.Character, workspace.BalloonRoots}
+						local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -12, 0), filter)
+						if ray then 
+							print("fat")
+							if lplr.Character.HumanoidRootPart.AssemblyLinearVelocity.Y < -100 then
+								workspace.Gravity = 10
+								lplr.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(lplr.Character.HumanoidRootPart.AssemblyLinearVelocity.X, 0, lplr.Character.HumanoidRootPart.AssemblyLinearVelocity.Z)
+							end
+						else
+							workspace.Gravity = 192.6
+						end
+					end
 				end)
+			else
+				UnbindFromStepped("NoFall")
 			end
 		end
 	})
@@ -1948,5 +1958,101 @@ runcode(function()
 		["Min"] = 1,
 		["Max"] = 1000,
 		["Function"] = function() end
+	})
+end)
+
+GuiLibrary["RemoveObject"]("PhaseOptionsButton")
+runcode(function()
+	local phase = {["Enabled"] = false}
+	local spidergoinup = false
+	local holdingshift = false
+	local phasemode = {["Value"] = "Normal"}
+	local phaselimit = {["Value"] = 1}
+	local phaseparts = {}
+
+	phase = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Phase", 
+		["Function"] = function(callback)
+			if callback then
+				BindToStepped("Phase", 1, function()
+					if entity.isAlive then
+						for i, part in pairs(lplr.Character:GetDescendants()) do
+							if part:IsA("BasePart") and part.CanCollide == true then
+								phaseparts[part] = true
+								part.CanCollide = false
+							end
+						end
+					end
+				end)
+			else
+				UnbindFromStepped("Phase")
+				for i,v in pairs(phaseparts) do
+					if i then
+						i.CanCollide = true
+					end
+				end
+				table.clear(phaseparts)
+			end
+		end,
+		["HoverText"] = "Lets you Phase/Clip through walls. (Hold shift to use phase over spider)"
+	})
+end)
+
+GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
+runcode(function()
+	local HighJumpMethod = {["Value"] = "Toggle"}
+	local HighJumpBoost = {["Value"] = 1}
+	local HighJumpDelay = {["Value"] = 20}
+	local HighJumpTick = tick()
+	local highjumpbound = true
+	local HighJump = {["Enabled"] = false}
+	HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "HighJump", 
+		["Function"] = function(callback)
+			if callback then
+				highjumpbound = false
+				if HighJumpMethod["Value"] == "Toggle" then
+					if HighJumpTick > tick()  then
+						createwarning("LongJump", "Wait "..math.round(HighJumpTick - tick()).." before retoggling.", 1)
+					end
+					if HighJumpTick <= tick() and entity.isAlive and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
+						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
+						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+					end
+					HighJump["ToggleButton"](false)
+				else
+					highjumpbound = true
+					BindToRenderStep("HighJump", 1, function()
+						if HighJumpTick <= tick() and entity.isAlive and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and uis:IsKeyDown(Enum.KeyCode.Space) then
+							HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
+							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+						end
+					end)
+				end
+			else
+				if highjumpbound then
+					UnbindFromRenderStep("HighJump")
+				end
+			end
+		end,
+		["HoverText"] = "Lets you jump higher"
+	})
+	HighJumpMethod = HighJump.CreateDropdown({
+		["Name"] = "Mode", 
+		["List"] = {"Toggle", "Normal"},
+		["Function"] = function(val) end
+	})
+	HighJumpBoost = HighJump.CreateSlider({
+		["Name"] = "Boost",
+		["Min"] = 1,
+		["Max"] = 150, 
+		["Function"] = function(val) end,
+		["Default"] = 100
+	})
+	HighJumpDelay = HighJump.CreateSlider({
+		["Name"] = "Delay",
+		["Min"] = 0,
+		["Max"] = 50, 
+		["Function"] = function(val) end,
 	})
 end)
