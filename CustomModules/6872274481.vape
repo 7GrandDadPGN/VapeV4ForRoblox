@@ -4621,8 +4621,8 @@ runcode(function()
 								longjumpvelo = (entity.isAlive and (not nomove) and acallowed and lplr.Character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or longjumpspeed["Value"])) or Vector3.new(0, 0, 0))
 							end)
 							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
-							task.wait(((longjumpdelay["Value"] - 1) / 10) + (damagetroll and 2 or 0))
 							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
+							task.wait(((longjumpdelay["Value"] - 1) / 10) + (damagetroll and 2 or 0))
 							if longjump["Enabled"] then 
 							--[[	if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) then
 									if getEquipped()["Object"] then 
@@ -4713,8 +4713,8 @@ runcode(function()
 	longjumpspeed = longjump.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 62,
-		["Default"] = 62,
+		["Max"] = 75,
+		["Default"] = 75,
 		["Function"] = function() end
 	})
 	longjumpval = longjump.CreateSlider({
@@ -4735,7 +4735,7 @@ runcode(function()
 		["Name"] = "Slowdown",
 		["Min"] = 1,
 		["Max"] = 30,
-		["Default"] = 2,
+		["Default"] = 3,
 		["Function"] = function() end,
 	})
 	longjumpautodisable = longjump.CreateToggle({
@@ -6553,7 +6553,7 @@ runcode(function()
 							flytogtick = tick() + 0.2
 						end
 						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
-						local allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
+						local allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
 						local flypos = lplr.Character.Humanoid.MoveDirection * flyspeed["Value"] * allowed
 						lplr.Character.HumanoidRootPart.Transparency = 1
 						lplr.Character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
@@ -8634,9 +8634,9 @@ runcode(function()
 	local anticheatconnection5
 	local playedanim = ""
 	local AnticheatBypassNumbers = {
-		TPSpeed = 0.4,
+		TPSpeed = 0.54,
 		TPLerp = 0.4,
-		TPCheck = 30
+		TPCheck = 61
 	}
 
 	local function check()
@@ -8980,7 +8980,7 @@ runcode(function()
 								lagbackchanged = false
 								lagbacknotification = false
 								if not shared.VapeOverrideAnticheatBypass then
-									if (not disabletpcheck) and (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude >= 0.01 then
+									if (not disabletpcheck) then
 										anticheatfunnyyes = true 
 										if clone.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 											amountoftimes = amountoftimes + 1
@@ -8991,11 +8991,13 @@ runcode(function()
 											check()
 											if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 												anticheatfunnyyes = false
-												if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
-												--	print("trollage2")
-													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), AnticheatBypassNumbers.TPLerp)
-												else
-													oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, AnticheatBypassNumbers.TPLerp)
+												if (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude >= 0.01 then
+													if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
+													--	print("trollage2")
+														oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), AnticheatBypassNumbers.TPLerp)
+													else
+														oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, AnticheatBypassNumbers.TPLerp)
+													end
 												end
 											end
 											check()
@@ -9006,11 +9008,13 @@ runcode(function()
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
-											if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
-											--	print("trollage")
-												oldchar.HumanoidRootPart.CFrame = addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y)
-											else
-												oldchar.HumanoidRootPart.CFrame = clone.HumanoidRootPart.CFrame
+											if (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude >= 0.01 then
+												if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
+												--	print("trollage")
+													oldchar.HumanoidRootPart.CFrame = addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y)
+												else
+													oldchar.HumanoidRootPart.CFrame = clone.HumanoidRootPart.CFrame
+												end
 											end
 										end
 										check()
