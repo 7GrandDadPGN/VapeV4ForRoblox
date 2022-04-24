@@ -432,10 +432,13 @@ do
 	entity.fullEntityRefresh()
 end
 
-local function vischeck(char, part, ignorelist)
+local function vischeck(char, part, ignorelist, origin)
 	local rayparams = RaycastParams.new()
 	rayparams.FilterDescendantsInstances = {lplr.Character, char, cam, table.unpack(ignorelist or {})}
-	local ray = workspace.Raycast(workspace, cam.CFrame.p, CFrame.lookAt(cam.CFrame.p, char[part].Position).lookVector.Unit * (cam.CFrame.p - char[part].Position).Magnitude, rayparams)
+	local ray = workspace.Raycast(workspace, origin or cam.CFrame.p, CFrame.lookAt(origin or cam.CFrame.p, char[part].Position).lookVector.Unit * ((origin or cam.CFrame.p) - char[part].Position).Magnitude, rayparams)
+	if ray then 
+		print("found:", ray.Instance:GetFullName())
+	end
 	return not ray
 --	local unpacked = unpack(cam.GetPartsObscuringTarget(cam, {lplr.Character[part].Position, char[part].Position}, {lplr.Character, char, cam, table.unpack(ignorelist or {})}))
 	--return not unpacked
@@ -467,7 +470,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 	return returnedplayer -- table of attackable entities
 end
 
-GetNearestHumanoidToMouse = function(player, distance, checkvis, vistab)
+GetNearestHumanoidToMouse = function(player, distance, checkvis, vistab, origin)
 	local closest, returnedplayer = distance, nil
 	if entity.isAlive then
 		for i, v in pairs(entity.entityList) do
@@ -475,7 +478,7 @@ GetNearestHumanoidToMouse = function(player, distance, checkvis, vistab)
 				local vec, vis = cam:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
 				if vis and targetCheck(v, true) then
 					if checkvis then
-						if not vischeck(v.Character, "HumanoidRootPart", vistab) then continue end
+						if not vischeck(v.Character, "HumanoidRootPart", vistab, origin) then continue end
 					end
 					local mag = (uis:GetMouseLocation() - Vector2.new(vec.X, vec.Y)).magnitude
 					if mag <= closest then
@@ -1908,7 +1911,7 @@ runcode(function()
 						filter.FilterDescendantsInstances = {lplr.Character, workspace.BalloonRoots}
 						local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -12, 0), filter)
 						if ray then 
-							print("fat")
+						--	print("fat")
 							if lplr.Character.HumanoidRootPart.AssemblyLinearVelocity.Y < -100 then
 								workspace.Gravity = 10
 								lplr.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(lplr.Character.HumanoidRootPart.AssemblyLinearVelocity.X, 0, lplr.Character.HumanoidRootPart.AssemblyLinearVelocity.Z)
@@ -1936,14 +1939,22 @@ runcode(function()
 			if callback then 
 				oldshoot = prophunt.ClientHandler.NetEvents.client.shoot
 				prophunt.ClientHandler.NetEvents.client.shoot = function(origin, direction, shot, randomthing, ...)
-					local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, {workspace.BalloonRoots})
+					local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, {workspace.BalloonRoots, workspace.Effects}, origin)
 					if plr then 
-						shot = {
-							instance = plr.Character.HumanoidRootPart,
-							normal = Vector3.new(1, 0, 0),
-							position = plr.Character.HumanoidRootPart.Position
-						}
-						direction = CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.Position).lookVector
+						local rayparams = RaycastParams.new()
+						rayparams.FilterDescendantsInstances = {plr.Character}
+						rayparams.FilterType = Enum.RaycastFilterType.Whitelist
+						local dir = CFrame.lookAt(origin, plr.Character.HumanoidRootPart.Position).lookVector
+						local ray = workspace:Raycast(origin, dir * 10000, rayparams)
+						if ray then
+							print("e", ray.Instance:GetFullName())
+							shot = {
+								instance = ray.Instance,
+								normal = ray.Normal,
+								position = ray.Position
+							}
+							direction = dir
+						end
 					end
 					return oldshoot(origin, direction, shot, randomthing, ...)
 				end
