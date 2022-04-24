@@ -8626,10 +8626,12 @@ runcode(function()
 	local AnticheatBypassNotification = {["Enabled"] = false}
 	local AnticheatBypassAnimation = {["Enabled"] = true}
 	local AnticheatBypassAnimationCustom = {["Value"] = ""}
+	local AnticheatBypassArrowDodge = {["Enabled"] = false}
 	local oldlaunchpos
 	local oldballoon
 	local clone
 	local changed = false
+	local combatcheck = false
 	local anticheatconnection
 	local anticheatconnection2
 	local anticheatconnection3
@@ -8638,7 +8640,8 @@ runcode(function()
 	local playedanim = ""
 	local AnticheatBypassNumbers = {
 		TPSpeed = 0.54,
-		TPLerp = 0.4,
+		TPCombat = 0.3,
+		TPLerp = 0.35,
 		TPCheck = 61
 	}
 
@@ -9007,7 +9010,7 @@ runcode(function()
 										end
 										check()
 										--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-										task.wait(killauranear and AnticheatBypassCombatCheck["Enabled"] and 0.2 or AnticheatBypassNumbers.TPSpeed)
+										task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or AnticheatBypassNumbers.TPSpeed)
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
@@ -9181,6 +9184,106 @@ runcode(function()
 		end,
 		["HoverText"] = "Makes speed check more stupid."
 	})
+	local arrowdodgeconnection
+	local arrowdodgedata
+	--skidded off the devforum because I hate projectile math
+	-- Compute 2D launch angle
+	-- v: launch velocity
+	-- g: gravity (positive) e.g. 196.2
+	-- d: horizontal distance
+	-- h: vertical distance
+	-- higherArc: if true, use the higher arc. If false, use the lower arc.
+	local function LaunchAngle(v: number, g: number, d: number, h: number, higherArc: boolean)
+		local v2 = v * v
+		local v4 = v2 * v2
+		local root = math.sqrt(v4 - g*(g*d*d + 2*h*v2))
+		if not higherArc then root = -root end
+		return math.atan((v2 + root) / (g * d))
+	end
+
+	-- Compute 3D launch direction from
+	-- start: start position
+	-- target: target position
+	-- v: launch velocity
+	-- g: gravity (positive) e.g. 196.2
+	-- higherArc: if true, use the higher arc. If false, use the lower arc.
+	local function LaunchDirection(start, target, v, g, higherArc: boolean)
+		-- get the direction flattened:
+		local horizontal = Vector3.new(target.X - start.X, 0, target.Z - start.Z)
+		
+		local h = target.Y - start.Y
+		local d = horizontal.Magnitude
+		local a = LaunchAngle(v, g, d, h, higherArc)
+		
+		-- NaN ~= NaN, computation couldn't be done (e.g. because it's too far to launch)
+		if a ~= a then return nil end
+		
+		-- speed if we were just launching at a flat angle:
+		local vec = horizontal.Unit * v
+		
+		-- rotate around the axis perpendicular to that direction...
+		local rotAxis = Vector3.new(-horizontal.Z, 0, horizontal.X)
+		
+		-- ...by the angle amount
+		return CFrame.fromAxisAngle(rotAxis, a) * vec
+	end
+
+	local function FindLeadShot(targetPosition: Vector3, targetVelocity: Vector3, projectileSpeed: Number, shooterPosition: Vector3, shooterVelocity: Vector3, gravity: Number)
+		local distance = (targetPosition - shooterPosition).Magnitude
+
+		local p = targetPosition - shooterPosition
+		local v = targetVelocity - shooterVelocity
+		local a = Vector3.new()
+
+		local timeTaken = (distance / projectileSpeed)
+		
+		if gravity > 0 then
+			local timeTaken = projectileSpeed/gravity+math.sqrt(2*distance/gravity+projectileSpeed^2/gravity^2)
+		end
+
+		local goalX = targetPosition.X + v.X*timeTaken + 0.5 * a.X * timeTaken^2
+		local goalY = targetPosition.Y + v.Y*timeTaken + 0.5 * a.Y * timeTaken^2
+		local goalZ = targetPosition.Z + v.Z*timeTaken + 0.5 * a.Z * timeTaken^2
+		
+		return Vector3.new(goalX, goalY, goalZ)
+	end
+	
+	AnticheatBypassArrowDodge = AnticheatBypass.CreateToggle({
+		["Name"] = "Arrow Dodge",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					bedwars["ClientHandler"]:WaitFor("ProjectileLaunch"):andThen(function(p6)
+						arrowdodgeconnection = p6:Connect(function(data)
+							if oldchar and clone and AnticheatBypass["Enabled"] and (arrowdodgedata == nil or arrowdodgedata.launchVelocity ~= data.launchVelocity) and entity.isAlive and tostring(data.projectile):find("arrow") then
+								arrowdodgedata = data
+								local projmetatab = bedwars["ProjectileMeta"][tostring(data.projectile)]
+								local prediction = (projmetatab.predictionLifetimeSec or projmetatab.lifetimeSec or 3)
+								local gravity = (projmetatab.gravitationalAcceleration or 196.2)
+								local multigrav = gravity
+								local offsetshootpos = data.position
+								local pos = (oldchar.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
+								local calculated2 = FindLeadShot(pos, Vector3.new(0, 0, 0), (Vector3.new(0, 0, 0) - data.launchVelocity).magnitude, offsetshootpos, Vector3.new(0, 0, 0), multigrav) 
+								local calculated = LaunchDirection(offsetshootpos, pos, (Vector3.new(0, 0, 0) - data.launchVelocity).magnitude, gravity, false)
+								local initialvelo = calculated--(calculated - offsetshootpos).Unit * launchvelo
+								local initialvelo2 = (calculated2 - offsetshootpos).Unit * (Vector3.new(0, 0, 0) - data.launchVelocity).magnitude
+								local calculatedvelo = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (Vector3.new(0, 0, 0) - data.launchVelocity).magnitude
+								if (calculatedvelo - data.launchVelocity).magnitude <= 20 then 
+									oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.6)
+								end
+							end
+						end)
+					end)
+				end)
+			else
+				if arrowdodgeconnection then 
+					arrowdodgeconnection:Disconnect()
+				end
+			end
+		end,
+		["Default"] = true,
+		["HoverText"] = "Dodge arrows (tanqr moment)"
+	})
 	AnticheatBypassTransparent = AnticheatBypass.CreateToggle({
 		["Name"] = "Transparent",
 		["Function"] = function(callback) 
@@ -9204,7 +9307,22 @@ runcode(function()
 	})
 	AnticheatBypassCombatCheck = AnticheatBypass.CreateToggle({
 		["Name"] = "Combat Check",
-		["Function"] = function() end,
+		["Function"] = function(callback) 
+			if callback then 
+				spawn(function()
+					repeat 
+						task.wait(0.1)
+						if (not AnticheatBypassCombatCheck["Enabled"]) then break end
+						if AnticheatBypass["Enabled"] then 
+							local plrs = GetAllNearestHumanoidToPosition(true, 30, 1)
+							combatcheck = #plrs > 0
+						end
+					until (not AnticheatBypassCombatCheck["Enabled"])
+				end)
+			else
+				combatcheck = false
+			end
+		end,
 		["Default"] = true
 	})
 	AnticheatBypassNotification = AnticheatBypass.CreateToggle({
