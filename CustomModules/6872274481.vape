@@ -4932,6 +4932,9 @@ runcode(function()
 		if killauranovape["Enabled"] and vapeusers[plr.Player.Name] then
 			return nil
 		end
+		if bedwars["KatanaController"].beginChargeTime then
+			return nil
+		end
 		local root = plr.RootPart
 		if not root then 
 			return nil
