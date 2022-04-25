@@ -447,6 +447,8 @@ runcode(function()
 	local aimignoredscripts = {["ObjectList"] = {}}
 	local aimbound
 	local shoottime = tick()
+	local recentlyshotplr
+	local recentlyshottick = tick()
 	local aimfovframe
 	local pressed = false
 	local tar = nil
@@ -471,6 +473,25 @@ runcode(function()
 		["Name"] = "SilentAim", 
 		["Function"] = function(callback) 
 			if callback then
+				spawn(function()
+					repeat
+						task.wait(0.1)
+						local targettable = {}
+						local targetsize = 0
+						if recentlyshotplr and recentlyshottick >= tick() then 
+							local plr = recentlyshotplr
+							if plr then
+								targettable[plr.Player.Name] = {
+									["UserId"] = plr.Player.UserId,
+									["Health"] = plr.Character.Humanoid.Health,
+									["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+								}
+								targetsize = targetsize + 1
+							end
+						end
+						targetinfo.UpdateInfo(targettable, targetsize)
+					until (not AimAssist["Enabled"])
+				end)
 				if aimfovframe then
 					aimfovframe.Visible = aimmode["Value"] ~= "Blatant"
 				end
@@ -527,6 +548,8 @@ runcode(function()
 						if not plr then
 							return oldnamecall(self, ...)
 						end
+						recentlyshotplr = plr
+						recentlyshottick = tick() + 3
 						local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
 						if aimtable[aimmethod["Value"]] == 1 then
 							local mag = (Vector3.new(0, 0, 0) - Args[1].Direction).Magnitude
@@ -3293,7 +3316,7 @@ local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOpt
 	end
 })
 
-pcall(function()
+runcode(function()
 	local TracersFolder = Instance.new("Folder")
 	TracersFolder.Name = "TracersFolder"
 	TracersFolder.Parent = GuiLibrary["MainGui"]
