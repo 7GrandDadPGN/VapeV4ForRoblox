@@ -751,7 +751,7 @@ phantomforces["Network"].send = function(self, method, ...)
 	local checkmethod = method
 	checkmethod = checkmethod:gsub("%W", "")
 
-	if checkmethod == "closeconnection" then
+	if checkmethod == "closeconnection" or checkmethod == "debug" then
 		return
 	end
 
