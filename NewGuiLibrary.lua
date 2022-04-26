@@ -2802,9 +2802,11 @@ if shared.VapeExecuted then
 			dropapi["Value"] = (list ~= {} and list[1] or "")
 			dropapi["Default"] = dropapi["Value"]
 			dropapi["Object"] = frame
+			dropapi["List"] = list
 			dropapi["UpdateList"] = function(val)
 				placeholder = 25
 				list = val
+				dropapi["List"] = val
 				if not table.find(list, dropapi["Value"]) then
 					dropapi["Value"] = list[1]
 					drop1.Text = "   "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"]).." - "..list[1]
@@ -3353,6 +3355,7 @@ if shared.VapeExecuted then
 			bindbkg2.BackgroundTransparency = 1
 			bindbkg2.ZIndex = 2
 			bindbkg2.Text = "x"
+			bindbkg2.TextColor3 = Color3.fromRGB(88, 88, 88)
 			bindbkg2.Parent = button
 			local bindimg = Instance.new("ImageLabel")
 			bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
@@ -4599,9 +4602,11 @@ if shared.VapeExecuted then
 				dropapi["Value"] = (list ~= {} and list[1] or "")
 				dropapi["Default"] = dropapi["Value"]
 				dropapi["Object"] = frame
+				dropapi["List"] = list
 				dropapi["UpdateList"] = function(val)
 					placeholder = 25
 					list = val
+					dropapi["List"] = val
 					if not table.find(list, dropapi["Value"]) then
 						dropapi["Value"] = list[1]
 						drop1.Text = "   "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"]).." - "..list[1]
