@@ -8692,13 +8692,13 @@ runcode(function()
 		TPSpeed = 0.1,
 		TPCombat = 0.3,
 		TPLerp = 0.35,
-		TPCheck = 10
+		TPCheck = 15
 	}
 
 	local function check()
 		lagbackedaftertouch = false
-		print((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude)
 		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
+			print((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude - AnticheatBypassNumbers.TPCheck)
 			local newpos = (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).Unit * AnticheatBypassNumbers.TPCheck
 			newpos = newpos == newpos and newpos or Vector3.new(0, 0, 0)
 			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
