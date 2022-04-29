@@ -2682,23 +2682,42 @@ end)
 
 GuiLibrary["RemoveObject"]("BlinkOptionsButton")
 runcode(function()
+	local BlinkIncoming = {["Enabled"] = false}
 	local Blink = {["Enabled"] = false}
 	Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "Blink",
+		["Name"] = "Blink", 
 		["Function"] = function(callback) 
 			if callback then
 				if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
-					settings():GetService("NetworkSettings").IncomingReplicationLag = 99999
+					game:GetService("NetworkClient"):SetOutgoingKBPSLimit(0.01)
+					if BlinkIncoming["Enabled"] then 
+						settings():GetService("NetworkSettings").IncomingReplicationLag = 99999999
+					end
 				else
 					Blink["ToggleButton"](false)
 				end
 			else
-				if GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] then
+				game:GetService("NetworkClient"):SetOutgoingKBPSLimit(math.huge)
+				if BlinkIncoming["Enabled"] then 
 					settings():GetService("NetworkSettings").IncomingReplicationLag = 0
 				end
 			end
-		end,
-		["HoverText"] = "Chokes all incoming packets (blatant mode required)\nPlease do not turn this on if you do not know what you are doing."
+		end, 
+		["HoverText"] = "Chokes all incoming or outgoing packets"
+	})
+	BlinkIncoming = Blink.CreateToggle({
+		["Name"] = "Incoming",
+		["Function"] = function(callback)
+			if callback then
+				if Blink["Enabled"] then 
+					settings():GetService("NetworkSettings").IncomingReplicationLag = 99999999
+				end
+			else
+				if Blink["Enabled"] then 
+					settings():GetService("NetworkSettings").IncomingReplicationLag = 0
+				end
+			end
+		end
 	})
 end)
 
@@ -2712,6 +2731,16 @@ runcode(function()
 	local anticolor = {["Hue"] = 1, ["Sat"] = 1, ["Value"] = 0.55}
 	local AntiVoid = {["Enabled"] = false}
 	local lastvalidpos
+
+	local function isPointInMapOccupied(p)
+		local region = Region3.new(p - Vector3.new(1, 1, 1), p + Vector3.new(1, 1, 1))
+		local possible = workspace:FindPartsInRegion3WithWhiteList(region, game:GetService("CollectionService"):GetTagged("block"))
+	--	for i,v in pairs(possible) do
+	--		print(v:GetFullName())
+	--	end
+		return (#possible == 0)
+	end
+
 	AntiVoid = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AntiVoid", 
 		["Function"] = function(callback)
@@ -2749,20 +2778,28 @@ runcode(function()
 									if (not lagbackedaftertouch) and lastvalidpos and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 										lagbackedaftertouch = true
 										local old = lplr.Character.HumanoidRootPart.CFrame
-										if (lastvalidpos.p - lplr.Character.HumanoidRootPart.CFrame.p).Magnitude <= 60 then
-											for i = 1, 5 do 
-												local new = old:lerp(lastvalidpos, 0.2 * i)
-												lplr.Character.HumanoidRootPart.Velocity = (new.p - lplr.Character.HumanoidRootPart.CFrame.p ).Unit * 20
-												lplr.Character.HumanoidRootPart.CFrame = new
-												task.wait(0.1)
-											end
-											lplr.Character.HumanoidRootPart.Anchored = true
-											task.wait(antivoidnewdelay["Value"] / 10)
-											if entity.isAlive then
-												lplr.Character.HumanoidRootPart.Anchored = false
+										if isPointInMapOccupied(lastvalidpos.p) then
+											if (lastvalidpos.p - lplr.Character.HumanoidRootPart.CFrame.p).Magnitude <= 60 then
+												for i = 1, 5 do 
+													local new = old:lerp(lastvalidpos, 0.2 * i)
+													lplr.Character.HumanoidRootPart.Velocity = (new.p - lplr.Character.HumanoidRootPart.CFrame.p ).Unit * 20
+													lplr.Character.HumanoidRootPart.CFrame = new
+													task.wait(0.1)
+												end
+												lplr.Character.HumanoidRootPart.Anchored = true
+												task.wait(antivoidnewdelay["Value"] / 10)
+												if entity.isAlive then
+													lplr.Character.HumanoidRootPart.Anchored = false
+												end
+											else
+												createwarning("AntiVoid", "Magnitude bigger then 60, failed.", 10)
 											end
 										else
-											createwarning("AntiVoid", "Magnitude bigger then 60, failed.", 10)
+											createwarning("AntiVoid", "Wall detected, failed.", 10)
+											for i = 1, 2 do
+												task.wait(0.1)
+												lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 70, lplr.Character.HumanoidRootPart.Velocity.Z)
+											end
 										end
 									end
 								else
@@ -4651,6 +4688,10 @@ runcode(function()
 									repeat task.wait() until damagetimer >= tick()
 									nomove = false
 								end
+								if not entity.isAlive then
+									longjump["ToggleButton"](false)
+									return
+								end
 								oldgrav = workspace.Gravity
 								workspace.Gravity = 15
 								if (entity.isAlive and longjump["Enabled"]) then
@@ -4669,7 +4710,7 @@ runcode(function()
 													local raycastparameters = RaycastParams.new()
 													raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
 													raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-													local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
+													local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -32, 0), raycastparameters)
 													if newray then
 														if longjump["Enabled"] then
 															longjump["ToggleButton"](false)
@@ -4699,7 +4740,7 @@ runcode(function()
 					end
 				end
 			else
-				workspace.Gravity = oldgrav
+				workspace.Gravity = oldgrav or 192.6
 				disabletpcheck = false
 				pcall(function()
 					UnbindFromStepped("LongJump")
@@ -6428,7 +6469,7 @@ runcode(function()
 									end
 								end
 								bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
+								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
@@ -8648,16 +8689,16 @@ runcode(function()
 	local anticheatconnection5
 	local playedanim = ""
 	local AnticheatBypassNumbers = {
-		TPSpeed = 0.54,
+		TPSpeed = 0.1,
 		TPCombat = 0.3,
 		TPLerp = 0.35,
-		TPCheck = 61
+		TPCheck = 10
 	}
 
 	local function check()
 		lagbackedaftertouch = false
+		print((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude)
 		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
-			print((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude - AnticheatBypassNumbers.TPCheck)
 			local newpos = (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).Unit * AnticheatBypassNumbers.TPCheck
 			newpos = newpos == newpos and newpos or Vector3.new(0, 0, 0)
 			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
@@ -9257,7 +9298,7 @@ runcode(function()
 		return Vector3.new(goalX, goalY, goalZ)
 	end
 	
-	AnticheatBypassArrowDodge = AnticheatBypass.CreateToggle({
+--[[	AnticheatBypassArrowDodge = AnticheatBypass.CreateToggle({
 		["Name"] = "Arrow Dodge",
 		["Function"] = function(callback)
 			if callback then
@@ -9292,7 +9333,7 @@ runcode(function()
 		end,
 		["Default"] = true,
 		["HoverText"] = "Dodge arrows (tanqr moment)"
-	})
+	})]]
 	AnticheatBypassTransparent = AnticheatBypass.CreateToggle({
 		["Name"] = "Transparent",
 		["Function"] = function(callback) 
@@ -9315,7 +9356,7 @@ runcode(function()
 		["Default"] = true
 	})
 	local changecheck = false
-	AnticheatBypassCombatCheck = AnticheatBypass.CreateToggle({
+--[[	AnticheatBypassCombatCheck = AnticheatBypass.CreateToggle({
 		["Name"] = "Combat Check",
 		["Function"] = function(callback) 
 			if callback then 
@@ -9340,7 +9381,7 @@ runcode(function()
 			end
 		end,
 		["Default"] = true
-	})
+	})]]
 	AnticheatBypassNotification = AnticheatBypass.CreateToggle({
 		["Name"] = "Notification",
 		["Function"] = function() end
