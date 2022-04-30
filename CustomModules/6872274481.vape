@@ -684,8 +684,8 @@ end
 local function getSword()
 	local bestsword, bestswordslot, bestswordnum = nil, nil, 0
 	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
-		if v5["itemType"]:find("sword") or v5["itemType"]:find("blade") or v5["itemType"]:find("scythe") or v5["itemType"]:find("dao") then
-			local swordrank = bedwars["ItemTable"][v5["itemType"]]["sword"]["damage"]
+		if bedwars["ItemTable"][v5["itemType"]]["sword"] then
+			local swordrank = bedwars["ItemTable"][v5["itemType"]]["sword"]["damage"] or 0
 			if swordrank > bestswordnum then
 				bestswordnum = swordrank
 				bestswordslot = i5
@@ -5012,7 +5012,7 @@ runcode(function()
 				killaurabox.Adornee = root
 			end
 		end
-		local sword = (equipped.Object and equipped.Object.Name == "frying_pan" and {tool = equipped.Object} or getSword())
+		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
 		local selfpos = lplr.Character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (lplr.Character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
 		killaurarealremote:InvokeServer({
 			["weapon"] = sword and sword["tool"],
@@ -6236,7 +6236,7 @@ runcode(function()
 						end
 						game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
 					end
-					if AutoLeave["Enabled"] and allowleave() then
+					if AutoLeave["Enabled"] and allowleave() and matchState ~= 2 then
 						task.wait(1 + (AutoLeaveDelay["Value"] / 10))
 						if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
 							if not AutoPlayAgain["Enabled"] then
@@ -8830,6 +8830,7 @@ runcode(function()
 			end
 			repeat 
 				task.wait() 
+				print(oldchar == lplr.Character, oldchar:GetFullName())
 				if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
 					clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
 				end
