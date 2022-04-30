@@ -1400,44 +1400,6 @@ end
 
 local function renderNametag(plr)
 	if (bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]) then
-		if lplr ~= plr and bedwars["CheckPlayerType"](lplr) == "DEFAULT" then
-			spawn(function()
-				repeat task.wait() until isAlive(plr)
-				repeat task.wait() until plr.Character.HumanoidRootPart.Velocity ~= Vector3.new(0, 0, 0)
-				task.wait(4)
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." POJ2GPO1KP52P22", "All")
-				spawn(function()
-					local connection
-					for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
-						if newbubble:IsA("TextLabel") and newbubble.Text:find("POJ2GPO1KP52P22") then
-							newbubble.Parent.Parent.Visible = false
-							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
-							if connection then
-								connection:Disconnect()
-							end
-						end
-					end
-					connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
-						if newbubble:IsA("TextLabel") and newbubble.Text:find("POJ2GPO1KP52P22") then
-							newbubble.Parent.Parent.Visible = false
-							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
-							if connection then
-								connection:Disconnect()
-							end
-						end
-					end)
-				end)
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Wait()
-				task.wait(0.2)
-				if getconnections then
-					for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-						if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-							debug.getupvalues(v.Function)[1]:SwitchCurrentChannel("all")
-						end
-					end
-				end
-			end)
-		end
 		local nametag = getNametagString(plr)
 		plr.CharacterAdded:connect(function(char)
 			if char ~= oldchar then
@@ -5832,32 +5794,6 @@ local commands = {
 
 chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
 	local plr = players:FindFirstChild(tab["FromSpeaker"])
-	if plr and bedwars["CheckPlayerType"](lplr) ~= "DEFAULT" and tab.MessageType == "Whisper" and tab.Message:find("POJ2GPO1KP52P22") and alreadysaidlist[plr.Name] == nil then
-		alreadysaidlist[plr.Name] = true
-		spawn(function()
-			local connection
-			for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
-				if newbubble:IsA("TextLabel") and newbubble.Text:find("POJ2GPO1KP52P22") then
-					newbubble.Parent.Parent.Visible = false
-					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or newbubble.Parent.Parent.Parent.Parent == nil
-					if connection then
-						connection:Disconnect()
-					end
-				end
-			end
-			connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
-				if newbubble:IsA("TextLabel") and newbubble.Text:find("POJ2GPO1KP52P22") then
-					newbubble.Parent.Parent.Visible = false
-					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or  newbubble.Parent.Parent.Parent.Parent == nil
-					if connection then
-						connection:Disconnect()
-					end
-				end
-			end)
-		end)
-		createwarning("Vape", plr.Name.." is using vape!", 60)
-		vapeusers[plr.Name] = true
-	end
 	local args = tab.Message:split(" ")
 	--priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)]
 	if priolist[bedwars["CheckPlayerType"](lplr)] > 0 and plr == lplr then
