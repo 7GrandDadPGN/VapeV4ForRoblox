@@ -6034,7 +6034,7 @@ runcode(function()
 			if callback then
 				autoleaveconnection = players.PlayerAdded:connect(function(plr)
 					pcall(function()
-						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
+						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
 							if AutoLeaveStaff["Enabled"] then
 								GuiLibrary["SelfDestruct"]()
 								game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -6054,7 +6054,7 @@ runcode(function()
 				end)
 				pcall(function()
 					for i, plr in pairs(players:GetChildren()) do
-						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 then
+						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
 							if AutoLeaveStaff["Enabled"] then
 								GuiLibrary["SelfDestruct"]()
 								game:GetService("StarterGui"):SetCore("SendNotification", {
