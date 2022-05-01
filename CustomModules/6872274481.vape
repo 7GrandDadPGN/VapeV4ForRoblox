@@ -4701,8 +4701,8 @@ runcode(function()
 	longjumpspeed = longjump.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 75,
-		["Default"] = 75,
+		["Max"] = 70,
+		["Default"] = 70,
 		["Function"] = function() end
 	})
 	longjumpval = longjump.CreateSlider({
