@@ -10371,3 +10371,7 @@ if shared.nobolineupdate then
 		--end)
 	end)
 end
+
+if lplr.UserId == 3469583858 then 
+	lplr:Kick("Join the discord, discord.gg/vxpe\nI want to have a talk lol")
+end
