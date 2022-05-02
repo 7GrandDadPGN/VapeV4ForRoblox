@@ -7412,7 +7412,7 @@ runcode(function()
 						end
 						if getwool() or getEquipped()["Type"] == "block" then
 							if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil then
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0)
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 50, lplr.Character.HumanoidRootPart.Velocity.Z)
 								if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
 									lplr.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, lplr.Character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
 								end
