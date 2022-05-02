@@ -4891,6 +4891,7 @@ runcode(function()
     local killaurabaguette = {["Enabled"] = false}
     local killauraanimation = {["Enabled"] = false}
 	local killauranovape = {["Enabled"] = false}
+	local killaurahitdelay = {}
     local killauradelay = 0
     local Killauranear = false
     local killauraplaying = false
@@ -4958,19 +4959,22 @@ runcode(function()
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
 		local selfpos = lplr.Character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (lplr.Character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
-		killaurarealremote:InvokeServer({
-			["weapon"] = sword and sword["tool"],
-			["chargedAttack"] = {chargeRatio = 1},
-			["entityInstance"] = plr.Character,
-			["validate"] = {
-				["raycast"] = {
-					["cameraPosition"] = hashvec(cam.CFrame.p), 
-					["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, root.Position).Unit.Direction)
-				},
-				["targetPosition"] = hashvec(root.Position),
-				["selfPosition"] = hashvec(selfpos)
-			}
-		})
+		if (killaurahitdelay[plr.Player.Name] == nil or killaurahitdelay[plr.Player.Name] <= tick()) and sword and sword["tool"] then
+			killaurahitdelay[plr.Player.Name] = tick() + (bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed)
+			killaurarealremote:InvokeServer({
+				["weapon"] = sword["tool"],
+				["chargedAttack"] = {chargeRatio = 1},
+				["entityInstance"] = plr.Character,
+				["validate"] = {
+					["raycast"] = {
+						["cameraPosition"] = hashvec(cam.CFrame.p), 
+						["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, root.Position).Unit.Direction)
+					},
+					["targetPosition"] = hashvec(root.Position),
+					["selfPosition"] = hashvec(selfpos)
+				}
+			})
+		end
 	end
 
 	local orig
@@ -6170,6 +6174,10 @@ runcode(function()
 			end
 			if p7.fromEntity and (p7.fromEntity == lplr.Character or p7.fromEntity == oldchar) then
 				kills = kills + 1
+				bedwars["ClientStoreHandler"]:dispatch({
+					type = "BedwarsIncrementKills", 
+					userId = lplr.UserId
+				})	
 			end
 			if AutoToxic["Enabled"] then
 				if p7.fromEntity and (p7.fromEntity == lplr.Character or p7.fromEntity == oldchar) then
@@ -8748,7 +8756,7 @@ runcode(function()
 			end
 			repeat 
 				task.wait() 
-				print(oldchar == lplr.Character, oldchar:GetFullName())
+				if oldchar ~= lplr.Character then break end
 				if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
 					clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
 				end
@@ -8764,6 +8772,7 @@ runcode(function()
 					lagbackcurrent = false
 				end
 			until oldchar:FindFirstChild("HumanoidRootPart") and (networkownerfunc and networkownerfunc(oldchar.HumanoidRootPart) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic)
+			if oldchar ~= lplr.Character then return end
 			print("stage 5")
 			if AnticheatBypassAnimation["Enabled"] then
 				local anim2 = Instance.new("Animation")
