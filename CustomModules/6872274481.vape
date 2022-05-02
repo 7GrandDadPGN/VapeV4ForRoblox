@@ -4891,7 +4891,7 @@ runcode(function()
     local killaurabaguette = {["Enabled"] = false}
     local killauraanimation = {["Enabled"] = false}
 	local killauranovape = {["Enabled"] = false}
-	local killaurahitdelay = {}
+	local killaurahitdelay = tick()
     local killauradelay = 0
     local Killauranear = false
     local killauraplaying = false
@@ -4957,11 +4957,13 @@ runcode(function()
 				killaurabox.Adornee = root
 			end
 		end
+		if killaurahitdelay > tick() then 
+			return nil
+		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
 		local selfpos = lplr.Character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (lplr.Character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
-		if (killaurahitdelay[plr.Player.Name] == nil or killaurahitdelay[plr.Player.Name] <= tick()) and sword and sword["tool"] then
-			killaurahitdelay[plr.Player.Name] = tick() + (bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed)
-			killaurarealremote:InvokeServer({
+		if sword and sword["tool"] then
+			local attacksuccess = killaurarealremote:InvokeServer({
 				["weapon"] = sword["tool"],
 				["chargedAttack"] = {chargeRatio = 1},
 				["entityInstance"] = plr.Character,
@@ -4974,6 +4976,9 @@ runcode(function()
 					["selfPosition"] = hashvec(selfpos)
 				}
 			})
+			if attacksuccess and bedwars["ItemTable"][sword["tool"].Name].sword.respectAttackSpeedOnServer then 
+				killaurahitdelay = tick() + bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed
+			end
 		end
 	end
 
@@ -8929,6 +8934,9 @@ runcode(function()
 									lagbacktime = tick()
 									lagbacks = lagbacks + 1
 									spawn(function()
+										if AnticheatBypassNotification["Enabled"] and math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())) > 250 then
+											createwarning("AnticheatBypass", "Possible Lagspike Moment", 10)
+										end
 										if AnticheatBypassFlagCheck["Enabled"] then
 											spawn(function()
 												if AnticheatBypass["Enabled"] then
@@ -8946,9 +8954,6 @@ runcode(function()
 													AnticheatBypass["ToggleButton"](false)
 												end
 											end)
-										end
-										if AnticheatBypassNotification["Enabled"] and math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())) > 250 then
-											createwarning("AnticheatBypass", "Possible Lagspike Moment", 10)
 										end
 									end)
 								end
@@ -9118,7 +9123,7 @@ runcode(function()
 					anticheatconnection2:Disconnect()
 				end
 				UnbindFromStepped("AnticheatBypass")
-				if oldchar then
+				if oldchar and clonesuccess then
 					if oldchar:FindFirstChild("Humanoid") then
 						for i2,v2 in pairs(oldchar.Humanoid.Animator:GetPlayingAnimationTracks()) do
 							if v2.Animation.AnimationId == playedanim then
@@ -9138,9 +9143,7 @@ runcode(function()
 						end
 					end
 					local oldcamcframe = cam.CFrame
-					if clonesuccess then
-						lplr.Character = oldchar
-					end
+					lplr.Character = oldchar
 					spawn(function()
 						repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
 						cam.CFrame = oldcamcframe
