@@ -6130,94 +6130,94 @@ if shared.VapeExecuted then
 	end)
 
 	api["CreateNotification"] = function(top, bottom, duration, customicon)
-			local offset = #notificationwindow:GetChildren()
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(0, 266, 0, 75)
-			frame.Position = UDim2.new(1, 0, 1, -(150 + 80 * offset))
-			frame.BackgroundTransparency = 1
-			frame.BackgroundColor3 = Color3.new(0, 0,0)
-			frame.BorderSizePixel = 0
-			frame.Parent = notificationwindow
-			frame.Visible = api["Notifications"]
-			frame.ClipsDescendants = false
-			local image = Instance.new("ImageLabel")
-			image.SliceCenter = Rect.new(67, 59, 323, 120)
-			image.Position = UDim2.new(0, -61, 0, -50)
-			image.BackgroundTransparency = 1
-			image.Name = "Frame"
-			image.ScaleType = Enum.ScaleType.Slice
-			image.Image = getcustomassetfunc("vape/assets/NotificationBackground.png")
-			image.Size = UDim2.new(1, 61, 0, 159)
-			image.Parent = frame
-			local uicorner = Instance.new("UICorner")
-			uicorner.CornerRadius = UDim.new(0, 6)
-			uicorner.Parent = frame
-			local frame2 = Instance.new("ImageLabel")
-			frame2.BackgroundColor3 = Color3.new(1, 1, 1)
-			frame2.Name = "Frame"
-			frame2:GetPropertyChangedSignal("BackgroundColor3"):connect(function()
-				frame2.ImageColor3 = frame2.BackgroundColor3
+		local offset = #notificationwindow:GetChildren()
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(0, 266, 0, 75)
+		frame.Position = UDim2.new(1, 0, 1, -(150 + 80 * offset))
+		frame.BackgroundTransparency = 1
+		frame.BackgroundColor3 = Color3.new(0, 0,0)
+		frame.BorderSizePixel = 0
+		frame.Parent = notificationwindow
+		frame.Visible = api["Notifications"]
+		frame.ClipsDescendants = false
+		local image = Instance.new("ImageLabel")
+		image.SliceCenter = Rect.new(67, 59, 323, 120)
+		image.Position = UDim2.new(0, -61, 0, -50)
+		image.BackgroundTransparency = 1
+		image.Name = "Frame"
+		image.ScaleType = Enum.ScaleType.Slice
+		image.Image = getcustomassetfunc("vape/assets/NotificationBackground.png")
+		image.Size = UDim2.new(1, 61, 0, 159)
+		image.Parent = frame
+		local uicorner = Instance.new("UICorner")
+		uicorner.CornerRadius = UDim.new(0, 6)
+		uicorner.Parent = frame
+		local frame2 = Instance.new("ImageLabel")
+		frame2.BackgroundColor3 = Color3.new(1, 1, 1)
+		frame2.Name = "Frame"
+		frame2:GetPropertyChangedSignal("BackgroundColor3"):connect(function()
+			frame2.ImageColor3 = frame2.BackgroundColor3
+		end)
+		frame2.BackgroundTransparency = 1
+		frame2.SliceCenter = Rect.new(2, 0, 224, 2)
+		frame2.Size = UDim2.new(1, -61, 0, 2)
+		frame2.ScaleType = Enum.ScaleType.Slice
+		frame2.Position = UDim2.new(0, 63, 1, -36)
+		frame2.ZIndex = 2
+		frame2.Image = getcustomassetfunc("vape/assets/NotificationBar.png")
+		frame2.BorderSizePixel = 0
+		frame2.Parent = image
+		local icon = Instance.new("ImageLabel")
+		icon.Name = "IconLabel"
+		icon.Image = getcustomassetfunc(customicon and "vape/"..customicon or "vape/assets/InfoNotification.png")
+		icon.BackgroundTransparency = 1
+		icon.Position = UDim2.new(0, -6, 0, -6)
+		icon.Size = UDim2.new(0, 60, 0, 60)
+		icon.Parent = frame
+		local icon2 = icon:Clone()
+		icon2.ImageColor3 = Color3.new(0, 0, 0)
+		icon2.ZIndex = -1
+		icon2.Position = UDim2.new(0, 1, 0, 1)
+		icon2.ImageTransparency = 0.5
+		icon2.Parent = icon
+		local textlabel1 = Instance.new("TextLabel")
+		textlabel1.Font = Enum.Font.Gotham
+		textlabel1.TextSize = 13
+		textlabel1.RichText = true
+		textlabel1.TextTransparency = 0.1
+		textlabel1.TextColor3 = Color3.new(1, 1, 1)
+		textlabel1.BackgroundTransparency = 1
+		textlabel1.Position = UDim2.new(0, 46, 0, 18)
+		textlabel1.TextXAlignment = Enum.TextXAlignment.Left
+		textlabel1.TextYAlignment = Enum.TextYAlignment.Top
+		textlabel1.Text = "<b>"..(translations[top] ~= nil and translations[top] or top).."</b>"
+		textlabel1.Parent = frame
+		local textlabel2 = textlabel1:Clone()
+		textlabel2.Position = UDim2.new(0, 46, 0, 44)
+		textlabel2.Font = Enum.Font.Gotham
+		textlabel2.TextTransparency = 0
+		textlabel2.TextColor3 = Color3.new(0.5, 0.5, 0.5)
+		textlabel2.RichText = true
+		textlabel2.Text = bottom
+		textlabel2.Parent = frame
+		local textlabel3 = textlabel2:Clone()
+		textlabel3.Position = UDim2.new(0, 1, 0, 1)
+		textlabel3.TextTransparency = 0.5
+		textlabel3.TextColor3 = Color3.new(0, 0, 0)
+		textlabel3.ZIndex = -1
+		textlabel3.Parent = textlabel2
+		spawn(function()
+			pcall(function()
+				bettertween2(frame, UDim2.new(1, -262, 1, -(150 + 80 * offset)), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
+				wait(0.15)
+				frame2:TweenSize(UDim2.new(0, 0, 0, 2), Enum.EasingDirection.In, Enum.EasingStyle.Linear, duration, true)
+				wait(duration)
+				bettertween2(frame, UDim2.new(1, 0, 1, frame.Position.Y.Offset), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
+				wait(0.15)
+				frame:Remove()
 			end)
-			frame2.BackgroundTransparency = 1
-			frame2.SliceCenter = Rect.new(2, 0, 224, 2)
-			frame2.Size = UDim2.new(1, -61, 0, 2)
-			frame2.ScaleType = Enum.ScaleType.Slice
-			frame2.Position = UDim2.new(0, 63, 1, -36)
-			frame2.ZIndex = 2
-			frame2.Image = getcustomassetfunc("vape/assets/NotificationBar.png")
-			frame2.BorderSizePixel = 0
-			frame2.Parent = image
-			local icon = Instance.new("ImageLabel")
-			icon.Name = "IconLabel"
-			icon.Image = getcustomassetfunc(customicon and "vape/"..customicon or "vape/assets/InfoNotification.png")
-			icon.BackgroundTransparency = 1
-			icon.Position = UDim2.new(0, -6, 0, -6)
-			icon.Size = UDim2.new(0, 60, 0, 60)
-			icon.Parent = frame
-			local icon2 = icon:Clone()
-			icon2.ImageColor3 = Color3.new(0, 0, 0)
-			icon2.ZIndex = -1
-			icon2.Position = UDim2.new(0, 1, 0, 1)
-			icon2.ImageTransparency = 0.5
-			icon2.Parent = icon
-			local textlabel1 = Instance.new("TextLabel")
-			textlabel1.Font = Enum.Font.Gotham
-			textlabel1.TextSize = 13
-			textlabel1.RichText = true
-			textlabel1.TextTransparency = 0.1
-			textlabel1.TextColor3 = Color3.new(1, 1, 1)
-			textlabel1.BackgroundTransparency = 1
-			textlabel1.Position = UDim2.new(0, 46, 0, 18)
-			textlabel1.TextXAlignment = Enum.TextXAlignment.Left
-			textlabel1.TextYAlignment = Enum.TextYAlignment.Top
-			textlabel1.Text = "<b>"..(translations[top] ~= nil and translations[top] or top).."</b>"
-			textlabel1.Parent = frame
-			local textlabel2 = textlabel1:Clone()
-			textlabel2.Position = UDim2.new(0, 46, 0, 44)
-			textlabel2.Font = Enum.Font.Gotham
-			textlabel2.TextTransparency = 0
-			textlabel2.TextColor3 = Color3.new(0.5, 0.5, 0.5)
-			textlabel2.RichText = true
-			textlabel2.Text = bottom
-			textlabel2.Parent = frame
-			local textlabel3 = textlabel2:Clone()
-			textlabel3.Position = UDim2.new(0, 1, 0, 1)
-			textlabel3.TextTransparency = 0.5
-			textlabel3.TextColor3 = Color3.new(0, 0, 0)
-			textlabel3.ZIndex = -1
-			textlabel3.Parent = textlabel2
-			spawn(function()
-				pcall(function()
-					bettertween2(frame, UDim2.new(1, -262, 1, -(150 + 80 * offset)), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
-					wait(0.15)
-					frame2:TweenSize(UDim2.new(0, 0, 0, 2), Enum.EasingDirection.In, Enum.EasingStyle.Linear, duration, true)
-					wait(duration)
-					bettertween2(frame, UDim2.new(1, 0, 1, frame.Position.Y.Offset), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
-					wait(0.15)
-					frame:Remove()
-				end)
-			end)
-			return frame
+		end)
+		return frame
 	end
 
 	api["LoadedAnimation"] = function(enabled)

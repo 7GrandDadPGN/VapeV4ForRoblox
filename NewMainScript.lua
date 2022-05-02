@@ -53,6 +53,7 @@ if not (getasset and requestfunc and queueteleport) then
 end
 
 if shared.VapeExecuted then
+	print("e")
 	error("Vape Already Injected")
 	return
 else
@@ -802,71 +803,73 @@ local function getSpaces(str)
 		return math.ceil(strSize.X / 3)
 end
 local function UpdateHud()
-	local text = ""
-	local text2 = ""
-	local tableofmodules = {}
-	local first = true
-	
-	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-		if v["Type"] == "OptionsButton" and v["Api"]["Name"] ~= "Text GUI" then
-			if v["Api"]["Enabled"] then
-				local blacklisted = table.find(TextGuiCircleObject["CircleList"]["ObjectList"], v["Api"]["Name"]) and TextGuiCircleObject["CircleList"]["ObjectListEnabled"][table.find(TextGuiCircleObject["CircleList"]["ObjectList"], v["Api"]["Name"])]
-				if not blacklisted then
-					table.insert(tableofmodules, {["Text"] = v["Api"]["Name"], ["ExtraText"] = v["Api"]["GetExtraText"]})
+	if GuiLibrary["MainGui"].ScaledGui.Visible then
+		local text = ""
+		local text2 = ""
+		local tableofmodules = {}
+		local first = true
+		
+		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
+			if v["Type"] == "OptionsButton" and v["Api"]["Name"] ~= "Text GUI" then
+				if v["Api"]["Enabled"] then
+					local blacklisted = table.find(TextGuiCircleObject["CircleList"]["ObjectList"], v["Api"]["Name"]) and TextGuiCircleObject["CircleList"]["ObjectListEnabled"][table.find(TextGuiCircleObject["CircleList"]["ObjectList"], v["Api"]["Name"])]
+					if not blacklisted then
+						table.insert(tableofmodules, {["Text"] = v["Api"]["Name"], ["ExtraText"] = v["Api"]["GetExtraText"]})
+					end
 				end
 			end
 		end
-	end
-	if sortingmethod == "Alphabetical" then
-		table.sort(tableofmodules, function(a, b) return a["Text"]:lower() < b["Text"]:lower() end)
-	else
-		table.sort(tableofmodules, function(a, b) 
-			local textsize1 = (translations[a["Text"]] ~= nil and translations[a["Text"]] or a["Text"])..(a["ExtraText"] and a["ExtraText"]() or "")
-			local textsize2 = (translations[b["Text"]] ~= nil and translations[b["Text"]] or b["Text"])..(b["ExtraText"] and b["ExtraText"]() or "")
-			textsize1 = game:GetService("TextService"):GetTextSize(textsize1, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
-			textsize2 = game:GetService("TextService"):GetTextSize(textsize2, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
-			return textsize1.X > textsize2.X 
-		end)
-	end
-	local textlists = {}
-	for i2,v2 in pairs(tableofmodules) do
-		if first then
-			text = (translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or "")
-			first = false
+		if sortingmethod == "Alphabetical" then
+			table.sort(tableofmodules, function(a, b) return a["Text"]:lower() < b["Text"]:lower() end)
 		else
-			text = text..'\n'..(translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or "")
+			table.sort(tableofmodules, function(a, b) 
+				local textsize1 = (translations[a["Text"]] ~= nil and translations[a["Text"]] or a["Text"])..(a["ExtraText"] and a["ExtraText"]() or "")
+				local textsize2 = (translations[b["Text"]] ~= nil and translations[b["Text"]] or b["Text"])..(b["ExtraText"] and b["ExtraText"]() or "")
+				textsize1 = game:GetService("TextService"):GetTextSize(textsize1, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
+				textsize2 = game:GetService("TextService"):GetTextSize(textsize2, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
+				return textsize1.X > textsize2.X 
+			end)
 		end
-		table.insert(textlists, (translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or ""))
-	end
-	textwithoutthing = text
-	onetext.Text = text
-	onetext2.Text = text:gsub(":", " ")
-	local newsize = game:GetService("TextService"):GetTextSize(text, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
-	if text == "" then
-		newsize = Vector2.new(0, 0)
-	end
-	onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
-	if TextGui.GetCustomChildren().Parent then
-		if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
-			onetext.TextXAlignment = Enum.TextXAlignment.Right
-			onetext2.TextXAlignment = Enum.TextXAlignment.Right
-			onetext2.Position = UDim2.new(0, 1, 0, 1)
-			onething.Position = UDim2.new(1, -142, 0, 8)
-			onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5))
-			onebackgroundsort.HorizontalAlignment = Enum.HorizontalAlignment.Right
-			onebackground.Position = onetext.Position + UDim2.new(0, -60, 0, 2)
-		else
-			onetext.TextXAlignment = Enum.TextXAlignment.Left
-			onetext2.TextXAlignment = Enum.TextXAlignment.Left
-			onetext2.Position = UDim2.new(0, 5, 0, 1)
-			onething.Position = UDim2.new(0, 2, 0, 8)
-			onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5))
-			onebackgroundsort.HorizontalAlignment = Enum.HorizontalAlignment.Left
-			onebackground.Position = onetext.Position + UDim2.new(0, -1, 0, 2)
+		local textlists = {}
+		for i2,v2 in pairs(tableofmodules) do
+			if first then
+				text = (translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or "")
+				first = false
+			else
+				text = text..'\n'..(translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or "")
+			end
+			table.insert(textlists, (translations[v2["Text"]] ~= nil and translations[v2["Text"]] or v2["Text"])..(v2["ExtraText"]() ~= "" and ":"..v2["ExtraText"]() or ""))
 		end
+		textwithoutthing = text
+		onetext.Text = text
+		onetext2.Text = text:gsub(":", " ")
+		local newsize = game:GetService("TextService"):GetTextSize(text, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
+		if text == "" then
+			newsize = Vector2.new(0, 0)
+		end
+		onetext.Size = UDim2.new(0, 154, 0, newsize.Y)
+		if TextGui.GetCustomChildren().Parent then
+			if (TextGui.GetCustomChildren().Parent.Position.X.Offset + TextGui.GetCustomChildren().Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2) then
+				onetext.TextXAlignment = Enum.TextXAlignment.Right
+				onetext2.TextXAlignment = Enum.TextXAlignment.Right
+				onetext2.Position = UDim2.new(0, 1, 0, 1)
+				onething.Position = UDim2.new(1, -142, 0, 8)
+				onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5))
+				onebackgroundsort.HorizontalAlignment = Enum.HorizontalAlignment.Right
+				onebackground.Position = onetext.Position + UDim2.new(0, -60, 0, 2)
+			else
+				onetext.TextXAlignment = Enum.TextXAlignment.Left
+				onetext2.TextXAlignment = Enum.TextXAlignment.Left
+				onetext2.Position = UDim2.new(0, 5, 0, 1)
+				onething.Position = UDim2.new(0, 2, 0, 8)
+				onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5))
+				onebackgroundsort.HorizontalAlignment = Enum.HorizontalAlignment.Left
+				onebackground.Position = onetext.Position + UDim2.new(0, -1, 0, 2)
+			end
+		end
+		refreshbars(textlists)
+		GuiLibrary["UpdateUI"]()
 	end
-	refreshbars(textlists)
-	GuiLibrary["UpdateUI"]()
 end
 
 TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(UpdateHud)
