@@ -9527,9 +9527,10 @@ runcode(function()
 	end
 
 	connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]:OnEvent("AngelProgress", function(p3)
-		if p3.incrementProgress >= bedwars["AngelUtil"].ANGEL_KILL_REQUIREMENT and AutoKit["Enabled"] then
+		task.wait(0.5)
+		if bedwars["ClientStoreHandler"]:getState().Kit.angelProgress >= 1 and AutoKit["Enabled"] and lplr.Character:GetAttribute("AngelType") == nil then
 			bedwars["ClientHandler"]:Get(bedwars["TrinityRemote"]):SendToServer({
-				angel = AutoTrinityList["Value"]
+				angel = AutoKitTrinity["Value"]
 			})
 		end
 	end)
