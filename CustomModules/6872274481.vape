@@ -1731,6 +1731,18 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
                 end
 			end
 		end
+		for i3,v3 in pairs(game:GetService("CollectionService"):GetTagged("Drone")) do -- drone
+			if v2:FindFirstChild("HumanoidRootPart") and currentamount < amount then
+				if tonubmer(v2:GetAttribute("PlayerUserId")) == lplr.UserId then continue end
+				local droneplr = players:GetPlayerByUserId(v2:GetAttribute("PlayerUserId"))
+				if droneplr and droneplr.Team == lplr.Team then continue end
+				local mag = (lplr.Character.HumanoidRootPart.Position - v2.HumanoidRootPart.Position).magnitude
+                if mag <= distance then -- magcheck
+                    table.insert(returnedplayer, {Player = {Name = "Drone", UserId = 1443379645}, Character = v2}) -- monsters are npcs so I have to create a fake player for target info
+					currentamount = currentamount + 1
+                end
+			end
+		end
 	end
 	return returnedplayer -- table of attackable entities
 end
