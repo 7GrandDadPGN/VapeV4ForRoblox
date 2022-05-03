@@ -8641,6 +8641,9 @@ runcode(function()
 		return addvectortocframe(cframe1, Vector3.new(0, ((oldchar and (cframe1.p.Y - oldchar.HumanoidRootPart.CFrame.p.Y)) or 0), 0))
 	end
 
+	local function finishcframe(cframe)
+		return shared.VapeOverrideAnticheatBypassCFrame and shared.VapeOverrideAnticheatBypassCFrame(cframe) or cframe
+	end
 	bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
 			if AnticheatBypass["Enabled"] then
@@ -8786,6 +8789,9 @@ runcode(function()
 				local Loaded = lplr.Character.Humanoid.Animator:LoadAnimation(anim2)
 				Loaded:Play()
 			end
+			if shared.VapeOverrideAnticheatBypassPre then 
+				shared.VapeOverrideAnticheatBypassPre(lplr.Character)
+			end
 			lplr.Character = clone
 			spawn(function()
 				repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
@@ -8891,6 +8897,9 @@ runcode(function()
 							--local targetvelo = (targetstrafing and (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p) or clone.HumanoidRootPart.Velocity)
 							local targetvelo = (clone.HumanoidRootPart.AssemblyLinearVelocity)
 							targetvelo = targetvelo.Unit * 20
+							if shared.VapeOverrideAnticheatBypassCFrame then
+								oldchar.HumanoidRootPart.CFrame = shared.VapeOverrideAnticheatBypassCFrame(oldchar.HumanoidRootPart.CFrame)
+							end
 							oldchar.HumanoidRootPart.Velocity = Vector3.new(math.clamp(targetvelo.X, -20, 20), clone.HumanoidRootPart.Velocity.Y, math.clamp(targetvelo.Z, -20, 20))
 						end
 					else
@@ -8990,9 +8999,9 @@ runcode(function()
 												if (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude >= 0.01 then
 													if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
 													--	print("trollage2")
-														oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), AnticheatBypassNumbers.TPLerp)
+														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), AnticheatBypassNumbers.TPLerp))
 													else
-														oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, AnticheatBypassNumbers.TPLerp)
+														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, AnticheatBypassNumbers.TPLerp))
 													end
 												end
 											end
@@ -9007,9 +9016,9 @@ runcode(function()
 											if (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude >= 0.01 then
 												if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
 												--	print("trollage")
-													oldchar.HumanoidRootPart.CFrame = addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y)
+													oldchar.HumanoidRootPart.CFrame = finishcframe(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y))
 												else
-													oldchar.HumanoidRootPart.CFrame = clone.HumanoidRootPart.CFrame
+													oldchar.HumanoidRootPart.CFrame = finishcframe(clone.HumanoidRootPart.CFrame)
 												end
 											end
 										end
