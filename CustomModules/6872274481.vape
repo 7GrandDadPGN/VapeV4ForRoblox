@@ -1733,7 +1733,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 		end
 		for i3,v3 in pairs(game:GetService("CollectionService"):GetTagged("Drone")) do -- drone
 			if v3:FindFirstChild("HumanoidRootPart") and currentamount < amount then
-				if tonubmer(v3:GetAttribute("PlayerUserId")) == lplr.UserId then continue end
+				if tonumber(v3:GetAttribute("PlayerUserId")) == lplr.UserId then continue end
 				local droneplr = players:GetPlayerByUserId(v3:GetAttribute("PlayerUserId"))
 				if droneplr and droneplr.Team == lplr.Team then continue end
 				local mag = (lplr.Character.HumanoidRootPart.Position - v3.HumanoidRootPart.Position).magnitude
