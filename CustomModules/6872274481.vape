@@ -7768,7 +7768,7 @@ runcode(function()
 						if FPSBoost["Enabled"] then
 							for i,v in pairs(workspace.Map.Blocks:GetChildren()) do
 								if v:GetAttribute("PlacedByUserId") == 0 then
-									v.Material = Enum.Material.SmoothPlastic
+									v.Material = Enum.Material.Fabric
 									for i2,v2 in pairs(v:GetChildren()) do
 										if v2:IsA("Texture") then
 											v2.Transparency = 1
@@ -9009,7 +9009,8 @@ runcode(function()
 										end
 										check()
 										--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-										task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or AnticheatBypassNumbers.TPSpeed)
+										local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()) <= 100
+										task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed + (ping and 0.05 or 0)))
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
