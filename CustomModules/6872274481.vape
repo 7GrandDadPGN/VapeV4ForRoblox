@@ -8940,9 +8940,15 @@ runcode(function()
 										if AnticheatBypassFlagCheck["Enabled"] then
 											spawn(function()
 												if AnticheatBypass["Enabled"] then
+													print("toggled")
 													AnticheatBypass["ToggleButton"](false)
 												end
-												repeat task.wait() until oldchar == nil or oldchar:FindFirstChild("HumanoidRootPart") == nil or (not (networkownerfunc and (not networkownerfunc(oldchar.HumanoidRootPart)) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual))
+												repeat
+													task.wait() 
+													if lplr.Character ~= clone then
+														oldchar = lplr.Character
+													end
+												until oldchar == nil or oldchar:FindFirstChild("HumanoidRootPart") == nil or (not (networkownerfunc and (not networkownerfunc(oldchar.HumanoidRootPart)) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual))
 											---	local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
 												--local oldmove = controlmodule.moveFunction
 												--controlmodule.moveFunction = function() end
@@ -8951,6 +8957,7 @@ runcode(function()
 												--	controlmodule.moveFunction = oldmove
 												--end)
 												if AnticheatBypass["Enabled"] == false then
+													print("toggled2")
 													AnticheatBypass["ToggleButton"](false)
 												end
 											end)
