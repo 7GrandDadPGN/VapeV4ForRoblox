@@ -1726,7 +1726,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 			if v2:FindFirstChild("HumanoidRootPart") and currentamount < amount and v2:GetAttribute("Team") ~= lplr:GetAttribute("Team") then -- no duck
 				local mag = (lplr.Character.HumanoidRootPart.Position - v2.HumanoidRootPart.Position).magnitude
                 if mag <= distance then -- magcheck
-                    table.insert(returnedplayer, {Player = {Name = (v2 and v2.Name or "Monster"), UserId = (v2 and v2.Name == "Duck" and 2020831224 or 1443379645)}, Character = v2}) -- monsters are npcs so I have to create a fake player for target info
+                    table.insert(returnedplayer, {Player = {Name = (v2 and v2.Name or "Monster"), UserId = (v2 and v2.Name == "Duck" and 2020831224 or 1443379645)}, Character = v2, RootPart = v2.HumanoidRootPart}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
                 end
 			end
@@ -1738,7 +1738,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 				if droneplr and droneplr.Team == lplr.Team then continue end
 				local mag = (lplr.Character.HumanoidRootPart.Position - v3.HumanoidRootPart.Position).magnitude
                 if mag <= distance then -- magcheck
-                    table.insert(returnedplayer, {Player = {Name = "Drone", UserId = 1443379645}, Character = v3}) -- monsters are npcs so I have to create a fake player for target info
+                    table.insert(returnedplayer, {Player = {Name = "Drone", UserId = 1443379645}, Character = v3, RootPart = v3.HumanoidRootPart}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
                 end
 			end
