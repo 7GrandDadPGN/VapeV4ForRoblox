@@ -3676,7 +3676,7 @@ if shared.VapeExecuted then
 					end
 				end)
 
-				api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBox", ["Api"] = textapi}
+				api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBox", ["Api"] = textapi, ["Object"] = frame}
 				return textapi
 			end
 
