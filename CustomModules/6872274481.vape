@@ -4713,15 +4713,15 @@ runcode(function()
 	longjumpspeed = longjump.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 70,
-		["Default"] = 70,
+		["Max"] = 68,
+		["Default"] = 68,
 		["Function"] = function() end
 	})
 	longjumpval = longjump.CreateSlider({
 		["Name"] = "Time",
 		["Min"] = 1,
-		["Max"] = 6,
-		["Default"] = 6,
+		["Max"] = 8,
+		["Default"] = 8,
 		["Function"] = function() end
 	})
 	longjumpheight = longjump.CreateSlider({
@@ -8621,6 +8621,8 @@ runcode(function()
 	local AnticheatBypassAnimation = {["Enabled"] = true}
 	local AnticheatBypassAnimationCustom = {["Value"] = ""}
 	local AnticheatBypassArrowDodge = {["Enabled"] = false}
+	local AnticheatBypassTPSpeed = {["Value"] = 13}
+	local AnticheatBypassTPLerp = {["Value"] = 50}
 	local oldlaunchpos
 	local oldballoon
 	local clone
@@ -8632,9 +8634,9 @@ runcode(function()
 	local anticheatconnection5
 	local playedanim = ""
 	local AnticheatBypassNumbers = {
-		TPSpeed = 0.13,
+		TPSpeed = 0.12,
 		TPCombat = 0.3,
-		TPLerp = 0.5,
+		TPLerp = 0.43,
 		TPCheck = 15
 	}
 
@@ -9355,6 +9357,26 @@ runcode(function()
 		["TempText"] = "Animation Id",
 		["FocusLost"] = function(enter) end
 	})
+	if shared.VapeDeveloper then 
+	--[[	AnticheatBypassTPSpeed = AnticheatBypass.CreateSlider({
+			["Name"] = "TPSpeed",
+			["Function"] = function(val) 
+				AnticheatBypassNumbers.TPSpeed = val / 100
+			end,
+			["Min"] = 1,
+			["Max"] = 100,
+			["Default"] = 13,
+		})
+		AnticheatBypassTPLerp = AnticheatBypass.CreateSlider({
+			["Name"] = "TPLerp",
+			["Function"] = function(val) 
+				AnticheatBypassNumbers.TPLerpSpeed = val / 100
+			end,
+			["Min"] = 1,
+			["Max"] = 100,
+			["Default"] = 50,
+		})]]
+	end
 end)
 
 runcode(function()
