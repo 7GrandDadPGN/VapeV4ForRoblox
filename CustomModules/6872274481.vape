@@ -8634,9 +8634,9 @@ runcode(function()
 	local anticheatconnection5
 	local playedanim = ""
 	local AnticheatBypassNumbers = {
-		TPSpeed = 0.12,
+		TPSpeed = 0.1,
 		TPCombat = 0.3,
-		TPLerp = 0.43,
+		TPLerp = 0.35,
 		TPCheck = 15
 	}
 
