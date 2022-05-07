@@ -4650,6 +4650,10 @@ runcode(function()
 								end
 								oldgrav = workspace.Gravity
 								workspace.Gravity = 15
+								if shared.damageanim then 
+									shared.damageanim()
+									bedwars["SoundManager"]:playSound(bedwars["SoundList"]["DAMAGE_"..math.random(1, 3)])
+								end
 								if (entity.isAlive and longjump["Enabled"]) then
 									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, longjumpheight["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
 								end
@@ -6057,12 +6061,15 @@ runcode(function()
 					pcall(function()
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
 							if AutoLeaveStaff["Enabled"] then
-								GuiLibrary["SelfDestruct"]()
+								coroutine.resume(coroutine.create(function()
+									GuiLibrary.SelfDestruct()
+								end))
 								game:GetService("StarterGui"):SetCore("SendNotification", {
 									Title = "Vape",
 									Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
 									Duration = 60,
 								})
+								return
 							else
 								local warning = createwarning("Vape", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
 								local warningtext = warning:GetChildren()[5]
@@ -6077,12 +6084,15 @@ runcode(function()
 					for i, plr in pairs(players:GetChildren()) do
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
 							if AutoLeaveStaff["Enabled"] then
-								GuiLibrary["SelfDestruct"]()
+								coroutine.resume(coroutine.create(function()
+									GuiLibrary.SelfDestruct()
+								end))
 								game:GetService("StarterGui"):SetCore("SendNotification", {
 									Title = "Vape",
 									Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
 									Duration = 60,
 								})
+								break
 							else
 								local warning = createwarning("Vape", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
 								local warningtext = warning:GetChildren()[5]
@@ -6388,7 +6398,7 @@ runcode(function()
 						if speedmode["Value"] == "CFrame" then
 							local newlongjumpvelo = longjumpvelo.Unit * math.clamp((Vector3.new(0, 0, 0) - longjumpvelo).magnitude - lplr.Character.Humanoid.WalkSpeed, 0, 100000000000)
 							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.new(0, 0, 0)
-							local newpos = (longjump["Enabled"] and newlongjumpvelo or (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] - lplr.Character.Humanoid.WalkSpeed))) * delta
+							local newpos = (longjump["Enabled"] and newlongjumpvelo or (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] - lplr.Character.Humanoid.WalkSpeed))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
 							if longjump["Enabled"] and newlongjumpvelo == Vector3.new(0, 0, 0) then
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, lplr.Character.HumanoidRootPart.Velocity.Y, 0)
 							end
@@ -6478,6 +6488,7 @@ GuiLibrary["RemoveObject"]("FlyOptionsButton")
 local flymissile
 runcode(function()
 	local OldNoFallFunction
+	local flymode = {["Value"] = "Normal"}
 	local flyspeed = {["Value"] = 40}
 	local flyverticalspeed = {["Value"] = 40}
 	local flyupanddown = {["Enabled"] = true}
@@ -6551,9 +6562,13 @@ runcode(function()
 						end
 						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 						local allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
-						local flypos = lplr.Character.Humanoid.MoveDirection * flyspeed["Value"] * allowed
+						local flypos = lplr.Character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and flyspeed["Value"] * allowed or math.clamp(flyspeed["Value"] * allowed, 1, 20))
+						local flypos2 = (lplr.Character.Humanoid.MoveDirection * math.clamp((flyspeed["Value"] * allowed) - 20, 0, 1000)) * delta
 						lplr.Character.HumanoidRootPart.Transparency = 1
 						lplr.Character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						if flymode["Value"] == "CFrame" then
+							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + flypos2
+						end
 						flyvelo = flypos + Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
 					end
 				end)
@@ -6575,6 +6590,11 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "Makes you go zoom (Balloons or TNT Required)"
+	})
+	flymode = fly.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Normal", "CFrame"},
+		["Function"] = function() end
 	})
 	flyspeed = fly.CreateSlider({
 		["Name"] = "Speed",
@@ -8796,11 +8816,11 @@ runcode(function()
 			until oldchar:FindFirstChild("HumanoidRootPart") and (networkownerfunc and networkownerfunc(oldchar.HumanoidRootPart) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic)
 			if oldchar ~= lplr.Character then return end
 			print("stage 5")
-			if AnticheatBypassAnimation["Enabled"] then
+			if AnticheatBypassAnimation["Enabled"] and oldchar:FindFirstChild("Humanoid") then
 				local anim2 = Instance.new("Animation")
 				anim2.AnimationId = AnticheatBypassAnimationCustom["Value"] ~= "" and AnticheatBypassAnimationCustom["Value"] or "http://www.roblox.com/asset/?id=4940563117"
 				playedanim = anim2.AnimationId
-				local Loaded = lplr.Character.Humanoid.Animator:LoadAnimation(anim2)
+				local Loaded = oldchar.Humanoid.Animator:LoadAnimation(anim2)
 				Loaded:Play()
 			end
 			if shared.VapeOverrideAnticheatBypassPre then 
@@ -9365,16 +9385,16 @@ runcode(function()
 			end,
 			["Min"] = 1,
 			["Max"] = 100,
-			["Default"] = 13,
+			["Default"] = AnticheatBypassNumbers.TPSpeed * 100,
 		})
 		AnticheatBypassTPLerp = AnticheatBypass.CreateSlider({
 			["Name"] = "TPLerp",
 			["Function"] = function(val) 
-				AnticheatBypassNumbers.TPLerpSpeed = val / 100
+				AnticheatBypassNumbers.TPLerp = val / 100
 			end,
 			["Min"] = 1,
 			["Max"] = 100,
-			["Default"] = 50,
+			["Default"] = AnticheatBypassNumbers.TPLerp * 100,
 		})]]
 	end
 end)
