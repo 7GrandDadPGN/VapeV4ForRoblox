@@ -80,6 +80,7 @@ local anticheatfunnyyes = false
 local staffleave
 local tpstring
 local networkownerfunc = isnetworkowner
+local uninjectflag = false
 local vapeusers = {}
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
@@ -1247,6 +1248,7 @@ GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	if oldbreakremote then
 		getmetatable(bedwars["ClientHandlerDamageBlock"]).Get = oldbreakremote
 	end
+	uninjectflag = true
 --	if oldshoot then
 --		bedwars["BowTable"]["calculateImportantLaunchValues"] = oldshoot
 --	end
@@ -6421,7 +6423,7 @@ runcode(function()
 										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 									end
 								end
-								bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
+								bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
 								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
@@ -6435,6 +6437,13 @@ runcode(function()
 			else
 				if bodyvelo then
 					bodyvelo:Remove()
+				end
+				if entity.isAlive then 
+					for i,v in pairs(lplr.Character.HumanoidRootPart:GetChildren()) do 
+						if v:IsA("BodyVelocity") then 
+							v:Remove()
+						end
+					end
 				end
 				UnbindFromStepped("Speed")
 			end
