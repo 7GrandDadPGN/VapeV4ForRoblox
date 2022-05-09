@@ -2068,6 +2068,11 @@ runcode(function()
 			end)
 		end
 	end)
+
+	local function floorpos(pos)
+		return Vector2.new(math.floor(pos.X), math.floor(pos.Y))
+	end
+
 	local ESPColor = {["Value"] = 0.44}
 	local ESPHealthBar = {["Enabled"] = false}
 	local ESPMethod = {["Value"] = "2D"}
@@ -2114,8 +2119,8 @@ runcode(function()
 								if isAlive(plr) and plr ~= lplr and (ESPTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
 									local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
 									local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-									local headPos, headVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position + Vector3.new(0, 1 + plr.Character.Humanoid.HipHeight, 0))
-									local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 1 + plr.Character.Humanoid.HipHeight, 0))
+									local headPos, headVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position + Vector3.new(0, 1 + (plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and 2 or plr.Character.Humanoid.HipHeight), 0))
+									local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 1 + (plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and 2 or plr.Character.Humanoid.HipHeight), 0))
 									rootPos = rootPos
 									if rootVis then
 										--thing.Visible = rootVis
@@ -2125,23 +2130,23 @@ runcode(function()
 											local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 											thing.Quad3.Color = color
 											thing.Quad3.Visible = true
-											thing.Quad4.From = Vector2.new(posx - 4, posy + 1)
-											thing.Quad4.To = Vector2.new(posx - 4, posy + sizey - 1)
+											thing.Quad4.From = floorpos(Vector2.new(posx - 4, posy + 1))
+											thing.Quad4.To = floorpos(Vector2.new(posx - 4, posy + sizey - 1))
 											thing.Quad4.Visible = true
 											local healthposy = sizey * math.clamp(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth, 0, 1)
-											thing.Quad3.From = Vector2.new(posx - 4, posy + sizey - (sizey - healthposy))
-											thing.Quad3.To = Vector2.new(posx - 4, posy)
+											thing.Quad3.From = floorpos(Vector2.new(posx - 4, posy + sizey - (sizey - healthposy)))
+											thing.Quad3.To = floorpos(Vector2.new(posx - 4, posy))
 											--thing.HealthLineMain.Size = UDim2.new(0, 1, math.clamp(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth, 0, 1), (math.clamp(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth, 0, 1) == 0 and 0 or -2))
 										end
-										thing.Quad1.PointA = Vector2.new(posx + sizex, posy)
-										thing.Quad1.PointB = Vector2.new(posx, posy)
-										thing.Quad1.PointC = Vector2.new(posx, posy + sizey)
-										thing.Quad1.PointD = Vector2.new(posx + sizex, posy + sizey)
+										thing.Quad1.PointA = floorpos(Vector2.new(posx + sizex, posy))
+										thing.Quad1.PointB = floorpos(Vector2.new(posx, posy))
+										thing.Quad1.PointC = floorpos(Vector2.new(posx, posy + sizey))
+										thing.Quad1.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
 										thing.Quad1.Visible = true
-										thing.Quad2.PointA = Vector2.new(posx + sizex, posy)
-										thing.Quad2.PointB = Vector2.new(posx, posy)
-										thing.Quad2.PointC = Vector2.new(posx, posy + sizey)
-										thing.Quad2.PointD = Vector2.new(posx + sizex, posy + sizey)
+										thing.Quad2.PointA = floorpos(Vector2.new(posx + sizex, posy))
+										thing.Quad2.PointB = floorpos(Vector2.new(posx, posy))
+										thing.Quad2.PointC = floorpos(Vector2.new(posx, posy + sizey))
+										thing.Quad2.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
 										thing.Quad2.Visible = true
 									end
 								end
@@ -2321,8 +2326,8 @@ runcode(function()
 								if isAlive(plr) and plr ~= lplr and (ESPTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
 									local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
 									local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-									local headPos, headVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position + Vector3.new(0, 1 + plr.Character.Humanoid.HipHeight, 0))
-									local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 1 + plr.Character.Humanoid.HipHeight, 0))
+									local headPos, headVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position + Vector3.new(0, 1 + (plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and 2 or plr.Character.Humanoid.HipHeight), 0))
+									local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 1 + (plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and 2 or plr.Character.Humanoid.HipHeight), 0))
 									rootPos = rootPos
 									if rootVis then
 										if ESPHealthBar["Enabled"] then
@@ -2847,6 +2852,10 @@ runcode(function()
         return (str:gsub("<[^<>]->", ""))
     end
 
+	local function floorpos(pos)
+		return Vector2.new(math.floor(pos.X), math.floor(pos.Y))
+	end
+
 	local NameTagsFolder = Instance.new("Folder")
 	NameTagsFolder.Name = "NameTagsFolder"
 	NameTagsFolder.Parent = GuiLibrary["MainGui"]
@@ -2904,20 +2913,17 @@ runcode(function()
 								
 								if headVis then
 									local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-									local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
 									local blocksaway = math.floor(((entity.isAlive and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
-									local rawText = (NameTagsDistance["Enabled"] and entity.isAlive and "["..blocksaway.."] " or "")..displaynamestr..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-									local modifiedText = (istarget and '[TARGET] ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '['..blocksaway..'] ' or '')..displaynamestr2..(NameTagsHealth["Enabled"] and ' '..math.floor(plr.Character.Humanoid.Health).."" or '')
-									thing.Text.Text = removeTags(modifiedText)
+									thing.Text.Text = (NameTagsDistance["Enabled"] and entity.isAlive and '['..blocksaway..'] ' or '')..displaynamestr..(NameTagsHealth["Enabled"] and ' '..math.floor(plr.Character.Humanoid.Health).."" or '')
 									thing.Text.Size = 17 * (NameTagsScale["Value"] / 10)
 									thing.Text.Color = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
 									thing.Text.Visible = headVis
 									thing.Text.Font = (math.clamp((table.find(fontitems, NameTagsFont["Value"]) or 1) - 1, 0, 3))
-									thing.Text.Position = Vector2.new(headPos.X - thing.Text.TextBounds.X / 2, (headPos.Y - thing.Text.TextBounds.Y))
+									thing.Text.Position = floorpos(Vector2.new(headPos.X - thing.Text.TextBounds.X / 2, (headPos.Y - thing.Text.TextBounds.Y)))
 									thing.BG.Visible = headVis and NameTagsBackground["Enabled"]
-									thing.BG.Size = Vector2.new(thing.Text.TextBounds.X + 4, thing.Text.TextBounds.Y)
-									thing.BG.Position = Vector2.new((headPos.X - 2) - thing.Text.TextBounds.X / 2, (headPos.Y - thing.Text.TextBounds.Y) + 1.5)
+									thing.BG.Size = floorpos(Vector2.new(thing.Text.TextBounds.X + 4, thing.Text.TextBounds.Y))
+									thing.BG.Position = floorpos(Vector2.new((headPos.X - 2) - thing.Text.TextBounds.X / 2, (headPos.Y - thing.Text.TextBounds.Y) + 1.5))
 								end
 							end
 						else
@@ -3730,76 +3736,99 @@ local Panic = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].Create
 		end
 	end
 }) 
-
-local ChatSpammer = {["Enabled"] = false}
-local ChatSpammerDelay = {["Value"] = 10}
-local ChatSpammerHideWait = {["Enabled"] = true}
-local ChatSpammerMessages = {["ObjectList"] = {}}
-local chatspammerfirstexecute = true
-local waitnum = 0
-ChatSpammer = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "ChatSpammer",
-	["Function"] = function(callback)
-		if callback then
-			if chatspammerfirstexecute then
-				lplr.PlayerGui:WaitForChild("Chat", 10)
-			end
-			if lplr.PlayerGui:FindFirstChild("Chat") and lplr.PlayerGui.Chat:FindFirstChild("Frame") and lplr.PlayerGui.Chat.Frame:FindFirstChild("ChatChannelParentFrame") and game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") then
-				spawn(function()
-					repeat
-						if ChatSpammer["Enabled"] then
-							pcall(function()
-								game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages["ObjectList"] > 0 and ChatSpammerMessages["ObjectList"][math.random(1, #ChatSpammerMessages["ObjectList"])] or "vxpe on top"), "All")
-								local framelabel = lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFrame["Frame_MessageLogDisplay"].Scroller.ChildAdded:Wait()
-								local textlabel = framelabel:WaitForChild("TextLabel")
-								if textlabel.Text:sub(1, 13) == "You must wait" then
-									waitnum = tonumber(textlabel.Text:sub(15, textlabel.Text:len() - 40))
-									if ChatSpammerHideWait["Enabled"] then
-										framelabel.Size = UDim2.new(0, 0, 0, 0)
-										framelabel:GetPropertyChangedSignal("Size"):connect(function()
-											framelabel.Size = UDim2.new(0, 0, 0, 0)
-										end)
+runcode(function()
+	local ChatSpammer = {["Enabled"] = false}
+	local ChatSpammerDelay = {["Value"] = 10}
+	local ChatSpammerHideWait = {["Enabled"] = true}
+	local ChatSpammerMessages = {["ObjectList"] = {}}
+	local chatspammerfirstexecute = true
+	local chatspammerhook = false
+	local oldchanneltab
+	local oldchannelfunc
+	local oldchanneltabs = {}
+	local waitnum = 0
+	ChatSpammer = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "ChatSpammer",
+		["Function"] = function(callback)
+			if callback then
+				if chatspammerfirstexecute then
+					lplr.PlayerGui:WaitForChild("Chat", 10)
+				end
+				if lplr.PlayerGui:FindFirstChild("Chat") and lplr.PlayerGui.Chat:FindFirstChild("Frame") and lplr.PlayerGui.Chat.Frame:FindFirstChild("ChatChannelParentFrame") and game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") then
+					if chatspammerhook == false then
+						spawn(function()
+							chatspammerhook = true
+							for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+								if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+									oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
+									oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
+									getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
+										local tab = oldchannelfunc(Self, Name)
+										if tab and tab.AddMessageToChannel then
+											local addmessage = tab.AddMessageToChannel
+											if oldchanneltabs[tab] == nil then
+												oldchanneltabs[tab] = tab.AddMessageToChannel
+											end
+											tab.AddMessageToChannel = function(Self2, MessageData)
+												if MessageData.MessageType == "System" then
+													if MessageData.Message:find("You must wait") and ChatSpammer["Enabled"] then
+														return nil
+													end
+												end
+												return addmessage(Self2, MessageData)
+											end
+										end
+										return tab
 									end
 								end
-							end)
-						end
-						if waitnum ~= 0 then
-							wait(waitnum)
-							waitnum = 0
-						else
-							wait(ChatSpammerDelay["Value"] / 10)
-						end
-					until ChatSpammer["Enabled"] == false
-				end)				
-			else
-				createwarning("ChatSpammer", "Default chat not found.", 3)
-				if ChatSpammer["Enabled"] then
-					ChatSpammer["ToggleButton"](false)
+							end
+						end)
+					end
+					spawn(function()
+						repeat
+							if ChatSpammer["Enabled"] then
+								pcall(function()
+									game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages["ObjectList"] > 0 and ChatSpammerMessages["ObjectList"][math.random(1, #ChatSpammerMessages["ObjectList"])] or "vxpe on top"), "All")
+								end)
+							end
+							if waitnum ~= 0 then
+								wait(waitnum)
+								waitnum = 0
+							else
+								wait(ChatSpammerDelay["Value"] / 10)
+							end
+						until ChatSpammer["Enabled"] == false
+					end)				
+				else
+					createwarning("ChatSpammer", "Default chat not found.", 3)
+					if ChatSpammer["Enabled"] then
+						ChatSpammer["ToggleButton"](false)
+					end
 				end
+			else
+				waitnum = 0
 			end
-		else
-			waitnum = 0
-		end
-	end,
-	["HoverText"] = "Spams chat with text of your choice (Default Chat Only)"
-})
-ChatSpammerDelay = ChatSpammer.CreateSlider({
-	["Name"] = "Delay",
-	["Min"] = 1,
-	["Max"] = 50,
-	["Default"] = 10,
-	["Function"] = function() end
-})
-ChatSpammerHideWait = ChatSpammer.CreateToggle({
-	["Name"] = "Hide Wait Message",
-	["Function"] = function() end,
-	["Default"] = true
-})
-ChatSpammerMessages = ChatSpammer.CreateTextList({
-	["Name"] = "Message",
-	["TempText"] = "message to spam",
-	["Function"] = function() end
-})
+		end,
+		["HoverText"] = "Spams chat with text of your choice (Default Chat Only)"
+	})
+	ChatSpammerDelay = ChatSpammer.CreateSlider({
+		["Name"] = "Delay",
+		["Min"] = 1,
+		["Max"] = 50,
+		["Default"] = 10,
+		["Function"] = function() end
+	})
+	ChatSpammerHideWait = ChatSpammer.CreateToggle({
+		["Name"] = "Hide Wait Message",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+	ChatSpammerMessages = ChatSpammer.CreateTextList({
+		["Name"] = "Message",
+		["TempText"] = "message to spam",
+		["Function"] = function() end
+	})
+end)
 
 runcode(function()
 	local controlmodule = {}
