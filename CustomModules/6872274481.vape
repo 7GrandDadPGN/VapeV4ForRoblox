@@ -139,6 +139,12 @@ local whitelisted = {
 pcall(function()
 	whitelisted = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
 end)
+local AnticheatBypassNumbers = {
+	TPSpeed = 0.1,
+	TPCombat = 0.3,
+	TPLerp = 0.35,
+	TPCheck = 15
+}
 
 local function BindToRenderStep(name, num, func)
 	if RenderStepTable[name] == nil then
@@ -4587,6 +4593,18 @@ runcode(function()
 	local damagetimer = 0
 	local gofast = false
 
+	local function calculatepos(vec)
+		local returned = vec
+		if entity.isAlive then 
+			local raycastparameters = RaycastParams.new()
+			raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
+			raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+			local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, returned, raycastparameters)
+			if newray then returned = (newray.Position - lplr.Character.HumanoidRootPart.Position) end
+		end
+		return returned
+	end
+
 --[[	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p3)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p3:Connect(function(p4)
 			if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) and (p4.entityInstance == (AnticheatBypass["Enabled"] and oldchar or lplr.Character)) and p4.damageType ~= 1 then
@@ -4613,10 +4631,19 @@ runcode(function()
 							local nomove = false
 							local acallowed = false
 							local damagetroll = false
+							local funnytick = tick()
 							BindToStepped("LongJump", 1, function()
 								disabletpcheck = damagetimer >= tick()
 								--damagetimer >= tick() and 400 or 
-								longjumpvelo = (entity.isAlive and (not nomove) and acallowed and lplr.Character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or longjumpspeed["Value"])) or Vector3.new(0, 0, 0))
+								local startlongjump = entity.isAlive and (not nomove) and acallowed
+								if startlongjump and longjumpmode["Value"] == "AnticheatBypass" then 
+									funnytick = tick() + 0.1
+								end
+								if longjumpmode["Value"] == "AnticheatBypass" then 
+									local newvelo = lplr.Character.Humanoid.MoveDirection * 20
+									--lplr.Character.HumanoidRootPart.Velocity = startlongjump and Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z) or Vector3.new(0, 0, 0)
+								end
+								longjumpvelo = (startlongjump and lplr.Character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or longjumpspeed["Value"]))) or Vector3.new(0, 0, 0))
 							end)
 							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
 							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
@@ -4659,6 +4686,25 @@ runcode(function()
 								if (entity.isAlive and longjump["Enabled"]) then
 									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, longjumpheight["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
 								end
+								spawn(function()
+									repeat
+										task.wait()
+										if funnytick <= tick() then break end
+										if entity.isAlive then
+											local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+											local acbypassnum = (combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed + (ping <= 40 and 0.05 or ping <= 70 and 0.03 or 0)))
+											for i = 1, 2 do 
+												task.wait(i % 2 == 0 and 0.01 or 0.02)
+												if entity.isAlive then 
+													lplr.Character.HumanoidRootPart.CFrame =  lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((12 * (longjumpspeed["Value"] / 68)) * acbypassnum))
+												end
+											end
+											task.wait(acbypassnum)
+											if funnytick <= tick() then break end
+											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((60 * (longjumpspeed["Value"] / 68)) * acbypassnum))
+										end
+									until funnytick <= tick()
+								end)
 								for i = 1, longjumpval["Value"] do 
 									acallowed = true
 									if not (entity.isAlive and longjump["Enabled"]) then 
@@ -4713,7 +4759,7 @@ runcode(function()
 	})
 	longjumpmode = longjump.CreateDropdown({
 		["Name"] = "Mode",
-		["List"] = {"Normal", "Inconsistent"},
+		["List"] = {"Normal", "Inconsistent", "AnticheatBypass"},
 		["Function"] = function() end
 	})
 	longjumpspeed = longjump.CreateSlider({
@@ -8662,17 +8708,10 @@ runcode(function()
 	local anticheatconnection4
 	local anticheatconnection5
 	local playedanim = ""
-	local AnticheatBypassNumbers = {
-		TPSpeed = 0.1,
-		TPCombat = 0.3,
-		TPLerp = 0.35,
-		TPCheck = 15
-	}
 
 	local function check()
 		lagbackedaftertouch = false
 		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
-			print((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude - AnticheatBypassNumbers.TPCheck)
 			local newpos = (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).Unit * AnticheatBypassNumbers.TPCheck
 			newpos = newpos == newpos and newpos or Vector3.new(0, 0, 0)
 			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
@@ -9052,8 +9091,8 @@ runcode(function()
 										end
 										check()
 										--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-										local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())) <= 70
-										task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed + (ping and 0.03 or 0)))
+										local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+										task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed + (ping <= 40 and 0.05 or ping <= 70 and 0.03 or 0)))
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											--print(amountoftimes, (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude)
