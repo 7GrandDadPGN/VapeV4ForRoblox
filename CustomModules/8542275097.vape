@@ -213,7 +213,7 @@ runcode(function()
 		local controllers = {}
 		local controllerids = {}
 		local eventnames = {}
-		for i,v in pairs(debug.getupvalue(Flamework.createDependency, 2).idToObj) do
+		for i,v in pairs(debug.getupvalue(Flamework.Testing.patchDependency, 1).idToObj) do
 			controllers[tostring(v)] = v
 			controllerids[tostring(v)] = i 
 			local controllerevents = {}
