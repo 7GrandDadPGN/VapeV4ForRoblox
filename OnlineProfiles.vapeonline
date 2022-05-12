@@ -1,7 +1,17 @@
 {
-    "Blatant BedWars": {
-        "ProfileName": "blatant",
+    "Blatant BedWars\nNormal": {
+        "ProfileName": "blatantnormal",
         "ProfileGame": 6872274481,
-        "OnlineProfileName": "BlatantBedWars.vapeprofile"
+        "OnlineProfileName": "BlatantBedWarsNormal.vapeprofile"
+    },
+    "Blatant BedWars\nCFrame\nBypass LongJump": {
+        "ProfileName": "blatantcframe1",
+        "ProfileGame": 6872274481,
+        "OnlineProfileName": "BlatantBedWarsCFrame1.vapeprofile"
+    },
+    "Blatant BedWars\nCFrame\nNormal LongJump": {
+        "ProfileName": "blatantcframe2",
+        "ProfileGame": 6872274481,
+        "OnlineProfileName": "BlatantBedWarsCFrame2.vapeprofile"
     }
 }

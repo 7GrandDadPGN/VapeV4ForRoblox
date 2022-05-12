@@ -53,7 +53,6 @@ if not (getasset and requestfunc and queueteleport) then
 end
 
 if shared.VapeExecuted then
-	print("e")
 	error("Vape Already Injected")
 	return
 else
@@ -309,12 +308,22 @@ local profilesloaded = false
 ProfilesTextList = Profiles.CreateTextList({
 	["Name"] = "ProfilesList",
 	["TempText"] = "Type name", 
+	["NoSave"] = true,
 	["AddFunction"] = function(user)
 		GuiLibrary["Profiles"][user] = {["Keybind"] = "", ["Selected"] = false}
+		local profiles = {}
+		for i,v in pairs(GuiLibrary["Profiles"]) do 
+			table.insert(profiles, i)
+		end
+		table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
+		ProfilesTextList["RefreshValues"](profiles)
 	end, 
-	["RemoveFunction"] = function(num) 
-		if #ProfilesTextList["ObjectList"] == 0 then
-			table.insert(ProfilesTextList["ObjectList"], "default")
+	["RemoveFunction"] = function(num, obj) 
+		if obj ~= "default" and obj ~= GuiLibrary["CurrentProfile"] then 
+			delfile(customdir.."Profiles/"..obj..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt")
+			GuiLibrary["Profiles"][obj] = nil
+		else
+			table.insert(ProfilesTextList["ObjectList"], obj)
 			ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
 		end
 	end, 
@@ -420,7 +429,7 @@ ProfilesTextList = Profiles.CreateTextList({
 			bindbkg.Visible = true
 		end)
 		obj.MouseLeave:connect(function()
-			bindbkg.Visible = GuiLibrary["Profiles"][profilename]["Keybind"] ~= ""
+			bindbkg.Visible = GuiLibrary["Profiles"][profilename] and GuiLibrary["Profiles"][profilename]["Keybind"] ~= ""
 		end)
 		if GuiLibrary["Profiles"][profilename]["Keybind"] ~= "" then
 
@@ -637,10 +646,12 @@ OnlineProfilesButton.MouseButton1Click:connect(function()
 				profiledownload.MouseButton1Click:connect(function()
 					writefile(customdir.."Profiles/"..v2["ProfileName"]..tostring(game.PlaceId)..".vapeprofile.txt", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles/"..v2["OnlineProfileName"], true)))
 					GuiLibrary["Profiles"][v2["ProfileName"]] = {["Keybind"] = "", ["Selected"] = false}
-					if table.find(ProfilesTextList["ObjectList"], v2["ProfileName"]) == nil then
-						table.insert(ProfilesTextList["ObjectList"], v2["ProfileName"])
+					local profiles = {}
+					for i,v in pairs(GuiLibrary["Profiles"]) do 
+						table.insert(profiles, i)
 					end
-					ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
+					table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
+					ProfilesTextList["RefreshValues"](profiles)
 				end)
 				local profileround = Instance.new("UICorner")
 				profileround.CornerRadius = UDim.new(0, 4)
@@ -1493,10 +1504,12 @@ else
 	end
 
 	GuiLibrary["LoadSettings"]()
-	if #ProfilesTextList["ObjectList"] == 0 then
-		table.insert(ProfilesTextList["ObjectList"], "default")
-		ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
+	local profiles = {}
+	for i,v in pairs(GuiLibrary["Profiles"]) do 
+		table.insert(profiles, i)
 	end
+	table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
+	ProfilesTextList["RefreshValues"](profiles)
 	GUIbind["Reload"]()
 	GuiLibrary["UpdateUI"]()
 	UpdateHud()
