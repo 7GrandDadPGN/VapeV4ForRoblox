@@ -299,7 +299,7 @@ local function CreateAutoHotbarGUI(children2, argstable)
 	local items = bedwars["ItemTable"]
 	if items then
 		for i2,v2 in pairs(items) do
-			if (i2:find("axe") == nil or i2:find("void")) and i2:find("bow") == nil and i2:find("shears") == nil and i2:find("wool") == nil and i2:find("sword") == nil and i2:find("chestplate") == nil and v2["dontGiveItem"] == nil and bedwars["ItemTable"][i2] and bedwars["ItemTable"][i2].image then
+			if (i2:find("axe") == nil or i2:find("void")) and i2:find("bow") == nil and i2:find("shears") == nil and i2:find("wool") == nil and v2.sword == nil and v2.armor == nil and v2["dontGiveItem"] == nil and bedwars["ItemTable"][i2] and bedwars["ItemTable"][i2].image then
 				table.insert(sortableitems, {["itemType"] = i2, ["itemDisplayType"] = i2})
 			end
 		end
@@ -310,7 +310,7 @@ local function CreateAutoHotbarGUI(children2, argstable)
 	buttontext.Name = "ButtonText"
 	buttontext.Text = ""
 	buttontext.Name = argstable["Name"]
-	buttontext.LayoutOrder = amount
+	buttontext.LayoutOrder = 1
 	buttontext.Size = UDim2.new(1, 0, 0, 40)
 	buttontext.Active = false
 	buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
@@ -953,6 +953,14 @@ runcode(function()
 			end,
 			["HighlightController"] = KnitClient.Controllers.EntityHighlightController,
             ["ItemTable"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.item["item-meta"]).getItemMeta, 1),
+			["IsVapePrivateIngame"] = function()
+				for i,v in pairs(players:GetChildren()) do 
+					if bedwars["CheckPlayerType"](v) ~= "DEFAULT" then 
+						return true
+					end
+				end
+				return false
+			end
 			["JuggernautRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.JuggernautController.KnitStart)[1])[4])),
 			["KatanaController"] = KnitClient.Controllers.KatanaController,
 			["KatanaRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.KatanaController.onEnable, 4))),
@@ -1292,6 +1300,26 @@ GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	end
 end)
 
+chatconnection2 = lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFrame["Frame_MessageLogDisplay"].Scroller.ChildAdded:connect(function(text)
+	local textlabel2 = text:WaitForChild("TextLabel")
+	if bedwars["IsVapePrivateIngame"]() then
+		if textlabel2.Text:find("KVOP25KYFPPP4") or textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+			text.Size = UDim2.new(0, 0, 0, 0)
+			text:GetPropertyChangedSignal("Size"):connect(function()
+				text.Size = UDim2.new(0, 0, 0, 0)
+			end)
+		end
+		textlabel2:GetPropertyChangedSignal("Text"):connect(function()
+			if textlabel2.Text:find("KVOP25KYFPPP4") or textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+				text.Size = UDim2.new(0, 0, 0, 0)
+				text:GetPropertyChangedSignal("Size"):connect(function()
+					text.Size = UDim2.new(0, 0, 0, 0)
+				end)
+			end
+		end)
+	end
+end)
+
 teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started and bedwars["ClientStoreHandler"] then
 		if #bedwars["ClientStoreHandler"]:getState().Party.members > 0 then
@@ -1408,6 +1436,44 @@ end
 
 local function renderNametag(plr)
 	if (bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]) then
+		if lplr ~= plr and bedwars["CheckPlayerType"](lplr) == "DEFAULT" then
+			spawn(function()
+				repeat task.wait() until isAlive(plr)
+				repeat task.wait() until plr.Character.HumanoidRootPart.Velocity ~= Vector3.new(0, 0, 0)
+				task.wait(4)
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." KVOP25KYFPPP4", "All")
+				spawn(function()
+					local connection
+					for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
+						if newbubble:IsA("TextLabel") and newbubble.Text:find("KVOP25KYFPPP4") then
+							newbubble.Parent.Parent.Visible = false
+							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
+							if connection then
+								connection:Disconnect()
+							end
+						end
+					end
+					connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
+						if newbubble:IsA("TextLabel") and newbubble.Text:find("KVOP25KYFPPP4") then
+							newbubble.Parent.Parent.Visible = false
+							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
+							if connection then
+								connection:Disconnect()
+							end
+						end
+					end)
+				end)
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Wait()
+				task.wait(0.2)
+				if getconnections then
+					for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+						if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+							debug.getupvalues(v.Function)[1]:SwitchCurrentChannel("all")
+						end
+					end
+				end
+			end)
+		end
 		local nametag = getNametagString(plr)
 		plr.CharacterAdded:connect(function(char)
 			if char ~= oldchar then
@@ -1901,7 +1967,7 @@ local function findItemInTable(tab, item)
 		if v["itemType"] then
 			local gottenitem, gottenitemnum = getItem(getCustomItem(v))
 			if gottenitem and gottenitem["itemType"] == item["itemType"] then
-				return v
+				return i
 			end
 		end
 	end
@@ -1921,51 +1987,67 @@ local AutoHotbarList = {["Hotbars"] = {}, ["CurrentlySelected"] = 1}
 local AutoHotbarMode = {["Value"] = "Toggle"}
 local AutoHotbar = {["Enabled"] = false}
 local AutoHotbarConnection
-local AutoHotbarConnection2
-
-local function AutoHotbarSort()
-	local items = (AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]] and AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]]["Items"] or {})
-				local newlist = {}
-				for i3,v3 in pairs(bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.hotbar) do
-					if i3 and v3.item then
-						bedwars["ClientStoreHandler"]:dispatch({
-							type = "InventoryRemoveFromHotbar", 
-							slot = i3 - 1
-						})
-						if findItemInTable(items, v3.item) == nil then
-							newlist[#newlist + 1] = v3
-						end
-					end
-				end
-				for i4,v4 in pairs(newlist) do
-					local item2, itemnum = getItem(v4.item["itemType"])
-					local stop = false
-					for i = 1, 9 do
-						if items[tostring(i)] == nil and (bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.hotbar[i] == nil or bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.hotbar[i].item == nil) and stop == false then
-							local ok, ok2 = getItem(item2["itemType"])
-							bedwars["ClientStoreHandler"]:dispatch({
-								type = "InventoryAddToHotbar", 
-								item = bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory.items[ok2], 
-								slot = i - 1
-							})
-							stop = true
-						end
-					end
-				end
-				for i2,v2 in pairs(items) do
-					local item2, itemnum = getItem(getCustomItem(v2))
-					if item2 then
-						bedwars["ClientStoreHandler"]:dispatch({
-							type = "InventoryAddToHotbar", 
-							item = getItemInInventory(item2), 
-							slot = i2 - 1
-						})
-					end
-				end
-end
 
 runcode(function()
 	local firsttimeautohotbar = true
+
+	local function findinhotbar(item)
+		for i,v in pairs(bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.hotbar) do
+			if v.item and v.item.itemType == getCustomItem(item) then
+				return i, v.item
+			end
+		end
+	end
+
+	local function findininventory(item)
+		for i,v in pairs(bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory.items) do
+			if v.itemType == item.itemType then
+				return v
+			end
+		end
+	end
+
+	local function AutoHotbarSort()
+		spawn(function()
+			task.wait(0.2)
+			local items = (AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]] and AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]]["Items"] or {})
+			for i,v in pairs(bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory.items) do 
+				local hotbarslot = findItemInTable(items, v)
+				if hotbarslot then
+					local oldhotbaritem = bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.hotbar[tonumber(hotbarslot)]
+					local newhotbaritemslot, newhotbaritem = findinhotbar(v)
+					if oldhotbaritem.item and oldhotbaritem.item.itemType == v.itemType then continue end
+					if oldhotbaritem.item then 
+						bedwars["ClientStoreHandler"]:dispatch({
+							type = "InventoryRemoveFromHotbar", 
+							slot = tonumber(hotbarslot) - 1
+						})
+					end
+					if newhotbaritemslot then 
+						bedwars["ClientStoreHandler"]:dispatch({
+							type = "InventoryRemoveFromHotbar", 
+							slot = newhotbaritemslot - 1
+						})
+					end
+					if oldhotbaritem.item then 
+						local nextitem1, nextitem1num = findininventory(oldhotbaritem.item)
+						bedwars["ClientStoreHandler"]:dispatch({
+							type = "InventoryAddToHotbar", 
+							item = nextitem1, 
+							slot = newhotbaritemslot - 1
+						})
+					end
+					local nextitem2, nextitem2num = findininventory(v)
+					bedwars["ClientStoreHandler"]:dispatch({
+						type = "InventoryAddToHotbar", 
+						item = nextitem2, 
+						slot = tonumber(hotbarslot) - 1
+					})
+				end
+			end
+		end)
+	end
+
 	AutoHotbar = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoHotbar",
 		["Function"] = function(callback) 
@@ -1978,37 +2060,19 @@ runcode(function()
 						firsttimeautohotbar = false
 					end
 				else
-					if entity.isAlive and lplr.Character.InventoryFolder.Value then
-						if AutoHotbarConnection2 then
-							AutoHotbarConnection2:Disconnect()
-						end
-						AutoHotbarConnection2 = lplr.Character.InventoryFolder.Value.ChildAdded:connect(function(p3)
+					AutoHotbarConnection = game:GetService("ReplicatedStorage").Inventories.DescendantAdded:connect(function(p3)
+						if p3.Parent.Name == lplr.Name then
 							local items = (AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]] and AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]]["Items"] or {})
-							if findItemInTable(items, {["itemType"] = p3.Name}) then
-								AutoHotbarSort()
+							local hotbarslot = findItemInTable(items, {["itemType"] = p3.Name})
+							if hotbarslot then
+								AutoHotbarSort(hotbarslot, p3.Name)
 							end
-						end)
-					end
-					AutoHotbarConnection = game:GetService("ReplicatedStorage").Inventories.ChildAdded:connect(function(folder)
-						if folder.Name == lplr.Name then
-							if AutoHotbarConnection2 then
-								AutoHotbarConnection2:Disconnect()
-							end
-							AutoHotbarConnection2 = folder.ChildAdded:connect(function(p3)
-								local items = (AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]] and AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]]["Items"] or {})
-								if findItemInTable(items, {["itemType"] = p3.Name}) then
-									AutoHotbarSort()
-								end
-							end)
 						end
 					end)
 				end
 			else
 				if AutoHotbarConnection then
 					AutoHotbarConnection:Disconnect()
-				end
-				if AutoHotbarConnection2 then
-					AutoHotbarConnection2:Disconnect()
 				end
 			end
 		end,
@@ -3862,7 +3926,6 @@ runcode(function()
 	AutoBuyCustom["Object"].AddBoxBKG.AddBox.TextSize = 14
 
 	local AutoBankConnection
-	local AutoBankConnection2
 	local AutoBank = {["Enabled"] = false}
 	local AutoBankTransmitted = false
 	local autobankui
@@ -3945,34 +4008,15 @@ runcode(function()
 					end
 				end
 				refreshbank()
-				if entity.isAlive and lplr.Character.InventoryFolder.Value then
-					if AutoBankConnection2 then
-						AutoBankConnection2:Disconnect()
-					end
-					AutoBankConnection2 = lplr.Character.InventoryFolder.Value.ChildAdded:connect(function(p3)
+				AutoBankConnection = game:GetService("ReplicatedStorage").Inventories.DescendantAdded:connect(function(p3)
+					if p3.Parent.Name == lplr.Name then
 						if echest == nil then 
 							echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
-						end
+						end	
 						if (p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and echest and (not AutoBankTransmitted) then
 							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
 							refreshbank()
 						end
-					end)
-				end
-				AutoBankConnection = game:GetService("ReplicatedStorage").Inventories.ChildAdded:connect(function(folder)
-					if folder.Name == lplr.Name then
-						if AutoBankConnection2 then
-							AutoBankConnection2:Disconnect()
-						end
-						AutoBankConnection2 = folder.ChildAdded:connect(function(p3)
-							if echest == nil then 
-								echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
-							end	
-							if (p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and echest and (not AutoBankTransmitted) then
-								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
-								refreshbank()
-							end
-						end)
 					end
 				end)
 				spawn(function()
@@ -4017,9 +4061,6 @@ runcode(function()
 				end
 				if AutoBankConnection then 
 					AutoBankConnection:Disconnect()
-				end
-				if AutoBankConnection2 then 
-					AutoBankConnection2:Disconnect()
 				end
 				local echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
 				local chestitems = echest and echest:GetChildren() or {}
@@ -5867,6 +5908,32 @@ local commands = {
 
 chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
 	local plr = players:FindFirstChild(tab["FromSpeaker"])
+	if plr and bedwars["CheckPlayerType"](lplr) ~= "DEFAULT" and tab.MessageType == "Whisper" and tab.Message:find("KVOP25KYFPPP4") and alreadysaidlist[plr.Name] == nil then
+		alreadysaidlist[plr.Name] = true
+		spawn(function()
+			local connection
+			for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
+				if newbubble:IsA("TextLabel") and newbubble.Text:find("KVOP25KYFPPP4") then
+					newbubble.Parent.Parent.Visible = false
+					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or newbubble.Parent.Parent.Parent.Parent == nil
+					if connection then
+						connection:Disconnect()
+					end
+				end
+			end
+			connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
+				if newbubble:IsA("TextLabel") and newbubble.Text:find("KVOP25KYFPPP4") then
+					newbubble.Parent.Parent.Visible = false
+					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or  newbubble.Parent.Parent.Parent.Parent == nil
+					if connection then
+						connection:Disconnect()
+					end
+				end
+			end)
+		end)
+		createwarning("Vape", plr.Name.." is using vape!", 60)
+		vapeusers[plr.Name] = true
+	end
 	local args = tab.Message:split(" ")
 	--priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)]
 	if priolist[bedwars["CheckPlayerType"](lplr)] > 0 and plr == lplr then
