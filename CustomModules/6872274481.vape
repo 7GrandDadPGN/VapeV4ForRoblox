@@ -4742,7 +4742,7 @@ runcode(function()
 											end
 											task.wait(acbypassnum)
 											if funnytick <= tick() then break end
-											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((60 * (longjumpspeed["Value"] / 68)) * acbypassnum))
+											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((54 * (longjumpspeed["Value"] / 68)) * acbypassnum))
 										end
 									until funnytick <= tick()
 								end)
