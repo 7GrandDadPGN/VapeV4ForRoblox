@@ -960,7 +960,7 @@ runcode(function()
 					end
 				end
 				return false
-			end
+			end,
 			["JuggernautRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.JuggernautController.KnitStart)[1])[4])),
 			["KatanaController"] = KnitClient.Controllers.KatanaController,
 			["KatanaRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.KatanaController.onEnable, 4))),
