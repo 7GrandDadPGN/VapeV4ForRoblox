@@ -2570,7 +2570,7 @@ if shared.VapeExecuted then
 							textapi["ObjectListEnabled"][i] = nil
 							textapi["RefreshValues"](textapi["ObjectList"])
 							if argstable["RemoveFunction"] then
-								argstable["RemoveFunction"](i)
+								argstable["RemoveFunction"](i, v)
 							end
 						end)
 					end
@@ -3606,7 +3606,7 @@ if shared.VapeExecuted then
 							table.remove(textapi["ObjectList"], table.find(textapi["ObjectList"], v))
 							textapi["RefreshValues"](textapi["ObjectList"])
 							if argstable["RemoveFunction"] then
-								argstable["RemoveFunction"](i)
+								argstable["RemoveFunction"](i, v)
 							end
 						end)
 						if argstable["CustomFunction"] then
@@ -4362,7 +4362,7 @@ if shared.VapeExecuted then
 								textapi["ObjectListEnabled"][i] = nil
 								textapi["RefreshValues"](textapi["ObjectList"])
 								if argstable["RemoveFunction"] then
-									argstable["RemoveFunction"](i)
+									argstable["RemoveFunction"](i, v)
 								end
 							end)
 						end
@@ -5896,7 +5896,7 @@ if shared.VapeExecuted then
 						table.remove(textapi["ObjectList"], i)
 						textapi["RefreshValues"](textapi["ObjectList"])
 						if argstable["RemoveFunction"] then
-							argstable["RemoveFunction"](i)
+							argstable["RemoveFunction"](i, v)
 						end
 					end)
 					if argstable["CustomFunction"] then
@@ -5904,8 +5904,9 @@ if shared.VapeExecuted then
 					end
 				end
 			end
-
-			api["ObjectsThatCanBeSaved"][argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
+			if not argstable["NoSave"] then
+				api["ObjectsThatCanBeSaved"][argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
+			end
 			addbutton.MouseButton1Click:connect(function() 
 				table.insert(textapi["ObjectList"], textbox.Text)
 				textapi["RefreshValues"](textapi["ObjectList"])
@@ -6066,7 +6067,7 @@ if shared.VapeExecuted then
 						textapi["ObjectListEnabled"][i] = nil
 						textapi["RefreshValues"](textapi["ObjectList"])
 						if argstable["RemoveFunction"] then
-							argstable["RemoveFunction"](i)
+							argstable["RemoveFunction"](i, v)
 						end
 					end)
 				end
