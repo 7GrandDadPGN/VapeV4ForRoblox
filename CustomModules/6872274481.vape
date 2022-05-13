@@ -9110,7 +9110,6 @@ runcode(function()
 						table.remove(pinglist, i)
 					end
 					table.insert(pinglist, ping)
-					getpingspikes()
 				until (not AnticheatBypass["Enabled"])
 			end)
 			repeat
