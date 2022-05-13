@@ -4752,7 +4752,7 @@ if shared.VapeExecuted then
 					sliderval.Visible = val
 					sliderexpand.Rotation = (val and 180 or 0)
 				end)
-				sliderapi["Hue"] = 0.44
+				sliderapi["Hue"] = (argstable["Default"] or 0.44)
 				sliderapi["Sat"] = 1
 				sliderapi["Value"] = 1
 				sliderapi["RainbowValue"] = false

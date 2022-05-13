@@ -1085,7 +1085,7 @@ shared.VapeTargetInfo = {
 		for i,v in pairs(tab) do
 			local plr = game:GetService("Players"):FindFirstChild(i)
 			targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
-			targethealthgreen:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
+			targethealthgreen:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
 			targethealth.Text = (math.floor((v["Health"] / 5) * 10) / 10).." hp"
 			targethealthgreen.BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])
 			targetname.Text = (TargetInfoDisplayNames["Enabled"] and plr and plr.DisplayName or i)
@@ -1372,6 +1372,7 @@ GuiLibrary["SelfDestruct"] = function()
 	GuiLibrary["SelfDestructEvent"]:Fire()
 	shared.VapeExecuted = nil
 	shared.VapePrivate = nil
+	shared.VapeFullyLoaded = nil
 	shared.VapeSwitchServers = nil
 	shared.GuiLibrary = nil
 	shared.VapeIndependent = nil
@@ -1486,6 +1487,7 @@ if shared.VapeIndependent then
 
 		coroutine.resume(selfdestructsave)
 	end)
+	shared.VapeFullyLoaded = true
 	return GuiLibrary
 else
 	loadstring(GetURL("AnyGame.vape"))()
@@ -1531,4 +1533,5 @@ else
 	end
 
 	coroutine.resume(selfdestructsave)
+	shared.VapeFullyLoaded = true
 end

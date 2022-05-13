@@ -917,7 +917,7 @@ runcode(function()
 			["ConstantManager"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out["shared"].constant["constant-manager"]).ConstantManager,
 			["CooldownController"] = KnitClient.Controllers.CooldownController,
             ["damageTable"] = KnitClient.Controllers.DamageController,
-			["DaoRemote"] = getremote(debug.getconstants(debug.getprotos(KnitClient.Controllers.KatanaController.onEnable)[4])),
+			["DaoRemote"] = getremote(debug.getconstants(debug.getprotos(KnitClient.Controllers.DaoController.onEnable)[4])),
 			["DetonateRavenRemote"] = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.RavenController).detonateRaven)),
             ["DropItem"] = getmetatable(KnitClient.Controllers.ItemDropController).dropItemInHand,
             ["DropItemRemote"] = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.ItemDropController).dropItemInHand)),
@@ -962,8 +962,8 @@ runcode(function()
 				return false
 			end,
 			["JuggernautRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.JuggernautController.KnitStart)[1])[4])),
-			["KatanaController"] = KnitClient.Controllers.KatanaController,
-			["KatanaRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.KatanaController.onEnable, 4))),
+			["KatanaController"] = KnitClient.Controllers.DaoController,
+			["KatanaRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.DaoController.onEnable, 4))),
             ["KnockbackTable"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.damage["knockback-util"]).KnockbackUtil.calculateKnockbackVelocity, 1),
 			["KnockbackTable2"] = require(game:GetService("ReplicatedStorage").TS.damage["knockback-util"]).KnockbackUtil,
 			["LobbyClientEvents"] = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"].lobby.out.client.events).LobbyClientEvents,
@@ -2219,7 +2219,7 @@ runcode(function()
 				BindToRenderStep("AutoClicker", 1, function() 
 					if entity.isAlive and autoclickermousedown and autoclickertick <= tick() and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= 1 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and firstclick == false then
 						autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
-						if getEquipped()["Type"] == "sword" then
+						if getEquipped()["Type"] == "sword" and bedwars["KatanaController"].beginChargeTime == nil then
 							bedwars["SwordController"]:swingSwordAtMouse()
 						end
 						if getEquipped()["Type"] == "block" and autoclickerblocks["Enabled"] and bedwars["BlockPlacementController"].blockPlacer then 
@@ -4969,14 +4969,18 @@ runcode(function()
 end)
 
 runcode(function()
-    local killaurabox = Instance.new("BoxHandleAdornment")
-    killaurabox.Transparency = 0.5
-    killaurabox.Color3 = Color3.new(1, 0, 0)
-    killaurabox.Adornee = nil
-    killaurabox.AlwaysOnTop = true
-	killaurabox.Size = Vector3.new(3, 6, 3)
-    killaurabox.ZIndex = 11
-    killaurabox.Parent = GuiLibrary["MainGui"]
+	local killauraboxes = {}
+	for i = 1, 6 do 
+		local killaurabox = Instance.new("BoxHandleAdornment")
+		killaurabox.Transparency = 0.5
+		killaurabox.Color3 = Color3.new(1, 0, 0)
+		killaurabox.Adornee = nil
+		killaurabox.AlwaysOnTop = true
+		killaurabox.Size = Vector3.new(3, 6, 3)
+		killaurabox.ZIndex = 11
+		killaurabox.Parent = GuiLibrary["MainGui"]
+		killauraboxes[i] = killaurabox
+	end
     local killauratargetframe = {["Players"] = {["Enabled"] = false}}
     local killaurarealremote = bedwars["ClientHandler"]:Get(bedwars["AttackRemote"])["instance"]
     local killauramethod = {["Value"] = "Normal"}
@@ -5007,11 +5011,8 @@ runcode(function()
 	local targettable = {}
 	local targetsize = 0
 
-	local function newAttackEntity(plr, firstplayercodedone)
+	local function newAttackEntity(plr, firstplayercodedone, attackedplayers)
 		if not entity.isAlive then
-			return nil
-		end
-		if workspace:GetServerTimeNow() - plr.Character:GetAttribute("LastDamageTakenTime") <= 0.3 then
 			return nil
 		end
 		local equipped = getEquipped()
@@ -5058,11 +5059,14 @@ runcode(function()
 				end
 			end
 			bedwars["SoundManager"]:playSound(bedwars["SoundList"]["SWORD_SWING_"..math.random(1, 2)])
-			if killauratarget["Enabled"] then
-				killaurabox.Adornee = root
-			end
+		end
+		if killauratarget["Enabled"] then
+			table.insert(attackedplayers, plr)
 		end
 		if killaurahitdelay > tick() then 
+			return nil
+		end
+		if workspace:GetServerTimeNow() - plr.Character:GetAttribute("LastDamageTakenTime") <= 0.3 then
 			return nil
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
@@ -5222,6 +5226,7 @@ runcode(function()
 							targettable = {}
 							targetsize = 0
 							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, killauratargets["Value"])
+							local attackedplayers = {}
 							local firstplayercodedone = {done = false}
 							for i,plr in pairs(plrs) do
 								targettable[plr.Player.Name] = {
@@ -5230,17 +5235,18 @@ runcode(function()
 									["MaxHealth"] = (plr.Character and plr.Character.Humanoid and plr.Character.Humanoid.MaxHealth or 10)
 								}
 								targetsize = targetsize + 1
-								coroutine.resume(coroutine.create(newAttackEntity), plr, firstplayercodedone)
+								coroutine.resume(coroutine.create(newAttackEntity), plr, firstplayercodedone, attackedplayers)
 								if firstplayercodedone.done then
 									targetedplayer = plr
 								end
 							end
+							for i,v in pairs(killauraboxes) do 
+								local attacked = attackedplayers[i]
+								v.Adornee = attacked and attacked.RootPart
+							end
 							if (#plrs <= 0) then
 								targetedplayer = nil
 								killauranear = false
-								if killaurabox.Adornee ~= nil then
-									killaurabox.Adornee = nil
-								end
 								pcall(function()
 									if origC0 == nil then
 										origC0 = cam.Viewmodel.RightHand.RightWrist.C0
@@ -5261,10 +5267,12 @@ runcode(function()
             else
 				UnbindFromStepped("Killaura") 
                 killauranear = false
+				for i,v in pairs(killauraboxes) do 
+					v.Adornee = nil
+				end
                 bedwars["ViewmodelController"]["playAnimation"] = oldplay
                 bedwars["SoundManager"]["playSound"] = oldsound
                 oldplay = nil
-				killaurabox.Adornee = nil
 				targetinfo.UpdateInfo({}, 0)
 				if entity.isAlive then
 					local Root = lplr.Character.HumanoidRootPart
@@ -5343,6 +5351,15 @@ runcode(function()
         ["Function"] = function() end,
 		["HoverText"] = "Shows a red box over the opponent."
     })
+	Killaura.CreateColorSlider({
+		["Name"] = "Target Color",
+		["Function"] = function(hue, sat, val) 
+			for i,v in pairs(killauraboxes) do 
+				v.Color3 = Color3.fromHSV(hue, sat, val)
+			end
+		end,
+		["Default"] = 1
+	})
     killauracframe = Killaura.CreateToggle({
         ["Name"] = "Face target",
         ["Function"] = function() end,
@@ -6177,6 +6194,8 @@ runcode(function()
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
 							if AutoLeaveStaff["Enabled"] then
 								coroutine.resume(coroutine.create(function()
+									repeat task.wait() until shared.VapeFullyLoaded
+									task.wait(0.5)
 									GuiLibrary.SelfDestruct()
 								end))
 								game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -6200,6 +6219,8 @@ runcode(function()
 						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
 							if AutoLeaveStaff["Enabled"] then
 								coroutine.resume(coroutine.create(function()
+									repeat task.wait() until shared.VapeFullyLoaded
+									task.wait(0.5)
 									GuiLibrary.SelfDestruct()
 								end))
 								game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -9066,6 +9087,32 @@ runcode(function()
 			local amountoftimes = 0
 			print("stage 8")
 			clonesuccess = true
+			local pinglist = {}
+
+			local function didpingspike()
+				local currentpingcheck = pinglist[1] or math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+				for i,v in pairs(pinglist) do 
+					if v ~= currentpingcheck and math.abs(v - currentpingcheck) >= 100 then 
+						return v
+					else
+						currentpingcheck = v
+					end
+				end
+				return nil
+			end
+
+			spawn(function()
+				repeat
+					task.wait(1)
+					if (not AnticheatBypass["Enabled"]) then break end
+					local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+					if #pinglist >= 10 then 
+						table.remove(pinglist, i)
+					end
+					table.insert(pinglist, ping)
+					getpingspikes()
+				until (not AnticheatBypass["Enabled"])
+			end)
 			repeat
 				task.wait()
 				if entity.isAlive then
@@ -9090,10 +9137,13 @@ runcode(function()
 								if not lagbackchanged then
 									lagbackchanged = true
 									lagbacktime = tick()
-									lagbacks = lagbacks + 1
+									if matchState ~= 2 then
+										lagbacks = lagbacks + 1
+									end
 									spawn(function()
-										if AnticheatBypassNotification["Enabled"] and math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())) > 250 then
-											createwarning("AnticheatBypass", "Possible Lagspike Moment", 10)
+										local pingspike = didpingspike() 
+										if pingspike then
+											createwarning("AnticheatBypass", "Lagspike Detected : "..pingspike, 10)
 										end
 										if AnticheatBypassFlagCheck["Enabled"] then
 											spawn(function()
@@ -10180,22 +10230,45 @@ runcode(function()
 		["Icon"] = "vape/assets/TargetIcon1.png",
 		["IconSize"] = 16
 	})
+	local overlayframe = Instance.new("Frame")
+	overlayframe.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	overlayframe.Size = UDim2.new(0, 200, 0, 120)
+	overlayframe.Position = UDim2.new(0, 0, 0, 5)
+	overlayframe.Parent = Overlay.GetCustomChildren()
+	local overlayframe2 = Instance.new("Frame")
+	overlayframe2.Size = UDim2.new(1, 0, 0, 10)
+	overlayframe2.Position = UDim2.new(0, 0, 0, -5)
+	overlayframe2.Parent = overlayframe
+	local overlayframe3 = Instance.new("Frame")
+	overlayframe3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	overlayframe3.Size = UDim2.new(1, 0, 0, 6)
+	overlayframe3.Position = UDim2.new(0, 0, 0, 6)
+	overlayframe3.BorderSizePixel = 0
+	overlayframe3.Parent = overlayframe2
+	local oldguiupdate = GuiLibrary["UpdateUI"]
+	GuiLibrary["UpdateUI"] = function(...)
+		overlayframe2.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		return oldguiupdate(...)
+	end
+	local framecorner1 = Instance.new("UICorner")
+	framecorner1.CornerRadius = UDim.new(0, 5)
+	framecorner1.Parent = overlayframe
+	local framecorner2 = Instance.new("UICorner")
+	framecorner2.CornerRadius = UDim.new(0, 5)
+	framecorner2.Parent = overlayframe2
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)
+	label.Size = UDim2.new(1, -7, 1, -5)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.TextYAlignment = Enum.TextYAlignment.Top
-	label.Font = Enum.Font.SourceSans
-	label.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
-	label.TextSize = 20
+	label.Font = Enum.Font.GothamBold
+	label.LineHeight = 1.2
+	label.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	label.TextSize = 16
 	label.Text = ""
-	label.BackgroundTransparency = 0
-	label.BorderSizePixel = 0
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextStrokeTransparency = 1
-	label.Parent = Overlay.GetCustomChildren()
-	local labelcorner = Instance.new("UICorner")
-	labelcorner.CornerRadius = UDim.new(0, 5)
-	labelcorner.Parent = label
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(200, 200, 200)
+	label.Position = UDim2.new(0, 7, 0, 5)
+	label.Parent = overlayframe
 	Overlay["Bypass"] = true
 	GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
 		["Name"] = "Overlay", 
@@ -10211,9 +10284,9 @@ runcode(function()
 							origtpstring = tpstring
 						end
 						local splitted = origtpstring:split("/")
-						label.Text = " Session Info\n\n Time Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\n Kills : "..(splitted[2] + kills).."\n Beds : "..(splitted[3] + beds).."\n Wins : "..(splitted[4] + (victorysaid and 1 or 0)).."\n Games : "..splitted[5].."\n Lagbacks : "..(splitted[6] + lagbacks)
+						label.Text = "Session Info\nTime Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\nKills : "..(splitted[2] + kills).."\nBeds : "..(splitted[3] + beds).."\nWins : "..(splitted[4] + (victorysaid and 1 or 0)).."\nGames : "..splitted[5].."\nLagbacks : "..(splitted[6] + lagbacks)
 						local textsize = game:GetService("TextService"):GetTextSize(label.Text, label.TextSize, label.Font, Vector2.new(100000, 100000))
-						label.Size = UDim2.new(0, textsize.X + 5, 0, textsize.Y + 4)
+						overlayframe.Size = UDim2.new(0, math.clamp(textsize.X, 200, 10000), 0, (textsize.Y * 1.2) + 10)
 						tpstring = splitted[1].."/"..(splitted[2] + kills).."/"..(splitted[3] + beds).."/"..(splitted[4] + (victorysaid and 1 or 0)).."/"..(splitted[5] + 1).."/"..(splitted[6] + lagbacks)
 					until (Overlay and Overlay.GetCustomChildren() and Overlay.GetCustomChildren().Parent and Overlay.GetCustomChildren().Parent.Visible == false)
 				end)
