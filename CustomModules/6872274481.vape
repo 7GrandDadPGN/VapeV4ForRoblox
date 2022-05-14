@@ -4673,7 +4673,7 @@ runcode(function()
 							local acallowed = false
 							local damagetroll = false
 							local funnytick = tick()
-							BindToStepped("LongJump", 1, function()
+							BindToStepped("LongJump", 1, function(time)
 								disabletpcheck = damagetimer >= tick()
 								--damagetimer >= tick() and 400 or 
 								local startlongjump = entity.isAlive and (not nomove) and acallowed
@@ -6770,9 +6770,9 @@ Hitboxes = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 	["Name"] = "HitBoxes",
 	["Function"] = function(callback)
 		if callback then
-			debug.setconstant(getmetatable(bedwars["SwordController"])["swingSwordInRegion"], 10, 4.8)
+			--debug.setconstant(getmetatable(bedwars["SwordController"])["swingSwordInRegion"], 14, 4.8)
 		else
-			debug.setconstant(getmetatable(bedwars["SwordController"])["swingSwordInRegion"], 10, 3.8)
+			--debug.setconstant(getmetatable(bedwars["SwordController"])["swingSwordInRegion"], 14, 3.8)
 		end
 	end,
 	["HoverText"] = "Expands entities hitboxes when your not clicking on them"
