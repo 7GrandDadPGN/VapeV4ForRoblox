@@ -4900,9 +4900,6 @@ runcode(function()
 		if killaurahitdelay > tick() then 
 			return nil
 		end
-		if workspace:GetServerTimeNow() - plr.Character:GetAttribute("LastDamageTakenTime") <= 0.3 then
-			return nil
-		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
 		local selfpos = lplr.Character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (lplr.Character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
 		if sword and sword["tool"] then
