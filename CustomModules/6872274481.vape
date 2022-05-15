@@ -661,8 +661,8 @@ local function createwarning(title, text, delay)
 	return (suc and res)
 end
 
-local function getItemNear(itemName)
-	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
+local function getItemNear(itemName, inv)
+	for i5, v5 in pairs(inv or bedwars["getInventory"](lplr)["items"]) do
 		if v5["itemType"]:find(itemName) then
 			return v5, i5
 		end
@@ -2821,6 +2821,10 @@ runcode(function()
 												end
 											else
 												createwarning("AntiVoid", "Magnitude bigger then 60, failed.", 10)
+												for i = 1, 2 do
+													task.wait(0.1)
+													lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 70, lplr.Character.HumanoidRootPart.Velocity.Z)
+												end
 											end
 										else
 											createwarning("AntiVoid", "Wall detected, failed.", 10)
@@ -3461,31 +3465,7 @@ runcode(function()
 end)
 
 runcode(function()
-	local swords = {}
-	local betterswords = {}
-	for i,v in pairs(bedwars["ShopItems"]) do
-		if v["itemType"]:find("sword") then
-			swords[v["itemType"]] = v["nextTier"]
-			betterswords[v["itemType"]] = bedwars["ItemTable"][v["itemType"]]["sword"]["damage"]
-		end
-	end
-
-	local function checkallitems(tab)
-		local highestsword = 1
-		local currentbuyablesword = nil
-		for i, v in pairs(tab) do
-			local NextSwordTable = bedwars["Shop"].getShopItem(i)
-			local NextSwordCurrency = getItem(NextSwordTable["currency"])
-			if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] and highestsword < v then
-				highestsword =  v
-				currentbuyablesword = i
-			end
-		end
-		return currentbuyablesword
-	end
-
 	local AutoBuy = {["Enabled"] = false}
-	local autobuydelay = tick()
 	local AutoBuyArmor = {["Enabled"] = false}
 	local AutoBuySword = {["Enabled"] = false}
 	local AutoBuyUpgrades = {["Enabled"] = false}
@@ -3527,282 +3507,125 @@ runcode(function()
 		return false
 	end
 
-	local function buyitem(itemtab, sucfunc, amount)
-		if getItem(itemtab.itemType) == nil or amount then
-			bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
-				shopItem = itemtab
-			}):andThen(function(p11)
-				sucfunc(p11)
-				if p11 then
-					bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
-					bedwars["ClientStoreHandler"]:dispatch({
-						type = "BedwarsAddItemPurchased", 
-						itemType = itemtab.itemType
-					});
-				end
-			end)
+	local function getShopItem(itemType)
+		for i,v in pairs(bedwars["ShopItems"]) do 
+			if v.itemType == itemType then return v end
 		end
+		return nil
 	end
 
-	local justboughtarmor = ""
-	local justboughtsword = ""
-	local justboughtaxe = ""
-	local justboughtpickaxe = ""
-	local boughtaxolotls = {}
-
-	connectionstodisconnect[#connectionstodisconnect + 1] = lplr.CharacterAdded:connect(function()
-		local ExecuteInventory = bedwars["getInventory"](lplr)
-		justboughtarmor = (getSword() and getSword()["itemType"] or "")
-		justboughtsword = (ExecuteInventory.armor[5] and ExecuteInventory.armor[5].itemType or "")
-		justboughtaxe = (getAxe() and getAxe()["itemType"] or "")
-		justboughtpickaxe = (getPickaxe() and getPickaxe()["itemType"] or "stone_pickaxe")
-	end)
-
-	local BuyCheck = function() end
-	BuyCheck = function(upgradesshopnpc)
-        local CurrentUpgrades = bedwars["ClientStoreHandler"]:getState()["Bedwars"]["teamUpgrades"]
-		if AutoBuy["Enabled"] and matchState == 1 then
-			local ExecuteInventory = bedwars["getInventory"](lplr)
-			local NextArmor = ExecuteInventory.armor[5] and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType) and bedwars["Shop"].getShopItem(ExecuteInventory.armor[5].itemType)["nextTier"] or (getArmor() == nil and "leather_chestplate" or nil)
-			local NextSword = getSword()
-			local NextAxe = (getAxe() and getAxe()["itemType"] ~= bedwars["Shop"].Axes[#bedwars["Shop"].Axes] and bedwars["Shop"].getShopItem(getAxe()["itemType"])["nextTier"] or getAxe() and getAxe()["itemType"] or "wood_axe")
-			local NextPickaxe = (getPickaxe() and getPickaxe()["itemType"] ~= "wood_pickaxe" and getPickaxe()["itemType"] ~= bedwars["Shop"].Pickaxes[#bedwars["Shop"].Pickaxes] and bedwars["Shop"].getShopItem(getPickaxe()["itemType"])["nextTier"] or getPickaxe() and getPickaxe()["itemType"] ~= "wood_pickaxe" and getPickaxe()["itemType"] or "stone_pickaxe")
-			local GeneratorUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "generator")
-			local ProtectionUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armor")
-			local SharpnessUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "damage")
-			local BreakSpeedUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "break")
-			local AlarmUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "alarm")
-            local ArmoryUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "armory")
-            local BrewingStandUpgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], "brewing_stand")
-			if not upgradesshopnpc then
-				for i,v in pairs(AutoBuyCustom["ObjectList"]) do
-					local splitautobuy = v:split(" : ")
-					if splitautobuy and #splitautobuy >= 2 and splitautobuy[4] == "true" then
-						if splitautobuy[1] == "axe" and NextAxe and getItem(NextAxe) == nil then
-							local NextAxeTable = bedwars["Shop"].getShopItem(NextAxe)
-							local NextAxeCurrency = getItem(NextAxeTable["currency"])
-							if NextAxeCurrency and NextAxeCurrency["amount"] >= NextAxeTable["price"] then
-								if justboughtaxe ~= NextAxe then
-									local oldboughtaxe = justboughtaxe
-									justboughtaxe = NextAxe
-									buyitem(NextAxeTable, function(suc)
-										if suc then
-											NextAxe = NextAxeTable["nextTier"]["itemType"]
-										else
-											justboughtaxe = oldboughtaxe
-										end
-									end)
-								end
-							end
-						end
-						if splitautobuy[1] == "pickaxe" and NextPickaxe and getItem(NextPickaxe) == nil then
-							local NextPickaxeTable = bedwars["Shop"].getShopItem(NextPickaxe)
-							local NextPickaxeCurrency = getItem(NextPickaxeTable["currency"])
-							if NextPickaxeCurrency and NextPickaxeCurrency["amount"] >= NextPickaxeTable["price"] then
-								if justboughtpickaxe ~= NextPickaxe then
-									local oldboughtpickaxe = justboughtpickaxe
-									justboughtpickaxe = NextPickaxe
-									buyitem(NextPickaxeTable, function(suc)
-										if suc then
-											NextPickaxe = NextPickaxeTable["nextTier"]
-										else
-											justboughtpickaxe = oldboughtpickaxe
-										end
-									end)
-								end
-							end
-						end
-						if splitautobuy[1] ~= "pickaxe" and splitautobuy[1] ~= "axe" then
-							local suc, customitem = pcall(function() return bedwars["Shop"].getShopItem(splitautobuy[1]) end)
-							local inventoryitem = getItem(splitautobuy[1] == "wool_white" and getwool() or splitautobuy[1])
-							if suc and customitem then
-								local CustomCurrency = getItem(customitem["currency"])
-								local customamount = tonumber(splitautobuy[2])
-								if CustomCurrency and CustomCurrency["amount"] >= customitem["price"] and (splitautobuy[1]:find("axolotl") and (not boughtaxolotls[splitautobuy[1]]) or (inventoryitem == nil or inventoryitem["amount"] < customamount)) then
-									buyitem(customitem, function(suc) end, tonumber(splitautobuy[2]))
-									boughtaxolotls[splitautobuy[1]] = true
-								end
-							end
-						end
-					end
-				end
-				if AutoBuyArmor["Enabled"] and NextArmor and kit ~= "bigman" and (AutoBuyGui["Enabled"] and bedwars["AppController"]:isAppOpen("BedwarsItemShopApp") or bedwars["AppController"]:isAppOpen("BedwarsTeamUpgradeApp") or (not AutoBuyGui["Enabled"])) then
-					local NextArmorTable = bedwars["Shop"].getShopItem(NextArmor)
-					local NextArmorCurrency = getItem(NextArmorTable["currency"])
-					if NextArmorCurrency and NextArmorCurrency["amount"] >= NextArmorTable["price"] then
-						if justboughtarmor ~= NextArmor then
-							local oldboughtarmor = justboughtarmor
-							justboughtarmor = NextArmor
-							buyitem(NextArmorTable, function(suc)
-								if suc then
-									NextArmor = NextArmorTable["nextTier"]
-								else
-									justboughtarmor = oldboughtarmor
-								end
-							end)
-						end
-					end
-				end
-				if AutoBuySword["Enabled"] and NextSword and kit ~= "barbarian" and (AutoBuyGui["Enabled"] and (bedwars["AppController"]:isAppOpen("BedwarsItemShopApp") or bedwars["AppController"]:isAppOpen("BedwarsTeamUpgradeApp")) or (not AutoBuyGui["Enabled"])) then
-					local buyablesword = checkallitems(betterswords)
-					if buyablesword and NextSword and betterswords[buyablesword] > (NextSword.itemType ~= "wood_sword" and betterswords[NextSword.itemType] or 1) then
-						local NextSwordTable = bedwars["Shop"].getShopItem(buyablesword)
-						local NextSwordCurrency = getItem(NextSwordTable["currency"])
-						if NextSwordCurrency and NextSwordCurrency["amount"] >= NextSwordTable["price"] then
-							if justboughtsword ~= buyablesword and getItem("rageblade") == nil and (NextSwordTable["category"] == "Armory" and CurrentUpgrades["armory"] or NextSwordTable["category"] ~= "Armory") then
-								local oldboughtsword = justboughtsword
-								justboughtsword = buyablesword
-								buyitem(NextSwordTable, function(suc)
-									if suc then
-										NextSword = swords[NextSwordTable["itemType"]]
-									else
-										justboughtsword = oldboughtsword
-									end
-								end)
-							end
-						end
-					end
-				end
-				for i,v in pairs(AutoBuyCustom["ObjectList"]) do
-					local splitautobuy = v:split(" : ")
-					if splitautobuy and #splitautobuy >= 2 and splitautobuy[4] ~= "true" then
-						if splitautobuy[1] == "axe" and NextAxe and getItem(NextAxe) == nil then
-							local NextAxeTable = bedwars["Shop"].getShopItem(NextAxe)
-							local NextAxeCurrency = getItem(NextAxeTable["currency"])
-							if NextAxeCurrency and NextAxeCurrency["amount"] >= NextAxeTable["price"] then
-								if justboughtaxe ~= NextAxe then
-									local oldboughtaxe = justboughtaxe
-									justboughtaxe = NextAxe
-									buyitem(NextAxeTable, function(suc)
-										if suc then
-											NextAxe = NextAxeTable["nextTier"]["itemType"]
-										else
-											justboughtaxe = oldboughtaxe
-										end
-									end)
-								end
-							end
-						end
-						if splitautobuy[1] == "pickaxe" and NextPickaxe and getItem(NextPickaxe) == nil then
-							local NextPickaxeTable = bedwars["Shop"].getShopItem(NextPickaxe)
-							local NextPickaxeCurrency = getItem(NextPickaxeTable["currency"])
-							if NextPickaxeCurrency and NextPickaxeCurrency["amount"] >= NextPickaxeTable["price"] then
-								if justboughtpickaxe ~= NextPickaxe then
-									local oldboughtpickaxe = justboughtpickaxe
-									justboughtpickaxe = NextPickaxe
-									buyitem(NextPickaxeTable, function(suc)
-										if suc then
-											NextPickaxe = NextPickaxeTable["nextTier"]
-										else
-											justboughtpickaxe = oldboughtpickaxe
-										end
-									end)
-								end
-							end
-						end
-						if splitautobuy[1] ~= "pickaxe" and splitautobuy[1] ~= "axe" then
-							local suc, customitem = pcall(function() return bedwars["Shop"].getShopItem(splitautobuy[1]) end)
-							local inventoryitem = getItem(splitautobuy[1] == "wool_white" and getwool() or splitautobuy[1])
-							if suc and customitem then
-								local CustomCurrency = getItem(customitem["currency"])
-								local customamount = tonumber(splitautobuy[2])
-								if CustomCurrency and CustomCurrency["amount"] >= customitem["price"] and (splitautobuy[1]:find("axolotl") and (not boughtaxolotls[splitautobuy[1]]) or (inventoryitem == nil or inventoryitem["amount"] < customamount)) then
-									buyitem(customitem, function(suc) end, tonumber(splitautobuy[2]))
-									boughtaxolotls[splitautobuy[1]] = true
-								end
-							end
-						end
-					end
-				end
+	local function buyItem(itemtab)
+		bedwars["ClientHandler"]:Get("BedwarsPurchaseItem"):CallServerAsync({
+			shopItem = itemtab
+		}):andThen(function(p11)
+			if p11 then
+				bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+				bedwars["ClientStoreHandler"]:dispatch({
+					type = "BedwarsAddItemPurchased", 
+					itemType = itemtab.itemType
+				})
 			end
-			if AutoBuyUpgrades["Enabled"] and (AutoBuyGui["Enabled"] and bedwars["AppController"]:isAppOpen("BedwarsTeamUpgradeApp") or (not AutoBuyGui["Enabled"])) then
-				local GenNewTier = GeneratorUpgrade["tiers"][CurrentUpgrades["generator"] and CurrentUpgrades["generator"] + 2 or 1]
-				local ProtNewTier = ProtectionUpgrade["tiers"][CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 2 or 1]
-				local SharpNewTier = SharpnessUpgrade["tiers"][CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 2 or 1]
-				local BreakSpeedNewTier = BreakSpeedUpgrade["tiers"][CurrentUpgrades["break"] and CurrentUpgrades["break"] + 2 or 1]
-				local AlarmNewTier = AlarmUpgrade["tiers"][CurrentUpgrades["alarm"] and CurrentUpgrades["alarm"] + 2 or 1]
-				local ArmoryNewTier = ArmoryUpgrade["tiers"][CurrentUpgrades["armory"] and CurrentUpgrades["armory"] + 2 or 1]
-				if GenNewTier and AutoBuyGen["Enabled"] then
-					local GenCurrency = getItem(GenNewTier["currency"])
-					if GenCurrency and GenCurrency["amount"] >= GenNewTier["price"] then
-						bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
-							upgradeId = "generator", 
-							tier = CurrentUpgrades["generator"] and CurrentUpgrades["generator"] + 1 or 0
-						}):andThen(function(suc)
-							if suc then
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
-							end
-						end)
+		end)
+	end
+
+	local function buyUpgrade(upgradetype, inv, upgrades)
+		local teamupgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], upgradetype)
+		local teamtier = teamupgrade["tiers"][upgrades[upgradetype] and upgrades[upgradetype] + 2 or 1]
+		if teamtier then 
+			local teamcurrency = getItem(teamtier["currency"])
+			if teamcurrency and teamcurrency["amount"] >= teamtier.price then 
+				bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
+					upgradeId = upgradetype, 
+					tier = upgrades[upgradetype] and upgrades[upgradetype] + 1 or 0
+				}):andThen(function(suc)
+					if suc then
+						bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
 					end
-				end
-				if ProtNewTier and AutoBuyProt["Enabled"] then
-					local ProtCurrency = getItem(ProtNewTier["currency"])
-					if ProtCurrency and ProtCurrency["amount"] >= ProtNewTier["price"] then
-						bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
-							upgradeId = "armor", 
-							tier = CurrentUpgrades["armor"] and CurrentUpgrades["armor"] + 1 or 0
-						}):andThen(function(suc)
-							if suc then
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
-							end
-						end)
-					end
-				end
-				if SharpNewTier and AutoBuySharp["Enabled"] then
-					local SharpCurrency = getItem(SharpNewTier["currency"])
-					if SharpCurrency and SharpCurrency["amount"] >= SharpNewTier["price"] then
-						bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
-							upgradeId = "damage", 
-							tier = CurrentUpgrades["damage"] and CurrentUpgrades["damage"] + 1 or 0
-						}):andThen(function(suc)
-							if suc then
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
-							end
-						end)
-					end
-				end
-				if BreakSpeedNewTier and AutoBuyBreakSpeed["Enabled"] then
-					local BreakSpeedCurrency = getItem(BreakSpeedNewTier["currency"])
-					if BreakSpeedCurrency and BreakSpeedCurrency["amount"] >= BreakSpeedNewTier["price"] then
-						bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
-							upgradeId = "break", 
-							tier = CurrentUpgrades["break"] and CurrentUpgrades["break"] + 1 or 0
-						}):andThen(function(suc)
-							if suc then
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
-							end
-						end)
-					end
-				end
-				if AlarmNewTier and AutoBuyAlarm["Enabled"] then
-					local AlarmCurrency = getItem(AlarmNewTier["currency"])
-					if AlarmCurrency and AlarmCurrency["amount"] >= AlarmNewTier["price"] then
-						bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
-							upgradeId = "alarm", 
-							tier = CurrentUpgrades["alarm"] and CurrentUpgrades["alarm"] + 1 or 0
-						}):andThen(function(suc)
-							if suc then
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
-							end
-						end)
-					end
-				end
-				if ArmoryNewTier and AutoBuyArmory["Enabled"] then
-					local ArmoryCurrency = getItem(ArmoryNewTier["currency"])
-					if ArmoryCurrency and ArmoryCurrency["amount"] >= ArmoryNewTier["price"] then
-						bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
-							upgradeId = "armory", 
-							tier = CurrentUpgrades["armory"] and CurrentUpgrades["armory"] + 1 or 0
-						}):andThen(function(suc)
-							if suc then
-								bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
-							end
-						end)
-					end
-				end
+				end)
 			end
 		end
 	end
+	
+	local armors = {
+		[1] = "leather_chestplate",
+		[2] = "iron_chestplate",
+		[3] = "diamond_chestplate",
+		[4] = "emerald_chestplate"
+	}
+
+	local swords = {
+		[1] = "wood_sword",
+		[2] = "stone_sword",
+		[3] = "iron_sword",
+		[4] = "diamond_sword",
+		[5] = "emerald_sword"
+	}
+
+	local buyfunctions = {
+		Armor = function(inv) 
+			if not AutoBuyArmor["Enabled"] then return end
+			local currentarmor = (inv.armor[5] ~= "empty" or inv.armor[5].itemType:find("chestplate") ~= nil) and inv.armor[5] or nil
+			local armorindex = (currentarmor and table.find(armors, currentarmor.itemType) or 0) + 1
+			if currentarmor ~= nil and table.find(armors, currentarmor.itemType) == nil then return end
+			local highestbuyable = nil
+			for i = armorindex, #armors, 1 do 
+				local shopitem = getShopItem(armors[i])
+				if shopitem then 
+					local currency = getItem(shopitem.currency)
+					if currency and currency["amount"] >= shopitem.price then 
+						highestbuyable = shopitem
+					end
+				end
+			end
+			if highestbuyable and (highestbuyable.ignoredByKit == nil or table.find(highestbuyable.ignoredByKit, kit) == nil) then 
+				buyItem(highestbuyable)
+			end
+		end,
+		Sword = function(inv, upgrades)
+			if not AutoBuySword["Enabled"] then return end
+			local currentsword = getItemNear("sword", inv.items)
+			local swordindex = (currentsword and table.find(swords, currentsword.itemType) or 0) + 1
+			if currentsword ~= nil and table.find(swords, currentsword.itemType) == nil then return end
+			local highestbuyable = nil
+			for i = swordindex, #swords, 1 do 
+				local shopitem = getShopItem(swords[i])
+				if shopitem then 
+					local currency = getItem(shopitem.currency)
+					if currency and currency["amount"] >= shopitem.price and (shopitem.category ~= "Armory" or upgrades["armory"]) then 
+						highestbuyable = shopitem
+					end
+				end
+			end
+			if highestbuyable and (highestbuyable.ignoredByKit == nil or table.find(highestbuyable.ignoredByKit, kit) == nil) then 
+				buyItem(highestbuyable)
+			end
+		end,
+		Protection = function(inv, upgrades)
+			if not AutoBuyProt["Enabled"] then return end
+			buyUpgrade("armor", inv, upgrades)
+		end,
+		Sharpness = function(inv, upgrades)
+			if not AutoBuySharp["Enabled"] then return end
+			buyUpgrade("damage", inv, upgrades)
+		end,
+		Generator = function(inv, upgrades)
+			if not AutoBuyGen["Enabled"] then return end
+			buyUpgrade("generator", inv, upgrades)
+		end,
+		BreakSpeed = function(inv, upgrades)
+			if not AutoBuyBreakSpeed["Enabled"] then return end
+			buyUpgrade("break", inv, upgrades)
+		end,
+		Alarm = function(inv, upgrades)
+			if not AutoBuyAlarm["Enabled"] then return end
+			buyUpgrade("alarm", inv, upgrades)
+		end,
+		Armory = function(inv, upgrades)
+			if not AutoBuyArmory["Enabled"] then return end
+			buyUpgrade("armory", inv, upgrades)
+		end
+	}
+
 	AutoBuy = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoBuy", 
 		["Function"] = function(callback)
@@ -3810,10 +3633,21 @@ runcode(function()
 				buyingthing = false 
 				spawn(function()
 					repeat
-						task.wait()
+						task.wait(0.1)
 						local found, npctype = nearNPC()
 						if found then
-							BuyCheck(npctype)
+							local inv = bedwars["getInventory"](lplr)
+							local currentupgrades = bedwars["ClientStoreHandler"]:getState()["Bedwars"]["teamUpgrades"]
+							if kit == "dasher" then 
+								swords = {
+									[1] = "wood_dao",
+									[2] = "stone_dao",
+									[3] = "iron_dao",
+									[4] = "diamond_dao",
+									[5] = "emerald_dao"
+								}
+							end
+							for i,v in pairs(buyfunctions) do v(inv, currentupgrades) end
 						end
 					until (not AutoBuy["Enabled"])
 				end)
@@ -4949,7 +4783,7 @@ runcode(function()
 						spidergoinup = ((newray or newray2) and true or false)
 						holdingshift = uis:IsKeyDown(Enum.KeyCode.LeftShift)
 						if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] and holdingshift == false or GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false) then
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X - (lplr.Character.HumanoidRootPart.CFrame.lookVector.X / 2), spiderspeed["Value"], lplr.Character.HumanoidRootPart.Velocity.Z - (lplr.Character.HumanoidRootPart.CFrame.lookVector.Z / 2))
+							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newray2 and newray == nil and lplr.Character.HumanoidRootPart.Velocity.X or 0, spiderspeed["Value"], newray2 and newray == nil and lplr.Character.HumanoidRootPart.Velocity.Z or 0)
 						end
 					end
 				end)

@@ -593,7 +593,7 @@ OnlineProfilesButton.MouseButton1Click:connect(function()
 		end)
 		onlineprofiles = (success and result or {})
 		for i2,v2 in pairs(onlineprofiles) do
-			if v2["ProfileGame"] == game.PlaceId then
+			if tostring(v2["ProfileGame"]) == tostring(shared.CustomSaveVape or game.PlaceId) then
 				local profilebox = Instance.new("Frame")
 				profilebox.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 				profilebox.Parent = OnlineProfilesList
