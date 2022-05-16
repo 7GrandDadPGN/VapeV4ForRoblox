@@ -142,7 +142,7 @@ end)
 local AnticheatBypassNumbers = {
 	TPSpeed = 0.1,
 	TPCombat = 0.3,
-	TPLerp = 0.35,
+	TPLerp = 0.4,
 	TPCheck = 15
 }
 
@@ -4898,6 +4898,9 @@ runcode(function()
 			table.insert(attackedplayers, plr)
 		end
 		if killaurahitdelay > tick() then 
+			return nil
+		end
+		if workspace:GetServerTimeNow() - plr.Character:GetAttribute("LastDamageTakenTime") <= 0.3 then
 			return nil
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
