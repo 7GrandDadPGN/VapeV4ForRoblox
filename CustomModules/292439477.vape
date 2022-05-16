@@ -327,6 +327,7 @@ getfunctions = function()
 			end
 			if rawget(v, "isspotted") then
 				phantomforces["Hud"] = v
+				phantomforces["SpotRemote"] = getremote(debug.getconstants(v.spotstep))
 			end
 			if rawget(v, "getstate") then
 				phantomforces["Character"] = v
@@ -337,22 +338,14 @@ getfunctions = function()
 				phantomforces["Sound"] = v
 			end
 			if rawget(v, "swapknife") then
-				print("swapknife", v)
 				phantomforces["KnifeRemote"] = getremoteknife(debug.getconstants(debug.getprotos(debug.getupvalues(v.swapknife)[4])[9]))
 			end
-			--[[if rawget(v, "onkeydown") then 
+			if rawget(v, "onkeydown") then 
 				for i2,v2 in pairs(v.onkeydown._funcs) do 
-					if table.find(debug.getconstants(i2), "stab1") then
-						for i3,v3 in pairs(debug.getupvalues(i2)) do 
-							if type(v3) == "table" then 
-								for i4,v4 in pairs(v3) do 
-									print(i3, i4, v4)
-								end
-							end
-						end
-					end
+					phantomforces["KeyPressFunc"] = i2
+					break
 				end
-			end]]
+			end
 			if rawget(v, "isdeployed") then
 				phantomforces["Menu"] = v
 			end
@@ -405,7 +398,7 @@ getfunctions = function()
 		wait(1)
 		getfunctions()
 	else
-
+		print("loaded")
 	end
 end
 getfunctions()
@@ -420,6 +413,8 @@ local injectiontime = tick()
 local AimAssist = {["Enabled"] = false}
 local AimAssistMode = {["Value"] = "Legit"}
 local AimAssistFOV = {["Value"] = 90}
+local AimAssistFOVShow = {["Enabled"] = false}
+local aimfovframecolor = {["Value"] = 0.44}
 local AimAssistSwitchDelay = {["GetRandomValue"] = function() return 10 end}
 local AimAssistAutoFire = {["Enabled"] = false}
 local AimAssistGunStats = {["Enabled"] = true}
@@ -436,6 +431,7 @@ local switchdelay = 0
 local shooting = 0
 local shootinglerp = 0
 local shootpos = vec3(0, 0, 0)
+local aimfovframe
 oldindex = hookmetamethod(game, "__index", function(self, index, ...)
 	if checkcaller() then
 		return oldindex(self, index, ...)
@@ -573,7 +569,7 @@ local oldhitmarker = phantomforces["Hud"].firehitmarker
 local oldsound = phantomforces["Sound"].PlaySound
 local seeable = {}
 local actuallyseeable = {}
-
+print("done1")
 runcode(function()
 	local GunTracers = {["Enabled"] = false}
 	local GunTracersColor = {["Hue"] = 0.44, ["Sat"] = 1, ["Value"] = 1}
@@ -1515,7 +1511,7 @@ spawn(function()
 		end
 	end)
 end)
-
+print("done2")
 runcode(function()
 	AutoRejoin = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoRejoin", 
@@ -1648,6 +1644,7 @@ BindToRenderStep("LegitRender", 500, function()
 end)
 
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
+	print("uninject")
 	UnbindFromRenderStep("LegitRender")
 	phantomforces["Network"].send = oldsend
 	phantomforces["Character"].updatecharacter = oldupdatechar
@@ -1682,6 +1679,9 @@ AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOpt
 	["Name"] = "SilentAim", 
 	["Function"] = function(callback) 
 		if callback then
+			if aimfovframe then
+				aimfovframe.Visible = AimAssistMode["Value"] ~= "Blatant"
+			end
 			spawn(function()
 				repeat
 					task.wait(0.1)
@@ -1711,12 +1711,24 @@ AimAssistMode = AimAssist.CreateDropdown({
 	["List"] = {"Legit", "Blatant"},
 	["Function"] = function() end
 })
+aimfovframecolor = AimAssist.CreateColorSlider({
+	["Name"] = "Circle Color",
+	["Function"] = function(hue, sat, val)
+		if aimfovframe then
+			aimfovframe.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+		end
+	end
+})
 AimAssistFOV = AimAssist.CreateSlider({
 	["Name"] = "FOV",
 	["Min"] = 1,
 	["Max"] = 1000,
 	["Default"] = 90,
-	["Function"] = function() end
+	["Function"] = function(val) 
+		if aimfovframe then
+			aimfovframe.Size = UDim2.new(0, val, 0, val)
+		end
+	end
 })
 AimAssistHeadshotChance = AimAssist.CreateSlider({
 	["Name"] = "Headshot Chance",
@@ -1738,6 +1750,29 @@ AimAssistGunStats = AimAssist.CreateToggle({
 	["Function"] = function() end,
 	["HoverText"] = "Uses gun data to make you look more legit.\nTurning this off is more blatant with no attachments.\n(hip accuracy stat = less spread)",
 	["Default"] = true
+})
+AimAssistFOVShow = AimAssist.CreateToggle({
+	["Name"] = "FOV Circle",
+	["Function"] = function(callback) 
+		if callback then
+			aimfovframe = Instance.new("Frame")
+			aimfovframe.BackgroundTransparency = 0.8
+			aimfovframe.ZIndex = -1
+			aimfovframe.Visible = AimAssistMode["Value"] ~= "Blatant" and AimAssist["Enabled"]
+			aimfovframe.BackgroundColor3 = Color3.fromHSV(aimfovframecolor["Hue"], aimfovframecolor["Sat"], aimfovframecolor["Value"])
+			aimfovframe.Size = UDim2.new(0, AimAssistFOV["Value"], 0, AimAssistFOV["Value"])
+			aimfovframe.AnchorPoint = Vector2.new(0.5, 0.5)
+			aimfovframe.Position = UDim2.new(0.5, 0, 0.5, -18)
+			aimfovframe.Parent = GuiLibrary["MainGui"]
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 2048)
+			corner.Parent = aimfovframe
+		else
+			if aimfovframe then
+				aimfovframe:Remove()
+			end
+		end
+	end,
 })
 AimAssistAutoFire = AimAssist.CreateToggle({
 	["Name"] = "AutoFire",
@@ -2032,6 +2067,41 @@ runcode(function()
 	})
 end)
 
+runcode(function()
+	local NoJumpDelay = {["Enabled"] = false}
+	local oldjumpdelay1
+	local oldjumpdelay2
+	local oldjumpdelay3
+	NoJumpDelay = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "NoJumpDelay",
+		["Function"] = function(callback)
+			local tab = debug.getconstants(phantomforces["KeyPressFunc"])
+			local jumploc = table.find(tab, "jump")
+			local sprintloc = table.find(tab, "sprinting")
+			if callback then 
+				if jumploc then 
+					oldjumpdelay1 = tab[jumploc + 1]
+					oldjumpdelay2 = tab[jumploc + 2]
+					debug.setconstant(phantomforces["KeyPressFunc"], jumploc + 1, 0)
+					debug.setconstant(phantomforces["KeyPressFunc"], jumploc + 2, 0)
+				end
+				if sprintloc then 
+					oldjumpdelay3 = tab[sprintloc + 3]
+					debug.setconstant(phantomforces["KeyPressFunc"], sprintloc + 3, 0)
+				end
+			else
+				if jumploc then 
+					debug.setconstant(phantomforces["KeyPressFunc"], jumploc + 1, oldjumpdelay1)
+					debug.setconstant(phantomforces["KeyPressFunc"], jumploc + 2, oldjumpdelay2)
+				end
+				if sprintloc then 
+					debug.setconstant(phantomforces["KeyPressFunc"], sprintloc + 3, oldjumpdelay3)
+				end
+			end
+		end
+	})
+end)
+
 local function checkname()
 	local str = lplr.Name
 	for i = 1, str:len() do
@@ -2041,6 +2111,7 @@ local function checkname()
 	end
 	return true
 end
+print("done3")
 
 runcode(function()
 	local Overlay = GuiLibrary.CreateCustomWindow({
@@ -2173,6 +2244,7 @@ runcode(function()
 		["Name"] = "ESP", 
 		["Function"] = function(callback) 
 			if callback then
+				print("espenabled")
 				BindToRenderStep("ESP", 500, function()
 					for i,plr in pairs(players:GetChildren()) do
 						local thing
@@ -2565,6 +2637,7 @@ runcode(function()
 					end
 				end)
 			else
+				print("espdisabled")
 				UnbindFromRenderStep("ESP") 
 				ESPFolder:ClearAllChildren()
 				for i,v in pairs(espfolderdrawing) do 
@@ -2680,6 +2753,7 @@ runcode(function()
 	})
 end)
 
+print("done4")
 
 runcode(function()
 	local TracersFolder = Instance.new("Folder")
@@ -3067,6 +3141,34 @@ runcode(function()
 	})
 end)
 
+runcode(function()
+	local AutoSpot = {["Enabled"] = false}
+	AutoSpot = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoSpot",
+		["Function"] = function(callback)
+			if callback then 
+				repeat 
+					task.wait(0.5)
+					if phantomforces["SpotRemote"] then 
+						for i,plr in pairs(players:GetChildren()) do
+							if lplr ~= plr and shared.vapeteamcheck(plr) then 
+								if (not actuallyseeable[plr.Name]) and type(phantomforces["Ray"].raycastwhitelist) == "table" then
+									local char = phantomforces["GetCharacter"](plr)
+									if char then
+										local ray = workspace:FindPartOnRayWithWhitelist(Ray.new(phantomforces["Camera"].cframe.p, CFrame.lookAt(phantomforces["Camera"].cframe.p, char.Head.Position + vec3(0, 0.5, 0)).LookVector * 1000), {table.unpack(phantomforces["Ray"].raycastwhitelist), char})
+										if ray and ray.Parent == char then
+											phantomforces["Network"]:send(phantomforces["SpotRemote"], plr, true)
+										end
+									end
+								end
+							end
+						end
+					end
+				until (not AutoSpot["Enabled"])
+			end
+		end,
+	})
+end)
 
 runcode(function()
 	local GrenadeESP = {["Enabled"] = false}
@@ -3294,3 +3396,5 @@ runcode(function()
 		["Default"] = 20
 	})
 end)
+
+print("done5")
