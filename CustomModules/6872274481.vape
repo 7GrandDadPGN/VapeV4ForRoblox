@@ -5221,7 +5221,7 @@ runcode(function()
         ["Function"] = function() end,
 		["HoverText"] = "Uses a custom animation for swinging"
     })
-	if bedwars["CheckPlayerType"](lplr) then
+	if bedwars["CheckPlayerType"](lplr) ~= "DEFAULT" then
 		killauranovape = Killaura.CreateToggle({
 			["Name"] = "No Vape",
 			["Function"] = function() end,
