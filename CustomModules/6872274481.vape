@@ -4575,7 +4575,7 @@ runcode(function()
 										if funnytick <= tick() then break end
 										if entity.isAlive then
 											local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
-											local acbypassnum = (combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed + (ping <= 40 and 0.05 or ping <= 70 and 0.03 or 0)))
+											local acbypassnum = (combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed))
 											for i = 1, 2 do 
 												task.wait(i % 2 == 0 and 0.01 or 0.02)
 												if entity.isAlive then 
