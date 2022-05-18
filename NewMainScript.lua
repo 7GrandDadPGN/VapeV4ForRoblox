@@ -956,6 +956,14 @@ textguirenderbkg = TextGui.CreateToggle({
 		UpdateHud()
 	end
 })
+TextGui.CreateToggle({
+	["Name"] = "Blacklist",
+	["Function"] = function(callback) 
+		if TextGuiCircleObject["Object"] then
+			TextGuiCircleObject["Object"].Visible = callback
+		end
+	end
+})
 TextGuiCircleObject = TextGui.CreateCircleWindow({
 	["Name"] = "Blacklist",
 	["Type"] = "Blacklist",
@@ -963,6 +971,7 @@ TextGuiCircleObject = TextGui.CreateCircleWindow({
 		GuiLibrary["UpdateHudEvent"]:Fire()
 	end
 })
+TextGuiCircleObject["Object"].Visible = false
 local CustomText = {["Value"] = "", ["Object"] = nil}
 TextGui.CreateToggle({
 	["Name"] = "Add custom text", 
