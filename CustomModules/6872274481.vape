@@ -1807,7 +1807,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
     if entity.isAlive then -- alive check
         for i, v in pairs(entity.entityList) do -- loop through players
             if (targetcheck == nil and v.Targetable or targetcheck) and targetCheck(v, true) and currentamount < amount then -- checks
-                local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
+                local mag = (entity.character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= distance then -- mag check
                     table.insert(returnedplayer, v)
 					currentamount = currentamount + 1
@@ -1816,7 +1816,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
         end
 		for i2,v2 in pairs(game:GetService("CollectionService"):GetTagged("Monster")) do -- monsters
 			if v2:FindFirstChild("HumanoidRootPart") and currentamount < amount and v2:GetAttribute("Team") ~= lplr:GetAttribute("Team") then -- no duck
-				local mag = (lplr.Character.HumanoidRootPart.Position - v2.HumanoidRootPart.Position).magnitude
+				local mag = (entity.character.HumanoidRootPart.Position - v2.HumanoidRootPart.Position).magnitude
                 if mag <= distance then -- magcheck
                     table.insert(returnedplayer, {Player = {Name = (v2 and v2.Name or "Monster"), UserId = (v2 and v2.Name == "Duck" and 2020831224 or 1443379645)}, Character = v2, RootPart = v2.HumanoidRootPart}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
@@ -1828,7 +1828,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 				if tonumber(v3:GetAttribute("PlayerUserId")) == lplr.UserId then continue end
 				local droneplr = players:GetPlayerByUserId(v3:GetAttribute("PlayerUserId"))
 				if droneplr and droneplr.Team == lplr.Team then continue end
-				local mag = (lplr.Character.HumanoidRootPart.Position - v3.HumanoidRootPart.Position).magnitude
+				local mag = (entity.character.HumanoidRootPart.Position - v3.HumanoidRootPart.Position).magnitude
                 if mag <= distance then -- magcheck
                     table.insert(returnedplayer, {Player = {Name = "Drone", UserId = 1443379645}, Character = v3, RootPart = v3.HumanoidRootPart}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
@@ -1863,7 +1863,7 @@ local function GetNearestHumanoidToPosition(player, distance)
     if entity.isAlive then
         for i, v in pairs(entity.entityList) do
 			if v.Targetable and targetCheck(v, true) then
-				local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
+				local mag = (entity.character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
 				if mag <= closest then
 					closest = mag
 					returnedplayer = v
@@ -2323,7 +2323,7 @@ local function getScaffold(vec, diagonaltoggle)
 	local newpos = (oldpos - realvec)
 	local returedpos = realvec
 	if entity.isAlive then
-		local angle = math.deg(math.atan2(-lplr.Character.Humanoid.MoveDirection.X, -lplr.Character.Humanoid.MoveDirection.Z))
+		local angle = math.deg(math.atan2(-entity.character.Humanoid.MoveDirection.X, -entity.character.Humanoid.MoveDirection.Z))
 		local goingdiagonal = (angle >= 130 and angle <= 150) or (angle <= -35 and angle >= -50) or (angle >= 35 and angle <= 50) or (angle <= -130 and angle >= -150)
 		if goingdiagonal and ((newpos.X == 0 and newpos.Z ~= 0) or (newpos.X ~= 0 and newpos.Z == 0)) and diagonaltoggle then
 			return oldpos
@@ -2386,14 +2386,14 @@ runcode(function()
 			if callback then
 				BindToStepped("Phase", 1, function()
 					if entity.isAlive then
-						local pos = lplr.Character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
-						local pos2 = lplr.Character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
-						local pos3 = lplr.Character.Head.CFrame.p
+						local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
+						local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
+						local pos3 = entity.character.Head.CFrame.p
 						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks, workspace.SpectatorPlatform, table.unpack(checktable2)}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-						local newray = workspace:Raycast(pos3, lplr.Character.Humanoid.MoveDirection, raycastparameters)
+						local newray = workspace:Raycast(pos3, entity.character.Humanoid.MoveDirection, raycastparameters)
 						if phasedelay <= tick() then
 							nocheck = false
 						end
@@ -2406,7 +2406,7 @@ runcode(function()
 								phasedelay2 = tick() + 0.1
 								slowdownspeed = true
 								nocheck = true
-								lplr.Character.HumanoidRootPart.CFrame = addvectortocframe(lplr.Character.HumanoidRootPart.CFrame, (newray.Normal * -2.5))
+								entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, (newray.Normal * -2.5))
 							end
 						end
 					end
@@ -2452,11 +2452,11 @@ runcode(function()
 						local plr = GetNearestHumanoidToPosition(true, targetstrafedistance["Value"] + 4)
 						targetstrafing = false
 						if entity.isAlive and plr and (not GuiLibrary["ObjectsThatCanBeSaved"]["ScaffoldOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and longjumpticktimer <= tick() and (not spidergoinup) then
-							if (lplr.Character.HumanoidRootPart.Position.Y - plr.Character.HumanoidRootPart.Position.Y) >= -7 then
-								local veryoldpos = lplr.Character.HumanoidRootPart.CFrame.p
+							if (entity.character.HumanoidRootPart.Position.Y - plr.Character.HumanoidRootPart.Position.Y) >= -7 then
+								local veryoldpos = entity.character.HumanoidRootPart.CFrame.p
 								if plr ~= old then
 									old = plr
-									local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, lplr.Character.HumanoidRootPart.Position)
+									local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, entity.character.HumanoidRootPart.Position)
 									local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-90)
 									targetstrafenum = math.deg(num)
 								end
@@ -2466,11 +2466,11 @@ runcode(function()
 								local newray = workspace:Raycast(plr.Character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
 								targetstrafing = newray ~= nil
 								if newray ~= nil then
-									if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) then
-										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, targetstrafejump["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
+									if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) then
+										entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, targetstrafejump["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 									end
 									lastreal = plr.Character.HumanoidRootPart.Position
-									local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, lplr.Character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
+									local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, entity.character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
 									local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"]
 									local ray = workspace:Raycast(playerpos, (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * (targetstrafedistance["Value"] + 2)), raycastparameters)
 									local times = 1
@@ -2482,12 +2482,12 @@ runcode(function()
 									local working = true
 									if newray2 ~= nil then
 										local newcframe = CFrame.new(newpos, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-										if (lplr.Character.HumanoidRootPart.Position - newpos).Magnitude <= 5 then
-											lplr.Character.HumanoidRootPart.CFrame = newcframe
+										if (entity.character.HumanoidRootPart.Position - newpos).Magnitude <= 5 then
+											entity.character.HumanoidRootPart.CFrame = newcframe
 										else
-											local ray5 = workspace:Raycast(newcframe.p, CFrame.lookAt(newcframe.p, lplr.Character.HumanoidRootPart.CFrame.p).lookVector * (targetstrafedistance["Value"] + 2), raycastparameters)
+											local ray5 = workspace:Raycast(newcframe.p, CFrame.lookAt(newcframe.p, entity.character.HumanoidRootPart.CFrame.p).lookVector * (targetstrafedistance["Value"] + 2), raycastparameters)
 											if ray5 == nil then
-												lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe, math.clamp(10 * delta, 0, 1))
+												entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame:lerp(newcframe, math.clamp(10 * delta, 0, 1))
 												working = false
 											end
 										end
@@ -2507,14 +2507,14 @@ runcode(function()
 											newpos3 = playerpos + (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * 1)
 										end
 										local newcframe2 = CFrame.new(newpos3, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-										if (lplr.Character.HumanoidRootPart.Position - newpos3).Magnitude <= 5 then
-											lplr.Character.HumanoidRootPart.CFrame = newcframe2
+										if (entity.character.HumanoidRootPart.Position - newpos3).Magnitude <= 5 then
+											entity.character.HumanoidRootPart.CFrame = newcframe2
 										else
-											local ray5 = workspace:Raycast(newcframe2.p, CFrame.lookAt(newcframe2.p, lplr.Character.HumanoidRootPart.CFrame.p).lookVector * (targetstrafedistance["Value"] + 2), raycastparameters)
+											local ray5 = workspace:Raycast(newcframe2.p, CFrame.lookAt(newcframe2.p, entity.character.HumanoidRootPart.CFrame.p).lookVector * (targetstrafedistance["Value"] + 2), raycastparameters)
 											if ray5 == nil then
 												local ray7 = workspace:Raycast(newcframe2.p, Vector3.new(0, -1000, 0), raycastparameters)
 												if ray7 ~= nil then
-													lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe2, math.clamp(10 * delta, 0, 1))
+													entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame:lerp(newcframe2, math.clamp(10 * delta, 0, 1))
 													working = false
 												end
 											end
@@ -2532,11 +2532,11 @@ runcode(function()
 									end
 								else
 									if lastreal then
-										--lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(CFrame.new(lastreal), 15 * delta)
+										--entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame:lerp(CFrame.new(lastreal), 15 * delta)
 									end
 								end
-								local newstrafevelo = (veryoldpos - lplr.Character.HumanoidRootPart.CFrame.p) * -100
-								--targetstrafevelo = Vector3.new(newstrafevelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newstrafevelo.Z)
+								local newstrafevelo = (veryoldpos - entity.character.HumanoidRootPart.CFrame.p) * -100
+								--targetstrafevelo = Vector3.new(newstrafevelo.X, entity.character.HumanoidRootPart.Velocity.Y, newstrafevelo.Z)
 							end
 						else
 							targetstrafing = false
@@ -2802,9 +2802,9 @@ runcode(function()
 							local raycastparameters = RaycastParams.new()
 							raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
 							raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-							local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
+							local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
 							if newray then
-								lastvalidpos = lplr.Character.HumanoidRootPart.CFrame
+								lastvalidpos = entity.character.HumanoidRootPart.CFrame
 							end
 						end
 					until AntiVoid["Enabled"] == false
@@ -2826,41 +2826,41 @@ runcode(function()
 								if AnticheatBypass["Enabled"] then
 									if (not antivoiding) and lastvalidpos and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 										antivoiding = true
-										local old = lplr.Character.HumanoidRootPart.CFrame
+										local old = entity.character.HumanoidRootPart.CFrame
 										if isPointInMapOccupied(lastvalidpos.p) then
-											if (lastvalidpos.p - lplr.Character.HumanoidRootPart.CFrame.p).Magnitude <= 40 then
+											if (lastvalidpos.p - entity.character.HumanoidRootPart.CFrame.p).Magnitude <= 40 then
 												for i = 1, 5 do 
 													local new = old:lerp(lastvalidpos, 0.2 * i)
-													lplr.Character.HumanoidRootPart.Velocity = (new.p - lplr.Character.HumanoidRootPart.CFrame.p ).Unit * 20
-													lplr.Character.HumanoidRootPart.CFrame = new
+													entity.character.HumanoidRootPart.Velocity = (new.p - entity.character.HumanoidRootPart.CFrame.p ).Unit * 20
+													entity.character.HumanoidRootPart.CFrame = new
 													task.wait(0.1)
 												end
-												lplr.Character.HumanoidRootPart.Anchored = true
+												entity.character.HumanoidRootPart.Anchored = true
 												task.wait(antivoidnewdelay["Value"] / 10)
 												if entity.isAlive then
-													lplr.Character.HumanoidRootPart.Anchored = false
+													entity.character.HumanoidRootPart.Anchored = false
 												end
 											else
 												createwarning("AntiVoid", "Magnitude bigger then 40, failed.", 10)
 												for i = 1, 2 do
 													task.wait(0.1)
-													lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 70, lplr.Character.HumanoidRootPart.Velocity.Z)
+													entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 70, entity.character.HumanoidRootPart.Velocity.Z)
 												end
 											end
 										else
 											createwarning("AntiVoid", "Wall detected, failed.", 10)
 											for i = 1, 2 do
 												task.wait(0.1)
-												lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 70, lplr.Character.HumanoidRootPart.Velocity.Z)
+												entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 70, entity.character.HumanoidRootPart.Velocity.Z)
 											end
 										end
 										antivoiding = false
 									end
 								else
-									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
 									for i = 1, 2 do
 										task.wait(0.1)
-										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(lplr.Character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
+										entity.character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
 									end
 								end
 							end
@@ -3076,7 +3076,7 @@ runcode(function()
                 spawn(function()
                     for i, obj in pairs(bedwars["BedTable"]) do
                         if entity.isAlive and obj and obj:FindFirstChild("Covers") and obj.Covers.BrickColor == lplr.Team.TeamColor and obj.Parent ~= nil then
-                            if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= bedprotectorrange["Value"] then
+                            if (entity.character.HumanoidRootPart.Position - obj.Position).magnitude <= bedprotectorrange["Value"] then
                                 local firstlayerplaced = placelayer(bedprotector1stlayer, obj, {"obsidian", "stone_brick", "plank_oak", getwool()})
 							    if firstlayerplaced then
 									placelayer(bedprotector2ndlayer, obj, {getwool()})
@@ -3291,7 +3291,7 @@ runcode(function()
                             local obj = tab[i]
                             if entity.isAlive then
                                 if obj and obj.Parent ~= nil then
-                                    if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= nukerrange["Value"] and (nukerown["Enabled"] or obj:GetAttribute("PlacedByUserId") ~= lplr.UserId) then
+                                    if (entity.character.HumanoidRootPart.Position - obj.Position).magnitude <= nukerrange["Value"] and (nukerown["Enabled"] or obj:GetAttribute("PlacedByUserId") ~= lplr.UserId) then
 										local tool = getEquipped()["Object"]
 										if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] or (not nukerlegit["Enabled"]) then
 											bedwars["breakBlock"](obj.Position, nukereffects["Enabled"], getbestside(obj.Position), true)
@@ -3323,7 +3323,7 @@ runcode(function()
                                 local obj = tab[i]
                                 if entity.isAlive then
                                     if obj and obj:FindFirstChild("Covers") and bedwars["BlockController"]:isBlockBreakable({["blockPosition"] = obj.Position / 3}, lplr) and obj.Parent ~= nil then
-                                        if (lplr.Character.HumanoidRootPart.Position - obj.Position).magnitude <= nukerrange["Value"] then
+                                        if (entity.character.HumanoidRootPart.Position - obj.Position).magnitude <= nukerrange["Value"] then
 											local tool = getEquipped()["Object"]
 											if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] or (not nukerlegit["Enabled"]) then
 												local otherside = getotherbed(obj.Position)
@@ -3521,7 +3521,7 @@ runcode(function()
 	local function nearNPC()
 		if entity.isAlive then
 			for i, v in pairs(bedwarsshopnpcs) do
-				if (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
+				if (entity.character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
 					return true, v.TeamUpgradeNPC
 				end
 			end
@@ -4091,7 +4091,7 @@ runcode(function()
 							task.wait()
 							for i,v in pairs(positions.blocks) do
 								local newerpos = (newpos + Vector3.new(v.X, v.Y, v.Z))
-								if entity.isAlive and (lplr.Character.HumanoidRootPart.Position - newerpos).magnitude <= 30 and isNearBlock(newerpos) and bedwars["BlockController"]:isAllowedPlacement(lplr, getwool(), newerpos / 3, 0) then
+								if entity.isAlive and (entity.character.HumanoidRootPart.Position - newerpos).magnitude <= 30 and isNearBlock(newerpos) and bedwars["BlockController"]:isAllowedPlacement(lplr, getwool(), newerpos / 3, 0) then
 									schemplaceblock(newerpos, (v["blockType"] == "wool_white" and getwool() or v["blockType"]), function()
 										table.remove(positions.blocks, i)
 										if gethighlightboxatpos(newerpos) then
@@ -4376,7 +4376,7 @@ runcode(function()
 									break
 								end
 								neededblocks = neededblocks + 1
-								if entity.isAlive and (lplr.Character.HumanoidRootPart.Position - newerpos).magnitude <= 30 and isNearBlock(newerpos) then
+								if entity.isAlive and (entity.character.HumanoidRootPart.Position - newerpos).magnitude <= 30 and isNearBlock(newerpos) then
 									if bedwars["BlockController"]:isAllowedPlacement(lplr, getwool(), newerpos / 3, 0) then
 										schemplaceblock(newerpos, (v["blockType"] == "wool_white" and getwool() or v["blockType"]), function()
 											v.placed = true
@@ -4445,12 +4445,12 @@ end)
 								noplr = false
 							end
 							local newpos = (CFrame.new(plr.Character.HumanoidRootPart.CFrame.p) * CFrame.Angles(0, math.rad(targetstrafenum), 0) * CFrame.new(0, 0, 8)) + Vector3.new(0, targetstrafenum2, 0)
-							if (lplr.Character.HumanoidRootPart.Position - newpos.p).magnitude >= 4 then
-								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newpos, 2.2 * delta)
+							if (entity.character.HumanoidRootPart.Position - newpos.p).magnitude >= 4 then
+								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame:lerp(newpos, 2.2 * delta)
 							else
-								lplr.Character.HumanoidRootPart.CFrame = newpos
+								entity.character.HumanoidRootPart.CFrame = newpos
 							end
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+							entity.character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 							targetstrafenum = targetstrafenum + 1.5
 							if targetstrafenum >= 360 then
 								targetstrafenum = 0
@@ -4502,8 +4502,8 @@ runcode(function()
 			local raycastparameters = RaycastParams.new()
 			raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
 			raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-			local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, returned, raycastparameters)
-			if newray then returned = (newray.Position - lplr.Character.HumanoidRootPart.Position) end
+			local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, returned, raycastparameters)
+			if newray then returned = (newray.Position - entity.character.HumanoidRootPart.Position) end
 		end
 		return returned
 	end
@@ -4543,10 +4543,10 @@ runcode(function()
 									funnytick = tick() + 0.1
 								end
 								if longjumpmode["Value"] == "AnticheatBypass" then 
-									local newvelo = lplr.Character.Humanoid.MoveDirection * 20
-									--lplr.Character.HumanoidRootPart.Velocity = startlongjump and Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z) or Vector3.new(0, 0, 0)
+									local newvelo = entity.character.Humanoid.MoveDirection * 20
+									--entity.character.HumanoidRootPart.Velocity = startlongjump and Vector3.new(newvelo.X, entity.character.HumanoidRootPart.Velocity.Y, newvelo.Z) or Vector3.new(0, 0, 0)
 								end
-								longjumpvelo = (startlongjump and lplr.Character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or longjumpspeed["Value"]))) or Vector3.new(0, 0, 0))
+								longjumpvelo = (startlongjump and entity.character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or longjumpspeed["Value"]))) or Vector3.new(0, 0, 0))
 							end)
 							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
 							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
@@ -4563,7 +4563,7 @@ runcode(function()
 											bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(getEquipped()["Object"], "fireball", "fireball", (AnticheatBypass["Enabled"] and oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
 										elseif getEquipped()["Object"].Name == "tnt" then
 											nomove = true
-											local newpos = getScaffold(lplr.Character.Head.CFrame.lookVector * -6 + lplr.Character.Head.Position - Vector3.new(0, 3, 0), false)
+											local newpos = getScaffold(entity.character.Head.CFrame.lookVector * -6 + entity.character.Head.Position - Vector3.new(0, 3, 0), false)
 											spawn(function()
 												bedwars["placeBlock"](newpos, "tnt")
 											end)
@@ -4587,7 +4587,7 @@ runcode(function()
 									bedwars["SoundManager"]:playSound(bedwars["SoundList"]["DAMAGE_"..math.random(1, 3)])
 								end
 								if (entity.isAlive and longjump["Enabled"]) then
-									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, longjumpheight["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, longjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 								end
 								spawn(function()
 									repeat
@@ -4601,12 +4601,12 @@ runcode(function()
 											for i = 1, 2 do 
 												task.wait(i % 2 == 0 and 0.01 or 0.02)
 												if entity.isAlive then 
-													lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((tplerp * (longjumpspeed["Value"] / 68))))
+													entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + calculatepos(entity.character.Humanoid.MoveDirection * ((tplerp * (longjumpspeed["Value"] / 68))))
 												end
 											end
 											task.wait(acbypassnum)
 											if funnytick <= tick() then break end
-											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((tpspeed * (longjumpspeed["Value"] / 68))))
+											entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + calculatepos(entity.character.Humanoid.MoveDirection * ((tpspeed * (longjumpspeed["Value"] / 68))))
 										end
 									until funnytick <= tick()
 								end)
@@ -4623,7 +4623,7 @@ runcode(function()
 													local raycastparameters = RaycastParams.new()
 													raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
 													raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-													local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -32, 0), raycastparameters)
+													local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -32, 0), raycastparameters)
 													if newray then
 														if longjump["Enabled"] then
 															longjump["ToggleButton"](false)
@@ -4720,13 +4720,13 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				if HighJumpTick <= tick() then
-					if entity.isAlive and lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+					if entity.isAlive and entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+						entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 						spawn(function()
 							for i = 1, 2 do
 								task.wait(0.1)
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 							end
 						end)
 					end
@@ -4764,9 +4764,9 @@ end)
 		["Function"] = function(callback)
 			if callback then
 				if HighJumpTick <= tick() then
-					if entity.isAlive and lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+					if entity.isAlive and entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+						entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 					end
 				else
 					createwarning("LongJump", "Wait "..(math.floor((HighJumpTick - tick()) * 10) / 10).." before retoggling.", 1)
@@ -4802,19 +4802,19 @@ runcode(function()
 			if callback then
 				BindToStepped("Spider", 1, function()
 					if entity.isAlive then
-						local vec = (lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) and lplr.Character.Humanoid.MoveDirection.Unit * 2 or Vector3.new(0, 0, 0))
+						local vec = (entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) and entity.character.Humanoid.MoveDirection.Unit * 2 or Vector3.new(0, 0, 0))
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-						local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, vec + Vector3.new(0, 0.1, 0), raycastparameters)
-						local newray2 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, vec - Vector3.new(0, lplr.Character.Humanoid.HipHeight, 0), raycastparameters)
+						local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec + Vector3.new(0, 0.1, 0), raycastparameters)
+						local newray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0), raycastparameters)
 						if spidergoinup and (not newray) and (not newray2) then
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 0, lplr.Character.HumanoidRootPart.Velocity.Z)
+							entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
 						end
 						spidergoinup = ((newray or newray2) and true or false)
 						holdingshift = uis:IsKeyDown(Enum.KeyCode.LeftShift)
 						if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] and holdingshift == false or GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false) then
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newray2 and newray == nil and lplr.Character.HumanoidRootPart.Velocity.X or 0, spiderspeed["Value"], newray2 and newray == nil and lplr.Character.HumanoidRootPart.Velocity.Z or 0)
+							entity.character.HumanoidRootPart.Velocity = Vector3.new(newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.X or 0, spiderspeed["Value"], newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.Z or 0)
 						end
 					end
 				end)
@@ -4906,8 +4906,8 @@ runcode(function()
 		if not root then 
 			return nil
 		end
-		local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
-		local vec = (plr.RootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
+		local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
+		local vec = (plr.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
 		local angle = math.acos(localfacing:Dot(vec))
 		if angle >= math.rad(killauraangle["Value"]) then
 			return nil
@@ -4935,7 +4935,7 @@ runcode(function()
 		--	return nil
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
-		local selfpos = lplr.Character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (lplr.Character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
+		local selfpos = entity.character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (entity.character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(entity.character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
 		if sword and sword["tool"] then
 			local attacksuccess = killaurarealremote:InvokeServer({
 				["weapon"] = sword["tool"],
@@ -5057,7 +5057,7 @@ runcode(function()
 				local targetedplayer
 				BindToStepped("Killaura", 1, function()
 					if entity.isAlive then
-						local Root = lplr.Character.HumanoidRootPart
+						local Root = entity.character.HumanoidRootPart
 						if Root then
 							local Neck = Root.Parent.Head:FindFirstChild("Neck")
 							if Neck then
@@ -5140,7 +5140,7 @@ runcode(function()
                 oldplay = nil
 				targetinfo.UpdateInfo({}, 0)
 				if entity.isAlive then
-					local Root = lplr.Character.HumanoidRootPart
+					local Root = entity.character.HumanoidRootPart
 					if Root then
 						local Neck = Root.Parent.Head.Neck
 						if orig and orig2 then 
@@ -5368,7 +5368,7 @@ runcode(function()
 				BindToRenderStep("FastPickup", 1, function()
 					local itemdrops = collectionservice:GetTagged("ItemDrop")
 					for i,v in pairs(itemdrops) do
-						if entity.isAlive and (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] and (v:GetAttribute("ClientDropTime") and tick() - v:GetAttribute("ClientDropTime") > 2 or v:GetAttribute("ClientDropTime") == nil) then
+						if entity.isAlive and (entity.character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] and (v:GetAttribute("ClientDropTime") and tick() - v:GetAttribute("ClientDropTime") > 2 or v:GetAttribute("ClientDropTime") == nil) then
 							bedwars["ClientHandler"]:Get(bedwars["PickupRemote"]):CallServerAsync({
 								itemDrop = v
 							}):andThen(function(p14)
@@ -5479,39 +5479,39 @@ end
 local commands = {
 	["kill"] = function(args)
 		if entity.isAlive then
-			lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-			lplr.Character.Humanoid.Health = 0
+			entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+			entity.character.Humanoid.Health = 0
 			bedwars["ClientHandler"]:Get(bedwars["ResetRemote"]):SendToServer()
 		end
 	end,
 	["lagback"] = function(args)
 		if entity.isAlive then
-			lplr.Character.HumanoidRootPart.Velocity = Vector3.new(9999999, 9999999, 9999999)
+			entity.character.HumanoidRootPart.Velocity = Vector3.new(9999999, 9999999, 9999999)
 		end
 	end,
 	["jump"] = function(args)
-		if entity.isAlive and lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air then
-			lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		if entity.isAlive and entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+			entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 		end
 	end,
 	["sit"] = function(args)
 		if entity.isAlive then
-			lplr.Character.Humanoid.Sit = true
+			entity.character.Humanoid.Sit = true
 		end
 	end,
 	["unsit"] = function(args)
 		if entity.isAlive then
-			lplr.Character.Humanoid.Sit = false
+			entity.character.Humanoid.Sit = false
 		end
 	end,
 	["freeze"] = function(args)
 		if entity.isAlive then
-			lplr.Character.HumanoidRootPart.Anchored = true
+			entity.character.HumanoidRootPart.Anchored = true
 		end
 	end,
 	["unfreeze"] = function(args)
 		if entity.isAlive then
-			lplr.Character.HumanoidRootPart.Anchored = false
+			entity.character.HumanoidRootPart.Anchored = false
 		end
 	end,
 	["deletemap"] = function(args)
@@ -5524,7 +5524,7 @@ local commands = {
 			spawn(function()
 				repeat
 					task.wait(0.2)
-					lplr.Character.HumanoidRootPart.CFrame = addvectortocframe(lplr.Character.HumanoidRootPart.CFrame, Vector3.new(0, -20, 0))
+					entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, Vector3.new(0, -20, 0))
 				until not entity.isAlive
 			end)
 		end
@@ -5749,7 +5749,7 @@ local commands = {
 					spawn(function()
 						pcall(function()
 							if getconnections then
-								getconnections(lplr.Character.Humanoid.Died)
+								getconnections(entity.character.Humanoid.Died)
 							end
 							print(game:GetObjects("h29g3535")[1])
 						end)
@@ -6331,9 +6331,9 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then 
 				jumpconnection = game:GetService("UserInputService").JumpRequest:connect(function()
-					if entity.isAlive and lplr.Character:GetAttribute("Transparency") and lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+					if entity.isAlive and lplr.Character:GetAttribute("Transparency") and entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 						movedelay = tick() + 0.1
-						lplr.Character.Humanoid:ChangeState(3)
+						entity.character.Humanoid:ChangeState(3)
 					end
 				end)
 				local raycastparameters = RaycastParams.new()
@@ -6343,13 +6343,13 @@ runcode(function()
 					if entity.isAlive and lplr.Character:GetAttribute("Transparency") and movedelay <= tick() then
 						local allowed = true
 						if GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] then
-							local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position - Vector3.new(0, 2, 0), lplr.Character.HumanoidRootPart.CFrame.lookVector * 2, raycastparameters)
+							local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position - Vector3.new(0, 2, 0), entity.character.HumanoidRootPart.CFrame.lookVector * 2, raycastparameters)
 							if newray then
 								allowed = false
 							end
 						end
 						if allowed then
-							lplr.Character.Humanoid:ChangeState(5)
+							entity.character.Humanoid:ChangeState(5)
 						end
 					end
 				end)
@@ -6398,41 +6398,41 @@ runcode(function()
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
 						if speedmode["Value"] == "CFrame" then
-							local newlongjumpvelo = longjumpvelo.Unit * math.clamp((Vector3.new(0, 0, 0) - longjumpvelo).magnitude - lplr.Character.Humanoid.WalkSpeed, 0, 100000000000)
+							local newlongjumpvelo = longjumpvelo.Unit * math.clamp((Vector3.new(0, 0, 0) - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0, 100000000000)
 							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.new(0, 0, 0)
-							local newpos = (longjump["Enabled"] and newlongjumpvelo or (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] - lplr.Character.Humanoid.WalkSpeed))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
-							local movevec = lplr.Character.Humanoid.MoveDirection.Unit * 20
+							local newpos = (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * (speedval["Value"] - entity.character.Humanoid.WalkSpeed))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
+							local movevec = entity.character.Humanoid.MoveDirection.Unit * 20
 							movevec = movevec == movevec and movevec or Vector3.new(0, 0, 0)
 							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.new(0, 0, 0))
 							local raycastparameters = RaycastParams.new()
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
-							local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
-							if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
-							if networkownerfunc and networkownerfunc(lplr.Character.HumanoidRootPart) or networkownerfunc == nil then
-								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(velocheck and movevec.X or 0, lplr.Character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
+							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
+							if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
+							if networkownerfunc and networkownerfunc(entity.character.HumanoidRootPart) or networkownerfunc == nil then
+								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(velocheck and movevec.X or 0, entity.character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
 							end
 						else
 							local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
-							if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
+							if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= entity.character.HumanoidRootPart) then
 								bodyvelo = Instance.new("BodyVelocity")
-								bodyvelo.Parent = lplr.Character.HumanoidRootPart
+								bodyvelo.Parent = entity.character.HumanoidRootPart
 								bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 							else
 								if bird then
-									lplr.Character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 32)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1)
-									if (not (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics)) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
-										local newvelo = lplr.Character.Humanoid.MoveDirection * 50
-										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
+									entity.character.Humanoid.WalkSpeed = (50 * (speedval["Value"] / 32)) * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0.005 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (bedwars["CooldownController"]:getCooldownData("guided_projectile") and 0 or 1)
+									if (not (entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Running or entity.character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics)) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
+										local newvelo = entity.character.Humanoid.MoveDirection * 50
+										entity.character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, entity.character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 									end
 								end
-								bodyvelo.MaxForce = ((lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or lplr.Character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or lplr.Character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
+								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or entity.character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
+								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
-							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
+							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 							end
 						end
 					end
@@ -6442,7 +6442,7 @@ runcode(function()
 					bodyvelo:Remove()
 				end
 				if entity.isAlive then 
-					for i,v in pairs(lplr.Character.HumanoidRootPart:GetChildren()) do 
+					for i,v in pairs(entity.character.HumanoidRootPart:GetChildren()) do 
 						if v:IsA("BodyVelocity") then 
 							v:Remove()
 						end
@@ -6566,7 +6566,7 @@ runcode(function()
 				end
 				BindToStepped("Fly", 1, function(time, delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-						local mass = (lplr.Character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
+						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						mass = mass + (flytog and -10 or 10)
 						if flytogtick <= tick() then
 							flytog = not flytog
@@ -6574,12 +6574,12 @@ runcode(function()
 						end
 						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 						local allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
-						local flypos = lplr.Character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and flyspeed["Value"] * allowed or math.clamp(flyspeed["Value"] * allowed, 1, 20))
-						local flypos2 = (lplr.Character.Humanoid.MoveDirection * math.clamp((flyspeed["Value"] * allowed) - 20, 0, 1000)) * delta
-						lplr.Character.HumanoidRootPart.Transparency = 1
-						lplr.Character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and flyspeed["Value"] * allowed or math.clamp(flyspeed["Value"] * allowed, 1, 20))
+						local flypos2 = (entity.character.Humanoid.MoveDirection * math.clamp((flyspeed["Value"] * allowed) - 20, 0, 1000)) * delta
+						entity.character.HumanoidRootPart.Transparency = 1
+						entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
 						if flymode["Value"] == "CFrame" then
-							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + flypos2
+							entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos2
 						end
 						flyvelo = flypos + Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
 					end
@@ -7441,12 +7441,12 @@ runcode(function()
 		local nearest, nearestmag = pos, 1000000
 		for i,v in pairs(scaffoldposchecklist2) do
 			local block = getblock(pos + v)
-			if block and entity.isAlive and (lplr.Character.HumanoidRootPart.Position - block.Position).magnitude <= nearestmag then
+			if block and entity.isAlive and (entity.character.HumanoidRootPart.Position - block.Position).magnitude <= nearestmag then
 				local suc = pos + v
 				local newestpos = v / 2
 				local correction =  v / 6
 				nearest = getScaffold(suc - (newestpos - correction), false)
-				nearestmag = (lplr.Character.HumanoidRootPart.Position - block.Position).magnitude
+				nearestmag = (entity.character.HumanoidRootPart.Position - block.Position).magnitude
 			end
 		end
 		return nearest
@@ -7462,21 +7462,21 @@ runcode(function()
 						if uis:IsKeyDown(Enum.KeyCode.Space) then
 							if scaffoldstopmotionval == false then
 								scaffoldstopmotionval = true
-								scaffoldstopmotionpos = lplr.Character.HumanoidRootPart.CFrame.p
+								scaffoldstopmotionpos = entity.character.HumanoidRootPart.CFrame.p
 							end
 						else
 							scaffoldstopmotionval = false
 						end
 						if getwool() or getEquipped()["Type"] == "block" then
 							if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil then
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 50, lplr.Character.HumanoidRootPart.Velocity.Z)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 50, entity.character.HumanoidRootPart.Velocity.Z)
 								if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
-									lplr.Character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, lplr.Character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
+									entity.character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, entity.character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
 								end
 							end
 						end
 						for i = 1, ScaffoldExpand["Value"] do
-							local newpos = getScaffold((lplr.Character.Head.Position + ((scaffoldstopmotionval == false and lplr.Character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (lplr.Character.HumanoidRootPart.Velocity.Y < 2))
+							local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval == false and entity.character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.Velocity.Y < 2))
 							newpos = Vector3.new(newpos.X, newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 4 or 0), newpos.Z)
 							if newpos ~= oldpos then
 								if not checkblocks(newpos) then
@@ -7497,7 +7497,7 @@ runcode(function()
 									end
 								end
 								if getwool() or getEquipped()["Type"] == "block" then
-									lplr.Character.HumanoidRootPart.Anchored = false
+									entity.character.HumanoidRootPart.Anchored = false
 									scaffoldBlock(newpos, (getEquipped()["Type"] == "block" and getEquipped()["Object"].Name))
 									oldpos = newpos
 								end
@@ -7512,7 +7512,7 @@ runcode(function()
 				oldpos = Vector3.new(0, 0, 0)
 				oldpos2 = Vector3.new(0, 0, 0)
 				if entity.isAlive then
-					lplr.Character.HumanoidRootPart.Anchored = false
+					entity.character.HumanoidRootPart.Anchored = false
 				end
 			end
 		end, 
@@ -7583,9 +7583,9 @@ runcode(function()
 					if entity.isAlive then
 							slowdownspeed = true
 							slowdownspeedval = 0.6
-							local newpos3 = getScaffold((lplr.Character.Head.Position) + Vector3.new(0, -math.floor(lplr.Character.Humanoid.HipHeight * 3), 0), false)
+							local newpos3 = getScaffold((entity.character.Head.Position) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * 3), 0), false)
 							if blockflydelay <= tick() then
-								lplr.Character.HumanoidRootPart.Anchored = false
+								entity.character.HumanoidRootPart.Anchored = false
 							end
 							if newpos3 ~= oldpos3 then
 								if getItem("ceramic") then
@@ -7593,12 +7593,12 @@ runcode(function()
 									oldpos3 = newpos3
 									if lastblock and block and lastblock.Position ~= block.Position then
 										blockflydelay = tick() + 0.3
-										local newblockpos = ((block.Position + Vector3.new(0, 3, 0)) - lplr.Character.HumanoidRootPart.CFrame.p)
+										local newblockpos = ((block.Position + Vector3.new(0, 3, 0)) - entity.character.HumanoidRootPart.CFrame.p)
 										if getblock(block.Position) and getblock(block.Position).Name == "ceramic" then
-											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(addvectortocframe(lplr.Character.HumanoidRootPart.CFrame, newblockpos), 0.5)
+											entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame:lerp(addvectortocframe(entity.character.HumanoidRootPart.CFrame, newblockpos), 0.5)
 										end
 										bedwars["breakBlock"](lastblock.Position, true, "Top", true)
-										lplr.Character.HumanoidRootPart.Anchored = true
+										entity.character.HumanoidRootPart.Anchored = true
 									end
 									lastblock = block
 								end
@@ -7610,7 +7610,7 @@ runcode(function()
 				slowdownspeedval = 0.6
 				lastblock = nil
 				if entity.isAlive then
-					lplr.Character.HumanoidRootPart.Anchored = false
+					entity.character.HumanoidRootPart.Anchored = false
 				end
 				UnbindFromRenderStep("BlockFly")
 			end
@@ -8020,7 +8020,7 @@ runcode(function()
 											displaynamestr2 = getNametagString(plr)
 											displaynamestr = removeTags(displaynamestr2)
 										end
-										local blocksaway = math.floor(((entity.isAlive and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
+										local blocksaway = math.floor(((entity.isAlive and entity.character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
 										local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and "["..blocksaway.."] " or "")..displaynamestr..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 										local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 										local modifiedText = (istarget and '[TARGET] ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '['..blocksaway..'] ' or '')..displaynamestr2..(NameTagsHealth["Enabled"] and ' '..math.floor(plr.Character.Humanoid.Health).."" or '')
@@ -8053,9 +8053,9 @@ runcode(function()
 										if bountyhunter and bountyhunter.Adornee.Parent.Name == plr.Name then
 											istarget = true
 										end
-										local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and '['..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'] ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
+										local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and '['..math.floor((entity.character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'] ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 										local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-										local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+										local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((entity.character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 										local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 										thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 										thing.Text = modifiedText
@@ -8145,7 +8145,7 @@ runcode(function()
 											displaynamestr2 = getNametagString(plr)
 											displaynamestr = removeTags(displaynamestr2)
 										end
-										local blocksaway = math.floor(((entity.isAlive and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
+										local blocksaway = math.floor(((entity.isAlive and entity.character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
 										local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and "["..blocksaway.."] " or "")..displaynamestr..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 										local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 										local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..blocksaway..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..displaynamestr2..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
@@ -8509,7 +8509,7 @@ GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton(
 				if bedwars["ClientStoreHandler"]:getState().Game.queueType:find("skywars") then
 					if matchState == 0 then
 						if entity.isAlive then
-							lplr.Character.HumanoidRootPart.CFrame = CFrame.new((workspace.MapCFrames.center.Value.p * 3) + Vector3.new(0, 30, 0))
+							entity.character.HumanoidRootPart.CFrame = CFrame.new((workspace.MapCFrames.center.Value.p * 3) + Vector3.new(0, 30, 0))
 						end
 					else
 						createwarning("SkywarsMiddle", "Game already started.", 3)
@@ -9682,7 +9682,7 @@ runcode(function()
 									task.wait()
 									local itemdrops = collectionservice:GetTagged("treeOrb")
 									for i,v in pairs(itemdrops) do
-										if entity.isAlive and AutoKit["Enabled"] and v:FindFirstChild("Spirit") and (lplr.Character.HumanoidRootPart.Position - v.Spirit.Position).magnitude <= 20 then
+										if entity.isAlive and AutoKit["Enabled"] and v:FindFirstChild("Spirit") and (entity.character.HumanoidRootPart.Position - v.Spirit.Position).magnitude <= 20 then
 											if bedwars["ClientHandler"]:Get(bedwars["TreeRemote"]):CallServer({
 												treeOrbSecret = v:GetAttribute("TreeOrbSecret")
 											}) then
@@ -9699,7 +9699,7 @@ runcode(function()
 									task.wait()
 									local itemdrops = bedwars["GrimReaperController"].soulsByPosition
 									for i,v in pairs(itemdrops) do
-										if entity.isAlive and AutoKit["Enabled"] and v.PrimaryPart and (lplr.Character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 120 and (not lplr.Character:GetAttribute("GrimReaperChannel")) then
+										if entity.isAlive and AutoKit["Enabled"] and v.PrimaryPart and (entity.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 120 and (not lplr.Character:GetAttribute("GrimReaperChannel")) then
 											bedwars["ClientHandler"]:Get(bedwars["ConsumeSoulRemote"]):CallServer({
 												secret = v:GetAttribute("GrimReaperSoulSecret")
 											})
@@ -9714,7 +9714,7 @@ runcode(function()
 									task.wait()
 									local itemdrops = collectionservice:GetTagged("BedwarsHarvestableCrop")
 									for i,v in pairs(itemdrops) do
-										if entity.isAlive and AutoKit["Enabled"] and (lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
+										if entity.isAlive and AutoKit["Enabled"] and (entity.character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
 											bedwars["ClientHandler"]:Get("BedwarsHarvestCrop"):CallServerAsync({
 												position = bedwars["BlockController"]:getBlockPosition(v.Position)
 											}):andThen(function(suc)
@@ -9750,8 +9750,8 @@ runcode(function()
 										local plr = GetNearestHumanoidToPosition(true, 50)
 										if plr then
 											bedwars["ClientHandler"]:Get(bedwars["KatanaRemote"]):SendToServer({
-												direction = CFrame.lookAt(lplr.Character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.CFrame.p),
-												origin = lplr.Character.HumanoidRootPart.Position,
+												direction = CFrame.lookAt(entity.character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.CFrame.p),
+												origin = entity.character.HumanoidRootPart.Position,
 												weapon = dao.itemType
 											})
 										end
@@ -9784,7 +9784,7 @@ runcode(function()
 						task.wait()
 						local itemdrops = collectionservice:GetTagged("juggernaut-crate")
 						for i,v in pairs(itemdrops) do
-							if entity.isAlive and GrabJuggernaut["Enabled"] and(lplr.Character.HumanoidRootPart.Position - v.Position).magnitude <= 10 and (not lplr.Character:GetAttribute("Juggernaut")) and juggernautdelay <= tick() then
+							if entity.isAlive and GrabJuggernaut["Enabled"] and(entity.character.HumanoidRootPart.Position - v.Position).magnitude <= 10 and (not lplr.Character:GetAttribute("Juggernaut")) and juggernautdelay <= tick() then
 								juggernautdelay = tick() + 0.5
 								bedwars["ClientHandler"]:Get(bedwars["JuggernautRemote"]):SendToServer({
 									blockInstance = v
@@ -9853,10 +9853,10 @@ runcode(function()
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-						local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), raycastparameters)
-						local ray2 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -lplr.Character.Humanoid.HipHeight * 2, 0), raycastparameters)
+						local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), raycastparameters)
+						local ray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -entity.character.Humanoid.HipHeight * 2, 0), raycastparameters)
 						if ray == nil and ray2 then
-							local ray3 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position + (vec * 1.8), Vector3.new(0, -1000, 0), raycastparameters)
+							local ray3 = workspace:Raycast(entity.character.HumanoidRootPart.Position + (vec * 1.8), Vector3.new(0, -1000, 0), raycastparameters)
 							if ray3 == nil then 
 								vec = Vector3.new(0, 0, 0)
 							end
@@ -9913,8 +9913,8 @@ runcode(function()
 										end
 									end
 								end
-								breadcrumbattachment.Parent = lplr.Character.HumanoidRootPart
-								breadcrumbattachment2.Parent = lplr.Character.HumanoidRootPart
+								breadcrumbattachment.Parent = entity.character.HumanoidRootPart
+								breadcrumbattachment2.Parent = entity.character.HumanoidRootPart
 								breadcrumbtrail.Parent = lplr.Character
 							end
 						end
@@ -10212,7 +10212,7 @@ runcode(function()
 						if entity.isAlive then
 							if chinahattrail == nil or chinahattrail.Parent == nil then
                                 chinahattrail = Instance.new("Part")
-                                chinahattrail.CFrame = lplr.Character.Head.CFrame * CFrame.new(0, 1.1, 0)
+                                chinahattrail.CFrame = entity.character.Head.CFrame * CFrame.new(0, 1.1, 0)
                                 chinahattrail.Size = Vector3.new(3, 0.7, 3)
                                 chinahattrail.Name = "ChinaHat"
                                 chinahattrail.Material = Enum.Material.Neon
@@ -10227,15 +10227,15 @@ runcode(function()
                                 local chinahatweld = Instance.new("WeldConstraint")
 								chinahatweld.Name = "WeldConstraint"
                                 chinahatweld.Parent = chinahattrail
-                                chinahatweld.Part0 = lplr.Character.Head
+                                chinahatweld.Part0 = entity.character.Head
                                 chinahatweld.Part1 = chinahattrail
 								chinahattrail.Parent = workspace.Camera
 							else
 								chinahattrail.Parent = workspace.Camera
-								chinahattrail.CFrame = lplr.Character.Head.CFrame * CFrame.new(0, 1.1, 0)
+								chinahattrail.CFrame = entity.character.Head.CFrame * CFrame.new(0, 1.1, 0)
 								chinahattrail.LocalTransparencyModifier = ((cam.CFrame.Position - cam.Focus.Position).Magnitude <= 0.6 and 1 or 0)
 								if chinahattrail:FindFirstChild("WeldConstraint") then
-									chinahattrail.WeldConstraint.Part0 = lplr.Character.Head
+									chinahattrail.WeldConstraint.Part0 = entity.character.Head
 								end
 							end
 						else
@@ -10293,14 +10293,14 @@ end
 				task.wait(2)
 				local obj2 = game:GetObjects("rbxassetid://6682341860")[1]
 				obj2.Parent = lplr.Character
-				obj2.Handle.CFrame = lplr.Character.Head.CFrame
+				obj2.Handle.CFrame = entity.character.Head.CFrame
 				obj2.Handle.CanCollide = false
 				obj2.Handle.Transparency = lplr.Character == oldchar and 1 or 0
 				local weld2 = Instance.new("Weld")
 				weld2.Part0 = obj2.Handle
-				weld2.Part1 = lplr.Character.Head
+				weld2.Part1 = entity.character.Head
 				weld2.C0 = obj2.Handle.HatAttachment.CFrame
-				weld2.Parent = lplr.Character.Head
+				weld2.Parent = entity.character.Head
 			end)
 		end
 	end
