@@ -4596,15 +4596,17 @@ runcode(function()
 										if entity.isAlive then
 											local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
 											local acbypassnum = (combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed))
+											local tplerp = 2 * AnticheatBypassNumbers.TPLerp
+											local tpspeed = 59 * acbypassnum
 											for i = 1, 2 do 
 												task.wait(i % 2 == 0 and 0.01 or 0.02)
 												if entity.isAlive then 
-													lplr.Character.HumanoidRootPart.CFrame =  lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((12 * (longjumpspeed["Value"] / 68)) * acbypassnum))
+													lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((tplerp * (longjumpspeed["Value"] / 68))))
 												end
 											end
 											task.wait(acbypassnum)
 											if funnytick <= tick() then break end
-											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((54 * (longjumpspeed["Value"] / 68)) * acbypassnum))
+											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + calculatepos(lplr.Character.Humanoid.MoveDirection * ((tpspeed * (longjumpspeed["Value"] / 68))))
 										end
 									until funnytick <= tick()
 								end)
