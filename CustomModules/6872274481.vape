@@ -4896,7 +4896,7 @@ runcode(function()
 		if bedwars["CheckWhitelisted"](plr.Player) then
 			return nil
 		end
-		if killauranovape["Enabled"] and client.ClientUsers[plr.Player.Name] then
+		if killauranovape["Enabled"] and clients.ClientUsers[plr.Player.Name] then
 			return nil
 		end
 		if killaurahandcheck["Enabled"] and bedwars["KatanaController"].beginChargeTime then
