@@ -1,5 +1,5 @@
 if shared.VapeExecuted then
-	local VERSION = "v4.07"..(shared.VapePrivate and " PRIVATE" or "")
+	local VERSION = "4.08"..(shared.VapePrivate and " PRIVATE" or "")
 	local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
 	local rainbowvalue = 0
 	local cam = game:GetService("Workspace").CurrentCamera
@@ -30,7 +30,7 @@ if shared.VapeExecuted then
 		["Profiles"] = {
 			["default"] = {["Keybind"] = "", ["Selected"] = true}
 		},
-		["RainbowSpeed"] = 1,
+		["RainbowSpeed"] = 0.6,
 		["Language"] = betterisfile("vape/language.dat") and readfile("vape/language.dat") or "en-us",
 		["GUIKeybind"] = "RightShift",
 		["CurrentProfile"] = "default",
@@ -126,7 +126,8 @@ if shared.VapeExecuted then
 		local gui = Instance.new("ScreenGui")
 		gui.Name = randomString()
 		gui.DisplayOrder = 999
-		gui.Parent = gethui()
+		--gui.Parent = gethui()
+		gui.Parent = game:GetService("CoreGui")
 		api["MainGui"] = gui
 	elseif game:GetService("CoreGui"):FindFirstChild('RobloxGui') then
 		api["MainGui"] = game:GetService("CoreGui").RobloxGui
@@ -269,7 +270,7 @@ if shared.VapeExecuted then
 	hoverboxshadow.ScaleType = Enum.ScaleType.Slice
 	hoverboxshadow.SliceCenter = Rect.new(10, 10, 118, 118)
 	hoverboxshadow.Parent = hoverbox
-	local vertextsize = game:GetService("TextService"):GetTextSize(VERSION, 25, Enum.Font.SourceSans, Vector2.new(99999, 99999))
+	local vertextsize = game:GetService("TextService"):GetTextSize("v"..VERSION, 25, Enum.Font.SourceSans, Vector2.new(99999, 99999))
 	local vertext = Instance.new("TextLabel")
 	vertext.Name = "Version"
 	vertext.Size = UDim2.new(0, vertextsize.X, 0, 20)
@@ -278,7 +279,7 @@ if shared.VapeExecuted then
 	vertext.Active = false
 	vertext.TextSize = 25
 	vertext.BackgroundTransparency = 1
-	vertext.Text = VERSION
+	vertext.Text = "v"..VERSION
 	vertext.TextXAlignment = Enum.TextXAlignment.Left
 	vertext.TextYAlignment = Enum.TextYAlignment.Top
 	vertext.Position = UDim2.new(1, -(vertextsize.X) - 20, 1, -25)
@@ -606,11 +607,15 @@ if shared.VapeExecuted then
 
 	api["RemoveObject"] = function(objname)
 		api["ObjectsThatCanBeSaved"][objname]["Object"]:Remove()
+		if api["ObjectsThatCanBeSaved"][objname]["Type"] == "OptionsButton" then 
+			api["ObjectsThatCanBeSaved"][objname]["ChildrenObject"].Name = "RemovedChildren"
+		end
 		api["ObjectsThatCanBeSaved"][objname] = nil
 	end
 
 	api["CreateMainWindow"] = function()
 		local windowapi = {}
+		local settingsexithovercolor = Color3.fromRGB(20, 20, 20)
 		local windowtitle = Instance.new("Frame")
 		windowtitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		windowtitle.Size = UDim2.new(0, 220, 0, 45)
@@ -649,6 +654,7 @@ if shared.VapeExecuted then
 		settingstext.Size = UDim2.new(0, 155, 0, 41)
 		settingstext.BackgroundTransparency = 1
 		settingstext.Name = "SettingsTitle"
+		settingstext.ZIndex = 2
 		settingstext.Position = UDim2.new(0, 36, 0, 0)
 		settingstext.TextXAlignment = Enum.TextXAlignment.Left
 		settingstext.Font = Enum.Font.SourceSans
@@ -657,6 +663,30 @@ if shared.VapeExecuted then
 		settingstext.Visible = false
 		settingstext.TextColor3 = Color3.fromRGB(201, 201, 201)
 		settingstext.Parent = windowtitle
+		local settingsbox = Instance.new("Frame")
+		settingsbox.Parent = settingstext
+		settingsbox.Size = UDim2.new(0, 220, 0, 45)
+		settingsbox.Position = UDim2.new(0, -36, 0, 0)
+		settingsbox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		settingsbox.Parent = settingstext
+		local settingsbox2 = Instance.new("TextLabel")
+		settingsbox2.Size = UDim2.new(1, 0, 0, 16)
+		settingsbox2.Position = UDim2.new(0, 0, 1, -16)
+		settingsbox2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		settingsbox2.BorderSizePixel = 0
+		settingsbox2.Visible = false
+		settingsbox2.TextColor3 = Color3.fromRGB(80, 80, 80)
+		settingsbox2.Font = Enum.Font.SourceSans
+		settingsbox2.TextXAlignment = Enum.TextXAlignment.Right
+		settingsbox2.Text = "Vape "..VERSION.."  "
+		settingsbox2.TextSize = 16
+		settingsbox2.Parent = windowtitle
+		local settingsbox3 = Instance.new("Frame")
+		settingsbox3.ZIndex = 1
+		settingsbox3.Size = UDim2.new(1, 0, 0, 3)
+		settingsbox3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		settingsbox3.BorderSizePixel = 0
+		settingsbox3.Parent = settingsbox2
 		local settingswheel = Instance.new("ImageButton")
 		settingswheel.Name = "SettingsWheel"
 		settingswheel.Size = UDim2.new(0, 14, 0, 14)
@@ -733,7 +763,7 @@ if shared.VapeExecuted then
 		settingsexit.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
 		settingsexit.Visible = false
 		settingsexit.Position = UDim2.new(1, -31, 0, 8)
-		settingsexit.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+		settingsexit.BackgroundColor3 = settingsexithovercolor
 		settingsexit.Parent = windowtitle
 		local settingsexitround = Instance.new("UICorner")
 		settingsexitround.CornerRadius = UDim.new(0, 16)
@@ -742,7 +772,7 @@ if shared.VapeExecuted then
 			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		end)
 		settingsexit.MouseLeave:connect(function()
-			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = settingsexithovercolor, ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 		end)
 		local children = Instance.new("Frame")
 		children.BackgroundTransparency = 1
@@ -828,6 +858,8 @@ if shared.VapeExecuted then
 		overlayschildren.Visible = true
 		local children2 = Instance.new("Frame")
 		children2.BackgroundTransparency = 1
+		children2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+		children2.BorderSizePixel = 0
 		children2.Size = UDim2.new(0, 220, 1, -4)
 		children2.Name = "SettingsChildren"
 		children2.Position = UDim2.new(0, 0, 0, 41)
@@ -842,6 +874,12 @@ if shared.VapeExecuted then
 		local windowcorner = Instance.new("UICorner")
 		windowcorner.CornerRadius = UDim.new(0, 4)
 		windowcorner.Parent = windowtitle
+		local windowcorner2 = Instance.new("UICorner")
+		windowcorner2.CornerRadius = UDim.new(0, 4)
+		windowcorner2.Parent = settingsbox
+		local windowcorner3 = Instance.new("UICorner")
+		windowcorner3.CornerRadius = UDim.new(0, 4)
+		windowcorner3.Parent = settingsbox2
 		local overlayscorner = Instance.new("UICorner")
 		overlayscorner.CornerRadius = UDim.new(0, 4)
 		overlayscorner.Parent = overlaystitle
@@ -912,6 +950,10 @@ if shared.VapeExecuted then
 			children.Visible = false
 			children2.Visible = true
 			settingstext.Text = "Settings"
+			settingsexithovercolor = Color3.fromRGB(20, 20, 20)
+			settingsexit.BackgroundColor3 = settingsexithovercolor
+			settingsbox2.Visible = true
+			settingsbox.Visible = true
 			windowbackbutton.Visible = true
 			settingstext.Visible = true
 			settingsexit.Visible = true
@@ -924,6 +966,7 @@ if shared.VapeExecuted then
 			settingswheel.Visible = true
 			children.Visible = true
 			children2.Visible = false
+			settingsbox2.Visible = false
 			windowbackbutton.Visible = false
 			settingstext.Visible = false
 			settingsexit.Visible = false
@@ -1140,6 +1183,10 @@ if shared.VapeExecuted then
 					children3.Visible = false
 					children2.Visible = true
 					settingstext.Text = "Settings"
+					settingsexithovercolor = Color3.fromRGB(20, 20, 20)
+					settingsexit.BackgroundColor3 = settingsexithovercolor
+					settingsbox2.Visible = true
+					settingsbox.Visible = true
 					windowbackbutton2.Visible = false
 					windowbackbutton.Visible = true
 				end)
@@ -1165,6 +1212,10 @@ if shared.VapeExecuted then
 					windowbackbutton.Visible = false
 					windowbackbutton2.Visible = true
 					settingstext.Text = text
+					settingsexithovercolor = Color3.fromRGB(26, 25, 26)
+					settingsexit.BackgroundColor3 = settingsexithovercolor
+					settingsbox2.Visible = false
+					settingsbox.Visible = false
 				end)
 				settingsexit.MouseButton1Click:connect(function()
 					children3.Visible = false
@@ -1505,7 +1556,7 @@ if shared.VapeExecuted then
 			bindbkg.Size = UDim2.new(0, 20, 0, 21)
 			bindbkg.Position = UDim2.new(1, -50, 0, 10)
 			bindbkg.BorderSizePixel = 0
-			bindbkg.BackgroundColor3 = Color3.fromRGB(72, 71, 72)
+			bindbkg.BackgroundColor3 = Color3.fromRGB(40, 41, 40)
 			bindbkg.BackgroundTransparency = 0
 			bindbkg.Visible = true
 			bindbkg.Parent = frame
@@ -1525,7 +1576,7 @@ if shared.VapeExecuted then
 			bindtext.Parent = bindbkg
 			bindtext.Font = Enum.Font.SourceSans
 			bindtext.Size = UDim2.new(1, 0, 1, 0)
-			bindtext.TextColor3 = Color3.fromRGB(225, 225, 225)
+			bindtext.TextColor3 = Color3.fromRGB(80, 80, 80)
 			bindtext.Visible = (api["GUIKeybind"] ~= "")
 			local bindtext2 = Instance.new("ImageLabel")
 			bindtext2.Size = UDim2.new(0, 154, 0, 41)
@@ -2276,6 +2327,64 @@ if shared.VapeExecuted then
 			end)
 			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Slider"] = {["Type"] = "SliderMain", ["Object"] = frame, ["Api"] = sliderapi}
 			return sliderapi
+		end
+
+		windowapi["CreateTextBox"] = function(argstable)
+			local textapi = {}
+			local amount2 = #children2:GetChildren()
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(0, 220, 0, 50)
+			frame.BackgroundTransparency = 1
+			frame.ClipsDescendants = true
+			frame.LayoutOrder = amount2
+			frame.Name = argstable["Name"]
+			frame.Parent = children2
+			local frametext = Instance.new("TextLabel")
+			frametext.Font = Enum.Font.SourceSans
+			frametext.TextSize = 16
+			frametext.Size = UDim2.new(1, 0, 0, 18)
+			frametext.Position = UDim2.new(0, 0, 0, -3)
+			frametext.BackgroundTransparency = 1
+			frametext.TextXAlignment = Enum.TextXAlignment.Left
+			frametext.TextYAlignment = Enum.TextYAlignment.Top
+			frametext.TextColor3 = Color3.fromRGB(180, 180, 180)
+			frametext.Text = "   "..argstable["Name"]
+			frametext.Parent = frame
+			local framebox = Instance.new("TextBox")
+			framebox.Size = UDim2.new(0, 200, 0, 29)
+			framebox.Position = UDim2.new(0, 10, 0, 16)
+			framebox.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+			framebox.Font = Enum.Font.SourceSans
+			framebox.PlaceholderText = " Click to set"
+			framebox.Text = ""
+			framebox.TextColor3 = Color3.new(1, 1, 1)
+			framebox.TextXAlignment = Enum.TextXAlignment.Left
+			framebox.TextSize = 18
+			framebox.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
+			framebox.Parent = frame
+			local frameboxcorner = Instance.new("UICorner")
+			frameboxcorner.CornerRadius = UDim.new(0, 5)
+			frameboxcorner.Parent = framebox
+			textapi["Object"] = frame
+			textapi["Value"] = ""
+			textapi["SetValue"] = function(val, entered)
+				textapi["Value"] = val
+				framebox.Text = val
+				if argstable["FocusLost"] and (not entered) then
+					argstable["FocusLost"](false)
+				end
+			end
+
+			framebox.FocusLost:connect(function(enter) 
+				textapi["SetValue"](framebox.Text, true)
+				if argstable["FocusLost"] then
+					argstable["FocusLost"](enter)
+				end
+			end)
+
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBox", ["Api"] = textapi, ["Object"] = frame}
+
+			return textapi
 		end
 
 		windowapi["CreateCircleWindow"] = function(argstablemain3)
@@ -3242,7 +3351,7 @@ if shared.VapeExecuted then
 		end)
 		local noexpand = false
 		dragGUI(windowtitle)
-		api["ObjectsThatCanBeSaved"][argstablemain2["Name"].."Window"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "Window", ["Api"] = windowapi}
+		api["ObjectsThatCanBeSaved"][argstablemain2["Name"].."Window"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "Window", ["Api"] = windowapi, ["SortOrder"] = 0}
 
 		windowapi["SetVisible"] = function(value)
 			windowtitle.Visible = value
@@ -3277,7 +3386,7 @@ if shared.VapeExecuted then
 			button.BorderSizePixel = 0
 			button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 			button.Text = ""
-			button.LayoutOrder = amount
+			--button.LayoutOrder = amount
 			button.Parent = children
 			local buttonactiveborder = Instance.new("Frame")
 			buttonactiveborder.BackgroundTransparency = 0.75
@@ -3307,39 +3416,22 @@ if shared.VapeExecuted then
 			buttontext.Position = UDim2.new(0, 12, 0, 0)
 			buttontext.Parent = button
 			local children2 = Instance.new("Frame")
-			children2.Size = UDim2.new(1, 0, 0, 476)
-			children2.BackgroundTransparency = 1
-			children2.LayoutOrder = amount
+			children2.Size = UDim2.new(1, 0, 0, 0)
+			children2.BorderSizePixel = 0
+			children2.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		--	children2.LayoutOrder = amount
 			children2.Visible = false
 			children2.Name = argstablemain["Name"].."Children"
 			children2.Parent = children
-			local sorttable1 = {}
-			for i,v in pairs(children:GetChildren()) do
-				if v:IsA("TextButton") then
-					table.insert(sorttable1, v.Name)
-				end
-			end
-			table.sort(sorttable1)
-			for i2,v2 in pairs(sorttable1) do
-				if v2:find("Button") then
-					local findstr = v2:gsub("Button", "Children")
-					local sortnum = i2
-					if children:FindFirstChild(findstr) then
-						children[findstr].LayoutOrder = sortnum + 1
-					end
-					children[v2].LayoutOrder = sortnum
-				else
-					children[v2].LayoutOrder = i2
-				end
-			end
 			local uilistlayout2 = Instance.new("UIListLayout")
 			uilistlayout2.SortOrder = Enum.SortOrder.LayoutOrder
 			uilistlayout2.Parent = children2
 			uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
-				if children2.Visible then
-					windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(85 + (uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale)), 0, 605))
-					children.CanvasSize = UDim2.new(0, 0, 0, (uilistlayout2.AbsoluteContentSize.Y + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale))
-				end
+				children2.Size = UDim2.new(0, 220, 0, uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+				--if children2.Visible then
+					--windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(85 + (uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale)), 0, 605))
+					--children.CanvasSize = UDim2.new(0, 0, 0, (uilistlayout2.AbsoluteContentSize.Y + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale))
+				--end
 			end)
 			local bindbkg = Instance.new("TextButton")
 			bindbkg.Text = ""
@@ -3465,6 +3557,8 @@ if shared.VapeExecuted then
 			end
 
 			buttonapi["ExpandToggle"] = function()
+				children2.Visible = not children2.Visible
+				--[[
 				if children2.Visible then
 					for i,v in pairs(children:GetChildren()) do
 						if v:IsA("TextButton") then
@@ -3492,7 +3586,7 @@ if shared.VapeExecuted then
 					windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(85 + (uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale)), 0, 605))
 					children.CanvasSize = UDim2.new(0, 0, 0, (uilistlayout2.AbsoluteContentSize.Y + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale))
 					currentexpandedbutton = buttonapi
-				end
+				end]]
 			end
 
 			buttonapi["CreateTextList"] = function(argstable)
@@ -4561,14 +4655,14 @@ if shared.VapeExecuted then
 				drop2.MouseButton1Click:connect(function()
 					dropframe.Visible = not dropframe.Visible
 					local num = (dropframe.Visible and 10 or 0) + (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * (dropframe.Visible and 13 or 9) * (api["MainRescale"].Scale) or 0) + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale)
-					children.CanvasSize = UDim2.new(0, 0, 0, num)
-					windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
+				--	children.CanvasSize = UDim2.new(0, 0, 0, num)
+				--	windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 				end)
 				drop1.MouseButton1Click:connect(function()
 					dropframe.Visible = not dropframe.Visible
 					local num = (dropframe.Visible and 10 or 0) + (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * (dropframe.Visible and 13 or 9) * (api["MainRescale"].Scale) or 0) + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale)
-					children.CanvasSize = UDim2.new(0, 0, 0, num)
-					windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
+				--	children.CanvasSize = UDim2.new(0, 0, 0, num)
+				--	windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 				end)
 				drop1.MouseEnter:connect(function()
 					thing.BackgroundColor3 = Color3.fromRGB(49, 48, 49)
@@ -4705,7 +4799,7 @@ if shared.VapeExecuted then
 				local slider3 = Instance.new("ImageButton")
 				slider3.AutoButtonColor = false
 				slider3.Size = UDim2.new(0, 24, 0, 16)
-				slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+				slider3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 				slider3.BorderSizePixel = 0
 				slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
 				slider3.Position = UDim2.new(0.44, -11, 0, -7)
@@ -4885,7 +4979,7 @@ if shared.VapeExecuted then
 				text2.Font = Enum.Font.SourceSans
 				text2.AutoButtonColor = false
 				text2.TextXAlignment = Enum.TextXAlignment.Right
-				text2.Text = tostring((argstable["Default"] or argstable["Min"])) .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+				text2.Text = tostring((argstable["Default"] or argstable["Min"])) .. " "..(argstable["Percent"] and "%" or " ").." "
 				text2.Size = UDim2.new(0, 40, 0, 25)
 				text2.Position = UDim2.new(1, -40, 0, 0)
 				text2.TextColor3 = Color3.fromRGB(162, 162, 162)
@@ -4931,7 +5025,7 @@ if shared.VapeExecuted then
 				local slider3 = Instance.new("ImageButton")
 				slider3.AutoButtonColor = false
 				slider3.Size = UDim2.new(0, 24, 0, 16)
-				slider3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+				slider3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 				slider3.BorderSizePixel = 0
 				slider3.Image = getcustomassetfunc("vape/assets/SliderButton1.png")
 				slider3.Position = UDim2.new(1, -11, 0, -7)
@@ -4946,13 +5040,15 @@ if shared.VapeExecuted then
 				--	val = math.clamp(val, argstable["Min"], argstable["Max"])
 					sliderapi["Value"] = val
 					slider2.Size = UDim2.new(math.clamp((val / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
-					text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+					local doublecheck = argstable["Double"] and (sliderapi["Value"] / argstable["Double"]) or sliderapi["Value"]
+					text2.Text = doublecheck .. " "..(argstable["Percent"] and "%  " or " ").." "
 					argstable["Function"](val)
 				end
 				slider3.MouseButton1Down:Connect(function()
 					local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
 					sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
-					text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+					local doublecheck = argstable["Double"] and (sliderapi["Value"] / argstable["Double"]) or sliderapi["Value"]
+					text2.Text = doublecheck .. " "..(argstable["Percent"] and "%  " or " ").." "
 					slider2.Size = UDim2.new(xscale2,0,1,0)
 					local move
 					local kill
@@ -4960,7 +5056,8 @@ if shared.VapeExecuted then
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
 							local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
 							sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
-							text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
+							local doublecheck = argstable["Double"] and (sliderapi["Value"] / argstable["Double"]) or sliderapi["Value"]
+							text2.Text = doublecheck .. " "..(argstable["Percent"] and "%  " or " ").." "
 							slider2.Size = UDim2.new(xscale2,0,1,0)
 						end
 					end)
@@ -5342,7 +5439,35 @@ if shared.VapeExecuted then
 			end)
 			button.MouseButton2Click:connect(buttonapi["ExpandToggle"])
 			button2.MouseButton1Click:connect(buttonapi["ExpandToggle"])
-			api["ObjectsThatCanBeSaved"][argstablemain["Name"].."OptionsButton"] = {["Type"] = "OptionsButton", ["Object"] = button, ["ChildrenObject"] = children2, ["Api"] = buttonapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"].."OptionsButton"] = {["Type"] = "OptionsButton", ["Object"] = button, ["ChildrenObject"] = children2, ["Api"] = buttonapi, ["SortOrder"] = 0}
+
+			local sorttable1 = {}
+			for i,v in pairs(children:GetChildren()) do
+				if v:IsA("TextButton") then
+					table.insert(sorttable1, v.Name)
+				end
+			end
+			table.sort(sorttable1)
+			for i2,v2 in pairs(sorttable1) do
+				if v2:find("Button") then 
+					local findstr = v2:gsub("Button", "Children")
+					local sortnum = i2
+					local findstr2 = v2:gsub("Button", "OptionsButton")
+					if api["ObjectsThatCanBeSaved"][findstr2] then
+						api["ObjectsThatCanBeSaved"][findstr2]["SortOrder"] = sortnum
+					end
+					children[v2].LayoutOrder = sortnum
+					if children:FindFirstChild(findstr) then
+						children[findstr].LayoutOrder = sortnum
+						if argstablemain2["Name"] == "Blatant" then 
+							print(sortnum, v2, children[findstr].LayoutOrder)
+						end
+					end
+				else
+					children[v2].LayoutOrder = i2
+				end
+			end
+			api["ObjectsThatCanBeSaved"][argstablemain2["Name"].."Window"]["SortOrder"] = #sorttable1
 
 			return buttonapi
 		end
@@ -5442,7 +5567,7 @@ if shared.VapeExecuted then
 		uilistlayout2.Parent = children2
 		uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
 			if children.Visible then
-				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
+				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 				--560
 			end
 		end)
@@ -5842,6 +5967,7 @@ if shared.VapeExecuted then
 			scrollframe.Position = UDim2.new(0, 10, 0, 0)
 			scrollframe.BackgroundTransparency = 1
 			scrollframe.ScrollBarThickness = 0
+			scrollframe.BorderSizePixel = 0
 			scrollframe.ScrollBarImageColor3 = Color3.new(0, 0, 0)
 			scrollframe.LayoutOrder = amount
 			scrollframe.Parent = scrollframebkg
@@ -5849,9 +5975,9 @@ if shared.VapeExecuted then
 			uilistlayout3.Padding = UDim.new(0, 3)
 			uilistlayout3.Parent = scrollframe
 			uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
-				scrollframe.CanvasSize = UDim2.new(0, 0, 0, uilistlayout3.AbsoluteContentSize.Y)
-				scrollframe.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105))
-				scrollframebkg.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105) + 3)
+				scrollframe.CanvasSize = UDim2.new(0, 0, 0, uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+				scrollframe.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 1, 105))
+				scrollframebkg.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 1, 105))
 			end)
 
 			textapi["Object"] = frame
@@ -5978,9 +6104,9 @@ if shared.VapeExecuted then
 			uilistlayout3.Padding = UDim.new(0, 3)
 			uilistlayout3.Parent = scrollframe
 			uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
-				scrollframe.CanvasSize = UDim2.new(0, 0, 0, uilistlayout3.AbsoluteContentSize.Y)
-				scrollframe.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105))
-				scrollframebkg.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105) + 3)
+				scrollframe.CanvasSize = UDim2.new(0, 0, 0, uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
+				scrollframe.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 1, 105))
+				scrollframebkg.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 1, 105) + 3)
 			end)
 
 			textapi["Object"] = frame

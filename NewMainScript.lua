@@ -163,6 +163,7 @@ local cam = workspace.CurrentCamera
 local selfdestructsave = coroutine.create(function()
 	while task.wait(10) do
 		if GuiLibrary and injected then
+			if not injected then return end
 			GuiLibrary["SaveSettings"]()
 		else
 			break
@@ -320,7 +321,7 @@ ProfilesTextList = Profiles.CreateTextList({
 	end, 
 	["RemoveFunction"] = function(num, obj) 
 		if obj ~= "default" and obj ~= GuiLibrary["CurrentProfile"] then 
-			delfile(customdir.."Profiles/"..obj..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt")
+			pcall(function() delfile(customdir.."Profiles/"..obj..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") end)
 			GuiLibrary["Profiles"][obj] = nil
 		else
 			table.insert(ProfilesTextList["ObjectList"], obj)
@@ -754,6 +755,26 @@ onetext2.TextYAlignment = Enum.TextYAlignment.Top
 onetext2.TextColor3 = Color3.new(0, 0, 0)
 onetext2.Font = Enum.Font.SourceSans
 onetext2.TextSize = 23
+local onecustomtext = Instance.new("TextLabel")
+onecustomtext.TextSize = 30
+onecustomtext.Font = Enum.Font.GothamBold
+onecustomtext.Size = UDim2.new(1, 0, 1, 0)
+onecustomtext.BackgroundTransparency = 1
+onecustomtext.Position = UDim2.new(0, 0, 0, 35)
+onecustomtext.TextXAlignment = Enum.TextXAlignment.Left
+onecustomtext.TextYAlignment = Enum.TextYAlignment.Top
+onecustomtext.Text = "7GrandDad's Client"
+onecustomtext.Parent = TextGui.GetCustomChildren()
+local onecustomtext2 = onecustomtext:Clone()
+onecustomtext2.ZIndex = -1
+onecustomtext2.Size = UDim2.new(1, 0, 1, 0)
+onecustomtext2.TextTransparency = 0.5
+onecustomtext2.TextColor3 = Color3.new(0, 0, 0)
+onecustomtext2.Position = UDim2.new(0, 1, 0, 1)
+onecustomtext2.Parent = onecustomtext
+onecustomtext:GetPropertyChangedSignal("TextXAlignment"):connect(function()
+	onecustomtext2.TextXAlignment = onecustomtext.TextXAlignment
+end)
 local onebackground = Instance.new("Frame")
 onebackground.BackgroundTransparency = 1
 onebackground.BorderSizePixel = 0
@@ -786,7 +807,7 @@ local function refreshbars(textlists)
 		frame.Visible = true
 		frame.ZIndex = 0
 		frame.LayoutOrder = i2
-		frame.Size = UDim2.new(0, textsize.X + 8, 0, textsize.Y - (onescale.Scale - 1))
+		frame.Size = UDim2.new(0, textsize.X + 8, 0, textsize.Y)
 		frame.Parent = onebackground
 		local colorframe = Instance.new("Frame")
 		colorframe.Size = UDim2.new(0, 2, 1, 0)
@@ -865,7 +886,9 @@ local function UpdateHud()
 				onetext2.TextXAlignment = Enum.TextXAlignment.Right
 				onetext2.Position = UDim2.new(0, 1, 0, 1)
 				onething.Position = UDim2.new(1, -142, 0, 8)
-				onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5))
+				onetext.Position = UDim2.new(1, -154, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5) + (onecustomtext.Visible and 25 or 0))
+				onecustomtext.Position = UDim2.new(0, 0, 0, onething.Visible and 35 or 0)
+				onecustomtext.TextXAlignment = Enum.TextXAlignment.Right
 				onebackgroundsort.HorizontalAlignment = Enum.HorizontalAlignment.Right
 				onebackground.Position = onetext.Position + UDim2.new(0, -60, 0, 2)
 			else
@@ -873,7 +896,8 @@ local function UpdateHud()
 				onetext2.TextXAlignment = Enum.TextXAlignment.Left
 				onetext2.Position = UDim2.new(0, 5, 0, 1)
 				onething.Position = UDim2.new(0, 2, 0, 8)
-				onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5))
+				onetext.Position = UDim2.new(0, 6, 0, (onething.Visible and (textguirenderbkg["Enabled"] and 41 or 35) or 5) + (onecustomtext.Visible and 25 or 0))
+				onecustomtext.TextXAlignment = Enum.TextXAlignment.Left
 				onebackgroundsort.HorizontalAlignment = Enum.HorizontalAlignment.Left
 				onebackground.Position = onetext.Position + UDim2.new(0, -1, 0, 2)
 			end
@@ -897,6 +921,15 @@ TextGui.CreateDropdown({
 	["Function"] = function(val)
 		sortingmethod = val
 		GuiLibrary["UpdateHudEvent"]:Fire()
+	end
+})
+textguiscaleslider = TextGui.CreateSlider({
+	["Name"] = "Scale",
+	["Min"] = 1,
+	["Max"] = 50,
+	["Default"] = 10,
+	["Function"] = function(val)
+		onescale.Scale = val / 10
 	end
 })
 TextGui.CreateToggle({
@@ -930,15 +963,26 @@ TextGuiCircleObject = TextGui.CreateCircleWindow({
 		GuiLibrary["UpdateHudEvent"]:Fire()
 	end
 })
-textguiscaleslider = TextGui.CreateSlider({
-	["Name"] = "Scale",
-	["Min"] = 1,
-	["Max"] = 50,
-	["Default"] = 10,
-	["Function"] = function(val)
-		onescale.Scale = val / 10
+local CustomText = {["Value"] = "", ["Object"] = nil}
+TextGui.CreateToggle({
+	["Name"] = "Add custom text", 
+	["Function"] = function(callback) 
+		onecustomtext.Visible = callback
+		if CustomText["Object"] then 
+			CustomText["Object"].Visible = callback
+		end
+		UpdateHud()
+	end,
+	["HoverText"] = "Renders a custom label"
+})
+CustomText = TextGui.CreateTextBox({
+	["Name"] = "Custom text",
+	["FocusLost"] = function(enter)
+		onecustomtext.Text = CustomText["Value"]
+		onecustomtext2.Text = CustomText["Value"]
 	end
 })
+CustomText["Object"].Visible = false
 
 local healthColorToPosition = {
 	[Vector3.new(Color3.fromRGB(255, 28, 0).r,
@@ -1081,14 +1125,16 @@ TargetInfo.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):connect(f
 end)
 shared.VapeTargetInfo = {
 	["UpdateInfo"] = function(tab, targetsize)
-		targetinfobkg3.Visible = (targetsize > 0) or (TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.new(0, 220, 0, 0))
-		for i,v in pairs(tab) do
-			local plr = game:GetService("Players"):FindFirstChild(i)
-			targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
-			targethealthgreen:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
-			targethealth.Text = (math.floor((v["Health"] / 5) * 10) / 10).." hp"
-			targethealthgreen.BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])
-			targetname.Text = (TargetInfoDisplayNames["Enabled"] and plr and plr.DisplayName or i)
+		if TargetInfo.GetCustomChildren().Parent then
+			targetinfobkg3.Visible = (targetsize > 0) or (TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.new(0, 220, 0, 0))
+			for i,v in pairs(tab) do
+				local plr = game:GetService("Players"):FindFirstChild(i)
+				targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
+				targethealthgreen:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
+				targethealth.Text = (math.floor((v["Health"] / 5) * 10) / 10).." hp"
+				targethealthgreen.BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])
+				targetname.Text = (TargetInfoDisplayNames["Enabled"] and plr and plr.DisplayName or i)
+			end
 		end
 	end,
 	["Object"] = TargetInfo
@@ -1145,12 +1191,12 @@ ModuleSettings.CreateToggle({
 	["Default"] = true,
 	["HoverText"] = "Temporarily disables certain features in server lobbies."
 })
+guicolorslider = GUI.CreateColorSlider("GUI Theme", function(val) GuiLibrary["Settings"]["GUIObject"]["Color"] = val GuiLibrary["UpdateUI"]() end)
 local blatantmode = GUI.CreateToggle({
 	["Name"] = "Blatant mode",
 	["Function"] = function() end,
 	["HoverText"] = "Required for certain features."
 })
-guicolorslider = GUI.CreateColorSlider("GUI Theme", function(val) GuiLibrary["Settings"]["GUIObject"]["Color"] = val GuiLibrary["UpdateUI"]() end)
 local tabsortorder = {
 	["CombatButton"] = 1,
 	["BlatantButton"] = 2,
@@ -1159,6 +1205,14 @@ local tabsortorder = {
 	["WorldButton"] = 5,
 	["FriendsButton"] = 6,
 	["ProfilesButton"] = 7
+}
+
+local tabsortorder2 = {
+	[1] = "Combat",
+	[2] = "Blatant",
+	[3] = "Render",
+	[4] = "Utility",
+	[5] = "World"
 }
 
 local tabcategorycolor = {
@@ -1174,6 +1228,7 @@ GuiLibrary["UpdateUI"] = function()
 		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		onetext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		onecustomtext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		local newtext = ""
 		local newfirst = false
 		local colorforindex = {}
@@ -1227,7 +1282,12 @@ GuiLibrary["UpdateUI"] = function()
 			end
 			if v["Type"] == "OptionsButton" then
 				if v["Api"]["Enabled"] then
-					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					local rainbowcolor2 = table.find(tabsortorder2, v["Object"].Parent.Parent.Name)
+					rainbowcolor2 = rainbowcolor2 and (rainbowcolor2 - 1) > 0 and GuiLibrary["ObjectsThatCanBeSaved"][tabsortorder2[rainbowcolor2 - 1].."Window"]["SortOrder"] or 0
+					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (rainbowcolor2 + v["SortOrder"])) or 0)
+					if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+					local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
+					v["Object"].BackgroundColor3 = newcolor
 				end
 			end
 			if v["Type"] == "ExtrasButton" then
@@ -1267,16 +1327,23 @@ GuiLibrary["UpdateUI"] = function()
 	end)
 end
 
-GeneralSettings.CreateToggle({
-	["Name"] = "Auto-load module states", 
-	["Function"] = function() end,
-	["HoverText"] = "Automatically enable saved module states upon loading profiles.\n(You can save module states by shift-clicking a profile button)"
-})
 GUISettings.CreateToggle({
 	["Name"] = "Blur Background", 
 	["Function"] = function(callback) GuiLibrary["MainBlur"].Size = (callback and 25 or 0) end,
 	["Default"] = true,
 	["HoverText"] = "Blur the background of the GUI"
+})
+local welcomemsg = GUISettings.CreateToggle({
+	["Name"] = "GUI bind indicator", 
+	["Function"] = function() end, 
+	["Default"] = true,
+	["HoverText"] = 'Displays a message indicating your GUI keybind upon injecting.\nI.E "Press RIGHTSHIFT to open GUI"'
+})
+GUISettings.CreateToggle({
+	["Name"] = "Show Tooltips", 
+	["Function"] = function(callback) GuiLibrary["ToggleTooltips"] = callback end,
+	["Default"] = true,
+	["HoverText"] = "Toggles visibility of these"
 })
 local rescale = GUISettings.CreateToggle({
 	["Name"] = "Rescale", 
@@ -1296,25 +1363,13 @@ GeneralSettings.CreateToggle({
 	["Name"] = "Enable Multi-Keybinding", 
 	["Function"] = function() end
 })
-local welcomemsg = GUISettings.CreateToggle({
-	["Name"] = "GUI bind indicator", 
-	["Function"] = function() end, 
-	["Default"] = true,
-	["HoverText"] = 'Displays a message indicating your GUI keybind upon injecting.\nI.E "Press RIGHTSHIFT to open GUI"'
-})
-GUISettings.CreateToggle({
-	["Name"] = "Show Tooltips", 
-	["Function"] = function(callback) GuiLibrary["ToggleTooltips"] = callback end,
-	["Default"] = true,
-	["HoverText"] = "Toggles visibility of these"
-})
 GeneralSettings.CreateToggle({
 	["Name"] = "Discord integration", 
 	["Function"] = function() end
 })
 local ToggleNotifications = {["Object"] = nil}
 local Notifications = {}
-Notifications = GeneralSettings.CreateToggle({
+Notifications = GUISettings.CreateToggle({
 	["Name"] = "Notifications", 
 	["Function"] = function(callback) 
 		GuiLibrary["Notifications"] = callback 
@@ -1334,7 +1389,7 @@ ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 GUISettings.CreateSlider({
 	["Name"] = "Rainbow Speed",
 	["Function"] = function(val)
-		GuiLibrary["RainbowSpeed"] = val / 10
+		GuiLibrary["RainbowSpeed"] = math.clamp((val / 10) - 0.4, 0, 1000000000)
 	end,
 	["Min"] = 1,
 	["Max"] = 100,
@@ -1388,7 +1443,7 @@ GuiLibrary["SelfDestruct"] = function()
 	GuiLibrary["MainBlur"]:Remove()
 end
 
-ModuleSettings.CreateButton2({
+GeneralSettings.CreateButton2({
 	["Name"] = "RESET CURRENT PROFILE", 
 	["Function"] = function()
 		local vapeprivate = shared.VapePrivate
@@ -1504,7 +1559,6 @@ else
 			loadstring(readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape"))()
 		end	
 	end
-
 	GuiLibrary["LoadSettings"]()
 	local profiles = {}
 	for i,v in pairs(GuiLibrary["Profiles"]) do 
