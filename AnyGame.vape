@@ -191,7 +191,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, checkvi
 				if checkvis then
 					if not vischeck(v.Character, "Head", vistab) then continue end
 				end
-                local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
+                local mag = (entity.character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= distance then -- mag check
                     table.insert(returnedplayer, v)
 					currentamount = currentamount + 1
@@ -210,7 +210,7 @@ local function GetNearestHumanoidToPosition(player, distance, checkvis, vistab)
 				if checkvis then
 					if not vischeck(v.Character, "Head", vistab) then continue end
 				end
-                local mag = (lplr.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
+                local mag = (entity.character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= closest then -- mag check
                     closest = mag
 					returnedplayer = v
@@ -1017,28 +1017,28 @@ runcode(function()
 			if callback then
 				BindToStepped("MouseTP", 1, function()
 					if entity.isAlive and ClickTPVelocity["Enabled"] and ClickTPMethod["Value"] == "SlowTP" then 
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+						entity.character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 					end
 				end)
 				if entity.isAlive then 
 					if ClickTPMethod["Value"] == "Normal" then
-						lplr.Character.HumanoidRootPart.CFrame = CFrame.new(localmouse.Hit.p)
+						entity.character.HumanoidRootPart.CFrame = CFrame.new(localmouse.Hit.p)
 						ClickTP["ToggleButton"](false)
 					else
 						spawn(function()
 							local selectedpos = localmouse.Hit.p
 							repeat
 								if entity.isAlive then 
-									local newpos = (selectedpos - lplr.Character.HumanoidRootPart.CFrame.p).Unit
-									newpos = newpos == newpos and newpos * (math.clamp((lplr.Character.HumanoidRootPart.CFrame.p - selectedpos).magnitude, 0, ClickTPAmount["Value"])) or Vector3.new(0, 0, 0)
-									lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(newpos.X, (ClickTPVertical["Enabled"] and newpos.Y or 0), newpos.Z)
-									lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-									if (lplr.Character.HumanoidRootPart.CFrame.p - selectedpos).magnitude <= 5 then 
+									local newpos = (selectedpos - entity.character.HumanoidRootPart.CFrame.p).Unit
+									newpos = newpos == newpos and newpos * (math.clamp((entity.character.HumanoidRootPart.CFrame.p - selectedpos).magnitude, 0, ClickTPAmount["Value"])) or Vector3.new(0, 0, 0)
+									entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + Vector3.new(newpos.X, (ClickTPVertical["Enabled"] and newpos.Y or 0), newpos.Z)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+									if (entity.character.HumanoidRootPart.CFrame.p - selectedpos).magnitude <= 5 then 
 										break
 									end
 								end
 								task.wait(ClickTPDelay["Value"] / 100)
-							until entity.isAlive and (lplr.Character.HumanoidRootPart.CFrame.p - selectedpos).magnitude <= 5 or (not ClickTP["Enabled"])
+							until entity.isAlive and (entity.character.HumanoidRootPart.CFrame.p - selectedpos).magnitude <= 5 or (not ClickTP["Enabled"])
 							if ClickTP["Enabled"] then 
 								ClickTP["ToggleButton"](false)
 							end
@@ -1128,7 +1128,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				if entity.isAlive then
-					flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+					flyposy = entity.character.HumanoidRootPart.CFrame.p.Y
 					flyalivecheck = true
 				end
 				flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
@@ -1178,23 +1178,23 @@ runcode(function()
 					end
 				end)
 				if flymethod["Value"] == "Jump" and entity.isAlive then
-					lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+					entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 				BindToStepped("Fly", 1, function(time, delta) 
 					if entity.isAlive then
-						lplr.Character.Humanoid.PlatformStand = flyplatformstanding["Enabled"]
+						entity.character.Humanoid.PlatformStand = flyplatformstanding["Enabled"]
 						if flyalivecheck == false then
-							flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+							flyposy = entity.character.HumanoidRootPart.CFrame.p.Y
 							flyalivecheck = true
 						end
-						local movevec = (flymovemethod["Value"] == "Manual" and (not (w or s or a or d)) and Vector3.new(0, 0, 0) or lplr.Character.Humanoid.MoveDirection).Unit
+						local movevec = (flymovemethod["Value"] == "Manual" and (not (w or s or a or d)) and Vector3.new(0, 0, 0) or entity.character.Humanoid.MoveDirection).Unit
 						movevec = movevec == movevec and movevec or Vector3.new(0, 0, 0)
 						if flymethod["Value"] == "Normal" then
 							if flyplatformstanding["Enabled"] then
-								lplr.Character.HumanoidRootPart.CFrame = CFrame.new(lplr.Character.HumanoidRootPart.CFrame.p, lplr.Character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
-								lplr.Character.HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
+								entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, entity.character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
+								entity.character.HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
 							end
-							lplr.Character.HumanoidRootPart.Velocity = (movevec * flyspeed["Value"]) + Vector3.new(0, 0.85 + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+							entity.character.HumanoidRootPart.Velocity = (movevec * flyspeed["Value"]) + Vector3.new(0, 0.85 + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
 						else
 							if flyup then
 								flyposy = flyposy + (flyverticalspeed["Value"] * delta)
@@ -1202,31 +1202,31 @@ runcode(function()
 							if flydown then
 								flyposy = flyposy - (flyverticalspeed["Value"] * delta)
 							end
-							local flypos = (movevec * (math.clamp(flyspeed["Value"] - lplr.Character.Humanoid.WalkSpeed, 0, 1000000000000) * delta))
-							flypos = Vector3.new(flypos.X, (flyposy - lplr.Character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
+							local flypos = (movevec * (math.clamp(flyspeed["Value"] - entity.character.Humanoid.WalkSpeed, 0, 1000000000000) * delta))
+							flypos = Vector3.new(flypos.X, (flyposy - entity.character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 							if flywall["Enabled"] then
 								local raycastparameters = RaycastParams.new()
 								raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
 								raycastparameters.FilterDescendantsInstances = {lplr.Character}
-								local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, flypos, raycastparameters)
-								if ray then flypos = (ray.Position - lplr.Character.HumanoidRootPart.Position) flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y end
+								local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, flypos, raycastparameters)
+								if ray then flypos = (ray.Position - entity.character.HumanoidRootPart.Position) flyposy = entity.character.HumanoidRootPart.CFrame.p.Y end
 							end
 							if flymethod["Value"] ~= "Jump" then
-								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + flypos
+								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos
 								if flyplatformstanding["Enabled"] then
-									lplr.Character.HumanoidRootPart.CFrame = CFrame.new(lplr.Character.HumanoidRootPart.CFrame.p, lplr.Character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
+									entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, entity.character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
 								end
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 							else
-								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, 0, flypos.Z)
-								if lplr.Character.HumanoidRootPart.Velocity.Y < -(lplr.Character.Humanoid.JumpPower - ((flyup and flyverticalspeed["Value"] or 0) - (flydown and flyverticalspeed["Value"] or 0))) then
-									flyjumpcf = lplr.Character.HumanoidRootPart.CFrame * CFrame.new(0, -lplr.Character.Humanoid.HipHeight, 0)
-									lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, 0, flypos.Z)
+								if entity.character.HumanoidRootPart.Velocity.Y < -(entity.character.Humanoid.JumpPower - ((flyup and flyverticalspeed["Value"] or 0) - (flydown and flyverticalspeed["Value"] or 0))) then
+									flyjumpcf = entity.character.HumanoidRootPart.CFrame * CFrame.new(0, -entity.character.Humanoid.HipHeight, 0)
+									entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 								end
 							end
 						end
 						if flyplatform then
-							flyplatform.CFrame = (flymethod["Value"] == "Jump" and flyjumpcf or lplr.Character.HumanoidRootPart.CFrame * CFrame.new(0, -lplr.Character.Humanoid.HipHeight * 2, 0))
+							flyplatform.CFrame = (flymethod["Value"] == "Jump" and flyjumpcf or entity.character.HumanoidRootPart.CFrame * CFrame.new(0, -entity.character.Humanoid.HipHeight * 2, 0))
 							flyplatform.Velocity = Vector3.new(0, 0, 0)
 							flyplatform.Parent = cam
 						end
@@ -1242,7 +1242,7 @@ runcode(function()
 				flyendpress:Disconnect()
 				UnbindFromStepped("Fly")
 				if entity.isAlive then
-					lplr.Character.Humanoid.PlatformStand = false
+					entity.character.Humanoid.PlatformStand = false
 				end
 				if flyplatform then
 					flyplatform:Remove()
@@ -1257,7 +1257,7 @@ runcode(function()
 		["List"] = {"Normal", "CFrame", "Jump"},
 		["Function"] = function(val)
 			if entity.isAlive then
-				flyposy = lplr.Character.HumanoidRootPart.CFrame.p.Y
+				flyposy = entity.character.HumanoidRootPart.CFrame.p.Y
 			end
 		end
 	})
@@ -1387,8 +1387,8 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 							local targettable = {}
 							local targetsize = 0
 							for i,v in pairs(plr) do
-								local localfacing = lplr.Character.HumanoidRootPart.CFrame.lookVector
-								local vec = (v.Character.HumanoidRootPart.Position - lplr.Character.HumanoidRootPart.Position).unit
+								local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
+								local vec = (v.Character.HumanoidRootPart.Position - entity.character.HumanoidRootPart.Position).unit
 								local angle = math.acos(localfacing:Dot(vec))
 								if angle <= math.rad(killauraangle["Value"]) then
 									killauranear = true
@@ -1462,16 +1462,16 @@ longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 		if callback then
 			if longjumpjump then
 				if entity.isAlive then
-					lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+					entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 			end
 			BindToRenderStep("LongJump", 1, function() 
 				if entity.isAlive then
-					if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-						local velo = lplr.Character.Humanoid.MoveDirection * longjumpboost["Value"]
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(velo.X, lplr.Character.HumanoidRootPart.Velocity.Y, velo.Z)
+					if (entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+						local velo = entity.character.Humanoid.MoveDirection * longjumpboost["Value"]
+						entity.character.HumanoidRootPart.Velocity = Vector3.new(velo.X, entity.character.HumanoidRootPart.Velocity.Y, velo.Z)
 					end
-					if lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+					if entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
 						longjumpfall = true
 					else
 						if longjumpfall and longjumpdisabler["Enabled"] then
@@ -1521,17 +1521,17 @@ HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 				if HighJumpTick > tick()  then
 					createwarning("LongJump", "Wait "..math.round(HighJumpTick - tick()).." before retoggling.", 1)
 				end
-				if HighJumpTick <= tick() and entity.isAlive and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
+				if HighJumpTick <= tick() and entity.isAlive and (entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Running or entity.character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) then
 					HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-					lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+					entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 				end
 				HighJump["ToggleButton"](false)
 			else
 				highjumpbound = true
 				BindToRenderStep("HighJump", 1, function()
-					if HighJumpTick <= tick() and entity.isAlive and (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and uis:IsKeyDown(Enum.KeyCode.Space) then
+					if HighJumpTick <= tick() and entity.isAlive and (entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Running or entity.character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and uis:IsKeyDown(Enum.KeyCode.Space) then
 						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+						entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 					end
 				end)
 			end
@@ -1588,24 +1588,24 @@ phase = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOption
 						for i,v in pairs(players:GetChildren()) do
 							table.insert(chars, v.Character)
 						end
-						local pos = lplr.Character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
-						local pos2 = lplr.Character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
-						local pos3 = lplr.Character.Head.CFrame.p
+						local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
+						local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
+						local pos3 = entity.character.Head.CFrame.p
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = chars
 						raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
-						local newray = workspace:Raycast(pos3, lplr.Character.Humanoid.MoveDirection, raycastparameters)
+						local newray = workspace:Raycast(pos3, entity.character.Humanoid.MoveDirection, raycastparameters)
 						if newray and (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] and holdingshift or GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] == false) then
 							local dir = newray.Normal.Z ~= 0 and "Z" or "X"
 							if newray.Instance.Size[dir] <= phaselimit["Value"] and newray.Instance.CanCollide then
-								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + (newray.Normal * (-(newray.Instance.Size[dir]) - 2))
+								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + (newray.Normal * (-(newray.Instance.Size[dir]) - 2))
 							end
 							--[[if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -6)) then
 								phasedelay = tick() + 0.075
 								phasedelay2 = tick() + 0.1
 								slowdownspeed = true
 								nocheck = true
-								lplr.Character.HumanoidRootPart.CFrame = addvectortocframe(lplr.Character.HumanoidRootPart.CFrame, (newray.Normal * -2.5))
+								entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, (newray.Normal * -2.5))
 							end]]
 						end
 					end
@@ -1654,20 +1654,20 @@ runcode(function()
 						for i,v in pairs(players:GetChildren()) do
 							table.insert(chars, v.Character)
 						end
-						local vec = (lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) and lplr.Character.Humanoid.MoveDirection.Unit * 2 or Vector3.new(0, 0, 0))
+						local vec = (entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) and entity.character.Humanoid.MoveDirection.Unit * 2 or Vector3.new(0, 0, 0))
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = chars
 						raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
-						local newray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, vec + Vector3.new(0, 0.1, 0), raycastparameters)
-						local newray2 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, vec - Vector3.new(0, lplr.Character.Humanoid.HipHeight, 0), raycastparameters)
+						local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec + Vector3.new(0, 0.1, 0), raycastparameters)
+						local newray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0), raycastparameters)
 						if spidergoinup and (not newray) and (not newray2) then
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, 0, lplr.Character.HumanoidRootPart.Velocity.Z)
+							entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
 						end
 						spidergoinup = ((newray or newray2) and true or false)
 						holdingshift = uis:IsKeyDown(Enum.KeyCode.LeftShift)
 						if (newray or newray2) and (newray or newray2).Normal.Y == 0 then
 							if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] and holdingshift == false or GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false) then
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X - (lplr.Character.HumanoidRootPart.CFrame.lookVector.X / 2), spiderspeed["Value"], lplr.Character.HumanoidRootPart.Velocity.Z - (lplr.Character.HumanoidRootPart.CFrame.lookVector.Z / 2))
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X - (entity.character.HumanoidRootPart.CFrame.lookVector.X / 2), spiderspeed["Value"], entity.character.HumanoidRootPart.Velocity.Z - (entity.character.HumanoidRootPart.CFrame.lookVector.Z / 2))
 							end
 						end
 					end
@@ -1743,41 +1743,41 @@ runcode(function()
 				BindToStepped("Speed", 1, function(time, delta)
 					if entity.isAlive then
 						local jumpcheck = killauranear and Killaura["Enabled"]
-						local movevec = (speedmovemethod["Value"] == "Manual" and (not (w or s or a or d)) and Vector3.new(0, 0, 0) or lplr.Character.Humanoid.MoveDirection).Unit
+						local movevec = (speedmovemethod["Value"] == "Manual" and (not (w or s or a or d)) and Vector3.new(0, 0, 0) or entity.character.Humanoid.MoveDirection).Unit
 						movevec = movevec == movevec and movevec or Vector3.new(0, 0, 0)
 						if speedmethod["Value"] == "Velocity" then
 							local newvelo = movevec * speedval["Value"]
-							lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, lplr.Character.HumanoidRootPart.Velocity.Y, newvelo.Z)
+							entity.character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, entity.character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 						elseif speedmethod["Value"] == "CFrame" then
-							local newpos = (movevec * (math.clamp(speedval["Value"] - lplr.Character.Humanoid.WalkSpeed, 0, 1000000000) * delta))
+							local newpos = (movevec * (math.clamp(speedval["Value"] - entity.character.Humanoid.WalkSpeed, 0, 1000000000) * delta))
 							if speedwallcheck["Enabled"] then
 								local raycastparameters = RaycastParams.new()
 								raycastparameters.FilterDescendantsInstances = {lplr.Character}
-								local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
-								if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
+								local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
+								if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
 							end
-							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+							entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
 						elseif speedmethod["Value"] == "TP" then
 							if speeddelayval <= tick() then
 								speeddelayval = tick() + (speeddelay["Value"] / 10)
-								local newpos = (movevec * (math.clamp(speedval["Value"] - lplr.Character.Humanoid.WalkSpeed, 0, 1000000000)))
+								local newpos = (movevec * (math.clamp(speedval["Value"] - entity.character.Humanoid.WalkSpeed, 0, 1000000000)))
 								if speedwallcheck["Enabled"] then
 									local raycastparameters = RaycastParams.new()
 									raycastparameters.FilterDescendantsInstances = {lplr.Character}
-									local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
-									if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
+									local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
+									if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
 								end
-								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
 							end
 						elseif speedmethod["Value"] == "WalkSpeed" then 
 							if oldwalkspeed == nil then
-								oldwalkspeed = lplr.Character.Humanoid.WalkSpeed
+								oldwalkspeed = entity.character.Humanoid.WalkSpeed
 							end
-							lplr.Character.Humanoid.WalkSpeed = speedval["Value"]
+							entity.character.Humanoid.WalkSpeed = speedval["Value"]
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] or jumpcheck) then
-							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
+							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 							end
 						end
 					end
@@ -1794,7 +1794,7 @@ runcode(function()
 					bodyvelo:Remove()
 				end
 				if oldwalkspeed then
-					lplr.Character.Humanoid.WalkSpeed = oldwalkspeed
+					entity.character.Humanoid.WalkSpeed = oldwalkspeed
 					oldwalkspeed = nil
 				end
 				UnbindFromStepped("Speed")
@@ -1807,7 +1807,7 @@ runcode(function()
 		["List"] = {"Velocity", "CFrame", "TP", "WalkSpeed"},
 		["Function"] = function(val)
 			if oldwalkspeed then
-				lplr.Character.Humanoid.WalkSpeed = oldwalkspeed
+				entity.character.Humanoid.WalkSpeed = oldwalkspeed
 				oldwalkspeed = nil
 			end
 			speeddelay["Object"].Visible = val == "TP"
@@ -1874,11 +1874,11 @@ runcode(function()
 			if callback then
 				BindToRenderStep("SpinBot", 1, function()
 					if entity.isAlive then
-						if (bodyspin == nil or bodyspin ~= nil and bodyspin.Parent ~= lplr.Character.HumanoidRootPart) then
+						if (bodyspin == nil or bodyspin ~= nil and bodyspin.Parent ~= entity.character.HumanoidRootPart) then
 							bodyspin = Instance.new("BodyAngularVelocity")
 							bodyspin.MaxTorque = Vector3.new(0, math.huge, 0)
 							bodyspin.AngularVelocity = Vector3.new(0, spinbotspeed["Value"], 0)
-							bodyspin.Parent = lplr.Character.HumanoidRootPart
+							bodyspin.Parent = entity.character.HumanoidRootPart
 						else
 							bodyspin.AngularVelocity = Vector3.new(0, spinbotspeed["Value"], 0)
 						end
@@ -2835,7 +2835,7 @@ local Health = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 			HealthText.Visible = true
 			BindToRenderStep("Health", 1, function()
 				if entity.isAlive then
-					HealthText.Text = tostring(math.round(lplr.Character.Humanoid.Health)).."❤"
+					HealthText.Text = tostring(math.round(entity.character.Humanoid.Health)).."❤"
 				end
 			end)
 		else
@@ -2913,7 +2913,7 @@ runcode(function()
 								
 								if headVis then
 									local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-									local blocksaway = math.floor(((entity.isAlive and lplr.Character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
+									local blocksaway = math.floor(((entity.isAlive and entity.character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - plr.Character.HumanoidRootPart.Position).magnitude / 3)
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 									thing.Text.Text = (NameTagsDistance["Enabled"] and entity.isAlive and '['..blocksaway..'] ' or '')..displaynamestr..(NameTagsHealth["Enabled"] and ' '..math.floor(plr.Character.Humanoid.Health).."" or '')
 									thing.Text.Size = 17 * (NameTagsScale["Value"] / 10)
@@ -2946,7 +2946,7 @@ runcode(function()
 										rawText = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name).." "..math.floor(plr.Character.Humanoid.Health)
 									end
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-									local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+									local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((entity.character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 									local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = modifiedText
@@ -2964,9 +2964,9 @@ runcode(function()
 								headPos = headPos
 								
 								if headVis then
-									local rawText = (NameTagsDistance["Enabled"] and entity.isAlive and "["..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
+									local rawText = (NameTagsDistance["Enabled"] and entity.isAlive and "["..math.floor((entity.character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
-									local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((lplr.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
+									local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((entity.character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
 									local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = modifiedText
@@ -3847,8 +3847,8 @@ runcode(function()
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {lplr.Character}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
-						local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), raycastparameters)
-						local ray2 = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -lplr.Character.Humanoid.HipHeight * 2, 0), raycastparameters)
+						local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), raycastparameters)
+						local ray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -entity.character.Humanoid.HipHeight * 2, 0), raycastparameters)
 						if ray == nil and ray2 then
 							vec = Vector3.new(0, 0, 0)
 						end
@@ -3914,11 +3914,11 @@ runcode(function()
 					local enums = Enum.HumanoidStateType:GetEnumItems()
 					table.remove(enums, table.find(enums, Enum.HumanoidStateType.None))
 					for i,v in pairs(enums) do
-						lplr.Character.Humanoid:SetStateEnabled(v, false)
+						entity.character.Humanoid:SetStateEnabled(v, false)
 					end
-					lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
+					entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
 					BindToStepped("Swim", 1, function()
-						lplr.Character.HumanoidRootPart.Velocity = ((lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) or lplr.Character.Humanoid.Jump) and lplr.Character.HumanoidRootPart.Velocity or Vector3.new(0, 0, 0))
+						entity.character.HumanoidRootPart.Velocity = ((entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) or entity.character.Humanoid.Jump) and entity.character.HumanoidRootPart.Velocity or Vector3.new(0, 0, 0))
 					end)
 				end
 			else 
@@ -3928,7 +3928,7 @@ runcode(function()
 					local enums = Enum.HumanoidStateType:GetEnumItems()
 					table.remove(enums, table.find(enums, Enum.HumanoidStateType.None))
 					for i,v in pairs(enums) do
-						lplr.Character.Humanoid:SetStateEnabled(v, true)
+						entity.character.Humanoid:SetStateEnabled(v, true)
 					end
 				end
 			end
@@ -3966,8 +3966,8 @@ runcode(function()
 								breadcrumbtrail.Enabled = true
 								breadcrumbtrail.Parent = cam
 							else
-								breadcrumbattachment.Parent = lplr.Character.HumanoidRootPart
-								breadcrumbattachment2.Parent = lplr.Character.HumanoidRootPart
+								breadcrumbattachment.Parent = entity.character.HumanoidRootPart
+								breadcrumbattachment2.Parent = entity.character.HumanoidRootPart
 								breadcrumbtrail.Parent = cam
 							end
 						end
@@ -4018,7 +4018,7 @@ end)
 							v:Remove()
 						end
 					end
-					lplr.Character.Humanoid:ApplyDescriptionClientServer(desc)
+					entity.character.Humanoid:ApplyDescriptionClientServer(desc)
 				end
 				femboyconnection = lplr.CharacterAdded:connect(function(char)
 					local hum = char:WaitForChild("Humanoid")
@@ -4040,7 +4040,7 @@ end)
 						end
 					end
 					local lplrdesc = game:GetService("Players"):GetHumanoidDescriptionFromUserId(lplr.UserId)
-					lplr.Character.Humanoid:ApplyDescriptionClientServer(lplrdesc)
+					entity.character.Humanoid:ApplyDescriptionClientServer(lplrdesc)
 				end
 			end
 		end,
