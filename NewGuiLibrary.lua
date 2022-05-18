@@ -5459,9 +5459,6 @@ if shared.VapeExecuted then
 					children[v2].LayoutOrder = sortnum
 					if children:FindFirstChild(findstr) then
 						children[findstr].LayoutOrder = sortnum
-						if argstablemain2["Name"] == "Blatant" then 
-							print(sortnum, v2, children[findstr].LayoutOrder)
-						end
 					end
 				else
 					children[v2].LayoutOrder = i2
