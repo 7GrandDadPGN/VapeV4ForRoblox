@@ -1283,7 +1283,7 @@ GuiLibrary["UpdateUI"] = function()
 			if (v["Type"] == "Button" or v["Type"] == "ButtonMain") and v["Api"]["Enabled"] then
 				buttons = buttons + 1
 				local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * tabsortorder[i]) or 0)
-				if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+				rainbowcolor = rainbowcolor % 1
 				local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
 				v["Object"].ButtonText.TextColor3 = newcolor
 				if v["Object"]:FindFirstChild("ButtonIcon") then
@@ -1297,7 +1297,7 @@ GuiLibrary["UpdateUI"] = function()
 						local rainbowcolor2 = table.find(tabsortorder2, v["Object"].Parent.Parent.Name)
 						rainbowcolor2 = rainbowcolor2 and (rainbowcolor2 - 1) > 0 and GuiLibrary["ObjectsThatCanBeSaved"][tabsortorder2[rainbowcolor2 - 1].."Window"]["SortOrder"] or 0
 						local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (rainbowcolor2 + v["SortOrder"])) or 0)
-						if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+						rainbowcolor = rainbowcolor % 1
 						newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
 					end
 					v["Object"].BackgroundColor3 = newcolor
@@ -1306,7 +1306,7 @@ GuiLibrary["UpdateUI"] = function()
 			if v["Type"] == "ExtrasButton" then
 				if v["Api"]["Enabled"] then
 					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
-					if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+					rainbowcolor = rainbowcolor % 1
 					local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
 					v["Object"].ImageColor3 = newcolor
 				end
