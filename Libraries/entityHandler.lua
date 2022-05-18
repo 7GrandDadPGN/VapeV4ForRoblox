@@ -1,7 +1,12 @@
 local entity = {
     entityList = {},
     entityConnections = {},
-    isAlive = false
+    isAlive = false,
+    character = {
+        Head = {},
+        Humanoid = {},
+        HumanoidRootPart = {}
+    }
 }
 local lplr = game:GetService("Players").LocalPlayer
 
@@ -45,6 +50,9 @@ do
                 if humrootpart and hum and head then
                     if localcheck then
                         entity.isAlive = true
+                        entity.character.Head = head
+                        entity.character.Humanoid = hum
+                        entity.character.HumanoidRootPart = humrootpart
                     else
                         table.insert(entity.entityList, {
                             Player = plr,
