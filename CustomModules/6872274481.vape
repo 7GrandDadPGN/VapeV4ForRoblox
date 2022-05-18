@@ -2589,6 +2589,7 @@ runcode(function()
 		["Name"] = "Horizontal",
 		["Min"] = 0,
 		["Max"] = 100,
+		["Percent"] = true,
 		["Function"] = function(val) 
 			if Velocity["Enabled"] then
 				bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (val / 100) 
@@ -2600,6 +2601,7 @@ runcode(function()
 		["Name"] = "Vertical",
 		["Min"] = 0,
 		["Max"] = 100,
+		["Percent"] = true,
 		["Function"] = function(val) 
 			if Velocity["Enabled"] then
 				bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (val / 100) 
@@ -4770,6 +4772,7 @@ end)
 	})
 end)]]
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
+GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 
 runcode(function()
 	local spiderspeed = {["Value"] = 0}
@@ -9390,6 +9393,7 @@ runcode(function()
 			["Function"] = function(val) 
 				AnticheatBypassNumbers.TPSpeed = val / 100
 			end,
+			["Double"] = 100,
 			["Min"] = 1,
 			["Max"] = 100,
 			["Default"] = AnticheatBypassNumbers.TPSpeed * 100,
@@ -9399,6 +9403,7 @@ runcode(function()
 			["Function"] = function(val) 
 				AnticheatBypassNumbers.TPLerp = val / 100
 			end,
+			["Double"] = 100,
 			["Min"] = 1,
 			["Max"] = 100,
 			["Default"] = AnticheatBypassNumbers.TPLerp * 100,
