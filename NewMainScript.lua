@@ -1244,7 +1244,7 @@ GuiLibrary["UpdateUI"] = function()
 		local colorforindex = {}
 		for i2,v2 in pairs(textwithoutthing:split("\n")) do
 			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * i2) or 0)
-			if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+			rainbowcolor = rainbowcolor % 1
 			local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
 			local splittext = v2:split(":")
 			splittext = #splittext > 1 and {splittext[1], " "..splittext[2]} or {v2, ""}
@@ -1325,7 +1325,7 @@ GuiLibrary["UpdateUI"] = function()
 			end
 		end
 		local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
-		if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+		rainbowcolor = rainbowcolor % 1
 		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(rainbowcolor, 0.7, 0.9) or Color3.fromRGB(199, 199, 199))
 		for i3, v3 in pairs(ProfilesTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
 		--	pcall(function()
