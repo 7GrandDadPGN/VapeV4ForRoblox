@@ -1294,9 +1294,6 @@ GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	if fakeuiconnection then
 		fakeuiconnection:Disconnect()
 	end
-	if oldbuyitem then
-		bedwars["ShopRight"]["purchase"] = oldbuyitem
-	end
 	if oldchannelfunc and oldchanneltab then
 		oldchanneltab.GetChannel = oldchannelfunc
 	end
@@ -5059,7 +5056,7 @@ runcode(function()
 					if entity.isAlive then
 						local Root = entity.character.HumanoidRootPart
 						if Root then
-							local Neck = Root.Parent.Head:FindFirstChild("Neck")
+							local Neck = entity.character.Head:FindFirstChild("Neck")
 							if Neck then
 								if orig == nil then
 									orig = Neck.C0.p
@@ -5069,7 +5066,7 @@ runcode(function()
 								end
 								if targetedplayer ~= nil and killauracframe["Enabled"] then
 									local targetPos = targetedplayer.RootPart.Position + Vector3.new(0, 2, 0)
-									local direction = (Vector3.new(targetPos.X, targetPos.Y, targetPos.Z) - Root.Parent.Head.Position).Unit
+									local direction = (Vector3.new(targetPos.X, targetPos.Y, targetPos.Z) - entity.character.Head.Position).Unit
 									local direction2 = (Vector3.new(targetPos.X, Root.Position.Y, targetPos.Z) - Root.Position).Unit
 									local lookCFrame = (CFrame.new(Vector3.new(), (Root.CFrame):VectorToObjectSpace(direction)))
 									local lookCFrame2 = (CFrame.new(Vector3.new(), (Root.CFrame):VectorToObjectSpace(direction2)))
@@ -6081,29 +6078,31 @@ runcode(function()
 					end)
 				end)
 				pcall(function()
-					for i, plr in pairs(players:GetChildren()) do
-						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
-							if AutoLeaveStaff["Enabled"] then
-								coroutine.resume(coroutine.create(function()
-									repeat task.wait() until shared.VapeFullyLoaded
-									task.wait(0.5)
-									GuiLibrary.SelfDestruct()
-								end))
-								game:GetService("StarterGui"):SetCore("SendNotification", {
-									Title = "Vape",
-									Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
-									Duration = 60,
-								})
-								break
-							else
-								local warning = createwarning("Vape", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
-								local warningtext = warning:GetChildren()[5]
-								warningtext.TextSize = 12
-								warningtext.TextLabel.TextSize = 12
-								warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+					spawn(function()
+						for i, plr in pairs(players:GetChildren()) do
+							if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
+								if AutoLeaveStaff["Enabled"] then
+									coroutine.resume(coroutine.create(function()
+										repeat task.wait() until shared.VapeFullyLoaded
+										task.wait(0.5)
+										GuiLibrary.SelfDestruct()
+									end))
+									game:GetService("StarterGui"):SetCore("SendNotification", {
+										Title = "Vape",
+										Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
+										Duration = 60,
+									})
+									break
+								else
+									local warning = createwarning("Vape", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
+									local warningtext = warning:GetChildren()[5]
+									warningtext.TextSize = 12
+									warningtext.TextLabel.TextSize = 12
+									warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+								end
 							end
 						end
-					end
+					end)
 				end)
 			else
 				autoleaveconnection:Disconnect()
