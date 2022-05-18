@@ -2773,7 +2773,7 @@ if shared.VapeExecuted then
 				api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TargetButton"] = {["Type"] = "TargetButton", ["Object"] = buttontext, ["Api"] = buttonapi}
 				return buttonapi
 			end]]
-		
+			buttonreturned["Object"] = frame
 			buttonreturned["CircleList"] = windowapi3.CreateCircleTextList({
 				Name = "CircleList",
 				Color = (argstablemain3["Type"] == "Blacklist" and Color3.fromRGB(250, 50, 56) or Color3.fromRGB(5, 134, 105))
@@ -4731,8 +4731,8 @@ if shared.VapeExecuted then
 							drop1.Text = "   "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"]).." - "..listobj
 							dropframe.Visible = false
 							local num = (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 9 or 0) + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale)
-							children.CanvasSize = UDim2.new(0, 0, 0, num)
-							windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
+							--children.CanvasSize = UDim2.new(0, 0, 0, num)
+							--windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 							argstable["Function"](listobj)
 							dropapi["UpdateList"](list)
 							api["UpdateHudEvent"]:Fire()
@@ -4832,13 +4832,13 @@ if shared.VapeExecuted then
 				sliderexpand.Size = UDim2.new(0, 15, 0, 15)
 				sliderexpand.BackgroundTransparency = 1
 				sliderexpand.Position = UDim2.new(0, game:GetService("TextService"):GetTextSize(text1.Text, text1.TextSize, text1.Font, Vector2.new(10000, 100000)).X + 3, 0, 6)
-				sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow.png")
+				sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow3.png")
 				sliderexpand.Parent = frame
 				sliderexpand.MouseEnter:connect(function()
-					sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow2.png")
+					sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow4.png")
 				end)
 				sliderexpand.MouseLeave:connect(function()
-					sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow.png")
+					sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow3.png")
 				end)
 				sliderexpand.MouseButton1Click:connect(function()
 					local val = not slidersat.Visible
@@ -5284,7 +5284,7 @@ if shared.VapeExecuted then
 				buttontext.Position = UDim2.new(0, (icon and 36 or 10), 0, 0)
 				buttontext.Parent = children2
 				local buttonarrow = Instance.new("ImageLabel")
-				buttonarrow.Size = UDim2.new(1, 0, 0, 4)
+				buttonarrow.Size = UDim2.new(1, 0, 0, 0)
 				buttonarrow.Position = UDim2.new(0, 0, 1, -4)
 				buttonarrow.BackgroundTransparency = 1
 				buttonarrow.Name = "ToggleArrow"
