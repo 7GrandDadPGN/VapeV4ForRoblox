@@ -316,7 +316,9 @@ runcode(function()
 							end
 							tab.AddMessageToChannel = function(Self2, MessageData)
 								if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
-									if bedwars["CheckPlayerType"](players[MessageData.FromSpeaker]) == "VAPE PRIVATE" then
+									local plrtype = bedwars["CheckPlayerType"](players[MessageData.FromSpeaker])
+									local hash = bedwars["HashFunction"](plr.Name..plr.UserId)
+									if plrtype == "VAPE PRIVATE" then
 										MessageData.ExtraData = {
 											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
 											Tags = {
@@ -328,7 +330,7 @@ runcode(function()
 											}
 										}
 									end
-									if bedwars["CheckPlayerType"](players[MessageData.FromSpeaker]) == "VAPE OWNER" then
+									if plrtype == "VAPE OWNER" then
 										MessageData.ExtraData = {
 											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
 											Tags = {
@@ -340,8 +342,8 @@ runcode(function()
 											}
 										}
 									end
-									if whitelisted.chattags[bedwars["HashFunction"](players[MessageData.FromSpeaker].Name..players[MessageData.FromSpeaker].UserId)] then
-										MessageData.ExtraData = whitelisted.chattags[bedwars["HashFunction"](players[MessageData.FromSpeaker].Name..players[MessageData.FromSpeaker].UserId)]
+									if whitelisted.chattags[hash] then
+										MessageData.ExtraData = whitelisted.chattags[hash]
 									end
 								end
 								return addmessage(Self2, MessageData)

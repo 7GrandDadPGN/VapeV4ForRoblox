@@ -1248,7 +1248,7 @@ runcode(function()
 											}
 										end
 										if whitelisted.chattags[hash] then
-											MessageData.ExtraData = data
+											MessageData.ExtraData = whitelisted.chattags[hash]
 										end
 									end
 									return addmessage(Self2, MessageData)
