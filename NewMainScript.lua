@@ -1,5 +1,6 @@
 repeat task.wait() until game:IsLoaded() == true
 local injected = true
+local oldrainbow = false
 local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
@@ -1291,11 +1292,14 @@ GuiLibrary["UpdateUI"] = function()
 			end
 			if v["Type"] == "OptionsButton" then
 				if v["Api"]["Enabled"] then
-					local rainbowcolor2 = table.find(tabsortorder2, v["Object"].Parent.Parent.Name)
-					rainbowcolor2 = rainbowcolor2 and (rainbowcolor2 - 1) > 0 and GuiLibrary["ObjectsThatCanBeSaved"][tabsortorder2[rainbowcolor2 - 1].."Window"]["SortOrder"] or 0
-					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (rainbowcolor2 + v["SortOrder"])) or 0)
-					if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
-					local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
+					local newcolor = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					if not oldrainbow then
+						local rainbowcolor2 = table.find(tabsortorder2, v["Object"].Parent.Parent.Name)
+						rainbowcolor2 = rainbowcolor2 and (rainbowcolor2 - 1) > 0 and GuiLibrary["ObjectsThatCanBeSaved"][tabsortorder2[rainbowcolor2 - 1].."Window"]["SortOrder"] or 0
+						local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (rainbowcolor2 + v["SortOrder"])) or 0)
+						if rainbowcolor < 0 then rainbowcolor = 1 + rainbowcolor end
+						newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
+					end
 					v["Object"].BackgroundColor3 = newcolor
 				end
 			end
@@ -1347,6 +1351,11 @@ local welcomemsg = GUISettings.CreateToggle({
 	["Function"] = function() end, 
 	["Default"] = true,
 	["HoverText"] = 'Displays a message indicating your GUI keybind upon injecting.\nI.E "Press RIGHTSHIFT to open GUI"'
+})
+GUISettings.CreateToggle({
+	["Name"] = "Old Rainbow", 
+	["Function"] = function(callback) oldrainbow = callback end,
+	["HoverText"] = "Reverts to old rainbow"
 })
 GUISettings.CreateToggle({
 	["Name"] = "Show Tooltips", 
