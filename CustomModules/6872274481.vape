@@ -81,7 +81,17 @@ local staffleave
 local tpstring
 local networkownerfunc = isnetworkowner
 local uninjectflag = false
-local vapeusers = {}
+local clients = {
+	ChatStrings1 = {
+		["KVOP25KYFPPP4"] = "vape",
+		["IO12GP56P4LGR"] = "future"
+	},
+	ChatStrings2 = {
+		["vape"] = "KVOP25KYFPPP4",
+		["future"] = "IO12GP56P4LGR"
+	},
+	ClientUsers = {}
+}
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		return readfile("vape/"..scripturl)
@@ -1224,14 +1234,14 @@ runcode(function()
 												}
 											}
 										end
-										if vapeusers[tostring(players[MessageData.FromSpeaker])] then
+										if clients.ClientUsers[tostring(players[MessageData.FromSpeaker])] then
 											MessageData.ExtraData = {
 												NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
 												Tags = {
 													table.unpack(MessageData.ExtraData.Tags),
 													{
 														TagColor = Color3.new(1, 1, 0),
-														TagText = "VAPE USER"
+														TagText = clients.ClientUsers[tostring(players[MessageData.FromSpeaker])]
 													}
 												}
 											}
@@ -1303,18 +1313,26 @@ end)
 chatconnection2 = lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFrame["Frame_MessageLogDisplay"].Scroller.ChildAdded:connect(function(text)
 	local textlabel2 = text:WaitForChild("TextLabel")
 	if bedwars["IsVapePrivateIngame"]() then
-		if textlabel2.Text:find("KVOP25KYFPPP4") or textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
-			text.Size = UDim2.new(0, 0, 0, 0)
-			text:GetPropertyChangedSignal("Size"):connect(function()
-				text.Size = UDim2.new(0, 0, 0, 0)
-			end)
-		end
-		textlabel2:GetPropertyChangedSignal("Text"):connect(function()
-			if textlabel2.Text:find("KVOP25KYFPPP4") or textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+		local args = textlabel2.Text:split(" ")
+		local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
+		if client then
+			if textlabel2.Text:find(clients.ChatStrings2[client]) or textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
 				text.Size = UDim2.new(0, 0, 0, 0)
 				text:GetPropertyChangedSignal("Size"):connect(function()
 					text.Size = UDim2.new(0, 0, 0, 0)
 				end)
+			end
+		end
+		textlabel2:GetPropertyChangedSignal("Text"):connect(function()
+			local args = textlabel2.Text:split(" ")
+			local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
+			if client then
+				if textlabel2.Text:find(clients.ChatStrings2[client]) or textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+					text.Size = UDim2.new(0, 0, 0, 0)
+					text:GetPropertyChangedSignal("Size"):connect(function()
+						text.Size = UDim2.new(0, 0, 0, 0)
+					end)
+				end
 			end
 		end)
 	end
@@ -1355,8 +1373,8 @@ local function getNametagString(plr)
 	if bedwars["CheckPlayerType"](plr) == "VAPE OWNER" then
 		nametag = '<font color="rgb(255, 80, 80)">[VAPE OWNER] '..(plr.DisplayName or plr.Name)..'</font>'
 	end
-	if vapeusers[tostring(plr)] then
-		nametag = '<font color="rgb(255, 255, 0)">[VAPE USER] '..(plr.DisplayName or plr.Name)..'</font>'
+	if clients.ClientUsers[tostring(plr)] then
+		nametag = '<font color="rgb(255, 255, 0)">['..clients.ClientUsers[tostring(plr)]..'] '..(plr.DisplayName or plr.Name)..'</font>'
 	end
 	if whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
 		local data = whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]
@@ -1441,11 +1459,11 @@ local function renderNametag(plr)
 				repeat task.wait() until isAlive(plr)
 				repeat task.wait() until plr.Character.HumanoidRootPart.Velocity ~= Vector3.new(0, 0, 0)
 				task.wait(4)
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." KVOP25KYFPPP4", "All")
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..clients.ChatStrings2.vape, "All")
 				spawn(function()
 					local connection
 					for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
-						if newbubble:IsA("TextLabel") and newbubble.Text:find("KVOP25KYFPPP4") then
+						if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
 							newbubble.Parent.Parent.Visible = false
 							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
 							if connection then
@@ -1454,7 +1472,7 @@ local function renderNametag(plr)
 						end
 					end
 					connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
-						if newbubble:IsA("TextLabel") and newbubble.Text:find("KVOP25KYFPPP4") then
+						if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
 							newbubble.Parent.Parent.Visible = false
 							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
 							if connection then
@@ -4815,7 +4833,7 @@ end)
 
 runcode(function()
 	local killauraboxes = {}
-	for i = 1, 6 do 
+	for i = 1, 10 do 
 		local killaurabox = Instance.new("BoxHandleAdornment")
 		killaurabox.Transparency = 0.5
 		killaurabox.Color3 = Color3.new(1, 0, 0)
@@ -4876,7 +4894,7 @@ runcode(function()
 		if bedwars["CheckWhitelisted"](plr.Player) then
 			return nil
 		end
-		if killauranovape["Enabled"] and vapeusers[plr.Player.Name] then
+		if killauranovape["Enabled"] and client.ClientUsers[plr.Player.Name] then
 			return nil
 		end
 		if killaurahandcheck["Enabled"] and bedwars["KatanaController"].beginChargeTime then
@@ -5770,12 +5788,14 @@ local commands = {
 
 chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
 	local plr = players:FindFirstChild(tab["FromSpeaker"])
-	if plr and bedwars["CheckPlayerType"](lplr) ~= "DEFAULT" and tab.MessageType == "Whisper" and tab.Message:find("KVOP25KYFPPP4") and alreadysaidlist[plr.Name] == nil then
+	local args = tab.Message:split(" ")
+	local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
+	if plr and bedwars["CheckPlayerType"](lplr) ~= "DEFAULT" and tab.MessageType == "Whisper" and client ~= nil and alreadysaidlist[plr.Name] == nil then
 		alreadysaidlist[plr.Name] = true
 		spawn(function()
 			local connection
 			for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
-				if newbubble:IsA("TextLabel") and newbubble.Text:find("KVOP25KYFPPP4") then
+				if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
 					newbubble.Parent.Parent.Visible = false
 					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or newbubble.Parent.Parent.Parent.Parent == nil
 					if connection then
@@ -5784,7 +5804,7 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 				end
 			end
 			connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
-				if newbubble:IsA("TextLabel") and newbubble.Text:find("KVOP25KYFPPP4") then
+				if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
 					newbubble.Parent.Parent.Visible = false
 					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or  newbubble.Parent.Parent.Parent.Parent == nil
 					if connection then
@@ -5793,10 +5813,9 @@ chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvent
 				end
 			end)
 		end)
-		createwarning("Vape", plr.Name.." is using vape!", 60)
-		vapeusers[plr.Name] = true
+		createwarning("Vape", plr.Name.." is using "..client.."!", 60)
+		clients.ClientUsers[plr.Name] = client:upper()..' USER'
 	end
-	local args = tab.Message:split(" ")
 	--priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)]
 	if priolist[bedwars["CheckPlayerType"](lplr)] > 0 and plr == lplr then
 		if tab.Message:len() >= 5 and tab.Message:sub(1, 5):lower() == ";cmds" then
@@ -6380,14 +6399,17 @@ runcode(function()
 							local newlongjumpvelo = longjumpvelo.Unit * math.clamp((Vector3.new(0, 0, 0) - longjumpvelo).magnitude - lplr.Character.Humanoid.WalkSpeed, 0, 100000000000)
 							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.new(0, 0, 0)
 							local newpos = (longjump["Enabled"] and newlongjumpvelo or (lplr.Character.Humanoid.MoveDirection * (speedval["Value"] - lplr.Character.Humanoid.WalkSpeed))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
-							if longjump["Enabled"] and newlongjumpvelo == Vector3.new(0, 0, 0) then
-								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0, lplr.Character.HumanoidRootPart.Velocity.Y, 0)
-							end
+							local movevec = lplr.Character.Humanoid.MoveDirection.Unit * 20
+							movevec = movevec == movevec and movevec or Vector3.new(0, 0, 0)
+							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.new(0, 0, 0))
 							local raycastparameters = RaycastParams.new()
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
 							local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
 							if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
-							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+							if networkownerfunc and networkownerfunc(lplr.Character.HumanoidRootPart) or networkownerfunc == nil then
+								lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(velocheck and movevec.X or 0, lplr.Character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
+							end
 						else
 							local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 							if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= lplr.Character.HumanoidRootPart) then
@@ -7992,7 +8014,7 @@ runcode(function()
 										end
 										local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
 										local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-										if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] or vapeusers[plr.Name] then
+										if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] or clients.ClientUsers[plr.Name] then
 											displaynamestr2 = getNametagString(plr)
 											displaynamestr = removeTags(displaynamestr2)
 										end
@@ -8117,7 +8139,7 @@ runcode(function()
 										end
 										local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
 										local displaynamestr2 = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-										if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] or vapeusers[plr.Name] then
+										if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] or clients.ClientUsers[plr.Name] then
 											displaynamestr2 = getNametagString(plr)
 											displaynamestr = removeTags(displaynamestr2)
 										end
