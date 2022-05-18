@@ -1210,6 +1210,7 @@ runcode(function()
 								tab.AddMessageToChannel = function(Self2, MessageData)
 									if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
 										local plrtype = bedwars["CheckPlayerType"](players[MessageData.FromSpeaker])
+										local hash = bedwars["HashFunction"](plr.Name..plr.UserId)
 										if plrtype == "VAPE PRIVATE" then
 											MessageData.ExtraData = {
 												NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
@@ -1245,6 +1246,9 @@ runcode(function()
 													}
 												}
 											}
+										end
+										if whitelisted.chattags[hash] then
+											MessageData.ExtraData = data
 										end
 									end
 									return addmessage(Self2, MessageData)
@@ -1364,6 +1368,7 @@ getfunctions()
 
 local function getNametagString(plr)
 	local nametag = ""
+	local hash = bedwars["HashFunction"](plr.Name..plr.UserId)
 	if bedwars["CheckPlayerType"](plr) == "VAPE PRIVATE" then
 		nametag = '<font color="rgb(127, 0, 255)">[VAPE PRIVATE] '..(plr.Name)..'</font>'
 	end
@@ -1373,8 +1378,8 @@ local function getNametagString(plr)
 	if clients.ClientUsers[tostring(plr)] then
 		nametag = '<font color="rgb(255, 255, 0)">['..clients.ClientUsers[tostring(plr)]..'] '..(plr.DisplayName or plr.Name)..'</font>'
 	end
-	if whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
-		local data = whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]
+	if whitelisted.chattags[hash] then
+		local data = whitelisted.chattags[hash]
 		local newnametag = ""
 		if data.Tags then
 			for i2,v2 in pairs(data.Tags) do
