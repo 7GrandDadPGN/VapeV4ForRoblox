@@ -1248,6 +1248,10 @@ runcode(function()
 											}
 										end
 										if whitelisted.chattags[hash] then
+											local newdata = {
+												NameColor = players[MessageData.FromSpeaker].Team == nil and whitelisted.chattags[hash].NameColor or players[MessageData.FromSpeaker].TeamColor.Color,
+												Tags = whitelisted.chattags[hash].Tags
+											}
 											MessageData.ExtraData = whitelisted.chattags[hash]
 										end
 									end
@@ -1313,11 +1317,17 @@ end)
 
 chatconnection2 = lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFrame["Frame_MessageLogDisplay"].Scroller.ChildAdded:connect(function(text)
 	local textlabel2 = text:WaitForChild("TextLabel")
-	if bedwars["IsVapePrivateIngame"]() then
+	if bedwars["IsVapePrivateIngame"] and bedwars["IsVapePrivateIngame"]() then
 		local args = textlabel2.Text:split(" ")
 		local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
+		if textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+			text.Size = UDim2.new(0, 0, 0, 0)
+			text:GetPropertyChangedSignal("Size"):connect(function()
+				text.Size = UDim2.new(0, 0, 0, 0)
+			end)
+		end
 		if client then
-			if textlabel2.Text:find(clients.ChatStrings2[client]) or textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+			if textlabel2.Text:find(clients.ChatStrings2[client]) then
 				text.Size = UDim2.new(0, 0, 0, 0)
 				text:GetPropertyChangedSignal("Size"):connect(function()
 					text.Size = UDim2.new(0, 0, 0, 0)
@@ -1327,8 +1337,14 @@ chatconnection2 = lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFra
 		textlabel2:GetPropertyChangedSignal("Text"):connect(function()
 			local args = textlabel2.Text:split(" ")
 			local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
+			if textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+				text.Size = UDim2.new(0, 0, 0, 0)
+				text:GetPropertyChangedSignal("Size"):connect(function()
+					text.Size = UDim2.new(0, 0, 0, 0)
+				end)
+			end
 			if client then
-				if textlabel2.Text:find(clients.ChatStrings2[client]) or textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+				if textlabel2.Text:find(clients.ChatStrings2[client]) then
 					text.Size = UDim2.new(0, 0, 0, 0)
 					text:GetPropertyChangedSignal("Size"):connect(function()
 						text.Size = UDim2.new(0, 0, 0, 0)
@@ -1383,10 +1399,10 @@ local function getNametagString(plr)
 		local newnametag = ""
 		if data.Tags then
 			for i2,v2 in pairs(data.Tags) do
-				newnametag = newnametag..'<font color="rgb('..math.floor(v2.TagColor.r)..', '..math.floor(v2.TagColor.g)..', '..math.floor(v2.TagColor.b)..')">['..v2.TagText..']</font> '
+				newnametag = newnametag..'<font color="rgb('..math.floor(v2.TagColor.r * 255)..', '..math.floor(v2.TagColor.g * 255)..', '..math.floor(v2.TagColor.b * 255)..')">['..v2.TagText..']</font> '
 			end
 		end
-		nametag = newnametag..(newnametag.NameColor and '<font color="rgb('..math.floor(newnametag.NameColor.r)..', '..math.floor(newnametag.NameColor.g)..', '..math.floor(newnametag.NameColor.b)..')">' or '')..(plr.DisplayName or plr.Name)..(newnametag.NameColor and '</font>' or '')
+		nametag = newnametag..(newnametag.NameColor and '<font color="rgb('..math.floor(newnametag.NameColor.r * 255)..', '..math.floor(newnametag.NameColor.g * 255)..', '..math.floor(newnametag.NameColor.b * 255)..')">' or '')..(plr.DisplayName or plr.Name)..(newnametag.NameColor and '</font>' or '')
 	end
 	return nametag
 end
