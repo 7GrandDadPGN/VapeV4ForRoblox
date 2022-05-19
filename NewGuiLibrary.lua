@@ -576,7 +576,7 @@ if shared.VapeExecuted then
 						--print(api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"], i, v["Enabled"])
 						local time = tick()
 						api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
-						print('Loaded '..i..' in '..tick() - time)
+						--print('Loaded '..i..' in '..tick() - time)
 					end
 					if v["Keybind"] ~= "" then
 						api["ObjectsThatCanBeSaved"][i]["Api"]["SetKeybind"](v["Keybind"])
