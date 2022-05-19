@@ -4919,7 +4919,7 @@ runcode(function()
 			killauranear = true
 			firstplayercodedone.done = true
 			if animationdelay <= tick() then
-				animationdelay = tick() + 0.3
+				animationdelay = tick() + 0.1
 				bedwars["ViewmodelController"]:playAnimation(7)
 				if plrentity ~= nil and entity.isAlive and killauraswing["Enabled"] == false then
 					plrentity:playAnimation(0)
@@ -5092,7 +5092,7 @@ runcode(function()
 				end)
                 spawn(function()
 					repeat
-						task.wait(0.05)
+						task.wait(0.03)
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
