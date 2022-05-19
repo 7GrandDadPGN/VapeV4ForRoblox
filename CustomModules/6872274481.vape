@@ -4934,7 +4934,7 @@ runcode(function()
 			return nil
 		end
 		if workspace:GetServerTimeNow() - plr.Character:GetAttribute("LastDamageTakenTime") <= 0.3 then
-		--	return nil
+			return nil
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
 		local selfpos = entity.character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (entity.character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(entity.character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
@@ -5088,7 +5088,7 @@ runcode(function()
 				end)
                 spawn(function()
 					repeat
-						task.wait(1 / killauraaps["GetRandomValue"]())
+						task.wait()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
@@ -5168,14 +5168,6 @@ runcode(function()
         ["HoverText"] = "Attack players around you\nwithout aiming at them."
     })
     killauratargetframe = Killaura.CreateTargetWindow({})
-	killauraaps = Killaura.CreateTwoSlider({
-		["Name"] = "Attacks per second",
-		["Min"] = 1,
-		["Max"] = 20,
-		["Function"] = function(val) end,
-		["Default"] = 10,
-		["Default2"] = 10
-	})
     killaurarange = Killaura.CreateSlider({
         ["Name"] = "Attack range",
         ["Min"] = 1,
