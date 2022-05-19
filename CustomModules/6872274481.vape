@@ -1541,8 +1541,7 @@ local function getPlayerColor(plr)
 end
 
 shared.vapeteamcheck = function(plr)
-	repeat task.wait() until bedwars["PlayerUtil"].getGamePlayer(lplr):getTeamId() and bedwars["PlayerUtil"].getGamePlayer(plr):getTeamId()
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and bedwars["PlayerUtil"].getGamePlayer(lplr):getTeamId() ~= bedwars["PlayerUtil"].getGamePlayer(plr):getTeamId() or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
+	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
 end
 
 local function targetCheck(plr, check)
