@@ -4877,6 +4877,7 @@ runcode(function()
 	local killauracurrentanim
 	local targettable = {}
 	local targetsize = 0
+	local animationdelay = tick()
 
 	local function newAttackEntity(plr, firstplayercodedone, attackedplayers)
 		if not entity.isAlive then
@@ -4917,15 +4918,18 @@ runcode(function()
 		if (not firstplayercodedone.done) then
 			killauranear = true
 			firstplayercodedone.done = true
-			bedwars["ViewmodelController"]:playAnimation(7)
-			if plrentity ~= nil and entity.isAlive and killauraswing["Enabled"] == false then
-				plrentity:playAnimation(0)
-			else
-				if plrentity == nil then
-					plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
+			if animationdelay <= tick() then
+				animationdelay = tick() + 0.3
+				bedwars["ViewmodelController"]:playAnimation(7)
+				if plrentity ~= nil and entity.isAlive and killauraswing["Enabled"] == false then
+					plrentity:playAnimation(0)
+				else
+					if plrentity == nil then
+						plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
+					end
 				end
+				bedwars["SoundManager"]:playSound(bedwars["SoundList"]["SWORD_SWING_"..math.random(1, 2)])
 			end
-			bedwars["SoundManager"]:playSound(bedwars["SoundList"]["SWORD_SWING_"..math.random(1, 2)])
 		end
 		if killauratarget["Enabled"] then
 			table.insert(attackedplayers, plr)
