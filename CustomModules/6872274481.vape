@@ -1252,7 +1252,7 @@ runcode(function()
 												NameColor = players[MessageData.FromSpeaker].Team == nil and whitelisted.chattags[hash].NameColor or players[MessageData.FromSpeaker].TeamColor.Color,
 												Tags = whitelisted.chattags[hash].Tags
 											}
-											MessageData.ExtraData = whitelisted.chattags[hash]
+											MessageData.ExtraData = newdata
 										end
 									end
 									return addmessage(Self2, MessageData)
