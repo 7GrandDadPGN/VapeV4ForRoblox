@@ -4614,7 +4614,7 @@ runcode(function()
 											local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
 											local acbypassnum = (combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed))
 											local tplerp = 2 * AnticheatBypassNumbers.TPLerp
-											local tpspeed = 59 * acbypassnum
+											local tpspeed = 58 * acbypassnum
 											for i = 1, 2 do 
 												task.wait(i % 2 == 0 and 0.01 or 0.02)
 												if entity.isAlive then 
@@ -4953,7 +4953,7 @@ runcode(function()
 			return nil
 		end
 		if workspace:GetServerTimeNow() - plr.Character:GetAttribute("LastDamageTakenTime") <= 0.3 then
-			return nil
+		--	return nil
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
 		local selfpos = entity.character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (entity.character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(entity.character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
@@ -6521,6 +6521,7 @@ runcode(function()
 	local flyupanddown = {["Enabled"] = true}
 	local flypop = {["Enabled"] = true}
 	local flyautodamage = {["Enabled"] = true}
+	local flyac = {["Enabled"] = false}
 	local olddeflate
 	local flyrequests = 0
 	local flytime = 60
@@ -6548,6 +6549,9 @@ runcode(function()
 
 	local flytog = false
 	local flytogtick = tick()
+	local groundtime = tick()
+	local onground = false
+	local lastonground = false
 	fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Fly",
 		["Function"] = function(callback)
@@ -6582,13 +6586,34 @@ runcode(function()
 				BindToStepped("Fly", 1, function(time, delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
-						mass = mass + (flytog and -10 or 10)
+						local allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
+						if allowed > 0 then
+							mass = mass + (flytog and -10 or 10)
+						end
 						if flytogtick <= tick() then
 							flytog = not flytog
 							flytogtick = tick() + 0.2
 						end
+						if flyac["Enabled"] and allowed <= 0 then 
+							local raycastparameters = RaycastParams.new()
+							raycastparameters.FilterDescendantsInstances = {workspace.Map.Blocks}
+							raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+							local newray = workspace:Raycast((AnticheatBypass["Enabled"] and oldchar or entity.character).HumanoidRootPart.Position, Vector3.new(0, (entity.character.Humanoid.HipHeight * -2) - 1, 0), raycastparameters)
+							onground = newray and true or false
+							if lastonground ~= onground then 
+								if not onground then 
+									groundtime = tick() + 1.4
+								end
+							end
+							if groundtime <= tick() and (not onground) then 
+								if fly["Enabled"] then 
+									fly["ToggleButton"](false)
+								end
+							end
+							lastonground = onground
+							allowed = 1
+						end
 						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
-						local allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
 						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and flyspeed["Value"] * allowed or math.clamp(flyspeed["Value"] * allowed, 1, 20))
 						local flypos2 = (entity.character.Humanoid.MoveDirection * math.clamp((flyspeed["Value"] * allowed) - 20, 0, 1000)) * delta
 						entity.character.HumanoidRootPart.Transparency = 1
@@ -6600,6 +6625,8 @@ runcode(function()
 					end
 				end)
 			else
+				onground = true
+				lastonground = true
 				flyup = false
 				flydown = false
 				flypress:Disconnect()
@@ -6647,6 +6674,11 @@ runcode(function()
 		["Function"] = function() end, 
 		["Default"] = true,
 		["HoverText"] = "Pops balloons when fly is disabled."
+	})
+	flyac = fly.CreateToggle({
+		["Name"] = "Fly Anyway",
+		["Function"] = function() end,
+		["HoverText"] = "Enables fly without balloons for 1.4s"
 	})
 end)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
