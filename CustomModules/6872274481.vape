@@ -4979,7 +4979,22 @@ runcode(function()
 
 	local orig
 	local orig2
-
+	local anims = {
+		["Normal"] = {
+			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.05},
+			{CFrame = CFrame.new(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.05}
+		},
+		["Slow"] = {
+			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.1},
+			{CFrame = CFrame.new(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.1}
+		},
+		["Vertical Spin"] = {
+			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(8), math.rad(5)), Time = 0.1},
+			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(180), math.rad(3), math.rad(13)), Time = 0.1},
+			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(90), math.rad(-5), math.rad(8)), Time = 0.1},
+			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(-0), math.rad(-0)), Time = 0.1}
+		}
+	}
     Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
         ["Name"] = "Killaura",
         ["Function"] = function(callback)
@@ -4994,59 +5009,11 @@ runcode(function()
 								end
 								if killauraplaying == false then
 									killauraplaying = true
-									if killauraanimmethod["Value"] == "Normal" or killauraanimmethod["Value"] == "Slow" then
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new((killauraanimmethod["Value"] == "Normal" and 0.1 or 0.2)), {C0 = origC0 * CFrame.new(0.7, -0.7, 0.6) * CFrame.Angles(-math.rad(65), math.rad(55), -math.rad(70))})
-											killauracurrentanim:Play()
-										end
-										task.wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new((killauraanimmethod["Value"] == "Normal" and 0.1 or 0.2)), {C0 = origC0 * CFrame.new(0.7, -0.7, 0.6) * CFrame.Angles(-math.rad(65), math.rad(105), -math.rad(70))})
-											killauracurrentanim:Play()
-										end
-										task.wait((killauraanimmethod["Value"] == "Normal" and 0.05 or 0.1))
-									elseif killauraanimmethod["Value"] == "Vertical Spin" then
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(90), math.rad(0), -math.rad(0))})
-											killauracurrentanim:Play()
-										end
-										task.wait(0.1)
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(180), math.rad(0), -math.rad(0))})
-											killauracurrentanim:Play()
-										end
-										task.wait(0.1)
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(240), math.rad(0), -math.rad(0))})
-											killauracurrentanim:Play()
-										end
-										task.wait(0.1)
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(359), math.rad(0), -math.rad(0))})
-											killauracurrentanim:Play()
-										end
-										task.wait(0.1)
-									elseif killauraanimmethod["Value"] == "Horizontal Spin" then
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(45), math.rad(90), -math.rad(70))})
-											killauracurrentanim:Play()
-										end
-										task.wait(0.1)
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(45), math.rad(180), -math.rad(70))})
-											killauracurrentanim:Play()
-										end
-										task.wait(0.1)
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(45), math.rad(240), -math.rad(70))})
-											killauracurrentanim:Play()
-										end
-										task.wait(0.1)
-										if Killaura["Enabled"] then
-											killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {C0 = origC0 * CFrame.Angles(-math.rad(45), math.rad(359), -math.rad(70))})
-											killauracurrentanim:Play()
-										end
-										task.wait(0.1)
+									for i,v in pairs(anims[killauraanimmethod["Value"]]) do 
+										if not Killaura["Enabled"] then break end
+										killauracurrentanim = game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist, TweenInfo.new(v.Time), {C0 = origC0 * v.CFrame})
+										killauracurrentanim:Play()
+										task.wait(v.Time - 0.01)
 									end
 									killauraplaying = false
 								end
@@ -5210,7 +5177,7 @@ runcode(function()
     })
     killauraanimmethod = Killaura.CreateDropdown({
         ["Name"] = "Animation", 
-        ["List"] = {"Normal", "Slow", "Vertical Spin", "Horizontal Spin"},
+        ["List"] = {"Normal", "Slow", "Vertical Spin"},
         ["Function"] = function(val) end
     })
     killauramouse = Killaura.CreateToggle({
@@ -6522,6 +6489,7 @@ runcode(function()
 	local flypop = {["Enabled"] = true}
 	local flyautodamage = {["Enabled"] = true}
 	local flyac = {["Enabled"] = false}
+	local flyacboost = {["Enabled"] = false}
 	local olddeflate
 	local flyrequests = 0
 	local flytime = 60
@@ -6534,7 +6502,7 @@ runcode(function()
 	local flycorountine
 
 	local function buyballoons()
-		if isAlive() and fly["Enabled"] then
+		if entity.isAlive and fly["Enabled"] then
 			if getItem("balloon") then
 				bedwars["BalloonController"]["inflateBalloon"]()
 			end
@@ -6583,10 +6551,16 @@ runcode(function()
 				if flyautodamage["Enabled"] and entity.isAlive and (bedwars["ClientStoreHandler"]:getState().Game.queueType and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega"))) then
 					buyballoons()
 				end
+				local allowed = entity.isAlive and ((tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)) or 0
+				if flyac["Enabled"] and allowed <= 0 and shared.damageanim then 
+					shared.damageanim()
+					bedwars["SoundManager"]:playSound(bedwars["SoundList"]["DAMAGE_"..math.random(1, 3)])
+				end
 				BindToStepped("Fly", 1, function(time, delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+						allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
 						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
-						local allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
+						local realflyspeed = flyspeed["Value"]
 						if allowed > 0 then
 							mass = mass + (flytog and -10 or 10)
 						end
@@ -6612,10 +6586,15 @@ runcode(function()
 							end
 							lastonground = onground
 							allowed = 1
+							realflyspeed = realflyspeed + 14
+						else
+							onground = true
+							lastonground = true
 						end
+						realflyspeed = realflyspeed * allowed
 						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
-						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and flyspeed["Value"] * allowed or math.clamp(flyspeed["Value"] * allowed, 1, 20))
-						local flypos2 = (entity.character.Humanoid.MoveDirection * math.clamp((flyspeed["Value"] * allowed) - 20, 0, 1000)) * delta
+						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.clamp(realflyspeed, 1, 20))
+						local flypos2 = (entity.character.Humanoid.MoveDirection * math.clamp((realflyspeed) - 20, 0, 1000)) * delta
 						entity.character.HumanoidRootPart.Transparency = 1
 						entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
 						if flymode["Value"] == "CFrame" then
@@ -6633,7 +6612,7 @@ runcode(function()
 				flyendpress:Disconnect()
 				UnbindFromStepped("Fly")
 				if flypop["Enabled"] then
-					if isAlive() and lplr.Character:GetAttribute("InflatedBalloons") then
+					if entity.isAlive and lplr.Character:GetAttribute("InflatedBalloons") then
 						for i = 1, lplr.Character:GetAttribute("InflatedBalloons") do
 							olddeflate()
 						end
@@ -6677,9 +6656,19 @@ runcode(function()
 	})
 	flyac = fly.CreateToggle({
 		["Name"] = "Fly Anyway",
-		["Function"] = function() end,
+		["Function"] = function(callback) 
+			if flyacboost["Object"] then 
+				flyacboost["Object"].Visible = callback
+			end
+		end,
 		["HoverText"] = "Enables fly without balloons for 1.4s"
 	})
+	flyacboost = fly.CreateToggle({
+		["Name"] = "Fly Boost",
+		["Function"] = function() end,
+		["HoverText"] = "boosts 1.4s fly",
+	})
+	flyacboost["Object"].Visible = false
 end)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 Hitboxes = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -10223,7 +10212,7 @@ runcode(function()
 				spawn(function()
 					repeat
 						task.wait()
-						if isAlive() and lplr.Character:GetAttribute("Health") <= 80 then
+						if entity.isAlive and lplr.Character:GetAttribute("Health") <= 80 then
 							local item = getItem("heal_splash_potion")
 							if item then
 								local raycastparameters = RaycastParams.new()
