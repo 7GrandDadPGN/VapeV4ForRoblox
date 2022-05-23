@@ -7610,7 +7610,7 @@ runcode(function()
 								end
 								local wool, woolamount = getwool()
 								local equipped = getEquipped()
-								if eqipped["Type"] == "block" then
+								if equipped["Type"] == "block" then
 									local equippeditem = getItem(equipped["Object"].Name)
 									woolamount = equippeditem and equippeditem["amount"] or 0
 								end
