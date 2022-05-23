@@ -975,7 +975,8 @@ runcode(function()
             ["ItemTable"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.item["item-meta"]).getItemMeta, 1),
 			["IsVapePrivateIngame"] = function()
 				for i,v in pairs(players:GetChildren()) do 
-					if bedwars["CheckPlayerType"](v) ~= "DEFAULT" then 
+					local plrstr = bedwars["HashFunction"](v.Name..v.UserId)
+					if bedwars["CheckPlayerType"](v) ~= "DEFAULT" or whitelisted.chattags[plrstr] then 
 						return true
 					end
 				end
@@ -1109,6 +1110,7 @@ runcode(function()
 			end  
         end)
         connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
+			currentinventory = p4.Inventory.observedInventory.inventory
             if p3.Game ~= p4.Game then
                 if p3.Game.matchState ~= p4.Game.matchState then
                     matchState = p3.Game.matchState
@@ -1117,9 +1119,6 @@ runcode(function()
                     end
                 end
             end
-			if p3.Inventory.observedInventory ~= p4.Inventory.observedInventory then 
-				currentinventory = p4.Inventory.observedInventory.inventory
-			end
             if p3.Bedwars.kit ~= p4.Bedwars.kit then
                 if matchState ~= 0 then
                     kit = p4.Bedwars.kit
@@ -2025,7 +2024,7 @@ local function findItemInTable(tab, item)
 end
 
 local function getItemInInventory(item)
-	for i,v in pairs(bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory.items) do
+	for i,v in pairs(bedwars["getInventory"](lplr)) do
 		if item and v["itemType"] == item["itemType"] then
 			return v
 		end
@@ -6049,7 +6048,7 @@ runcode(function()
 	connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(p2)
 		if AutoLeave["Enabled"] then
 			task.wait(AutoLeaveDelay["Value"] / 10)
-			if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
+			if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil and bedwars["ClientStoreHandler"]:getState().Party.leader.userId == lplr.UserId then
 				if not AutoPlayAgain["Enabled"] then
 					bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 				else
@@ -6202,7 +6201,7 @@ runcode(function()
 					end
 					if AutoLeave["Enabled"] and allowleave() and matchState ~= 2 then
 						task.wait(1 + (AutoLeaveDelay["Value"] / 10))
-						if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil then
+						if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil and bedwars["ClientStoreHandler"]:getState().Party.leader.userId == lplr.UserId then
 							if not AutoPlayAgain["Enabled"] then
 								bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 							else
