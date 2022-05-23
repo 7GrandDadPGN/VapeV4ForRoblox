@@ -57,6 +57,7 @@ local chatconnection
 local blocktable
 local RenderStepTable = {}
 local StepTable = {}
+local inventories = {}
 local Hitboxes = {["Enabled"] = false}
 local Reach = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
@@ -77,7 +78,6 @@ local oldchanneltabs = {}
 local connectionstodisconnect = {}
 local anticheatfunny = false
 local anticheatfunnyyes = false
-local staffleave
 local tpstring
 local networkownerfunc = isnetworkowner
 local uninjectflag = false
@@ -943,7 +943,7 @@ runcode(function()
 			["GamePlayerUtil"] = require(game:GetService("ReplicatedStorage").TS.player["player-util"]).GamePlayerUtil,
             ["getEntityTable"] = require(game:GetService("ReplicatedStorage").TS.entity["entity-util"]).EntityUtil,
             ["getIcon"] = function(item, showinv)
-                local itemmeta = bedwars["getItemMetadata"](item["itemType"])
+                local itemmeta = bedwars["ItemTable"][item["itemType"]]
                 if itemmeta and showinv then
                     return itemmeta.image
                 end
@@ -954,6 +954,16 @@ runcode(function()
 					if plr == lplr then 
 						return currentinventory
 					end
+					return inventories[plr]
+				end)
+                return (suc and result or {
+                    ["items"] = {},
+                    ["armor"] = {},
+                    ["hand"] = nil
+                })
+            end,
+			["getInventory2"] = function(plr)
+                local suc, result = pcall(function() 
 					return InventoryUtil.getInventory(plr) 
 				end)
                 return (suc and result or {
@@ -1125,6 +1135,9 @@ runcode(function()
 					print("kit:", p4.Bedwars.kit)
                 end
             end
+			if p3.Kit ~= p4.Kit then 
+				bedwars["BountyHunterTarget"] = p4.Kit.bountyHunterTarget
+			end
         end)
         matchState = bedwars["ClientStoreHandler"]:getState().Game.matchState
 		currentinventory = bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory
@@ -1380,9 +1393,6 @@ teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(functio
 		if tpstring then
 			queueteleport('shared.vapeoverlay = "'..tpstring..'"')
 		end
-		if staffleave then
-			queueteleport('shared.vapestaffleave = "'..staffleave..'"')
-		end
     end
 end)
 
@@ -1579,12 +1589,102 @@ local function targetCheck(plr, check)
 end
 
 do
+	local invadded = {}
+	local invremoved = {}
+	local armor1 = {}
+	local armor2 = {}
+	local armor3 = {}
+	local hand = {}
 	GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendRefresh.Event:connect(function()
 		entity.fullEntityRefresh()
 	end)
 	entity.isPlayerTargetable = function(plr)
 		return lplr ~= plr and shared.vapeteamcheck(plr) and friendCheck(plr) == nil
 	end
+	entity.characterAdded = function(plr, char, localcheck)
+        if char then
+            spawn(function()
+                local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
+                local head = char:WaitForChild("Head", 10)
+                local hum = char:WaitForChild("Humanoid", 10)
+                if humrootpart and hum and head then
+                    if localcheck then
+                        entity.isAlive = true
+                        entity.character.Head = head
+                        entity.character.Humanoid = hum
+                        entity.character.HumanoidRootPart = humrootpart
+                    else
+						local inv = char:FindFirstChild("InventoryFolder")
+						if inv then 
+							if invadded[plr] then invadded[plr]:Disconnect() end 
+							if invremoved[plr] then invremoved[plr]:Disconnect() end 
+							if armor1[plr] then armor1[plr]:Disconnect() end 
+							if armor2[plr] then armor2[plr]:Disconnect() end 
+							if armor3[plr] then armor3[plr]:Disconnect() end 
+							if hand[plr] then hand[plr]:Disconnect() end 
+							invadded[plr] = inv.Value.ChildAdded:connect(function(item)
+							--	inventories[plr] = bedwars["getInventory2"](plr)
+							end)
+							invremoved[plr] = inv.Value.ChildRemoved:connect(function(item)
+							--	inventories[plr] = bedwars["getInventory2"](plr)
+							end)
+							local armorobj1 = char:FindFirstChild("ArmorInvItem_0")
+							local armorobj2 = char:FindFirstChild("ArmorInvItem_1")
+							local armorobj3 = char:FindFirstChild("ArmorInvItem_2")
+							local handobj = char:FindFirstChild("HandInvItem")
+							if armorobj1 and armorobj2 and armorobj3 and handobj then 
+								armor1[plr] = armorobj1.Changed:connect(function() 
+									task.delay(0.2, function() 
+										inventories[plr] = bedwars["getInventory2"](plr) 
+									end)
+								end)
+								armor2[plr] = armorobj2.Changed:connect(function() 
+									task.delay(0.2, function() 
+										inventories[plr] = bedwars["getInventory2"](plr) 
+									end)
+								end)
+								armor3[plr] = armorobj3.Changed:connect(function() 
+									task.delay(0.2, function() 
+										inventories[plr] = bedwars["getInventory2"](plr) 
+									end)
+								end)
+								hand[plr] = handobj.Changed:connect(function() 
+									task.delay(0.2, function() 
+										inventories[plr] = bedwars["getInventory2"](plr) 
+									end)
+								end)
+							end
+						end
+						task.delay(1, function()
+							inventories[plr] = bedwars["getInventory2"](plr)
+						end)
+                        table.insert(entity.entityList, {
+                            Player = plr,
+                            Character = char,
+                            RootPart = humrootpart,
+                            Targetable = entity.isPlayerTargetable(plr),
+                            Team = plr.Team
+                        })
+                    end
+                    entity.entityConnections[#entity.entityConnections + 1] = char.ChildRemoved:connect(function(part)
+                        if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
+                            if localcheck then
+                                entity.isAlive = false
+                            else
+								if invadded[plr] then invadded[plr]:Disconnect() end 
+								if invremoved[plr] then invremoved[plr]:Disconnect() end 
+								if armor1[plr] then armor1[plr]:Disconnect() end 
+								if armor2[plr] then armor2[plr]:Disconnect() end 
+								if armor3[plr] then armor3[plr]:Disconnect() end 
+								if hand[plr] then hand[plr]:Disconnect() end 
+                                entity.removeEntity(plr)
+                            end
+                        end
+                    end)
+                end
+            end)
+        end
+    end
 	entity.entityAdded = function(plr, localcheck, custom)
         entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterAdded:connect(function(char)
             entity.refreshEntity(plr, localcheck)
@@ -1600,8 +1700,9 @@ do
             if localcheck then
                 entity.fullEntityRefresh()
             else
-                task.wait(0.5)
-                entity.refreshEntity(plr, localcheck)
+				task.delay(1, function()
+					entity.refreshEntity(plr, localcheck)
+				end)
             end
         end)
         if plr.Character then
@@ -5771,11 +5872,6 @@ local commands = {
 		lplr:Kick()
 	end,
 	["staffkick"] = function(args)
-		local str = ""
-		for i,v in pairs(args) do
-			str = str..v..(i > 1 and " " or "")
-		end
-		staffleave = str
 		bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 	end,
 	["togglemodule"] = function(args)
@@ -6654,7 +6750,7 @@ runcode(function()
 					flyacprogressbarframe.Visible = false
 				end
 				onground = true
-				lastonground = true
+				lastonground = false
 				flyup = false
 				flydown = false
 				flypress:Disconnect()
@@ -8136,9 +8232,8 @@ runcode(function()
 									local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
 									
 									if headVis then
-										local bountyhunter = lplr.PlayerGui:FindFirstChildWhichIsA("BillboardGui")
 										local istarget = false
-										if bountyhunter and bountyhunter.Adornee.Parent.Name == plr.Name then
+										if bedwars["BountyHunterTarget"] == plr then
 											istarget = true
 										end
 										local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
@@ -8175,9 +8270,8 @@ runcode(function()
 									thing.Font = Enum.Font.SourceSans
 									thing.TextSize = 14
 									if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
-										local bountyhunter = lplr.PlayerGui:FindFirstChildWhichIsA("BillboardGui")
 										local istarget = false
-										if bountyhunter and bountyhunter.Adornee.Parent.Name == plr.Name then
+										if bedwars["BountyHunterTarget"] == plr then
 											istarget = true
 										end
 										local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and '['..math.floor((entity.character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'] ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
@@ -8263,9 +8357,8 @@ runcode(function()
 												thing.Boots.Image = ""
 											end
 										end
-										local bountyhunter = lplr.PlayerGui:FindFirstChildWhichIsA("BillboardGui")
 										local istarget = false
-										if bountyhunter and bountyhunter.Adornee.Parent.Name == plr.Name then
+										if bedwars["BountyHunterTarget"] == plr then
 											istarget = true
 										end
 										local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
