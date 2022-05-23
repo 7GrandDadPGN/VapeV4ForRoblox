@@ -856,6 +856,11 @@ runcode(function()
         local KnitClient = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"].knit.src).KnitClient
         local Client = require(game:GetService("ReplicatedStorage").TS.remotes).default.Client
         local InventoryUtil = require(game:GetService("ReplicatedStorage").TS.inventory["inventory-util"]).InventoryUtil
+		local currentinventory = {
+			["items"] = {},
+			["armor"] = {},
+			["hand"] = nil
+		}
         OldClientGet = getmetatable(Client).Get
 		local OldClientWaitFor = getmetatable(Client).WaitFor
         getmetatable(Client).Get = function(Self, remotename)
@@ -945,7 +950,12 @@ runcode(function()
                 return ""
             end,
             ["getInventory"] = function(plr)
-                local suc, result = pcall(function() return InventoryUtil.getInventory(plr) end)
+                local suc, result = pcall(function() 
+					if plr == lplr then 
+						return currentinventory
+					end
+					return InventoryUtil.getInventory(plr) 
+				end)
                 return (suc and result or {
                     ["items"] = {},
                     ["armor"] = {},
@@ -1103,17 +1113,22 @@ runcode(function()
                 if p3.Game.matchState ~= p4.Game.matchState then
                     matchState = p3.Game.matchState
                     if matchState ~= 0 then
-                        kit = rawget(bedwars["ClientStoreHandler"]:getState()["Bedwars"], "kit")
+                        kit = p4.Bedwars.kit
                     end
                 end
             end
+			if p3.Inventory.observedInventory ~= p4.Inventory.observedInventory then 
+				currentinventory = p4.Inventory.observedInventory.inventory
+			end
             if p3.Bedwars.kit ~= p4.Bedwars.kit then
                 if matchState ~= 0 then
-                    kit = rawget(bedwars["ClientStoreHandler"]:getState()["Bedwars"], "kit")
+                    kit = p4.Bedwars.kit
+					print("kit:", p4.Bedwars.kit)
                 end
             end
         end)
         matchState = bedwars["ClientStoreHandler"]:getState().Game.matchState
+		currentinventory = bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory
         if matchState ~= 0 then
             kit = rawget(bedwars["ClientStoreHandler"]:getState()["Bedwars"], "kit")
         end
@@ -3453,7 +3468,7 @@ runcode(function()
 			if callback then
 				BindToRenderStep("ChestStealer", 1, function()
 					if ChestStealDelay <= tick() and entity.isAlive then
-						ChestStealDelay = tick() + 0.2
+						ChestStealDelay = tick() + 0.01
 						local rootpart = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
 						for i,v in pairs(game:GetService("CollectionService"):GetTagged("chest")) do
 							if rootpart and (rootpart.Position - v.Position).magnitude <= ChestStealerDistance["Value"] and v:FindFirstChild("ChestFolderValue") then
@@ -3463,7 +3478,10 @@ runcode(function()
 									bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer(chest)
 									for i3,v3 in pairs(chestitems) do
 										if v3:IsA("Accessory") then
-											bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(v.ChestFolderValue.Value, v3)
+											spawn(function()
+												bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(v.ChestFolderValue.Value, v3)
+											end)
+											task.wait(0.01)
 										end
 									end
 									bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer(nil)
@@ -4980,11 +4998,11 @@ runcode(function()
 	local orig
 	local orig2
 	local anims = {
-		["Normal"] = {
+		Normal = {
 			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.05},
 			{CFrame = CFrame.new(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.05}
 		},
-		["Slow"] = {
+		Slow = {
 			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.1},
 			{CFrame = CFrame.new(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.1}
 		},
@@ -4993,6 +5011,13 @@ runcode(function()
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(180), math.rad(3), math.rad(13)), Time = 0.1},
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(90), math.rad(-5), math.rad(8)), Time = 0.1},
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(-0), math.rad(-0)), Time = 0.1}
+		},
+		Exhibition = {
+			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.15},
+			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.05},
+			{CFrame = CFrame.new(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.1},
+			{CFrame = CFrame.new(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.05},
+			{CFrame = CFrame.new(0.63, -0.1, 1.37) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.15}
 		}
 	}
     Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -5177,7 +5202,7 @@ runcode(function()
     })
     killauraanimmethod = Killaura.CreateDropdown({
         ["Name"] = "Animation", 
-        ["List"] = {"Normal", "Slow", "Vertical Spin"},
+        ["List"] = {"Normal", "Slow", "Vertical Spin", "Exhibition"},
         ["Function"] = function(val) end
     })
     killauramouse = Killaura.CreateToggle({
@@ -5341,26 +5366,30 @@ runcode(function()
 	})
 
 	local FastPickupRange = {["Value"] = 1}
-	local FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+	local FastPickup = {["Enabled"] = false}
+	FastPickup = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "PickupRange", 
 		["Function"] = function(callback)
 			if callback then
-				BindToRenderStep("FastPickup", 1, function()
-					local itemdrops = collectionservice:GetTagged("ItemDrop")
-					for i,v in pairs(itemdrops) do
-						if entity.isAlive and (entity.character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] and (v:GetAttribute("ClientDropTime") and tick() - v:GetAttribute("ClientDropTime") > 2 or v:GetAttribute("ClientDropTime") == nil) then
-							bedwars["ClientHandler"]:Get(bedwars["PickupRemote"]):CallServerAsync({
-								itemDrop = v
-							}):andThen(function(p14)
-								if p14 then
-									bedwars["SoundManager"]:playSound(bedwars["SoundList"].PICKUP_ITEM_DROP)
-								end
-							end)
+				spawn(function()
+					repeat
+						task.wait(0.01)
+						local itemdrops = collectionservice:GetTagged("ItemDrop")
+						for i,v in pairs(itemdrops) do
+							if entity.isAlive and (entity.character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] and (v:GetAttribute("ClientDropTime") and tick() - v:GetAttribute("ClientDropTime") > 2 or v:GetAttribute("ClientDropTime") == nil) then
+								spawn(function()
+									bedwars["ClientHandler"]:Get(bedwars["PickupRemote"]):CallServerAsync({
+										itemDrop = v
+									}):andThen(function(p14)
+										if p14 then
+											bedwars["SoundManager"]:playSound(bedwars["SoundList"].PICKUP_ITEM_DROP)
+										end
+									end)
+								end)
+							end
 						end
-					end
+					until (not FastPickup["Enabled"])
 				end)
-			else
-				UnbindFromRenderStep("FastPickup")
 			end
 		end
 	})
@@ -6036,32 +6065,34 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				autoleaveconnection = players.PlayerAdded:connect(function(plr)
-					pcall(function()
-						if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
-							if AutoLeaveStaff["Enabled"] then
-								coroutine.resume(coroutine.create(function()
-									repeat task.wait() until shared.VapeFullyLoaded
-									task.wait(0.5)
-									GuiLibrary.SelfDestruct()
-								end))
-								game:GetService("StarterGui"):SetCore("SendNotification", {
-									Title = "Vape",
-									Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
-									Duration = 60,
-								})
-								return
-							else
-								local warning = createwarning("Vape", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
-								local warningtext = warning:GetChildren()[5]
-								warningtext.TextSize = 12
-								warningtext.TextLabel.TextSize = 12
-								warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+					spawn(function()
+						pcall(function()
+							if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
+								if AutoLeaveStaff["Enabled"] then
+									coroutine.resume(coroutine.create(function()
+										repeat task.wait() until shared.VapeFullyLoaded
+										task.wait(0.5)
+										GuiLibrary.SelfDestruct()
+									end))
+									game:GetService("StarterGui"):SetCore("SendNotification", {
+										Title = "Vape",
+										Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
+										Duration = 60,
+									})
+									return
+								else
+									local warning = createwarning("Vape", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
+									local warningtext = warning:GetChildren()[5]
+									warningtext.TextSize = 12
+									warningtext.TextLabel.TextSize = 12
+									warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+								end
 							end
-						end
+						end)
 					end)
 				end)
-				pcall(function()
-					spawn(function()
+				spawn(function()
+					pcall(function()
 						for i, plr in pairs(players:GetChildren()) do
 							if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
 								if AutoLeaveStaff["Enabled"] then
@@ -6409,7 +6440,7 @@ runcode(function()
 									end
 								end
 								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or entity.character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
+								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
@@ -6490,6 +6521,9 @@ runcode(function()
 	local flyautodamage = {["Enabled"] = true}
 	local flyac = {["Enabled"] = false}
 	local flyacboost = {["Enabled"] = false}
+	local flyacrisky = {["Enabled"] = false}
+	local flyacprogressbar = {["Enabled"] = false}
+	local flyacprogressbarframe
 	local olddeflate
 	local flyrequests = 0
 	local flytime = 60
@@ -6548,17 +6582,23 @@ runcode(function()
 						flydown = false
 					end
 				end)
+				local balloons = false
 				if flyautodamage["Enabled"] and entity.isAlive and (bedwars["ClientStoreHandler"]:getState().Game.queueType and (not bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega"))) then
 					buyballoons()
+					balloons = true
 				end
-				local allowed = entity.isAlive and ((tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)) or 0
-				if flyac["Enabled"] and allowed <= 0 and shared.damageanim then 
+				local allowed = entity.isAlive and ((tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)) or 0
+				if flyac["Enabled"] and (allowed <= 0 or (not balloons)) and shared.damageanim then 
 					shared.damageanim()
 					bedwars["SoundManager"]:playSound(bedwars["SoundList"]["DAMAGE_"..math.random(1, 3)])
 				end
+				if flyacprogressbarframe then 
+					flyacprogressbarframe.Visible = true
+					flyacprogressbarframe.Frame:TweenSize(UDim2.new(1, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0, true)
+				end
 				BindToStepped("Fly", 1, function(time, delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-						allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.4 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
+						allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
 						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						local realflyspeed = flyspeed["Value"]
 						if allowed > 0 then
@@ -6576,7 +6616,14 @@ runcode(function()
 							onground = newray and true or false
 							if lastonground ~= onground then 
 								if not onground then 
-									groundtime = tick() + 1.4
+									groundtime = tick() + (flyacrisky["Enabled"] and 2 or 1.4)
+									if flyacprogressbarframe then 
+										flyacprogressbarframe.Frame:TweenSize(UDim2.new(0, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, groundtime - tick(), true)
+									end
+								else
+									if flyacprogressbarframe then 
+										flyacprogressbarframe.Frame:TweenSize(UDim2.new(1, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0, true)
+									end
 								end
 							end
 							if groundtime <= tick() and (not onground) then 
@@ -6604,6 +6651,9 @@ runcode(function()
 					end
 				end)
 			else
+				if flyacprogressbarframe then 
+					flyacprogressbarframe.Visible = false
+				end
 				onground = true
 				lastonground = true
 				flyup = false
@@ -6660,6 +6710,12 @@ runcode(function()
 			if flyacboost["Object"] then 
 				flyacboost["Object"].Visible = callback
 			end
+			if flyacrisky["Object"] then 
+				flyacrisky["Object"].Visible = callback
+			end
+			if flyacprogressbar["Object"] then 
+				flyacprogressbar["Object"].Visible = callback
+			end
 		end,
 		["HoverText"] = "Enables fly without balloons for 1.4s"
 	})
@@ -6669,6 +6725,40 @@ runcode(function()
 		["HoverText"] = "boosts 1.4s fly",
 	})
 	flyacboost["Object"].Visible = false
+	flyacrisky = fly.CreateToggle({
+		["Name"] = "Risky Fly",
+		["Function"] = function() end,
+		["HoverText"] = "fly for 2s but will flag instantly after 2s"
+	})
+	flyacrisky["Object"].Visible = false
+	flyacprogressbar = fly.CreateToggle({
+		["Name"] = "Progress Bar",
+		["Function"] = function(callback) 
+			if callback then 
+				flyacprogressbarframe = Instance.new("Frame")
+				flyacprogressbarframe.AnchorPoint = Vector2.new(0.5, 0)
+				flyacprogressbarframe.Position = UDim2.new(0.5, 0, 1, -200)
+				flyacprogressbarframe.Size = UDim2.new(0.2, 0, 0, 20)
+				flyacprogressbarframe.BackgroundTransparency = 0.5
+				flyacprogressbarframe.BorderSizePixel = 0
+				flyacprogressbarframe.BackgroundColor3 = Color3.new(0, 0, 0)
+				flyacprogressbarframe.Visible = fly["Enabled"]
+				flyacprogressbarframe.Parent = GuiLibrary["MainGui"]
+				local flyacprogressbarframe2 = flyacprogressbarframe:Clone()
+				flyacprogressbarframe2.AnchorPoint = Vector2.new(0, 0)
+				flyacprogressbarframe2.Position = UDim2.new(0, 0, 0, 0)
+				flyacprogressbarframe2.Size = UDim2.new(1, 0, 0, 20)
+				flyacprogressbarframe2.BackgroundTransparency = 0
+				flyacprogressbarframe2.Visible = true
+				flyacprogressbarframe2.BackgroundColor3 = Color3.new(0.9, 0.9, 0.9)
+				flyacprogressbarframe2.Parent = flyacprogressbarframe
+			else
+
+			end
+		end,
+		["HoverText"] = "show amount of fly time"
+	})
+	flyacprogressbar["Object"].Visible = false
 end)
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 Hitboxes = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -7519,8 +7609,10 @@ runcode(function()
 									newpos = getnearestblock(newpos)
 								end
 								local wool, woolamount = getwool()
-								if getEquipped()["Type"] == "block" then
-									woolamount = getItem(getEquipped()["Object"].Name)["amount"]
+								local equipped = getEquipped()
+								if eqipped["Type"] == "block" then
+									local equippeditem = getItem(equipped["Object"].Name)
+									woolamount = equippeditem and equippeditem["amount"] or 0
 								end
 								scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
 								if woolamount then
@@ -8137,38 +8229,40 @@ runcode(function()
 									local headPos, headVis = cam:WorldToViewportPoint((plr.Character.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, plr.Character.Head.Size.Y + plr.Character.HumanoidRootPart.Size.Y, 0)).Position)
 									
 									if headVis then
-										local inventory = bedwars["getInventory"](plr)
-										if inventory.hand then
-											thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
-											if thing.Hand.Image:find("rbxasset://") then
-												thing.Hand.ResampleMode = Enum.ResamplerMode.Pixelated
+										if NameTagsShowInventory["Enabled"] then 
+											local inventory = bedwars["getInventory"](plr)
+											if inventory.hand then
+												thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
+												if thing.Hand.Image:find("rbxasset://") then
+													thing.Hand.ResampleMode = Enum.ResamplerMode.Pixelated
+												end
+											else
+												thing.Hand.Image = ""
 											end
-										else
-											thing.Hand.Image = ""
-										end
-										if inventory.armor[4] then
-											thing.Helmet.Image = bedwars["getIcon"](inventory.armor[4], NameTagsShowInventory["Enabled"])
-											if thing.Helmet.Image:find("rbxasset://") then
-												thing.Helmet.ResampleMode = Enum.ResamplerMode.Pixelated
+											if inventory.armor[4] then
+												thing.Helmet.Image = bedwars["getIcon"](inventory.armor[4], NameTagsShowInventory["Enabled"])
+												if thing.Helmet.Image:find("rbxasset://") then
+													thing.Helmet.ResampleMode = Enum.ResamplerMode.Pixelated
+												end
+											else
+												thing.Helmet.Image = ""
 											end
-										else
-											thing.Helmet.Image = ""
-										end
-										if inventory.armor[5] then
-											thing.Chestplate.Image = bedwars["getIcon"](inventory.armor[5], NameTagsShowInventory["Enabled"])
-											if thing.Chestplate.Image:find("rbxasset://") then
-												thing.Chestplate.ResampleMode = Enum.ResamplerMode.Pixelated
+											if inventory.armor[5] then
+												thing.Chestplate.Image = bedwars["getIcon"](inventory.armor[5], NameTagsShowInventory["Enabled"])
+												if thing.Chestplate.Image:find("rbxasset://") then
+													thing.Chestplate.ResampleMode = Enum.ResamplerMode.Pixelated
+												end
+											else
+												thing.Chestplate.Image = ""
 											end
-										else
-											thing.Chestplate.Image = ""
-										end
-										if inventory.armor[6] then
-											thing.Boots.Image = bedwars["getIcon"](inventory.armor[6], NameTagsShowInventory["Enabled"])
-											if thing.Boots.Image:find("rbxasset://") then
-												thing.Boots.ResampleMode = Enum.ResamplerMode.Pixelated
+											if inventory.armor[6] then
+												thing.Boots.Image = bedwars["getIcon"](inventory.armor[6], NameTagsShowInventory["Enabled"])
+												if thing.Boots.Image:find("rbxasset://") then
+													thing.Boots.ResampleMode = Enum.ResamplerMode.Pixelated
+												end
+											else
+												thing.Boots.Image = ""
 											end
-										else
-											thing.Boots.Image = ""
 										end
 										local bountyhunter = lplr.PlayerGui:FindFirstChildWhichIsA("BillboardGui")
 										local istarget = false
@@ -8705,6 +8799,7 @@ runcode(function()
 	local function check()
 		lagbackedaftertouch = false
 		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
+			--createwarning("AnticheatBypass", "tp check failed by: "..(math.floor(((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude - AnticheatBypassNumbers.TPCheck) * 100) / 100), 10)
 			local newpos = (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).Unit * AnticheatBypassNumbers.TPCheck
 			newpos = newpos == newpos and newpos or Vector3.new(0, 0, 0)
 			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
@@ -8971,7 +9066,8 @@ runcode(function()
 						else
 							--local targetvelo = (targetstrafing and (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p) or clone.HumanoidRootPart.Velocity)
 							local targetvelo = (clone.HumanoidRootPart.AssemblyLinearVelocity)
-							targetvelo = targetvelo.Unit * 20
+							targetvelo = targetvelo.Unit * (clone:GetAttribute("StatusEffect_speed") and 28 or 20)
+							print((clone:GetAttribute("StatusEffect_speed") and 28 or 20))
 							if shared.VapeOverrideAnticheatBypassCFrame then
 								oldchar.HumanoidRootPart.CFrame = shared.VapeOverrideAnticheatBypassCFrame(oldchar.HumanoidRootPart.CFrame)
 							end
@@ -9284,7 +9380,7 @@ runcode(function()
 				end
 			end
 		end,
-		["HoverText"] = "Makes speed check more stupid."
+		["HoverText"] = "Makes speed check more stupid.",
 	})
 	local arrowdodgeconnection
 	local arrowdodgedata
