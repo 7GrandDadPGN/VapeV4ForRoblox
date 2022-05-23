@@ -9067,7 +9067,6 @@ runcode(function()
 							--local targetvelo = (targetstrafing and (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p) or clone.HumanoidRootPart.Velocity)
 							local targetvelo = (clone.HumanoidRootPart.AssemblyLinearVelocity)
 							targetvelo = targetvelo.Unit * (clone:GetAttribute("StatusEffect_speed") and 28 or 20)
-							print((clone:GetAttribute("StatusEffect_speed") and 28 or 20))
 							if shared.VapeOverrideAnticheatBypassCFrame then
 								oldchar.HumanoidRootPart.CFrame = shared.VapeOverrideAnticheatBypassCFrame(oldchar.HumanoidRootPart.CFrame)
 							end
