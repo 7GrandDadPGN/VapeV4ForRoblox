@@ -9360,7 +9360,7 @@ runcode(function()
 					task.wait(1)
 					if (not AnticheatBypass["Enabled"]) then break end
 					local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
-					local fps = game:GetService("RunService").RenderStepped:Wait() / 1
+					local fps = 1 / game:GetService("RunService").RenderStepped:Wait()
 					if #pinglist >= 10 then 
 						table.remove(pinglist, i)
 					end
