@@ -1700,9 +1700,12 @@ do
             if localcheck then
                 entity.fullEntityRefresh()
             else
-				task.delay(1, function()
-					entity.refreshEntity(plr, localcheck)
-				end)
+				entity.refreshEntity(plr, localcheck)
+				if plr:GetAttribute("Team") == lplr:GetAttribute("Team") then 
+					task.delay(3, function()
+						entity.refreshEntity(plr, localcheck)
+					end)
+				end
             end
         end)
         if plr.Character then
@@ -3622,6 +3625,149 @@ runcode(function()
 end)
 
 runcode(function()
+	local ChestESPList = {["ObjectList"] = {}, ["RefreshList"] = function() end}
+	local function nearchestitem(item)
+		for i,v in pairs(ChestESPList["ObjectList"]) do 
+			if item:find(v) then return v end
+		end
+	end
+	local function refreshAdornee(v)
+		local chest = v.Adornee.ChestFolderValue.Value
+        local chestitems = chest and chest:GetChildren() or {}
+		for i2,v2 in pairs(v.Frame:GetChildren()) do
+			if v2:IsA("ImageLabel") then
+				v2:Remove()
+			end
+		end
+		v.Enabled = false
+		local alreadygot = {}
+		for i3,v3 in pairs(chestitems) do
+			if table.find(ChestESPList["ObjectList"], v3.Name) or nearchestitem(v3.Name) and alreadygot[v3.Name] == nil then 
+				alreadygot[v3.Name] = true
+				v.Enabled = true
+                local blockimage = Instance.new("ImageLabel")
+                blockimage.Size = UDim2.new(0, 32, 0, 32)
+                blockimage.BackgroundTransparency = 1
+                blockimage.Image = bedwars["getIcon"]({itemType = v3.Name}, true)
+                blockimage.Parent = v.Frame
+            end
+		end
+	end
+
+	local ChestESPFolder = Instance.new("Folder")
+	ChestESPFolder.Name = "ChestESPFolder"
+	ChestESPFolder.Parent = GuiLibrary["MainGui"]
+	local ChestESP = {["Enabled"] = false}
+    local chestconnections = {}
+	ChestESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "ChestESP",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					chestconnections[#chestconnections + 1] = game:GetService("CollectionService"):GetInstanceAddedSignal("chest"):connect(function(v)
+						spawn(function()
+							local billboard = Instance.new("BillboardGui")
+							billboard.Parent = ChestESPFolder
+							billboard.Name = "chest"
+							billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 1.5)
+							billboard.Size = UDim2.new(0, 42, 0, 42)
+							billboard.AlwaysOnTop = true
+							billboard.Adornee = v
+							local frame = Instance.new("Frame")
+							frame.Size = UDim2.new(1, 0, 1, 0)
+							frame.BackgroundColor3 = Color3.new(0, 0, 0)
+							frame.BackgroundTransparency = 0.5
+							frame.Parent = billboard
+							local uilistlayout = Instance.new("UIListLayout")
+							uilistlayout.FillDirection = Enum.FillDirection.Horizontal
+							uilistlayout.Padding = UDim.new(0, 4)
+							uilistlayout.VerticalAlignment = Enum.VerticalAlignment.Center
+							uilistlayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+							uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+								billboard.Size = UDim2.new(0, math.clamp(uilistlayout.AbsoluteContentSize.X + 12, 42, 1000000), 0, 42)
+							end)
+							uilistlayout.Parent = frame
+							local uicorner = Instance.new("UICorner")
+							uicorner.CornerRadius = UDim.new(0, 4)
+							uicorner.Parent = frame
+							local chest = v:WaitForChild("ChestFolderValue").Value
+							if chest then 
+								chestconnections[#chestconnections + 1] = chest.ChildAdded:connect(function()
+									refreshAdornee(billboard)
+								end)
+								chestconnections[#chestconnections + 1] = chest.ChildRemoved:connect(function()
+									refreshAdornee(billboard)
+								end)
+								refreshAdornee(billboard)
+							end
+						end)
+					end)
+					for i,v in pairs(game:GetService("CollectionService"):GetTagged("chest")) do
+                        spawn(function()
+							local billboard = Instance.new("BillboardGui")
+							billboard.Parent = ChestESPFolder
+							billboard.Name = "chest"
+							billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 1.5)
+							billboard.Size = UDim2.new(0, 42, 0, 42)
+							billboard.AlwaysOnTop = true
+							billboard.Adornee = v
+							local frame = Instance.new("Frame")
+							frame.Size = UDim2.new(1, 0, 1, 0)
+							frame.BackgroundColor3 = Color3.new(0, 0, 0)
+							frame.BackgroundTransparency = 0.5
+							frame.Parent = billboard
+							local uilistlayout = Instance.new("UIListLayout")
+							uilistlayout.FillDirection = Enum.FillDirection.Horizontal
+							uilistlayout.Padding = UDim.new(0, 4)
+							uilistlayout.VerticalAlignment = Enum.VerticalAlignment.Center
+							uilistlayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+							uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+								billboard.Size = UDim2.new(0, math.clamp(uilistlayout.AbsoluteContentSize.X + 12, 42, 1000000), 0, 42)
+							end)
+							uilistlayout.Parent = frame
+							local uicorner = Instance.new("UICorner")
+							uicorner.CornerRadius = UDim.new(0, 4)
+							uicorner.Parent = frame
+							local chest = v:WaitForChild("ChestFolderValue").Value
+							if chest then 
+								chestconnections[#chestconnections + 1] = chest.ChildAdded:connect(function()
+									refreshAdornee(billboard)
+								end)
+								chestconnections[#chestconnections + 1] = chest.ChildRemoved:connect(function()
+									refreshAdornee(billboard)
+								end)
+								refreshAdornee(billboard)
+							end
+						end)
+                    end
+				end)
+			else
+				ChestESPFolder:ClearAllChildren()
+                for i,v in pairs(chestconnections) do 
+                    v:Disconnect()
+                end
+			end
+		end
+	})
+	ChestESPList = ChestESP.CreateTextList({
+		["Name"] = "ItemList",
+		["TempText"] = "item or part of item",
+		["AddFunction"] = function()
+			if ChestESP["Enabled"] then 
+				ChestESP["ToggleButton"](false)
+				ChestESP["ToggleButton"](false)
+			end
+		end,
+		["RemoveFunction"] = function()
+			if ChestESP["Enabled"] then 
+				ChestESP["ToggleButton"](false)
+				ChestESP["ToggleButton"](false)
+			end
+		end
+	})
+end)
+
+runcode(function()
 	local AutoBuy = {["Enabled"] = false}
 	local AutoBuyArmor = {["Enabled"] = false}
 	local AutoBuySword = {["Enabled"] = false}
@@ -3731,6 +3877,10 @@ runcode(function()
 					local currency = getItem(shopitem.currency)
 					if currency and currency["amount"] >= shopitem.price then 
 						highestbuyable = shopitem
+						bedwars["ClientStoreHandler"]:dispatch({
+							type = "BedwarsAddItemPurchased", 
+							itemType = shopitem.itemType
+						})
 					end
 				end
 			end
@@ -3750,6 +3900,10 @@ runcode(function()
 					local currency = getItem(shopitem.currency)
 					if currency and currency["amount"] >= shopitem.price and (shopitem.category ~= "Armory" or upgrades["armory"]) then 
 						highestbuyable = shopitem
+						bedwars["ClientStoreHandler"]:dispatch({
+							type = "BedwarsAddItemPurchased", 
+							itemType = shopitem.itemType
+						})
 					end
 				end
 			end
@@ -9183,12 +9337,17 @@ runcode(function()
 			print("stage 8")
 			clonesuccess = true
 			local pinglist = {}
+			local fpslist = {}
 
 			local function didpingspike()
 				local currentpingcheck = pinglist[1] or math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+				for i,v in pairs(fpslist) do 
+					print("anticheatbypass fps ["..i.."]: "..v)
+				end
 				for i,v in pairs(pinglist) do 
+					print("anticheatbypass ping ["..i.."]: "..v)
 					if v ~= currentpingcheck and math.abs(v - currentpingcheck) >= 100 then 
-						return v
+						return currentpingcheck.." => "..v
 					else
 						currentpingcheck = v
 					end
@@ -9201,10 +9360,15 @@ runcode(function()
 					task.wait(1)
 					if (not AnticheatBypass["Enabled"]) then break end
 					local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+					local fps = game:GetService("RunService").RenderStepped:Wait()
 					if #pinglist >= 10 then 
 						table.remove(pinglist, i)
 					end
 					table.insert(pinglist, ping)
+					if #fpslist >= 10 then 
+						table.remove(fpslist, i)
+					end
+					table.insert(fpslist, fps)
 				until (not AnticheatBypass["Enabled"])
 			end)
 			repeat
@@ -9231,13 +9395,14 @@ runcode(function()
 								if not lagbackchanged then
 									lagbackchanged = true
 									lagbacktime = tick()
-									if matchState ~= 2 then
-										lagbacks = lagbacks + 1
-									end
 									spawn(function()
 										local pingspike = didpingspike() 
 										if pingspike then
 											createwarning("AnticheatBypass", "Lagspike Detected : "..pingspike, 10)
+										else
+											if matchState ~= 2 then
+												lagbacks = lagbacks + 1
+											end
 										end
 										if AnticheatBypassFlagCheck["Enabled"] then
 											spawn(function()
@@ -9251,13 +9416,13 @@ runcode(function()
 														oldchar = lplr.Character
 													end
 												until oldchar == nil or oldchar:FindFirstChild("HumanoidRootPart") == nil or (not (networkownerfunc and (not networkownerfunc(oldchar.HumanoidRootPart)) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual))
-											---	local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
-												--local oldmove = controlmodule.moveFunction
-												--controlmodule.moveFunction = function() end
-												--spawn(function()
-												--	repeat task.wait() until lplr.Character == clone
-												--	controlmodule.moveFunction = oldmove
-												--end)
+												local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
+												local oldmove = controlmodule.moveFunction
+												controlmodule.moveFunction = function() end
+												spawn(function()
+													repeat task.wait() until lplr.Character == clone or AnticheatBypass["Enabled"] == false
+													controlmodule.moveFunction = oldmove
+												end)
 												if AnticheatBypass["Enabled"] == false then
 													print("toggled2")
 													AnticheatBypass["ToggleButton"](false)
