@@ -6691,6 +6691,7 @@ runcode(function()
 					flyacprogressbarframe.Visible = true
 					flyacprogressbarframe.Frame:TweenSize(UDim2.new(1, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0, true)
 				end
+				local firsttoggled = true
 				BindToStepped("Fly", 1, function(time, delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						allowed = (tnttimer > 0 and 1.2 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1) * (bird and (1.5 * flyspeed["Value"] / 44) or 1) * (((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or (tnttimer >= tick()) or (bedwars["ClientStoreHandler"]:getState().Game.queueType and bedwars["ClientStoreHandler"]:getState().Game.queueType:find("mega")) or dao) and 1 or 0)
@@ -6709,8 +6710,12 @@ runcode(function()
 							raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
 							local newray = workspace:Raycast((AnticheatBypass["Enabled"] and oldchar or entity.character).HumanoidRootPart.Position, Vector3.new(0, (entity.character.Humanoid.HipHeight * -2) - 1, 0), raycastparameters)
 							onground = newray and true or false
+							if firsttoggled then 
+								lastonground = not onground
+								firsttoggled = false
+							end
 							if lastonground ~= onground then 
-								if not onground then 
+								if (not onground) then 
 									groundtime = tick() + (flyacrisky["Enabled"] and 2 or 1.4)
 									if flyacprogressbarframe then 
 										flyacprogressbarframe.Frame:TweenSize(UDim2.new(0, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, groundtime - tick(), true)
@@ -6749,8 +6754,6 @@ runcode(function()
 				if flyacprogressbarframe then 
 					flyacprogressbarframe.Visible = false
 				end
-				onground = true
-				lastonground = false
 				flyup = false
 				flydown = false
 				flypress:Disconnect()
