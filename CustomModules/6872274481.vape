@@ -1120,7 +1120,6 @@ runcode(function()
 			end  
         end)
         connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
-			currentinventory = p4.Inventory.observedInventory.inventory
             if p3.Game ~= p4.Game then
                 if p3.Game.matchState ~= p4.Game.matchState then
                     matchState = p3.Game.matchState
@@ -1140,7 +1139,6 @@ runcode(function()
 			end
         end)
         matchState = bedwars["ClientStoreHandler"]:getState().Game.matchState
-		currentinventory = bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory
         if matchState ~= 0 then
             kit = rawget(bedwars["ClientStoreHandler"]:getState()["Bedwars"], "kit")
         end
@@ -1174,6 +1172,13 @@ runcode(function()
 			end)
 			shared.vapebypassed = true
 		end
+
+		spawn(function()
+			repeat
+				task.wait()
+				currentinventory = bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory
+			until uninjectflag
+		end)
 
 		spawn(function()
 			local chatsuc, chatres = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/bedwarssettings.json")) end)
@@ -3945,7 +3950,7 @@ runcode(function()
 				buyingthing = false 
 				spawn(function()
 					repeat
-						task.wait(0.1)
+						task.wait(0.03)
 						local found, npctype = nearNPC()
 						if found then
 							local inv = bedwars["getInventory"](lplr)
@@ -9201,23 +9206,6 @@ runcode(function()
 			if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
 				clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
 			end
-			if clone:FindFirstChild("Humanoid") and AnticheatBypassDisguise["Enabled"] then
-				spawn(function()
-					if desc == nil then
-						desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"]))
-					end
-					desc.HeightScale = oldchar.Humanoid.HumanoidDescription.HeightScale
-					for i,v in pairs(clone:GetChildren()) do 
-						if v:IsA("ShirtGraphic") then 
-							v:Remove()
-						end
-						if v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil and v:FindFirstChild("Handle") then 
-							v.Handle.Transparency = 1
-						end
-					end
-					clone.Humanoid:ApplyDescriptionClientServer(desc)
-				end)
-			end
 			repeat 
 				task.wait() 
 				if oldchar ~= lplr.Character then break end
@@ -9313,6 +9301,23 @@ runcode(function()
 			if oldchar and oldchar:FindFirstChild("Animate") then
 				oldchar.Animate.Disabled = true
 				oldchar.Animate.Parent = clone
+			end
+			if clone:FindFirstChild("Humanoid") and AnticheatBypassDisguise["Enabled"] then
+				pcall(function()
+					if desc == nil then
+						desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"]))
+					end
+					desc.HeightScale = oldchar.Humanoid.HumanoidDescription.HeightScale
+					for i,v in pairs(clone:GetChildren()) do 
+						if v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") then 
+							v:Remove()
+						end
+						if v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil and v:FindFirstChild("Handle") then 
+							v.Handle.Transparency = 1
+						end
+					end
+					clone.Humanoid:ApplyDescriptionClientServer(desc)
+				end)
 			end
 			if oldchar and oldchar.Head:FindFirstChild("Nametag") then
 				oldchar.Head.Nametag.Enabled = false
