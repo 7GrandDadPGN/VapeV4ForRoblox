@@ -3793,15 +3793,11 @@ runcode(function()
 	local shopnpcconnection
 	spawn(function()
 		repeat task.wait() until matchState ~= 0
-		workspace.ChildAdded:connect(function(v)
-			if v:FindFirstChild("BedwarsItemShop") or v:FindFirstChild("BedwarsTeamUpgrader") then
-				table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = v:FindFirstChild("BedwarsTeamUpgrader")})
-			end
-		end)
-		for i,v in pairs(workspace:GetChildren()) do
-			if v:FindFirstChild("BedwarsItemShop") or v:FindFirstChild("BedwarsTeamUpgrader") then
-				table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = v:FindFirstChild("BedwarsTeamUpgrader")})
-			end
+		for i,v in pairs(game:GetService("CollectionService"):GetTagged("BedwarsItemShop")) do
+			table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = nil})
+		end
+		for i,v in pairs(game:GetService("CollectionService"):GetTagged("BedwarsTeamUpgrader")) do
+			table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = true})
 		end
 	end)
 
