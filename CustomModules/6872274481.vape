@@ -9031,12 +9031,15 @@ runcode(function()
 	local AnticheatBypassNotification = {["Enabled"] = false}
 	local AnticheatBypassAnimation = {["Enabled"] = true}
 	local AnticheatBypassAnimationCustom = {["Value"] = ""}
+	local AnticheatBypassDisguise = {["Enabled"] = false}
+	local AnticheatBypassDisguiseCustom = {["Value"] = ""}
 	local AnticheatBypassArrowDodge = {["Enabled"] = false}
 	local AnticheatBypassTPSpeed = {["Value"] = 13}
 	local AnticheatBypassTPLerp = {["Value"] = 50}
 	local oldlaunchpos
 	local oldballoon
 	local clone
+	local desc
 	local changed = false
 	local anticheatconnection
 	local anticheatconnection2
@@ -9181,6 +9184,19 @@ runcode(function()
 			if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
 				clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
 			end
+			if clone:FindFirstChild("Humanoid") and AnticheatBypassDisguise["Enabled"] then
+				spawn(function()
+					if desc == nil then
+						desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"]))
+					end
+					for i,v in pairs(clone:GetChildren()) do 
+						if v:IsA("ShirtGraphic") then 
+							v:Remove()
+						end
+					end
+					clone.Humanoid:ApplyDescriptionClientServer(desc)
+				end)
+			end
 			repeat 
 				task.wait() 
 				if oldchar ~= lplr.Character then break end
@@ -9202,12 +9218,14 @@ runcode(function()
 			if oldchar ~= lplr.Character then return end
 			print("stage 5")
 			pcall(function()
-				if AnticheatBypassAnimation["Enabled"] and oldchar:FindFirstChild("Humanoid") then
-					local anim2 = Instance.new("Animation")
-					anim2.AnimationId = AnticheatBypassAnimationCustom["Value"] ~= "" and "http://www.roblox.com/asset/?id="..AnticheatBypassAnimationCustom["Value"] or "http://www.roblox.com/asset/?id=4940563117"
-					playedanim = anim2.AnimationId
-					local Loaded = oldchar.Humanoid.Animator:LoadAnimation(anim2)
-					Loaded:Play()
+				if oldchar:FindFirstChild("Humanoid") then 
+					if AnticheatBypassAnimation["Enabled"] then
+						local anim2 = Instance.new("Animation")
+						anim2.AnimationId = AnticheatBypassAnimationCustom["Value"] ~= "" and "http://www.roblox.com/asset/?id="..AnticheatBypassAnimationCustom["Value"] or "http://www.roblox.com/asset/?id=4940563117"
+						playedanim = anim2.AnimationId
+						local Loaded = oldchar.Humanoid.Animator:LoadAnimation(anim2)
+						Loaded:Play()
+					end
 				end
 			end)
 			if shared.VapeOverrideAnticheatBypassPre then 
@@ -9810,10 +9828,22 @@ runcode(function()
 		["Name"] = "Play Animation",
 		["Function"] = function() end,
 	})
+	AnticheatBypassDisguise = AnticheatBypass.CreateToggle({
+		["Name"] = "Disguise User",
+		["Function"] = function() end,
+		["Default"] = true
+	})
 	AnticheatBypassAnimationCustom = AnticheatBypass.CreateTextBox({
 		["Name"] = "Animation",
 		["TempText"] = "Animation Id",
 		["FocusLost"] = function(enter) end
+	})
+	AnticheatBypassDisguiseCustom = AnticheatBypass.CreateTextBox({
+		["Name"] = "Disguise",
+		["TempText"] = "Disguise User Id",
+		["FocusLost"] = function(enter) 
+			spawn(function() desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"])) end)
+		end
 	})
 	if shared.VapeDeveloper then 
 		--[[AnticheatBypassTPSpeed = AnticheatBypass.CreateSlider({
