@@ -3780,6 +3780,7 @@ runcode(function()
     local AutoBuyArmory = {["Enabled"] = false}
     local AutoBuyBrewingStand = {["Enabled"] = false}
 	local AutoBuyGui = {["Enabled"] = false}
+	local AutoBuyTierSkip = {["Enabled"] = true}
 	local AutoBuyCustom = {["ObjectList"] = {}, ["RefreshList"] = function() end}
 	local buyingthing = false
 	local shoothook
@@ -3867,13 +3868,13 @@ runcode(function()
 	local buyfunctions = {
 		Armor = function(inv, upgrades, shoptype) 
 			if (not AutoBuyArmor["Enabled"]) and shoptype == "item" then return end
-			local currentarmor = (inv.armor[5] ~= "empty" or inv.armor[5].itemType:find("chestplate") ~= nil) and inv.armor[5] or nil
+			local currentarmor = (inv.armor[2] ~= "empty" and inv.armor[2].itemType:find("chestplate") ~= nil) and inv.armor[2] or nil
 			local armorindex = (currentarmor and table.find(armors, currentarmor.itemType) or 0) + 1
 			if currentarmor ~= nil and table.find(armors, currentarmor.itemType) == nil then return end
 			local highestbuyable = nil
 			for i = armorindex, #armors, 1 do 
 				local shopitem = getShopItem(armors[i])
-				if shopitem then 
+				if shopitem and (AutoBuyTierSkip["Enabled"] or i == (armorindex + 1)) then 
 					local currency = getItem(shopitem.currency)
 					if currency and currency["amount"] >= shopitem.price then 
 						highestbuyable = shopitem
@@ -3964,7 +3965,9 @@ runcode(function()
 							elseif kit == "lumen" then 
 								swords[5] = "light_sword"
 							end
-							for i,v in pairs(buyfunctions) do v(inv, currentupgrades, npctype and "upgrade" or "item") end
+							if AutoBuyGui["Enabled"] == false or (bedwars["AppController"]:isAppOpen("BedwarsItemShopApp") or bedwars["AppController"]:isAppOpen("BedwarsTeamUpgradeApp")) then
+								for i,v in pairs(buyfunctions) do v(inv, currentupgrades, npctype and "upgrade" or "item") end
+							end
 						end
 					until (not AutoBuy["Enabled"])
 				end)
@@ -4035,6 +4038,15 @@ runcode(function()
 		["Name"] = "Buy Armory",
 		["Function"] = function() end, 
 	})
+	AutoBuyGui = AutoBuy.CreateToggle({
+		["Name"] = "Shop GUI Check",
+		["Function"] = function() end, 	
+	})
+	AutoBuyTierSkip = AutoBuy.CreateToggle({
+		["Name"] = "Tier Skip",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
 	AutoBuyGen["Object"].BackgroundTransparency = 0
 	AutoBuyGen["Object"].BorderSizePixel = 0
 	AutoBuyGen["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -4059,10 +4071,6 @@ runcode(function()
 	AutoBuyArmory["Object"].BorderSizePixel = 0
 	AutoBuyArmory["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	AutoBuyArmory["Object"].Visible = AutoBuyUpgrades["Enabled"]
-	AutoBuyGui = AutoBuy.CreateToggle({
-		["Name"] = "Shop GUI Check",
-		["Function"] = function() end, 	
-	})
 	AutoBuyCustom = AutoBuy.CreateTextList({
 		["Name"] = "BuyList",
 		["TempText"] = "item : amount : priority : after",
@@ -8579,7 +8587,16 @@ runcode(function()
 	})
 	NameTagsShowInventory = NameTags.CreateToggle({
 		["Name"] = "Equipment",
-		["Function"] = function() end,
+		["Function"] = function() 
+			NameTagsFolder:ClearAllChildren()
+			for i,v in pairs(nametagsfolderdrawing) do 
+				pcall(function()
+					nametagsfolderdrawing[i].Text:Remove()
+					nametagsfolderdrawing[i].BG:Remove()
+					nametagsfolderdrawing[i] = nil
+				end)
+			end
+		end,
 		["Default"] = true
 	})
 	NameTagsDrawing = NameTags.CreateToggle({
@@ -9189,7 +9206,7 @@ runcode(function()
 					if desc == nil then
 						desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"]))
 					end
-					desc.HeightScale = 1
+					desc.HeightScale = oldchar.Humanoid.HumanoidDescription.HeightScale
 					for i,v in pairs(clone:GetChildren()) do 
 						if v:IsA("ShirtGraphic") then 
 							v:Remove()
