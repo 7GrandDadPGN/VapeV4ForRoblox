@@ -9201,13 +9201,15 @@ runcode(function()
 			until oldchar:FindFirstChild("HumanoidRootPart") and (networkownerfunc and networkownerfunc(oldchar.HumanoidRootPart) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic)
 			if oldchar ~= lplr.Character then return end
 			print("stage 5")
-			if AnticheatBypassAnimation["Enabled"] and oldchar:FindFirstChild("Humanoid") then
-				local anim2 = Instance.new("Animation")
-				anim2.AnimationId = AnticheatBypassAnimationCustom["Value"] ~= "" and AnticheatBypassAnimationCustom["Value"] or "http://www.roblox.com/asset/?id=4940563117"
-				playedanim = anim2.AnimationId
-				local Loaded = oldchar.Humanoid.Animator:LoadAnimation(anim2)
-				Loaded:Play()
-			end
+			pcall(function()
+				if AnticheatBypassAnimation["Enabled"] and oldchar:FindFirstChild("Humanoid") then
+					local anim2 = Instance.new("Animation")
+					anim2.AnimationId = AnticheatBypassAnimationCustom["Value"] ~= "" and "http://www.roblox.com/asset/?id="..AnticheatBypassAnimationCustom["Value"] or "http://www.roblox.com/asset/?id=4940563117"
+					playedanim = anim2.AnimationId
+					local Loaded = oldchar.Humanoid.Animator:LoadAnimation(anim2)
+					Loaded:Play()
+				end
+			end)
 			if shared.VapeOverrideAnticheatBypassPre then 
 				shared.VapeOverrideAnticheatBypassPre(lplr.Character)
 			end
