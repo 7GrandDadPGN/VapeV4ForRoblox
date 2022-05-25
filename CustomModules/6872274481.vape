@@ -3946,7 +3946,7 @@ runcode(function()
 				buyingthing = false 
 				spawn(function()
 					repeat
-						task.wait(0.03)
+						task.wait()
 						local found, npctype = nearNPC()
 						if found then
 							local inv = bedwars["getInventory"](lplr)
@@ -9851,9 +9851,8 @@ runcode(function()
 		["Function"] = function() end,
 	})
 	AnticheatBypassDisguise = AnticheatBypass.CreateToggle({
-		["Name"] = "Disguise User",
+		["Name"] = "Disguise",
 		["Function"] = function() end,
-		["Default"] = true
 	})
 	AnticheatBypassAnimationCustom = AnticheatBypass.CreateTextBox({
 		["Name"] = "Animation",
