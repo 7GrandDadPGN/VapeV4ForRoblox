@@ -1120,18 +1120,10 @@ runcode(function()
 			end  
         end)
         connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
+			kit = p4.Bedwars.kit
             if p3.Game ~= p4.Game then
                 if p3.Game.matchState ~= p4.Game.matchState then
                     matchState = p3.Game.matchState
-                    if matchState ~= 0 then
-                        kit = p4.Bedwars.kit
-                    end
-                end
-            end
-            if p3.Bedwars.kit ~= p4.Bedwars.kit then
-                if matchState ~= 0 then
-                    kit = p4.Bedwars.kit
-					print("kit:", p4.Bedwars.kit)
                 end
             end
 			if p3.Kit ~= p4.Kit then 
@@ -1946,7 +1938,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 	local currentamount = 0
     if entity.isAlive then -- alive check
         for i, v in pairs(entity.entityList) do -- loop through players
-            if (targetcheck == nil and v.Targetable or targetcheck) and targetCheck(v, true) and currentamount < amount then -- checks
+            if (v.Targetable or targetcheck) and targetCheck(v, true) and currentamount < amount then -- checks
                 local mag = (entity.character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
                 if mag <= distance then -- mag check
                     table.insert(returnedplayer, v)
