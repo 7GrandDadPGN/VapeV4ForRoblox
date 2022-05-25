@@ -9194,7 +9194,7 @@ runcode(function()
 						if v:IsA("ShirtGraphic") then 
 							v:Remove()
 						end
-						if v:IsA("Accessory") and v:FindFirstChild("ThumbnailCamera") and v:FindFirstChild("Handle") then 
+						if v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil and v:FindFirstChild("Handle") then 
 							v.Handle.Transparency = 1
 						end
 					end
