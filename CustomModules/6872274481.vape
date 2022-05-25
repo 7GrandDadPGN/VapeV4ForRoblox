@@ -6319,7 +6319,7 @@ runcode(function()
 				autoleaveconnection = players.PlayerAdded:connect(function(plr)
 					spawn(function()
 						pcall(function()
-							if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
+							if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and (plr.UserId ~= 87365146 or shared.VapePrivate) then
 								if AutoLeaveStaff["Enabled"] then
 									coroutine.resume(coroutine.create(function()
 										repeat task.wait() until shared.VapeFullyLoaded
@@ -6346,7 +6346,7 @@ runcode(function()
 				spawn(function()
 					pcall(function()
 						for i, plr in pairs(players:GetChildren()) do
-							if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and plr.UserId ~= 87365146 then
+							if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and (plr.UserId ~= 87365146 or shared.VapePrivate) then
 								if AutoLeaveStaff["Enabled"] then
 									coroutine.resume(coroutine.create(function()
 										repeat task.wait() until shared.VapeFullyLoaded
