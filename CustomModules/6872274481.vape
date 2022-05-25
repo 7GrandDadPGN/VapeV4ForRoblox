@@ -1619,12 +1619,14 @@ do
 							if armor2[plr] then armor2[plr]:Disconnect() end 
 							if armor3[plr] then armor3[plr]:Disconnect() end 
 							if hand[plr] then hand[plr]:Disconnect() end 
-							invadded[plr] = inv.Value.ChildAdded:connect(function(item)
-							--	inventories[plr] = bedwars["getInventory2"](plr)
-							end)
-							invremoved[plr] = inv.Value.ChildRemoved:connect(function(item)
-							--	inventories[plr] = bedwars["getInventory2"](plr)
-							end)
+							if inv.Value then
+								invadded[plr] = inv.Value.ChildAdded:connect(function(item)
+								--	inventories[plr] = bedwars["getInventory2"](plr)
+								end)
+								invremoved[plr] = inv.Value.ChildRemoved:connect(function(item)
+								--	inventories[plr] = bedwars["getInventory2"](plr)
+								end)
+							end
 							local armorobj1 = char:FindFirstChild("ArmorInvItem_0")
 							local armorobj2 = char:FindFirstChild("ArmorInvItem_1")
 							local armorobj3 = char:FindFirstChild("ArmorInvItem_2")
