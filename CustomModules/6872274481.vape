@@ -9189,9 +9189,13 @@ runcode(function()
 					if desc == nil then
 						desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"]))
 					end
+					desc.HeightScale = 1
 					for i,v in pairs(clone:GetChildren()) do 
 						if v:IsA("ShirtGraphic") then 
 							v:Remove()
+						end
+						if v:IsA("Accessory") and v:FindFirstChild("ThumbnailCamera") and v:FindFirstChild("Handle") then 
+							v.Handle.Transparency = 1
 						end
 					end
 					clone.Humanoid:ApplyDescriptionClientServer(desc)
