@@ -9341,6 +9341,14 @@ runcode(function()
 			local pinglist = {}
 			local fpslist = {}
 
+			local function getaverageframerate()
+				local frames = 0
+				for i,v in pairs(fpslist) do 
+					frames = frames + v
+				end
+				return #fpslist > 0 and (frames / (60 * #fpslist)) <= 1.2 or #fpslist <= 0 and true
+			end
+
 			local function didpingspike()
 				local currentpingcheck = pinglist[1] or math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
 				for i,v in pairs(fpslist) do 
@@ -9359,18 +9367,18 @@ runcode(function()
 
 			spawn(function()
 				repeat
-					task.wait(1)
 					if (not AnticheatBypass["Enabled"]) then break end
 					local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
 					local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
 					if #pinglist >= 10 then 
-						table.remove(pinglist, i)
+						table.remove(pinglist, 1)
+					end
+					if #fpslist >= 10 then 
+						table.remove(fpslist, 1)
 					end
 					table.insert(pinglist, ping)
-					if #fpslist >= 10 then 
-						table.remove(fpslist, i)
-					end
 					table.insert(fpslist, fps)
+					task.wait(1)
 				until (not AnticheatBypass["Enabled"])
 			end)
 			repeat
@@ -9420,7 +9428,10 @@ runcode(function()
 												until oldchar == nil or oldchar:FindFirstChild("HumanoidRootPart") == nil or (not (networkownerfunc and (not networkownerfunc(oldchar.HumanoidRootPart)) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual))
 												local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
 												local oldmove = controlmodule.moveFunction
-												controlmodule.moveFunction = function() end
+												controlmodule.moveFunction = function(self, movedir, ...)
+													movedir = Vector3.new(0, 0, 0)
+													return oldmove(self, movedir, ...)
+												end
 												spawn(function()
 													repeat task.wait() until lplr.Character == clone or AnticheatBypass["Enabled"] == false
 													controlmodule.moveFunction = oldmove
@@ -9450,6 +9461,7 @@ runcode(function()
 										if clone.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 											amountoftimes = amountoftimes + 1
 										end
+										local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and (getaverageframerate() and 0.2 or 0) or 0
 										for i = 1, 2 do 
 											check()
 											task.wait(i % 2 == 0 and 0.01 or 0.02)
@@ -9459,9 +9471,9 @@ runcode(function()
 												if (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude >= 0.01 then
 													if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
 													--	print("trollage2")
-														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), AnticheatBypassNumbers.TPLerp))
+														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), AnticheatBypassNumbers.TPLerp - framerate))
 													else
-														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, AnticheatBypassNumbers.TPLerp))
+														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, AnticheatBypassNumbers.TPLerp - framerate))
 													end
 												end
 											end
@@ -9469,7 +9481,6 @@ runcode(function()
 										end
 										check()
 										--task.wait(longjump["Enabled"] and 0.23 or 0.28)
-										local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
 										-- + (ping <= 40 and 0.05 or ping <= 70 and 0.03 or 0)
 										task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed))
 										check()
@@ -9805,7 +9816,7 @@ runcode(function()
 		["FocusLost"] = function(enter) end
 	})
 	if shared.VapeDeveloper then 
-	--[[	AnticheatBypassTPSpeed = AnticheatBypass.CreateSlider({
+		--[[AnticheatBypassTPSpeed = AnticheatBypass.CreateSlider({
 			["Name"] = "TPSpeed",
 			["Function"] = function(val) 
 				AnticheatBypassNumbers.TPSpeed = val / 100
