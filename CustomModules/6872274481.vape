@@ -9495,7 +9495,7 @@ runcode(function()
 										if clone.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 											amountoftimes = amountoftimes + 1
 										end
-										local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and (getaverageframerate() and 0.22 or 0) or 0
+										local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and (getaverageframerate() and 0.215 or 0) or 0
 										for i = 1, 2 do 
 											check()
 											task.wait(i % 2 == 0 and 0.01 or 0.02)
