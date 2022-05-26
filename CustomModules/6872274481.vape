@@ -9046,6 +9046,7 @@ runcode(function()
 	local AnticheatBypassDisguise = {["Enabled"] = false}
 	local AnticheatBypassDisguiseCustom = {["Value"] = ""}
 	local AnticheatBypassArrowDodge = {["Enabled"] = false}
+	local AnticheatBypassAutoConfig = {["Enabled"] = false}
 	local AnticheatBypassTPSpeed = {["Value"] = 13}
 	local AnticheatBypassTPLerp = {["Value"] = 50}
 	local oldlaunchpos
@@ -9544,85 +9545,117 @@ runcode(function()
 		end
 	end
 
+	local function anticheatbypassenable()
+		anticheatconnection2 = lplr.CharacterRemoving:connect(function()
+			if clone and clone:FindFirstChild("ClonedCharacter") then
+				if changed == false then
+					clone:Remove()
+				end
+			end
+		end)
+		shared.VapeRealCharacter = nil
+		if lplr.Character ~= clone then
+			spawn(function()
+				repeat task.wait() until entity.isAlive
+				lplr.Character:WaitForChild("Humanoid", 10)
+				lplr.Character:WaitForChild("LeftHand", 10)
+				lplr.Character:WaitForChild("RightHand", 10)
+				lplr.Character:WaitForChild("LeftFoot", 10)
+				lplr.Character:WaitForChild("RightFoot", 10)
+				lplr.Character:WaitForChild("LeftLowerArm", 10)
+				lplr.Character:WaitForChild("RightLowerArm", 10)
+				lplr.Character:WaitForChild("LeftUpperArm", 10)
+				lplr.Character:WaitForChild("RightUpperArm", 10)
+				lplr.Character:WaitForChild("LeftLowerLeg", 10)
+				lplr.Character:WaitForChild("RightLowerLeg", 10)
+				lplr.Character:WaitForChild("LeftUpperLeg", 10)
+				lplr.Character:WaitForChild("RightUpperLeg", 10)
+				lplr.Character:WaitForChild("UpperTorso", 10)
+				lplr.Character:WaitForChild("LowerTorso", 10)
+				local root = lplr.Character:WaitForChild("HumanoidRootPart", 20)
+				local head = lplr.Character:WaitForChild("Head", 20)
+				task.wait(0.4)
+				if root ~= nil and head ~= nil then
+					if changed == false then
+						if lplr.Character ~= clone and lplr.Character:FindFirstChild("ClonedCharacter") == nil then
+							spawn(disablestuff)
+						end
+					else
+						changed = false
+					end
+				else
+					createwarning("AnticheatBypass", "ur root / head no load L", 30)
+				end
+			end)
+		end
+		anticheatconnection = lplr.CharacterAdded:connect(function(char)
+			spawn(function()
+				shared.VapeRealCharacter = nil
+				char:WaitForChild("Humanoid", 10)
+				char:WaitForChild("LeftHand", 10)
+				char:WaitForChild("RightHand", 10)
+				char:WaitForChild("LeftFoot", 10)
+				char:WaitForChild("RightFoot", 10)
+				char:WaitForChild("LeftLowerArm", 10)
+				char:WaitForChild("RightLowerArm", 10)
+				char:WaitForChild("LeftUpperArm", 10)
+				char:WaitForChild("RightUpperArm", 10)
+				char:WaitForChild("LeftLowerLeg", 10)
+				char:WaitForChild("RightLowerLeg", 10)
+				char:WaitForChild("LeftUpperLeg", 10)
+				char:WaitForChild("RightUpperLeg", 10)
+				char:WaitForChild("UpperTorso", 10)
+				char:WaitForChild("LowerTorso", 10)
+				local root = char:WaitForChild("HumanoidRootPart", 20)
+				local head = char:WaitForChild("Head", 20)
+				task.wait(0.4)
+				if root ~= nil and head ~= nil then
+					if changed == false then
+						if char ~= clone and char:FindFirstChild("ClonedCharacter") == nil then
+							spawn(disablestuff)
+						end
+					else
+						changed = false
+					end
+				else
+					createwarning("AnticheatBypass", "ur root / head no load L", 30)
+				end
+			end)
+		end)
+	end
+
 	AnticheatBypass = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AnticheatBypass",
 		["Function"] = function(callback)
 			if callback then
-				anticheatconnection2 = lplr.CharacterRemoving:connect(function()
-					if clone and clone:FindFirstChild("ClonedCharacter") then
-						if changed == false then
-							clone:Remove()
+				spawn(function()
+					if AnticheatBypassAutoConfig["Enabled"] then 
+						repeat task.wait() until bedwars["ClientStoreHandler"]:getState().Game.queueType ~= nil
+						local amountofplayers = 0
+						for i,v in pairs(bedwars["QueueMeta"][bedwars["ClientStoreHandler"]:getState().Game.queueType or "bedwars_test"].teams) do 
+							amountofplayers = amountofplayers + v.maxPlayers
 						end
+						if amountofplayers > 24 then
+							pcall(function()
+								GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](42)
+								GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("CFrame")
+								GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](42)
+								GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
+								GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("AnticheatBypass")
+							end)
+						else
+							pcall(function()
+								GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](54)
+								GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("Normal")
+								GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](54)
+								GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("Normal")
+								GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("Normal")
+							end)
+							anticheatbypassenable()
+						end
+					else
+						anticheatbypassenable()
 					end
-				end)
-				shared.VapeRealCharacter = nil
-				if lplr.Character ~= clone then
-					spawn(function()
-						repeat task.wait() until entity.isAlive
-						lplr.Character:WaitForChild("Humanoid", 10)
-						lplr.Character:WaitForChild("LeftHand", 10)
-						lplr.Character:WaitForChild("RightHand", 10)
-						lplr.Character:WaitForChild("LeftFoot", 10)
-						lplr.Character:WaitForChild("RightFoot", 10)
-						lplr.Character:WaitForChild("LeftLowerArm", 10)
-						lplr.Character:WaitForChild("RightLowerArm", 10)
-						lplr.Character:WaitForChild("LeftUpperArm", 10)
-						lplr.Character:WaitForChild("RightUpperArm", 10)
-						lplr.Character:WaitForChild("LeftLowerLeg", 10)
-						lplr.Character:WaitForChild("RightLowerLeg", 10)
-						lplr.Character:WaitForChild("LeftUpperLeg", 10)
-						lplr.Character:WaitForChild("RightUpperLeg", 10)
-						lplr.Character:WaitForChild("UpperTorso", 10)
-						lplr.Character:WaitForChild("LowerTorso", 10)
-						local root = lplr.Character:WaitForChild("HumanoidRootPart", 20)
-						local head = lplr.Character:WaitForChild("Head", 20)
-						task.wait(0.4)
-						if root ~= nil and head ~= nil then
-							if changed == false then
-								if lplr.Character ~= clone and lplr.Character:FindFirstChild("ClonedCharacter") == nil then
-									spawn(disablestuff)
-								end
-							else
-								changed = false
-							end
-						else
-							createwarning("AnticheatBypass", "ur root / head no load L", 30)
-						end
-					end)
-				end
-				anticheatconnection = lplr.CharacterAdded:connect(function(char)
-					spawn(function()
-						shared.VapeRealCharacter = nil
-						char:WaitForChild("Humanoid", 10)
-						char:WaitForChild("LeftHand", 10)
-						char:WaitForChild("RightHand", 10)
-						char:WaitForChild("LeftFoot", 10)
-						char:WaitForChild("RightFoot", 10)
-						char:WaitForChild("LeftLowerArm", 10)
-						char:WaitForChild("RightLowerArm", 10)
-						char:WaitForChild("LeftUpperArm", 10)
-						char:WaitForChild("RightUpperArm", 10)
-						char:WaitForChild("LeftLowerLeg", 10)
-						char:WaitForChild("RightLowerLeg", 10)
-						char:WaitForChild("LeftUpperLeg", 10)
-						char:WaitForChild("RightUpperLeg", 10)
-						char:WaitForChild("UpperTorso", 10)
-						char:WaitForChild("LowerTorso", 10)
-						local root = char:WaitForChild("HumanoidRootPart", 20)
-						local head = char:WaitForChild("Head", 20)
-						task.wait(0.4)
-						if root ~= nil and head ~= nil then
-							if changed == false then
-								if char ~= clone and char:FindFirstChild("ClonedCharacter") == nil then
-									spawn(disablestuff)
-								end
-							else
-								changed = false
-							end
-						else
-							createwarning("AnticheatBypass", "ur root / head no load L", 30)
-						end
-					end)
 				end)
 			else
 				shared.VapeRealCharacter = nil
@@ -9788,6 +9821,11 @@ runcode(function()
 		["Default"] = true,
 		["HoverText"] = "Dodge arrows (tanqr moment)"
 	})]]
+	AnticheatBypassAutoConfig = AnticheatBypass.CreateToggle({
+		["Name"] = "Auto Config",
+		["Function"] = function() end,
+		["Default"] = true
+	})
 	AnticheatBypassTransparent = AnticheatBypass.CreateToggle({
 		["Name"] = "Transparent",
 		["Function"] = function(callback) 
