@@ -1410,7 +1410,6 @@ if shared.VapeExecuted then
 					sliderapi["Max"] = argstable["Max"]
 					sliderapi["SetValue"] = function(val)
 					--	val = math.clamp(val, argstable["Min"], argstable["Max"])
-						val = math.min(val, 9999999999999999999999999999999)
 						sliderapi["Value"] = val
 						slider2.Size = UDim2.new(math.clamp((val / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
 						text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
@@ -2264,7 +2263,6 @@ if shared.VapeExecuted then
 			sliderapi["Max"] = argstable["Max"]
 			sliderapi["SetValue"] = function(val)
 			--	val = math.clamp(val, argstable["Min"], argstable["Max"])
-				val = math.min(val, 9999999999999999999999999999999)
 				sliderapi["Value"] = val
 				slider2.Size = UDim2.new(math.clamp((val / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
 				text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
@@ -5042,7 +5040,6 @@ if shared.VapeExecuted then
 				sliderapi["Max"] = argstable["Max"]
 				sliderapi["SetValue"] = function(val)
 				--	val = math.clamp(val, argstable["Min"], argstable["Max"])
-					val = math.min(val, 9999999999999999999999999999999)
 					sliderapi["Value"] = val
 					slider2.Size = UDim2.new(math.clamp((val / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
 					local doublecheck = argstable["Double"] and (sliderapi["Value"] / argstable["Double"]) or sliderapi["Value"]
