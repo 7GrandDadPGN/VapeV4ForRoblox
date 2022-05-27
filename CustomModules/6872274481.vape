@@ -4176,7 +4176,7 @@ runcode(function()
 				iron.Name = "iron"
 				iron.Parent = autobankui
 				local echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
-				if entity.isAlive and echest and lplr.Character.InventoryFolder.Value then
+				if entity.isAlive and echest and lplr.Character:FindFirstChild("InventoryFolder") and lplr.Character.InventoryFolder.Value then
 					local inv = lplr.Character.InventoryFolder.Value
 					local chestitems = inv and inv:GetChildren() or {}
 					if #chestitems > 0 then
