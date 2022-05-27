@@ -9224,7 +9224,6 @@ runcode(function()
 		print("stage 2")
 		if lplr.Character and lplr.Character ~= clone then
 			oldchar = lplr.Character
-			shared.VapeRealCharacter = oldchar
 			oldchar.Archivable = true
 			pcall(function()
 				anticheatconnection3 = oldchar:WaitForChild("InventoryFolder", 20):GetPropertyChangedSignal("Value"):connect(function()
@@ -9326,6 +9325,7 @@ runcode(function()
 					end
 				end
 			end)
+			shared.VapeRealCharacter = lplr.Character
 			if shared.VapeOverrideAnticheatBypassPre then 
 				shared.VapeOverrideAnticheatBypassPre(lplr.Character)
 			end
@@ -9394,7 +9394,7 @@ runcode(function()
 			if clone:FindFirstChild("Humanoid") and AnticheatBypassDisguise["Enabled"] then
 				pcall(function()
 					if desc == nil then
-						desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"]))
+						desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1 or tonumber(AnticheatBypassDisguiseCustom["Value"]))
 					end
 					desc.HeightScale = oldchar.Humanoid.HumanoidDescription.HeightScale
 					for i,v in pairs(clone:GetChildren()) do 
@@ -9697,7 +9697,6 @@ runcode(function()
 		end
 		anticheatconnection = lplr.CharacterAdded:connect(function(char)
 			spawn(function()
-				shared.VapeRealCharacter = nil
 				char:WaitForChild("Humanoid", 10)
 				char:WaitForChild("LeftHand", 10)
 				char:WaitForChild("RightHand", 10)
@@ -9719,6 +9718,7 @@ runcode(function()
 				if root ~= nil and head ~= nil then
 					if changed == false then
 						if char ~= clone and char:FindFirstChild("ClonedCharacter") == nil then
+							shared.VapeRealCharacter = nil
 							spawn(disablestuff)
 						end
 					else
