@@ -4176,14 +4176,12 @@ runcode(function()
 				iron.Name = "iron"
 				iron.Parent = autobankui
 				local echest = game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal")
-				if entity.isAlive and echest and lplr.Character:FindFirstChild("InventoryFolder") and lplr.Character.InventoryFolder.Value then
-					local inv = lplr.Character.InventoryFolder.Value
-					local chestitems = inv and inv:GetChildren() or {}
-					if #chestitems > 0 then
-						for i3,v3 in pairs(chestitems) do
-							if v3:IsA("Accessory") and (v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond") then
-								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3)
-							end
+				if entity.isAlive and echest then
+					local chestitems = bedwars["getInventory"](lplr)["items"]
+					for i3,v3 in pairs(chestitems) do
+						if (v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
+							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
+							refreshbank()
 						end
 					end
 				end
@@ -4210,11 +4208,11 @@ runcode(function()
 						if found ~= AutoBankTransmitted then
 							AutoBankTransmitted = found
 							if (not AutoBankTransmitted) and entity.isAlive then 
-								local chestitems = lplr.Character.InventoryFolder.Value:GetChildren()
+								local chestitems = bedwars["getInventory"](lplr)["items"]
 								if #chestitems > 0 then
 									for i3,v3 in pairs(chestitems) do
-										if v3:IsA("Accessory") and (v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond") then
-											bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3)
+										if (v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
+											bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
 											refreshbank()
 										end
 									end
