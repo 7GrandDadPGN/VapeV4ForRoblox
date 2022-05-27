@@ -11016,11 +11016,6 @@ spawn(function()
 		end
 	end
 
-	createannouncement({
-		Time = 20,
-		Text = "fat"
-	})
-
 	local function rundata(datatab, olddatatab)
 		if not olddatatab then
 			if datatab.Disabled then 
