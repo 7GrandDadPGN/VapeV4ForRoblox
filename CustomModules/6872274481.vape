@@ -2574,114 +2574,79 @@ runcode(function()
 	local targetstrafejump = {["Value"] = 40}
 	local targetstrafedistance = {["Value"] = 12}
 	local targetstrafenum = 0
+	local targetstrafepos = Vector3.new(0, 0, 0)
 	local flip = false
 	local lastreal
 	local old = nil
+	local oldmove2
 	local part
 	targetstrafe = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "TargetStrafe",
 		["Function"] = function(callback)
 			if callback then
-					BindToStepped("TargetStrafe", 1, function(lol, delta)
-						local plr = GetNearestHumanoidToPosition(true, targetstrafedistance["Value"] + 4)
+				local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
+				oldmove2 = controlmodule.moveFunction
+				controlmodule.moveFunction = function(self, movedir, facecam, ...)
+					if targetstrafing and targetstrafepos and entity.isAlive then 
+						movedir = (targetstrafepos - entity.character.HumanoidRootPart.Position).Unit
+						facecam = false
+					end
+					return oldmove2(self, movedir, facecam, ...)
+				end
+				BindToStepped("TargetStrafe", 1, function(lol, delta)
+					local plr = GetNearestHumanoidToPosition(true, 18)
+					targetstrafing = false
+					if entity.isAlive and plr and (not GuiLibrary["ObjectsThatCanBeSaved"]["ScaffoldOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and longjumpticktimer <= tick() and (not spidergoinup) then
+						local veryoldpos = entity.character.HumanoidRootPart.CFrame.p
+						if plr ~= old then
+							old = plr
+							local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, entity.character.HumanoidRootPart.Position)
+							local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-90)
+							targetstrafenum = math.deg(num)
+						end
+						local raycastparameters = RaycastParams.new()
+						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
+						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
 						targetstrafing = false
-						if entity.isAlive and plr and (not GuiLibrary["ObjectsThatCanBeSaved"]["ScaffoldOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and longjumpticktimer <= tick() and (not spidergoinup) then
-							if (entity.character.HumanoidRootPart.Position.Y - plr.Character.HumanoidRootPart.Position.Y) >= -7 then
-								local veryoldpos = entity.character.HumanoidRootPart.CFrame.p
-								if plr ~= old then
-									old = plr
-									local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, entity.character.HumanoidRootPart.Position)
-									local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-90)
-									targetstrafenum = math.deg(num)
-								end
-								local raycastparameters = RaycastParams.new()
-								raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
-								raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-								local newray = workspace:Raycast(plr.Character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
-								targetstrafing = newray ~= nil
-								if newray ~= nil then
-									if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) then
-										entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, targetstrafejump["Value"], entity.character.HumanoidRootPart.Velocity.Z)
-									end
-									lastreal = plr.Character.HumanoidRootPart.Position
-									local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, entity.character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
-									local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"]
-									local ray = workspace:Raycast(playerpos, (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * (targetstrafedistance["Value"] + 2)), raycastparameters)
-									local times = 1
-									if ray and ray.Position then
-										times = 1 + (((playerpos - ray.Position).Magnitude) / 20)
-										newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * math.clamp(((playerpos - ray.Position).Magnitude - 3), 1, targetstrafedistance["Value"])
-									end
-									local newray2 = workspace:Raycast(newpos, Vector3.new(0, -1000, 0), raycastparameters)
-									local working = true
-									if newray2 ~= nil then
-										local newcframe = CFrame.new(newpos, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-										if (entity.character.HumanoidRootPart.Position - newpos).Magnitude <= 5 then
-											entity.character.HumanoidRootPart.CFrame = newcframe
-										else
-											local ray5 = workspace:Raycast(newcframe.p, CFrame.lookAt(newcframe.p, entity.character.HumanoidRootPart.CFrame.p).lookVector * (targetstrafedistance["Value"] + 2), raycastparameters)
-											if ray5 == nil then
-												entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame:lerp(newcframe, math.clamp(10 * delta, 0, 1))
-												working = false
-											end
-										end
-									else
-										local passed = false
-										local newpos3 = newpos
-										for i = 4, targetstrafedistance["Value"], 4 do
-											local betterpos = playerpos + (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * math.clamp((targetstrafedistance["Value"] - i), 1, targetstrafedistance["Value"]))
-											local newray3 = workspace:Raycast(betterpos, Vector3.new(0, -1000, 0), raycastparameters)
-											if newray3 then
-												newpos3 = betterpos
-												passed = true
-												break
-											end
-										end
-										if not passed then
-											newpos3 = playerpos + (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * 1)
-										end
-										local newcframe2 = CFrame.new(newpos3, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-										if (entity.character.HumanoidRootPart.Position - newpos3).Magnitude <= 5 then
-											entity.character.HumanoidRootPart.CFrame = newcframe2
-										else
-											local ray5 = workspace:Raycast(newcframe2.p, CFrame.lookAt(newcframe2.p, entity.character.HumanoidRootPart.CFrame.p).lookVector * (targetstrafedistance["Value"] + 2), raycastparameters)
-											if ray5 == nil then
-												local ray7 = workspace:Raycast(newcframe2.p, Vector3.new(0, -1000, 0), raycastparameters)
-												if ray7 ~= nil then
-													entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame:lerp(newcframe2, math.clamp(10 * delta, 0, 1))
-													working = false
-												end
-											end
-										end
-									end
-									times = times * (delta * 100)
-									if working then
-										targetstrafenum = (flip and targetstrafenum - ((targetstrafespeed["Value"] / 10) * times) or targetstrafenum + ((targetstrafespeed["Value"] / 10) * times))
-										if targetstrafenum >= 999999 then
-											targetstrafenum = 0
-										end
-										if targetstrafenum < -999999 then
-											targetstrafenum = 0
-										end
-									end
-								else
-									if lastreal then
-										--entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame:lerp(CFrame.new(lastreal), 15 * delta)
-									end
-								end
-								local newstrafevelo = (veryoldpos - entity.character.HumanoidRootPart.CFrame.p) * -100
-								--targetstrafevelo = Vector3.new(newstrafevelo.X, entity.character.HumanoidRootPart.Velocity.Y, newstrafevelo.Z)
+						lastreal = plr.Character.HumanoidRootPart.Position
+						local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, entity.character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
+						local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"]
+						local working = true
+						local newray3 = workspace:Raycast(playerpos, CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"], raycastparameters)
+						newpos = newray3 and (playerpos - newray3.Position) * 0.8 or newpos
+						local newray2 = workspace:Raycast(newpos, Vector3.new(0, -15, 0), raycastparameters)
+						if newray2 ~= nil then
+							local newray4 = workspace:Raycast(entity.character.HumanoidRootPart.Position, (entity.character.HumanoidRootPart.Position - newpos), raycastparameters)
+							if newray4 then 
+								flip = not flip
+							else
+								targetstrafepos = newpos
+								targetstrafing = true
 							end
 						else
-							targetstrafing = false
-							old = nil
-							lastreal = nil
+							flip = not flip
 						end
-					end)
-				else
-					UnbindFromStepped("TargetStrafe")
-					targetstrafing = false
-				end
+						if working then
+							targetstrafenum = (flip and targetstrafenum - ((targetstrafespeed["Value"] * 10) * delta) or targetstrafenum + ((targetstrafespeed["Value"] * 10) * delta))
+							if targetstrafenum >= 999999 then
+								targetstrafenum = 0
+							end
+							if targetstrafenum < -999999 then
+								targetstrafenum = 0
+							end
+						end
+					else
+						targetstrafing = false
+						old = nil
+						lastreal = nil
+					end
+				end)
+			else
+				UnbindFromStepped("TargetStrafe")
+				targetstrafing = false
+				local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
+				controlmodule.moveFunction = oldmove2
+			end
 		end,
 		["HoverText"] = "Automatically moves around attacking players"
 	})
@@ -6697,7 +6662,7 @@ runcode(function()
 				BindToStepped("Speed", 1, function(time, delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						if speedanimation["Enabled"] then
-							for i,v in pairs(lplr.Character.Humanoid:GetPlayingAnimationTracks()) do
+							for i,v in pairs(entity.character.Humanoid:GetPlayingAnimationTracks()) do
 								if v.Name == "WalkAnim" or v.Name == "RunAnim" then
 									v:AdjustSpeed(1)
 								end
