@@ -3571,7 +3571,7 @@ runcode(function()
 				BindToRenderStep("ChestStealer", 1, function()
 					if ChestStealDelay <= tick() and entity.isAlive then
 						ChestStealDelay = tick() + 0.01
-						local rootpart = lplr.Character and lplr.Character:FindFirstChild("HumanoidRootPart")
+						local rootpart = entity.character.HumanoidRootPart
 						for i,v in pairs(game:GetService("CollectionService"):GetTagged("chest")) do
 							if rootpart and (rootpart.Position - v.Position).magnitude <= ChestStealerDistance["Value"] and v:FindFirstChild("ChestFolderValue") then
 								local chest = v.ChestFolderValue.Value
@@ -8113,11 +8113,9 @@ NoSlowdown = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 			OldSetSpeedFunc = bedwars["sprintTable"]["setSpeed"]
 			bedwars["sprintTable"]["setSpeed"] = function(tab1, val1)
 				spawn(function()
-					if lplr.Character then
-						local hum = lplr.Character:WaitForChild("Humanoid")
-						if hum then
-							hum.WalkSpeed = (bedwars["sprintTable"].blockSprint and math.clamp(val1 * tab1.moveSpeedMultiplier, 20, 100000000) or val1)
-						end
+					local hum = entity.character.Humanoid
+					if hum then
+						hum.WalkSpeed = (bedwars["sprintTable"].blockSprint and math.clamp(val1 * tab1.moveSpeedMultiplier, 20, 100000000) or val1)
 					end
 				end)
 			end
