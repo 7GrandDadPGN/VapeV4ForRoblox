@@ -1611,7 +1611,7 @@ do
                         entity.character.Humanoid = hum
                         entity.character.HumanoidRootPart = humrootpart
                     else
-						local inv = char:FindFirstChild("InventoryFolder")
+						local inv = char:WaitForChild("InventoryFolder", 5)
 						if inv then 
 							if invadded[plr] then invadded[plr]:Disconnect() end 
 							if invremoved[plr] then invremoved[plr]:Disconnect() end 
@@ -1627,26 +1627,32 @@ do
 								--	inventories[plr] = bedwars["getInventory2"](plr)
 								end)
 							end
-							local armorobj1 = char:WaitForChild("ArmorInvItem_0", 3)
-							local armorobj2 = char:WaitForChild("ArmorInvItem_1", 3)
-							local armorobj3 = char:WaitForChild("ArmorInvItem_2", 3)
-							local handobj = char:WaitForChild("HandInvItem", 3)
-							if armorobj1 and armorobj2 and armorobj3 and handobj then 
+							local armorobj1 = char:WaitForChild("ArmorInvItem_0", 5)
+							local armorobj2 = char:WaitForChild("ArmorInvItem_1", 5)
+							local armorobj3 = char:WaitForChild("ArmorInvItem_2", 5)
+							local handobj = char:WaitForChild("HandInvItem", 5)
+							if armorobj1 then
 								armor1[plr] = armorobj1.Changed:connect(function() 
 									task.delay(0.3, function() 
 										inventories[plr] = bedwars["getInventory2"](plr) 
 									end)
 								end)
+							end
+							if armorobj2 then
 								armor2[plr] = armorobj2.Changed:connect(function() 
 									task.delay(0.3, function() 
 										inventories[plr] = bedwars["getInventory2"](plr) 
 									end)
 								end)
+							end
+							if armorobj3 then
 								armor3[plr] = armorobj3.Changed:connect(function() 
 									task.delay(0.3, function() 
 										inventories[plr] = bedwars["getInventory2"](plr) 
 									end)
 								end)
+							end
+							if handobj then
 								hand[plr] = handobj.Changed:connect(function() 
 									task.delay(0.3, function() 
 										inventories[plr] = bedwars["getInventory2"](plr) 
@@ -2593,56 +2599,66 @@ runcode(function()
 					end
 					return oldmove2(self, movedir, facecam, ...)
 				end
-				BindToStepped("TargetStrafe", 1, function(lol, delta)
-					local plr = GetNearestHumanoidToPosition(true, 18)
-					targetstrafing = false
-					if entity.isAlive and plr and (not GuiLibrary["ObjectsThatCanBeSaved"]["ScaffoldOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and longjumpticktimer <= tick() and (not spidergoinup) then
-						local veryoldpos = entity.character.HumanoidRootPart.CFrame.p
-						if plr ~= old then
-							old = plr
-							local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, entity.character.HumanoidRootPart.Position)
-							local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-90)
-							targetstrafenum = math.deg(num)
-						end
-						local raycastparameters = RaycastParams.new()
-						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
-						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+				spawn(function()
+					repeat
+						task.wait(0.1)
+						if (not targetstrafe["Enabled"]) then break end
+						local plr = GetNearestHumanoidToPosition(true, 18)
 						targetstrafing = false
-						lastreal = plr.Character.HumanoidRootPart.Position
-						local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, entity.character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
-						local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"]
-						local working = true
-						local newray3 = workspace:Raycast(playerpos, CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"], raycastparameters)
-						newpos = newray3 and (playerpos - newray3.Position) * 0.9 or newpos
-						local newray2 = workspace:Raycast(newpos, Vector3.new(0, -15, 0), raycastparameters)
-						if newray2 ~= nil then
-							local newray4 = workspace:Raycast(entity.character.HumanoidRootPart.Position, (entity.character.HumanoidRootPart.Position - newpos), raycastparameters)
-							if newray4 then 
-								flip = not flip
+						if entity.isAlive and plr and (not GuiLibrary["ObjectsThatCanBeSaved"]["ScaffoldOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and longjumpticktimer <= tick() and (not spidergoinup) then
+							local veryoldpos = entity.character.HumanoidRootPart.CFrame.p
+							if plr ~= old then
+								old = plr
+								local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, entity.character.HumanoidRootPart.Position)
+								local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-90)
+								targetstrafenum = math.deg(num)
+							end
+							local raycastparameters = RaycastParams.new()
+							raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
+							raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+							targetstrafing = false
+							lastreal = plr.Character.HumanoidRootPart.Position
+							local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, entity.character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
+							local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"]
+							local working = true
+							local newray3 = workspace:Raycast(playerpos, CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"], raycastparameters)
+							newpos = newray3 and (playerpos - newray3.Position) * 0.8 or newpos
+							local newray2 = workspace:Raycast(newpos, Vector3.new(0, -15, 0), raycastparameters)
+							if newray2 == nil then 
+								newray2 = workspace:Raycast(playerpos + (playerpos - newpos) * 0.4, Vector3.new(0, -15, 0), raycastparameters)
+								if newray2 then 
+									newpos = playerpos + ((playerpos - newpos) * 0.4)
+									print("override")
+								end
+							end
+							if newray2 ~= nil then
+								local newray4 = workspace:Raycast(entity.character.HumanoidRootPart.Position, (entity.character.HumanoidRootPart.Position - newpos), raycastparameters)
+								if newray4 then 
+									flip = not flip
+								else
+									targetstrafepos = newpos
+									targetstrafing = true
+								end
 							else
-								targetstrafepos = newpos
-								targetstrafing = true
+								flip = not flip
+							end
+							if working then
+								targetstrafenum = (flip and targetstrafenum - targetstrafespeed["Value"] or targetstrafenum + targetstrafespeed["Value"])
+								if targetstrafenum >= 999999 then
+									targetstrafenum = 0
+								end
+								if targetstrafenum < -999999 then
+									targetstrafenum = 0
+								end
 							end
 						else
-							flip = not flip
+							targetstrafing = false
+							old = nil
+							lastreal = nil
 						end
-						if working then
-							targetstrafenum = (flip and targetstrafenum - ((targetstrafespeed["Value"] * 10) * delta) or targetstrafenum + ((targetstrafespeed["Value"] * 10) * delta))
-							if targetstrafenum >= 999999 then
-								targetstrafenum = 0
-							end
-							if targetstrafenum < -999999 then
-								targetstrafenum = 0
-							end
-						end
-					else
-						targetstrafing = false
-						old = nil
-						lastreal = nil
-					end
+					until (not targetstrafe["Enabled"])
 				end)
 			else
-				UnbindFromStepped("TargetStrafe")
 				targetstrafing = false
 				local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
 				controlmodule.moveFunction = oldmove2
