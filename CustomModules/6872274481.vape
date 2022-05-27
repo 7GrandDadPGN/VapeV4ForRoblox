@@ -9500,6 +9500,15 @@ runcode(function()
 				return nil
 			end
 
+			local function notlasso()
+				for i,v in pairs(game:GetService("CollectionService"):GetTagged("LassoHooked")) do 
+					if v:IsDescendantOf(oldchar) then 
+						return false
+					end
+				end
+				return true
+			end
+
 			spawn(function()
 				repeat
 					if (not AnticheatBypass["Enabled"]) then break end
@@ -9545,7 +9554,7 @@ runcode(function()
 										if pingspike then
 											createwarning("AnticheatBypass", "Lagspike Detected : "..pingspike, 10)
 										else
-											if matchState ~= 2 then
+											if matchState ~= 2 and notlasso() then
 												lagbacks = lagbacks + 1
 											end
 										end
