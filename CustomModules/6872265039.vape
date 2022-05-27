@@ -875,7 +875,7 @@ spawn(function()
 		notifyframecorner.CornerRadius = UDim.new(0, 5)
 		notifyframecorner.Parent = notifyframereal
 		local notifyframeaspect = Instance.new("UIAspectRatioConstraint")
-		notifyframeaspect.AspectRatio = 7.372
+		notifyframeaspect.AspectRatio = 10
 		notifyframeaspect.DominantAxis = Enum.DominantAxis.Height
 		notifyframeaspect.Parent = notifyframereal
 		local notifyframelist = Instance.new("UIListLayout")

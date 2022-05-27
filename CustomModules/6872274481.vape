@@ -10923,7 +10923,7 @@ spawn(function()
 		notifyframecorner.CornerRadius = UDim.new(0, 5)
 		notifyframecorner.Parent = notifyframereal
 		local notifyframeaspect = Instance.new("UIAspectRatioConstraint")
-		notifyframeaspect.AspectRatio = 7.372
+		notifyframeaspect.AspectRatio = 10
 		notifyframeaspect.DominantAxis = Enum.DominantAxis.Height
 		notifyframeaspect.Parent = notifyframereal
 		local notifyframelist = Instance.new("UIListLayout")
@@ -11015,6 +11015,11 @@ spawn(function()
 			notifyframereal:Remove()
 		end
 	end
+
+	createannouncement({
+		Time = 20,
+		Text = "fat"
+	})
 
 	local function rundata(datatab, olddatatab)
 		if not olddatatab then
