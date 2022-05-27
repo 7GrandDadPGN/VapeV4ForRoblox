@@ -1627,10 +1627,10 @@ do
 								--	inventories[plr] = bedwars["getInventory2"](plr)
 								end)
 							end
-							local armorobj1 = char:FindFirstChild("ArmorInvItem_0")
-							local armorobj2 = char:FindFirstChild("ArmorInvItem_1")
-							local armorobj3 = char:FindFirstChild("ArmorInvItem_2")
-							local handobj = char:FindFirstChild("HandInvItem")
+							local armorobj1 = char:WaitForChild("ArmorInvItem_0", 3)
+							local armorobj2 = char:WaitForChild("ArmorInvItem_1", 3)
+							local armorobj3 = char:WaitForChild("ArmorInvItem_2", 3)
+							local handobj = char:WaitForChild("HandInvItem", 3)
 							if armorobj1 and armorobj2 and armorobj3 and handobj then 
 								armor1[plr] = armorobj1.Changed:connect(function() 
 									task.delay(0.3, function() 
@@ -2613,7 +2613,7 @@ runcode(function()
 						local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"]
 						local working = true
 						local newray3 = workspace:Raycast(playerpos, CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"], raycastparameters)
-						newpos = newray3 and (playerpos - newray3.Position) * 0.8 or newpos
+						newpos = newray3 and (playerpos - newray3.Position) * 0.9 or newpos
 						local newray2 = workspace:Raycast(newpos, Vector3.new(0, -15, 0), raycastparameters)
 						if newray2 ~= nil then
 							local newray4 = workspace:Raycast(entity.character.HumanoidRootPart.Position, (entity.character.HumanoidRootPart.Position - newpos), raycastparameters)
