@@ -4844,9 +4844,14 @@ runcode(function()
 			if callback then
 				longjumpvelo = Vector3.new(0, 0, 0)
 				if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-					if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
-						AnticheatBypass["ToggleButton"](false)
-					end
+					spawn(function()
+						repeat task.wait() until shared.VapeFullyLoaded
+						if longjump["Enabled"] then 
+							if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
+								AnticheatBypass["ToggleButton"](false)
+							end
+						end
+					end)
 					if entity.isAlive then
 						spawn(function()
 							local nomove = false
@@ -6672,9 +6677,14 @@ runcode(function()
 		["Name"] = "Speed",
 		["Function"] = function(callback)
 			if callback then
-				if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
-					AnticheatBypass["ToggleButton"](false)
-				end
+				spawn(function()
+					repeat task.wait() until shared.VapeFullyLoaded
+					if speed["Enabled"] then
+						if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
+							AnticheatBypass["ToggleButton"](false)
+						end
+					end
+				end)
 				if GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] then
 					createwarning("Speed Stopped", "Disable fly to move.", 4)
 				end
