@@ -9721,27 +9721,29 @@ runcode(function()
 				spawn(function()
 					if AnticheatBypassAutoConfig["Enabled"] then 
 						repeat task.wait() until bedwars["ClientStoreHandler"]:getState().Game.queueType ~= nil
-						local amountofplayers = 0
-						for i,v in pairs(bedwars["QueueMeta"][bedwars["ClientStoreHandler"]:getState().Game.queueType or "bedwars_test"].teams) do 
-							amountofplayers = amountofplayers + v.maxPlayers
-						end
-						if amountofplayers > 24 then
-							pcall(function()
-								GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](42)
-								GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("CFrame")
-								GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](42)
-								GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
-								GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("AnticheatBypass")
-							end)
-						else
-							pcall(function()
-								GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](54)
-								GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("Normal")
-								GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](54)
-								GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("Normal")
-								GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("Normal")
-							end)
-							anticheatbypassenable()
+						if AnticheatBypass["Enabled"] then
+							local amountofplayers = 0
+							for i,v in pairs(bedwars["QueueMeta"][bedwars["ClientStoreHandler"]:getState().Game.queueType or "bedwars_test"].teams) do 
+								amountofplayers = amountofplayers + v.maxPlayers
+							end
+							if amountofplayers > 24 then
+								pcall(function()
+									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](42)
+									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("CFrame")
+									GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](42)
+									GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
+									GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("AnticheatBypass")
+								end)
+							else
+								pcall(function()
+									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](54)
+									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("Normal")
+									GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](54)
+									GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("Normal")
+									GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("Normal")
+								end)
+								anticheatbypassenable()
+							end
 						end
 					else
 						anticheatbypassenable()
