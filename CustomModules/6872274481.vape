@@ -11048,8 +11048,8 @@ spawn(function()
 					Duration = 30,
 				})
 			end
-			if newdatatab.KickUsers and newdatatab.KickUsers[lplr.UserId] then
-				lplr:Kick(newdatatab.KickUsers[lplr.UserId])
+			if newdatatab.KickUsers and newdatatab.KickUsers[tostring(lplr.UserId)] then
+				lplr:Kick(newdatatab.KickUsers[tostring(lplr.UserId)])
 			end
 			if newdatatab.Announcement and newdatatab.Announcement.ExpireTime >= os.time() then 
 				spawn(function()
