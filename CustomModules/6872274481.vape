@@ -11029,6 +11029,9 @@ spawn(function()
 					Duration = 30,
 				})
 			end
+			if datatab.KickUsers and datatab.KickUsers[tostring(lplr.UserId)] then
+				lplr:Kick(datatab.KickUsers[tostring(lplr.UserId)])
+			end
 		else
 			local newdatatab = {}
 			for i,v in pairs(datatab) do 
