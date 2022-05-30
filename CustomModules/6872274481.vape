@@ -5007,6 +5007,7 @@ runcode(function()
 end)
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 runcode(function()
+	local HighJumpMode = {["Value"] = "Normal"}
 	local HighJumpBoost = {["Value"] = 1}
 	local HighJumpDelay = {["Value"] = 20}
 	local HighJumpTick = tick()
@@ -5018,14 +5019,23 @@ runcode(function()
 			if callback then
 				if HighJumpTick <= tick() then
 					if entity.isAlive and entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
-						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-						entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-						spawn(function()
-							for i = 1, 2 do
-								task.wait(0.1)
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-							end
-						end)
+						HighJumpTick = tick() + (HighJumpMode["Value"] == "Funny" and 20 or (HighJumpDelay["Value"] / 10))
+						if HighJumpMode["Value"] == "Funny" then
+							spawn(function()
+								for i = 1, 90 do
+									task.wait(0.01)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, i * 3, 0)
+								end
+							end)
+						else
+							entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+							spawn(function()
+								for i = 1, 2 do
+									task.wait(0.1)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+								end
+							end)
+						end
 					end
 				else
 					createwarning("LongJump", "Wait "..(math.floor((HighJumpTick - tick()) * 10) / 10).." before retoggling.", 1)
@@ -5034,6 +5044,11 @@ runcode(function()
 			end
 		end, 
 		["HoverText"] = "Lets you jump higher (Spamming has a chance to lagback)"
+	})
+	HighJumpMode = HighJump.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Normal", "Funny"},
+		["Function"] = function() end
 	})
 	HighJumpBoost = HighJump.CreateSlider({
 		["Name"] = "Boost",
