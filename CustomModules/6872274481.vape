@@ -2950,11 +2950,6 @@ runcode(function()
 													entity.character.HumanoidRootPart.CFrame = new
 													task.wait(0.1)
 												end
-												entity.character.HumanoidRootPart.Anchored = true
-												task.wait(antivoidnewdelay["Value"] / 10)
-												if entity.isAlive then
-													entity.character.HumanoidRootPart.Anchored = false
-												end
 											else
 												createwarning("AntiVoid", "Magnitude bigger then 40, failed.", 10)
 												for i = 1, 2 do
@@ -5270,8 +5265,8 @@ runcode(function()
 			{CFrame = CFrame.new(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.05}
 		},
 		Slow = {
-			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.1},
-			{CFrame = CFrame.new(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.1}
+			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.15},
+			{CFrame = CFrame.new(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.15}
 		},
 		["Vertical Spin"] = {
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(8), math.rad(5)), Time = 0.1},
@@ -5280,6 +5275,10 @@ runcode(function()
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(-0), math.rad(-0)), Time = 0.1}
 		},
 		Exhibition = {
+			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.1},
+			{CFrame = CFrame.new(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.2}
+		},
+		["Exhibition Old"] = {
 			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.15},
 			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.05},
 			{CFrame = CFrame.new(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.1},
@@ -5419,17 +5418,17 @@ runcode(function()
                 bedwars["SoundManager"]["playSound"] = oldsound
                 oldplay = nil
 				targetinfo.UpdateInfo({}, 0)
-				if entity.isAlive then
-					local Root = entity.character.HumanoidRootPart
-					if Root then
-						local Neck = Root.Parent.Head.Neck
-						if orig and orig2 then 
-							Neck.C0 = CFrame.new(orig)
-							Root.Parent.LowerTorso.Root.C0 = CFrame.new(orig2)
+                pcall(function()
+					if entity.isAlive then
+						local Root = entity.character.HumanoidRootPart
+						if Root then
+							local Neck = Root.Parent.Head.Neck
+							if orig and orig2 then 
+								Neck.C0 = CFrame.new(orig)
+								Root.Parent.LowerTorso.Root.C0 = CFrame.new(orig2)
+							end
 						end
 					end
-				end
-                pcall(function()
                     if origC0 == nil then
                         origC0 = cam.Viewmodel.RightHand.RightWrist.C0
                     end
@@ -5469,7 +5468,7 @@ runcode(function()
     })
     killauraanimmethod = Killaura.CreateDropdown({
         ["Name"] = "Animation", 
-        ["List"] = {"Normal", "Slow", "Vertical Spin", "Exhibition"},
+        ["List"] = {"Normal", "Slow", "Vertical Spin", "Exhibition", "Exhibition Old"},
         ["Function"] = function(val) end
     })
     killauramouse = Killaura.CreateToggle({
@@ -6917,9 +6916,14 @@ runcode(function()
 									fly["ToggleButton"](false)
 								end
 							end
+							if flyacprogressbarframe then 
+								flyacprogressbarframe.TextLabel.Text = (onground and (flyacrisky["Enabled"] and 2 or 1.4) or math.floor((groundtime - tick()) * 10) / 10).."s"
+							end
 							lastonground = onground
 							allowed = 1
-							realflyspeed = realflyspeed + 14
+							if flymode["Value"] ~= "CFrame" and flyacboost["Enabled"] then
+								realflyspeed = realflyspeed + 14
+							end
 						else
 							onground = true
 							lastonground = true
@@ -7036,6 +7040,16 @@ runcode(function()
 				flyacprogressbarframe2.Visible = true
 				flyacprogressbarframe2.BackgroundColor3 = Color3.new(0.9, 0.9, 0.9)
 				flyacprogressbarframe2.Parent = flyacprogressbarframe
+				local flyacprogressbartext = Instance.new("TextLabel")
+				flyacprogressbartext.Text = "2s"
+				flyacprogressbartext.Font = Enum.Font.Gotham
+				flyacprogressbartext.TextStrokeTransparency = 0
+				flyacprogressbartext.TextColor3 =  Color3.new(0.9, 0.9, 0.9)
+				flyacprogressbartext.TextSize = 20
+				flyacprogressbartext.Size = UDim2.new(1, 0, 1, 0)
+				flyacprogressbartext.BackgroundTransparency = 1
+				flyacprogressbartext.Position = UDim2.new(0, 0, -1, 0)
+				flyacprogressbartext.Parent = flyacprogressbarframe
 			else
 
 			end
@@ -10717,6 +10731,7 @@ runcode(function()
 	label.Position = UDim2.new(0, 7, 0, 5)
 	label.Parent = overlayframe
 	Overlay["Bypass"] = true
+	local oldnetworkowner
 	GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
 		["Name"] = "Overlay", 
 		["Icon"] = "vape/assets/TargetIcon1.png", 
@@ -10729,6 +10744,15 @@ runcode(function()
 						if not tpstring then
 							tpstring = tick().."/"..kills.."/"..beds.."/"..(victorysaid and 1 or 0).."/"..(1).."/"..(0)
 							origtpstring = tpstring
+						end
+						if entity.isAlive and (not AnticheatBypass["Enabled"]) and networkownerfunc then 
+							local newnetworkowner = networkownerfunc(entity.character.HumanoidRootPart)
+							if oldnetworkowner ~= nil and oldnetworkowner ~= newnetworkowner and newnetworkowner == false then 
+								lagbacks = lagbacks + 1
+							end
+							oldnetworkowner = newnetworkowner
+						else
+							oldnetworkowner = nil
 						end
 						local splitted = origtpstring:split("/")
 						label.Text = "Session Info\nTime Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\nKills : "..(splitted[2] + kills).."\nBeds : "..(splitted[3] + beds).."\nWins : "..(splitted[4] + (victorysaid and 1 or 0)).."\nGames : "..splitted[5].."\nLagbacks : "..(splitted[6] + lagbacks)
