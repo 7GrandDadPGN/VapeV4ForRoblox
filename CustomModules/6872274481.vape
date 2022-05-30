@@ -2525,7 +2525,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				BindToStepped("Phase", 1, function()
-					if entity.isAlive then
+					if entity.isAlive and entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 						local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
 						local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
 						local pos3 = entity.character.Head.CFrame.p
@@ -5022,7 +5022,7 @@ runcode(function()
 						HighJumpTick = tick() + (HighJumpMode["Value"] == "Funny" and 20 or (HighJumpDelay["Value"] / 10))
 						if HighJumpMode["Value"] == "Funny" then
 							spawn(function()
-								for i = 1, 90 do
+								for i = 1, 100 do
 									task.wait(0.01)
 									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, i * 3, 0)
 								end
@@ -5113,8 +5113,8 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				BindToStepped("Spider", 1, function()
-					if entity.isAlive then
-						local vec = (entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) and entity.character.Humanoid.MoveDirection.Unit * 2 or Vector3.new(0, 0, 0))
+					if entity.isAlive and entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+						local vec = entity.character.Humanoid.MoveDirection.Unit * 2
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
