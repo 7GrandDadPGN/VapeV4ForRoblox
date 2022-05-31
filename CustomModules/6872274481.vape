@@ -6077,6 +6077,8 @@ local AutoReport = {["Enabled"] = false}
 runcode(function()
 	local reporttable = {
 		["gay"] = "Bullying",
+		["gae"] = "Bullying",
+		["gey"] = "Bullying",
 		["hacker"] = "Scamming",
 		["fat"] = "Bullying",
 		["get a life"] = "Bullying",
@@ -10232,14 +10234,26 @@ runcode(function()
 						if entity.isAlive and autohealallowed then
 							local item = getItem("apple")
 							local shield = getItem("big_shield") or getItem("mini_shield")
-							if item then
+							local pot = getItem("heal_splash_potion")
+							if item or pot then
 								if lplr.Character:GetAttribute("Health") <= (lplr.Character:GetAttribute("MaxHealth") - (100 - autohealval["Value"])) then
 									autohealallowed = false
-									bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServerAsync({
-										["item"] = item["tool"]
-									}):andThen(function()
+									if item then
+										bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServerAsync({
+											["item"] = item["tool"]
+										}):andThen(function()
+											autohealallowed = true
+										end)
+									else
+										local raycastparameters = RaycastParams.new()
+										raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
+										raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+										local newray = workspace:Raycast((oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -76, 0), raycastparameters)
+										if newray ~= nil then
+											bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(pot["tool"], "heal_splash_potion", "heal_splash_potion", (oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -70, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
+										end
 										autohealallowed = true
-									end)
+									end
 								end
 							end
 							if shield then
@@ -10849,34 +10863,6 @@ runcode(function()
 			end
 		end, 
 		["Priority"] = 2
-	})
-end)
-
-runcode(function()
-	local AutoPot = {["Enabled"] = false}
-	AutoPot = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoPot",
-		["Function"] = function(callback)
-			if callback then
-				spawn(function()
-					repeat
-						task.wait()
-						if entity.isAlive and lplr.Character:GetAttribute("Health") <= 80 then
-							local item = getItem("heal_splash_potion")
-							if item then
-								local raycastparameters = RaycastParams.new()
-								raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
-								raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-								local newray = workspace:Raycast((oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -76, 0), raycastparameters)
-								if newray ~= nil then
-									bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(item["tool"], "heal_splash_potion", "heal_splash_potion", (oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -70, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
-								end
-							end
-						end
-					until (not AutoPot["Enabled"])
-				end)
-			end
-		end
 	})
 end)
 
