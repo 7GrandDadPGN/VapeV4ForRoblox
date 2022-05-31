@@ -6073,81 +6073,148 @@ local commands = {
 	end,
 }
 
-chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
-	local plr = players:FindFirstChild(tab["FromSpeaker"])
-	local args = tab.Message:split(" ")
-	local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
-	if plr and bedwars["CheckPlayerType"](lplr) ~= "DEFAULT" and tab.MessageType == "Whisper" and client ~= nil and alreadysaidlist[plr.Name] == nil then
-		alreadysaidlist[plr.Name] = true
-		spawn(function()
-			local connection
-			for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
-				if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
-					newbubble.Parent.Parent.Visible = false
-					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or newbubble.Parent.Parent.Parent.Parent == nil
-					if connection then
-						connection:Disconnect()
-					end
-				end
+local AutoReport = {["Enabled"] = false}
+runcode(function()
+	local reporttable = {
+		["gay"] = "Bullying",
+		["hacker"] = "Scamming",
+		["fat"] = "Bullying",
+		["get a life"] = "Bullying",
+		["fatherless"] = "Bullying",
+		["disco"] = "Offsite Links",
+		["yt"] = "Offsite Links",
+		["dizcourde"] = "Offsite Links",
+		["retard"] = "Swearing",
+		["bad"] = "Bullying",
+		["trash"] = "Bullying",
+		["nolife"] = "Bullying",
+		["no life"] = "Bullying",
+		["loser"] = "Bullying",
+		["kill your"] = "Bullying",
+		["hack to win"] = "Bullying",
+		["bozo"] = "Bullying",
+		["kid"] = "Bullying",
+		["adopted"] = "Bullying",
+		["L in life"] = "Bullying",
+		["commit not alive"] = "Bullying",
+		["vxpe"] = "Offsite Links",
+		["futureclient"] = "Offsite Links",
+		["im hacking"] = "Scamming",
+		["I'm hacking"] = "Scamming",
+		["download"] = "Offsite Links",
+		["youtube"] = "Offsite Links",
+		["die"] = "Bullying"
+	}
+
+	local alreadyreported = {}
+
+	local function findreport(msg)
+		for i,v in pairs(reporttable) do 
+			if msg:lower():find(i) then 
+				return v
 			end
-			connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
-				if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
-					newbubble.Parent.Parent.Visible = false
-					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or  newbubble.Parent.Parent.Parent.Parent == nil
-					if connection then
-						connection:Disconnect()
+		end
+		return nil
+	end
+
+	local AutoReportNotify = {["Enabled"] = false}
+	AutoReport = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoReport",
+		["Function"] = function() end
+	})
+	AutoReportNotify = AutoReport.CreateToggle({
+		["Name"] = "Notify",
+		["Function"] = function() end
+	})
+
+	chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
+		local plr = players:FindFirstChild(tab["FromSpeaker"])
+		local args = tab.Message:split(" ")
+		local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
+		if plr and bedwars["CheckPlayerType"](lplr) ~= "DEFAULT" and tab.MessageType == "Whisper" and client ~= nil and alreadysaidlist[plr.Name] == nil then
+			alreadysaidlist[plr.Name] = true
+			spawn(function()
+				local connection
+				for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
+					if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
+						newbubble.Parent.Parent.Visible = false
+						repeat task.wait() until newbubble.Parent.Parent.Parent == nil or newbubble.Parent.Parent.Parent.Parent == nil
+						if connection then
+							connection:Disconnect()
+						end
 					end
 				end
+				connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
+					if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
+						newbubble.Parent.Parent.Visible = false
+						repeat task.wait() until newbubble.Parent.Parent.Parent == nil or  newbubble.Parent.Parent.Parent.Parent == nil
+						if connection then
+							connection:Disconnect()
+						end
+					end
+				end)
 			end)
-		end)
-		createwarning("Vape", plr.Name.." is using "..client.."!", 60)
-		clients.ClientUsers[plr.Name] = client:upper()..' USER'
-	end
-	--priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)]
-	if priolist[bedwars["CheckPlayerType"](lplr)] > 0 and plr == lplr then
-		if tab.Message:len() >= 5 and tab.Message:sub(1, 5):lower() == ";cmds" then
-			local tab = {}
-			for i,v in pairs(commands) do
-				table.insert(tab, i)
-			end
-			table.sort(tab)
-			local str = ""
-			for i,v in pairs(tab) do
-				str = str..";"..v.."\n"
-			end
-			game.StarterGui:SetCore("ChatMakeSystemMessage",{
-                Text = 	str,
-            })
+			createwarning("Vape", plr.Name.." is using "..client.."!", 60)
+			clients.ClientUsers[plr.Name] = client:upper()..' USER'
 		end
-	end
-	if plr and priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)] and #args > 1 then
-		table.remove(args, 1)
-		local chosenplayers = findplayers(args[1])
-		if table.find(chosenplayers, lplr) then
+		--priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)]
+		if priolist[bedwars["CheckPlayerType"](lplr)] > 0 and plr == lplr then
+			if tab.Message:len() >= 5 and tab.Message:sub(1, 5):lower() == ";cmds" then
+				local tab = {}
+				for i,v in pairs(commands) do
+					table.insert(tab, i)
+				end
+				table.sort(tab)
+				local str = ""
+				for i,v in pairs(tab) do
+					str = str..";"..v.."\n"
+				end
+				game.StarterGui:SetCore("ChatMakeSystemMessage",{
+					Text = 	str,
+				})
+			end
+		end
+		if AutoReport["Enabled"] and plr and plr ~= lplr and alreadyreported[plr] == nil then
+            local reportreason = findreport(tab.Message)
+            if reportreason then 
+                spawn(function()
+                    players:ReportAbuse(plr, reportreason, "he said a bad word")
+                end)
+				if AutoReportNotify["Enabled"] then 
+					createwarning("AutoReport", "reported "..plr.Name.." for "..reportreason, 15)
+				end
+                alreadyreported[plr] = true
+            end
+        end
+		if plr and priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)] and #args > 1 then
 			table.remove(args, 1)
-			for i,v in pairs(commands) do
-				if tab.Message:len() >= (i:len() + 1) and tab.Message:sub(1, i:len() + 1):lower() == ";"..i:lower() then
-				--	print("hahahah")
-					v(args)
-					break
+			local chosenplayers = findplayers(args[1])
+			if table.find(chosenplayers, lplr) then
+				table.remove(args, 1)
+				for i,v in pairs(commands) do
+					if tab.Message:len() >= (i:len() + 1) and tab.Message:sub(1, i:len() + 1):lower() == ";"..i:lower() then
+					--	print("hahahah")
+						v(args)
+						break
+					end
 				end
 			end
 		end
-	end
-	if (AutoToxicTeam["Enabled"] == false and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") or AutoToxicTeam["Enabled"]) and (#AutoToxicPhrases5["ObjectList"] > 0 and toxicfindstr(tab["Message"], AutoToxicPhrases5["ObjectList"]) or #AutoToxicPhrases5["ObjectList"] == 0 and (tab["Message"]:lower():find("hack") or tab["Message"]:lower():find("exploit") or tab["Message"]:lower():find("cheat"))) and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
-		local custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
-		if custommsg == lastsaid2 then
-			custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
-		else
-			lastsaid2 = custommsg
+		if (AutoToxicTeam["Enabled"] == false and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") or AutoToxicTeam["Enabled"]) and (#AutoToxicPhrases5["ObjectList"] > 0 and toxicfindstr(tab["Message"], AutoToxicPhrases5["ObjectList"]) or #AutoToxicPhrases5["ObjectList"] == 0 and (tab["Message"]:lower():find("hack") or tab["Message"]:lower():find("exploit") or tab["Message"]:lower():find("cheat"))) and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
+			local custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
+			if custommsg == lastsaid2 then
+				custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
+			else
+				lastsaid2 = custommsg
+			end
+			if custommsg then
+				custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
+			end
+			local msg = custommsg or "I dont care about the fact that I'm hacking, I care about how you died in a block game L "..(plr.DisplayName or plr.Name).." | vxpe.xyz"
+			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+			table.insert(ignoredplayers, plr.UserId)
 		end
-		if custommsg then
-			custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
-		end
-		local msg = custommsg or "I dont care about the fact that I'm hacking, I care about how you died in a block game L "..(plr.DisplayName or plr.Name).." | vxpe.xyz"
-		game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
-		table.insert(ignoredplayers, plr.UserId)
-	end
+	end)
 end)
 
 runcode(function()
@@ -9745,6 +9812,9 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				spawn(function()
+					if (not AutoReport["Enabled"]) then 
+						AutoReport["ToggleButton"](false)
+					end
 					if AnticheatBypassAutoConfig["Enabled"] then 
 						repeat task.wait() until bedwars["ClientStoreHandler"]:getState().Game.queueType ~= nil
 						if AnticheatBypass["Enabled"] then
