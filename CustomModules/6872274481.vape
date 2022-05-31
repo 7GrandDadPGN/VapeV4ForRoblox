@@ -6174,7 +6174,7 @@ runcode(function()
 				})
 			end
 		end
-		if AutoReport["Enabled"] and plr and plr ~= lplr and alreadyreported[plr] == nil then
+		if AutoReport["Enabled"] and plr and plr ~= lplr and alreadyreported[plr] == nil and bedwars["CheckPlayerType"](plr) == "DEFAULT" then
             local reportreason = findreport(tab.Message)
             if reportreason then 
                 spawn(function()
