@@ -26,6 +26,7 @@ local antivoidypos = 0
 local kills = 0
 local beds = 0
 local lagbacks = 0
+local disguisecheck = false
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -1674,7 +1675,13 @@ do
                     entity.entityConnections[#entity.entityConnections + 1] = char.ChildRemoved:connect(function(part)
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
                             if localcheck then
-                                entity.isAlive = false
+								if not disguisecheck then
+                                	entity.isAlive = false
+								else
+									local head = char:WaitForChild("Head", 10)
+									entity.character.Head = head
+								end
+								disguisecheck = false
                             else
 								if invadded[plr] then invadded[plr]:Disconnect() end 
 								if invremoved[plr] then invremoved[plr]:Disconnect() end 
@@ -9482,6 +9489,7 @@ runcode(function()
 							v.Handle.Transparency = 1
 						end
 					end
+					disguisecheck = true
 					clone.Humanoid:ApplyDescriptionClientServer(desc)
 				end)
 			end
