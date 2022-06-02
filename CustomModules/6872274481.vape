@@ -681,8 +681,8 @@ local function getItemNear(itemName, inv)
 	return nil
 end
 
-local function getItem(itemName)
-	for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
+local function getItem(itemName, inv)
+	for i5, v5 in pairs(inv or bedwars["getInventory"](lplr)["items"]) do
 		if v5["itemType"] == itemName then
 			return v5, i5
 		end
@@ -2635,7 +2635,6 @@ runcode(function()
 								newray2 = workspace:Raycast(playerpos + (playerpos - newpos) * 0.4, Vector3.new(0, -15, 0), raycastparameters)
 								if newray2 then 
 									newpos = playerpos + ((playerpos - newpos) * 0.4)
-									print("override")
 								end
 							end
 							if newray2 ~= nil then
@@ -3814,7 +3813,7 @@ runcode(function()
 		local teamupgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], upgradetype)
 		local teamtier = teamupgrade["tiers"][upgrades[upgradetype] and upgrades[upgradetype] + 2 or 1]
 		if teamtier then 
-			local teamcurrency = getItem(teamtier["currency"])
+			local teamcurrency = getItem(teamtier["currency"], inv.items)
 			if teamcurrency and teamcurrency["amount"] >= teamtier.price then 
 				bedwars["ClientHandler"]:Get("BedwarsPurchaseTeamUpgrade"):CallServerAsync({
 					upgradeId = upgradetype, 
@@ -3853,7 +3852,7 @@ runcode(function()
 			for i = armorindex, #armors, 1 do 
 				local shopitem = getShopItem(armors[i])
 				if shopitem and (AutoBuyTierSkip["Enabled"] or i == (armorindex + 1)) then 
-					local currency = getItem(shopitem.currency)
+					local currency = getItem(shopitem.currency, inv.items)
 					if currency and currency["amount"] >= shopitem.price then 
 						highestbuyable = shopitem
 						bedwars["ClientStoreHandler"]:dispatch({
@@ -3876,7 +3875,7 @@ runcode(function()
 			for i = swordindex, #swords, 1 do 
 				local shopitem = getShopItem(swords[i])
 				if shopitem then 
-					local currency = getItem(shopitem.currency)
+					local currency = getItem(shopitem.currency, inv.items)
 					if currency and currency["amount"] >= shopitem.price and (shopitem.category ~= "Armory" or upgrades["armory"]) then 
 						highestbuyable = shopitem
 						bedwars["ClientStoreHandler"]:dispatch({
@@ -3949,8 +3948,8 @@ runcode(function()
 									if #autobuyitem >= 3 and autobuyitem[4] ~= "true" then 
 										local shopitem = getShopItem(autobuyitem[1])
 										if shopitem then 
-											local currency = getItem(shopitem.currency)
-											local actualitem = getItem(shopitem.itemType)
+											local currency = getItem(shopitem.currency, inv.items)
+											local actualitem = getItem(shopitem.itemType, inv.items)
 											if currency and currency["amount"] >= shopitem.price and (actualitem == nil or actualitem["amount"] < tonumber(autobuyitem[2])) then 
 												buyItem(shopitem)
 											end
@@ -3963,8 +3962,8 @@ runcode(function()
 									if #autobuyitem >= 3 and autobuyitem[4] == "true" then 
 										local shopitem = getShopItem(autobuyitem[1])
 										if shopitem then 
-											local currency = getItem(shopitem.currency)
-											local actualitem = getItem(shopitem.itemType)
+											local currency = getItem(shopitem.currency, inv.items)
+											local actualitem = getItem(shopitem.itemType, inv.items)
 											if currency and currency["amount"] >= shopitem.price and (actualitem == nil or actualitem["amount"] < tonumber(autobuyitem[2])) then 
 												buyItem(shopitem)
 											end
@@ -5183,7 +5182,9 @@ runcode(function()
     local killaurahandcheck = {["Enabled"] = false}
     local killaurabaguette = {["Enabled"] = false}
     local killauraanimation = {["Enabled"] = false}
+	local killauracolor = {["Value"] = 0.44}
 	local killauranovape = {["Enabled"] = false}
+	local killauratargethighlight = {["Enabled"] = false}
 	local killaurahitdelay = tick()
     local killauradelay = 0
     local Killauranear = false
@@ -5408,7 +5409,7 @@ runcode(function()
 							end
 							for i,v in pairs(killauraboxes) do 
 								local attacked = attackedplayers[i]
-								v.Adornee = attacked and attacked.RootPart
+								v.Adornee = attacked and ((not killauratargethighlight["Enabled"]) and attacked.RootPart or (not GuiLibrary["ObjectsThatCanBeSaved"]["ChamsOptionsButton"]["Api"]["Enabled"]) and attacked.Character or nil)
 							end
 							if (#plrs <= 0) then
 								targetedplayer = nil
@@ -5506,14 +5507,49 @@ runcode(function()
     })
     killauratarget = Killaura.CreateToggle({
         ["Name"] = "Show target",
-        ["Function"] = function() end,
+        ["Function"] = function(callback) 
+			if killauratargethighlight["Object"] then 
+				killauratargethighlight["Object"].Visible = callback
+			end
+			if killauracolor["Object"] then 
+				killauracolor["Object"].Visible = callback
+			end
+		end,
 		["HoverText"] = "Shows a red box over the opponent."
     })
-	Killaura.CreateColorSlider({
+	killauratargethighlight = Killaura.CreateToggle({
+		["Name"] = "Use New Highlight",
+		["Function"] = function(callback) 
+			for i,v in pairs(killauraboxes) do 
+				v:Remove()
+			end
+			for i = 1, 10 do 
+				local killaurabox
+				if callback then 
+					killaurabox = Instance.new("Highlight")
+					killaurabox.FillTransparency = 0.5
+					killaurabox.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+					killaurabox.OutlineTransparency = 1
+					killaurabox.Parent = GuiLibrary["MainGui"]
+				else
+					killaurabox = Instance.new("BoxHandleAdornment")
+					killaurabox.Transparency = 0.5
+					killaurabox.Color3 = Color3.new(1, 0, 0)
+					killaurabox.Adornee = nil
+					killaurabox.AlwaysOnTop = true
+					killaurabox.Size = Vector3.new(3, 6, 3)
+					killaurabox.ZIndex = 11
+					killaurabox.Parent = GuiLibrary["MainGui"]
+				end
+				killauraboxes[i] = killaurabox
+			end
+		end
+	})
+	killauracolor = Killaura.CreateColorSlider({
 		["Name"] = "Target Color",
 		["Function"] = function(hue, sat, val) 
 			for i,v in pairs(killauraboxes) do 
-				v.Color3 = Color3.fromHSV(hue, sat, val)
+				v[(killauratargethighlight["Enabled"] and "FillColor" or "Color3")] = Color3.fromHSV(hue, sat, val)
 			end
 		end,
 		["Default"] = 1
