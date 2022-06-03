@@ -1494,6 +1494,16 @@ end
 
 local function renderNametag(plr)
 	if (bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]) then
+		local playerlist = game:GetService("CoreGui"):FindFirstChild("PlayerList")
+		if playerlist then
+			pcall(function()
+				local playerlistplayers = playerlist.PlayerListMaster.OffsetFrame.PlayerScrollList.SizeOffsetFrame.ScrollingFrameContainer.ScrollingFrameClippingFrame.ScollingFrame.OffsetUndoFrame
+				local targetedplr = playerlistplayers:FindFirstChild("p_"..plr.UserId)
+				if targetedplr then 
+					targetedplr.ChildrenFrame.NameFrame.BGFrame.OverlayFrame.PlayerIcon.Image = getcustomassetfunc("vape/assets/VapeIcon.png")
+				end
+			end)
+		end
 		if lplr ~= plr and bedwars["CheckPlayerType"](lplr) == "DEFAULT" then
 			spawn(function()
 				repeat task.wait() until isAlive(plr)
@@ -2384,7 +2394,7 @@ runcode(function()
 				BindToRenderStep("AutoClicker", 1, function() 
 					if entity.isAlive and autoclickermousedown and autoclickertick <= tick() and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= 1 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and firstclick == false then
 						autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
-						if getEquipped()["Type"] == "sword" and bedwars["KatanaController"].beginChargeTime == nil then
+						if getEquipped()["Type"] == "sword" and (bedwars["KatanaController"].beginChargeTime == nil or bedwars["KatanaController"].beginChargeTime == 0) then
 							bedwars["SwordController"]:swingSwordAtMouse()
 						end
 						if getEquipped()["Type"] == "block" and autoclickerblocks["Enabled"] and bedwars["BlockPlacementController"].blockPlacer then 
@@ -2496,6 +2506,7 @@ runcode(function()
 	local phasedelay = tick()
 	local phasedelay2 = tick()
 	local phase = {["Enabled"] = false}
+	local phasedist = {["Value"] = 1}
 	local checktable = {}
 	local checktable2 = {}
 
@@ -2532,7 +2543,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				BindToStepped("Phase", 1, function()
-					if entity.isAlive and entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+					if entity.isAlive then
 						local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
 						local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
 						local pos3 = entity.character.Head.CFrame.p
@@ -2548,12 +2559,12 @@ runcode(function()
 							slowdownspeed = false
 						end
 						if newray and phasedelay <= tick() and phasedelay2 <= tick() and (not bird) and (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] and holdingshift or GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] == false) then
-							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -6)) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -6)) then
+							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) then
 								phasedelay = tick() + 0.075
 								phasedelay2 = tick() + 0.1
 								slowdownspeed = true
 								nocheck = true
-								entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, (newray.Normal * -2.5))
+								entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, (newray.Normal * -(3.5 * phasedist["Value"])))
 							end
 						end
 					end
@@ -2580,6 +2591,12 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "Lets you Phase/Clip through walls. (Hold shift to use phase over spider)"
+	})
+	phasedist = phase.CreateSlider({
+		["Name"] = "Blocks",
+		["Min"] = 1,
+		["Max"] = 3,
+		["Function"] = function() end
 	})
 
 	local targetstrafe = {["Enabled"] = false}
@@ -5119,7 +5136,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				BindToStepped("Spider", 1, function()
-					if entity.isAlive and entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+					if entity.isAlive then
 						local vec = entity.character.Humanoid.MoveDirection.Unit * 2
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {game:GetService("CollectionService"):GetTagged("block")}
@@ -5220,7 +5237,7 @@ runcode(function()
 		if killauranovape["Enabled"] and clients.ClientUsers[plr.Player.Name] then
 			return nil
 		end
-		if killaurahandcheck["Enabled"] and bedwars["KatanaController"].beginChargeTime then
+		if killaurahandcheck["Enabled"] and bedwars["KatanaController"].beginChargeTime ~= 0 then
 			return nil
 		end
 		local root = plr.RootPart
@@ -8961,7 +8978,7 @@ runcode(function()
 end)
 
 runcode(function()
-	--[[local MissileTP = {["Enabled"] = false}
+	local MissileTP = {["Enabled"] = false}
 	local MissileTeleportDelaySlider = {["Value"] = 30}
 	MissileTP = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "MissileTP",
@@ -9005,7 +9022,7 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "Spawns and teleports a missile to a player\nnear your mouse."
-	})]]
+	})
 
 	local RavenTP = {["Enabled"] = false}
 	RavenTP = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({

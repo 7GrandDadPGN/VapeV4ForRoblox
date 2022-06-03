@@ -696,6 +696,8 @@ local rainbowval2 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromH
 local rainbowval3 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 1))})
 local guicolorslider = {["RainbowValue"] = false}
 local textguiscaleslider = {["Value"] = 10}
+local fontitems = {"SourceSans"}
+local fontitems2 = {"GothamBold"}
 
 local onething = Instance.new("ImageLabel")
 onething.Parent = TextGui.GetCustomChildren()
@@ -764,7 +766,7 @@ onecustomtext.BackgroundTransparency = 1
 onecustomtext.Position = UDim2.new(0, 0, 0, 35)
 onecustomtext.TextXAlignment = Enum.TextXAlignment.Left
 onecustomtext.TextYAlignment = Enum.TextYAlignment.Top
-onecustomtext.Text = "7GrandDad's Client"
+onecustomtext.Text = ""
 onecustomtext.Parent = TextGui.GetCustomChildren()
 local onecustomtext2 = onecustomtext:Clone()
 onecustomtext2.ZIndex = -1
@@ -916,9 +918,13 @@ onescale:GetPropertyChangedSignal("Scale"):connect(function()
 	UpdateHud()
 end)
 GuiLibrary["UpdateHudEvent"].Event:connect(UpdateHud)
-local fontitems = {}
 for i,v in pairs(Enum.Font:GetEnumItems()) do 
-	table.insert(fontitems, v.Name)
+	if v ~= "SourceSans" then
+		table.insert(fontitems, v.Name)
+	end
+	if v ~= "GothamBold" then
+		table.insert(fontitems2, v.Name)
+	end
 end
 TextGui.CreateDropdown({
 	["Name"] = "Sort",
@@ -934,6 +940,15 @@ TextGui.CreateDropdown({
 	["Function"] = function(val)
 		onetext.Font = Enum.Font[val]
 		onetext2.Font = Enum.Font[val]
+		GuiLibrary["UpdateHudEvent"]:Fire()
+	end
+})
+TextGui.CreateDropdown({
+	["Name"] = "CustomTextFont",
+	["List"] = fontitems2,
+	["Function"] = function(val)
+		onecustomtext.Font = Enum.Font[val]
+		onecustomtext2.Font = Enum.Font[val]
 		GuiLibrary["UpdateHudEvent"]:Fire()
 	end
 })
