@@ -916,11 +916,24 @@ onescale:GetPropertyChangedSignal("Scale"):connect(function()
 	UpdateHud()
 end)
 GuiLibrary["UpdateHudEvent"].Event:connect(UpdateHud)
+local fontitems = {}
+for i,v in pairs(Enum.Font:GetEnumItems()) do 
+	table.insert(fontitems, v.Name)
+end
 TextGui.CreateDropdown({
 	["Name"] = "Sort",
 	["List"] = {"Alphabetical", "Length"},
 	["Function"] = function(val)
 		sortingmethod = val
+		GuiLibrary["UpdateHudEvent"]:Fire()
+	end
+})
+TextGui.CreateDropdown({
+	["Name"] = "Font",
+	["List"] = fontitems,
+	["Function"] = function(val)
+		onetext.Font = Enum.Font[val]
+		onetext2.Font = Enum.Font[val]
 		GuiLibrary["UpdateHudEvent"]:Fire()
 	end
 })
