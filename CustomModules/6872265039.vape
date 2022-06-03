@@ -463,6 +463,16 @@ end
 
 local function renderNametag(plr)
 	if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
+		local playerlist = game:GetService("CoreGui"):FindFirstChild("PlayerList")
+		if playerlist then
+			pcall(function()
+				local playerlistplayers = playerlist.PlayerListMaster.OffsetFrame.PlayerScrollList.SizeOffsetFrame.ScrollingFrameContainer.ScrollingFrameClippingFrame.ScollingFrame.OffsetUndoFrame
+				local targetedplr = playerlistplayers:FindFirstChild("p_"..plr.UserId)
+				if targetedplr then 
+					targetedplr.ChildrenFrame.NameFrame.BGFrame.OverlayFrame.PlayerIcon.Image = getcustomassetfunc("vape/assets/VapeIcon.png")
+				end
+			end)
+		end
 		local nametag = getNametagString(plr)
 		plr.CharacterAdded:connect(function(char)
 			if char ~= oldchar then
