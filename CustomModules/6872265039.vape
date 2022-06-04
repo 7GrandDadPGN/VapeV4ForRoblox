@@ -2,6 +2,7 @@
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
 local textservice = game:GetService("TextService")
+local repstorage = game:GetService("ReplicatedStorage")
 local lplr = players.LocalPlayer
 local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
@@ -187,27 +188,27 @@ local function createwarning(title, text, delay)
 	return (suc and res)
 end
 
-local newupdate = game.Players.LocalPlayer.PlayerScripts.TS:WaitForChild("ui", 3) and true or false
+local newupdate = lplr.PlayerScripts.TS:WaitForChild("ui", 3) and true or false
 
 runcode(function()
     local flaggedremotes = {"SelfReport"}
 
     getfunctions = function()
-        local Flamework = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@flamework"].core.out).Flamework
+        local Flamework = require(repstorage["rbxts_include"]["node_modules"]["@flamework"].core.out).Flamework
 		repeat task.wait() until Flamework.isInitialized
-        local KnitClient = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"].knit.src).KnitClient
-        local Client = require(game:GetService("ReplicatedStorage").TS.remotes).default.Client
+        local KnitClient = require(repstorage["rbxts_include"]["node_modules"].knit.src).KnitClient
+        local Client = require(repstorage.TS.remotes).default.Client
         local OldClientGet = getmetatable(Client).Get
 		local OldClientWaitFor = getmetatable(Client).WaitFor
         bedwars = {
-			["BedwarsKits"] = require(game:GetService("ReplicatedStorage").TS.games.bedwars.kit["bedwars-kit-shop"]).BedwarsKitShop,
+			["BedwarsKits"] = require(repstorage.TS.games.bedwars.kit["bedwars-kit-shop"]).BedwarsKitShop,
             ["ClientHandler"] = Client,
-            ["ClientStoreHandler"] = (newupdate and require(game.Players.LocalPlayer.PlayerScripts.TS.ui.store).ClientStore or require(lplr.PlayerScripts.TS.rodux.rodux).ClientStore),
-			["KitMeta"] = require(game:GetService("ReplicatedStorage").TS.games.bedwars.kit["bedwars-kit-meta"]).BedwarsKitMeta,
-			["LobbyClientEvents"] = (newupdate and require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"].lobby.out.client.events).LobbyClientEvents),
+            ["ClientStoreHandler"] = (newupdate and require(lplr.PlayerScripts.TS.ui.store).ClientStore or require(lplr.PlayerScripts.TS.rodux.rodux).ClientStore),
+			["KitMeta"] = require(repstorage.TS.games.bedwars.kit["bedwars-kit-meta"]).BedwarsKitMeta,
+			["LobbyClientEvents"] = (newupdate and require(repstorage["rbxts_include"]["node_modules"]["@easy-games"].lobby.out.client.events).LobbyClientEvents),
             ["sprintTable"] = KnitClient.Controllers.SprintController,
-			["WeldTable"] = require(game:GetService("ReplicatedStorage").TS.util["weld-util"]).WeldUtil,
-			["QueueMeta"] = require(game:GetService("ReplicatedStorage").TS.game["queue-meta"]).QueueMeta,
+			["WeldTable"] = require(repstorage.TS.util["weld-util"]).WeldUtil,
+			["QueueMeta"] = require(repstorage.TS.game["queue-meta"]).QueueMeta,
 			["CheckWhitelisted"] = function(plr, ownercheck)
 				local plrstr = bedwars["HashFunction"](plr.Name..plr.UserId)
 				local localstr = bedwars["HashFunction"](lplr.Name..lplr.UserId)
@@ -230,14 +231,14 @@ runcode(function()
 				end
 				return storedshahashes[tostring(str)]
 			end,
-			["getEntityTable"] = require(game:GetService("ReplicatedStorage").TS.entity["entity-util"]).EntityUtil,
+			["getEntityTable"] = require(repstorage.TS.entity["entity-util"]).EntityUtil,
         }
 		if not shared.vapebypassed then
-			local realremote = game:GetService("ReplicatedStorage"):WaitForChild("GameAnalyticsError")
+			local realremote = repstorage:WaitForChild("GameAnalyticsError")
 			realremote.Parent = nil
 			local fakeremote = Instance.new("RemoteEvent")
 			fakeremote.Name = "GameAnalyticsError"
-			fakeremote.Parent = game:GetService("ReplicatedStorage")
+			fakeremote.Parent = repstorage
 			game:GetService("ScriptContext").Error:Connect(function(p1, p2, p3)
 				if not p3 then
 					return;
@@ -303,7 +304,7 @@ runcode(function()
 					end
 				end
 			end
-			for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+			for i,v in pairs(getconnections(repstorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
 				if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
 					oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
 					oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
@@ -399,66 +400,62 @@ local function getNametagString(plr)
 	return nametag
 end
 
-while game:IsLoaded() == false do wait() end
-local player = game:GetService("Players").LocalPlayer
-local players = game:GetService("Players")
-
 local function Cape(char, texture)
 	for i,v in pairs(char:GetDescendants()) do
 		if v.Name == "Cape" then
 			v:Remove()
 		end
 	end
-			local hum = char:WaitForChild("Humanoid")
-			local torso = nil
-			if hum.RigType == Enum.HumanoidRigType.R15 then
-			torso = char:WaitForChild("UpperTorso")
-			else
-			torso = char:WaitForChild("Torso")
-			end
-			local p = Instance.new("Part", torso.Parent)
-			p.Name = "Cape"
-			p.Anchored = false
-			p.CanCollide = false
-			p.TopSurface = 0
-			p.BottomSurface = 0
-			p.FormFactor = "Custom"
-			p.Size = Vector3.new(0.2,0.2,0.2)
-			p.Transparency = 1
-			local decal = Instance.new("Decal", p)
-			decal.Texture = texture
-			decal.Face = "Back"
-			local msh = Instance.new("BlockMesh", p)
-			msh.Scale = Vector3.new(9,17.5,0.5)
-			local motor = Instance.new("Motor", p)
-			motor.Part0 = p
-			motor.Part1 = torso
-			motor.MaxVelocity = 0.01
-			motor.C0 = CFrame.new(0,2,0) * CFrame.Angles(0,math.rad(90),0)
-			motor.C1 = CFrame.new(0,1,0.45) * CFrame.Angles(0,math.rad(90),0)
-			local wave = false
-			repeat wait(1/44)
-				decal.Transparency = torso.Transparency
-				local ang = 0.1
-				local oldmag = torso.Velocity.magnitude
-				local mv = 0.002
-				if wave then
-					ang = ang + ((torso.Velocity.magnitude/10) * 0.05) + 0.05
-					wave = false
-				else
-					wave = true
-				end
-				ang = ang + math.min(torso.Velocity.magnitude/11, 0.5)
-				motor.MaxVelocity = math.min((torso.Velocity.magnitude/111), 0.04) --+ mv
-				motor.DesiredAngle = -ang
-				if motor.CurrentAngle < -0.2 and motor.DesiredAngle > -0.2 then
-					motor.MaxVelocity = 0.04
-				end
-				repeat wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) >= (torso.Velocity.magnitude/10) + 1
-				if torso.Velocity.magnitude < 0.1 then
-					wait(0.1)
-				end
-			until not p or p.Parent ~= torso.Parent
+	local hum = char:WaitForChild("Humanoid")
+	local torso = nil
+	if hum.RigType == Enum.HumanoidRigType.R15 then
+	torso = char:WaitForChild("UpperTorso")
+	else
+	torso = char:WaitForChild("Torso")
+	end
+	local p = Instance.new("Part", torso.Parent)
+	p.Name = "Cape"
+	p.Anchored = false
+	p.CanCollide = false
+	p.TopSurface = 0
+	p.BottomSurface = 0
+	p.FormFactor = "Custom"
+	p.Size = Vector3.new(0.2,0.2,0.2)
+	p.Transparency = 1
+	local decal = Instance.new("Decal", p)
+	decal.Texture = texture
+	decal.Face = "Back"
+	local msh = Instance.new("BlockMesh", p)
+	msh.Scale = Vector3.new(9,17.5,0.5)
+	local motor = Instance.new("Motor", p)
+	motor.Part0 = p
+	motor.Part1 = torso
+	motor.MaxVelocity = 0.01
+	motor.C0 = CFrame.new(0,2,0) * CFrame.Angles(0,math.rad(90),0)
+	motor.C1 = CFrame.new(0,1,0.45) * CFrame.Angles(0,math.rad(90),0)
+	local wave = false
+	repeat wait(1/44)
+		decal.Transparency = torso.Transparency
+		local ang = 0.1
+		local oldmag = torso.Velocity.magnitude
+		local mv = 0.002
+		if wave then
+			ang = ang + ((torso.Velocity.magnitude/10) * 0.05) + 0.05
+			wave = false
+		else
+			wave = true
+		end
+		ang = ang + math.min(torso.Velocity.magnitude/11, 0.5)
+		motor.MaxVelocity = math.min((torso.Velocity.magnitude/111), 0.04) --+ mv
+		motor.DesiredAngle = -ang
+		if motor.CurrentAngle < -0.2 and motor.DesiredAngle > -0.2 then
+			motor.MaxVelocity = 0.04
+		end
+		repeat wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) >= (torso.Velocity.magnitude/10) + 1
+		if torso.Velocity.magnitude < 0.1 then
+			wait(0.1)
+		end
+	until not p or p.Parent ~= torso.Parent
 end	
 
 local function renderNametag(plr)
@@ -510,60 +507,10 @@ GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
---GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
 GuiLibrary["RemoveObject"]("SpiderOptionsButton")
---[[local place = game:GetService("MarketplaceService"):GetProductInfo(6872265039)
-if place.Updated ~= "2021-11-12T18:26:09.8908284Z" then
-	local image = Instance.new("ImageLabel")
-	image.Size = UDim2.new(1, 0, 1, 36)
-	image.Image = getcustomassetfunc("vape/assets/UpdateImage.png")
-	image.Position = UDim2.new(0, 0, 0, -36)
-	image.ZIndex = 9
-	image.Parent = GuiLibrary["MainGui"]
-    local textlabel = Instance.new("TextLabel")
-    textlabel.Size = UDim2.new(1, 0, 1, 36)
-    textlabel.Text = "Vape is currently down for testing due to the BedWars update.\nThe discord has been copied to your clipboard."
-	textlabel.TextColor3 = Color3.new(1, 1, 1)
-    textlabel.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
-	textlabel.BackgroundTransparency = 0.5
-	textlabel.BorderSizePixel = 0
-    textlabel.Position = UDim2.new(0, 0, 0, -36)
-	textlabel.ZIndex = 10
-    textlabel.TextSize = 30
-    textlabel.Parent = GuiLibrary["MainGui"]
-	spawn(function()
-		for i = 1, 14 do
-			spawn(function()
-				local reqbody = {
-					["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
-					["args"] = {
-						["invite"] = {["code"] = "wjRYjVWkya"},
-						["code"] = "wjRYjVWkya",
-					},
-					["cmd"] = "INVITE_BROWSER"
-				}
-				local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
-				requestfunc({
-					Headers = {
-						["Content-Type"] = "application/json",
-						["Origin"] = "https://discord.com"
-					},
-					Url = "http://127.0.0.1:64"..(53 + i).."/rpc?v=1",
-					Method = "POST",
-					Body = newreq
-				})
-			end)
-		end
-	end)
-	setclipboard("https://discord.com/invite/wjRYjVWkya")
-    task.wait(0.5)
-    spawn(function()
-        while true do end
-    end)
-end]]
 
-teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+teleportfunc = lplr.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
 		if shared.vapeoverlay then
 			queueteleport('shared.vapeoverlay = "'..shared.vapeoverlay..'"')
@@ -619,8 +566,8 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				--buyballoons()
-				flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
-					if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+				flypress = uis.InputBegan:connect(function(input1)
+					if flyupanddown["Enabled"] and uis:GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.Space then
 							flyup = true
 						end
@@ -629,7 +576,7 @@ runcode(function()
 						end
 					end
 				end)
-				flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
+				flyendpress = uis.InputEnded:connect(function(input1)
 					if input1.KeyCode == Enum.KeyCode.Space then
 						flyup = false
 					end
@@ -861,6 +808,25 @@ runcode(function()
 	AutoKitTextList = AutoKit.CreateTextList({
 		["Name"] = "KitList",
 		["TempText"] = "kit name : prio : kitskin",
+	})
+end)
+
+runcode(function()
+	local CameraFix = {["Enabled"] = false}
+	CameraFix = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "CameraFix",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait()
+						if (not CameraFix["Enabled"]) then break end
+						UserSettings():GetService("UserGameSettings").RotationType = ((cam.CFrame.Position - cam.Focus.Position).Magnitude <= 0.5 and Enum.RotationType.CameraRelative or Enum.RotationType.MovementRelative)
+					until (not CameraFix["Enabled"])
+				end)
+			end
+		end,
+		["HoverText"] = "Fixes third person camera face bug"
 	})
 end)
 
@@ -1116,11 +1082,11 @@ if shared.nobolineupdate then
 		elseif gethui then
 			realgui.Parent = gethui()
 		end
-		fakeuiconnection = game:GetService("UserInputService").InputBegan:connect(function(input1)
-			if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+		fakeuiconnection = uis.InputBegan:connect(function(input1)
+			if uis:GetFocusedTextBox() == nil then
 				if input1.KeyCode == Enum.KeyCode[GuiLibrary["GUIKeybind"]] and GuiLibrary["KeybindCaptured"] == false then
 					realgui.Enabled = not realgui.Enabled
-					game:GetService("UserInputService").OverrideMouseIconBehavior = (realgui.Enabled and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
+					uis.OverrideMouseIconBehavior = (realgui.Enabled and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
 				end
 			end
 		end)
