@@ -7615,6 +7615,7 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 runcode(function()
 	local old
 	local old2
+	local oldhitpart 
 	local removetextures = {["Enabled"] = false}
 	local FPSBoost = {["Enabled"] = false}
 	local fpsboostdamageindicator = {["Enabled"] = false}
@@ -7656,10 +7657,8 @@ runcode(function()
 					})
 				end
 				if fpsboostdamageeffect["Enabled"] then 
-					if bedwars["DamageIndicatorController"].hitEffectPart then 
-						bedwars["DamageIndicatorController"].hitEffectPart.Attachment.Cubes.Enabled = false
-						bedwars["DamageIndicatorController"].hitEffectPart.Attachment.Shards.Enabled = false
-					end
+					oldhitpart = bedwars["DamageIndicatorController"].hitEffectPart
+					bedwars["DamageIndicatorController"].hitEffectPart = nil
 				end
 				old = getmetatable(bedwars["HighlightController"])["highlight"]
 				old2 = getmetatable(bedwars["StopwatchController"]).tweenOutGhost
@@ -7669,6 +7668,9 @@ runcode(function()
 				end
 				getmetatable(bedwars["HighlightController"])["highlight"] = function() end
 			else
+				if oldhitpart then 
+					bedwars["DamageIndicatorController"].hitEffectPart = oldhitpart
+				end
 				damagetab.strokeThickness = 1.5
 				damagetab.textSize = 28
 				damagetab.blowUpDuration = 0.125
@@ -7765,9 +7767,14 @@ runcode(function()
 		["Name"] = "Remove Damage Effect",
 		["Function"] = function(callback)
 			if FPSBoost["Enabled"] then 
-				if bedwars["DamageIndicatorController"].hitEffectPart then 
-					bedwars["DamageIndicatorController"].hitEffectPart.Attachment.Cubes.Enabled = not callback
-					bedwars["DamageIndicatorController"].hitEffectPart.Attachment.Shards.Enabled = not callback
+				if callback then 
+					oldhitpart = bedwars["DamageIndicatorController"].hitEffectPart
+					bedwars["DamageIndicatorController"].hitEffectPart = nil
+				else
+					if oldhitpart then 
+						bedwars["DamageIndicatorController"].hitEffectPart = oldhitpart
+					end
+					oldhitpart = nil
 				end
 			end
 		end
