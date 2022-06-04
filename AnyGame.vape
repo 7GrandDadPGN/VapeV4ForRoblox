@@ -128,7 +128,7 @@ local function getcustomassetfunc(path)
 end
 
 shared.vapeteamcheck = function(plr)
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and (plr.Team ~= lplr.Team or (lplr.Team == nil or #lplr.Team:GetPlayers() == #game:GetService("Players"):GetChildren())) or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
+	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and (plr.Team ~= lplr.Team or (lplr.Team == nil or #lplr.Team:GetPlayers() == #players:GetChildren())) or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
 end
 
 local function targetCheck(plr, check)
@@ -376,56 +376,56 @@ local function Cape(char, texture)
 			v:Remove()
 		end
 	end
-			local hum = char:WaitForChild("Humanoid")
-			local torso = nil
-			if hum.RigType == Enum.HumanoidRigType.R15 then
-			torso = char:WaitForChild("UpperTorso")
-			else
-			torso = char:WaitForChild("Torso")
-			end
-			local p = Instance.new("Part", torso.Parent)
-			p.Name = "Cape"
-			p.Anchored = false
-			p.CanCollide = false
-			p.TopSurface = 0
-			p.BottomSurface = 0
-			p.FormFactor = "Custom"
-			p.Size = Vector3.new(0.2,0.2,0.2)
-			p.Transparency = 1
-			local decal = Instance.new("Decal", p)
-			decal.Texture = texture
-			decal.Face = "Back"
-			local msh = Instance.new("BlockMesh", p)
-			msh.Scale = Vector3.new(9,17.5,0.5)
-			local motor = Instance.new("Motor", p)
-			motor.Part0 = p
-			motor.Part1 = torso
-			motor.MaxVelocity = 0.01
-			motor.C0 = CFrame.new(0,2,0) * CFrame.Angles(0,math.rad(90),0)
-			motor.C1 = CFrame.new(0,1,0.45) * CFrame.Angles(0,math.rad(90),0)
-			local wave = false
-			repeat wait(1/44)
-				decal.Transparency = torso.Transparency
-				local ang = 0.1
-				local oldmag = torso.Velocity.magnitude
-				local mv = 0.002
-				if wave then
-					ang = ang + ((torso.Velocity.magnitude/10) * 0.05) + 0.05
-					wave = false
-				else
-					wave = true
-				end
-				ang = ang + math.min(torso.Velocity.magnitude/11, 0.5)
-				motor.MaxVelocity = math.min((torso.Velocity.magnitude/111), 0.04) --+ mv
-				motor.DesiredAngle = -ang
-				if motor.CurrentAngle < -0.2 and motor.DesiredAngle > -0.2 then
-					motor.MaxVelocity = 0.04
-				end
-				repeat wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) >= (torso.Velocity.magnitude/10) + 1
-				if torso.Velocity.magnitude < 0.1 then
-					wait(0.1)
-				end
-			until not p or p.Parent ~= torso.Parent
+	local hum = char:WaitForChild("Humanoid")
+	local torso = nil
+	if hum.RigType == Enum.HumanoidRigType.R15 then
+	torso = char:WaitForChild("UpperTorso")
+	else
+	torso = char:WaitForChild("Torso")
+	end
+	local p = Instance.new("Part", torso.Parent)
+	p.Name = "Cape"
+	p.Anchored = false
+	p.CanCollide = false
+	p.TopSurface = 0
+	p.BottomSurface = 0
+	p.FormFactor = "Custom"
+	p.Size = Vector3.new(0.2,0.2,0.2)
+	p.Transparency = 1
+	local decal = Instance.new("Decal", p)
+	decal.Texture = texture
+	decal.Face = "Back"
+	local msh = Instance.new("BlockMesh", p)
+	msh.Scale = Vector3.new(9,17.5,0.5)
+	local motor = Instance.new("Motor", p)
+	motor.Part0 = p
+	motor.Part1 = torso
+	motor.MaxVelocity = 0.01
+	motor.C0 = CFrame.new(0,2,0) * CFrame.Angles(0,math.rad(90),0)
+	motor.C1 = CFrame.new(0,1,0.45) * CFrame.Angles(0,math.rad(90),0)
+	local wave = false
+	repeat wait(1/44)
+		decal.Transparency = torso.Transparency
+		local ang = 0.1
+		local oldmag = torso.Velocity.magnitude
+		local mv = 0.002
+		if wave then
+			ang = ang + ((torso.Velocity.magnitude/10) * 0.05) + 0.05
+			wave = false
+		else
+			wave = true
+		end
+		ang = ang + math.min(torso.Velocity.magnitude/11, 0.5)
+		motor.MaxVelocity = math.min((torso.Velocity.magnitude/111), 0.04) --+ mv
+		motor.DesiredAngle = -ang
+		if motor.CurrentAngle < -0.2 and motor.DesiredAngle > -0.2 then
+			motor.MaxVelocity = 0.04
+		end
+		repeat wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) >= (torso.Velocity.magnitude/10) + 1
+		if torso.Velocity.magnitude < 0.1 then
+			wait(0.1)
+		end
+	until not p or p.Parent ~= torso.Parent
 end
 
 runcode(function()
@@ -454,8 +454,8 @@ runcode(function()
 	local tar = nil
 
 	local function isNotHoveringOverGui()
-		local mousepos = game:GetService("UserInputService"):GetMouseLocation() - Vector2.new(0, 36)
-		for i,v in pairs(game:GetService("Players").LocalPlayer.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+		local mousepos = uis:GetMouseLocation() - Vector2.new(0, 36)
+		for i,v in pairs(lplr.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
 			if v.Active and v.Visible and v:FindFirstAncestorOfClass("ScreenGui").Enabled then
 				return false
 			end
@@ -1131,8 +1131,8 @@ runcode(function()
 					flyposy = entity.character.HumanoidRootPart.CFrame.p.Y
 					flyalivecheck = true
 				end
-				flypress = game:GetService("UserInputService").InputBegan:connect(function(input1)
-					if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+				flypress = uis.InputBegan:connect(function(input1)
+					if uis:GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.W then
 							w = -1
 						end
@@ -1156,7 +1156,7 @@ runcode(function()
 						end
 					end
 				end)
-				flyendpress = game:GetService("UserInputService").InputEnded:connect(function(input1)
+				flyendpress = uis.InputEnded:connect(function(input1)
 					local divided = flykeys["Value"]:split("/")
 					if input1.KeyCode == Enum.KeyCode.W then
 						w = 0
@@ -1710,8 +1710,8 @@ runcode(function()
 		["Name"] = "Speed", 
 		["Function"] = function(callback)
 			if callback then
-				speeddown = game:GetService("UserInputService").InputBegan:connect(function(input1)
-					if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+				speeddown = uis.InputBegan:connect(function(input1)
+					if uis:GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.W then
 							w = true
 						end
@@ -1726,7 +1726,7 @@ runcode(function()
 						end
 					end
 				end)
-				speedup = game:GetService("UserInputService").InputEnded:connect(function(input1)
+				speedup = uis.InputEnded:connect(function(input1)
 					if input1.KeyCode == Enum.KeyCode.W then
 						w = false
 					end
@@ -1760,7 +1760,7 @@ runcode(function()
 						elseif speedmethod["Value"] == "TP" then
 							if speeddelayval <= tick() then
 								speeddelayval = tick() + (speeddelay["Value"] / 10)
-								local newpos = (movevec * (math.clamp(speedval["Value"] - entity.character.Humanoid.WalkSpeed, 0, 1000000000)))
+								local newpos = (movevec * speedval["Value"])
 								if speedwallcheck["Enabled"] then
 									local raycastparameters = RaycastParams.new()
 									raycastparameters.FilterDescendantsInstances = {lplr.Character}
@@ -2418,6 +2418,33 @@ runcode(function()
 									end
 								end
 							end
+							if ESPMethod["Value"] == "VideoFrame" then
+								if ESPFolder:FindFirstChild(plr.Name) then
+									thing = ESPFolder[plr.Name]
+									thing.Visible = false
+								else
+									thing = Instance.new("ImageLabel")
+									thing.BackgroundTransparency = 1
+									thing.BorderSizePixel = 0
+									thing.Image = getcustomassetfunc("honestlyquiteincredible.png")
+									thing.Visible = false
+									thing.Name = plr.Name
+									thing.Parent = ESPFolder
+								end
+								
+								if isAlive(plr) and plr ~= lplr and (ESPTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
+									local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+									local rootSize = (plr.Character.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
+									local headPos, headVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position + Vector3.new(0, 1 + (plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and 2 or plr.Character.Humanoid.HipHeight), 0))
+									local legPos, legVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position - Vector3.new(0, 1 + (plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and 2 or plr.Character.Humanoid.HipHeight), 0))
+									rootPos = rootPos
+									if rootVis then
+										thing.Visible = rootVis
+										thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
+										thing.Position = UDim2.new(0, rootPos.X - thing.Size.X.Offset / 2, 0, (rootPos.Y - thing.Size.Y.Offset / 2) - 36)
+									end
+								end
+							end
 						end
 					end
 				end)
@@ -2451,7 +2478,7 @@ runcode(function()
 	})
 	ESPMethod = ESP.CreateDropdown({
 		["Name"] = "Mode",
-		["List"] = {"2D", "Skeleton"},
+		["List"] = {"2D", "Skeleton", "VideoFrame"},
 		["Function"] = function(val)
 			ESPFolder:ClearAllChildren()
 			for i,v in pairs(espfolderdrawing) do 
@@ -2555,66 +2582,26 @@ runcode(function()
 			if callback then
 				BindToRenderStep("Chams", 500, function()
 					for i,plr in pairs(players:GetChildren()) do
-						if ChamsBetter["Enabled"] then
-							local thing
-							if ChamsFolder:FindFirstChild(plr.Name) then
-								thing = ChamsFolder[plr.Name]
-								thing.Enabled = false
-								thing.FillColor = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Hue"], ChamsColor["Sat"], ChamsColor["Value"])
-								thing.OutlineColor = Color3.fromHSV(ChamsOutlineColor["Hue"], ChamsOutlineColor["Sat"], ChamsOutlineColor["Value"])
-							end
+						local thing
+						if ChamsFolder:FindFirstChild(plr.Name) then
+							thing = ChamsFolder[plr.Name]
+							thing.Enabled = false
+							thing.FillColor = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Hue"], ChamsColor["Sat"], ChamsColor["Value"])
+							thing.OutlineColor = getPlayerColor(plr) or Color3.fromHSV(ChamsOutlineColor["Hue"], ChamsOutlineColor["Sat"], ChamsOutlineColor["Value"])
+						end
 
-							if isAlive(plr) and plr ~= lplr and (ChamsTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
-								if ChamsFolder:FindFirstChild(plr.Name) == nil then
-									local chamfolder = Instance.new("Highlight")
-									chamfolder.Name = plr.Name
-									chamfolder.Parent = ChamsFolder
-									thing = chamfolder
-								end
-								thing.Enabled = true
-								thing.Adornee = plr.Character
-								thing.OutlineTransparency = ChamsOutlineTransparency["Value"] / 100
-								thing.DepthMode = Enum.HighlightDepthMode[(ChamsOnTop["Enabled"] and "AlwaysOnTop" or "Occluded")]
-								thing.FillTransparency = ChamsTransparency["Value"] / 100
+						if isAlive(plr) and plr ~= lplr and (ChamsTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
+							if ChamsFolder:FindFirstChild(plr.Name) == nil then
+								local chamfolder = Instance.new("Highlight")
+								chamfolder.Name = plr.Name
+								chamfolder.Parent = ChamsFolder
+								thing = chamfolder
 							end
-						else
-							local thing
-							if ChamsFolder:FindFirstChild(plr.Name) then
-								thing = ChamsFolder[plr.Name]
-								for partnumber, part in pairs(thing:GetChildren()) do
-									part.Visible = false
-									part.Color3 = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Hue"], ChamsColor["Sat"], ChamsColor["Value"])
-								end
-							end
-							
-							if isAlive(plr) and plr ~= lplr and (ChamsTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
-								if ChamsFolder:FindFirstChild(plr.Name) == nil then
-									local chamfolder = Instance.new("Folder")
-									chamfolder.Name = plr.Name
-									chamfolder.Parent = ChamsFolder
-									thing = chamfolder
-									for partnumber, part in pairs(plr.Character:GetChildren()) do
-										if chamobjects[part.Name] then
-											local boxhandle = Instance.new("BoxHandleAdornment")
-											boxhandle.Size = (part.Name == "Head" and Vector3.new(1.25, 1.25, 1.25) or part.Size) + Vector3.new(.01, .01, .01)
-											boxhandle.AlwaysOnTop = ChamsOnTop["Enabled"]
-											boxhandle.ZIndex = 10
-											boxhandle.Visible = true
-											boxhandle.Color3 = getPlayerColor(plr) or Color3.fromHSV(ChamsColor["Hue"], ChamsColor["Sat"], ChamsColor["Value"])
-											boxhandle.Name = part.Name
-											boxhandle.Parent = chamfolder
-										end
-									end
-								end
-								for partnumber, part in pairs(thing:GetChildren()) do
-									part.Visible = true
-									if plr.Character:FindFirstChild(part.Name) then
-										part.Adornee = plr.Character[part.Name]
-										part.AlwaysOnTop = ChamsOnTop["Enabled"]
-										part.Transparency = ChamsTransparency["Value"] / 100
-									end
-								end
-							end
+							thing.Enabled = true
+							thing.Adornee = plr.Character
+							thing.OutlineTransparency = ChamsOutlineTransparency["Value"] / 100
+							thing.DepthMode = Enum.HighlightDepthMode[(ChamsOnTop["Enabled"] and "AlwaysOnTop" or "Occluded")]
+							thing.FillTransparency = ChamsTransparency["Value"] / 100
 						end
 					end
 				end)
@@ -2652,122 +2639,6 @@ runcode(function()
 		["Function"] = function() end,
 		["Default"] = true
 	})
-	ChamsBetter = Chams.CreateToggle({
-		["Name"] = "New Highlight Chams",
-		["Function"] = function(callback)
-			if callback then
-				local suc = pcall(function() return readfile("vape/Profiles/HighlightCheck.vapesetting.txt") end)
-				if not suc then
-					if ChamsBetter["Enabled"] then
-						ChamsBetter["ToggleButton"](false)
-					end
-					local frame = Instance.new("Frame")
-					frame.Size = UDim2.new(0, 660, 0, 445)
-					frame.Position = UDim2.new(0.5, -330, 0.5, -223)
-					frame.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
-					frame.Parent = GuiLibrary["MainGui"].ScaledGui
-					local frameIcon = Instance.new("ImageLabel")
-					frameIcon.Size = UDim2.new(0, 19, 0, 16)
-					frameIcon.Image = getcustomassetfunc("vape/assets/ProfilesIcon.png")
-					frameIcon.Name = "WindowIcon"
-					frameIcon.BackgroundTransparency = 1
-					frameIcon.Position = UDim2.new(0, 10, 0, 13)
-					frameIcon.ImageColor3 = Color3.fromRGB(200, 200, 200)
-					frameIcon.Parent = frame
-					local frameText = Instance.new("TextLabel")
-					frameText.Size = UDim2.new(0, 155, 0, 41)
-					frameText.BackgroundTransparency = 1
-					frameText.Name = "WindowTitle"
-					frameText.Position = UDim2.new(0, 36, 0, 0)
-					frameText.TextXAlignment = Enum.TextXAlignment.Left
-					frameText.Font = Enum.Font.SourceSans
-					frameText.TextSize = 17
-					frameText.Text = "Highlight"
-					frameText.TextColor3 = Color3.fromRGB(201, 201, 201)
-					frameText.Parent = frame
-					local frameCorner = Instance.new("UICorner")
-					frameCorner.CornerRadius = UDim.new(0, 4)
-					frameCorner.Parent = frame
-					local frameShadow = Instance.new("ImageLabel")
-					frameShadow.AnchorPoint = Vector2.new(0.5, 0.5)
-					frameShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-					frameShadow.Image = getcustomassetfunc("vape/assets/WindowBlur.png")
-					frameShadow.BackgroundTransparency = 1
-					frameShadow.ZIndex = -1
-					frameShadow.Size = UDim2.new(1, 6, 1, 6)
-					frameShadow.ImageColor3 = Color3.new(0, 0, 0)
-					frameShadow.ScaleType = Enum.ScaleType.Slice
-					frameShadow.SliceCenter = Rect.new(10, 10, 118, 118)
-					frameShadow.Parent = frame
-					local frameExitButton = Instance.new("ImageButton")
-					frameExitButton.Name = "frameExitButton"
-					frameExitButton.ImageColor3 = Color3.fromRGB(121, 121, 121)
-					frameExitButton.Size = UDim2.new(0, 24, 0, 24)
-					frameExitButton.AutoButtonColor = false
-					frameExitButton.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
-					frameExitButton.Visible = true
-					frameExitButton.Position = UDim2.new(1, -31, 0, 8)
-					frameExitButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
-					frameExitButton.Parent = frame
-					frameExitButton.MouseButton1Click:connect(function()
-						frame:Remove()
-					end)
-					local frametextlab = Instance.new("TextLabel")
-					frametextlab.TextSize = 18
-					frametextlab.BackgroundTransparency = 1
-					frametextlab.Position = UDim2.new(0, 0, 0, 41)
-					frametextlab.TextYAlignment = Enum.TextYAlignment.Top
-					frametextlab.Size = UDim2.new(1, 0, 1, -41)
-					frametextlab.TextColor3 = Color3.new(1, 1, 1)
-					frametextlab.Font = Enum.Font.SourceSans
-					frametextlab.Text = "\nSteps to enable Highlights\nClick the button below to get the link for the steps, click the done button when you have done the steps."
-					frametextlab.Parent = frame
-					local framebutton1 = Instance.new("TextButton")
-					framebutton1.Text = "Copy Steps to Clipboard"
-					framebutton1.AutoButtonColor = false
-					framebutton1.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-					framebutton1.BorderSizePixel = 0
-					framebutton1.TextColor3 = Color3.new(1, 1, 1)
-					framebutton1.Size = UDim2.new(0, 200, 0, 50)
-					framebutton1.Position = UDim2.new(0.5, -100, 0, 150)
-					framebutton1.Parent = frame
-					framebutton1.MouseButton1Click:connect(function()
-						spawn(function()
-							setclipboard("https://github.com/7GrandDadPGN/VapeV4ForRoblox/wiki/Turning-on-Highlights")
-							framebutton1.Text = "Copied to clipboard!"
-							task.wait(3)
-							framebutton1.Text = "Copy Steps to Clipboard"
-						end)
-					end)
-					local framebutton2 = framebutton1:Clone()
-					framebutton2.Text = "Done"
-					framebutton2.Position = UDim2.new(0.5, -100, 0, 210)
-					framebutton2.Parent = frame
-					framebutton2.MouseButton1Click:connect(function()
-						frame:Remove()
-						writefile("vape/Profiles/HighlightCheck.vapesetting.txt", "")
-						if ChamsBetter["Enabled"] == false then
-							ChamsBetter["ToggleButton"](false)
-						end
-					end)
-					local frameExitButtonround = Instance.new("UICorner")
-					frameExitButtonround.CornerRadius = UDim.new(0, 16)
-					frameExitButtonround.Parent = frameExitButton
-					frameExitButton.MouseEnter:connect(function()
-						game:GetService("TweenService"):Create(frameExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-					end)
-					frameExitButton.MouseLeave:connect(function()
-						game:GetService("TweenService"):Create(frameExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
-					end)
-				end
-			end
-			ChamsFolder:ClearAllChildren()
-			if ChamsOutlineTransparency["Object"] then 
-				ChamsOutlineTransparency["Object"].Visible = callback
-			end
-		end
-	})
-	ChamsOutlineTransparency["Object"].Visible = ChamsBetter["Enabled"]
 	ChamsOnTop = Chams.CreateToggle({
 		["Name"] = "Bypass Walls", 
 		["Function"] = function() end
@@ -2947,11 +2818,11 @@ runcode(function()
 									end
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 									local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font>'..math.floor((entity.character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'<font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
-									local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+									local nametagSize = textservice:GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = modifiedText
 								else
-									local nametagSize = game:GetService("TextService"):GetTextSize(plr.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+									local nametagSize = textservice:GetTextSize(plr.Name, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = plr.Name
 								end
@@ -2967,7 +2838,7 @@ runcode(function()
 									local rawText = (NameTagsDistance["Enabled"] and entity.isAlive and "["..math.floor((entity.character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plr.Character.Humanoid.Health) or "")
 									local color = HealthbarColorTransferFunction(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
 									local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((entity.character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plr.Character.Humanoid.Health).."</font>" or '')
-									local nametagSize = game:GetService("TextService"):GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+									local nametagSize = textservice:GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = modifiedText
 									thing.Font = Enum.Font[NameTagsFont["Value"]]
@@ -3076,34 +2947,12 @@ local searchRefresh = function()
 	if searchModule["Enabled"] then
 		for i,v in pairs(workspace:GetDescendants()) do
 			if (v:IsA("BasePart") or v:IsA("Model")) and table.find(SearchTextList["ObjectList"], v.Name) and searchFindBoxHandle(v) == nil then
-				if searchNewHighlight["Enabled"] then
-					local highlight = Instance.new("Highlight")
-					highlight.Name = v.Name
-					highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-					highlight.FillColor = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
-					highlight.Adornee = v
-					highlight.Parent = searchFolder
-				else
-					local oldparent = v.Parent
-					local boxhandle = Instance.new("BoxHandleAdornment")
-					boxhandle.Name = v.Name
-					boxhandle.AlwaysOnTop = true
-					boxhandle.Color3 = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
-					boxhandle.Adornee = v
-					boxhandle.ZIndex = 10
-					local modelpos, modelsize
-					spawn(function()
-						repeat
-							wait(0.2)
-							if v.ClassName == "Model" then
-								modelpos, modelsize = v:GetBoundingBox()
-							end
-							boxhandle.Size = (v.ClassName == "Model" and modelsize or v.Size)
-						until boxhandle == nil or v.Parent ~= oldparent
-					end)
-					boxhandle.Transparency = 0.5
-					boxhandle.Parent = searchFolder
-				end
+				local highlight = Instance.new("Highlight")
+				highlight.Name = v.Name
+				highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+				highlight.FillColor = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
+				highlight.Adornee = v
+				highlight.Parent = searchFolder
 			end
 		end
 	end
@@ -3115,34 +2964,12 @@ searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 			searchRefresh()
 			searchAdd = workspace.DescendantAdded:connect(function(v)
 				if (v:IsA("BasePart") or v:IsA("Model")) and table.find(SearchTextList["ObjectList"], v.Name) and searchFindBoxHandle(v) == nil then
-					if searchNewHighlight["Enabled"] then
-						local highlight = Instance.new("Highlight")
-						highlight.Name = v.Name
-						highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-						highlight.FillColor = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
-						highlight.Adornee = v
-						highlight.Parent = searchFolder
-					else
-						local oldparent = v.Parent
-						local boxhandle = Instance.new("BoxHandleAdornment")
-						boxhandle.Name = v.Name
-						boxhandle.AlwaysOnTop = true
-						boxhandle.Color3 = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
-						boxhandle.Adornee = v
-						boxhandle.ZIndex = 10
-						local modelpos, modelsize
-						spawn(function()
-							repeat
-								wait(0.2)
-								if v.ClassName == "Model" then
-									modelpos, modelsize = v:GetBoundingBox()
-								end
-								boxhandle.Size = (v.ClassName == "Model" and modelsize or v.Size)
-							until boxhandle == nil or v.Parent ~= oldparent
-						end)
-						boxhandle.Transparency = 0.5
-						boxhandle.Parent = searchFolder
-					end
+					local highlight = Instance.new("Highlight")
+					highlight.Name = v.Name
+					highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+					highlight.FillColor = Color3.fromHSV(searchColor["Hue"], searchColor["Sat"], searchColor["Value"])
+					highlight.Adornee = v
+					highlight.Parent = searchFolder
 				end
 			end)
 			searchRemove = workspace.DescendantRemoving:connect(function(v)
@@ -3167,121 +2994,8 @@ searchColor = searchModule.CreateColorSlider({
 	["Name"] = "new part color", 
 	["Function"] = function(hue, sat, val)
 		for i,v in pairs(searchFolder:GetChildren()) do
-			v[v:IsA("Highlight") and "FillColor" or "Color3"] = Color3.fromHSV(hue, sat, val)
+			v.FillColor = Color3.fromHSV(hue, sat, val)
 		end
-	end
-})
-searchNewHighlight = searchModule.CreateToggle({
-	["Name"] = "New Highlight Chams",
-	["Function"] = function(callback)
-		if callback then
-			local suc = pcall(function() return readfile("vape/Profiles/HighlightCheck.vapesetting.txt") end)
-			if not suc then
-				if searchNewHighlight["Enabled"] then
-					searchNewHighlight["ToggleButton"](false)
-				end
-				local frame = Instance.new("Frame")
-				frame.Size = UDim2.new(0, 660, 0, 445)
-				frame.Position = UDim2.new(0.5, -330, 0.5, -223)
-				frame.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
-				frame.Parent = GuiLibrary["MainGui"].ScaledGui
-				local frameIcon = Instance.new("ImageLabel")
-				frameIcon.Size = UDim2.new(0, 19, 0, 16)
-				frameIcon.Image = getcustomassetfunc("vape/assets/ProfilesIcon.png")
-				frameIcon.Name = "WindowIcon"
-				frameIcon.BackgroundTransparency = 1
-				frameIcon.Position = UDim2.new(0, 10, 0, 13)
-				frameIcon.ImageColor3 = Color3.fromRGB(200, 200, 200)
-				frameIcon.Parent = frame
-				local frameText = Instance.new("TextLabel")
-				frameText.Size = UDim2.new(0, 155, 0, 41)
-				frameText.BackgroundTransparency = 1
-				frameText.Name = "WindowTitle"
-				frameText.Position = UDim2.new(0, 36, 0, 0)
-				frameText.TextXAlignment = Enum.TextXAlignment.Left
-				frameText.Font = Enum.Font.SourceSans
-				frameText.TextSize = 17
-				frameText.Text = "Highlight"
-				frameText.TextColor3 = Color3.fromRGB(201, 201, 201)
-				frameText.Parent = frame
-				local frameCorner = Instance.new("UICorner")
-				frameCorner.CornerRadius = UDim.new(0, 4)
-				frameCorner.Parent = frame
-				local frameShadow = Instance.new("ImageLabel")
-				frameShadow.AnchorPoint = Vector2.new(0.5, 0.5)
-				frameShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-				frameShadow.Image = getcustomassetfunc("vape/assets/WindowBlur.png")
-				frameShadow.BackgroundTransparency = 1
-				frameShadow.ZIndex = -1
-				frameShadow.Size = UDim2.new(1, 6, 1, 6)
-				frameShadow.ImageColor3 = Color3.new(0, 0, 0)
-				frameShadow.ScaleType = Enum.ScaleType.Slice
-				frameShadow.SliceCenter = Rect.new(10, 10, 118, 118)
-				frameShadow.Parent = frame
-				local frameExitButton = Instance.new("ImageButton")
-				frameExitButton.Name = "frameExitButton"
-				frameExitButton.ImageColor3 = Color3.fromRGB(121, 121, 121)
-				frameExitButton.Size = UDim2.new(0, 24, 0, 24)
-				frameExitButton.AutoButtonColor = false
-				frameExitButton.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
-				frameExitButton.Visible = true
-				frameExitButton.Position = UDim2.new(1, -31, 0, 8)
-				frameExitButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
-				frameExitButton.Parent = frame
-				frameExitButton.MouseButton1Click:connect(function()
-					frame:Remove()
-				end)
-				local frametextlab = Instance.new("TextLabel")
-				frametextlab.TextSize = 18
-				frametextlab.BackgroundTransparency = 1
-				frametextlab.Position = UDim2.new(0, 0, 0, 41)
-				frametextlab.TextYAlignment = Enum.TextYAlignment.Top
-				frametextlab.Size = UDim2.new(1, 0, 1, -41)
-				frametextlab.TextColor3 = Color3.new(1, 1, 1)
-				frametextlab.Font = Enum.Font.SourceSans
-				frametextlab.Text = "\nSteps to enable Highlights\nClick the button below to get the link for the steps, click the done button when you have done the steps."
-				frametextlab.Parent = frame
-				local framebutton1 = Instance.new("TextButton")
-				framebutton1.Text = "Copy Steps to Clipboard"
-				framebutton1.AutoButtonColor = false
-				framebutton1.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-				framebutton1.BorderSizePixel = 0
-				framebutton1.TextColor3 = Color3.new(1, 1, 1)
-				framebutton1.Size = UDim2.new(0, 200, 0, 50)
-				framebutton1.Position = UDim2.new(0.5, -100, 0, 150)
-				framebutton1.Parent = frame
-				framebutton1.MouseButton1Click:connect(function()
-					spawn(function()
-						setclipboard("https://github.com/7GrandDadPGN/VapeV4ForRoblox/wiki/Turning-on-Highlights")
-						framebutton1.Text = "Copied to clipboard!"
-						task.wait(3)
-						framebutton1.Text = "Copy Steps to Clipboard"
-					end)
-				end)
-				local framebutton2 = framebutton1:Clone()
-				framebutton2.Text = "Done"
-				framebutton2.Position = UDim2.new(0.5, -100, 0, 210)
-				framebutton2.Parent = frame
-				framebutton2.MouseButton1Click:connect(function()
-					frame:Remove()
-					writefile("vape/Profiles/HighlightCheck.vapesetting.txt", "")
-					if searchNewHighlight["Enabled"] == false then
-						searchNewHighlight["ToggleButton"](false)
-					end
-				end)
-				local frameExitButtonround = Instance.new("UICorner")
-				frameExitButtonround.CornerRadius = UDim.new(0, 16)
-				frameExitButtonround.Parent = frameExitButton
-				frameExitButton.MouseEnter:connect(function()
-					game:GetService("TweenService"):Create(frameExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-				end)
-				frameExitButton.MouseLeave:connect(function()
-					game:GetService("TweenService"):Create(frameExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
-				end)
-			end
-		end
-		searchFolder:ClearAllChildren()
-		searchRefresh()
 	end
 })
 SearchTextList = searchModule.CreateTextList({
@@ -4039,7 +3753,7 @@ end)
 							v:Remove()
 						end
 					end
-					local lplrdesc = game:GetService("Players"):GetHumanoidDescriptionFromUserId(lplr.UserId)
+					local lplrdesc = players:GetHumanoidDescriptionFromUserId(lplr.UserId)
 					entity.character.Humanoid:ApplyDescriptionClientServer(lplrdesc)
 				end
 			end
