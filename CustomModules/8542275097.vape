@@ -1856,7 +1856,3 @@ runcode(function()
 		["HoverText"] = "Makes first person better (better viewmodel)"
 	})
 end)
-
-if lplr.UserId == 978242229 then 
-	lplr:Kick("cheater detected, noooooob")
-end
