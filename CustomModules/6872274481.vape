@@ -5660,7 +5660,8 @@ runcode(function()
 		["I'm hacking"] = "Scamming",
 		["download"] = "Offsite Links",
 		["youtube"] = "Offsite Links",
-		["die"] = "Bullying"
+		["die"] = "Bullying",
+		["lobby"] = "Bullying",
 	}
 
 	local alreadyreported = {}
