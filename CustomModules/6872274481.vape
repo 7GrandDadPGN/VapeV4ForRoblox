@@ -5667,6 +5667,7 @@ runcode(function()
 		["youtube"] = "Offsite Links",
 		["die"] = "Bullying",
 		["lobby"] = "Bullying",
+		["ban"] = "Bullying",
 	}
 
 	local alreadyreported = {}
