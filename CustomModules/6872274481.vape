@@ -3044,6 +3044,7 @@ runcode(function()
 	local nukerrange = {["Value"] = 1}
 	local nukereffects = {["Enabled"] = false}
 	local nukeranimation = {["Enabled"] = false}
+	local nukernofly = {["Enabled"] = false}
 	local nukerlegit = {["Enabled"] = false}
 	local nukerown = {["Enabled"] = false}
     local nukerluckyblock = {["Enabled"] = false}
@@ -3075,7 +3076,7 @@ runcode(function()
                     repeat
                         task.wait()
                         for i, obj in pairs(luckyblocktable) do
-                            if entity.isAlive then
+                            if entity.isAlive and (nukernofly["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] == false)  then
                                 if obj and obj.Parent ~= nil then
                                     if (entity.character.HumanoidRootPart.Position - obj.Position).magnitude <= nukerrange["Value"] and (nukerown["Enabled"] or obj:GetAttribute("PlacedByUserId") ~= lplr.UserId) then
 										local tool = getEquipped()["Object"]
@@ -3103,7 +3104,7 @@ runcode(function()
                 spawn(function()
                     repeat
                         task.wait()
-                        if nukerbeds["Enabled"] then
+                        if nukerbeds["Enabled"] and (nukernofly["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] == false) then
                             for i, obj in pairs(bedwars["BedTable"]) do
                                 if entity.isAlive then
                                     if obj and obj:FindFirstChild("Covers") and bedwars["BlockController"]:isBlockBreakable({["blockPosition"] = obj.Position / 3}, lplr) and obj.Parent ~= nil then
@@ -3179,6 +3180,10 @@ runcode(function()
 		["Name"] = "Break Beds",
 		["Function"] = function(callback) end,
 		["Default"] = true
+	})
+	nukernofly = Nuker.CreateToggle({
+		["Name"] = "Fly Disable",
+		["Function"] = function() end
 	})
     nukerluckyblock = Nuker.CreateToggle({
 		["Name"] = "Break LuckyBlocks",
@@ -5931,6 +5936,21 @@ runcode(function()
 	local leavesaid = false
 	bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
+			if AnticheatBypass["Enabled"] then
+				if p7.fromEntity == oldchar and p7.entityInstance ~= oldchar then
+					bedwars["SoundManager"]:playSound(bedwars["SoundList"].KILL)
+				end
+				if p7.entityInstance == oldchar and changed == false and p7.entityInstance.Humanoid.Health <= 0 then
+					if not bedwars["GamePlayerUtil"].getGamePlayer(lplr):isSpectator() then
+						cam.CameraSubject = (p7.fromEntity and p7.fromEntity:FindFirstChild("Humanoid") or p7.entityInstance and p7.entityInstance:FindFirstChild("Humanoid") or workspace.RespawnView)
+						bedwars["RespawnController"].respawnTree = bedwars["Roact"].mount(bedwars["Roact"].createElement(bedwars["RespawnTimer"], {
+							RespawnDuration = p7.respawnDuration,
+							KilledByPlayer = (p7.fromEntity and players:GetPlayerFromCharacter(p7.fromEntity)),
+							DamageType = p7.damageType
+						}), lplr.PlayerGui)
+					end
+				end
+			end
 			if leavesaid == false and (p7.entityInstance == lplr.Character or p7.entityInstance == oldchar) then
 				local plr = {["Name"] = ""}
 				if p7.fromEntity then
@@ -6072,8 +6092,9 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then 
 				BindToRenderStep("HideBalloons", 1, function()
-					if entity.isAlive and workspace.BalloonRoots:FindFirstChild("BalloonRoot:"..lplr.Name) then
-						workspace.BalloonRoots["BalloonRoot:"..lplr.Name].Position = Vector3.new(math.huge, -math.huge, math.huge)
+					local balloonroot = workspace.BalloonRoots:FindFirstChild("BalloonRoot:"..lplr.Name)
+					if balloonroot then
+						balloonroot.Position = Vector3.new(math.huge, -math.huge, math.huge)
 					end
 				end)
 			else
@@ -8582,25 +8603,6 @@ runcode(function()
 	local function finishcframe(cframe)
 		return shared.VapeOverrideAnticheatBypassCFrame and shared.VapeOverrideAnticheatBypassCFrame(cframe) or cframe
 	end
-	bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
-		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
-			if AnticheatBypass["Enabled"] then
-				if p7.fromEntity == oldchar and p7.entityInstance ~= oldchar then
-					bedwars["SoundManager"]:playSound(bedwars["SoundList"].KILL)
-				end
-				if p7.entityInstance == oldchar and changed == false and p7.entityInstance.Humanoid.Health <= 0 then
-					if not bedwars["GamePlayerUtil"].getGamePlayer(lplr):isSpectator() then
-						cam.CameraSubject = (p7.fromEntity and p7.fromEntity:FindFirstChild("Humanoid") or p7.entityInstance and p7.entityInstance:FindFirstChild("Humanoid") or workspace.RespawnView)
-						bedwars["RespawnController"].respawnTree = bedwars["Roact"].mount(bedwars["Roact"].createElement(bedwars["RespawnTimer"], {
-							RespawnDuration = p7.respawnDuration,
-							KilledByPlayer = (p7.fromEntity and players:GetPlayerFromCharacter(p7.fromEntity)),
-							DamageType = p7.damageType
-						}), lplr.PlayerGui)
-					end
-				end
-			end
-		end)
-	end)	
 
 	local clonesuccess = false
 	local function disablestuff()
