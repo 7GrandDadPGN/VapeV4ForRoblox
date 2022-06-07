@@ -8894,7 +8894,7 @@ runcode(function()
 			local function notlasso()
 				for i,v in pairs(collectionservice:GetTagged("LassoHooked")) do 
 					print("lasso", v)
-					if v:IsDescendantOf(oldchar) then 
+					if v == oldchar then 
 						return false
 					end
 				end
