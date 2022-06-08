@@ -5640,6 +5640,7 @@ runcode(function()
 		["gae"] = "Bullying",
 		["gey"] = "Bullying",
 		["hacker"] = "Scamming",
+		["hecker"] = "Scamming",
 		["fat"] = "Bullying",
 		["get a life"] = "Bullying",
 		["fatherless"] = "Bullying",
