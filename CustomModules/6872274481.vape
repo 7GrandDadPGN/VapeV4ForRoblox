@@ -5675,12 +5675,21 @@ runcode(function()
 		["ban"] = "Bullying",
 	}
 
+	local reporttableexact = {
+		["L"] = "Bullying",
+	}
+
 	local alreadyreported = {}
 
 	local function findreport(msg)
 		local checkstr = msg:gsub("%W+", ""):lower()
 		for i,v in pairs(reporttable) do 
 			if checkstr:find(i) then 
+				return v
+			end
+		end
+		for i,v in pairs(reporttableexact) do 
+			if checkstr == i then 
 				return v
 			end
 		end
