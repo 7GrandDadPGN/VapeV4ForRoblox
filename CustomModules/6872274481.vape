@@ -5639,7 +5639,7 @@ runcode(function()
 		["gay"] = "Bullying",
 		["gae"] = "Bullying",
 		["gey"] = "Bullying",
-		["hacker"] = "Scamming",
+		["hack"] = "Scamming",
 		["exploit"] = "Scamming",
 		["cheat"] = "Scamming",
 		["hecker"] = "Scamming",
@@ -5667,7 +5667,6 @@ runcode(function()
 		["commitnotalive"] = "Bullying",
 		["vxpe"] = "Offsite Links",
 		["futureclient"] = "Offsite Links",
-		["hacking"] = "Scamming",
 		["download"] = "Offsite Links",
 		["youtube"] = "Offsite Links",
 		["die"] = "Bullying",
@@ -5769,7 +5768,10 @@ runcode(function()
                     players:ReportAbuse(plr, reportreason, "he said a bad word")
                 end)
 				if AutoReportNotify["Enabled"] then 
-					createwarning("AutoReport", "Reported "..plr.Name.." for\n"..reportreason..'('..reportedmatch..')', 15)
+					local warning = createwarning("AutoReport", "Reported "..plr.Name.." for\n"..reportreason..' ('..reportedmatch..')', 15)
+					pcall(function()
+						warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+					end)
 				end
                 alreadyreported[plr] = true
             end
