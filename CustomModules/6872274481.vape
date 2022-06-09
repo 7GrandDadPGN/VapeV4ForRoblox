@@ -5685,12 +5685,12 @@ runcode(function()
 		local checkstr = msg:gsub("%W+", ""):lower()
 		for i,v in pairs(reporttable) do 
 			if checkstr:find(i) then 
-				return v
+				return v, i
 			end
 		end
 		for i,v in pairs(reporttableexact) do 
 			if checkstr == i then 
-				return v
+				return v, i
 			end
 		end
 		return nil
@@ -5763,13 +5763,13 @@ runcode(function()
 			end
 		end
 		if AutoReport["Enabled"] and plr and plr ~= lplr and alreadyreported[plr] == nil and bedwars["CheckPlayerType"](plr) == "DEFAULT" then
-            local reportreason = findreport(tab.Message)
+            local reportreason, reportedmatch = findreport(tab.Message)
             if reportreason then 
                 spawn(function()
                     players:ReportAbuse(plr, reportreason, "he said a bad word")
                 end)
 				if AutoReportNotify["Enabled"] then 
-					createwarning("AutoReport", "reported "..plr.Name.." for\n"..reportreason, 15)
+					createwarning("AutoReport", "Reported "..plr.Name.." for\n"..reportreason..'('..reportedmatch..')', 15)
 				end
                 alreadyreported[plr] = true
             end
