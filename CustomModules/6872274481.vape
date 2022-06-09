@@ -5678,8 +5678,9 @@ runcode(function()
 	local alreadyreported = {}
 
 	local function findreport(msg)
+		local checkstr = msg:gsub("%W+", ""):lower()
 		for i,v in pairs(reporttable) do 
-			if msg:lower():find(i) then 
+			if checkstr:find(i) then 
 				return v
 			end
 		end
