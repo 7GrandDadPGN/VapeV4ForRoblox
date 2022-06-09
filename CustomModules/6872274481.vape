@@ -5769,7 +5769,7 @@ runcode(function()
                     players:ReportAbuse(plr, reportreason, "he said a bad word")
                 end)
 				if AutoReportNotify["Enabled"] then 
-					createwarning("AutoReport", "reported "..plr.Name.." for "..reportreason, 15)
+					createwarning("AutoReport", "reported "..plr.Name.." for\n"..reportreason, 15)
 				end
                 alreadyreported[plr] = true
             end
