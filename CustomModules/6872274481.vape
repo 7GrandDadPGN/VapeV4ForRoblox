@@ -5640,10 +5640,13 @@ runcode(function()
 		["gae"] = "Bullying",
 		["gey"] = "Bullying",
 		["hacker"] = "Scamming",
+		["exploit"] = "Scamming",
 		["cheat"] = "Scamming",
 		["hecker"] = "Scamming",
 		["fat"] = "Bullying",
 		["get a life"] = "Bullying",
+		["fatherless"] = "Bullying",
+		["report"] = "Bullying",
 		["fatherless"] = "Bullying",
 		["disco"] = "Offsite Links",
 		["yt"] = "Offsite Links",
@@ -5664,8 +5667,7 @@ runcode(function()
 		["commit not alive"] = "Bullying",
 		["vxpe"] = "Offsite Links",
 		["futureclient"] = "Offsite Links",
-		["im hacking"] = "Scamming",
-		["I'm hacking"] = "Scamming",
+		["hacking"] = "Scamming",
 		["download"] = "Offsite Links",
 		["youtube"] = "Offsite Links",
 		["die"] = "Bullying",
@@ -6311,19 +6313,19 @@ runcode(function()
 				bedwars["BalloonController"]["deflateBalloon"] = function() end
 				flypress = uis.InputBegan:connect(function(input1)
 					if flyupanddown["Enabled"] and uis:GetFocusedTextBox() == nil then
-						if input1.KeyCode == Enum.KeyCode.Space then
+						if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
 							flyup = true
 						end
-						if input1.KeyCode == Enum.KeyCode.LeftShift then
+						if input1.KeyCode == Enum.KeyCode.LeftShift or input1.KeyCode == Enum.KeyCode.ButtonL2 then
 							flydown = true
 						end
 					end
 				end)
 				flyendpress = uis.InputEnded:connect(function(input1)
-					if input1.KeyCode == Enum.KeyCode.Space then
+					if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
 						flyup = false
 					end
-					if input1.KeyCode == Enum.KeyCode.LeftShift then
+					if input1.KeyCode == Enum.KeyCode.LeftShift or input1.KeyCode == Enum.KeyCode.ButtonL2 then
 						flydown = false
 					end
 				end)
