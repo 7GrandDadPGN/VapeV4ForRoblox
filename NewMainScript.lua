@@ -1023,44 +1023,25 @@ CustomText = TextGui.CreateTextBox({
 CustomText["Object"].Visible = false
 
 local healthColorToPosition = {
-	[Vector3.new(Color3.fromRGB(255, 28, 0).r,
-  Color3.fromRGB(255, 28, 0).g,
-  Color3.fromRGB(255, 28, 0).b)] = 0.1;
-	[Vector3.new(Color3.fromRGB(250, 235, 0).r,
-  Color3.fromRGB(250, 235, 0).g,
-  Color3.fromRGB(250, 235, 0).b)] = 0.5;
-	[Vector3.new(Color3.fromRGB(27, 252, 107).r,
-  Color3.fromRGB(27, 252, 107).g,
-  Color3.fromRGB(27, 252, 107).b)] = 0.8;
+	[0.01] = Color3.fromRGB(255, 28, 0);
+	[0.5] = Color3.fromRGB(250, 235, 0);
+	[0.99] = Color3.fromRGB(27, 252, 107);
 }
-local min = 0.1
-local minColor = Color3.fromRGB(255, 28, 0)
-local max = 0.8
-local maxColor = Color3.fromRGB(27, 252, 107)
 
 local function HealthbarColorTransferFunction(healthPercent)
-	if healthPercent < min then
-		return minColor
-	elseif healthPercent > max then
-		return maxColor
-	end
-
-
-	local numeratorSum = Vector3.new(0,0,0)
-	local denominatorSum = 0
-	for colorSampleValue, samplePoint in pairs(healthColorToPosition) do
-		local distance = healthPercent - samplePoint
-		if distance == 0 then
-			
-			return Color3.new(colorSampleValue.x, colorSampleValue.y, colorSampleValue.z)
+	healthPercent = math.clamp(healthPercent, 0.01, 0.99)
+	local lastcolor = Color3.new(1, 1, 1)
+	for samplePoint, colorSampleValue in pairs(healthColorToPosition) do
+		local distance = (healthPercent / samplePoint)
+		if distance == 1 then
+			return colorSampleValue
+		elseif distance < 1 then 
+			return lastcolor:lerp(colorSampleValue, distance)
 		else
-			local wi = 1 / (distance*distance)
-			numeratorSum = numeratorSum + wi * colorSampleValue
-			denominatorSum = denominatorSum + wi
+			lastcolor = colorSampleValue
 		end
 	end
-	local result = numeratorSum / denominatorSum
-	return Color3.new(result.x, result.y, result.z)
+	return lastcolor
 end
 
 local TargetInfo = GuiLibrary.CreateCustomWindow({
