@@ -205,7 +205,7 @@ runcode(function()
 	textlabel.TextColor3 = Color3.new(1, 1, 1)
 	textlabel.Position = UDim2.new(0, 0, 0, -36)
 	textlabel.Parent = GuiLibrary["MainGui"].ScaledGui.ClickGui
-	spawn(function()
+	task.spawn(function()
 		repeat task.wait() until matchState ~= 0
 		textlabel:Remove()
 	end)
@@ -214,7 +214,7 @@ end)
 local cachedassets = {}
 local function getcustomassetfunc(path)
 	if not betterisfile(path) then
-		spawn(function()
+		task.spawn(function()
 			local textlabel = Instance.new("TextLabel")
 			textlabel.Size = UDim2.new(1, 0, 0, 36)
 			textlabel.Text = "Downloading "..path
@@ -984,7 +984,7 @@ runcode(function()
 				return blocktable:placeBlock(Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
-        spawn(function()
+        task.spawn(function()
             repeat task.wait() until matchState ~= 0
 			local raycastparameters = RaycastParams.new()
 			raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block")}
@@ -1034,14 +1034,14 @@ runcode(function()
 			shared.vapebypassed = true
 		end
 
-		spawn(function()
+		task.spawn(function()
 			repeat
 				task.wait()
 				currentinventory = bedwars["ClientStoreHandler"]:getState().Inventory.observedInventory.inventory
 			until uninjectflag
 		end)
 
-		spawn(function()
+		task.spawn(function()
 			local chatsuc, chatres = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/bedwarssettings.json")) end)
 			if chatsuc then
 				if chatres.crashed and (not chatres.said) then
@@ -1367,11 +1367,11 @@ local function renderNametag(plr)
 			end)
 		end
 		if lplr ~= plr and bedwars["CheckPlayerType"](lplr) == "DEFAULT" then
-			spawn(function()
+			task.spawn(function()
 				repeat task.wait() until plr:GetAttribute("PlayerConnected")
 				task.wait(4)
 				repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..clients.ChatStrings2.vape, "All")
-				spawn(function()
+				task.spawn(function()
 					local connection
 					for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
 						if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
@@ -1406,7 +1406,7 @@ local function renderNametag(plr)
 		local nametag = getNametagString(plr)
 		plr.CharacterAdded:connect(function(char)
 			if char ~= oldchar then
-				spawn(function()
+				task.spawn(function()
 					pcall(function() 
 						
 						bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
@@ -1415,9 +1415,9 @@ local function renderNametag(plr)
 				end)
 			end
 		end)
-		spawn(function()
+		task.spawn(function()
 			if plr.Character and plr.Character ~= oldchar then
-				spawn(function()
+				task.spawn(function()
 					pcall(function() 
 						bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
 						Cape(plr.Character, getcustomassetfunc("vape/assets/VapeCape.png"))
@@ -1428,7 +1428,7 @@ local function renderNametag(plr)
 	end
 end
 
-spawn(function()
+task.spawn(function()
 	for i,v in pairs(players:GetChildren()) do renderNametag(v) end
 	connectionstodisconnect[#connectionstodisconnect + 1] = players.PlayerAdded:connect(renderNametag)
 end)
@@ -1472,7 +1472,7 @@ do
 	end
 	entity.characterAdded = function(plr, char, localcheck)
         if char then
-            spawn(function()
+            task.spawn(function()
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10)
                 local hum = char:WaitForChild("Humanoid", 10)
@@ -2001,7 +2001,7 @@ runcode(function()
 	end
 
 	local function AutoHotbarSort()
-		spawn(function()
+		task.spawn(function()
 			task.wait(0.2)
 			local items = (AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]] and AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]]["Items"] or {})
 			for i,v in pairs(bedwars["getInventory"](lplr).items) do 
@@ -2218,7 +2218,7 @@ runcode(function()
 						if getEquipped()["Type"] == "block" and autoclickerblocks["Enabled"] and bedwars["BlockPlacementController"].blockPlacer then 
 							local mouseinfo = bedwars["BlockPlacementController"].blockPlacer.clientManager:getBlockSelector():getMouseInfo(0)
 							if mouseinfo then
-								spawn(function()
+								task.spawn(function()
 									if bedwars["BlockPlacementController"].blockPlacer then
 										bedwars["BlockPlacementController"].blockPlacer:placeBlock(mouseinfo.placementPosition)
 									end
@@ -2424,7 +2424,7 @@ runcode(function()
 					end
 					return oldmove2(self, movedir, facecam, ...)
 				end
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait(0.1)
 						if (not targetstrafe["Enabled"]) then break end
@@ -2606,7 +2606,7 @@ runcode(function()
 		["Name"] = "Sprint",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait()
 						if Sprint["Enabled"] == false then break end
@@ -2631,7 +2631,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				if FieldOfViewZoom["Enabled"] then
-					spawn(function()
+					task.spawn(function()
 						repeat
 							task.wait()
 						until uis:IsKeyDown(Enum.KeyCode[FieldOfView["Keybind"] ~= "" and FieldOfView["Keybind"] or "C"]) == false
@@ -2733,7 +2733,7 @@ runcode(function()
 		["Name"] = "AntiVoid", 
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() until antivoidypos ~= 0
 					repeat
 						task.wait(0.2)
@@ -2748,7 +2748,7 @@ runcode(function()
 						end
 					until AntiVoid["Enabled"] == false
 				end)
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() until antivoidypos ~= 0
 					if AntiVoid["Enabled"] then
 						local specialpos = (workspace.MapCFrames:FindFirstChild("center") and workspace.MapCFrames.center.Value.p == Vector3.new(77, 11, 35))
@@ -2985,7 +2985,7 @@ runcode(function()
 		["Name"] = "BedProtector",
 		["Function"] = function(callback)
             if callback then
-                spawn(function()
+                task.spawn(function()
                     for i, obj in pairs(bedwars["BedTable"]) do
                         if entity.isAlive and obj:GetAttribute("Team"..lplr:GetAttribute("Team").."NoBreak") and obj.Parent ~= nil then
                             if (entity.character.HumanoidRootPart.Position - obj.Position).magnitude <= bedprotectorrange["Value"] then
@@ -3045,7 +3045,7 @@ runcode(function()
                         table.remove(luckyblocktable, table.find(luckyblocktable, v))
                     end
                 end)
-                spawn(function()
+                task.spawn(function()
                     repeat
                         task.wait()
                         for i, obj in pairs(luckyblocktable) do
@@ -3074,7 +3074,7 @@ runcode(function()
                         end
                     until Nuker["Enabled"] == false
                 end)
-                spawn(function()
+                task.spawn(function()
                     repeat
                         task.wait()
                         if nukerbeds["Enabled"] and (nukernofly["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] == false) then
@@ -3188,7 +3188,7 @@ runcode(function()
 		["Name"] = "ChestStealer",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat 
 						task.wait(0.01)
 						if entity.isAlive then
@@ -3199,7 +3199,7 @@ runcode(function()
 									if #chestitems > 0 then
 										for i3,v3 in pairs(chestitems) do
 											if v3:IsA("Accessory") then
-												spawn(function()
+												task.spawn(function()
 													pcall(function()
 														bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(chest.Value, v3)
 													end)
@@ -3218,7 +3218,7 @@ runcode(function()
 											bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer(chest)
 											for i3,v3 in pairs(chestitems) do
 												if v3:IsA("Accessory") then
-													spawn(function()
+													task.spawn(function()
 														pcall(function()
 															bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(v.ChestFolderValue.Value, v3)
 														end)
@@ -3315,9 +3315,9 @@ runcode(function()
 		["Name"] = "ChestESP",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					chestconnections[#chestconnections + 1] = collectionservice:GetInstanceAddedSignal("chest"):connect(function(v)
-						spawn(function()
+						task.spawn(function()
 							local billboard = Instance.new("BillboardGui")
 							billboard.Parent = ChestESPFolder
 							billboard.Name = "chest"
@@ -3355,7 +3355,7 @@ runcode(function()
 						end)
 					end)
 					for i,v in pairs(collectionservice:GetTagged("chest")) do
-                        spawn(function()
+                        task.spawn(function()
 							local billboard = Instance.new("BillboardGui")
 							billboard.Parent = ChestESPFolder
 							billboard.Name = "chest"
@@ -3438,7 +3438,7 @@ runcode(function()
 	local shoothook
 	local bedwarsshopnpcs = {}
 	local shopnpcconnection
-	spawn(function()
+	task.spawn(function()
 		repeat task.wait() until matchState ~= 0
 		for i,v in pairs(collectionservice:GetTagged("BedwarsItemShop")) do
 			table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = true})
@@ -3592,7 +3592,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then 
 				buyingthing = false 
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait()
 						local found, npctype = nearNPC()
@@ -3784,7 +3784,7 @@ runcode(function()
 				autobankui = Instance.new("Frame")
 				autobankui.Size = UDim2.new(0, 120, 0, 40)
 				autobankui.Position = UDim2.new(0, 0, 0, -200)
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait()
 						if autobankui then 
@@ -3853,7 +3853,7 @@ runcode(function()
 						end
 					end
 				end)
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait()
 						local found, npctype = nearNPC()
@@ -3867,7 +3867,7 @@ runcode(function()
 								if #chestitems > 0 then
 									for i3,v3 in pairs(chestitems) do
 										if (v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
-											spawn(function()
+											task.spawn(function()
 												bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
 												refreshbank()
 											end)
@@ -3881,7 +3881,7 @@ runcode(function()
 							if #chestitems > 0 then
 								for i3,v3 in pairs(chestitems) do
 									if v3:IsA("Accessory") and ((npctype == false and (v3.Name == "emerald" or v3.Name == "iron")) or v3.Name == "diamond") then
-										spawn(function()
+										task.spawn(function()
 											bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
 											refreshbank()
 										end)
@@ -3904,7 +3904,7 @@ runcode(function()
 				if #chestitems > 0 then
 					for i3,v3 in pairs(chestitems) do
 						if v3:IsA("Accessory") and (v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond") then
-							spawn(function()
+							task.spawn(function()
 								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
 							end)
 						end
@@ -4061,7 +4061,7 @@ runcode(function()
 							texture.Parent = block
 						end
 					end
-					spawn(function()
+					task.spawn(function()
 						repeat
 							task.wait()
 							for i,v in pairs(positions.blocks) do
@@ -4336,7 +4336,7 @@ runcode(function()
 							texture.Parent = block
 						end
 					end
-					spawn(function()
+					task.spawn(function()
 						local neededblocks = 0
 						repeat
 							task.wait()
@@ -4434,7 +4434,7 @@ runcode(function()
 			if callback then
 				longjumpvelo = Vector3.new()
 				if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-					spawn(function()
+					task.spawn(function()
 						repeat task.wait() until shared.VapeFullyLoaded
 						if longjump["Enabled"] then 
 							if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
@@ -4443,7 +4443,7 @@ runcode(function()
 						end
 					end)
 					if entity.isAlive then
-						spawn(function()
+						task.spawn(function()
 							local nomove = false
 							local acallowed = false
 							local damagetroll = false
@@ -4479,7 +4479,7 @@ runcode(function()
 								if (entity.isAlive and longjump["Enabled"]) then
 									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, longjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 								end
-								spawn(function()
+								task.spawn(function()
 									repeat
 										task.wait()
 										if funnytick <= tick() then break end
@@ -4506,7 +4506,7 @@ runcode(function()
 										break
 									end
 									if i == 3 and longjumpautodisable["Enabled"] then
-										spawn(function()
+										task.spawn(function()
 											repeat
 												task.wait()
 												if entity.isAlive then
@@ -4615,7 +4615,7 @@ runcode(function()
 					if entity.isAlive and entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 						HighJumpTick = tick() + (HighJumpMode["Value"] == "Funny" and 20 or (HighJumpDelay["Value"] / 10))
 						if HighJumpMode["Value"] == "Funny" then
-							spawn(function()
+							task.spawn(function()
 								for i = 1, 100 do
 									task.wait(0.01)
 									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, i * 3, 0)
@@ -4623,7 +4623,7 @@ runcode(function()
 							end)
 						else
 							entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-							spawn(function()
+							task.spawn(function()
 								for i = 1, 2 do
 									task.wait(0.1)
 									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
@@ -4857,7 +4857,7 @@ runcode(function()
         ["Name"] = "Killaura",
         ["Function"] = function(callback)
             if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait()
 						if (killauraanimation["Enabled"] and not killauraswing["Enabled"]) and killauranear then
@@ -4897,7 +4897,7 @@ runcode(function()
                     return oldplay(Self, id, ...)
                 end
 				local playerentity
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() plrentity = bedwars["getEntityTable"].getLocalPlayerEntity() until playerentity ~= nil
 				end)
 				local targetedplayer
@@ -4929,7 +4929,7 @@ runcode(function()
 						end
 					end
 				end)
-                spawn(function()
+                task.spawn(function()
 					repeat
 						task.wait(0.03)
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
@@ -5228,13 +5228,13 @@ runcode(function()
 		["Name"] = "PickupRange", 
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait(0.01)
 						local itemdrops = collectionservice:GetTagged("ItemDrop")
 						for i,v in pairs(itemdrops) do
 							if entity.isAlive and (entity.character.HumanoidRootPart.Position - v.Position).magnitude <= FastPickupRange["Value"] and (v:GetAttribute("ClientDropTime") and tick() - v:GetAttribute("ClientDropTime") > 2 or v:GetAttribute("ClientDropTime") == nil) then
-								spawn(function()
+								task.spawn(function()
 									bedwars["ClientHandler"]:Get(bedwars["PickupRemote"]):CallServerAsync({
 										itemDrop = v
 									}):andThen(function(p14)
@@ -5387,7 +5387,7 @@ local commands = {
 	end,
 	["void"] = function(args)
 		if entity.isAlive then
-			spawn(function()
+			task.spawn(function()
 				repeat
 					task.wait(0.2)
 					entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, Vector3.new(0, -20, 0))
@@ -5555,7 +5555,7 @@ local commands = {
 					video.Loaded:connect(function()
 						video.Visible = true
 						video:Play()
-						spawn(function()
+						task.spawn(function()
 							repeat
 								wait()
 								for i = 0, 1, 0.01 do
@@ -5566,7 +5566,7 @@ local commands = {
 						end)
 					end)
 					task.wait(19)
-					spawn(function()
+					task.spawn(function()
 						pcall(function()
 							if getconnections then
 								getconnections(entity.character.Humanoid.Died)
@@ -5703,7 +5703,7 @@ runcode(function()
 					end
 				end)
 			end
-			spawn(function()
+			task.spawn(function()
 				local connection
 				for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
 					if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
@@ -5746,7 +5746,7 @@ runcode(function()
 		if AutoReport["Enabled"] and plr and plr ~= lplr and alreadyreported[plr] == nil and bedwars["CheckPlayerType"](plr) == "DEFAULT" then
             local reportreason, reportedmatch = findreport(tab.Message)
             if reportreason then 
-                spawn(function()
+                task.spawn(function()
                     players:ReportAbuse(plr, reportreason, "he said a bad word")
                 end)
 				if AutoReportNotify["Enabled"] then 
@@ -5815,7 +5815,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				autoleaveconnection = players.PlayerAdded:connect(function(plr)
-					spawn(function()
+					task.spawn(function()
 						pcall(function()
 							if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and (plr.UserId ~= 87365146 or shared.VapePrivate) then
 								if AutoLeaveStaff["Enabled"] then
@@ -5841,7 +5841,7 @@ runcode(function()
 						end)
 					end)
 				end)
-				spawn(function()
+				task.spawn(function()
 					pcall(function()
 						for i, plr in pairs(players:GetChildren()) do
 							if plr:IsInGroup(5774246) and plr:GetRankInGroup(5774246) >= 100 and (plr.UserId ~= 87365146 or shared.VapePrivate) then
@@ -6125,7 +6125,7 @@ runcode(function()
 		["Name"] = "Speed",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() until shared.VapeFullyLoaded
 					if speed["Enabled"] then
 						if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
@@ -6133,7 +6133,7 @@ runcode(function()
 						end
 					end
 				end)
-				spawn(function()
+				task.spawn(function()
 					repeat
 						gofast = true
 						task.wait(0.15)
@@ -6462,7 +6462,7 @@ runcode(function()
 		["Name"] = "Damage Animation",
 		["Function"] = function(callback) 
 			if callback then 
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait(0.1)
 						for i,v in pairs(getconnections(cam:GetPropertyChangedSignal("CameraType"))) do 
@@ -7380,7 +7380,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				scaffoldtext.Visible = ScaffoldBlockCount["Enabled"]
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait()
 						if entity.isAlive and (ScaffoldHandCheck["Enabled"] and getEquipped()["Type"] == "block" or (not ScaffoldHandCheck["Enabled"])) then
@@ -7424,7 +7424,7 @@ runcode(function()
 										end
 									end
 									if getwool() or getEquipped()["Type"] == "block" then
-										bedwars["placeBlock"](newpos, (getEquipped()["Type"] == "block" and getEquipped()["Object"].Name))
+										task.spawn(bedwars["placeBlock"], newpos, (getEquipped()["Type"] == "block" and getEquipped()["Object"].Name))
 										oldpos = newpos
 									end
 								end
@@ -7498,7 +7498,7 @@ NoFall = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptio
 	["Name"] = "NoFall",
 	["Function"] = function(callback)
 		if callback then
-			spawn(function()
+			task.spawn(function()
 				repeat
 					task.wait(0.5)
 					bedwars["ClientHandler"]:Get("GroundHit"):SendToServer()
@@ -7645,7 +7645,7 @@ runcode(function()
 			local damagetab = debug.getupvalue(bedwars["DamageIndicator"], 2)
 			if callback then
 				if removetextures["Enabled"] then
-					spawn(function()
+					task.spawn(function()
 						repeat task.wait() until matchState ~= 0
 						if FPSBoost["Enabled"] then
 							for i,v in pairs(collectionservice:GetTagged("block")) do
@@ -7668,7 +7668,7 @@ runcode(function()
 					damagetab.blowUpSize = 0
 					debug.setupvalue(bedwars["DamageIndicator"], 10, {
 						Create = function(self, obj, ...)
-							spawn(function()
+							task.spawn(function()
 								obj.Parent.Visible = false
 							end)
 							return game:GetService("TweenService"):Create(obj, ...)
@@ -7720,7 +7720,7 @@ runcode(function()
 		["Name"] = "Remove Textures",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() until matchState ~= 0
 					if FPSBoost["Enabled"] then
 						for i,v in pairs(collectionservice:GetTagged("block")) do
@@ -7736,7 +7736,7 @@ runcode(function()
 					end
 				end)
 			else
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() until matchState ~= 0
 					if FPSBoost["Enabled"] then
 						for i,v in pairs(collectionservice:GetTagged("block")) do
@@ -7766,7 +7766,7 @@ runcode(function()
 					damagetab.blowUpSize = 0
 					debug.setupvalue(bedwars["DamageIndicator"], 10, {
 						Create = function(self, obj, ...)
-							spawn(function()
+							task.spawn(function()
 								obj.Parent.Visible = false
 							end)
 							return game:GetService("TweenService"):Create(obj, ...)
@@ -7987,7 +7987,7 @@ runcode(function()
 									boots.Parent = thing
 									local kit = hand:Clone()
 									kit.Name = "Kit"
-									spawn(function()
+									task.spawn(function()
 										repeat task.wait() until plr:GetAttribute("PlayingAsKit") ~= ""
 										if kit then
 											kit.Image = kititems[plr:GetAttribute("PlayingAsKit")] and bedwars["getIcon"]({itemType = kititems[plr:GetAttribute("PlayingAsKit")]}, NameTagsShowInventory["Enabled"]) or ""
@@ -8257,7 +8257,7 @@ runcode(function()
 		["Name"] = "BedPlates",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() until #bedwars["BedTable"] > 0
 					if BedPlates["Enabled"] then
 						for i,v in pairs(bedwars["BedTable"]) do
@@ -8303,7 +8303,7 @@ runcode(function()
 		["Name"] = "MissileTP",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					if getItem("guided_missile") then
 						local plr = GetNearestHumanoidToMouse(true, 1000)
 						if plr then
@@ -8348,7 +8348,7 @@ runcode(function()
 		["Name"] = "RavenTP",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					if getItem("raven") then
 						local plr = GetNearestHumanoidToMouse(true, 1000)
 						if plr then
@@ -8502,7 +8502,7 @@ runcode(function()
 		["Name"] = "AutoBalloon", 
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() until antivoidypos ~= 0
 					if AutoBalloon["Enabled"] then
 						antivoidpart = Instance.new("Part")
@@ -8736,7 +8736,7 @@ runcode(function()
 				shared.VapeOverrideAnticheatBypassPre(lplr.Character)
 			end
 			lplr.Character = clone
-			spawn(function()
+			task.spawn(function()
 				repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
 				cam.CFrame = oldcamcframe
 			end)
@@ -8912,7 +8912,7 @@ runcode(function()
 				return true
 			end
 
-			spawn(function()
+			task.spawn(function()
 				repeat
 					if (not AnticheatBypass["Enabled"]) then break end
 					local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
@@ -8951,7 +8951,7 @@ runcode(function()
 								if not lagbackchanged then
 									lagbackchanged = true
 									lagbacktime = tick()
-									spawn(function()
+									task.spawn(function()
 										local pingspike = didpingspike() 
 										if pingspike then
 											if AnticheatBypassNotification["Enabled"] then
@@ -8963,7 +8963,7 @@ runcode(function()
 											end
 										end
 										if AnticheatBypassFlagCheck["Enabled"] then
-											spawn(function()
+											task.spawn(function()
 												if AnticheatBypass["Enabled"] then
 													print("toggled")
 													AnticheatBypass["ToggleButton"](false)
@@ -8980,7 +8980,7 @@ runcode(function()
 													movedir = Vector3.new()
 													return oldmove(self, movedir, ...)
 												end
-												spawn(function()
+												task.spawn(function()
 													repeat task.wait() until lplr.Character == clone or AnticheatBypass["Enabled"] == false
 													controlmodule.moveFunction = oldmove
 												end)
@@ -9066,7 +9066,7 @@ runcode(function()
 		end)
 		shared.VapeRealCharacter = nil
 		if lplr.Character ~= clone then
-			spawn(function()
+			task.spawn(function()
 				repeat task.wait() until entity.isAlive
 				lplr.Character:WaitForChild("Humanoid", 10)
 				lplr.Character:WaitForChild("LeftHand", 10)
@@ -9100,7 +9100,7 @@ runcode(function()
 			end)
 		end
 		anticheatconnection = lplr.CharacterAdded:connect(function(char)
-			spawn(function()
+			task.spawn(function()
 				char:WaitForChild("Humanoid", 10)
 				char:WaitForChild("LeftHand", 10)
 				char:WaitForChild("RightHand", 10)
@@ -9139,7 +9139,7 @@ runcode(function()
 		["Name"] = "AnticheatBypass",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					if (not AutoReport["Enabled"]) then 
 						AutoReport["ToggleButton"](false)
 					end
@@ -9183,7 +9183,7 @@ runcode(function()
 				if clone and clone:FindFirstChild("Animate") and oldchar then
 					local anim = clone:FindFirstChild("Animate")
 					anim.Parent = oldchar	
-					spawn(function()
+					task.spawn(function()
 						anim.Disabled = true 
 						anim.Disabled = false
 					end)
@@ -9216,7 +9216,7 @@ runcode(function()
 					end
 					local oldcamcframe = cam.CFrame
 					lplr.Character = oldchar
-					spawn(function()
+					task.spawn(function()
 						repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
 						cam.CFrame = oldcamcframe
 					end)
@@ -9305,7 +9305,7 @@ runcode(function()
 		["Name"] = "Arrow Dodge",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					bedwars["ClientHandler"]:WaitFor("ProjectileLaunch"):andThen(function(p6)
 						arrowdodgeconnection = p6:Connect(function(data)
 							if oldchar and clone and AnticheatBypass["Enabled"] and (arrowdodgedata == nil or arrowdodgedata.launchVelocity ~= data.launchVelocity) and entity.isAlive and tostring(data.projectile):find("arrow") then
@@ -9368,7 +9368,7 @@ runcode(function()
 		["Name"] = "Combat Check",
 		["Function"] = function(callback) 
 			if callback then 
-				spawn(function()
+				task.spawn(function()
 					repeat 
 						task.wait(0.1)
 						if (not AnticheatBypassCombatCheck["Enabled"]) then break end
@@ -9411,7 +9411,7 @@ runcode(function()
 		["Name"] = "Disguise",
 		["TempText"] = "Disguise User Id",
 		["FocusLost"] = function(enter) 
-			spawn(function() desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"])) end)
+			task.spawn(function() desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"])) end)
 		end
 	})
 	if shared.VapeDeveloper then 
@@ -9443,7 +9443,7 @@ runcode(function()
 		["Name"] = "WinterTheme",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					for i,v in pairs(lighting:GetChildren()) do
 						if v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("PostEffect") then
 							v:Remove()
@@ -9479,7 +9479,7 @@ runcode(function()
 					atmosphere.Haze = 0
 					atmosphere.Parent = lighting
 				end)
-				spawn(function()
+				task.spawn(function()
 					local snowpart = Instance.new("Part")
 					snowpart.Size = Vector3.new(240, 0.5, 240)
 					snowpart.Name = "SnowParticle"
@@ -9579,7 +9579,7 @@ runcode(function()
 		["Name"] = "AutoHeal",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait(0.1)
 						autohealfunc()
@@ -9628,11 +9628,11 @@ runcode(function()
 		["Name"] = "AutoKit",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() until kit ~= ""
 					if AutoKit["Enabled"] then
 						if kit == "melody" then
-							spawn(function()
+							task.spawn(function()
 								repeat
 									task.wait(0.1)
 									if getItem("guitar") then
@@ -9647,7 +9647,7 @@ runcode(function()
 								until (not AutoKit["Enabled"])
 							end)
 						elseif kit == "bigman" then
-							spawn(function()
+							task.spawn(function()
 								repeat
 									task.wait()
 									local itemdrops = collectionservice:GetTagged("treeOrb")
@@ -9664,7 +9664,7 @@ runcode(function()
 								until (not AutoKit["Enabled"])
 							end)
 						elseif kit == "grim_reaper" then
-							spawn(function()
+							task.spawn(function()
 								repeat
 									task.wait()
 									local itemdrops = bedwars["GrimReaperController"].soulsByPosition
@@ -9679,7 +9679,7 @@ runcode(function()
 								until (not AutoKit["Enabled"])
 							end)
 						elseif kit == "farmer_cletus" then 
-							spawn(function()
+							task.spawn(function()
 								repeat
 									task.wait()
 									local itemdrops = collectionservice:GetTagged("BedwarsHarvestableCrop")
@@ -9698,7 +9698,7 @@ runcode(function()
 								until (not AutoKit["Enabled"])
 							end)
 						elseif kit == "miner" then
-							spawn(function()
+							task.spawn(function()
 								repeat
 									task.wait(0.1)
 									if entity.isAlive then
@@ -9712,7 +9712,7 @@ runcode(function()
 								until (not AutoKit["Enabled"])
 							end)
 						elseif kit == "dasher" then
-							spawn(function()
+							task.spawn(function()
 								repeat
 									task.wait(0.1)
 									local dao = getItemNear("dao")
@@ -9749,7 +9749,7 @@ runcode(function()
 		["Name"] = "AutoJuggernaut", 
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait()
 						local itemdrops = collectionservice:GetTagged("juggernaut-crate")
@@ -9778,7 +9778,7 @@ runcode(function()
 			if callback then
 				vapecapeconnection = lplr.CharacterAdded:connect(function(char)
 					if char ~= oldchar then
-						spawn(function()
+						task.spawn(function()
 							pcall(function() 
 								Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
 							end)
@@ -9786,7 +9786,7 @@ runcode(function()
 					end
 				end)
 				if lplr.Character and lplr.Character ~= oldchar then
-					spawn(function()
+					task.spawn(function()
 						pcall(function() 
 							Cape(lplr.Character, getcustomassetfunc("vape/assets/VapeCape.png"))
 						end)
@@ -9853,7 +9853,7 @@ runcode(function()
 		["Name"] = "Breadcrumbs",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait(0.3)
 						if (not Breadcrumbs["Enabled"]) then return end
@@ -10119,7 +10119,7 @@ runcode(function()
 		["Function"] = function(callback)
 			Overlay.SetVisible(callback) 
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						wait(1)
 						if not tpstring then
@@ -10158,7 +10158,7 @@ runcode(function()
 		["Name"] = "ChinaHat",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait(0.3)
 						if (not ChinaHat["Enabled"]) then return end
@@ -10224,7 +10224,7 @@ runcode(function()
 		["Name"] = "CameraFix",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait()
 						if (not CameraFix["Enabled"]) then break end
@@ -10246,7 +10246,7 @@ runcode(function()
 			if callback then 
 				if not transformed then
 					transformed = true
-					spawn(function()
+					task.spawn(function()
 						local oldbedwarstabofblocks = '{"wool_blue":"rbxassetid://5089281898","wool_pink":"rbxassetid://6856183009","clay_pink":"rbxassetid://6856283410","grass":["rbxassetid://6812582110","rbxassetid://6812616868","rbxassetid://6812616868","rbxassetid://6812616868","rbxassetid://6812616868","rbxassetid://6812616868"],"snow":"rbxassetid://6874651192","wool_cyan":"rbxassetid://6177124865","red_sandstone":"rbxassetid://6708703895","wool_green":"rbxassetid://6177123316","clay_black":"rbxassetid://5890435474","sand":"rbxassetid://6187018940","wool_orange":"rbxassetid://6177122584","hickory_log":"rbxassetid://6879467811","wood_plank_birch":"rbxassetid://6768647328","clay_gray":"rbxassetid://7126965624","wood_plank_spruce":"rbxassetid://6768615964","brick":"rbxassetid://6782607284","clay_dark_brown":"rbxassetid://6874651325","stone_brick":"rbxassetid://6710700118","ceramic":"rbxassetid://6875522401","clay_blue":"rbxassetid://4991097126","wood_plank_maple":"rbxassetid://6768632085","diamond_block":"rbxassetid://6734061546","wood_plank_oak":"rbxassetid://6768575772","ice":"rbxassetid://6874651262","marble":"rbxassetid://6594536339","spruce_log":"rbxassetid://6874161124","oak_log":"rbxassetid://6879467811","clay_light_brown":"rbxassetid://6874651634","clay_dark_green":"rbxassetid://6812653448","marble_pillar":["rbxassetid://6909328433","rbxassetid://6909328433","rbxassetid://6909323822","rbxassetid://6909323822","rbxassetid://6909323822","rbxassetid://6909323822"],"slate_brick":"rbxassetid://6708836267","obsidian":"rbxassetid://6855476765","iron_block":"rbxassetid://6734050333","wool_red":"rbxassetid://5089281973","clay_purple":"rbxassetid://6856099740","clay_orange":"rbxassetid://7017703219","clay_red":"rbxassetid://6856283323","wool_yellow":"rbxassetid://6829151816","tnt":["rbxassetid://6889157997","rbxassetid://6889157997","rbxassetid://6855533421","rbxassetid://6855533421","rbxassetid://6855533421","rbxassetid://6855533421"],"clay_yellow":"rbxassetid://4991097283","clay_white":"rbxassetid://7017705325","wool_purple":"rbxassetid://6177125247","sandstone":"rbxassetid://6708657090","wool_white":"rbxassetid://5089287375","clay_light_green":"rbxassetid://6856099550","birch_log":"rbxassetid://6856088949","emerald_block":"rbxassetid://6856082835","clay":"rbxassetid://6856190168","stone":"rbxassetid://6812635290","slime_block":"rbxassetid://6869286145"}'
 						local oldbedwarsblocktab = game:GetService("HttpService"):JSONDecode(oldbedwarstabofblocks)
 						local oldbedwarstabofimages = '{"clay_orange":"rbxassetid://7017703219","iron":"rbxassetid://6850537969","glass":"rbxassetid://6909521321","log_spruce":"rbxassetid://6874161124","ice":"rbxassetid://6874651262","marble":"rbxassetid://6594536339","zipline_base":"rbxassetid://7051148904","iron_helmet":"rbxassetid://6874272559","marble_pillar":"rbxassetid://6909323822","clay_dark_green":"rbxassetid://6763635916","wood_plank_birch":"rbxassetid://6768647328","watering_can":"rbxassetid://6915423754","emerald_helmet":"rbxassetid://6931675766","pie":"rbxassetid://6985761399","wood_plank_spruce":"rbxassetid://6768615964","diamond_chestplate":"rbxassetid://6874272898","wool_pink":"rbxassetid://6910479863","wool_blue":"rbxassetid://6910480234","wood_plank_oak":"rbxassetid://6910418127","diamond_boots":"rbxassetid://6874272964","clay_yellow":"rbxassetid://4991097283","tnt":"rbxassetid://6856168996","lasso":"rbxassetid://7192710930","clay_purple":"rbxassetid://6856099740","melon_seeds":"rbxassetid://6956387796","apple":"rbxassetid://6985765179","carrot_seeds":"rbxassetid://6956387835","log_oak":"rbxassetid://6763678414","emerald_chestplate":"rbxassetid://6931675868","wool_yellow":"rbxassetid://6910479606","emerald_boots":"rbxassetid://6931675942","clay_light_brown":"rbxassetid://6874651634","balloon":"rbxassetid://7122143895","cannon":"rbxassetid://7121221753","leather_boots":"rbxassetid://6855466456","melon":"rbxassetid://6915428682","wool_white":"rbxassetid://6910387332","log_birch":"rbxassetid://6763678414","clay_pink":"rbxassetid://6856283410","grass":"rbxassetid://6773447725","obsidian":"rbxassetid://6910443317","shield":"rbxassetid://7051149149","red_sandstone":"rbxassetid://6708703895","diamond_helmet":"rbxassetid://6874272793","wool_orange":"rbxassetid://6910479956","log_hickory":"rbxassetid://7017706899","guitar":"rbxassetid://7085044606","wool_purple":"rbxassetid://6910479777","diamond":"rbxassetid://6850538161","iron_chestplate":"rbxassetid://6874272631","slime_block":"rbxassetid://6869284566","stone_brick":"rbxassetid://6910394475","hammer":"rbxassetid://6955848801","ceramic":"rbxassetid://6910426690","wood_plank_maple":"rbxassetid://6768632085","leather_helmet":"rbxassetid://6855466216","stone":"rbxassetid://6763635916","slate_brick":"rbxassetid://6708836267","sandstone":"rbxassetid://6708657090","snow":"rbxassetid://6874651192","wool_red":"rbxassetid://6910479695","leather_chestplate":"rbxassetid://6876833204","clay_red":"rbxassetid://6856283323","wool_green":"rbxassetid://6910480050","clay_white":"rbxassetid://7017705325","wool_cyan":"rbxassetid://6910480152","clay_black":"rbxassetid://5890435474","sand":"rbxassetid://6187018940","clay_light_green":"rbxassetid://6856099550","clay_dark_brown":"rbxassetid://6874651325","carrot":"rbxassetid://3677675280","clay":"rbxassetid://6856190168","iron_boots":"rbxassetid://6874272718","emerald":"rbxassetid://6850538075","zipline":"rbxassetid://7051148904"}'
@@ -10393,7 +10393,7 @@ runcode(function()
 							["SPEAR_HIT"] = "rbxassetid://7807270398",
 							["SPEAR_THROW"] = "rbxassetid://7813485044",
 						}
-						spawn(function()
+						task.spawn(function()
 							repeat wait() until workspace ~= nil 
 							repeat wait() until workspace:FindFirstChild("Map") ~= nil
 							for i,v in pairs(workspace.Map.Blocks:GetChildren()) do
@@ -10523,7 +10523,7 @@ runcode(function()
 									died.Volume = 0
 								end
 								if oldbedwarsblocktab[v.Name] then
-									spawn(function()
+									task.spawn(function()
 										local hand = v:WaitForChild("Handle", 10)
 										if hand then
 											hand.CastShadow = false
@@ -10572,7 +10572,7 @@ runcode(function()
 						debug.setconstant(bedwars["DamageIndicator"], 126, 0.5)
 						debug.setupvalue(bedwars["DamageIndicator"], 10, {
 							Create = function(self, obj, ...)
-								spawn(function()
+								task.spawn(function()
 									obj.Parent.Parent.Parent.Parent.Velocity = Vector3.new((math.random(-50, 50) / 100) * damagetab.velX, (math.random(50, 60) / 100) * damagetab.velY, (math.random(-50, 50) / 100) * damagetab.velZ)
 									local textcompare = obj.Parent.TextColor3
 									if textcompare ~= Color3.fromRGB(85, 255, 85) then
@@ -10623,7 +10623,7 @@ local function isblatant()
 	return GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Enabled"] or GuiLibrary["ObjectsThatCanBeSaved"]["SpeedOptionsButton"]["Api"]["Keybind"] ~= "" or GuiLibrary["ObjectsThatCanBeSaved"]["AnticheatBypassOptionsButton"]["Api"]["Enabled"] or GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"] or GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Keybind"] ~= ""
 end
 
-spawn(function()
+task.spawn(function()
 	local url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/bedwarsdata"
 
 	local function createannouncement(announcetab)
@@ -10777,7 +10777,7 @@ spawn(function()
 				lplr:Kick(newdatatab.KickUsers[tostring(lplr.UserId)])
 			end
 			if newdatatab.Announcement and newdatatab.Announcement.ExpireTime >= os.time() then 
-				spawn(function()
+				task.spawn(function()
 					createannouncement(newdatatab.Announcement)
 				end)
 			end
@@ -10810,7 +10810,7 @@ spawn(function()
 end)
 
 if shared.nobolineupdate then
-	spawn(function()
+	task.spawn(function()
 		repeat
 			task.wait()
 			if GuiLibrary["MainGui"].Parent ~= nil then
@@ -10837,7 +10837,7 @@ if shared.nobolineupdate then
 			})
 		end
 	end)
-	spawn(function()
+	task.spawn(function()
 		task.wait(2)
 		local ImageLabel = Instance.new("ImageLabel")
 		ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
