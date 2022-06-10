@@ -1453,6 +1453,9 @@ local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(f
 		if shared.VapePrivate then
 			teleportstr = 'shared.VapePrivate = true '..teleportstr
 		end
+		if shared.VapeCustomProfile then 
+			teleportstr = "shared.VapeCustomProfile = '"..shared.VapeCustomProfile.."'"..teleportstr
+		end
 		GuiLibrary["SaveSettings"]()
 		queueteleport(teleportstr)
     end
@@ -1561,7 +1564,7 @@ GeneralSettings.CreateButton2({
 if shared.VapeIndependent then
 	spawn(function()
 		repeat task.wait() until shared.VapeManualLoad
-		GuiLibrary["LoadSettings"]()
+		GuiLibrary["LoadSettings"](shared.VapeCustomProfile)
 		if #ProfilesTextList["ObjectList"] == 0 then
 			table.insert(ProfilesTextList["ObjectList"], "default")
 			ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
@@ -1605,7 +1608,7 @@ else
 			loadstring(readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape"))()
 		end	
 	end
-	GuiLibrary["LoadSettings"]()
+	GuiLibrary["LoadSettings"](shared.VapeCustomProfile)
 	local profiles = {}
 	for i,v in pairs(GuiLibrary["Profiles"]) do 
 		table.insert(profiles, i)

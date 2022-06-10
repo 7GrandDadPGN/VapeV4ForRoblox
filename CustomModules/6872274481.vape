@@ -780,7 +780,7 @@ runcode(function()
 						end
 						if Reach["Enabled"] then
 							local mag = (tab.validate.selfPosition.value - tab.validate.targetPosition.value).magnitude
-							local newres = hashvec(tab.validate.selfPosition.value + (mag > 14.4 and (CFrame.lookAt(tab.validate.selfPosition.value, tab.validate.targetPosition.value).lookVector * 4) or Vector3.new(0, 0, 0)))
+							local newres = hashvec(tab.validate.selfPosition.value + (mag > 14.4 and (CFrame.lookAt(tab.validate.selfPosition.value, tab.validate.targetPosition.value).lookVector * 4) or Vector3.new()))
 							tab.validate.selfPosition = newres
 						end
 						return res:CallServer(tab)
@@ -1464,7 +1464,7 @@ do
 	local armor2 = {}
 	local armor3 = {}
 	local hand = {}
-	GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendRefresh.Event:connect(function()
+	connectionstodisconnect[#connectionstodisconnect + 1] = GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendRefresh.Event:connect(function()
 		entity.fullEntityRefresh()
 	end)
 	entity.isPlayerTargetable = function(plr)
@@ -1632,17 +1632,15 @@ end)
 
 local function getBestTool(block)
     local tool = nil
-	local toolnum = 0
-	local blockmeta = bedwars["getItemMetadata"](block)
-	local blockType = ""
-	if blockmeta["block"] and blockmeta["block"]["breakType"] then
-		blockType = blockmeta["block"]["breakType"]
-	end
-	for i,v in pairs(bedwars["getInventory"](lplr).items) do
-		local meta = bedwars["getItemMetadata"](v.itemType)
-		if meta["breakBlock"] and meta["breakBlock"][blockType] then
-			tool = v
-			break
+	local blockmeta = bedwars["ItemTable"][block]
+	local blockType = blockmeta["block"] and blockmeta["block"]["breakType"]
+	if blockType then
+		for i,v in pairs(bedwars["getInventory"](lplr).items) do
+			local meta = bedwars["ItemTable"][v.itemType]
+			if meta["breakBlock"] and meta["breakBlock"][blockType] then
+				tool = v
+				break
+			end
 		end
 	end
     return tool
@@ -1669,11 +1667,13 @@ local function switchToAndUseTool(block, legit)
 	end
 end
 
+local normalsides = {}
+for i,v in pairs(Enum.NormalId:GetEnumItems()) do if v.Name ~= "Bottom" then table.insert(normalsides, v) end end
+
 local function isBlockCovered(pos)
 	local coveredsides = 0
-	local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 	for i, v in pairs(normalsides) do
-		local blockpos = (pos + (Vector3.FromNormalId(Enum.NormalId[v]) * 3))
+		local blockpos = (pos + (Vector3.FromNormalId(v) * 3))
 		local block = getblock(blockpos)
 		if block then
 			coveredsides = coveredsides + 1
@@ -1689,8 +1689,8 @@ local function getallblocks(pos, normal)
 		local blockpos = (pos + (Vector3.FromNormalId(normal) * (i * 3)))
 		local extrablock = getblock(blockpos)
 		local covered = isBlockCovered(blockpos)
-		if extrablock and extrablock.Parent ~= nil and (covered or covered == false and lastblock == nil) then
-			if bedwars["BlockController"]:isBlockBreakable({["blockPosition"] = blockpos}, lplr) then
+		if extrablock and extrablock.Parent ~= nil then
+			if bedwars["BlockController"]:isBlockBreakable({blockPosition = blockpos}, lplr) then
 				table.insert(blocks, extrablock.Name)
 			else
 				table.insert(blocks, "unbreakable")
@@ -1708,13 +1708,13 @@ local function getallblocks(pos, normal)
 end
 
 local function getlastblock(pos, normal)
-	local lastfound = nil
+	local lastfound, lastpos = nil, nil
 	for i = 1, 20 do
 		local blockpos = (pos + (Vector3.FromNormalId(normal) * (i * 3)))
-		local extrablock = getblock(blockpos)
+		local extrablock, extrablockpos = getblock(blockpos)
 		local covered = isBlockCovered(blockpos)
-		if extrablock and extrablock.Parent ~= nil and (covered or covered == false and lastblock == nil) then
-			lastfound = extrablock
+		if extrablock and extrablock.Parent ~= nil then
+			lastfound, lastpos = extrablock, extrablockpos
 			if covered == false then
 				break
 			end
@@ -1722,33 +1722,30 @@ local function getlastblock(pos, normal)
 			break
 		end
 	end
-	return lastfound
+	return lastfound, lastpos
 end
 
 local healthbarblocktable = {
 	["blockHealth"] = -1,
-	["breakingBlockPosition"] = Vector3.new(0, 0, 0)
+	["breakingBlockPosition"] = Vector3.new()
 }
 bedwars["breakBlock"] = function(pos, effects, normal, bypass)
     if lplr:GetAttribute("DenyBlockBreak") == true then
 		return nil
 	end
-	local block = ((bypass == nil and getlastblock(pos, Enum.NormalId[normal])) or getblock(pos))
-	local notmainblock = not ((bypass == nil and getlastblock(pos, Enum.NormalId[normal])))
-    if block and bedwars["BlockController"]:isBlockBreakable({blockPosition = bedwars["BlockController"]:getBlockPosition((notmainblock and pos or block.Position))}, lplr) then
-        if bedwars["BlockEngineClientEvents"].DamageBlock:fire(block.Name, bedwars["BlockController"]:getBlockPosition((notmainblock and pos or block.Position)), block):isCancelled() then
+	local block, blockpos = nil, nil
+	if not bypass then block, blockpos = getlastblock(pos, normal) end
+	if not block then block, blockpos = getblock(pos) end
+    if blockpos then
+        if bedwars["BlockEngineClientEvents"].DamageBlock:fire(block.Name, blockpos, block):isCancelled() then
             return nil
         end
-        local olditem = nil
-		pcall(function()
-			olditem = lplr.Character.HandInvItem.Value
-		end)
-        local blockhealthbarpos = {blockPosition = Vector3.new(0, 0, 0)}
+        local blockhealthbarpos = {blockPosition = Vector3.new()}
         local blockdmg = 0
         if block and block.Parent ~= nil then
             switchToAndUseTool(block)
             blockhealthbarpos = {
-                blockPosition = bedwars["BlockController"]:getBlockPosition((notmainblock and pos or block.Position))
+                blockPosition = blockpos
             }
             if healthbarblocktable.blockHealth == -1 or blockhealthbarpos.blockPosition ~= healthbarblocktable.breakingBlockPosition then
 				local blockdata = bedwars["BlockController"]:getStore():getBlockData(blockhealthbarpos.blockPosition)
@@ -1757,7 +1754,7 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
 				end
 				local blockhealth = blockdata:GetAttribute(lplr.Name .. "_Health")
 				if blockhealth == nil then
-					blockhealth = block:GetAttribute("Health");
+					blockhealth = block:GetAttribute("Health")
 				end
 				healthbarblocktable.blockHealth = blockhealth
 				healthbarblocktable.breakingBlockPosition = blockhealthbarpos.blockPosition
@@ -1769,10 +1766,10 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
             end
             bedwars["ClientHandlerDamageBlock"]:Get("DamageBlock"):CallServerAsync({
                 blockRef = blockhealthbarpos, 
-                hitPosition = (notmainblock and pos or block.Position), 
-                hitNormal = Vector3.FromNormalId(Enum.NormalId[normal])
-            }):andThen(function(p9)
-				if p9 == "failed" then
+                hitPosition = blockpos * 3, 
+                hitNormal = Vector3.FromNormalId(normal)
+            }):andThen(function(result)
+				if result == "failed" then
 					healthbarblocktable.blockHealth = healthbarblocktable.blockHealth + blockdmg
 				end
 			end)
@@ -1781,6 +1778,7 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
                 if healthbarblocktable.blockHealth <= 0 then
                     bedwars["BlockBreaker"].breakEffect:playBreak(block.Name, blockhealthbarpos.blockPosition, lplr)
                     bedwars["BlockBreaker"].healthbarMaid:DoCleaning()
+					healthbarblocktable.breakingBlockPosition = Vector3.new()
                 else
                     bedwars["BlockBreaker"].breakEffect:playHit(block.Name, blockhealthbarpos.blockPosition, lplr)
                 end
@@ -2291,8 +2289,8 @@ reachval = Reach.CreateSlider({
 GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("PhaseOptionsButton")
 
-local oldpos = Vector3.new(0, 0, 0)
-local oldpos2 = Vector3.new(0, 0, 0)
+local oldpos = Vector3.new()
+local oldpos2 = Vector3.new()
 local Spider = {["Enabled"] = false}
 
 local function getScaffold(vec, diagonaltoggle)
@@ -2313,7 +2311,7 @@ local slowdownspeed = false
 local slowdownspeedval = 0.6
 local speed = {["Enabled"] = false}
 local longjump = {["Enabled"] = false}
-local longjumpvelo = Vector3.new(0, 0, 0)
+local longjumpvelo = Vector3.new()
 local spidergoinup = false
 local holdingshift = false
 local targetstrafevelo = Vector3.new(1, 1, 1)
@@ -2328,26 +2326,12 @@ runcode(function()
 	local phase = {["Enabled"] = false}
 	local phasedist = {["Value"] = 1}
 	local checktable = {}
-	local checktable2 = {}
 
 	for i,v in pairs(workspace:GetChildren()) do
 		if v:IsA("Folder") and v.Name:find("Map") == nil then
 			table.insert(checktable, v)
 		end
-		if v.Name:find("cage") then
-			table.insert(checktable2, v)
-		end
 	end
-
-	local cageconnection = workspace.ChildAdded:connect(function(v)
-		if v.Name:find("cage") then
-			table.insert(checktable2, v)
-		end
-	end)
-	spawn(function()
-		repeat task.wait() until matchState ~= 0
-		cageconnection:Disconnect()
-	end)
 
 	local function isPointInMapOccupied(p)
 		local region = Region3.new(p - Vector3.new(1, 1, 1), p + Vector3.new(1, 1, 1))
@@ -2366,7 +2350,7 @@ runcode(function()
 						local pos3 = entity.character.Head.CFrame.p
 						local bird = (lplr.Character:GetAttribute("Shield_DODO_BIRD") and lplr.Character:GetAttribute("Shield_DODO_BIRD") > 0)
 						local raycastparameters = RaycastParams.new()
-						raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block"), workspace.SpectatorPlatform, table.unpack(checktable2)}
+						raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block"), collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
 						local newray = workspace:Raycast(pos3, entity.character.Humanoid.MoveDirection, raycastparameters)
 						if phasedelay <= tick() then
@@ -2421,7 +2405,7 @@ runcode(function()
 	local targetstrafejump = {["Value"] = 40}
 	local targetstrafedistance = {["Value"] = 12}
 	local targetstrafenum = 0
-	local targetstrafepos = Vector3.new(0, 0, 0)
+	local targetstrafepos = Vector3.new()
 	local flip = false
 	local lastreal
 	local old = nil
@@ -2455,7 +2439,7 @@ runcode(function()
 								targetstrafenum = math.deg(num)
 							end
 							local raycastparameters = RaycastParams.new()
-							raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block")}
+							raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block"), collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
 							raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
 							targetstrafing = false
 							lastreal = plr.Character.HumanoidRootPart.Position
@@ -2729,6 +2713,7 @@ end)
 local lagbackedaftertouch = false
 runcode(function()
 	local antivoidpart
+	local antivoidconnection
 	local antivoidmethod = {["Value"] = "Dynamic"}
 	local antivoidnew = {["Enabled"] = false}
 	local antivoidnewdelay = {["Value"] = 10}
@@ -2754,9 +2739,9 @@ runcode(function()
 						task.wait(0.2)
 						if AntiVoid["Enabled"] and entity.isAlive then
 							local raycastparameters = RaycastParams.new()
-							raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block")}
+							raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block"), collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
 							raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-							local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
+							local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -15, 0), raycastparameters)
 							if newray then
 								lastvalidpos = entity.character.HumanoidRootPart.CFrame
 							end
@@ -2775,7 +2760,7 @@ runcode(function()
 						antivoidpart.Color = Color3.fromHSV(anticolor["Hue"], anticolor["Sat"], anticolor["Value"])
 						antivoidpart.Transparency = 1 - (antitransparent["Value"] / 100)
 						antivoidpart.Position = Vector3.new(0, antivoidypos, 0)
-						connectionstodisconnect[#connectionstodisconnect + 1] = antivoidpart.Touched:connect(function(touchedpart)
+						antivoidconnection = antivoidpart.Touched:connect(function(touchedpart)
 							if touchedpart.Parent == lplr.Character and entity.isAlive then
 								if AnticheatBypass["Enabled"] then
 									if (not antivoiding) and lastvalidpos and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
@@ -2818,6 +2803,7 @@ runcode(function()
 					end
 				end)
 			else
+				if antivoidconnection then antivoidconnection:Disconnect() end
 				if antivoidpart then
 					antivoidpart:Remove() 
 				end
@@ -2917,9 +2903,7 @@ runcode(function()
 end)
 
 local function getbestside(pos)
-	local softest = 1000000
-	local softestside = Enum.NormalId.Top
-	local normalsides = {"Top", "Left", "Right", "Front", "Back"}
+	local softest, softestside = 1000000, Enum.NormalId.Top
 	for i,v in pairs(normalsides) do
 		local sidehardness = 0
 		for i2,v2 in pairs(getallblocks(pos, v)) do	
@@ -2937,17 +2921,6 @@ local function getbestside(pos)
 		end
 	end
 	return softestside, softest
-end
-
-local function getotherbed(pos)
-	local normalsides = {"Top", "Left", "Right", "Front", "Back"}
-	for i,v in pairs(normalsides) do
-		local bedobj = getblock(pos + (Vector3.FromNormalId(Enum.NormalId[v]) * 3))
-		if bedobj and bedobj.Name == "bed" then
-			return (pos + (Vector3.FromNormalId(Enum.NormalId[v]) * 3))
-		end
-	end
-	return nil
 end
 
 runcode(function()
@@ -3107,18 +3080,13 @@ runcode(function()
                         if nukerbeds["Enabled"] and (nukernofly["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] == false) then
                             for i, obj in pairs(bedwars["BedTable"]) do
                                 if entity.isAlive then
-                                    if obj and obj:FindFirstChild("Covers") and bedwars["BlockController"]:isBlockBreakable({["blockPosition"] = obj.Position / 3}, lplr) and obj.Parent ~= nil then
+                                    if obj and bedwars["BlockController"]:isBlockBreakable({blockPosition = obj.Position / 3}, lplr) and obj.Parent ~= nil then
                                         if (entity.character.HumanoidRootPart.Position - obj.Position).magnitude <= nukerrange["Value"] then
 											local tool = getEquipped()["Object"]
 											if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] or (not nukerlegit["Enabled"]) then
-												local otherside = getotherbed(obj.Position)
-												if otherside then
-													local res, amount = getbestside(obj.Position)
-													local res2, amount2 = getbestside(otherside)
-													bedwars["breakBlock"]((amount < amount2 and obj.Position or otherside), nukereffects["Enabled"], (amount < amount2 and res or res2))
-												else
-													bedwars["breakBlock"](obj.Position, nukereffects["Enabled"], getbestside(obj.Position))
-												end
+												local res, amount = getbestside(obj.Position)
+												local res2, amount2 = getbestside(obj.Position + Vector3.new(0, 0, 3))
+												bedwars["breakBlock"]((amount < amount2 and obj.Position or obj.Position + Vector3.new(0, 0, 3)), nukereffects["Enabled"], (amount < amount2 and res or res2))
 												local animation
 												if nukeranimation["Enabled"] then
 													animation = bedwars["AnimationUtil"].playAnimation(lplr, bedwars["BlockController"]:getAnimationController():getAssetId(1))
@@ -3137,7 +3105,7 @@ runcode(function()
                                 end
                             end
                         end
-                    until Nuker["Enabled"] == false
+                    until (not Nuker["Enabled"])
                 end)
             else
 				nukerconnection:Disconnect()
@@ -3473,22 +3441,23 @@ runcode(function()
 	spawn(function()
 		repeat task.wait() until matchState ~= 0
 		for i,v in pairs(collectionservice:GetTagged("BedwarsItemShop")) do
-			table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = nil})
+			table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = true})
 		end
 		for i,v in pairs(collectionservice:GetTagged("BedwarsTeamUpgrader")) do
-			table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = true})
+			table.insert(bedwarsshopnpcs, {["Position"] = v.Position, ["TeamUpgradeNPC"] = false})
 		end
 	end)
 
 	local function nearNPC()
+		local npc, npccheck = nil, false
 		if entity.isAlive then
 			for i, v in pairs(bedwarsshopnpcs) do
 				if (entity.character.HumanoidRootPart.Position - v.Position).magnitude <= 10 then
-					return true, v.TeamUpgradeNPC
+					npc, npccheck = true, npccheck ~= true and v.TeamUpgradeNPC
 				end
 			end
 		end
-		return false
+		return npc, not npccheck
 	end
 
 	local function getShopItem(itemType)
@@ -3792,7 +3761,7 @@ runcode(function()
 
 	local AutoBankConnection
 	local AutoBank = {["Enabled"] = false}
-	local AutoBankTransmitted = false
+	local AutoBankTransmitted, AutoBankTransmittedType = false, false
 	local autobankui
 
 	local function refreshbank()
@@ -3876,9 +3845,11 @@ runcode(function()
 						if echest == nil then 
 							echest = repstorage.Inventories:FindFirstChild(lplr.Name.."_personal")
 						end	
-						if (p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and echest and (not AutoBankTransmitted) then
-							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
-							refreshbank()
+						if (p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and echest then
+							if AutoBankTransmitted and AutoBankTransmittedType and p3.Name ~= "diamond" or (not AutoBankTransmitted) then 
+								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
+								refreshbank()
+							end
 						end
 					end
 				end)
@@ -3886,12 +3857,11 @@ runcode(function()
 					repeat
 						task.wait()
 						local found, npctype = nearNPC()
-						found = found and true or false
 						if echest == nil then 
 							echest = repstorage.Inventories:FindFirstChild(lplr.Name.."_personal")
 						end
 						if found ~= AutoBankTransmitted then
-							AutoBankTransmitted = found
+							AutoBankTransmitted, AutoBankTransmittedType = found, npctype
 							if (not AutoBankTransmitted) and entity.isAlive then 
 								local chestitems = bedwars["getInventory"](lplr).items
 								if #chestitems > 0 then
@@ -3910,7 +3880,7 @@ runcode(function()
 							local chestitems = echest and echest:GetChildren() or {}
 							if #chestitems > 0 then
 								for i3,v3 in pairs(chestitems) do
-									if v3:IsA("Accessory") and ((npctype == nil and (v3.Name == "emerald" or v3.Name == "iron")) or v3.Name == "diamond") then
+									if v3:IsA("Accessory") and ((npctype == false and (v3.Name == "emerald" or v3.Name == "iron")) or v3.Name == "diamond") then
 										spawn(function()
 											bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
 											refreshbank()
@@ -4462,7 +4432,7 @@ runcode(function()
 		["Name"] = "LongJump",
 		["Function"] = function(callback)
 			if callback then
-				longjumpvelo = Vector3.new(0, 0, 0)
+				longjumpvelo = Vector3.new()
 				if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 					spawn(function()
 						repeat task.wait() until shared.VapeFullyLoaded
@@ -4484,7 +4454,7 @@ runcode(function()
 								if startlongjump and longjumpmode["Value"] == "AnticheatBypass" then 
 									funnytick = tick() + 0.1
 								end
-								longjumpvelo = (startlongjump and entity.character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or longjumpspeed["Value"]))) or Vector3.new(0, 0, 0))
+								longjumpvelo = (startlongjump and entity.character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or longjumpspeed["Value"]))) or Vector3.new())
 							end)
 							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
 							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
@@ -4833,7 +4803,7 @@ runcode(function()
 			return nil
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
-		local selfpos = entity.character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (entity.character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(entity.character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new(0, 0, 0))
+		local selfpos = entity.character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (entity.character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(entity.character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new())
 		if sword and sword["tool"] then
 			local attacksuccess = killaurarealremote:InvokeServer({
 				["weapon"] = sword["tool"],
@@ -5681,6 +5651,7 @@ runcode(function()
 	}
 
 	local alreadyreported = {}
+	local AutoReportList = {["ObjectList"] = {}}
 
 	local function findreport(msg)
 		local checkstr = msg:gsub("%W+", ""):lower()
@@ -5694,6 +5665,11 @@ runcode(function()
 				return v, i
 			end
 		end
+		for i,v in pairs(AutoReportList["ObjectList"]) do 
+			if checkstr:find(v) then 
+				return "Bullying", v
+			end
+		end
 		return nil
 	end
 
@@ -5705,6 +5681,10 @@ runcode(function()
 	AutoReportNotify = AutoReport.CreateToggle({
 		["Name"] = "Notify",
 		["Function"] = function() end
+	})
+	AutoReportList = AutoReport.CreateTextList({
+		["Name"] = "Report Words",
+		["TempText"] = "phrase (to report)"
 	})
 
 	chatconnection = repstorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
@@ -5958,6 +5938,11 @@ runcode(function()
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
 			if AnticheatBypass["Enabled"] then
 				if p7.fromEntity == oldchar and p7.entityInstance ~= oldchar then
+					kills = kills + 1
+					bedwars["ClientStoreHandler"]:dispatch({
+						type = "BedwarsIncrementKills", 
+						userId = lplr.UserId
+					})	
 					bedwars["SoundManager"]:playSound(bedwars["SoundList"].KILL)
 				end
 				if p7.entityInstance == oldchar and changed == false and p7.entityInstance.Humanoid.Health <= 0 then
@@ -5970,6 +5955,9 @@ runcode(function()
 						}), lplr.PlayerGui)
 					end
 				end
+			end
+			if p7.fromEntity == lplr.Character and p7.entityInstance ~= lplr.Character then 
+				kills = kills + 1
 			end
 			if leavesaid == false and (p7.entityInstance == lplr.Character or p7.entityInstance == oldchar) then
 				local plr = {["Name"] = ""}
@@ -5998,13 +5986,6 @@ runcode(function()
 						end
 					end
 				end
-			end
-			if p7.fromEntity and p7.fromEntity == oldchar then
-				kills = kills + 1
-				bedwars["ClientStoreHandler"]:dispatch({
-					type = "BedwarsIncrementKills", 
-					userId = lplr.UserId
-				})	
 			end
 			if AutoToxic["Enabled"] then
 				if p7.fromEntity and (p7.fromEntity == lplr.Character or p7.fromEntity == oldchar) then
@@ -6171,12 +6152,12 @@ runcode(function()
 						end
 						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
 						if speedmode["Value"] == "CFrame" then
-							local newlongjumpvelo = longjumpvelo.Unit * math.clamp((Vector3.new(0, 0, 0) - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0, 100000000000)
-							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.new(0, 0, 0)
+							local newlongjumpvelo = longjumpvelo.Unit * math.clamp((Vector3.new() - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0, 100000000000)
+							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.new()
 							local newpos = (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * (speedval["Value"] - entity.character.Humanoid.WalkSpeed))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
 							local movevec = entity.character.Humanoid.MoveDirection.Unit * 20
-							movevec = movevec == movevec and movevec or Vector3.new(0, 0, 0)
-							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.new(0, 0, 0))
+							movevec = movevec == movevec and movevec or Vector3.new()
+							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.new())
 							local raycastparameters = RaycastParams.new()
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
 							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
@@ -6199,12 +6180,12 @@ runcode(function()
 										entity.character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, entity.character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 									end
 								end
-								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or entity.character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.new(0, 0, 0) or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
+								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or entity.character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.new() or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
 								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
-							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.new() then
 								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 							end
 						end
@@ -6609,9 +6590,8 @@ runcode(function()
 	local ScaffoldBlockCount = {["Enabled"] = false}
 	local ScaffoldHandCheck = {["Enabled"] = false}
 	local scaffoldstopmotionval = false
-	local scaffoldallowed = true
 	local scaffoldposcheck = tick()
-	local scaffoldstopmotionpos = Vector3.new(0, 0, 0)
+	local scaffoldstopmotionpos = Vector3.new()
 	local scaffoldposchecklist = {
 		[1] = Vector3.new(0, 3, 0),
 		[2] = Vector3.new(-3, 3, 0),
@@ -7400,65 +7380,62 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				scaffoldtext.Visible = ScaffoldBlockCount["Enabled"]
-				BindToRenderStep("Scaffold", 1, function(delta)
-					if entity.isAlive and (ScaffoldHandCheck["Enabled"] and getEquipped()["Type"] == "block" or (not ScaffoldHandCheck["Enabled"])) then
-						if uis:IsKeyDown(Enum.KeyCode.Space) then
-							if scaffoldstopmotionval == false then
-								scaffoldstopmotionval = true
-								scaffoldstopmotionpos = entity.character.HumanoidRootPart.CFrame.p
+				spawn(function()
+					repeat
+						task.wait()
+						if entity.isAlive and (ScaffoldHandCheck["Enabled"] and getEquipped()["Type"] == "block" or (not ScaffoldHandCheck["Enabled"])) then
+							if uis:IsKeyDown(Enum.KeyCode.Space) then
+								if scaffoldstopmotionval == false then
+									scaffoldstopmotionval = true
+									scaffoldstopmotionpos = entity.character.HumanoidRootPart.CFrame.p
+								end
+							else
+								scaffoldstopmotionval = false
 							end
-						else
-							scaffoldstopmotionval = false
-						end
-						if getwool() or getEquipped()["Type"] == "block" then
-							if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil then
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 50, entity.character.HumanoidRootPart.Velocity.Z)
-								if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
-									entity.character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, entity.character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
-								end
-							end
-						end
-						for i = 1, ScaffoldExpand["Value"] do
-							local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval == false and entity.character.Humanoid.MoveDirection or Vector3.new(0, 0, 0)) * (i * 3.5))) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.Velocity.Y < 2))
-							newpos = Vector3.new(newpos.X, newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 4 or 0), newpos.Z)
-							if newpos ~= oldpos then
-								if not checkblocks(newpos) then
-									newpos = getnearestblock(newpos)
-								end
-								local wool, woolamount = getwool()
-								local equipped = getEquipped()
-								if equipped["Type"] == "block" then
-									local equippeditem = getItem(equipped["Object"].Name)
-									woolamount = equippeditem and equippeditem["amount"] or 0
-								end
-								scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
-								if woolamount then
-									if woolamount >= 128 then
-										scaffoldtext.TextColor3 = Color3.fromRGB(9, 255, 198)
-									elseif woolamount >= 64 then
-										scaffoldtext.TextColor3 = Color3.fromRGB(255, 249, 18)
-									else
-										scaffoldtext.TextColor3 = Color3.fromRGB(255, 0, 0)
+							if getwool() or getEquipped()["Type"] == "block" then
+								if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil then
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 50, entity.character.HumanoidRootPart.Velocity.Z)
+									if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
+										entity.character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, entity.character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
 									end
 								end
-								if getwool() or getEquipped()["Type"] == "block" then
-									entity.character.HumanoidRootPart.Anchored = false
-									bedwars["placeBlock"](newpos, (getEquipped()["Type"] == "block" and getEquipped()["Object"].Name))
-									oldpos = newpos
+							end
+							for i = 1, ScaffoldExpand["Value"] do
+								local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval == false and entity.character.Humanoid.MoveDirection or Vector3.new()) * (i * 3.5))) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.Velocity.Y < 2))
+								newpos = Vector3.new(newpos.X, newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 4 or 0), newpos.Z)
+								if newpos ~= oldpos then
+									if not checkblocks(newpos) then
+										newpos = getnearestblock(newpos)
+									end
+									local wool, woolamount = getwool()
+									local equipped = getEquipped()
+									if equipped["Type"] == "block" then
+										local equippeditem = getItem(equipped["Object"].Name)
+										woolamount = equippeditem and equippeditem["amount"] or 0
+									end
+									scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
+									if woolamount then
+										if woolamount >= 128 then
+											scaffoldtext.TextColor3 = Color3.fromRGB(9, 255, 198)
+										elseif woolamount >= 64 then
+											scaffoldtext.TextColor3 = Color3.fromRGB(255, 249, 18)
+										else
+											scaffoldtext.TextColor3 = Color3.fromRGB(255, 0, 0)
+										end
+									end
+									if getwool() or getEquipped()["Type"] == "block" then
+										bedwars["placeBlock"](newpos, (getEquipped()["Type"] == "block" and getEquipped()["Object"].Name))
+										oldpos = newpos
+									end
 								end
 							end
 						end
-					end
+					until (not Scaffold["Enabled"])
 				end)
 			else
 				scaffoldtext.Visible = false
-				UnbindFromRenderStep("Scaffold")
-				scaffoldallowed = true
-				oldpos = Vector3.new(0, 0, 0)
-				oldpos2 = Vector3.new(0, 0, 0)
-				if entity.isAlive then
-					entity.character.HumanoidRootPart.Anchored = false
-				end
+				oldpos = Vector3.new()
+				oldpos2 = Vector3.new()
 			end
 		end, 
 		["HoverText"] = "Helps you make bridges/scaffold walk."
@@ -7825,6 +7802,7 @@ end)
 
 GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
 runcode(function()
+	local nametagconnection
 	local function removeTags(str)
         str = str:gsub("<br%s*/>", "\n")
         return (str:gsub("<[^<>]->", ""))
@@ -7852,25 +7830,25 @@ runcode(function()
 		["farmer_cletus"] = "carrot_seeds",
 		["melody"] = "guitar",
 		["barbarian"] = "rageblade",
-		["gingerbread_man"] = "gumdrop_bounce_pad"
+		["gingerbread_man"] = "gumdrop_bounce_pad",
+		["spirit_catcher"] = "spirit",
+		["fisherman"] = "fishing_rod",
+		["oil_man"] = "oil_consumable",
+		["santa"] = "tnt",
+		["miner"] = "miner_pickaxe",
+		["sheep_herder"] = "crook",
+		["beast"] = "speed_potion",
+		["metal_detector"] = "metal_detector",
+		["cyber"] = "drone",
+		["vesta"] = "damage_banner",
+		["lumen"] = "light_sword",
+		["ember"] = "infernal_saber"
 	}
 
 	local NameTagsFolder = Instance.new("Folder")
 	NameTagsFolder.Name = "NameTagsFolder"
 	NameTagsFolder.Parent = GuiLibrary["MainGui"]
 	local nametagsfolderdrawing = {}
-	connectionstodisconnect[#connectionstodisconnect + 1] = players.PlayerRemoving:connect(function(plr)
-		if NameTagsFolder:FindFirstChild(plr.Name) then
-			NameTagsFolder[plr.Name]:Remove()
-		end
-		if nametagsfolderdrawing[plr.Name] then 
-			pcall(function()
-				nametagsfolderdrawing[plr.Name].Text:Remove()
-				nametagsfolderdrawing[plr.Name].BG:Remove()
-				nametagsfolderdrawing[plr.Name] = nil
-			end)
-		end
-	end)
 	local NameTagsColor = {["Value"] = 0.44}
 	local NameTagsTeammates = {["Enabled"] = false}
 	local NameTagsDisplayName = {["Enabled"] = false}
@@ -7888,6 +7866,18 @@ runcode(function()
 		["Name"] = "NameTags",
 		["Function"] = function(callback) 
 			if callback then
+				nametagconnection = players.PlayerRemoving:connect(function(plr)
+					if NameTagsFolder:FindFirstChild(plr.Name) then
+						NameTagsFolder[plr.Name]:Remove()
+					end
+					if nametagsfolderdrawing[plr.Name] then 
+						pcall(function()
+							nametagsfolderdrawing[plr.Name].Text:Remove()
+							nametagsfolderdrawing[plr.Name].BG:Remove()
+							nametagsfolderdrawing[plr.Name] = nil
+						end)
+					end
+				end)
 				BindToRenderStep("NameTags", 500, function()
 					for i,plr in pairs(players:GetChildren()) do
 							local thing
@@ -8079,6 +8069,7 @@ runcode(function()
 
 				end)
 			else
+				if nametagconnection then nametagconnection:Disconnect() end
 				UnbindFromRenderStep("NameTags") 
 				NameTagsFolder:ClearAllChildren()
 				for i,v in pairs(nametagsfolderdrawing) do 
@@ -8181,7 +8172,7 @@ runcode(function()
 			local blockpos = (pos + (Vector3.FromNormalId(normal) * (i * 3)))
 			local extrablock = getblock(blockpos)
 			local covered = true
-			if extrablock and extrablock.Parent ~= nil and (covered or covered == false and lastblock == nil) then
+			if extrablock and extrablock.Parent ~= nil then
 				if bedwars["BlockController"]:isBlockBreakable({["blockPosition"] = blockpos}, lplr) then
 					table.insert(blocks, extrablock.Name)
 				else
@@ -8201,9 +8192,13 @@ runcode(function()
 
 	local function getallbedblocks(pos)
 		local blocks = {}
-		local normalsides = {"Top", "Left", "Right", "Front", "Back"}
 		for i,v in pairs(normalsides) do
 			for i2,v2 in pairs(getallblocks2(pos, v)) do	
+				if table.find(blocks, v2) == nil and v2 ~= "bed" then
+					table.insert(blocks, v2)
+				end
+			end
+			for i2,v2 in pairs(getallblocks2(pos + Vector3.new(0, 0, 3), v)) do	
 				if table.find(blocks, v2) == nil and v2 ~= "bed" then
 					table.insert(blocks, v2)
 				end
@@ -8214,15 +8209,6 @@ runcode(function()
 
 	local function refreshAdornee(v)
 		local bedblocks = getallbedblocks(v.Adornee.Position)
-		local otherside = getotherbed(v.Adornee.Position)
-		if otherside then
-			local bedblocks2 = getallbedblocks(otherside)
-			for i2,v2 in pairs(bedblocks2) do
-				if table.find(bedblocks, v2) == nil then
-					table.insert(bedblocks, v2)
-				end
-			end
-		end
 		for i2,v2 in pairs(v.Frame:GetChildren()) do
 			if v2:IsA("ImageLabel") then
 				v2:Remove()
@@ -8243,10 +8229,12 @@ runcode(function()
 	local BedPlates = {["Enabled"] = false}
 	bedwars["ClientHandlerDamageBlock"]:WaitFor("PlaceBlockEvent"):andThen(function(p4)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p4:Connect(function(p5)
-			for i,v in pairs(BedPlatesFolder:GetChildren()) do 
-				if v.Adornee then
-					if ((p5.blockRef.blockPosition * 3) - v.Adornee.Position).magnitude <= 20 then
-						refreshAdornee(v)
+			if BedPlates["Enabled"] then
+				for i,v in pairs(BedPlatesFolder:GetChildren()) do 
+					if v.Adornee then
+						if ((p5.blockRef.blockPosition * 3) - v.Adornee.Position).magnitude <= 20 then
+							refreshAdornee(v)
+						end
 					end
 				end
 			end
@@ -8254,10 +8242,12 @@ runcode(function()
 	end)
 	bedwars["ClientHandlerDamageBlock"]:WaitFor("BreakBlockEvent"):andThen(function(p4)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p4:Connect(function(p5)
-			for i,v in pairs(BedPlatesFolder:GetChildren()) do 
-				if v.Adornee then
-					if ((p5.blockRef.blockPosition * 3) - v.Adornee.Position).magnitude <= 20 then
-						refreshAdornee(v)
+			if BedPlates["Enabled"] then
+				for i,v in pairs(BedPlatesFolder:GetChildren()) do 
+					if v.Adornee then
+						if ((p5.blockRef.blockPosition * 3) - v.Adornee.Position).magnitude <= 20 then
+							refreshAdornee(v)
+						end
 					end
 				end
 			end
@@ -8503,6 +8493,7 @@ end)
 
 runcode(function()
 	local antivoidpart
+	local antivoidconnection
 	local antivoiddelay = {["Value"] = 10}
 	local antivoidlegit = {["Enabled"] = false}
 	local balloondebounce = false
@@ -8522,8 +8513,8 @@ runcode(function()
 						antivoidpart.Material = Enum.Material.Neon
 						antivoidpart.Color = Color3.fromRGB(135, 29, 139)
 						antivoidpart.Position = Vector3.new(0, antivoidypos - 50, 0)
-						connectionstodisconnect[#connectionstodisconnect + 1] = antivoidpart.Touched:connect(function(touchedpart)
-							if touchedpart.Parent == lplr.Character and entity.isAlive and balloondebounce == false then
+						antivoidconnection = antivoidpart.Touched:connect(function(touchedpart)
+							if entity.isAlive and touchedpart:IsDescendantOf(lplr.Character) and balloondebounce == false then
 								balloondebounce = true
 								local oldtool = getEquipped()["Object"]
 								for i = 1, 3 do
@@ -8557,6 +8548,7 @@ runcode(function()
 					end
 				end)
 			else
+				if antivoidconnection then antivoidconnection:Disconnect() end
 				if antivoidpart then
 					antivoidpart:Remove() 
 				end
@@ -8578,8 +8570,6 @@ runcode(function()
 		["HoverText"] = "Switches to balloons in hotbar and inflates them."
 	})
 end)
-
-
 
 runcode(function()
 	local AnticheatBypassTransparent = {["Enabled"] = false}
@@ -8610,7 +8600,7 @@ runcode(function()
 		if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") and (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
 			--createwarning("AnticheatBypass", "tp check failed by: "..(math.floor(((oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).magnitude - AnticheatBypassNumbers.TPCheck) * 100) / 100), 10)
 			local newpos = (oldchar.HumanoidRootPart.Position - clone.HumanoidRootPart.Position).Unit * AnticheatBypassNumbers.TPCheck
-			newpos = newpos == newpos and newpos or Vector3.new(0, 0, 0)
+			newpos = newpos == newpos and newpos or Vector3.new()
 			clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
 			lagbackedaftertouch = true
 		end
@@ -8798,9 +8788,9 @@ runcode(function()
 				clone.Animate:Remove()
 			end
 			if clone and clone:FindFirstChild("Humanoid") then
-				oldchar.Humanoid:Move(Vector3.new(0, 0, 0), false)
+				oldchar.Humanoid:Move(Vector3.new(), false)
 				task.wait(0.1)
-				oldchar.Humanoid:Move(Vector3.new(0, 0, 0), false)
+				oldchar.Humanoid:Move(Vector3.new(), false)
 			end
 			if oldchar and oldchar:FindFirstChild("Animate") then
 				oldchar.Animate.Disabled = true
@@ -8872,7 +8862,7 @@ runcode(function()
 							oldchar.HumanoidRootPart.Velocity = Vector3.new(math.clamp(targetvelo.X, -20, 20), clone.HumanoidRootPart.Velocity.Y, math.clamp(targetvelo.Z, -20, 20))
 						end
 					else
-						oldchar.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+						oldchar.HumanoidRootPart.Velocity = Vector3.new()
 					end
 				end
 			end)
@@ -8915,7 +8905,6 @@ runcode(function()
 
 			local function notlasso()
 				for i,v in pairs(collectionservice:GetTagged("LassoHooked")) do 
-					print("lasso", v)
 					if v == oldchar then 
 						return false
 					end
@@ -8965,7 +8954,9 @@ runcode(function()
 									spawn(function()
 										local pingspike = didpingspike() 
 										if pingspike then
-											createwarning("AnticheatBypass", "Lagspike Detected : "..pingspike, 10)
+											if AnticheatBypassNotification["Enabled"] then
+												createwarning("AnticheatBypass", "Lagspike Detected : "..pingspike, 10)
+											end
 										else
 											if matchState ~= 2 and notlasso() then
 												lagbacks = lagbacks + 1
@@ -8986,7 +8977,7 @@ runcode(function()
 												local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
 												local oldmove = controlmodule.moveFunction
 												controlmodule.moveFunction = function(self, movedir, ...)
-													movedir = Vector3.new(0, 0, 0)
+													movedir = Vector3.new()
 													return oldmove(self, movedir, ...)
 												end
 												spawn(function()
@@ -9005,8 +8996,8 @@ runcode(function()
 									lagbacknotification = true
 									createwarning("AnticheatBypass", "You have been lagbacked for a \nawfully long time", 10)
 								end
-								clone.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-								oldchar.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+								clone.HumanoidRootPart.Velocity = Vector3.new()
+								oldchar.HumanoidRootPart.Velocity = Vector3.new()
 								clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
 							else
 								lagbackchanged = false
@@ -9014,10 +9005,14 @@ runcode(function()
 								if not shared.VapeOverrideAnticheatBypass then
 									if (not disabletpcheck) then
 										anticheatfunnyyes = true 
-										if clone.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
+										if clone.Humanoid.MoveDirection ~= Vector3.new() then
 											amountoftimes = amountoftimes + 1
 										end
-										local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and (getaverageframerate() and 0.215 or 0) or 0
+										local frameratecheck = getaverageframerate()
+										local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.22 or 0
+										local framerate2 = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.01 or 0
+										framerate = math.floor((AnticheatBypassNumbers.TPLerp + framerate) * 100) / 100
+										framerate2 = math.floor((AnticheatBypassNumbers.TPSpeed + framerate2) * 100) / 100
 										for i = 1, 2 do 
 											check()
 											task.wait(i % 2 == 0 and 0.01 or 0.02)
@@ -9026,16 +9021,16 @@ runcode(function()
 												anticheatfunnyyes = false
 												if (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude >= 0.01 then
 													if (Vector3.new(0, oldchar.HumanoidRootPart.CFrame.p.Y, 0) - Vector3.new(0, clone.HumanoidRootPart.CFrame.p.Y, 0)).magnitude <= 4 then
-														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), AnticheatBypassNumbers.TPLerp - framerate))
+														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(addvectortocframe2(clone.HumanoidRootPart.CFrame, oldchar.HumanoidRootPart.CFrame.p.Y), framerate))
 													else
-														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, AnticheatBypassNumbers.TPLerp - framerate))
+														oldchar.HumanoidRootPart.CFrame = finishcframe(oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, framerate))
 													end
 												end
 											end
 											check()
 										end
 										check()
-										task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed))
+										task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or framerate2)
 										check()
 										if oldchar and oldchar:FindFirstChild("HumanoidRootPart") and clone and clone:FindFirstChild("HumanoidRootPart") then
 											if (oldchar.HumanoidRootPart.CFrame.p - clone.HumanoidRootPart.CFrame.p).magnitude >= 0.01 then
@@ -9321,11 +9316,11 @@ runcode(function()
 								local multigrav = gravity
 								local offsetshootpos = data.position
 								local pos = (oldchar.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
-								local calculated2 = FindLeadShot(pos, Vector3.new(0, 0, 0), (Vector3.new(0, 0, 0) - data.launchVelocity).magnitude, offsetshootpos, Vector3.new(0, 0, 0), multigrav) 
-								local calculated = LaunchDirection(offsetshootpos, pos, (Vector3.new(0, 0, 0) - data.launchVelocity).magnitude, gravity, false)
+								local calculated2 = FindLeadShot(pos, Vector3.new(), (Vector3.new() - data.launchVelocity).magnitude, offsetshootpos, Vector3.new(), multigrav) 
+								local calculated = LaunchDirection(offsetshootpos, pos, (Vector3.new() - data.launchVelocity).magnitude, gravity, false)
 								local initialvelo = calculated--(calculated - offsetshootpos).Unit * launchvelo
-								local initialvelo2 = (calculated2 - offsetshootpos).Unit * (Vector3.new(0, 0, 0) - data.launchVelocity).magnitude
-								local calculatedvelo = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (Vector3.new(0, 0, 0) - data.launchVelocity).magnitude
+								local initialvelo2 = (calculated2 - offsetshootpos).Unit * (Vector3.new() - data.launchVelocity).magnitude
+								local calculatedvelo = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (Vector3.new() - data.launchVelocity).magnitude
 								if (calculatedvelo - data.launchVelocity).magnitude <= 20 then 
 									oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.6)
 								end
@@ -9774,7 +9769,7 @@ runcode(function()
 	})
 end)
 
-pcall(function() GuiLibrary["RemoveObject"]("CapeOptionsButton") end)
+GuiLibrary["RemoveObject"]("CapeOptionsButton")
 runcode(function()
 	local vapecapeconnection
 	GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
@@ -9833,7 +9828,7 @@ runcode(function()
 						if ray == nil and ray2 then
 							local ray3 = workspace:Raycast(entity.character.HumanoidRootPart.Position + (vec * 1.8), Vector3.new(0, -1000, 0), raycastparameters)
 							if ray3 == nil then 
-								vec = Vector3.new(0, 0, 0)
+								vec = Vector3.new()
 							end
 						end
 					end
@@ -9847,9 +9842,7 @@ runcode(function()
 	})
 end)
 
-pcall(function()
-	GuiLibrary["RemoveObject"]("BreadcrumbsOptionsButton")
-end)
+GuiLibrary["RemoveObject"]("BreadcrumbsOptionsButton")
 runcode(function()
 	local Breadcrumbs = {["Enabled"] = false}
 	local BreadcrumbsLifetime = {["Value"] = 20}
@@ -10001,7 +9994,7 @@ runcode(function()
 					if BowAimbotMode["Value"] == "Player" then 
 						plr = GetNearestHumanoidToMouse(true, 1000)
 					else
-						plr = {Character = {Humanoid = {MoveDirection = Vector3.new(0, 0, 0)}, GetAttribute = function() end, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.new(0, 0, 0)}}}
+						plr = {Character = {Humanoid = {MoveDirection = Vector3.new()}, GetAttribute = function() end, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.new()}}}
 					end
 					if plr then
 						local shootpos = bowtable:getLaunchPosition(oldchar or shootpospart)
@@ -10030,9 +10023,9 @@ runcode(function()
 						end
 						local velo = (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 40, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
 						if projmeta.projectile == "telepearl" then
-							velo = Vector3.new(0, 0, 0)
+							velo = Vector3.new()
 						end
-						local calculated2 = FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.new(0, 0, 0), multigrav) 
+						local calculated2 = FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.new(), multigrav) 
 						pos = pos + Vector3.new(0, velo.Y + (plr.Character:GetAttribute("InflatedBalloons") and plr.Character:GetAttribute("InflatedBalloons") > 0 and velo.Y > 0 and 1 or 0), 0)
 						local calculated = LaunchDirection(offsetshootpos, pos, launchvelo, gravity, false)
 						local initialvelo2 = (calculated2 - offsetshootpos).Unit * launchvelo
@@ -10245,55 +10238,382 @@ runcode(function()
 end)
 
 runcode(function()
-	local olddamagetab = {}
-	local olddamageconstants = {}
-	GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "OldDamageIndicator",
+	local transformed = false
+	local OldBedwars = {["Enabled"] = false}
+	OldBedwars = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "OldBedwars",
 		["Function"] = function(callback) 
 			if callback then 
-				local damagetab = debug.getupvalue(bedwars["DamageIndicator"], 2)
-				for i,v in pairs(damagetab) do 
-					olddamagetab[i] = v
-				end
-				damagetab.strokeThickness = false
-				damagetab.textSize = 32
-				damagetab.blowUpDuration = 0
-				damagetab.baseColor = Color3.fromRGB(214, 0, 0)
-				damagetab.blowUpSize = 32
-				damagetab.blowUpCompleteDuration = 0
-				damagetab.anchoredDuration = 0
-				olddamageconstants[81] = debug.getconstant(bedwars["DamageIndicator"], 81)
-				olddamageconstants[100] = debug.getconstant(bedwars["DamageIndicator"], 100)
-				olddamageconstants[116] = debug.getconstant(bedwars["DamageIndicator"], 116)
-				olddamageconstants[126] = debug.getconstant(bedwars["DamageIndicator"], 126)
-				debug.setconstant(bedwars["DamageIndicator"], 81, Enum.Font.LuckiestGuy)
-				debug.setconstant(bedwars["DamageIndicator"], 100, "Enabled")
-				debug.setconstant(bedwars["DamageIndicator"], 116, 0.3)
-				debug.setconstant(bedwars["DamageIndicator"], 126, 0.5)
-				debug.setupvalue(bedwars["DamageIndicator"], 10, {
-					Create = function(self, obj, ...)
+				if not transformed then
+					transformed = true
+					spawn(function()
+						local oldbedwarstabofblocks = '{"wool_blue":"rbxassetid://5089281898","wool_pink":"rbxassetid://6856183009","clay_pink":"rbxassetid://6856283410","grass":["rbxassetid://6812582110","rbxassetid://6812616868","rbxassetid://6812616868","rbxassetid://6812616868","rbxassetid://6812616868","rbxassetid://6812616868"],"snow":"rbxassetid://6874651192","wool_cyan":"rbxassetid://6177124865","red_sandstone":"rbxassetid://6708703895","wool_green":"rbxassetid://6177123316","clay_black":"rbxassetid://5890435474","sand":"rbxassetid://6187018940","wool_orange":"rbxassetid://6177122584","hickory_log":"rbxassetid://6879467811","wood_plank_birch":"rbxassetid://6768647328","clay_gray":"rbxassetid://7126965624","wood_plank_spruce":"rbxassetid://6768615964","brick":"rbxassetid://6782607284","clay_dark_brown":"rbxassetid://6874651325","stone_brick":"rbxassetid://6710700118","ceramic":"rbxassetid://6875522401","clay_blue":"rbxassetid://4991097126","wood_plank_maple":"rbxassetid://6768632085","diamond_block":"rbxassetid://6734061546","wood_plank_oak":"rbxassetid://6768575772","ice":"rbxassetid://6874651262","marble":"rbxassetid://6594536339","spruce_log":"rbxassetid://6874161124","oak_log":"rbxassetid://6879467811","clay_light_brown":"rbxassetid://6874651634","clay_dark_green":"rbxassetid://6812653448","marble_pillar":["rbxassetid://6909328433","rbxassetid://6909328433","rbxassetid://6909323822","rbxassetid://6909323822","rbxassetid://6909323822","rbxassetid://6909323822"],"slate_brick":"rbxassetid://6708836267","obsidian":"rbxassetid://6855476765","iron_block":"rbxassetid://6734050333","wool_red":"rbxassetid://5089281973","clay_purple":"rbxassetid://6856099740","clay_orange":"rbxassetid://7017703219","clay_red":"rbxassetid://6856283323","wool_yellow":"rbxassetid://6829151816","tnt":["rbxassetid://6889157997","rbxassetid://6889157997","rbxassetid://6855533421","rbxassetid://6855533421","rbxassetid://6855533421","rbxassetid://6855533421"],"clay_yellow":"rbxassetid://4991097283","clay_white":"rbxassetid://7017705325","wool_purple":"rbxassetid://6177125247","sandstone":"rbxassetid://6708657090","wool_white":"rbxassetid://5089287375","clay_light_green":"rbxassetid://6856099550","birch_log":"rbxassetid://6856088949","emerald_block":"rbxassetid://6856082835","clay":"rbxassetid://6856190168","stone":"rbxassetid://6812635290","slime_block":"rbxassetid://6869286145"}'
+						local oldbedwarsblocktab = game:GetService("HttpService"):JSONDecode(oldbedwarstabofblocks)
+						local oldbedwarstabofimages = '{"clay_orange":"rbxassetid://7017703219","iron":"rbxassetid://6850537969","glass":"rbxassetid://6909521321","log_spruce":"rbxassetid://6874161124","ice":"rbxassetid://6874651262","marble":"rbxassetid://6594536339","zipline_base":"rbxassetid://7051148904","iron_helmet":"rbxassetid://6874272559","marble_pillar":"rbxassetid://6909323822","clay_dark_green":"rbxassetid://6763635916","wood_plank_birch":"rbxassetid://6768647328","watering_can":"rbxassetid://6915423754","emerald_helmet":"rbxassetid://6931675766","pie":"rbxassetid://6985761399","wood_plank_spruce":"rbxassetid://6768615964","diamond_chestplate":"rbxassetid://6874272898","wool_pink":"rbxassetid://6910479863","wool_blue":"rbxassetid://6910480234","wood_plank_oak":"rbxassetid://6910418127","diamond_boots":"rbxassetid://6874272964","clay_yellow":"rbxassetid://4991097283","tnt":"rbxassetid://6856168996","lasso":"rbxassetid://7192710930","clay_purple":"rbxassetid://6856099740","melon_seeds":"rbxassetid://6956387796","apple":"rbxassetid://6985765179","carrot_seeds":"rbxassetid://6956387835","log_oak":"rbxassetid://6763678414","emerald_chestplate":"rbxassetid://6931675868","wool_yellow":"rbxassetid://6910479606","emerald_boots":"rbxassetid://6931675942","clay_light_brown":"rbxassetid://6874651634","balloon":"rbxassetid://7122143895","cannon":"rbxassetid://7121221753","leather_boots":"rbxassetid://6855466456","melon":"rbxassetid://6915428682","wool_white":"rbxassetid://6910387332","log_birch":"rbxassetid://6763678414","clay_pink":"rbxassetid://6856283410","grass":"rbxassetid://6773447725","obsidian":"rbxassetid://6910443317","shield":"rbxassetid://7051149149","red_sandstone":"rbxassetid://6708703895","diamond_helmet":"rbxassetid://6874272793","wool_orange":"rbxassetid://6910479956","log_hickory":"rbxassetid://7017706899","guitar":"rbxassetid://7085044606","wool_purple":"rbxassetid://6910479777","diamond":"rbxassetid://6850538161","iron_chestplate":"rbxassetid://6874272631","slime_block":"rbxassetid://6869284566","stone_brick":"rbxassetid://6910394475","hammer":"rbxassetid://6955848801","ceramic":"rbxassetid://6910426690","wood_plank_maple":"rbxassetid://6768632085","leather_helmet":"rbxassetid://6855466216","stone":"rbxassetid://6763635916","slate_brick":"rbxassetid://6708836267","sandstone":"rbxassetid://6708657090","snow":"rbxassetid://6874651192","wool_red":"rbxassetid://6910479695","leather_chestplate":"rbxassetid://6876833204","clay_red":"rbxassetid://6856283323","wool_green":"rbxassetid://6910480050","clay_white":"rbxassetid://7017705325","wool_cyan":"rbxassetid://6910480152","clay_black":"rbxassetid://5890435474","sand":"rbxassetid://6187018940","clay_light_green":"rbxassetid://6856099550","clay_dark_brown":"rbxassetid://6874651325","carrot":"rbxassetid://3677675280","clay":"rbxassetid://6856190168","iron_boots":"rbxassetid://6874272718","emerald":"rbxassetid://6850538075","zipline":"rbxassetid://7051148904"}'
+						local oldbedwarsicontab = game:GetService("HttpService"):JSONDecode(oldbedwarstabofimages)
+						local oldbedwarssoundtable = {
+							["QUEUE_JOIN"] = "rbxassetid://6691735519",
+							["QUEUE_MATCH_FOUND"] = "rbxassetid://6768247187",
+							["UI_CLICK"] = "rbxassetid://6732690176",
+							["UI_OPEN"] = "rbxassetid://6732607930",
+							["BEDWARS_UPGRADE_SUCCESS"] = "rbxassetid://6760677364",
+							["BEDWARS_PURCHASE_ITEM"] = "rbxassetid://6760677364",
+							["SWORD_SWING_1"] = "rbxassetid://6760544639",
+							["SWORD_SWING_2"] = "rbxassetid://6760544595",
+							["DAMAGE_1"] = "rbxassetid://6765457325",
+							["DAMAGE_2"] = "rbxassetid://6765470975",
+							["DAMAGE_3"] = "rbxassetid://6765470941",
+							["CROP_HARVEST"] = "rbxassetid://4864122196",
+							["CROP_PLANT_1"] = "rbxassetid://5483943277",
+							["CROP_PLANT_2"] = "rbxassetid://5483943479",
+							["CROP_PLANT_3"] = "rbxassetid://5483943723",
+							["ARMOR_EQUIP"] = "rbxassetid://6760627839",
+							["ARMOR_UNEQUIP"] = "rbxassetid://6760625788",
+							["PICKUP_ITEM_DROP"] = "rbxassetid://6768578304",
+							["PARTY_INCOMING_INVITE"] = "rbxassetid://6732495464",
+							["ERROR_NOTIFICATION"] = "rbxassetid://6732495464",
+							["INFO_NOTIFICATION"] = "rbxassetid://6732495464",
+							["END_GAME"] = "rbxassetid://6246476959",
+							["GENERIC_BLOCK_PLACE"] = "rbxassetid://4842910664",
+							["GENERIC_BLOCK_BREAK"] = "rbxassetid://4819966893",
+							["GRASS_BREAK"] = "rbxassetid://5282847153",
+							["WOOD_BREAK"] = "rbxassetid://4819966893",
+							["STONE_BREAK"] = "rbxassetid://6328287211",
+							["WOOL_BREAK"] = "rbxassetid://4842910664",
+							["TNT_EXPLODE_1"] = "rbxassetid://7192313632",
+							["TNT_HISS_1"] = "rbxassetid://7192313423",
+							["FIREBALL_EXPLODE"] = "rbxassetid://6855723746",
+							["SLIME_BLOCK_BOUNCE"] = "rbxassetid://6857999096",
+							["SLIME_BLOCK_BREAK"] = "rbxassetid://6857999170",
+							["SLIME_BLOCK_HIT"] = "rbxassetid://6857999148",
+							["SLIME_BLOCK_PLACE"] = "rbxassetid://6857999119",
+							["BOW_DRAW"] = "rbxassetid://6866062236",
+							["BOW_FIRE"] = "rbxassetid://6866062104",
+							["ARROW_HIT"] = "rbxassetid://6866062188",
+							["ARROW_IMPACT"] = "rbxassetid://6866062148",
+							["TELEPEARL_THROW"] = "rbxassetid://6866223756",
+							["TELEPEARL_LAND"] = "rbxassetid://6866223798",
+							["CROSSBOW_RELOAD"] = "rbxassetid://6869254094",
+							["VOICE_1"] = "rbxassetid://5283866929",
+							["VOICE_2"] = "rbxassetid://5283867710",
+							["VOICE_HONK"] = "rbxassetid://5283872555",
+							["FORTIFY_BLOCK"] = "rbxassetid://6955762535",
+							["EAT_FOOD_1"] = "rbxassetid://4968170636",
+							["KILL"] = "rbxassetid://7013482008",
+							["ZIPLINE_TRAVEL"] = "rbxassetid://7047882304",
+							["ZIPLINE_LATCH"] = "rbxassetid://7047882233",
+							["ZIPLINE_UNLATCH"] = "rbxassetid://7047882265",
+							["SHIELD_BLOCKED"] = "rbxassetid://6955762535",
+							["GUITAR_LOOP"] = "rbxassetid://7084168540",
+							["GUITAR_HEAL_1"] = "rbxassetid://7084168458",
+							["CANNON_MOVE"] = "rbxassetid://7118668472",
+							["CANNON_FIRE"] = "rbxassetid://7121064180",
+							["BALLOON_INFLATE"] = "rbxassetid://7118657911",
+							["BALLOON_POP"] = "rbxassetid://7118657873",
+							["FIREBALL_THROW"] = "rbxassetid://7192289445",
+							["LASSO_HIT"] = "rbxassetid://7192289603",
+							["LASSO_SWING"] = "rbxassetid://7192289504",
+							["LASSO_THROW"] = "rbxassetid://7192289548",
+							["GRIM_REAPER_CONSUME"] = "rbxassetid://7225389554",
+							["GRIM_REAPER_CHANNEL"] = "rbxassetid://7225389512",
+							["TV_STATIC"] = "rbxassetid://7256209920",
+							["TURRET_ON"] = "rbxassetid://7290176291",
+							["TURRET_OFF"] = "rbxassetid://7290176380",
+							["TURRET_ROTATE"] = "rbxassetid://7290176421",
+							["TURRET_SHOOT"] = "rbxassetid://7290187805",
+							["WIZARD_LIGHTNING_CAST"] = "rbxassetid://7262989886",
+							["WIZARD_LIGHTNING_LAND"] = "rbxassetid://7263165647",
+							["WIZARD_LIGHTNING_STRIKE"] = "rbxassetid://7263165347",
+							["WIZARD_ORB_CAST"] = "rbxassetid://7263165448",
+							["WIZARD_ORB_TRAVEL_LOOP"] = "rbxassetid://7263165579",
+							["WIZARD_ORB_CONTACT_LOOP"] = "rbxassetid://7263165647",
+							["BATTLE_PASS_PROGRESS_LEVEL_UP"] = "rbxassetid://7331597283",
+							["BATTLE_PASS_PROGRESS_EXP_GAIN"] = "rbxassetid://7331597220",
+							["FLAMETHROWER_UPGRADE"] = "rbxassetid://7310273053",
+							["FLAMETHROWER_USE"] = "rbxassetid://7310273125",
+							["BRITTLE_HIT"] = "rbxassetid://7310273179",
+							["EXTINGUISH"] = "rbxassetid://7310273015",
+							["RAVEN_SPACE_AMBIENT"] = "rbxassetid://7341443286",
+							["RAVEN_WING_FLAP"] = "rbxassetid://7341443378",
+							["RAVEN_CAW"] = "rbxassetid://7341443447",
+							["JADE_HAMMER_THUD"] = "rbxassetid://7342299402",
+							["STATUE"] = "rbxassetid://7344166851",
+							["CONFETTI"] = "rbxassetid://7344278405",
+							["HEART"] = "rbxassetid://7345120916",
+							["SPRAY"] = "rbxassetid://7361499529",
+							["BEEHIVE_PRODUCE"] = "rbxassetid://7378100183",
+							["DEPOSIT_BEE"] = "rbxassetid://7378100250",
+							["CATCH_BEE"] = "rbxassetid://7378100305",
+							["BEE_NET_SWING"] = "rbxassetid://7378100350",
+							["ASCEND"] = "rbxassetid://7378387334",
+							["BED_ALARM"] = "rbxassetid://7396762708",
+							["BOUNTY_CLAIMED"] = "rbxassetid://7396751941",
+							["BOUNTY_ASSIGNED"] = "rbxassetid://7396752155",
+							["BAGUETTE_HIT"] = "rbxassetid://7396760547",
+							["BAGUETTE_SWING"] = "rbxassetid://7396760496",
+							["TESLA_ZAP"] = "rbxassetid://7497477336",
+							["SPIRIT_TRIGGERED"] = "rbxassetid://7498107251",
+							["SPIRIT_EXPLODE"] = "rbxassetid://7498107327",
+							["ANGEL_LIGHT_ORB_CREATE"] = "rbxassetid://7552134231",
+							["ANGEL_LIGHT_ORB_HEAL"] = "rbxassetid://7552134868",
+							["ANGEL_VOID_ORB_CREATE"] = "rbxassetid://7552135942",
+							["ANGEL_VOID_ORB_HEAL"] = "rbxassetid://7552136927",
+							["DODO_BIRD_JUMP"] = "rbxassetid://7618085391",
+							["DODO_BIRD_DOUBLE_JUMP"] = "rbxassetid://7618085771",
+							["DODO_BIRD_MOUNT"] = "rbxassetid://7618085486",
+							["DODO_BIRD_DISMOUNT"] = "rbxassetid://7618085571",
+							["DODO_BIRD_SQUAWK_1"] = "rbxassetid://7618085870",
+							["DODO_BIRD_SQUAWK_2"] = "rbxassetid://7618085657",
+							["SHIELD_CHARGE_START"] = "rbxassetid://7730842884",
+							["SHIELD_CHARGE_LOOP"] = "rbxassetid://7730843006",
+							["SHIELD_CHARGE_BASH"] = "rbxassetid://7730843142",
+							["ROCKET_LAUNCHER_FIRE"] = "rbxassetid://7681584765",
+							["ROCKET_LAUNCHER_FLYING_LOOP"] = "rbxassetid://7681584906",
+							["SMOKE_GRENADE_POP"] = "rbxassetid://7681276062",
+							["SMOKE_GRENADE_EMIT_LOOP"] = "rbxassetid://7681276135",
+							["GOO_SPIT"] = "rbxassetid://7807271610",
+							["GOO_SPLAT"] = "rbxassetid://7807272724",
+							["GOO_EAT"] = "rbxassetid://7813484049",
+							["LUCKY_BLOCK_BREAK"] = "rbxassetid://7682005357",
+							["AXOLOTL_SWITCH_TARGETS"] = "rbxassetid://7344278405",
+							["HALLOWEEN_MUSIC"] = "rbxassetid://7775602786",
+							["SNAP_TRAP_SETUP"] = "rbxassetid://7796078515",
+							["SNAP_TRAP_CLOSE"] = "rbxassetid://7796078695",
+							["SNAP_TRAP_CONSUME_MARK"] = "rbxassetid://7796078825",
+							["GHOST_VACUUM_SUCKING_LOOP"] = "rbxassetid://7814995865",
+							["GHOST_VACUUM_SHOOT"] = "rbxassetid://7806060367",
+							["GHOST_VACUUM_CATCH"] = "rbxassetid://7815151688",
+							["FISHERMAN_GAME_START"] = "rbxassetid://7806060544",
+							["FISHERMAN_GAME_PULLING_LOOP"] = "rbxassetid://7806060638",
+							["FISHERMAN_GAME_PROGRESS_INCREASE"] = "rbxassetid://7806060745",
+							["FISHERMAN_GAME_FISH_MOVE"] = "rbxassetid://7806060863",
+							["FISHERMAN_GAME_LOOP"] = "rbxassetid://7806061057",
+							["FISHING_ROD_CAST"] = "rbxassetid://7806060976",
+							["FISHING_ROD_SPLASH"] = "rbxassetid://7806061193",
+							["SPEAR_HIT"] = "rbxassetid://7807270398",
+							["SPEAR_THROW"] = "rbxassetid://7813485044",
+						}
 						spawn(function()
-							obj.Parent.Parent.Parent.Parent.Velocity = Vector3.new((math.random(-50, 50) / 100) * damagetab.velX, (math.random(50, 60) / 100) * damagetab.velY, (math.random(-50, 50) / 100) * damagetab.velZ)
-							local textcompare = obj.Parent.TextColor3
-							if textcompare ~= Color3.fromRGB(85, 255, 85) then
-								local newtween = game:GetService("TweenService"):Create(obj.Parent, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {
-									TextColor3 = (textcompare == Color3.fromRGB(76, 175, 93) and Color3.new(0, 0, 0) or Color3.new(1, 1, 1))
-								})
-								task.wait(0.15)
-								newtween:Play()
+							repeat wait() until workspace ~= nil 
+							repeat wait() until workspace:FindFirstChild("Map") ~= nil
+							for i,v in pairs(workspace.Map.Blocks:GetChildren()) do
+								if oldbedwarsblocktab[v.Name] then
+									if type(oldbedwarsblocktab[v.Name]) == "table" then
+										for i2,v2 in pairs(v:GetDescendants()) do
+											if v2:IsA("Texture") then
+												if v2.Name == "Top" then
+													v2.Texture = oldbedwarsblocktab[v.Name][1]
+													v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+												elseif v2.Name == "Bottom" then
+													v2.Texture = oldbedwarsblocktab[v.Name][2]
+												else
+													v2.Texture = oldbedwarsblocktab[v.Name][3]
+												end
+											end
+										end
+									else
+										for i2,v2 in pairs(v:GetDescendants()) do
+											if v2:IsA("Texture") then
+												v2.Texture = oldbedwarsblocktab[v.Name]
+											end
+										end
+									end
+								end
 							end
 						end)
-						return game:GetService("TweenService"):Create(obj, ...)
-					end
-				})
+						game:GetService("CollectionService"):GetInstanceAddedSignal("block"):connect(function(v)
+							if oldbedwarsblocktab[v.Name] then
+								if type(oldbedwarsblocktab[v.Name]) == "table" then
+									for i2,v2 in pairs(v:GetDescendants()) do
+										if v2:IsA("Texture") then
+											if v2.Name == "Top" then
+												v2.Texture = oldbedwarsblocktab[v.Name][1]
+												v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+											elseif v2.Name == "Bottom" then
+												v2.Texture = oldbedwarsblocktab[v.Name][2]
+											else
+												v2.Texture = oldbedwarsblocktab[v.Name][3]
+											end
+										end
+									end
+									v.DescendantAdded:connect(function(v3)
+										if v3:IsA("Texture") then
+											if v3.Name == "Top" then
+												v3.Texture = oldbedwarsblocktab[v.Name][1]
+												v3.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+											elseif v3.Name == "Bottom" then
+												v3.Texture = oldbedwarsblocktab[v.Name][2]
+											else
+												v3.Texture = oldbedwarsblocktab[v.Name][3]
+											end
+										end
+									end)
+								else
+									for i2,v2 in pairs(v:GetDescendants()) do
+										if v2:IsA("Texture") then
+											v2.Texture = oldbedwarsblocktab[v.Name]
+										end
+									end
+									v.DescendantAdded:connect(function(v3)
+										if v3:IsA("Texture") then
+											v3.Texture = oldbedwarsblocktab[v.Name]
+										end
+									end)
+								end
+							end
+						end)
+						game:GetService("CollectionService"):GetInstanceAddedSignal("tnt"):connect(function(v)
+							if oldbedwarsblocktab[v.Name] then
+								if type(oldbedwarsblocktab[v.Name]) == "table" then
+									for i2,v2 in pairs(v:GetDescendants()) do
+										if v2:IsA("Texture") then
+											if v2.Name == "Top" then
+												v2.Texture = oldbedwarsblocktab[v.Name][1]
+												v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+											elseif v2.Name == "Bottom" then
+												v2.Texture = oldbedwarsblocktab[v.Name][2]
+											else
+												v2.Texture = oldbedwarsblocktab[v.Name][3]
+											end
+										end
+									end
+									v.DescendantAdded:connect(function(v3)
+										if v3:IsA("Texture") then
+											if v3.Name == "Top" then
+												v3.Texture = oldbedwarsblocktab[v.Name][1]
+												v3.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+											elseif v3.Name == "Bottom" then
+												v3.Texture = oldbedwarsblocktab[v.Name][2]
+											else
+												v3.Texture = oldbedwarsblocktab[v.Name][3]
+											end
+										end
+									end)
+								else
+									for i2,v2 in pairs(v:GetDescendants()) do
+										if v2:IsA("Texture") then
+											v2.Texture = oldbedwarsblocktab[v.Name]
+										end
+									end
+									v.DescendantAdded:connect(function(v3)
+										if v3:IsA("Texture") then
+											v3.Texture = oldbedwarsblocktab[v.Name]
+										end
+									end)
+								end
+							end
+						end)
+						for i,v in pairs(bedwars["ItemTable"]) do 
+							if oldbedwarsicontab[i] then 
+								v.image = oldbedwarsicontab[i]
+							end
+						end			
+						for i,v in pairs(oldbedwarssoundtable) do 
+							local item = bedwars["SoundList"][i]
+							if item then
+								bedwars["SoundList"][i] = v
+							end
+						end	
+						local oldweld = bedwars["WeldTable"].weldCharacterAccessories
+						local alreadydone = {}
+						bedwars["WeldTable"].weldCharacterAccessories = function(model, ...)
+							for i,v in pairs(model:GetChildren()) do
+								local died = v.Name == "HumanoidRootPart" and v:FindFirstChild("Died")
+								if died then 
+									died.Volume = 0
+								end
+								if oldbedwarsblocktab[v.Name] then
+									spawn(function()
+										local hand = v:WaitForChild("Handle", 10)
+										if hand then
+											hand.CastShadow = false
+										end
+										for i2,v2 in pairs(v:GetDescendants()) do
+											if v2:IsA("Texture") then
+												if v2.Name == "Top" then
+													v2.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][1] or oldbedwarsblocktab[v.Name])
+													v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+												elseif v2.Name == "Bottom" then
+													v2.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][2] or oldbedwarsblocktab[v.Name])
+												else
+													v2.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][3] or oldbedwarsblocktab[v.Name])
+												end
+											end
+										end
+										v.DescendantAdded:connect(function(v3)
+											if v3:IsA("Texture") then
+												if v3.Name == "Top" then
+													v3.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][1] or oldbedwarsblocktab[v.Name])
+													v3.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+												elseif v3.Name == "Bottom" then
+													v3.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][2] or oldbedwarsblocktab[v.Name])
+												else
+													v3.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][3] or oldbedwarsblocktab[v.Name])
+												end
+											end
+										end)
+									end)
+								end
+							end
+							return oldweld(model, ...)
+						end
+						local damagetab = debug.getupvalue(bedwars["DamageIndicator"], 2)
+						damagetab.strokeThickness = false
+						damagetab.textSize = 32
+						damagetab.blowUpDuration = 0
+						damagetab.baseColor = Color3.fromRGB(214, 0, 0)
+						damagetab.blowUpSize = 32
+						damagetab.blowUpCompleteDuration = 0
+						damagetab.anchoredDuration = 0
+						debug.setconstant(bedwars["ViewmodelController"].show, 5, "")
+						debug.setconstant(bedwars["DamageIndicator"], 81, Enum.Font.LuckiestGuy)
+						debug.setconstant(bedwars["DamageIndicator"], 100, "Enabled")
+						debug.setconstant(bedwars["DamageIndicator"], 116, 0.3)
+						debug.setconstant(bedwars["DamageIndicator"], 126, 0.5)
+						debug.setupvalue(bedwars["DamageIndicator"], 10, {
+							Create = function(self, obj, ...)
+								spawn(function()
+									obj.Parent.Parent.Parent.Parent.Velocity = Vector3.new((math.random(-50, 50) / 100) * damagetab.velX, (math.random(50, 60) / 100) * damagetab.velY, (math.random(-50, 50) / 100) * damagetab.velZ)
+									local textcompare = obj.Parent.TextColor3
+									if textcompare ~= Color3.fromRGB(85, 255, 85) then
+										local newtween = game:GetService("TweenService"):Create(obj.Parent, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {
+											TextColor3 = (textcompare == Color3.fromRGB(76, 175, 93) and Color3.new(0, 0, 0) or Color3.new(1, 1, 1))
+										})
+										task.wait(0.15)
+										newtween:Play()
+									end
+								end)
+								return game:GetService("TweenService"):Create(obj, ...)
+							end
+						})
+						sethiddenproperty(lighting, "Technology", "Compatibility")
+						lighting.Ambient = Color3.fromRGB(89, 89, 89)
+						lighting.Brightness = 2
+						lighting.EnvironmentDiffuseScale = 0
+						lighting.EnvironmentSpecularScale = 0
+						lighting.OutdoorAmbient = Color3.fromRGB(201, 201, 201)
+						lighting.Atmosphere.Density = 0.1
+						lighting.Atmosphere.Offset = 0.25
+						lighting.Atmosphere.Color = Color3.fromRGB(198, 198, 198)
+						lighting.Atmosphere.Decay = Color3.fromRGB(104, 112, 124)
+						lighting.Atmosphere.Glare = 0
+						lighting.Atmosphere.Haze = 0
+						lighting.ClockTime = 13
+						lighting.GeographicLatitude = 0
+						lighting.GlobalShadows = false
+						lighting.TimeOfDay = "13:00:00"
+						lighting.Sky.SkyboxBk = "rbxassetid://7018684000"
+						lighting.Sky.SkyboxDn = "rbxassetid://6334928194"
+						lighting.Sky.SkyboxFt = "rbxassetid://7018684000"
+						lighting.Sky.SkyboxLf = "rbxassetid://7018684000"
+						lighting.Sky.SkyboxRt = "rbxassetid://7018684000"
+						lighting.Sky.SkyboxUp = "rbxassetid://7018689553"
+					end)
+				else
+					OldBedwars["ToggleButton"](false)
+				end
 			else
-				for i,v in pairs(olddamagetab) do 
-					debug.getupvalue(bedwars["DamageIndicator"], 2)[i] = v
-				end
-				for i,v in pairs(olddamageconstants) do 
-					debug.setconstant(bedwars["DamageIndicator"], i, v)
-				end
-				debug.setupvalue(bedwars["DamageIndicator"], 10, game:GetService("TweenService"))
+				createwarning("OldBedwars", "Disabled Next Game", 10)
 			end
 		end
 	})

@@ -409,7 +409,7 @@ if shared.VapeExecuted then
 		end
 	end
 
-	api["LoadSettings"] = function()
+	api["LoadSettings"] = function(customprofile)
 		if identifyexecutor and identifyexecutor():find("ScriptWare") == nil and listfiles then
 			for i,v in pairs(listfiles(customdir.."Profiles")) do 
 				local newstr = v:gsub(customdir.."Profiles", ""):sub(2, v:len())
@@ -444,6 +444,11 @@ if shared.VapeExecuted then
 			api["Profiles"] = result2
 		end
 		getprofile()
+		if customprofile then 
+			api["Profiles"][api["CurrentProfile"]]["Selected"] = false
+			api["Profiles"][customprofile] = api["Profiles"][customprofile] or {["Keybind"] = "", ["Selected"] = true}
+			api["CurrentProfile"] = customprofile
+		end
 		local success3, result3 = pcall(function()
 			return game:GetService("HttpService"):JSONDecode(readfile(customdir.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt"))
 		end)
