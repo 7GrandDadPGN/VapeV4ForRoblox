@@ -1570,14 +1570,10 @@ do
     end
 	entity.entityAdded = function(plr, localcheck, custom)
         entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterAdded:connect(function(char)
-			if localcheck then
-				print("addedchar")
-			end
             entity.refreshEntity(plr, localcheck)
         end)
         entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterRemoving:connect(function(char)
             if localcheck then
-				print("removed char")
                 entity.isAlive = false
             else
                 entity.removeEntity(plr)
@@ -9198,7 +9194,6 @@ runcode(function()
 					end
 				end)
 			else
-				print("disabled")
 				oldcloneroot = nil
 				shared.VapeRealCharacter = nil
 				if oldballoon then
@@ -9241,7 +9236,6 @@ runcode(function()
 						end
 					end
 					local oldcamcframe = cam.CFrame
-					print("changed char")
 					lplr.Character = oldchar
 					task.spawn(function()
 						repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
