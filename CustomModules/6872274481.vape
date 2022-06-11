@@ -21,6 +21,7 @@ local mouse = lplr:GetMouse()
 local bedwars = {}
 local getfunctions
 local oldchar
+local oldcloneroot
 local matchState = 0
 local kit = ""
 local antivoidypos = 0
@@ -781,7 +782,7 @@ runcode(function()
 						end
 						if Reach["Enabled"] then
 							local mag = (tab.validate.selfPosition.value - tab.validate.targetPosition.value).magnitude
-							local newres = hashvec(tab.validate.selfPosition.value + (mag > 14.4 and (CFrame.lookAt(tab.validate.selfPosition.value, tab.validate.targetPosition.value).lookVector * 4) or Vector3.new()))
+							local newres = hashvec(tab.validate.selfPosition.value + (mag > 14.4 and (CFrame.lookAt(tab.validate.selfPosition.value, tab.validate.targetPosition.value).lookVector * 4) or Vector3.zero))
 							tab.validate.selfPosition = newres
 						end
 						return res:CallServer(tab)
@@ -1543,13 +1544,15 @@ do
                     entity.entityConnections[#entity.entityConnections + 1] = char.ChildRemoved:connect(function(part)
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
                             if localcheck then
-								if not disguisecheck then
-                                	entity.isAlive = false
-								else
-									local head = char:WaitForChild("Head", 10)
-									entity.character.Head = head
+								if char == lplr.Character then
+									if not disguisecheck then
+										entity.isAlive = false
+									else
+										local head = char:WaitForChild("Head", 10)
+										entity.character.Head = head
+									end
+									disguisecheck = false
 								end
-								disguisecheck = false
                             else
 								if invadded[plr] then invadded[plr]:Disconnect() end 
 								if invremoved[plr] then invremoved[plr]:Disconnect() end 
@@ -1567,10 +1570,14 @@ do
     end
 	entity.entityAdded = function(plr, localcheck, custom)
         entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterAdded:connect(function(char)
+			if localcheck then
+				print("addedchar")
+			end
             entity.refreshEntity(plr, localcheck)
         end)
         entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterRemoving:connect(function(char)
             if localcheck then
+				print("removed char")
                 entity.isAlive = false
             else
                 entity.removeEntity(plr)
@@ -1727,7 +1734,7 @@ end
 
 local healthbarblocktable = {
 	["blockHealth"] = -1,
-	["breakingBlockPosition"] = Vector3.new()
+	["breakingBlockPosition"] = Vector3.zero
 }
 bedwars["breakBlock"] = function(pos, effects, normal, bypass)
     if lplr:GetAttribute("DenyBlockBreak") == true then
@@ -1740,7 +1747,7 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
         if bedwars["BlockEngineClientEvents"].DamageBlock:fire(block.Name, blockpos, block):isCancelled() then
             return nil
         end
-        local blockhealthbarpos = {blockPosition = Vector3.new()}
+        local blockhealthbarpos = {blockPosition = Vector3.zero}
         local blockdmg = 0
         if block and block.Parent ~= nil then
             switchToAndUseTool(block)
@@ -1778,7 +1785,7 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
                 if healthbarblocktable.blockHealth <= 0 then
                     bedwars["BlockBreaker"].breakEffect:playBreak(block.Name, blockhealthbarpos.blockPosition, lplr)
                     bedwars["BlockBreaker"].healthbarMaid:DoCleaning()
-					healthbarblocktable.breakingBlockPosition = Vector3.new()
+					healthbarblocktable.breakingBlockPosition = Vector3.zero
                 else
                     bedwars["BlockBreaker"].breakEffect:playHit(block.Name, blockhealthbarpos.blockPosition, lplr)
                 end
@@ -1804,13 +1811,16 @@ local function getEquipped()
     return {["Object"] = obj and obj.tool, ["Type"] = typetext}
 end
 
-local function GetAllNearestHumanoidToPosition(player, distance, amount, targetcheck)
+local function GetAllNearestHumanoidToPosition(player, distance, amount, targetcheck, overridepos)
 	local returnedplayer = {}
 	local currentamount = 0
     if entity.isAlive then -- alive check
         for i, v in pairs(entity.entityList) do -- loop through players
             if (v.Targetable or targetcheck) and targetCheck(v) and currentamount < amount then -- checks
                 local mag = (entity.character.HumanoidRootPart.Position - v.RootPart.Position).magnitude
+				if overridepos and mag > distance then 
+					mag = (overridepos - v.RootPart.Position).magnitude
+				end
                 if mag <= distance then -- mag check
                     table.insert(returnedplayer, v)
 					currentamount = currentamount + 1
@@ -1820,6 +1830,9 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 		for i2,v2 in pairs(collectionservice:GetTagged("Monster")) do -- monsters
 			if v2:FindFirstChild("HumanoidRootPart") and currentamount < amount and v2:GetAttribute("Team") ~= lplr:GetAttribute("Team") then -- no duck
 				local mag = (entity.character.HumanoidRootPart.Position - v2.HumanoidRootPart.Position).magnitude
+				if overridepos and mag > distance then 
+					mag = (overridepos - v2.HumanoidRootPart.Position).magnitude
+				end
                 if mag <= distance then -- magcheck
                     table.insert(returnedplayer, {Player = {Name = (v2 and v2.Name or "Monster"), UserId = (v2 and v2.Name == "Duck" and 2020831224 or 1443379645)}, Character = v2, RootPart = v2.HumanoidRootPart}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
@@ -1832,6 +1845,9 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 				local droneplr = players:GetPlayerByUserId(v3:GetAttribute("PlayerUserId"))
 				if droneplr and droneplr.Team == lplr.Team then continue end
 				local mag = (entity.character.HumanoidRootPart.Position - v3.HumanoidRootPart.Position).magnitude
+				if overridepos and mag > distance then 
+					mag = (overridepos - v3.HumanoidRootPart.Position).magnitude
+				end
                 if mag <= distance then -- magcheck
                     table.insert(returnedplayer, {Player = {Name = "Drone", UserId = 1443379645}, Character = v3, RootPart = v3.HumanoidRootPart}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
@@ -2284,8 +2300,8 @@ reachval = Reach.CreateSlider({
 GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("PhaseOptionsButton")
 
-local oldpos = Vector3.new()
-local oldpos2 = Vector3.new()
+local oldpos = Vector3.zero
+local oldpos2 = Vector3.zero
 local Spider = {["Enabled"] = false}
 
 local function getScaffold(vec, diagonaltoggle)
@@ -2306,7 +2322,7 @@ local slowdownspeed = false
 local slowdownspeedval = 0.6
 local speed = {["Enabled"] = false}
 local longjump = {["Enabled"] = false}
-local longjumpvelo = Vector3.new()
+local longjumpvelo = Vector3.zero
 local spidergoinup = false
 local holdingshift = false
 local targetstrafevelo = Vector3.new(1, 1, 1)
@@ -2400,7 +2416,7 @@ runcode(function()
 	local targetstrafejump = {["Value"] = 40}
 	local targetstrafedistance = {["Value"] = 12}
 	local targetstrafenum = 0
-	local targetstrafepos = Vector3.new()
+	local targetstrafepos = Vector3.zero
 	local flip = false
 	local lastreal
 	local old = nil
@@ -3777,7 +3793,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				autobankui = Instance.new("Frame")
-				autobankui.Size = UDim2.new(0, 120, 0, 40)
+				autobankui.Size = UDim2.new(0, 160, 0, 40)
 				autobankui.Position = UDim2.new(0, 0, 0, -200)
 				task.spawn(function()
 					repeat
@@ -3787,7 +3803,7 @@ runcode(function()
 							if hotbar then 
 								local healthbar = hotbar["1"]:FindFirstChild("HotbarHealthbarContainer")
 								if healthbar then 
-									autobankui.Position = UDim2.new(0.5, -60, 0, healthbar.AbsolutePosition.Y - 50)
+									autobankui.Position = UDim2.new(0.5, -80, 0, healthbar.AbsolutePosition.Y - 50)
 								end
 							end
 						else
@@ -3824,11 +3840,16 @@ runcode(function()
 				iron.Position = UDim2.new(0, 0, 0, 0)
 				iron.Name = "iron"
 				iron.Parent = autobankui
+				local crystal = emerald:Clone()
+				crystal.Image = bedwars["getIcon"]({itemType = "void_crystal"}, true)
+				crystal.Position = UDim2.new(0, 120, 0, 0)
+				crystal.Name = "void_crystal"
+				crystal.Parent = autobankui
 				local echest = repstorage.Inventories:FindFirstChild(lplr.Name.."_personal")
 				if entity.isAlive and echest then
 					local chestitems = bedwars["getInventory"](lplr).items
 					for i3,v3 in pairs(chestitems) do
-						if (v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
+						if (v3.itemType == "void_crystal" or v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
 							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
 							refreshbank()
 						end
@@ -3840,7 +3861,7 @@ runcode(function()
 						if echest == nil then 
 							echest = repstorage.Inventories:FindFirstChild(lplr.Name.."_personal")
 						end	
-						if (p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and echest then
+						if (p3.Name == "void_crystal" or p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and echest then
 							if AutoBankTransmitted and AutoBankTransmittedType and p3.Name ~= "diamond" or (not AutoBankTransmitted) then 
 								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
 								refreshbank()
@@ -3861,7 +3882,7 @@ runcode(function()
 								local chestitems = bedwars["getInventory"](lplr).items
 								if #chestitems > 0 then
 									for i3,v3 in pairs(chestitems) do
-										if (v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
+										if (v3.itemType == "void_crystal" or v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
 											task.spawn(function()
 												bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
 												refreshbank()
@@ -3875,7 +3896,7 @@ runcode(function()
 							local chestitems = echest and echest:GetChildren() or {}
 							if #chestitems > 0 then
 								for i3,v3 in pairs(chestitems) do
-									if v3:IsA("Accessory") and ((npctype == false and (v3.Name == "emerald" or v3.Name == "iron")) or v3.Name == "diamond") then
+									if v3:IsA("Accessory") and ((npctype == false and (v3.Name == "void_crystal" or v3.Name == "emerald" or v3.Name == "iron")) or v3.Name == "diamond") then
 										task.spawn(function()
 											bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
 											refreshbank()
@@ -3898,7 +3919,7 @@ runcode(function()
 				local chestitems = echest and echest:GetChildren() or {}
 				if #chestitems > 0 then
 					for i3,v3 in pairs(chestitems) do
-						if v3:IsA("Accessory") and (v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond") then
+						if v3:IsA("Accessory") and (v3.Name == "void_crystal" or v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond") then
 							task.spawn(function()
 								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
 							end)
@@ -4429,7 +4450,7 @@ runcode(function()
 		["Name"] = "LongJump",
 		["Function"] = function(callback)
 			if callback then
-				longjumpvelo = Vector3.new()
+				longjumpvelo = Vector3.zero
 				if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 					task.spawn(function()
 						repeat task.wait() until shared.VapeFullyLoaded
@@ -4451,7 +4472,7 @@ runcode(function()
 								if startlongjump and longjumpmode["Value"] == "AnticheatBypass" then 
 									funnytick = tick() + 0.1
 								end
-								longjumpvelo = (startlongjump and entity.character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or longjumpspeed["Value"]))) or Vector3.new())
+								longjumpvelo = (startlongjump and entity.character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or longjumpspeed["Value"]))) or Vector3.zero)
 							end)
 							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
 							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
@@ -4799,7 +4820,8 @@ runcode(function()
 			return nil
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
-		local selfpos = entity.character.HumanoidRootPart.Position + (killaurarange["Value"] > 14 and (entity.character.HumanoidRootPart.Position - root.Position).magnitude > 14 and (CFrame.lookAt(entity.character.HumanoidRootPart.Position, root.Position).lookVector * 4) or Vector3.new())
+		local selfrootpos = (oldcloneroot or entity.character.HumanoidRootPart).Position
+		local selfpos = selfrootpos + (killaurarange["Value"] > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
 		if sword and sword["tool"] then
 			local attacksuccess = killaurarealremote:InvokeServer({
 				["weapon"] = sword["tool"],
@@ -4914,8 +4936,8 @@ runcode(function()
 										local targetPos = targetedplayer.RootPart.Position + Vector3.new(0, 2, 0)
 										local direction = (Vector3.new(targetPos.X, targetPos.Y, targetPos.Z) - entity.character.Head.Position).Unit
 										local direction2 = (Vector3.new(targetPos.X, Root.Position.Y, targetPos.Z) - Root.Position).Unit
-										local lookCFrame = (CFrame.new(Vector3.new(), (Root.CFrame):VectorToObjectSpace(direction)))
-										local lookCFrame2 = (CFrame.new(Vector3.new(), (Root.CFrame):VectorToObjectSpace(direction2)))
+										local lookCFrame = (CFrame.new(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction)))
+										local lookCFrame2 = (CFrame.new(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction2)))
 										Neck.C0 = CFrame.new(orig) * CFrame.Angles(lookCFrame.LookVector.Unit.y, 0, 0)
 										Root.Parent.LowerTorso.Root.C0 = lookCFrame2 + orig2
 									else
@@ -4933,7 +4955,7 @@ runcode(function()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
-							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, killauratargets["Value"])
+							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, killauratargets["Value"], false, oldchar and oldchar.HumanoidRootPart.Position)
 							local attackedplayers = {}
 							local firstplayercodedone = {done = false}
 							for i,plr in pairs(plrs) do
@@ -6159,12 +6181,12 @@ runcode(function()
 						end
 						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
 						if speedmode["Value"] == "CFrame" then
-							local newlongjumpvelo = longjumpvelo.Unit * math.clamp((Vector3.new() - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0, 100000000000)
-							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.new()
+							local newlongjumpvelo = longjumpvelo.Unit * math.clamp((Vector3.zero - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0, 100000000000)
+							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.zero
 							local newpos = (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * (speedval["Value"] - entity.character.Humanoid.WalkSpeed))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
 							local movevec = entity.character.Humanoid.MoveDirection.Unit * 20
-							movevec = movevec == movevec and movevec or Vector3.new()
-							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.new())
+							movevec = movevec == movevec and movevec or Vector3.zero
+							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.zero)
 							local raycastparameters = RaycastParams.new()
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
 							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
@@ -6187,12 +6209,12 @@ runcode(function()
 										entity.character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, entity.character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 									end
 								end
-								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or entity.character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.new() or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
+								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or bird or entity.character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.zero or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
 								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) and (not bird) then
-							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.new() then
+							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
 								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 							end
 						end
@@ -6598,7 +6620,7 @@ runcode(function()
 	local ScaffoldHandCheck = {["Enabled"] = false}
 	local scaffoldstopmotionval = false
 	local scaffoldposcheck = tick()
-	local scaffoldstopmotionpos = Vector3.new()
+	local scaffoldstopmotionpos = Vector3.zero
 	local scaffoldposchecklist = {
 		[1] = Vector3.new(0, 3, 0),
 		[2] = Vector3.new(-3, 3, 0),
@@ -7408,7 +7430,7 @@ runcode(function()
 								end
 							end
 							for i = 1, ScaffoldExpand["Value"] do
-								local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval == false and entity.character.Humanoid.MoveDirection or Vector3.new()) * (i * 3.5))) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.Velocity.Y < 2))
+								local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval == false and entity.character.Humanoid.MoveDirection or Vector3.zero) * (i * 3.5))) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.Velocity.Y < 2))
 								newpos = Vector3.new(newpos.X, newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 4 or 0), newpos.Z)
 								if newpos ~= oldpos then
 									if not checkblocks(newpos) then
@@ -7441,8 +7463,8 @@ runcode(function()
 				end)
 			else
 				scaffoldtext.Visible = false
-				oldpos = Vector3.new()
-				oldpos2 = Vector3.new()
+				oldpos = Vector3.zero
+				oldpos2 = Vector3.zero
 			end
 		end, 
 		["HoverText"] = "Helps you make bridges/scaffold walk."
@@ -8598,7 +8620,7 @@ runcode(function()
 		if oldroot and cloneroot and (oldroot.Position - cloneroot.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
 			--createwarning("AnticheatBypass", "tp check failed by: "..(math.floor(((oldroot.Position - cloneroot.Position).magnitude - AnticheatBypassNumbers.TPCheck) * 100) / 100), 10)
 			local newpos = (oldroot.Position - cloneroot.Position).Unit * AnticheatBypassNumbers.TPCheck
-			newpos = newpos == newpos and newpos or Vector3.new()
+			newpos = newpos == newpos and newpos or Vector3.zero
 			cloneroot.CFrame = oldroot.CFrame
 			lagbackedaftertouch = true
 		end
@@ -8782,9 +8804,9 @@ runcode(function()
 				clone.Animate:Remove()
 			end
 			if clone and clone:FindFirstChild("Humanoid") then
-				oldchar.Humanoid:Move(Vector3.new(), false)
+				oldchar.Humanoid:Move(Vector3.zero, false)
 				task.wait(0.1)
-				oldchar.Humanoid:Move(Vector3.new(), false)
+				oldchar.Humanoid:Move(Vector3.zero, false)
 			end
 			if oldchar and oldchar:FindFirstChild("Animate") then
 				oldchar.Animate.Disabled = true
@@ -8856,7 +8878,7 @@ runcode(function()
 							oldchar.HumanoidRootPart.Velocity = Vector3.new(math.clamp(targetvelo.X, -20, 20), clone.HumanoidRootPart.Velocity.Y, math.clamp(targetvelo.Z, -20, 20))
 						end
 					else
-						oldchar.HumanoidRootPart.Velocity = Vector3.new()
+						oldchar.HumanoidRootPart.Velocity = Vector3.zero
 					end
 				end
 			end)
@@ -8929,6 +8951,7 @@ runcode(function()
 				task.wait()
 				if entity.isAlive then
 					local oldroot = oldchar and oldchar:FindFirstChild("HumanoidRootPart")
+					oldcloneroot = oldroot
 					if oldroot then
 						if networkownerfunc == nil and gethiddenproperty(oldroot, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then
 							if lagbackcurrent == false then
@@ -8976,11 +8999,13 @@ runcode(function()
 												local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
 												local oldmove = controlmodule.moveFunction
 												controlmodule.moveFunction = function(self, movedir, ...)
-													movedir = Vector3.new()
+													movedir = Vector3.zero
 													return oldmove(self, movedir, ...)
 												end
 												task.spawn(function()
-													repeat task.wait() until lplr.Character == clone or AnticheatBypass["Enabled"] == false
+													repeat 
+														task.wait()
+													until lplr.Character == clone or AnticheatBypass["Enabled"] == false
 													controlmodule.moveFunction = oldmove
 												end)
 												if AnticheatBypass["Enabled"] == false then
@@ -8995,8 +9020,8 @@ runcode(function()
 									lagbacknotification = true
 									createwarning("AnticheatBypass", "You have been lagbacked for a \nawfully long time", 10)
 								end
-								cloneroot.Velocity = Vector3.new()
-								oldroot.Velocity = Vector3.new()
+								cloneroot.Velocity = Vector3.zero
+								oldroot.Velocity = Vector3.zero
 								cloneroot.CFrame = oldroot.CFrame
 							else
 								lagbackchanged = false
@@ -9004,7 +9029,7 @@ runcode(function()
 								if not shared.VapeOverrideAnticheatBypass then
 									if (not disabletpcheck) then
 										anticheatfunnyyes = true 
-										if clone.Humanoid.MoveDirection ~= Vector3.new() then
+										if clone.Humanoid.MoveDirection ~= Vector3.zero then
 											amountoftimes = amountoftimes + 1
 										end
 										local frameratecheck = getaverageframerate()
@@ -9173,6 +9198,8 @@ runcode(function()
 					end
 				end)
 			else
+				print("disabled")
+				oldcloneroot = nil
 				shared.VapeRealCharacter = nil
 				if oldballoon then
 					bedwars["BalloonController"].hookBalloon = oldballoon
@@ -9214,6 +9241,7 @@ runcode(function()
 						end
 					end
 					local oldcamcframe = cam.CFrame
+					print("changed char")
 					lplr.Character = oldchar
 					task.spawn(function()
 						repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
@@ -9285,7 +9313,7 @@ runcode(function()
 
 		local p = targetPosition - shooterPosition
 		local v = targetVelocity - shooterVelocity
-		local a = Vector3.new()
+		local a = Vector3.zero
 
 		local timeTaken = (distance / projectileSpeed)
 		
@@ -9315,11 +9343,11 @@ runcode(function()
 								local multigrav = gravity
 								local offsetshootpos = data.position
 								local pos = (oldchar.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
-								local calculated2 = FindLeadShot(pos, Vector3.new(), (Vector3.new() - data.launchVelocity).magnitude, offsetshootpos, Vector3.new(), multigrav) 
-								local calculated = LaunchDirection(offsetshootpos, pos, (Vector3.new() - data.launchVelocity).magnitude, gravity, false)
+								local calculated2 = FindLeadShot(pos, Vector3.zero, (Vector3.zero - data.launchVelocity).magnitude, offsetshootpos, Vector3.zero, multigrav) 
+								local calculated = LaunchDirection(offsetshootpos, pos, (Vector3.zero - data.launchVelocity).magnitude, gravity, false)
 								local initialvelo = calculated--(calculated - offsetshootpos).Unit * launchvelo
-								local initialvelo2 = (calculated2 - offsetshootpos).Unit * (Vector3.new() - data.launchVelocity).magnitude
-								local calculatedvelo = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (Vector3.new() - data.launchVelocity).magnitude
+								local initialvelo2 = (calculated2 - offsetshootpos).Unit * (Vector3.zero - data.launchVelocity).magnitude
+								local calculatedvelo = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (Vector3.zero - data.launchVelocity).magnitude
 								if (calculatedvelo - data.launchVelocity).magnitude <= 20 then 
 									oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.6)
 								end
@@ -9557,9 +9585,9 @@ runcode(function()
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block")}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-						local newray = workspace:Raycast((oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -76, 0), raycastparameters)
+						local newray = workspace:Raycast((oldcloneroot or entity.character.HumanoidRootPart).Position, Vector3.new(0, -76, 0), raycastparameters)
 						if newray ~= nil then
-							bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(pot["tool"], "heal_splash_potion", "heal_splash_potion", (oldchar or lplr.Character).HumanoidRootPart.Position, Vector3.new(0, -70, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
+							bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(pot["tool"], "heal_splash_potion", "heal_splash_potion", (oldcloneroot or entity.character.HumanoidRootPart).Position, Vector3.new(0, -70, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
 						end
 					end
 				end
@@ -9827,7 +9855,7 @@ runcode(function()
 						if ray == nil and ray2 then
 							local ray3 = workspace:Raycast(entity.character.HumanoidRootPart.Position + (vec * 1.8), Vector3.new(0, -1000, 0), raycastparameters)
 							if ray3 == nil then 
-								vec = Vector3.new()
+								vec = Vector3.zero
 							end
 						end
 					end
@@ -9960,7 +9988,7 @@ runcode(function()
 
 		local p = targetPosition - shooterPosition
 		local v = targetVelocity - shooterVelocity
-		local a = Vector3.new()
+		local a = Vector3.zero
 
 		local timeTaken = (distance / projectileSpeed)
 		
@@ -9993,7 +10021,7 @@ runcode(function()
 					if BowAimbotMode["Value"] == "Player" then 
 						plr = GetNearestHumanoidToMouse(true, 1000)
 					else
-						plr = {Character = {Humanoid = {MoveDirection = Vector3.new()}, GetAttribute = function() end, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.new()}}}
+						plr = {Character = {Humanoid = {MoveDirection = Vector3.zero}, GetAttribute = function() end, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.zero}}}
 					end
 					if plr then
 						local shootpos = bowtable:getLaunchPosition(oldchar or shootpospart)
@@ -10022,9 +10050,9 @@ runcode(function()
 						end
 						local velo = (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 40, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
 						if projmeta.projectile == "telepearl" then
-							velo = Vector3.new()
+							velo = Vector3.zero
 						end
-						local calculated2 = FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.new(), multigrav) 
+						local calculated2 = FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.zero, multigrav) 
 						pos = pos + Vector3.new(0, velo.Y + (plr.Character:GetAttribute("InflatedBalloons") and plr.Character:GetAttribute("InflatedBalloons") > 0 and velo.Y > 0 and 1 or 0), 0)
 						local calculated = LaunchDirection(offsetshootpos, pos, launchvelo, gravity, false)
 						local initialvelo2 = (calculated2 - offsetshootpos).Unit * launchvelo
@@ -10393,9 +10421,7 @@ runcode(function()
 							["SPEAR_THROW"] = "rbxassetid://7813485044",
 						}
 						task.spawn(function()
-							repeat wait() until workspace ~= nil 
-							repeat wait() until workspace:FindFirstChild("Map") ~= nil
-							for i,v in pairs(workspace.Map.Blocks:GetChildren()) do
+							for i,v in pairs(collectionservice:GetTagged("block")) do
 								if oldbedwarsblocktab[v.Name] then
 									if type(oldbedwarsblocktab[v.Name]) == "table" then
 										for i2,v2 in pairs(v:GetDescendants()) do
