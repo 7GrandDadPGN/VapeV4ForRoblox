@@ -911,6 +911,7 @@ runcode(function()
             ["PlayerUtil"] = require(repstorage.TS.player["player-util"]).GamePlayerUtil,
 			["ProjectileMeta"] = require(repstorage.TS.projectile["projectile-meta"]).ProjectileMeta,
 			["QueueMeta"] = require(repstorage.TS.game["queue-meta"]).QueueMeta,
+			["QueueCard"] = require(lplr.PlayerScripts.TS.controllers.global.queue.ui["queue-card"]).QueueCard,
 			["QueryUtil"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out).GameQueryUtil,
             ["prepareHashing"] = require(repstorage.TS["remote-hash"]["remote-hash-util"]).RemoteHashUtil.prepareHashVector3,
 			["ProjectileRemote"] = getremote(debug.getconstants(debug.getupvalues(getmetatable(KnitClient.Controllers.ProjectileController)["launchProjectileWithValues"])[2])),
@@ -4471,7 +4472,7 @@ runcode(function()
 								longjumpvelo = (startlongjump and entity.character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or longjumpspeed["Value"]))) or Vector3.zero)
 							end)
 							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
-							repeat task.wait() until (anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
+							repeat task.wait() until (longjumpmode["Value"] == "AnticheatBypass" or anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
 							task.wait(((longjumpdelay["Value"] - 1) / 10) + (damagetroll and 2 or 0))
 							if longjump["Enabled"] then 
 								local funnycheck = nomove
@@ -6380,7 +6381,7 @@ runcode(function()
 						end
 						if flyac["Enabled"] and allowed <= 0 then 
 							local raycastparameters = RaycastParams.new()
-							raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block")}
+							raycastparameters.FilterDescendantsInstances = {collectionservice:GetTagged("block"), collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
 							raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
 							local newray = workspace:Raycast((AnticheatBypass["Enabled"] and oldchar or entity.character).HumanoidRootPart.Position, Vector3.new(0, (entity.character.Humanoid.HipHeight * -2) - 1, 0), raycastparameters)
 							onground = newray and true or false
@@ -10633,6 +10634,25 @@ runcode(function()
 				end
 			else
 				createwarning("OldBedwars", "Disabled Next Game", 10)
+			end
+		end
+	})
+end)
+
+runcode(function()
+	local CardFixer = {["Enabled"] = false}
+	CardFixer = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "CardFixer",
+		["Function"] = function(callback) 
+			if callback then 
+				spawn(function()
+					repeat task.wait() until matchState ~= 0
+					if clientstorestate.Game.customMatch == nil and CardFixer["Enabled"] then 
+						debug.setconstant(bedwars["QueueCard"].render, 9, 0.1)
+					end
+				end)
+			else
+				debug.setconstant(bedwars["QueueCard"].render, 9, 0.01)
 			end
 		end
 	})
