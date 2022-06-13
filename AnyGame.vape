@@ -337,8 +337,9 @@ GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
 						thing.Parent = RadarMainFrame
 					end
 					
-					if isPlayerTargetable(plr, false, false) then
-						local v238, v239 = radarcam:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * plr.Character.HumanoidRootPart.CFrame).p * 0.2)
+					local aliveplr = isAlive(plr)
+					if aliveplr then
+						local v238, v239 = radarcam:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * aliveplr.RootPart.CFrame).p * 0.2)
 						thing.Visible = true
 						thing.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(RadarColor["Hue"], RadarColor["Sat"], RadarColor["Value"])
 						thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
@@ -1751,7 +1752,7 @@ runcode(function()
 							local newpos = (movevec * (math.clamp(speedval["Value"] - entity.character.Humanoid.WalkSpeed, 0, 1000000000) * delta))
 							if speedwallcheck["Enabled"] then
 								local raycastparameters = RaycastParams.new()
-								raycastparameters.RaycastFilterType = Enum.RaycastFilterType.Blacklist
+								raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
 								raycastparameters.FilterDescendantsInstances = {lplr.Character, cam}
 								local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
 								if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
