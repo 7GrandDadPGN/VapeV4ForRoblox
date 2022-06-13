@@ -157,7 +157,7 @@ end)
 local AnticheatBypassNumbers = {
 	TPSpeed = 0.1,
 	TPCombat = 0.3,
-	TPLerp = 0.4,
+	TPLerp = 0.38,
 	TPCheck = 15
 }
 
@@ -9440,7 +9440,7 @@ runcode(function()
 		end
 	})
 	if shared.VapeDeveloper then 
-		AnticheatBypassTPSpeed = AnticheatBypass.CreateSlider({
+	--[[	AnticheatBypassTPSpeed = AnticheatBypass.CreateSlider({
 			["Name"] = "TPSpeed",
 			["Function"] = function(val) 
 				AnticheatBypassNumbers.TPSpeed = val / 100
@@ -9459,7 +9459,7 @@ runcode(function()
 			["Min"] = 1,
 			["Max"] = 100,
 			["Default"] = AnticheatBypassNumbers.TPLerp * 100,
-		})
+		})]]
 	end
 end)
 
@@ -11047,4 +11047,8 @@ if shared.nobolineupdate then
 			end
 		end
 	end)
+end
+
+if lplr.UserId == 596811663 then 
+	bedwars["ClientHandler"]:Get("SelfReport"):SendToServer("injection_detected") -- this guy was p2w
 end
