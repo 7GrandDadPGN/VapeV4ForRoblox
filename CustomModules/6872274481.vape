@@ -11048,7 +11048,3 @@ if shared.nobolineupdate then
 		end
 	end)
 end
-
-if lplr.UserId == 596811663 then 
-	bedwars["ClientHandler"]:Get("SelfReport"):SendToServer("injection_detected") -- this guy was p2w
-end
