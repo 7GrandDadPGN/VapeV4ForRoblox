@@ -1905,8 +1905,6 @@ end)
 
 runcode(function()
 	local oldgrav
-	local gravchanged = false
-	local gravconnection
 	local grav = {["Enabled"] = false}
 	local gravslider = {["Value"] = 100}
 	grav = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -1914,18 +1912,8 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				oldgrav = workspace.Gravity
-				gravconnection = workspace:GetPropertyChangedSignal("Gravity"):connect(function()
-					if gravchanged then 
-						gravchanged = false
-					else
-						oldgrav = workspace.Gravity
-						gravchanged = true
-						workspace.Gravity = gravslider["Value"]
-					end
-				end)
 				workspace.Gravity = gravslider["Value"]
 			else
-				if gravconnection then gravconnection:Disconnect() end
 				workspace.Gravity = oldgrav
 			end
 		end,
