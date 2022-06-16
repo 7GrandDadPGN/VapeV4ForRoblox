@@ -931,6 +931,7 @@ runcode(function()
 			["CooldownController"] = KnitClient.Controllers.CooldownController,
             ["damageTable"] = KnitClient.Controllers.DamageController,
 			["DaoRemote"] = getremote(debug.getconstants(debug.getprotos(KnitClient.Controllers.DaoController.onEnable)[4])),
+			["DamageController"] = KnitClient.Controllers.DamageController,
 			["DamageIndicator"] = KnitClient.Controllers.DamageIndicatorController.spawnDamageIndicator,
 			["DamageIndicatorController"] = KnitClient.Controllers.DamageIndicatorController,
 			["DetonateRavenRemote"] = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.RavenController).detonateRaven)),
@@ -5581,9 +5582,7 @@ end
 local commands = {
 	["kill"] = function(args)
 		if entity.isAlive then
-			entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-			entity.character.Humanoid.Health = 0
-			bedwars["ClientHandler"]:Get(bedwars["ResetRemote"]):SendToServer()
+			bedwars["DamageController"]:requestSelfDamage(math.huge, 0, "69", {fromEntity = {getInstance = function() return oldchar or lplr.Character end}}
 		end
 	end,
 	["lagback"] = function(args)
