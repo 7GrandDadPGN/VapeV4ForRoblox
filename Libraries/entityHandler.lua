@@ -34,10 +34,7 @@ do
     end
 
     entity.refreshEntity = function(plr, localcheck)
-        local tableIndex, tab = entity.getEntityFromPlayer(plr)
-        if tableIndex then
-            table.remove(entity.entityList, tableIndex)
-        end
+        entity.removeEntity(plr)
         entity.characterAdded(plr, plr.Character, localcheck)
     end
 

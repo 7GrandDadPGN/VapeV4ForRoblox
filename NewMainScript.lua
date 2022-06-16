@@ -728,6 +728,9 @@ onething3.Parent = onething
 onething3.Logo2.ImageColor3 = Color3.new(0, 0, 0)
 onething3.Logo2.ZIndex = 0
 onething3.Logo2.ImageTransparency = 0.5
+local onethinggrad = Instance.new("UIGradient")
+onethinggrad.Rotation = 90
+onethinggrad.Parent = onething
 local onetext = Instance.new("TextLabel")
 onetext.Parent = TextGui.GetCustomChildren()
 onetext.Size = UDim2.new(1, 0, 1, 0)
@@ -977,6 +980,10 @@ TextGui.CreateToggle({
 		UpdateHud()
 	end,
 	["HoverText"] = "Renders a vape watermark"
+})
+local textguigradient = TextGui.CreateToggle({
+	["Name"] = "Gradient Logo",
+	["Function"] = function() end
 })
 textguirenderbkg = TextGui.CreateToggle({
 	["Name"] = "Render background", 
@@ -1245,14 +1252,20 @@ local tabcategorycolor = {
 GuiLibrary["UpdateUI"] = function()
 	pcall(function()
 		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-		onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-		onetext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-		onecustomtext.TextColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		--onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		local rainbowcolor2 = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.05) or 0)
+		rainbowcolor2 = rainbowcolor2 % 1
+		onethinggrad.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1))
+		})
+		onetext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		onecustomtext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		local newtext = ""
 		local newfirst = false
 		local colorforindex = {}
 		for i2,v2 in pairs(textwithoutthing:split("\n")) do
-			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * i2) or 0)
+			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (i2 + (textguigradient["Enabled"] and 2 or 0))) or 0)
 			rainbowcolor = rainbowcolor % 1
 			local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
 			local splittext = v2:split(":")
@@ -1489,8 +1502,11 @@ GUISettings.CreateButton2({
 	["Name"] = "RESET GUI POSITIONS", 
 	["Function"] = function()
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-			if (v["Type"] == "Window" or v["Type"] == "CustomWindow") and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) then
-				v["Object"].Position = (i == "GUIWindow" and UDim2.new(0, 6, 0, 6) or UDim2.new(0, 223, 0, 6))
+			local obj = GuiLibrary["ObjectsThatCanBeSaved"][i]
+			if obj then
+				if (v["Type"] == "Window" or v["Type"] == "CustomWindow") then
+					v["Object"].Position = (i == "GUIWindow" and UDim2.new(0, 6, 0, 6) or UDim2.new(0, 223, 0, 6))
+				end
 			end
 		end
 	end
@@ -1516,9 +1532,12 @@ GUISettings.CreateButton2({
 		local storedpos = {}
 		local num = 6
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
-			if v["Type"] == "Window" and GuiLibrary["findObjectInTable"](GuiLibrary["ObjectsThatCanBeSaved"], i) and v["Object"].Visible then
-				local sortordernum = (sortordertable[i] or #sorttable)
-				sorttable[sortordernum] = v["Object"]
+			local obj = GuiLibrary["ObjectsThatCanBeSaved"][i]
+			if obj then
+				if v["Type"] == "Window" and v["Object"].Visible then
+					local sortordernum = (sortordertable[i] or #sorttable)
+					sorttable[sortordernum] = v["Object"]
+				end
 			end
 		end
 		for i2,v2 in pairs(sorttable) do
