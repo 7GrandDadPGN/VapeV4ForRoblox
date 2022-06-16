@@ -1753,7 +1753,7 @@ function Kavo.CreateLib(kavName, themeList)
                         if not focusing then
                             opened = false
                             callback(v)
-                            itemTextbox.Text = v
+                            itemTextbox.Text = dropname.." - "..v
                             dropFrame:TweenSize(UDim2.new(0, 352, 0, 33), 'InOut', 'Linear', 0.08)
                             wait(0.1)
                             updateSectionFrame()
@@ -1816,7 +1816,7 @@ function Kavo.CreateLib(kavName, themeList)
 
                 function DropFunction:SetValue(val)
                     callback(val)
-                    itemTextbox.Text = val
+                    itemTextbox.Text = dropname.." - "..val
                 end
 
                 function DropFunction:Refresh(newList)

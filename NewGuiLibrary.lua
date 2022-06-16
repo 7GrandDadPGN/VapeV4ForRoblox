@@ -92,15 +92,6 @@ if shared.VapeExecuted then
 		return table.concat(array)
 	end
 
-	api["findObjectInTable"] = function(temp, object)
-		for i,v in pairs(temp) do
-			if i == object or v == object then
-				return true
-			end
-		end
-		return false
-	end
-
 	local function RelativeXY(GuiObject, location)
 		local x, y = location.X - GuiObject.AbsolutePosition.X, location.Y - GuiObject.AbsolutePosition.Y
 		local x2 = 0
@@ -454,44 +445,47 @@ if shared.VapeExecuted then
 		end)
 		if success3 and type(result3) == "table" then
 			for i,v in pairs(result3) do
-				if v["Type"] == "Window" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
-					api["ObjectsThatCanBeSaved"][i]["Object"].Visible = v["Visible"]
-					if v["Expanded"] then
-						api["ObjectsThatCanBeSaved"][i]["Api"]["ExpandToggle"]()
-					end
-				end
-				if v["Type"] == "CustomWindow" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
-					api["ObjectsThatCanBeSaved"][i]["Object"].Visible = v["Visible"]
-					if v["Pinned"] then
-						api["ObjectsThatCanBeSaved"][i]["Api"]["PinnedToggle"]()
-					end
-					api["ObjectsThatCanBeSaved"][i]["Api"]["CheckVis"]()
-				end
-				if v["Type"] == "ButtonMain" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					if api["ObjectsThatCanBeSaved"][i]["Type"] == "ToggleMain" then
-						api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](v["Enabled"], true)
-						if v["Keybind"] ~= "" then
-							api["ObjectsThatCanBeSaved"][i]["Api"]["Keybind"] = v["Keybind"]
+				local obj = api["ObjectsThatCanBeSaved"][i]
+				if obj then
+					if v["Type"] == "Window" then
+						obj["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
+						obj["Object"].Visible = v["Visible"]
+						if v["Expanded"] then
+							obj["Api"]["ExpandToggle"]()
 						end
-					else
-						if v["Enabled"] then
-							api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
+					end
+					if v["Type"] == "CustomWindow" then
+						obj["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
+						obj["Object"].Visible = v["Visible"]
+						if v["Pinned"] then
+							obj["Api"]["PinnedToggle"]()
+						end
+						obj["Api"]["CheckVis"]()
+					end
+					if v["Type"] == "ButtonMain" then
+						if obj["Type"] == "ToggleMain" then
+							obj["Api"]["ToggleButton"](v["Enabled"], true)
 							if v["Keybind"] ~= "" then
-								api["ObjectsThatCanBeSaved"][i]["Api"]["SetKeybind"](v["Keybind"])
+								obj["Api"]["Keybind"] = v["Keybind"]
+							end
+						else
+							if v["Enabled"] then
+								obj["Api"]["ToggleButton"](false)
+								if v["Keybind"] ~= "" then
+									obj["Api"]["SetKeybind"](v["Keybind"])
+								end
 							end
 						end
 					end
-				end
-				if v["Type"] == "ColorSliderMain" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"])
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetRainbow"](v["RainbowValue"])
-				--	api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -7, 0, -7)
-				end
-				if v["Type"] == "SliderMain" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"])
-				--	api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -7, 0, -7)
+					if v["Type"] == "ColorSliderMain" then
+						obj["Api"]["SetValue"](v["Value"])
+						obj["Api"]["SetRainbow"](v["RainbowValue"])
+					--	obj["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -7, 0, -7)
+					end
+					if v["Type"] == "SliderMain" then
+						obj["Api"]["SetValue"](v["Value"])
+					--	obj["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -7, 0, -7)
+					end
 				end
 				if v["Type"] == "GUIKeybind" then
 					api["GUIKeybind"] = v["Value"]
@@ -504,87 +498,93 @@ if shared.VapeExecuted then
 		if success and type(result) == "table" then
 			api["LoadSettingsEvent"]:Fire(result)
 			for i,v in pairs(result) do
-				if v["Type"] == "Custom" and api["findObjectInTable"](api["Settings"], i) then
+				if v["Type"] == "Custom" and api["Settings"][i] then
 					api["Settings"][i] = v
 				end
-				if v["Type"] == "Dropdown" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"])
-				end
-				if v["Type"] == "CustomWindow" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
-					api["ObjectsThatCanBeSaved"][i]["Object"].Visible = v["Visible"]
-					if v["Pinned"] then
-						api["ObjectsThatCanBeSaved"][i]["Api"]["PinnedToggle"]()
+				local obj = api["ObjectsThatCanBeSaved"][i]
+				if obj then
+					if v["Type"] == "Dropdown" then
+						obj["Api"]["SetValue"](v["Value"])
 					end
-					api["ObjectsThatCanBeSaved"][i]["Api"]["CheckVis"]()
-				end
-				if v["Type"] == "Button" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					if api["ObjectsThatCanBeSaved"][i]["Type"] == "Toggle" then
-						api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](v["Enabled"], true)
-						if v["Keybind"] ~= "" then
-							api["ObjectsThatCanBeSaved"][i]["Api"]["Keybind"] = v["Keybind"]
+					if v["Type"] == "CustomWindow" then
+						obj["Object"].Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
+						obj["Object"].Visible = v["Visible"]
+						if v["Pinned"] then
+							obj["Api"]["PinnedToggle"]()
 						end
-					elseif api["ObjectsThatCanBeSaved"][i]["Type"] == "TargetButton" then
-						api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](v["Enabled"], true)
-					else
-						if v["Enabled"] then
-							api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
+						obj["Api"]["CheckVis"]()
+					end
+					if v["Type"] == "Button" then
+						if obj["Type"] == "Toggle" then
+							obj["Api"]["ToggleButton"](v["Enabled"], true)
 							if v["Keybind"] ~= "" then
-								api["ObjectsThatCanBeSaved"][i]["Api"]["SetKeybind"](v["Keybind"])
+								obj["Api"]["Keybind"] = v["Keybind"]
+							end
+						elseif obj["Type"] == "TargetButton" then
+							obj["Api"]["ToggleButton"](v["Enabled"], true)
+						else
+							if v["Enabled"] then
+								obj["Api"]["ToggleButton"](false)
+								if v["Keybind"] ~= "" then
+									obj["Api"]["SetKeybind"](v["Keybind"])
+								end
 							end
 						end
 					end
-				end
-				if v["Type"] == "NewToggle" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](v["Enabled"], true)
-					if v["Keybind"] ~= "" then
-						api["ObjectsThatCanBeSaved"][i]["Api"]["Keybind"] = v["Keybind"]
+					if v["Type"] == "NewToggle" then
+						obj["Api"]["ToggleButton"](v["Enabled"], true)
+						if v["Keybind"] ~= "" then
+							obj["Api"]["Keybind"] = v["Keybind"]
+						end
 					end
-				end
-				if v["Type"] == "Slider" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["OldMax"] ~= api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] and v["Value"] > api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] and api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] or (v["OldDefault"] ~= api["ObjectsThatCanBeSaved"][i]["Api"]["Default"] and v["Value"] == v["OldDefault"] and api["ObjectsThatCanBeSaved"][i]["Api"]["Default"] or v["Value"]))
-				end
-				if v["Type"] == "TextBox" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"])
-				end
-				if v["Type"] == "TextList" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["RefreshValues"]((v["ObjectTable"] or {}))
-				end
-				if v["Type"] == "TextCircleList" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["RefreshValues"]((v["ObjectTable"] or {}), (v["ObjectTableEnabled"] or {}))
-				end
-				if v["Type"] == "TwoSlider" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Value"] == api["ObjectsThatCanBeSaved"][i]["Api"]["Min"] and 0 or v["Value"])
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue2"](v["Value2"])
-					api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider.Position = UDim2.new(v["SliderPos1"], -8, 1, -9)
-					api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider2.Position = UDim2.new(v["SliderPos2"], -8, 1, -9)
-					api["ObjectsThatCanBeSaved"][i]["Object"].Slider.FillSlider.Size = UDim2.new(0, api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider2.AbsolutePosition.X - api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider.AbsolutePosition.X, 1, 0)
-					api["ObjectsThatCanBeSaved"][i]["Object"].Slider.FillSlider.Position = UDim2.new(api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider.Position.X.Scale, 0, 0, 0)
-					--api["ObjectsThatCanBeSaved"][i]["Object"].Slider.FillSlider.Size = UDim2.new((v["Value"] < api["ObjectsThatCanBeSaved"][i]["Api"]["Max"] and v["Value"] or api["ObjectsThatCanBeSaved"][i]["Api"]["Max"]) / api["ObjectsThatCanBeSaved"][i]["Api"]["Max"], 0, 1, 0)
-				end
-				if v["Type"] == "ColorSlider" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					v["Hue"] = v["Hue"] or 0.44
-					v["Sat"] = v["Sat"] or 1
-					v["Value"] = v["Value"] or 1
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetValue"](v["Hue"], v["Sat"], v["Value"])
-					api["ObjectsThatCanBeSaved"][i]["Api"]["SetRainbow"](v["RainbowValue"])
-					api["ObjectsThatCanBeSaved"][i]["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Hue"], 0.02, 0.95), -9, 0, -7)
-					pcall(function()
-						api["ObjectsThatCanBeSaved"][i]["Object2"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Sat"], 0.02, 0.95), -9, 0, -7)
-						api["ObjectsThatCanBeSaved"][i]["Object3"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -9, 0, -7)
-					end)
+					if v["Type"] == "Slider" then
+						obj["Api"]["SetValue"](v["OldMax"] ~= obj["Api"]["Max"] and v["Value"] > obj["Api"]["Max"] and obj["Api"]["Max"] or (v["OldDefault"] ~= obj["Api"]["Default"] and v["Value"] == v["OldDefault"] and obj["Api"]["Default"] or v["Value"]))
+					end
+					if v["Type"] == "TextBox" then
+						obj["Api"]["SetValue"](v["Value"])
+					end
+					if v["Type"] == "TextList" then
+						obj["Api"]["RefreshValues"]((v["ObjectTable"] or {}))
+					end
+					if v["Type"] == "TextCircleList" then
+						obj["Api"]["RefreshValues"]((v["ObjectTable"] or {}), (v["ObjectTableEnabled"] or {}))
+					end
+					if v["Type"] == "TwoSlider" then
+						obj["Api"]["SetValue"](v["Value"] == obj["Api"]["Min"] and 0 or v["Value"])
+						obj["Api"]["SetValue2"](v["Value2"])
+						obj["Object"].Slider.ButtonSlider.Position = UDim2.new(v["SliderPos1"], -8, 1, -9)
+						obj["Object"].Slider.ButtonSlider2.Position = UDim2.new(v["SliderPos2"], -8, 1, -9)
+						obj["Object"].Slider.FillSlider.Size = UDim2.new(0, obj["Object"].Slider.ButtonSlider2.AbsolutePosition.X - obj["Object"].Slider.ButtonSlider.AbsolutePosition.X, 1, 0)
+						obj["Object"].Slider.FillSlider.Position = UDim2.new(obj["Object"].Slider.ButtonSlider.Position.X.Scale, 0, 0, 0)
+						--obj["Object"].Slider.FillSlider.Size = UDim2.new((v["Value"] < obj["Api"]["Max"] and v["Value"] or obj["Api"]["Max"]) / obj["Api"]["Max"], 0, 1, 0)
+					end
+					if v["Type"] == "ColorSlider" then
+						v["Hue"] = v["Hue"] or 0.44
+						v["Sat"] = v["Sat"] or 1
+						v["Value"] = v["Value"] or 1
+						obj["Api"]["SetValue"](v["Hue"], v["Sat"], v["Value"])
+						obj["Api"]["SetRainbow"](v["RainbowValue"])
+						obj["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Hue"], 0.02, 0.95), -9, 0, -7)
+						pcall(function()
+							obj["Object2"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Sat"], 0.02, 0.95), -9, 0, -7)
+							obj["Object3"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -9, 0, -7)
+						end)
+					end
 				end
 			end
 			for i,v in pairs(result) do
-				if v["Type"] == "OptionsButton" and api["findObjectInTable"](api["ObjectsThatCanBeSaved"], i) then
-					if v["Enabled"] then
-						--print(api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"], i, v["Enabled"])
-						local time = tick()
-						api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
-						--print('Loaded '..i..' in '..tick() - time)
-					end
-					if v["Keybind"] ~= "" then
-						api["ObjectsThatCanBeSaved"][i]["Api"]["SetKeybind"](v["Keybind"])
+				local obj = api["ObjectsThatCanBeSaved"][i]
+				if obj then 
+					if v["Type"] == "OptionsButton" then
+						if v["Enabled"] then
+							--print(api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"], i, v["Enabled"])
+							--local time = tick()
+							api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
+							--print('Loaded '..i..' in '..tick() - time)
+						end
+						if v["Keybind"] ~= "" then
+							api["ObjectsThatCanBeSaved"][i]["Api"]["SetKeybind"](v["Keybind"])
+						end
 					end
 				end
 			end

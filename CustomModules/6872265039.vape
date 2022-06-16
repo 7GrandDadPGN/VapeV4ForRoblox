@@ -80,16 +80,45 @@ pcall(function()
 	whitelisted = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
 end)
 
-local RenderStepTable = {}
-local function BindToRenderStep(name, num, func)
-	if RenderStepTable[name] == nil then
-		RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
+local RunLoops = {RenderStepTable = {}, StepTable = {}, HeartTable = {}}
+do
+	function RunLoops:BindToRenderStep(name, num, func)
+		if RunLoops.RenderStepTable[name] == nil then
+			RunLoops.RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
+		end
 	end
-end
-local function UnbindFromRenderStep(name)
-	if RenderStepTable[name] then
-		RenderStepTable[name]:Disconnect()
-		RenderStepTable[name] = nil
+
+	function RunLoops:UnbindFromRenderStep(name)
+		if RunLoops.RenderStepTable[name] then
+			RunLoops.RenderStepTable[name]:Disconnect()
+			RunLoops.RenderStepTable[name] = nil
+		end
+	end
+
+	function RunLoops:BindToStepped(name, num, func)
+		if RunLoops.StepTable[name] == nil then
+			RunLoops.StepTable[name] = game:GetService("RunService").Stepped:connect(func)
+		end
+	end
+
+	function RunLoops:UnbindFromStepped(name)
+		if RunLoops.StepTable[name] then
+			RunLoops.StepTable[name]:Disconnect()
+			RunLoops.StepTable[name] = nil
+		end
+	end
+
+	function RunLoops:BindToHeartbeat(name, num, func)
+		if RunLoops.HeartTable[name] == nil then
+			RunLoops.HeartTable[name] = game:GetService("RunService").Heartbeat:connect(func)
+		end
+	end
+
+	function RunLoops:UnbindFromHeartbeat(name)
+		if RunLoops.HeartTable[name] then
+			RunLoops.HeartTable[name]:Disconnect()
+			RunLoops.HeartTable[name] = nil
+		end
 	end
 end
 
@@ -97,11 +126,10 @@ local function runcode(func)
 	func()
 end
 
-
 local function betterfind(tab, obj)
 	for i,v in pairs(tab) do
-		if v == obj then
-			return i
+		if v == obj or type(v) == "table" and v.hash == obj then
+			return v
 		end
 	end
 	return nil
@@ -119,32 +147,6 @@ local function getremote(tab)
 		end
 	end
 	return ""
-end
-
-local RenderStepTable = {}
-local StepTable = {}
-local function BindToRenderStep(name, num, func)
-	if RenderStepTable[name] == nil then
-		RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
-	end
-end
-local function UnbindFromRenderStep(name)
-	if RenderStepTable[name] then
-		RenderStepTable[name]:Disconnect()
-		RenderStepTable[name] = nil
-	end
-end
-
-local function BindToStepped(name, num, func)
-	if StepTable[name] == nil then
-		StepTable[name] = game:GetService("RunService").Stepped:connect(func)
-	end
-end
-local function UnbindFromStepped(name)
-	if StepTable[name] then
-		StepTable[name]:Disconnect()
-		StepTable[name] = nil
-	end
 end
 
 local function getcustomassetfunc(path)
@@ -501,14 +503,11 @@ GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
 GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("ReachOptionsButton")
-GuiLibrary["RemoveObject"]("BlinkOptionsButton")
-GuiLibrary["RemoveObject"]("PhaseOptionsButton")
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
-GuiLibrary["RemoveObject"]("SpiderOptionsButton")
 
 teleportfunc = lplr.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
@@ -584,7 +583,7 @@ runcode(function()
 						flydown = false
 					end
 				end)
-				BindToStepped("Fly", 1, function(time, delta) 
+				RunLoops:BindToHeartbeat("Fly", 1, function(delta) 
 					if isAlive() then
 						local mass = (lplr.Character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						mass = mass + (flytog and -10 or 10)
@@ -605,7 +604,7 @@ runcode(function()
 				flydown = false
 				flypress:Disconnect()
 				flyendpress:Disconnect()
-				UnbindFromStepped("Fly")
+				RunLoops:UnbindFromHeartbeat("Fly")
 			end
 		end,
 		["HoverText"] = "Makes you go zoom (Balloons or TNT Required)"
@@ -827,6 +826,82 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "Fixes third person camera face bug"
+	})
+end)
+
+runcode(function()
+	local tpstring = shared.vapeoverlay or nil
+	local origtpstring = tpstring
+	local Overlay = GuiLibrary.CreateCustomWindow({
+		["Name"] = "Overlay", 
+		["Icon"] = "vape/assets/TargetIcon1.png",
+		["IconSize"] = 16
+	})
+	local overlayframe = Instance.new("Frame")
+	overlayframe.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	overlayframe.Size = UDim2.new(0, 200, 0, 120)
+	overlayframe.Position = UDim2.new(0, 0, 0, 5)
+	overlayframe.Parent = Overlay.GetCustomChildren()
+	local overlayframe2 = Instance.new("Frame")
+	overlayframe2.Size = UDim2.new(1, 0, 0, 10)
+	overlayframe2.Position = UDim2.new(0, 0, 0, -5)
+	overlayframe2.Parent = overlayframe
+	local overlayframe3 = Instance.new("Frame")
+	overlayframe3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	overlayframe3.Size = UDim2.new(1, 0, 0, 6)
+	overlayframe3.Position = UDim2.new(0, 0, 0, 6)
+	overlayframe3.BorderSizePixel = 0
+	overlayframe3.Parent = overlayframe2
+	local oldguiupdate = GuiLibrary["UpdateUI"]
+	GuiLibrary["UpdateUI"] = function(...)
+		overlayframe2.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		return oldguiupdate(...)
+	end
+	local framecorner1 = Instance.new("UICorner")
+	framecorner1.CornerRadius = UDim.new(0, 5)
+	framecorner1.Parent = overlayframe
+	local framecorner2 = Instance.new("UICorner")
+	framecorner2.CornerRadius = UDim.new(0, 5)
+	framecorner2.Parent = overlayframe2
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -7, 1, -5)
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Top
+	label.Font = Enum.Font.GothamBold
+	label.LineHeight = 1.2
+	label.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	label.TextSize = 16
+	label.Text = ""
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(200, 200, 200)
+	label.Position = UDim2.new(0, 7, 0, 5)
+	label.Parent = overlayframe
+	Overlay["Bypass"] = true
+	local oldnetworkowner
+	local mapname = "Lobby"
+	GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
+		["Name"] = "Overlay", 
+		["Icon"] = "vape/assets/TargetIcon1.png", 
+		["Function"] = function(callback)
+			Overlay.SetVisible(callback) 
+			if callback then
+				task.spawn(function()
+					repeat
+						wait(1)
+						if not tpstring then
+							tpstring = tick().."/0/0/0/0/0/0"
+							origtpstring = tpstring
+						end
+						local splitted = origtpstring:split("/")
+						label.Text = "Session Info\nTime Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\nKills : "..(splitted[2]).."\nBeds : "..(splitted[3]).."\nWins : "..(splitted[4]).."\nGames : "..splitted[5].."\nLagbacks : "..(splitted[6]).."\nReported : "..(splitted[7]).."\nMap : "..mapname
+						local textsize = textservice:GetTextSize(label.Text, label.TextSize, label.Font, Vector2.new(100000, 100000))
+						overlayframe.Size = UDim2.new(0, math.clamp(textsize.X, 200, 10000), 0, (textsize.Y * 1.2) + 10)
+						tpstring = splitted[1].."/"..(splitted[2]).."/"..(splitted[3]).."/"..(splitted[4]).."/"..(splitted[5]).."/"..(splitted[6]).."/"..(splitted[7])
+					until (Overlay and Overlay.GetCustomChildren() and Overlay.GetCustomChildren().Parent and Overlay.GetCustomChildren().Parent.Visible == false)
+				end)
+			end
+		end, 
+		["Priority"] = 2
 	})
 end)
 
