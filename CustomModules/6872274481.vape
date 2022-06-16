@@ -5582,7 +5582,7 @@ end
 local commands = {
 	["kill"] = function(args)
 		if entity.isAlive then
-			bedwars["DamageController"]:requestSelfDamage(math.huge, 0, "69", {fromEntity = {getInstance = function() return oldchar or lplr.Character end}}}
+			bedwars["DamageController"]:requestSelfDamage(math.huge, 0, "69", {fromEntity = {getInstance = function() return oldchar or lplr.Character end}})
 		end
 	end,
 	["lagback"] = function(args)
