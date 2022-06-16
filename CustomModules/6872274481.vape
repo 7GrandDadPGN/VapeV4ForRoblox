@@ -6566,7 +6566,9 @@ runcode(function()
 							flytog = not flytog
 							flytogtick = tick() + 0.2
 						end
-						flyacprogressbarframe.Visible = allowed <= 0
+						if flyacprogressbarframe then
+							flyacprogressbarframe.Visible = allowed <= 0
+						end
 						if flyac["Enabled"] and allowed <= 0 then 
 							local newray = getblock((AnticheatBypass["Enabled"] and oldchar or entity.character).HumanoidRootPart.Position + Vector3.new(0, (entity.character.Humanoid.HipHeight * -2) - 1, 0))
 							onground = newray and true or false
