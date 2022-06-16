@@ -1085,7 +1085,7 @@ runcode(function()
 			if (not uninjectflag) then
 				bedwarsblocks = collectionservice:GetTagged("block")
 				connectionstodisconnect[#connectionstodisconnect + 1] = collectionservice:GetInstanceAddedSignal("block"):connect(function(v) table.insert(bedwarsblocks, v) blockraycast.FilterDescendantsInstances = bedwarsblocks end)
-				connectionstodisconnect[#connectionstodisconnect + 1] = collectionservice:GetInstanceRemovedSignal("block"):connect(function(v) table.remove(bedwarsblocks, table.find(bedwarsblocks, v)) blockraycast.FilterDescendantsInstances = bedwarsblocks end)
+				connectionstodisconnect[#connectionstodisconnect + 1] = collectionservice:GetInstanceRemovedSignal("block"):connect(function(v) local found = table.find(bedwarsblocks, v) if found then table.remove(bedwarsblocks, found) end blockraycast.FilterDescendantsInstances = bedwarsblocks end)
 				blockraycast.FilterDescendantsInstances = bedwarsblocks
 				local lowestypos = 99999
 				for i,v in pairs(bedwarsblocks) do 
@@ -3463,7 +3463,8 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				task.spawn(function()
-					chestconnections[#chestconnections + 1] = collectionservice:GetInstanceAddedSignal("chest"):connect(function(v)
+
+					local function chestfunc(v)
 						task.spawn(function()
 							local billboard = Instance.new("BillboardGui")
 							billboard.Parent = ChestESPFolder
@@ -3491,54 +3492,23 @@ runcode(function()
 							uicorner.Parent = frame
 							local chest = v:WaitForChild("ChestFolderValue").Value
 							if chest then 
-								chestconnections[#chestconnections + 1] = chest.ChildAdded:connect(function()
-									refreshAdornee(billboard)
+								chestconnections[#chestconnections + 1] = chest.ChildAdded:connect(function(item)
+									if table.find(ChestESPList["ObjectList"], item.Name) or nearchestitem(item.Name) then 
+										refreshAdornee(billboard)
+									end
 								end)
-								chestconnections[#chestconnections + 1] = chest.ChildRemoved:connect(function()
-									refreshAdornee(billboard)
-								end)
-								refreshAdornee(billboard)
-							end
-						end)
-					end)
-					for i,v in pairs(collectionservice:GetTagged("chest")) do
-                        task.spawn(function()
-							local billboard = Instance.new("BillboardGui")
-							billboard.Parent = ChestESPFolder
-							billboard.Name = "chest"
-							billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 1.5)
-							billboard.Size = UDim2.new(0, 42, 0, 42)
-							billboard.AlwaysOnTop = true
-							billboard.Adornee = v
-							local frame = Instance.new("Frame")
-							frame.Size = UDim2.new(1, 0, 1, 0)
-							frame.BackgroundColor3 = Color3.new(0, 0, 0)
-							frame.BackgroundTransparency = 0.5
-							frame.Parent = billboard
-							local uilistlayout = Instance.new("UIListLayout")
-							uilistlayout.FillDirection = Enum.FillDirection.Horizontal
-							uilistlayout.Padding = UDim.new(0, 4)
-							uilistlayout.VerticalAlignment = Enum.VerticalAlignment.Center
-							uilistlayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-							uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
-								billboard.Size = UDim2.new(0, math.clamp(uilistlayout.AbsoluteContentSize.X + 12, 42, 1000000), 0, 42)
-							end)
-							uilistlayout.Parent = frame
-							local uicorner = Instance.new("UICorner")
-							uicorner.CornerRadius = UDim.new(0, 4)
-							uicorner.Parent = frame
-							local chest = v:WaitForChild("ChestFolderValue").Value
-							if chest then 
-								chestconnections[#chestconnections + 1] = chest.ChildAdded:connect(function()
-									refreshAdornee(billboard)
-								end)
-								chestconnections[#chestconnections + 1] = chest.ChildRemoved:connect(function()
-									refreshAdornee(billboard)
+								chestconnections[#chestconnections + 1] = chest.ChildRemoved:connect(function(item)
+									if table.find(ChestESPList["ObjectList"], item.Name) or nearchestitem(item.Name) then 
+										refreshAdornee(billboard)
+									end
 								end)
 								refreshAdornee(billboard)
 							end
 						end)
-                    end
+					end
+
+					chestconnections[#chestconnections + 1] = collectionservice:GetInstanceAddedSignal("chest"):connect(chestfunc)
+					for i,v in pairs(collectionservice:GetTagged("chest")) do chestfunc(v) end
 				end)
 			else
 				ChestESPFolder:ClearAllChildren()
@@ -5325,7 +5295,7 @@ runcode(function()
         ["Name"] = "BowAura",
         ["Function"] = function(callback)
 			if callback then 
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and BowAura["Enabled"] and entity.isAlive then
@@ -5578,11 +5548,10 @@ local function findplayers(arg)
 
 	return temp
 end
-
 local commands = {
 	["kill"] = function(args, plr)
 		if entity.isAlive then
-			bedwars["DamageController"]:requestSelfDamage(math.huge, 0, "69", {fromEntity = {getInstance = function() return plr and plr.Charcter end}})
+			bedwars["DamageController"]:requestSelfDamage(math.huge, 0, "69", {fromEntity = {getInstance = function() return plr and plr.Character end}})
 		end
 	end,
 	["lagback"] = function(args)
@@ -5616,8 +5585,8 @@ local commands = {
 		end
 	end,
 	["deletemap"] = function(args)
-		for i,v in pairs(bedwarsblocks) do
-			v:Remove()
+		for i,v in pairs(collectionservice:GetTagged("block")) do
+			v:Destroy()
 		end
 	end,
 	["void"] = function(args)
@@ -10767,7 +10736,7 @@ runcode(function()
 		["Name"] = "CardFixer",
 		["Function"] = function(callback) 
 			if callback then 
-				spawn(function()
+				task.spawn(function()
 					repeat task.wait() until matchState ~= 0
 					if bedwars["ClientStoreHandler"]:getState().Game.customMatch == nil and CardFixer["Enabled"] then 
 						debug.setconstant(bedwars["QueueCard"].render, 9, 0.1)
