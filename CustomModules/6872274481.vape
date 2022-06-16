@@ -5552,8 +5552,8 @@ local commands = {
 	["kill"] = function(args, plr)
 		if entity.isAlive then
 			local hum = entity.character.Humanoid
-			bedwars["DamageController"]:requestSelfDamage(math.huge, 0, "69", {fromEntity = {getInstance = function() return plr and plr.Character end}})
-			task.delay(1, function()
+			bedwars["DamageController"]:requestSelfDamage(math.huge, 0, "69", {fromEntity = bedwars["getEntityTable"]:getEntity(plr)})
+			task.delay(0.2, function()
 				if hum and hum.Health > 0 then 
 					hum:ChangeState(Enum.HumanoidStateType.Dead)
 					hum.Health = 0
