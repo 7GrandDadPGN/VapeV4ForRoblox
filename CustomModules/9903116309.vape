@@ -1088,9 +1088,9 @@ runcode(function()
 								end
 								
 								local aliveplr = isAlive(plr, TracersAlive["Enabled"])
-							if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
-									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.Character.HumanoidRootPart).Position)
-									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.Character.HumanoidRootPart).Position)
+								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
+									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
 									if rootScrPos.Z < 0 then
 										tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
 									end
