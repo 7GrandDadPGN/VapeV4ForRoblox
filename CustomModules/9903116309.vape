@@ -111,7 +111,7 @@ local function isAlive(plr)
 	if plr then
 		local char = br["ChickynoidClient"].characters[plr.UserId]
 		char = char and char.characterModel and char.characterModel.model
-		return char
+		return char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Head") and char
 	end
 	return br["ChickynoidClient"].characterModel and br["ChickynoidClient"].characterModel.model
 end
@@ -134,8 +134,7 @@ local function getAttackable()
 	local tab = {}
 	for i,v in pairs(players:GetPlayers()) do 
 		if v ~= lplr and v:GetAttribute("teamId") ~= lplr:GetAttribute("teamId") then
-			local char = br["ChickynoidClient"].characters[v.UserId]
-			char = char and char.characterModel and char.characterModel.model
+			local char = isAlive(v)
 			if char then 
 				table.insert(tab, {Player = v, Character = char})
 			end
@@ -144,12 +143,53 @@ local function getAttackable()
 	return tab
 end
 
+local function getTeammates()
+	local tab = {}
+	for i,v in pairs(players:GetPlayers()) do 
+		if v ~= lplr and v:GetAttribute("teamId") == lplr:GetAttribute("teamId") then
+			local char = isAlive(v)
+			if char then 
+				table.insert(tab, {Player = v, Character = char})
+			end
+		end
+	end
+	return tab
+end
+
+local function getBattleRoyaleEntity(plr)
+	for i,v in pairs(collectionservice:GetTagged("royale-entity")) do 
+		if v:GetAttribute("userId") == plr.UserId then 
+			return v
+		end
+	end
+end
+
 local function GetNearestHumanoidToMouse(player, distance, checkvis)
     local closest, returnedplayer = distance, nil
 	for i, v in pairs(getAttackable()) do
 		local vec, vis = cam:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
 		if vis then
 			local mag = (uis:GetMouseLocation() - Vector2.new(vec.X, vec.Y)).magnitude
+			if mag <= closest then
+				if checkvis then 
+					rayparams.FilterDescendantsInstances = {lplr.Character}
+					local res = br["GameQueryUtil"]:raycast(cam.CFrame.p, CFrame.lookAt(cam.CFrame.p, v.Character.Head:GetRenderCFrame().p).lookVector * 1000, rayparams)
+					if res == nil or res.Instance and res.Instance:IsDescendantOf(v.Character) ~= true then continue end
+				end
+				closest = mag
+				returnedplayer = v
+			end
+		end
+	end
+    return returnedplayer
+end
+
+local function GetNearestHumanoidToPosition(player, distance, checkvis)
+    local closest, returnedplayer = distance, nil
+	local localchar = isAlive()
+	if localchar then
+		for i, v in pairs(getTeammates()) do
+			local mag = (localchar.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
 			if mag <= closest then
 				if checkvis then 
 					rayparams.FilterDescendantsInstances = {lplr.Character}
@@ -202,6 +242,7 @@ runcode(function()
 		["InventoryController"] = Flamework.resolveDependency("client/controllers/global/inventory/inventory-controller@InventoryController"),
 		["LobbyClientEvents"] = require(repstorage.rbxts_include.node_modules["@easy-games"].lobby.out.client.events).LobbyClientEvents,
 		["MatchManagerController"] = Flamework.resolveDependency("@easy-games/minigame-engine:client/controllers/match/match-manager-controller@MatchManagerController"),
+		["Networking"] = require(repstorage.TS.networking),
 		["sprintTable"] = Flamework.resolveDependency("client/controllers/global/movement/sprint-controller@SprintController")
 	}
 end)
@@ -231,9 +272,26 @@ end)
 
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	uninjectflag = true
-end
+end)
 
+GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
+GuiLibrary["RemoveObject"]("ReachOptionsButton")
+GuiLibrary["RemoveObject"]("BlinkOptionsButton")
+GuiLibrary["RemoveObject"]("FlyOptionsButton")
+GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
+GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
+GuiLibrary["RemoveObject"]("KillauraOptionsButton")
+GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
+GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
+GuiLibrary["RemoveObject"]("PhaseOptionsButton")
+GuiLibrary["RemoveObject"]("SpiderOptionsButton")
+GuiLibrary["RemoveObject"]("SpeedOptionsButton")
+GuiLibrary["RemoveObject"]("SpinBotOptionsButton")
+GuiLibrary["RemoveObject"]("SwimOptionsButton")
+GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
+GuiLibrary["RemoveObject"]("GravityOptionsButton")
 GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
+GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 runcode(function()
 	local SilentAim = {["Enabled"] = false}
 	local SilentAimFOV = {["Value"] = 0}
@@ -355,6 +413,28 @@ runcode(function()
 		if ESPFolder:FindFirstChild(plr.Name) then
 			ESPFolder[plr.Name]:Remove()
 		end
+		if espfolderdrawing[plr.Name] then
+			pcall(function()
+				pcall(function()
+					espfolderdrawing[plr.Name].Quad1:Remove()
+					espfolderdrawing[plr.Name].Quad2:Remove()
+					espfolderdrawing[plr.Name].Quad3:Remove()
+					espfolderdrawing[plr.Name].Quad4:Remove()
+				end)
+				pcall(function()
+					espfolderdrawing[plr.Name].Head:Remove()
+					espfolderdrawing[plr.Name].Head2:Remove()
+					espfolderdrawing[plr.Name].Torso:Remove()
+					espfolderdrawing[plr.Name].Torso2:Remove()
+					espfolderdrawing[plr.Name].Torso3:Remove()
+					espfolderdrawing[plr.Name].LeftArm:Remove()
+					espfolderdrawing[plr.Name].RightArm:Remove()
+					espfolderdrawing[plr.Name].LeftLeg:Remove()
+					espfolderdrawing[plr.Name].RightLeg:Remove()
+				end)
+				espfolderdrawing[plr.Name] = nil
+			end)
+		end
 	end)
 
 	local function floorpos(pos)
@@ -363,6 +443,7 @@ runcode(function()
 
 	local ESPColor = {["Value"] = 0.44}
 	local ESPHealthBar = {["Enabled"] = false}
+	local ESPMethod = {["Value"] = "2D"}
 	local ESPDrawing = {["Enabled"] = false}
 	local ESPTeammates = {["Enabled"] = true}
 	local ESPAlive = {["Enabled"] = false}
@@ -373,120 +454,375 @@ runcode(function()
 				RunLoops:BindToRenderStep("ESP", 500, function()
 					for i,plr in pairs(players:GetChildren()) do
 						local thing
-						if ESPFolder:FindFirstChild(plr.Name) then
-							thing = ESPFolder[plr.Name]
-							thing.Visible = false
-							thing.Line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-							thing.Line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-							thing.Line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-							thing.Line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-						else
-							thing = Instance.new("Frame")
-							thing.BackgroundTransparency = 1
-							thing.BorderSizePixel = 0
-							thing.Visible = false
-							thing.Name = plr.Name
-							thing.Parent = ESPFolder
-							local line1 = Instance.new("Frame")
-							line1.BorderSizePixel = 0
-							line1.Name = "Line1"
-							line1.ZIndex = 2
-							line1.Size = UDim2.new(1, -2, 0, 1)
-							line1.Position = UDim2.new(0, 1, 0, 1)
-							line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-							line1.Parent = thing
-							local line2 = Instance.new("Frame")
-							line2.BorderSizePixel = 0
-							line2.Name = "Line2"
-							line2.Size = UDim2.new(1, -2, 0, 1)
-							line2.ZIndex = 2
-							line2.Position = UDim2.new(0, 1, 1, -2)
-							line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-							line2.Parent = thing
-							local line3 = Instance.new("Frame")
-							line3.BorderSizePixel = 0
-							line3.Name = "Line3"
-							line3.Size = UDim2.new(0, 1, 1, -2)
-							line3.Position = UDim2.new(0, 1, 0, 1)
-							line3.ZIndex = 2
-							line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-							line3.Parent = thing
-							local line4 = Instance.new("Frame")
-							line4.BorderSizePixel = 0
-							line4.Name = "Line4"
-							line4.Size = UDim2.new(0, 1, 1, -2)
-							line4.Position = UDim2.new(1, -2, 0, 1)
-							line4.ZIndex = 2
-							line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-							line4.Parent = thing
-							local line1clone = line1:Clone()
-							line1clone.ZIndex = 1
-							line1clone.Size = UDim2.new(1, 0, 0, 3)
-							line1clone.BackgroundTransparency = 0.5
-							line1clone.Position = UDim2.new(0, 0, 0, 0)
-							line1clone.BackgroundColor3 = Color3.new(0, 0, 0)
-							line1clone.Parent = thing
-							local line2clone = line2:Clone()
-							line2clone.ZIndex = 1
-							line2clone.Size = UDim2.new(1, 0, 0, 3)
-							line2clone.BackgroundTransparency = 0.5
-							line2clone.Position = UDim2.new(0, 0, 1, -3)
-							line2clone.BackgroundColor3 = Color3.new(0, 0, 0)
-							line2clone.Parent = thing
-							local line3clone = line3:Clone()
-							line3clone.ZIndex = 1
-							line3clone.Size = UDim2.new(0, 3, 1, 0)
-							line3clone.BackgroundTransparency = 0.5
-							line3clone.Position = UDim2.new(0, 0, 0, 0)
-							line3clone.BackgroundColor3 = Color3.new(0, 0, 0)
-							line3clone.Parent = thing
-							local line4clone = line4:Clone()
-							line4clone.ZIndex = 1
-							line4clone.Size = UDim2.new(0, 3, 1, 0)
-							line4clone.BackgroundTransparency = 0.5
-							line4clone.Position = UDim2.new(1, -3, 0, 0)
-							line4clone.BackgroundColor3 = Color3.new(0, 0, 0)
-							line4clone.Parent = thing
-							local healthline = Instance.new("Frame")
-							healthline.BorderSizePixel = 0
-							healthline.Name = "HealthLineMain"
-							healthline.ZIndex = 2
-							healthline.AnchorPoint = Vector2.new(0, 1)
-							healthline.Visible = ESPHealthBar["Enabled"]
-							healthline.Size = UDim2.new(0, 1, 1, -2)
-							healthline.Position = UDim2.new(0, -4, 1, -1)
-							healthline.BackgroundColor3 = Color3.new(0, 1, 0)
-							healthline.Parent = thing
-							local healthlineclone = healthline:Clone()
-							healthlineclone.ZIndex = 1
-							healthlineclone.AnchorPoint = Vector2.new(0, 0)
-							healthlineclone.Size = UDim2.new(0, 3, 1, 0)
-							healthlineclone.BackgroundTransparency = 0.5
-							healthlineclone.Visible = ESPHealthBar["Enabled"]
-							healthlineclone.Name = "HealthLineBKG"
-							healthlineclone.Position = UDim2.new(0, -5, 0, 0)
-							healthlineclone.BackgroundColor3 = Color3.new(0, 0, 0)
-							healthlineclone.Parent = thing
-						end
-						
-						local aliveplr = isAlive(plr, ESPAlive["Enabled"])
-						if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
-							local plrattr = br["EntityService"]:getLivingEntityById(plr:GetAttribute("LivingEntityID"))
-							plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100}
-							local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
-							local rootSize = (aliveplr.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-							local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-							local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-							rootPos = rootPos
-							if rootVis then
-								if ESPHealthBar["Enabled"] then
-									local color = HealthbarColorTransferFunction(plrattr.health / plrattr.maxHealth)
-									thing.HealthLineMain.BackgroundColor3 = color
-									thing.HealthLineMain.Size = UDim2.new(0, 1, math.clamp(plrattr.health / plrattr.maxHealth, 0, 1), (math.clamp(plrattr.health / plrattr.maxHealth, 0, 1) == 0 and 0 or -2))
+						if ESPDrawing["Enabled"] then 
+							if ESPMethod["Value"] == "2D" then
+								if espfolderdrawing[plr.Name] then
+									thing = espfolderdrawing[plr.Name]
+									thing.Quad1.Visible = false
+									thing.Quad1.Color = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									thing.Quad2.Visible = false
+									thing.Quad3.Visible = false
+									thing.Quad4.Visible = false
+								else
+									espfolderdrawing[plr.Name] = {}
+									espfolderdrawing[plr.Name].Quad1 = Drawing.new("Quad")
+									espfolderdrawing[plr.Name].Quad1.Thickness = 1
+									espfolderdrawing[plr.Name].Quad1.ZIndex = 2
+									espfolderdrawing[plr.Name].Quad1.Color = Color3.new(1, 1, 1)
+									espfolderdrawing[plr.Name].Quad2 = Drawing.new("Quad")
+									espfolderdrawing[plr.Name].Quad2.Thickness = 2
+									espfolderdrawing[plr.Name].Quad2.ZIndex = 1
+									espfolderdrawing[plr.Name].Quad2.Color = Color3.new(0, 0, 0)
+									espfolderdrawing[plr.Name].Quad3 = Drawing.new("Line")
+									espfolderdrawing[plr.Name].Quad3.Thickness = 1
+									espfolderdrawing[plr.Name].Quad3.ZIndex = 2
+									espfolderdrawing[plr.Name].Quad3.Color = Color3.new(0, 0, 0)
+									espfolderdrawing[plr.Name].Quad4 = Drawing.new("Line")
+									espfolderdrawing[plr.Name].Quad4.Thickness = 2
+									espfolderdrawing[plr.Name].Quad4.ZIndex = 1
+									espfolderdrawing[plr.Name].Quad4.Color = Color3.new(0, 0, 0)
+									thing = espfolderdrawing[plr.Name]
 								end
-								thing.Visible = rootVis
-								thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
-								thing.Position = UDim2.new(0, rootPos.X - thing.Size.X.Offset / 2, 0, (rootPos.Y - thing.Size.Y.Offset / 2) - 36)
+
+								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
+								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									local plrattr = br["EntityService"]:getLivingEntityById(plr:GetAttribute("LivingEntityID"))
+									plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100}
+									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
+									local rootSize = (aliveplr.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
+									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									rootPos = rootPos
+									if rootVis then
+										--thing.Visible = rootVis
+										local sizex, sizey = (rootSize / rootPos.Z), (headPos.Y - legPos.Y) 
+										local posx, posy = (rootPos.X - sizex / 2),  ((rootPos.Y - sizey / 2))
+										if ESPHealthBar["Enabled"] then
+											local color = HealthbarColorTransferFunction(plrattr.health / plrattr.maxHealth)
+											thing.Quad3.Color = color
+											thing.Quad3.Visible = true
+											thing.Quad4.From = floorpos(Vector2.new(posx - 4, posy + 1))
+											thing.Quad4.To = floorpos(Vector2.new(posx - 4, posy + sizey - 1))
+											thing.Quad4.Visible = true
+											local healthposy = sizey * math.clamp(plrattr.health / plrattr.maxHealth, 0, 1)
+											thing.Quad3.From = floorpos(Vector2.new(posx - 4, posy + sizey - (sizey - healthposy)))
+											thing.Quad3.To = floorpos(Vector2.new(posx - 4, posy))
+											--thing.HealthLineMain.Size = UDim2.new(0, 1, math.clamp(plr.Humanoid.Health / plr.Humanoid.MaxHealth, 0, 1), (math.clamp(plr.Humanoid.Health / plr.Humanoid.MaxHealth, 0, 1) == 0 and 0 or -2))
+										end
+										thing.Quad1.PointA = floorpos(Vector2.new(posx + sizex, posy))
+										thing.Quad1.PointB = floorpos(Vector2.new(posx, posy))
+										thing.Quad1.PointC = floorpos(Vector2.new(posx, posy + sizey))
+										thing.Quad1.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
+										thing.Quad1.Visible = true
+										thing.Quad2.PointA = floorpos(Vector2.new(posx + sizex, posy))
+										thing.Quad2.PointB = floorpos(Vector2.new(posx, posy))
+										thing.Quad2.PointC = floorpos(Vector2.new(posx, posy + sizey))
+										thing.Quad2.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
+										thing.Quad2.Visible = true
+									end
+								end
+							else
+								if espfolderdrawing[plr.Name] then
+									thing = espfolderdrawing[plr.Name]
+									for linenum, line in pairs(thing) do
+										line.Color = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+										line.Visible = false
+									end
+								else
+									thing = {}
+									thing.Head = Drawing.new("Line")
+									thing.Head2 = Drawing.new("Line")
+									thing.Torso = Drawing.new("Line")
+									thing.Torso2 = Drawing.new("Line")
+									thing.Torso3 = Drawing.new("Line")
+									thing.LeftArm = Drawing.new("Line")
+									thing.RightArm = Drawing.new("Line")
+									thing.LeftLeg = Drawing.new("Line")
+									thing.RightLeg = Drawing.new("Line")
+									espfolderdrawing[plr.Name] = thing
+								end
+								
+								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
+								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									local rootPos, rootVis = cam:WorldToViewportPoint(plr.HumanoidRootPart.Position)
+									local rigcheck = aliveplr.Humanoid.RigType == Enum.HumanoidRigType.R6
+									if rootVis and plr.Character:FindFirstChild((rigcheck and "Torso" or "UpperTorso")) and plr.Character:FindFirstChild((rigcheck and "Left Arm" or "LeftHand")) and plr.Character:FindFirstChild((rigcheck and "Right Arm" or "RightHand")) and plr.Character:FindFirstChild((rigcheck and "Left Leg" or "LeftFoot")) and plr.Character:FindFirstChild((rigcheck and "Right Leg" or "RightFoot")) and plr.Character:FindFirstChild("Head") then
+										local head = CalculateObjectPosition((aliveplr.Head.CFrame).p)
+										local headfront = CalculateObjectPosition((aliveplr.Head.CFrame * CFrame.new(0, 0, -0.5)).p)
+										local toplefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-1.5, 0.8, 0)).p)
+										local toprighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(1.5, 0.8, 0)).p)
+										local toptorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, 0.8, 0)).p)
+										local bottomtorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										local bottomlefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-0.5, -0.8, 0)).p)
+										local bottomrighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0.5, -0.8, 0)).p)
+										local leftarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Arm" or "LeftHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										local rightarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Arm" or "RightHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										local leftleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Leg" or "LeftFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										local rightleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Leg" or "RightFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										thing.Torso.From = toplefttorso
+										thing.Torso.To = toprighttorso
+										thing.Torso.Visible = true
+										thing.Torso2.From = toptorso
+										thing.Torso2.To = bottomtorso
+										thing.Torso2.Visible = true
+										thing.Torso3.From = bottomlefttorso
+										thing.Torso3.To = bottomrighttorso
+										thing.Torso3.Visible = true
+										thing.LeftArm.From = toplefttorso
+										thing.LeftArm.To = leftarm
+										thing.LeftArm.Visible = true
+										thing.RightArm.From = toprighttorso
+										thing.RightArm.To = rightarm
+										thing.RightArm.Visible = true
+										thing.LeftLeg.From = bottomlefttorso
+										thing.LeftLeg.To = leftleg
+										thing.LeftLeg.Visible = true
+										thing.RightLeg.From = bottomrighttorso
+										thing.RightLeg.To = rightleg
+										thing.RightLeg.Visible = true
+										thing.Head.From = toptorso
+										thing.Head.To = head
+										thing.Head.Visible = true
+										thing.Head2.From = head
+										thing.Head2.To = headfront
+										thing.Head2.Visible = true
+										--[[CalculateLine(toplefttorso, toprighttorso, thing.TopTorsoLine)
+										CalculateLine(toptorso, bottomtorso, thing.MiddleTorsoLine)
+										CalculateLine(bottomlefttorso, bottomrighttorso, thing.BottomTorsoLine)
+										CalculateLine(toplefttorso, leftarm, thing.LeftArm)
+										CalculateLine(toprighttorso, rightarm, thing.RightArm)
+										CalculateLine(bottomlefttorso, leftleg, thing.LeftLeg)
+										CalculateLine(bottomrighttorso, rightleg, thing.RightLeg)
+										CalculateLine(toptorso, head, thing.Head)
+										CalculateLine(head, headfront, thing.HeadForward)]]
+									end
+								end
+							end
+						else
+							if ESPMethod["Value"] == "2D" then
+								if ESPFolder:FindFirstChild(plr.Name) then
+									thing = ESPFolder[plr.Name]
+									thing.Visible = false
+									thing.Line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									thing.Line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									thing.Line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									thing.Line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+								else
+									thing = Instance.new("Frame")
+									thing.BackgroundTransparency = 1
+									thing.BorderSizePixel = 0
+									thing.Visible = false
+									thing.Name = plr.Name
+									thing.Parent = ESPFolder
+									local line1 = Instance.new("Frame")
+									line1.BorderSizePixel = 0
+									line1.Name = "Line1"
+									line1.ZIndex = 2
+									line1.Size = UDim2.new(1, -2, 0, 1)
+									line1.Position = UDim2.new(0, 1, 0, 1)
+									line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									line1.Parent = thing
+									local line2 = Instance.new("Frame")
+									line2.BorderSizePixel = 0
+									line2.Name = "Line2"
+									line2.Size = UDim2.new(1, -2, 0, 1)
+									line2.ZIndex = 2
+									line2.Position = UDim2.new(0, 1, 1, -2)
+									line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									line2.Parent = thing
+									local line3 = Instance.new("Frame")
+									line3.BorderSizePixel = 0
+									line3.Name = "Line3"
+									line3.Size = UDim2.new(0, 1, 1, -2)
+									line3.Position = UDim2.new(0, 1, 0, 1)
+									line3.ZIndex = 2
+									line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									line3.Parent = thing
+									local line4 = Instance.new("Frame")
+									line4.BorderSizePixel = 0
+									line4.Name = "Line4"
+									line4.Size = UDim2.new(0, 1, 1, -2)
+									line4.Position = UDim2.new(1, -2, 0, 1)
+									line4.ZIndex = 2
+									line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									line4.Parent = thing
+									local line1clone = line1:Clone()
+									line1clone.ZIndex = 1
+									line1clone.Size = UDim2.new(1, 0, 0, 3)
+									line1clone.BackgroundTransparency = 0.5
+									line1clone.Position = UDim2.new(0, 0, 0, 0)
+									line1clone.BackgroundColor3 = Color3.new(0, 0, 0)
+									line1clone.Parent = thing
+									local line2clone = line2:Clone()
+									line2clone.ZIndex = 1
+									line2clone.Size = UDim2.new(1, 0, 0, 3)
+									line2clone.BackgroundTransparency = 0.5
+									line2clone.Position = UDim2.new(0, 0, 1, -3)
+									line2clone.BackgroundColor3 = Color3.new(0, 0, 0)
+									line2clone.Parent = thing
+									local line3clone = line3:Clone()
+									line3clone.ZIndex = 1
+									line3clone.Size = UDim2.new(0, 3, 1, 0)
+									line3clone.BackgroundTransparency = 0.5
+									line3clone.Position = UDim2.new(0, 0, 0, 0)
+									line3clone.BackgroundColor3 = Color3.new(0, 0, 0)
+									line3clone.Parent = thing
+									local line4clone = line4:Clone()
+									line4clone.ZIndex = 1
+									line4clone.Size = UDim2.new(0, 3, 1, 0)
+									line4clone.BackgroundTransparency = 0.5
+									line4clone.Position = UDim2.new(1, -3, 0, 0)
+									line4clone.BackgroundColor3 = Color3.new(0, 0, 0)
+									line4clone.Parent = thing
+									local healthline = Instance.new("Frame")
+									healthline.BorderSizePixel = 0
+									healthline.Name = "HealthLineMain"
+									healthline.ZIndex = 2
+									healthline.AnchorPoint = Vector2.new(0, 1)
+									healthline.Visible = ESPHealthBar["Enabled"]
+									healthline.Size = UDim2.new(0, 1, 1, -2)
+									healthline.Position = UDim2.new(0, -4, 1, -1)
+									healthline.BackgroundColor3 = Color3.new(0, 1, 0)
+									healthline.Parent = thing
+									local healthlineclone = healthline:Clone()
+									healthlineclone.ZIndex = 1
+									healthlineclone.AnchorPoint = Vector2.new(0, 0)
+									healthlineclone.Size = UDim2.new(0, 3, 1, 0)
+									healthlineclone.BackgroundTransparency = 0.5
+									healthlineclone.Visible = ESPHealthBar["Enabled"]
+									healthlineclone.Name = "HealthLineBKG"
+									healthlineclone.Position = UDim2.new(0, -5, 0, 0)
+									healthlineclone.BackgroundColor3 = Color3.new(0, 0, 0)
+									healthlineclone.Parent = thing
+								end
+								
+								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
+								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									local plrattr = br["EntityService"]:getLivingEntityById(plr:GetAttribute("LivingEntityID"))
+									plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100}
+									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
+									local rootSize = (aliveplr.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
+									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									rootPos = rootPos
+									if rootVis then
+										if ESPHealthBar["Enabled"] then
+											local color = HealthbarColorTransferFunction(plrattr.health / plrattr.maxHealth)
+											thing.HealthLineMain.BackgroundColor3 = color
+											thing.HealthLineMain.Size = UDim2.new(0, 1, math.clamp(plrattr.health / plrattr.maxHealth, 0, 1), (math.clamp(plrattr.health / plrattr.maxHealth, 0, 1) == 0 and 0 or -2))
+										end
+										thing.Visible = rootVis
+										thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
+										thing.Position = UDim2.new(0, rootPos.X - thing.Size.X.Offset / 2, 0, (rootPos.Y - thing.Size.Y.Offset / 2) - 36)
+									end
+								end
+							end
+							if ESPMethod["Value"] == "Skeleton" then
+								if ESPFolder:FindFirstChild(plr.Name) then
+									thing = ESPFolder[plr.Name]
+									thing.Visible = false
+									for linenum, line in pairs(thing:GetChildren()) do
+										line.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									end
+								else
+									thing = Instance.new("Frame")
+									thing.BackgroundTransparency = 1
+									thing.BorderSizePixel = 0
+									thing.Visible = false
+									thing.Name = plr.Name
+									thing.Parent = ESPFolder
+									local line1 = Instance.new("Frame")
+									line1.BorderSizePixel = 0
+									line1.Name = "TopTorsoLine"
+									line1.AnchorPoint = Vector2.new(0.5, 0.5)
+									line1.ZIndex = 2
+									line1.Size = UDim2.new(0, 0, 0, 0)
+									line1.Position = UDim2.new(0, 0, 0, 0)
+									line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+									line1.Parent = thing
+									local line2 = line1:Clone()
+									line2.Name = "MiddleTorsoLine"
+									line2.Parent = thing
+									local line3 = line1:Clone()
+									line3.Name = "BottomTorsoLine"
+									line3.Parent = thing
+									local line4 = line1:Clone()
+									line4.Name = "LeftArm"
+									line4.Parent = thing
+									local line5 = line1:Clone()
+									line5.Name = "RightArm"
+									line5.Parent = thing
+									local line6 = line1:Clone()
+									line6.Name = "LeftLeg"
+									line6.Parent = thing
+									local line7 = line1:Clone()
+									line7.Name = "RightLeg"
+									line7.Parent = thing
+									local line8 = line1:Clone()
+									line8.Name = "Head"
+									line8.Parent = thing
+									local line9 = line1:Clone()
+									line9.Name = "HeadForward"
+									line9.Parent = thing
+								end
+								
+								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
+								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
+									local rigcheck = aliveplr.Humanoid.RigType == Enum.HumanoidRigType.R6
+									if rootVis and plr.Character:FindFirstChild((rigcheck and "Torso" or "UpperTorso")) and plr.Character:FindFirstChild((rigcheck and "Left Arm" or "LeftHand")) and plr.Character:FindFirstChild((rigcheck and "Right Arm" or "RightHand")) and plr.Character:FindFirstChild((rigcheck and "Left Leg" or "LeftFoot")) and plr.Character:FindFirstChild((rigcheck and "Right Leg" or "RightFoot")) and plr.Character:FindFirstChild("Head") then
+										thing.Visible = true
+										local head = CalculateObjectPosition((aliveplr.Head.CFrame).p)
+										local headfront = CalculateObjectPosition((aliveplr.Head.CFrame * CFrame.new(0, 0, -0.5)).p)
+										local toplefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-1.5, 0.8, 0)).p)
+										local toprighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(1.5, 0.8, 0)).p)
+										local toptorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, 0.8, 0)).p)
+										local bottomtorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										local bottomlefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-0.5, -0.8, 0)).p)
+										local bottomrighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0.5, -0.8, 0)).p)
+										local leftarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Arm" or "LeftHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										local rightarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Arm" or "RightHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										local leftleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Leg" or "LeftFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										local rightleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Leg" or "RightFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										CalculateLine(toplefttorso, toprighttorso, thing.TopTorsoLine)
+										CalculateLine(toptorso, bottomtorso, thing.MiddleTorsoLine)
+										CalculateLine(bottomlefttorso, bottomrighttorso, thing.BottomTorsoLine)
+										CalculateLine(toplefttorso, leftarm, thing.LeftArm)
+										CalculateLine(toprighttorso, rightarm, thing.RightArm)
+										CalculateLine(bottomlefttorso, leftleg, thing.LeftLeg)
+										CalculateLine(bottomrighttorso, rightleg, thing.RightLeg)
+										CalculateLine(toptorso, head, thing.Head)
+										CalculateLine(head, headfront, thing.HeadForward)
+									end
+								end
+							end
+							if ESPMethod["Value"] == "VideoFrame" then
+								if ESPFolder:FindFirstChild(plr.Name) then
+									thing = ESPFolder[plr.Name]
+									thing.Visible = false
+								else
+									thing = Instance.new("ImageLabel")
+									thing.BackgroundTransparency = 1
+									thing.BorderSizePixel = 0
+									thing.Image = getcustomassetfunc("honestlyquiteincredible.png")
+									thing.Visible = false
+									thing.Name = plr.Name
+									thing.Parent = ESPFolder
+								end
+								
+								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
+								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
+									local rootSize = (aliveplr.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
+									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									rootPos = rootPos
+									if rootVis then
+										thing.Visible = rootVis
+										thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
+										thing.Position = UDim2.new(0, rootPos.X - thing.Size.X.Offset / 2, 0, (rootPos.Y - thing.Size.Y.Offset / 2) - 36)
+									end
+								end
 							end
 						end
 					end
@@ -494,9 +830,59 @@ runcode(function()
 			else
 				RunLoops:UnbindFromRenderStep("ESP") 
 				ESPFolder:ClearAllChildren()
+				for i,v in pairs(espfolderdrawing) do 
+					pcall(function()
+						espfolderdrawing[i].Quad1:Remove()
+						espfolderdrawing[i].Quad2:Remove()
+						espfolderdrawing[i].Quad3:Remove()
+						espfolderdrawing[i].Quad4:Remove()
+						espfolderdrawing[i] = nil
+					end)
+					pcall(function()
+						espfolderdrawing[i].Head:Remove()
+						espfolderdrawing[i].Head2:Remove()
+						espfolderdrawing[i].Torso:Remove()
+						espfolderdrawing[i].Torso2:Remove()
+						espfolderdrawing[i].Torso3:Remove()
+						espfolderdrawing[i].LeftArm:Remove()
+						espfolderdrawing[i].RightArm:Remove()
+						espfolderdrawing[i].LeftLeg:Remove()
+						espfolderdrawing[i].RightLeg:Remove()
+						espfolderdrawing[i] = nil
+					end)
+				end
 			end
 		end,
 		["HoverText"] = "Extra Sensory Perception\nRenders an ESP on players."
+	})
+	ESPMethod = ESP.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"2D", "Skeleton", "VideoFrame"},
+		["Function"] = function(val)
+			ESPFolder:ClearAllChildren()
+			for i,v in pairs(espfolderdrawing) do 
+				pcall(function()
+					espfolderdrawing[i].Quad1:Remove()
+					espfolderdrawing[i].Quad2:Remove()
+					espfolderdrawing[i].Quad3:Remove()
+					espfolderdrawing[i].Quad4:Remove()
+					espfolderdrawing[i] = nil
+				end)
+				pcall(function()
+					espfolderdrawing[i].Head:Remove()
+					espfolderdrawing[i].Head2:Remove()
+					espfolderdrawing[i].Torso:Remove()
+					espfolderdrawing[i].Torso2:Remove()
+					espfolderdrawing[i].Torso3:Remove()
+					espfolderdrawing[i].LeftArm:Remove()
+					espfolderdrawing[i].RightArm:Remove()
+					espfolderdrawing[i].LeftLeg:Remove()
+					espfolderdrawing[i].RightLeg:Remove()
+					espfolderdrawing[i] = nil
+				end)
+			end
+			ESPHealthBar["Object"].Visible = (val == "2D")
+		end,
 	})
 	ESPColor = ESP.CreateColorSlider({
 		["Name"] = "Player Color", 
@@ -523,9 +909,102 @@ runcode(function()
 		["Function"] = function() end,
 		["Default"] = true
 	})
+	ESPDrawing = ESP.CreateToggle({
+		["Name"] = "Drawing",
+		["Function"] = function() 
+			ESPFolder:ClearAllChildren()
+			for i,v in pairs(espfolderdrawing) do 
+				pcall(function()
+					espfolderdrawing[i].Quad1:Remove()
+					espfolderdrawing[i].Quad2:Remove()
+					espfolderdrawing[i].Quad3:Remove()
+					espfolderdrawing[i].Quad4:Remove()
+					espfolderdrawing[i] = nil
+				end)
+				pcall(function()
+					espfolderdrawing[i].Head:Remove()
+					espfolderdrawing[i].Head2:Remove()
+					espfolderdrawing[i].Torso:Remove()
+					espfolderdrawing[i].Torso2:Remove()
+					espfolderdrawing[i].Torso3:Remove()
+					espfolderdrawing[i].LeftArm:Remove()
+					espfolderdrawing[i].RightArm:Remove()
+					espfolderdrawing[i].LeftLeg:Remove()
+					espfolderdrawing[i].RightLeg:Remove()
+					espfolderdrawing[i] = nil
+				end)
+			end
+		end,
+	})
 	ESPAlive = ESP.CreateToggle({
 		["Name"] = "Alive Check",
 		["Function"] = function() end
+	})
+end)
+
+GuiLibrary["RemoveObject"]("ArrowsOptionsButton")
+runcode(function()
+	local ArrowsFolder = Instance.new("Folder")
+	ArrowsFolder.Name = "ArrowsFolder"
+	ArrowsFolder.Parent = GuiLibrary["MainGui"]
+	players.PlayerRemoving:connect(function(plr)
+		if ArrowsFolder:FindFirstChild(plr.Name) then
+			ArrowsFolder[plr.Name]:Remove()
+		end
+	end)
+	local ArrowsColor = {["Value"] = 0.44}
+	local ArrowsTeammate = {["Enabled"] = true}
+	local Arrows = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Arrows", 
+		["Function"] = function(callback) 
+			if callback then
+				RunLoops:BindToRenderStep("Arrows", 500, function()
+					for i,plr in pairs(players:GetChildren()) do
+						local thing
+						if ArrowsFolder:FindFirstChild(plr.Name) then
+							thing = ArrowsFolder[plr.Name]
+							thing.Visible = false
+							thing.ImageColor3 = getPlayerColor(plr) or Color3.fromHSV(ArrowsColor["Hue"], ArrowsColor["Sat"], ArrowsColor["Value"])
+						else
+							thing = Instance.new("ImageLabel")
+							thing.BackgroundTransparency = 1
+							thing.BorderSizePixel = 0
+							thing.Size = UDim2.new(0, 256, 0, 256)
+							thing.AnchorPoint = Vector2.new(0.5, 0.5)
+							thing.Position = UDim2.new(0.5, 0, 0.5, 0)
+							thing.Visible = false
+							thing.Image = getcustomassetfunc("vape/assets/ArrowIndicator.png")
+							thing.Name = plr.Name
+							thing.Parent = ArrowsFolder
+						end
+						
+						local aliveplr = isAlive(plr)
+						if aliveplr and plr ~= lplr and (ArrowsTeammate["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+							local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
+							local camcframeflat = CFrame.new(cam.CFrame.p, cam.CFrame.p + cam.CFrame.lookVector * Vector3.new(1, 0, 1))
+							local pointRelativeToCamera = camcframeflat:pointToObjectSpace(aliveplr.HumanoidRootPart.Position)
+							local unitRelativeVector = (pointRelativeToCamera * Vector3.new(1, 0, 1)).unit
+							local rotation = math.atan2(unitRelativeVector.Z, unitRelativeVector.X)
+							thing.Visible = not rootVis
+							thing.Rotation = math.deg(rotation)
+						end
+					end
+				end)
+			else
+				RunLoops:UnbindFromRenderStep("Arrows") 
+				ArrowsFolder:ClearAllChildren()
+			end
+		end, 
+		["HoverText"] = "Draws arrows on screen when entities\nare out of your field of view."
+	})
+	ArrowsColor = Arrows.CreateColorSlider({
+		["Name"] = "Player Color", 
+		["Function"] = function(val) end,
+	})
+	ArrowsTeammate = Arrows.CreateToggle({
+		["Name"] = "Teammate",
+		["Function"] = function() end,
+		["Default"] = true
 	})
 end)
 
@@ -573,8 +1052,8 @@ runcode(function()
 
 								local aliveplr = isAlive(plr, TracersAlive["Enabled"])
 								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
-									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
-									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
+									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.Character.HumanoidRootPart).Position)
+									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.Character.HumanoidRootPart).Position)
 									if rootScrPos.Z < 0 then
 										tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
 									end
@@ -610,8 +1089,8 @@ runcode(function()
 								
 								local aliveplr = isAlive(plr, TracersAlive["Enabled"])
 							if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
-									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
-									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
+									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.Character.HumanoidRootPart).Position)
+									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.Character.HumanoidRootPart).Position)
 									if rootScrPos.Z < 0 then
 										tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
 									end
@@ -686,6 +1165,214 @@ runcode(function()
 		["Name"] = "Alive Check",
 		["Function"] = function() end
 	})
+end)
+
+GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
+runcode(function()
+	runcode(function()
+		local function removeTags(str)
+			str = str:gsub("<br%s*/>", "\n")
+			return (str:gsub("<[^<>]->", ""))
+		end
+	
+		local function floorpos(pos)
+			return Vector2.new(math.floor(pos.X), math.floor(pos.Y))
+		end
+	
+		local NameTagsFolder = Instance.new("Folder")
+		NameTagsFolder.Name = "NameTagsFolder"
+		NameTagsFolder.Parent = GuiLibrary["MainGui"]
+		local nametagsfolderdrawing = {}
+		players.PlayerRemoving:connect(function(plr)
+			if NameTagsFolder:FindFirstChild(plr.Name) then
+				NameTagsFolder[plr.Name]:Remove()
+			end
+			if nametagsfolderdrawing[plr.Name] then 
+				pcall(function()
+					nametagsfolderdrawing[plr.Name].Text:Remove()
+					nametagsfolderdrawing[plr.Name].BG:Remove()
+					nametagsfolderdrawing[plr.Name] = nil
+				end)
+			end
+		end)
+		local NameTagsColor = {["Value"] = 0.44}
+		local NameTagsDisplayName = {["Enabled"] = false}
+		local NameTagsHealth = {["Enabled"] = false}
+		local NameTagsDistance = {["Enabled"] = false}
+		local NameTagsBackground = {["Enabled"] = true}
+		local NameTagsScale = {["Value"] = 10}
+		local NameTagsFont = {["Value"] = "SourceSans"}
+		local NameTagsTeammates = {["Enabled"] = true}
+		local NameTagsAlive = {["Enabled"] = false}
+		local fontitems = {"SourceSans"}
+		local NameTags = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+			["Name"] = "NameTags", 
+			["Function"] = function(callback) 
+				if callback then
+					RunLoops:BindToRenderStep("NameTags", 500, function()
+						for i,plr in pairs(players:GetChildren()) do
+							local thing
+							local localchar = isAlive()
+							if NameTagsDrawing["Enabled"] then
+								if nametagsfolderdrawing[plr.Name] then
+									thing = nametagsfolderdrawing[plr.Name]
+									thing.Text.Visible = false
+									thing.BG.Visible = false
+								else
+									nametagsfolderdrawing[plr.Name] = {}
+									nametagsfolderdrawing[plr.Name].Text = Drawing.new("Text")
+									nametagsfolderdrawing[plr.Name].Text.Size = 17	
+									nametagsfolderdrawing[plr.Name].Text.Font = 0
+									nametagsfolderdrawing[plr.Name].Text.Text = ""
+									nametagsfolderdrawing[plr.Name].Text.ZIndex = 2
+									nametagsfolderdrawing[plr.Name].BG = Drawing.new("Square")
+									nametagsfolderdrawing[plr.Name].BG.Filled = true
+									nametagsfolderdrawing[plr.Name].BG.Transparency = 0.5
+									nametagsfolderdrawing[plr.Name].BG.Color = Color3.new(0, 0, 0)
+									nametagsfolderdrawing[plr.Name].BG.ZIndex = 1
+									thing = nametagsfolderdrawing[plr.Name]
+								end
+	
+								local aliveplr = isAlive(plr, NameTagsAlive["Enabled"])
+								if aliveplr and plr ~= lplr and (NameTagsTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									local headPos, headVis = cam:WorldToViewportPoint((aliveplr.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, aliveplr.Head.Size.Y + aliveplr.HumanoidRootPart.Size.Y, 0)).Position)
+									
+									if headVis then
+										local plrattr = br["EntityService"]:getLivingEntityById(plr:GetAttribute("LivingEntityID"))
+										plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100}
+										local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+										local blocksaway = math.floor(((localchar and localchar.HumanoidRootPart.Position or Vector3.new(0,0,0)) - aliveplr.HumanoidRootPart.Position).magnitude / 3)
+										local color = HealthbarColorTransferFunction(plrattr.health / plrattr.maxHealth)
+										thing.Text.Text = (NameTagsDistance["Enabled"] and entity.isAlive and '['..blocksaway..'] ' or '')..displaynamestr..(NameTagsHealth["Enabled"] and ' '..math.floor(plrattr.health).."" or '')
+										thing.Text.Size = 17 * (NameTagsScale["Value"] / 10)
+										thing.Text.Color = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
+										thing.Text.Visible = headVis
+										thing.Text.Font = (math.clamp((table.find(fontitems, NameTagsFont["Value"]) or 1) - 1, 0, 3))
+										thing.Text.Position = floorpos(Vector2.new(headPos.X - thing.Text.TextBounds.X / 2, (headPos.Y - thing.Text.TextBounds.Y)))
+										thing.BG.Visible = headVis and NameTagsBackground["Enabled"]
+										thing.BG.Size = floorpos(Vector2.new(thing.Text.TextBounds.X + 4, thing.Text.TextBounds.Y))
+										thing.BG.Position = floorpos(Vector2.new((headPos.X - 2) - thing.Text.TextBounds.X / 2, (headPos.Y - thing.Text.TextBounds.Y) + 1.5))
+									end
+								end
+							else
+								if NameTagsFolder:FindFirstChild(plr.Name) then
+									thing = NameTagsFolder[plr.Name]
+									thing.Visible = false
+								else
+									thing = Instance.new("TextLabel")
+									thing.BackgroundTransparency = 0.5
+									thing.BackgroundColor3 = Color3.new(0, 0, 0)
+									thing.BorderSizePixel = 0
+									thing.Visible = false
+									thing.RichText = true
+									thing.Name = plr.Name
+									thing.Font = Enum.Font.SourceSans
+									thing.TextSize = 14
+									thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
+									thing.Parent = NameTagsFolder
+								end
+									
+								local aliveplr = isAlive(plr, NameTagsAlive["Enabled"])
+								if aliveplr and plr ~= lplr and (NameTagsTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									local headPos, headVis = cam:WorldToViewportPoint((aliveplr.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, aliveplr.Head.Size.Y + aliveplr.HumanoidRootPart.Size.Y, 0)).Position)
+									headPos = headPos
+									
+									if headVis then
+										local plrattr = br["EntityService"]:getLivingEntityById(plr:GetAttribute("LivingEntityID"))
+										plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100}
+										local rawText = (NameTagsDistance["Enabled"] and localchar and "["..math.floor(((localchar and localchar.HumanoidRootPart.Position or Vector3.zero) - aliveplr.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plrattr.health) or "")
+										local color = HealthbarColorTransferFunction(plrattr.health / plrattr.maxHealth)
+										local modifiedText = (NameTagsDistance["Enabled"] and localchar and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor(((localchar and localchar.HumanoidRootPart.Position or Vector3.zero) - aliveplr.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plrattr.health).."</font>" or '')
+										local nametagSize = textservice:GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+										thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+										thing.Text = modifiedText
+										thing.Font = Enum.Font[NameTagsFont["Value"]]
+										thing.TextSize = 14 * (NameTagsScale["Value"] / 10)
+										thing.BackgroundTransparency = NameTagsBackground["Enabled"] and 0.5 or 1
+										thing.TextColor3 = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
+										thing.Visible = headVis
+										thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
+									end
+								end
+							end
+						end
+					end)
+				else
+					RunLoops:UnbindFromRenderStep("NameTags")
+					NameTagsFolder:ClearAllChildren()
+					for i,v in pairs(nametagsfolderdrawing) do 
+						pcall(function()
+							nametagsfolderdrawing[i].Text:Remove()
+							nametagsfolderdrawing[i].BG:Remove()
+							nametagsfolderdrawing[i] = nil
+						end)
+					end
+				end
+			end,
+			["HoverText"] = "Renders nametags on entities through walls."
+		})
+		for i,v in pairs(Enum.Font:GetEnumItems()) do 
+			if v.Name ~= "SourceSans" then 
+				table.insert(fontitems, v.Name)
+			end
+		end
+		NameTagsFont = NameTags.CreateDropdown({
+			["Name"] = "Font",
+			["List"] = fontitems,
+			["Function"] = function() end,
+		})
+		NameTagsColor = NameTags.CreateColorSlider({
+			["Name"] = "Player Color", 
+			["Function"] = function(val) end
+		})
+		NameTagsScale = NameTags.CreateSlider({
+			["Name"] = "Scale",
+			["Function"] = function(val) end,
+			["Default"] = 10,
+			["Min"] = 1,
+			["Max"] = 50
+		})
+		NameTagsBackground = NameTags.CreateToggle({
+			["Name"] = "Background", 
+			["Function"] = function() end,
+			["Default"] = true
+		})
+		NameTagsDisplayName = NameTags.CreateToggle({
+			["Name"] = "Use Display Name", 
+			["Function"] = function() end,
+			["Default"] = true
+		})
+		NameTagsHealth = NameTags.CreateToggle({
+			["Name"] = "Health", 
+			["Function"] = function() end
+		})
+		NameTagsDistance = NameTags.CreateToggle({
+			["Name"] = "Distance", 
+			["Function"] = function() end
+		})
+		NameTagsTeammates = NameTags.CreateToggle({
+			["Name"] = "Teammates", 
+			["Function"] = function() end,
+			["Default"] = true
+		})
+		NameTagsDrawing = NameTags.CreateToggle({
+			["Name"] = "Drawing",
+			["Function"] = function() 
+				NameTagsFolder:ClearAllChildren()
+				for i,v in pairs(nametagsfolderdrawing) do 
+					pcall(function()
+						nametagsfolderdrawing[i].Text:Remove()
+						nametagsfolderdrawing[i].BG:Remove()
+						nametagsfolderdrawing[i] = nil
+					end)
+				end
+			end,
+		})
+		NameTagsAlive = NameTags.CreateToggle({
+			["Name"] = "Alive Check",
+			["Function"] = function() end
+		})
+	end)
 end)
 
 runcode(function()
