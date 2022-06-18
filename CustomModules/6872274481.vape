@@ -3183,7 +3183,7 @@ runcode(function()
 									if obj and obj.Parent ~= nil then
 										if ((oldcloneroot and oldcloneroot.Position or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] and (nukerown["Enabled"] or obj:GetAttribute("PlacedByUserId") ~= lplr.UserId) then
 											local tool = (not nukerlegit["Enabled"]) and {Name = "wood_axe"} or getEquipped()["Object"]
-											if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] then
+											if (not nukerlegit["Enabled"]) or tool and bedwars["ItemTable"][tool.Name]["breakBlock"] then
 												bedwars["breakBlock"](obj.Position, nukereffects["Enabled"], getbestside(obj.Position), true)
 												local animation
 												if nukeranimation["Enabled"] then
@@ -3214,7 +3214,7 @@ runcode(function()
                                     if obj and bedwars["BlockController"]:isBlockBreakable({blockPosition = obj.Position / 3}, lplr) and obj.Parent ~= nil then
                                         if ((oldcloneroot and oldcloneroot.Position or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] then
 											local tool = (not nukerlegit["Enabled"]) and {Name = "wood_axe"} or getEquipped()["Object"]
-											if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] then
+											if (not nukerlegit["Enabled"]) or tool and bedwars["ItemTable"][tool.Name]["breakBlock"] then
 												local res, amount = getbestside(obj.Position)
 												local res2, amount2 = getbestside(obj.Position + Vector3.new(0, 0, 3))
 												bedwars["breakBlock"]((amount < amount2 and obj.Position or obj.Position + Vector3.new(0, 0, 3)), nukereffects["Enabled"], (amount < amount2 and res or res2))
