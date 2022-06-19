@@ -102,7 +102,8 @@ local function GetURL(scripturl)
 	end
 end
 local shalib = loadstring(GetURL("Libraries/sha.lua"))()
-local entity = loadstring(GetURL("Libraries/entityHandler.lua"))()
+shared.vapeentity = loadstring(GetURL("Libraries/entityHandler.lua"))()
+local entity = shared.vapeentity
 local whitelisted = {
 	players = {
 		"edbf7c4bd824bb17954c0fee8f108b6263a23d58e1dc500157513409cd9c55433ad43ea5c8bb121602fcd0eb0137d64805aaa8c597521298f5b53d69fa82014b", 
@@ -4806,7 +4807,13 @@ GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 
 runcode(function()
+	local function roundpos(vec)
+		return Vector3.new(math.round(vec.X / .5) * .65, math.round(vec.Y), math.round(vec.Z / .5) * .65)
+	end
+
 	local spiderspeed = {["Value"] = 0}
+	local spidermode = {["Value"] = "Normal"}
+	local spiderpart
 	local spiderconnection1
 	local spiderconnection2
 	Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -4825,26 +4832,56 @@ runcode(function()
 				end)
 				RunLoops:BindToHeartbeat("Spider", 1, function()
 					if entity.isAlive then
-						local vec = entity.character.Humanoid.MoveDirection.Unit * 2
-						local newray = getblock(entity.character.HumanoidRootPart.Position + (vec + Vector3.new(0, 0.1, 0)))
-						local newray2 = getblock(entity.character.HumanoidRootPart.Position + (vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)))
-						if spidergoinup and (not newray) and (not newray2) then
-							entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
-						end
-						spidergoinup = ((newray or newray2) and true or false)
-						if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false or holdingshift == false) then
-							entity.character.HumanoidRootPart.Velocity = Vector3.new(newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.X or 0, spiderspeed["Value"], newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.Z or 0)
+						if spidermode["Value"] == "Normal" then
+							local vec = entity.character.Humanoid.MoveDirection.Unit * 2
+							local newray = getblock(entity.character.HumanoidRootPart.Position + (vec + Vector3.new(0, 0.1, 0)))
+							local newray2 = getblock(entity.character.HumanoidRootPart.Position + (vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)))
+							if tostring(newray) == "bed" then newray = nil end 
+							if tostring(newray2) == "bed" then newray2 = nil end 
+							if spidergoinup and (not newray) and (not newray2) then
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
+							end
+							spidergoinup = ((newray or newray2) and true or false)
+							if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false or holdingshift == false) then
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.X or 0, spiderspeed["Value"], newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.Z or 0)
+							end
+						else
+							if not spiderpart then 
+								spiderpart = Instance.new("TrussPart")
+								spiderpart.Size = Vector3.new(2, 2, 2)
+								spiderpart.Transparency = 1
+								spiderpart.Anchored = true
+								spiderpart.Parent = cam
+							end
+							local vec = entity.character.HumanoidRootPart.CFrame.lookVector.Unit * 1.5
+							local vec2 = entity.character.HumanoidRootPart.CFrame.lookVector.Unit * .5
+							local newray2, newray2pos = getblock(entity.character.HumanoidRootPart.Position + (vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)))
+							if tostring(newray2) == "bed" then newray2 = nil end 
+							local newpos = newray2 and (newray2pos * 3) - roundpos(vec2) or Vector3.zero
+							spiderpart.Position = newpos
 						end
 					end
 				end)
 			else
 				if spiderconnection1 then spiderconnection1:Disconnect() end
 				if spiderconnection2 then spiderconnection2:Disconnect() end
+				if spiderpart then 
+					spiderpart:Remove()
+				end
 				RunLoops:UnbindFromHeartbeat("Spider")
 				holdingshift = false
 			end
 		end,
 		["HoverText"] = "Lets you climb up walls"
+	})
+	spidermode = Spider.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Normal", "Classic"},
+		["Function"] = function() 
+			if spiderpart then 
+				spiderpart:Remove()
+			end
+		end
 	})
 	spiderspeed = Spider.CreateSlider({
 		["Name"] = "Speed",
@@ -10290,48 +10327,36 @@ runcode(function()
 		["Name"] = "ChinaHat",
 		["Function"] = function(callback)
 			if callback then
-				task.spawn(function()
-					repeat
-						task.wait(0.3)
-						if (not ChinaHat["Enabled"]) then return end
-						if entity.isAlive then
-							if chinahattrail == nil or chinahattrail.Parent == nil then
-                                chinahattrail = Instance.new("Part")
-                                chinahattrail.CFrame = entity.character.Head.CFrame * CFrame.new(0, 1.1, 0)
-                                chinahattrail.Size = Vector3.new(3, 0.7, 3)
-                                chinahattrail.Name = "ChinaHat"
-                                chinahattrail.Material = Enum.Material.Neon
-								chinahattrail.Color = Color3.fromHSV(ChinaHatColor["Hue"], ChinaHatColor["Sat"], ChinaHatColor["Value"])
-                                chinahattrail.CanCollide = false
-                                chinahattrail.Transparency = 0.3
-                                local chinahatmesh = Instance.new("SpecialMesh")
-                                chinahatmesh.Parent = chinahattrail
-                                chinahatmesh.MeshType = "FileMesh"
-                                chinahatmesh.MeshId = "http://www.roblox.com/asset/?id=1778999"
-                                chinahatmesh.Scale = Vector3.new(3, 0.6, 3)
-                                local chinahatweld = Instance.new("WeldConstraint")
-								chinahatweld.Name = "WeldConstraint"
-                                chinahatweld.Parent = chinahattrail
-                                chinahatweld.Part0 = entity.character.Head
-                                chinahatweld.Part1 = chinahattrail
-								chinahattrail.Parent = workspace.Camera
-							else
-								chinahattrail.Parent = workspace.Camera
-								chinahattrail.CFrame = entity.character.Head.CFrame * CFrame.new(0, 1.1, 0)
-								chinahattrail.LocalTransparencyModifier = ((cam.CFrame.Position - cam.Focus.Position).Magnitude <= 0.6 and 1 or 0)
-								if chinahattrail:FindFirstChild("WeldConstraint") then
-									chinahattrail.WeldConstraint.Part0 = entity.character.Head
-								end
-							end
-						else
-							if chinahattrail then 
-								chinahattrail:Remove()
-								chinahattrail = nil
-							end
+				RunLoops:BindToHeartbeat("ChinaHat", 1, function()
+					if entity.isAlive then
+						if chinahattrail == nil or chinahattrail.Parent == nil then
+							chinahattrail = Instance.new("Part")
+							chinahattrail.CFrame = entity.character.Head.CFrame * CFrame.new(0, 1.1, 0)
+							chinahattrail.Size = Vector3.new(3, 0.7, 3)
+							chinahattrail.Name = "ChinaHat"
+							chinahattrail.Material = Enum.Material.Neon
+							chinahattrail.Color = Color3.fromHSV(ChinaHatColor["Hue"], ChinaHatColor["Sat"], ChinaHatColor["Value"])
+							chinahattrail.CanCollide = false
+							chinahattrail.Transparency = 0.3
+							local chinahatmesh = Instance.new("SpecialMesh")
+							chinahatmesh.Parent = chinahattrail
+							chinahatmesh.MeshType = "FileMesh"
+							chinahatmesh.MeshId = "http://www.roblox.com/asset/?id=1778999"
+							chinahatmesh.Scale = Vector3.new(3, 0.6, 3)
+							chinahattrail.Parent = workspace.Camera
 						end
-					until (not ChinaHat["Enabled"])
+						chinahattrail.CFrame = entity.character.Head.CFrame * CFrame.new(0, 1.1, 0)
+						chinahattrail.Velocity = Vector3.zero
+						chinahattrail.LocalTransparencyModifier = ((cam.CFrame.Position - cam.Focus.Position).Magnitude <= 0.6 and 1 or 0)
+					else
+						if chinahattrail then 
+							chinahattrail:Remove()
+							chinahattrail = nil
+						end
+					end
 				end)
 			else
+				RunLoops:UnbindFromHeartbeat("ChinaHat")
 				if chinahattrail then
 					chinahattrail:Remove()
 					chinahattrail = nil
