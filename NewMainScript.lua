@@ -731,6 +731,9 @@ onething3.Logo2.ImageTransparency = 0.5
 local onethinggrad = Instance.new("UIGradient")
 onethinggrad.Rotation = 90
 onethinggrad.Parent = onething
+local onethinggrad2 = Instance.new("UIGradient")
+onethinggrad2.Rotation = 90
+onethinggrad2.Parent = onething2
 local onetext = Instance.new("TextLabel")
 onetext.Parent = TextGui.GetCustomChildren()
 onetext.Size = UDim2.new(1, 0, 1, 0)
@@ -1258,6 +1261,10 @@ GuiLibrary["UpdateUI"] = function()
 		onethinggrad.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)),
 			ColorSequenceKeypoint.new(1, Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1))
+		})
+		onethinggrad2.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], (rainbowcolor2 == GuiLibrary["Settings"]["GUIObject"]["Color"] or (not textguigradient["Enabled"])) and 0 or 1, 1)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(rainbowcolor2, (rainbowcolor2 == GuiLibrary["Settings"]["GUIObject"]["Color"] or (not textguigradient["Enabled"])) and 0 or 1, 1))
 		})
 		onetext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		onecustomtext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
