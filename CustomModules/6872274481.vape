@@ -2485,9 +2485,7 @@ runcode(function()
 		["Name"] = "Phase",
 		["Function"] = function(callback)
 			if callback then
-				task.spawn(function()
-					repeat
-						task.wait(0.2)
+				RunLoops:BindToHeartbeat("Phase", 1, function()
 						if entity.isAlive and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
 							local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
 							local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
@@ -2527,6 +2525,7 @@ runcode(function()
 					end
 				end)
 			else
+				RunLoops:UnbindFromHeartbeat("Phase")
 				if phaseconnection then
 					phaseconnection:Disconnect()
 				end
