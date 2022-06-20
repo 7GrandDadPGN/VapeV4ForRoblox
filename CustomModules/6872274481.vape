@@ -2486,29 +2486,28 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				RunLoops:BindToHeartbeat("Phase", 1, function()
-						if entity.isAlive and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
-							local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
-							local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
-							local pos3 = entity.character.Head.CFrame.p
-							raycastparameters.FilterDescendantsInstances = {bedwarsblocks, collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
-							local newray = workspace:Raycast(pos3, entity.character.Humanoid.MoveDirection, raycastparameters)
-							if phasedelay <= tick() then
-								nocheck = false
-							end
-							if phasedelay2 <= tick() then
-								slowdownspeed = false
-							end
-							if newray and phasedelay <= tick() and phasedelay2 <= tick() and (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] and holdingshift or GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] == false) then
-								if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) then
-									phasedelay = tick() + 0.075
-									phasedelay2 = tick() + 0.1
-									slowdownspeed = true
-									nocheck = true
-									entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, (newray.Normal * -(3.5 * phasedist["Value"])))
-								end
+					if entity.isAlive and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
+						local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
+						local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
+						local pos3 = entity.character.Head.CFrame.p
+						raycastparameters.FilterDescendantsInstances = {bedwarsblocks, collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
+						local newray = workspace:Raycast(pos3, entity.character.Humanoid.MoveDirection, raycastparameters)
+						if phasedelay <= tick() then
+							nocheck = false
+						end
+						if phasedelay2 <= tick() then
+							slowdownspeed = false
+						end
+						if newray and phasedelay <= tick() and phasedelay2 <= tick() and (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] and holdingshift or GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] == false) then
+							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) then
+								phasedelay = tick() + 0.075
+								phasedelay2 = tick() + 0.1
+								slowdownspeed = true
+								nocheck = true
+								entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, (newray.Normal * -(3.5 * phasedist["Value"])))
 							end
 						end
-					until (not phase["Enabled"])
+					end
 				end)
 				phaseconnection = game:GetService("RunService").Stepped:connect(function()
 					if entity.isAlive and (nocheck ~= oldnocheck or nocheck) then
