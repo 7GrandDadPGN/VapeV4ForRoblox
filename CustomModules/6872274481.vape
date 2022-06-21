@@ -155,7 +155,7 @@ end)
 local AnticheatBypassNumbers = {
 	TPSpeed = 0.1,
 	TPCombat = 0.3,
-	TPLerp = 0.4,
+	TPLerp = 0.395,
 	TPCheck = 15
 }
 
