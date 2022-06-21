@@ -8852,6 +8852,7 @@ end)
 
 runcode(function()
 	local AnticheatBypassTransparent = {["Enabled"] = false}
+	local AnticheatBypassAlternate = {["Enabled"] = false}
 	local AnticheatBypassFlagCheck = {["Enabled"] = false}
 	local AnticheatBypassNotification = {["Enabled"] = false}
 	local AnticheatBypassAnimation = {["Enabled"] = true}
@@ -9160,7 +9161,7 @@ runcode(function()
 				for i,v in pairs(fpslist) do 
 					frames = frames + v
 				end
-				return #fpslist > 0 and (frames / (60 * #fpslist)) <= 1.2 or #fpslist <= 0 and true
+				return #fpslist > 0 and (frames / (60 * #fpslist)) <= 1.2 or #fpslist <= 0 or AnticheatBypassAlternate["Enabled"]
 			end
 
 			local function didpingspike()
@@ -9571,6 +9572,10 @@ runcode(function()
 		["Name"] = "Auto Config",
 		["Function"] = function() end,
 		["Default"] = true
+	})
+	AnticheatBypassAlternate = AnticheatBypass.CreateToggle({
+		["Name"] = "Alternate Numbers",
+		["Function"] = function() end
 	})
 	AnticheatBypassTransparent = AnticheatBypass.CreateToggle({
 		["Name"] = "Transparent",
