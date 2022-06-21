@@ -3661,7 +3661,7 @@ runcode(function()
 					end
 					entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
 					RunLoops:BindToHeartbeat("Swim", 1, function()
-						entity.character.HumanoidRootPart.Velocity = ((entity.character.Humanoid.MoveDirection ~= Vector3.new() or entity.character.Humanoid.Jump) and entity.character.HumanoidRootPart.Velocity or Vector3.new())
+						entity.character.HumanoidRootPart.Velocity = ((entity.character.Humanoid.MoveDirection ~= Vector3.new() or uis:IsKeyDown(Enum.KeyCode.Space)) and entity.character.HumanoidRootPart.Velocity or Vector3.new())
 					end)
 				end
 			else 

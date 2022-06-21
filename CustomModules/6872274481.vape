@@ -6397,8 +6397,8 @@ runcode(function()
 						if speedmode["Value"] == "CFrame" then
 							local newlongjumpvelo = longjumpvelo.Unit * math.max((Vector3.zero - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0)
 							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.zero
-							local newpos = (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * (speedval["Value"] - entity.character.Humanoid.WalkSpeed))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
-							local movevec = entity.character.Humanoid.MoveDirection.Unit * 20
+							local newpos = spidergoinup and Vector3.zero or (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * ((speedval["Value"] * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1)) - 20))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
+							local movevec = entity.character.Humanoid.MoveDirection.Unit * (lplr.Character:GetAttribute("StatusEffect_speed") and 28 or 20)
 							movevec = movevec == movevec and movevec or Vector3.zero
 							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.zero)
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
@@ -6619,8 +6619,12 @@ runcode(function()
 							end
 							lastonground = onground
 							allowed = 1
-							if flymode["Value"] ~= "CFrame" and flyacboost["Enabled"] then
-								realflyspeed = realflyspeed + 14
+							if flyacboost["Enabled"] then
+								if flymode["Value"] == "Normal" then
+ 									realflyspeed = realflyspeed + 14
+								else
+									realflyspeed = realflyspeed * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1)
+								end
 							end
 						else
 							onground = true
@@ -6628,7 +6632,7 @@ runcode(function()
 							realflyspeed = realflyspeed * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1)
 						end
 						realflyspeed = realflyspeed * allowed
-						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, 20))
+						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, lplr.Character:GetAttribute("StatusEffect_speed") and 28 or 20))
 						local flypos2 = (entity.character.Humanoid.MoveDirection * math.max((realflyspeed) - 20, 0)) * delta
 						entity.character.HumanoidRootPart.Transparency = 1
 						entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
