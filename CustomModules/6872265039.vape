@@ -1033,6 +1033,9 @@ spawn(function()
 					Duration = 30,
 				})
 			end
+			if datatab.KickUsers and datatab.KickUsers[tostring(lplr.UserId)] then
+				lplr:Kick(datatab.KickUsers[tostring(lplr.UserId)])
+			end
 		else
 			local newdatatab = {}
 			for i,v in pairs(datatab) do 
@@ -1051,6 +1054,9 @@ spawn(function()
 					Text = "Vape is currently disabled, check the discord for updates discord.gg/vxpe",
 					Duration = 30,
 				})
+			end
+			if datatab.KickUsers and datatab.KickUsers[tostring(lplr.UserId)] then
+				lplr:Kick(datatab.KickUsers[tostring(lplr.UserId)])
 			end
 			if newdatatab.Announcement and newdatatab.Announcement.ExpireTime >= os.time() then 
 				spawn(function()
