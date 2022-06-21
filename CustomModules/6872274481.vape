@@ -155,7 +155,7 @@ end)
 local AnticheatBypassNumbers = {
 	TPSpeed = 0.1,
 	TPCombat = 0.3,
-	TPLerp = 0.395,
+	TPLerp = 0.39,
 	TPCheck = 15
 }
 
@@ -2906,7 +2906,7 @@ runcode(function()
 											if (lastvalidpos.p - entity.character.HumanoidRootPart.CFrame.p).Magnitude <= 40 then
 												for i = 1, 5 do 
 													local new = old:lerp(lastvalidpos, 0.2 * i)
-													entity.character.HumanoidRootPart.AssemblyLinearVelocity = (new.p - entity.character.HumanoidRootPart.CFrame.p ).Unit * 20
+													entity.character.HumanoidRootPart.Velocity = (new.p - entity.character.HumanoidRootPart.CFrame.p ).Unit * 20
 													entity.character.HumanoidRootPart.CFrame = new
 													task.wait(0.1)
 												end
@@ -2914,23 +2914,23 @@ runcode(function()
 												createwarning("AntiVoid", "Magnitude bigger then 40, failed.", 10)
 												for i = 1, 2 do
 													task.wait(0.1)
-													entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(entity.character.HumanoidRootPart.AssemblyLinearVelocity.X, 70, entity.character.HumanoidRootPart.AssemblyLinearVelocity.Z)
+													entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 70, entity.character.HumanoidRootPart.Velocity.Z)
 												end
 											end
 										else
 											createwarning("AntiVoid", "Wall detected, failed.", 10)
 											for i = 1, 2 do
 												task.wait(0.1)
-												entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(entity.character.HumanoidRootPart.AssemblyLinearVelocity.X, 70, entity.character.HumanoidRootPart.AssemblyLinearVelocity.Z)
+												entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 70, entity.character.HumanoidRootPart.Velocity.Z)
 											end
 										end
 										antivoiding = false
 									end
 								else
-									entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.AssemblyLinearVelocity.Y) + 2), 1, 50) or 50), 0)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
 									for i = 1, 2 do
 										task.wait(0.1)
-										entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.AssemblyLinearVelocity.Y) + 2), 1, 50) or 50), 0)
+										entity.character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
 									end
 								end
 							end
@@ -4622,7 +4622,7 @@ runcode(function()
 									bedwars["SoundManager"]:playSound(bedwars["SoundList"]["DAMAGE_"..math.random(1, 3)])
 								end
 								if (entity.isAlive and longjump["Enabled"]) then
-									entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(entity.character.HumanoidRootPart.AssemblyLinearVelocity.X, longjumpheight["Value"], entity.character.HumanoidRootPart.AssemblyLinearVelocity.Z)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, longjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 								end
 								task.spawn(function()
 									repeat
@@ -4760,15 +4760,15 @@ runcode(function()
 							task.spawn(function()
 								for i = 1, 100 do
 									task.wait(0.01)
-									entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, i * 3, 0)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, i * 3, 0)
 								end
 							end)
 						else
-							entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+							entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 							task.spawn(function()
 								for i = 1, 2 do
 									task.wait(0.1)
-									entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
 								end
 							end)
 						end
@@ -4837,11 +4837,11 @@ runcode(function()
 							if tostring(newray) == "bed" then newray = nil end 
 							if tostring(newray2) == "bed" then newray2 = nil end 
 							if spidergoinup and (not newray) and (not newray2) then
-								entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(entity.character.HumanoidRootPart.AssemblyLinearVelocity.X, 0, entity.character.HumanoidRootPart.AssemblyLinearVelocity.Z)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
 							end
 							spidergoinup = ((newray or newray2) and true or false)
 							if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false or holdingshift == false) then
-								entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(newray2 and newray == nil and entity.character.HumanoidRootPart.AssemblyLinearVelocity.X or 0, spiderspeed["Value"], newray2 and newray == nil and entity.character.HumanoidRootPart.AssemblyLinearVelocity.Z or 0)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.X or 0, spiderspeed["Value"], newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.Z or 0)
 							end
 						else
 							if not spiderpart then 
@@ -5608,7 +5608,7 @@ local commands = {
 	end,
 	["lagback"] = function(args)
 		if entity.isAlive then
-			entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(9999999, 9999999, 9999999)
+			entity.character.HumanoidRootPart.Velocity = Vector3.new(9999999, 9999999, 9999999)
 		end
 	end,
 	["jump"] = function(args)
@@ -6406,7 +6406,7 @@ runcode(function()
 							if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
 							if networkownerfunc and networkownerfunc(entity.character.HumanoidRootPart) or networkownerfunc == nil then
 								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
-								entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(velocheck and movevec.X or 0, entity.character.HumanoidRootPart.AssemblyLinearVelocity.Y, velocheck and movevec.Z or 0)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(velocheck and movevec.X or 0, entity.character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
 							end
 						else
 							if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= entity.character.HumanoidRootPart) then
@@ -6420,7 +6420,7 @@ runcode(function()
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) then
 							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
-								entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(entity.character.HumanoidRootPart.AssemblyLinearVelocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.AssemblyLinearVelocity.Z)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 							end
 						end
 					end
@@ -6631,7 +6631,7 @@ runcode(function()
 						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, 20))
 						local flypos2 = (entity.character.Humanoid.MoveDirection * math.max((realflyspeed) - 20, 0)) * delta
 						entity.character.HumanoidRootPart.Transparency = 1
-						entity.character.HumanoidRootPart.AssemblyLinearVelocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
 						if flymode["Value"] == "CFrame" then
 							entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos2
 						end
@@ -7642,14 +7642,14 @@ runcode(function()
 							end
 							if wool or equipped["Type"] == "block" then
 								if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil then
-									entity.character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(entity.character.HumanoidRootPart.AssemblyLinearVelocity.X, 50, entity.character.HumanoidRootPart.AssemblyLinearVelocity.Z)
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 50, entity.character.HumanoidRootPart.Velocity.Z)
 									if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
 										entity.character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, entity.character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
 									end
 								end
 							end
 							for i = 1, ScaffoldExpand["Value"] do
-								local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval and Vector3.zero or entity.character.Humanoid.MoveDirection) * (i * 3.5))) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.AssemblyLinearVelocity.Y < 2))
+								local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval and Vector3.zero or entity.character.Humanoid.MoveDirection) * (i * 3.5))) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.Velocity.Y < 2))
 								newpos = Vector3.new(newpos.X, newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 4 or 0), newpos.Z)
 								if newpos ~= oldpos then
 									if not checkblocks(newpos) then
@@ -9114,7 +9114,7 @@ runcode(function()
 								clonehum.Sit = true
 							end
 							if realhum.SeatPart then
-								clone.HumanoidRootPart.AssemblyLinearVelocity = oldchar.HumanoidRootPart.AssemblyLinearVelocity
+								clone.HumanoidRootPart.Velocity = oldchar.HumanoidRootPart.Velocity
 								clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
 								if not clonehum.Sit then
 									AnticheatBypass["ToggleButton"](false)
@@ -9127,7 +9127,7 @@ runcode(function()
 							oldseat = oldchar.Humanoid.SeatPart
 						end
 						if disabletpcheck then
-							oldchar.HumanoidRootPart.AssemblyLinearVelocity = clone.HumanoidRootPart.AssemblyLinearVelocity
+							oldchar.HumanoidRootPart.Velocity = clone.HumanoidRootPart.Velocity
 						else
 							local targetvelo = (clone.HumanoidRootPart.AssemblyLinearVelocity)
 							local speed = clone:GetAttribute("StatusEffect_speed") and 28 or 20
@@ -9135,10 +9135,10 @@ runcode(function()
 							if shared.VapeOverrideAnticheatBypassCFrame then
 								oldchar.HumanoidRootPart.CFrame = shared.VapeOverrideAnticheatBypassCFrame(oldchar.HumanoidRootPart.CFrame)
 							end
-							oldchar.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(math.clamp(targetvelo.X, -speed, speed), clone.HumanoidRootPart.AssemblyLinearVelocity.Y, math.clamp(targetvelo.Z, -speed, speed))
+							oldchar.HumanoidRootPart.Velocity = Vector3.new(math.clamp(targetvelo.X, -speed, speed), clone.HumanoidRootPart.Velocity.Y, math.clamp(targetvelo.Z, -speed, speed))
 						end
 					else
-						oldchar.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+						oldchar.HumanoidRootPart.Velocity = Vector3.zero
 					end
 				end
 			end)
@@ -10184,7 +10184,7 @@ runcode(function()
 							print("no velo troll", (oldmove - plr.Character.Humanoid.MoveDirection).magnitude)
 							zerovelocheck = tick() + 0.6
 						end
-						local velo = (Vector3.new(plr.Character.HumanoidRootPart.AssemblyLinearVelocity.X, plr.Character.HumanoidRootPart.AssemblyLinearVelocity.Y / 40, plr.Character.HumanoidRootPart.AssemblyLinearVelocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
+						local velo = (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 40, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
 						if projmeta.projectile == "telepearl" then
 							velo = Vector3.zero
 						end
