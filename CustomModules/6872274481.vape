@@ -60,6 +60,13 @@ local oldshoot
 local chatconnection
 local blocktable
 local inventories = {}
+local currentinventory = {
+	["inventory"] = {
+		["items"] = {},
+		["armor"] = {},
+		["hand"] = nil
+	}
+}
 local Hitboxes = {["Enabled"] = false}
 local Reach = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
@@ -707,7 +714,7 @@ local function createwarning(title, text, delay)
 end
 
 local function getItemNear(itemName, inv)
-	for i5, v5 in pairs(inv or bedwars["getInventory"](lplr).items) do
+	for i5, v5 in pairs(inv or currentinventory.inventory.items) do
 		if v5.itemType:find(itemName) then
 			return v5, i5
 		end
@@ -716,7 +723,7 @@ local function getItemNear(itemName, inv)
 end
 
 local function getItem(itemName, inv)
-	for i5, v5 in pairs(inv or bedwars["getInventory"](lplr).items) do
+	for i5, v5 in pairs(inv or currentinventory.inventory.items) do
 		if v5.itemType == itemName then
 			return v5, i5
 		end
@@ -735,7 +742,7 @@ end
 
 local function getSword()
 	local bestsword, bestswordslot, bestswordnum = nil, nil, 0
-	for i5, v5 in pairs(bedwars["getInventory"](lplr).items) do
+	for i5, v5 in pairs(currentinventory.inventory.items) do
 		if bedwars["ItemTable"][v5.itemType]["sword"] then
 			local swordrank = bedwars["ItemTable"][v5.itemType]["sword"]["damage"] or 0
 			if swordrank > bestswordnum then
@@ -749,7 +756,7 @@ local function getSword()
 end
 
 local function getSlotFromItem(item)
-	for i,v in pairs(bedwars["getInventory"](lplr).items) do
+	for i,v in pairs(currentinventory.inventory.items) do
 		if v.itemType == item.itemType then
 			return i
 		end
@@ -759,7 +766,7 @@ end
 
 local function getAxe()
 	local bestsword, bestswordslot, bestswordnum = nil, nil, 0
-	for i5, v5 in pairs(bedwars["getInventory"](lplr).items) do
+	for i5, v5 in pairs(currentinventory.inventory.items) do
 		if v5.itemType:find("axe") and v5.itemType:find("pickaxe") == nil and v5.itemType:find("void") == nil then
 			bestswordnum = swordrank
 			bestswordslot = i5
@@ -853,16 +860,9 @@ runcode(function()
         local KnitClient = debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 6)
         local Client = require(repstorage.TS.remotes).default.Client
         local InventoryUtil = require(repstorage.TS.inventory["inventory-util"]).InventoryUtil
-		local currentinventory = {
-			["inventory"] = {
-				["items"] = {},
-				["armor"] = {},
-				["hand"] = nil
-			}
-		}
         OldClientGet = getmetatable(Client).Get
         getmetatable(Client).Get = function(Self, remotename)
-			if remotename == bedwars["AttackRemote"] then
+			if remotename == bedwars["AttackRemote"] and not uninjectflag then
 				local res = OldClientGet(Self, remotename)
 				return {
 					["instance"] = res["instance"],
@@ -952,19 +952,6 @@ runcode(function()
                     return itemmeta.image
                 end
                 return ""
-            end,
-            ["getInventory"] = function(plr)
-                local suc, result = pcall(function() 
-					if plr == lplr then 
-						return currentinventory.inventory
-					end
-					return inventories[plr]
-				end)
-                return (suc and result or {
-                    ["items"] = {},
-                    ["armor"] = {},
-                    ["hand"] = nil
-                })
             end,
 			["getInventory2"] = function(plr)
                 local suc, result = pcall(function() 
@@ -1459,6 +1446,27 @@ local function Cape(char, texture)
 	until not p or p.Parent ~= torso.Parent
 end
 
+local function getSpeedMultiplier(reduce)
+	local speed = 1
+	if lplr.Character then 
+		local speedboost = lplr.Character:GetAttribute("SpeedBoost")
+		if speedboost and speedboost > 1 then 
+			speed = speed + (speedboost - 1)
+		end
+		if lplr.Character:GetAttribute("GrimReaperChannel") then 
+			speed = speed + 0.6
+		end
+		if lplr.Character:GetAttribute("SpeedPieBuff") then 
+			speed = speed + (queueType == "SURVIVAL" and 0.15 or 0.3)
+		end
+		local armor = currentinventory.inventory.armor[3]
+		if type(armor) ~= "table" then armor = {itemType = ""} end
+		if armor.itemType == "speed_boots" then 
+			speed = speed + 1
+		end
+	end
+	return reduce and speed ~= 1 and speed * (0.9 - (0.15 * math.floor(speed))) or speed
+end
 
 local function renderNametag(plr)
 	if (bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]) then
@@ -1767,7 +1775,7 @@ local function getBestTool(block)
 	local blockmeta = bedwars["ItemTable"][block]
 	local blockType = blockmeta["block"] and blockmeta["block"]["breakType"]
 	if blockType then
-		for i,v in pairs(bedwars["getInventory"](lplr).items) do
+		for i,v in pairs(currentinventory.inventory.items) do
 			local meta = bedwars["ItemTable"][v.itemType]
 			if meta["breakBlock"] and meta["breakBlock"][blockType] then
 				tool = v
@@ -1921,12 +1929,13 @@ end
 
 local function getEquipped()
 	local typetext = ""
-	local obj = bedwars["getInventory"](lplr).hand
+	local obj = currentinventory.hand
 	if obj then
-		if bedwars["ItemTable"][obj.itemType]["sword"] then
+		local metatab = bedwars["ItemTable"][obj.itemType]
+		if meta["sword"] then
 			typetext = "sword"
 		end
-		if obj.itemType:find("wool") or bedwars["ItemTable"][obj.itemType]["block"] then
+		if meta["block"] then
 			typetext = "block"
 		end
 		if obj.itemType:find("bow") then
@@ -2048,7 +2057,7 @@ runcode(function()
 			for i,v in pairs(tab) do
 				local plr = players[i]
 				if plr then
-					local inventory = bedwars["getInventory"](plr)
+					local inventory = inventories[plr] or {}
 					if inventory.hand then
 						handsquare.Image = bedwars["getIcon"](inventory.hand, true)
 					else
@@ -2078,7 +2087,7 @@ end)
 
 local function getBow()
 	local bestsword, bestswordslot, bestswordnum = nil, nil, 0
-	for i5, v5 in pairs(bedwars["getInventory"](lplr).items) do
+	for i5, v5 in pairs(currentinventory.inventory.items) do
 		if v5.itemType:find("bow") then
 			local tab = bedwars["ItemTable"][v5.itemType].projectileSource.ammoItemTypes
 			local tab2 = tab[#tab]
@@ -2135,7 +2144,7 @@ runcode(function()
 	end
 
 	local function findininventory(item)
-		for i,v in pairs(bedwars["getInventory"](lplr).items) do
+		for i,v in pairs(currentinventory.inventory.items) do
 			if v.itemType == item.itemType then
 				return v
 			end
@@ -2146,7 +2155,7 @@ runcode(function()
 		task.spawn(function()
 			task.wait(0.2)
 			local items = (AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]] and AutoHotbarList["Hotbars"][AutoHotbarList["CurrentlySelected"]]["Items"] or {})
-			for i,v in pairs(bedwars["getInventory"](lplr).items) do 
+			for i,v in pairs(currentinventory.inventory.items) do 
 				local hotbarslot = findItemInTable(items, v)
 				if hotbarslot then
 					local oldhotbaritem = currentinventory.hotbar[tonumber(hotbarslot)]
@@ -3722,7 +3731,7 @@ runcode(function()
 						task.wait()
 						local found, npctype = nearNPC(AutoBuyRange["Value"])
 						if found then
-							local inv = bedwars["getInventory"](lplr)
+							local inv = currentinventory.inventory
 							local currentupgrades = bedwars["ClientStoreHandler"]:getState()["Bedwars"]["teamUpgrades"]
 							if kit == "dasher" then 
 								swords = {
@@ -3969,7 +3978,7 @@ runcode(function()
 				crystal.Parent = autobankui
 				local echest = repstorage.Inventories:FindFirstChild(lplr.Name.."_personal")
 				if entity.isAlive and echest then
-					local chestitems = bedwars["getInventory"](lplr).items
+					local chestitems = currentinventory.inventory.items
 					for i3,v3 in pairs(chestitems) do
 						if (v3.itemType == "void_crystal" or v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
 							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
@@ -4001,7 +4010,7 @@ runcode(function()
 						if found ~= AutoBankTransmitted or npctype ~= AutoBankTransmittedType then
 							AutoBankTransmitted, AutoBankTransmittedType = found, npctype
 							if entity.isAlive then
-								local chestitems = bedwars["getInventory"](lplr).items
+								local chestitems = currentinventory.inventory.items
 								if #chestitems > 0 then
 									for i3,v3 in pairs(chestitems) do
 										if (v3.itemType == "void_crystal" or v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
@@ -4754,7 +4763,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				if HighJumpTick <= tick() then
-					if entity.isAlive and entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+					if entity.isAlive then
 						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
 						if HighJumpMode["Value"] == "Funny" then
 							task.spawn(function()
@@ -5095,6 +5104,13 @@ runcode(function()
 				end)
 				local targetedplayer
 				RunLoops:BindToHeartbeat("Killaura", 1, function()
+					for i,v in pairs(killauraboxes) do 
+						if v:IsA("BoxHandleAdornment") and v.Adornee then
+							local cf = v.Adornee and v.Adornee.CFrame
+							local onex, oney, onez = cf:ToEulerAnglesXYZ() 
+							v.CFrame = CFrame.new() * CFrame.Angles(-onex, -oney, -onez)
+						end
+					end
 					if entity.isAlive then
 						local Root = entity.character.HumanoidRootPart
 						if Root then
@@ -6362,7 +6378,6 @@ runcode(function()
 	local speedanimation = {["Enabled"] = false}
 	local speedtick = tick()
 	local bodyvelo
-	local gofast = false
 	local raycastparameters = RaycastParams.new()
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Speed",
@@ -6375,14 +6390,6 @@ runcode(function()
 							AnticheatBypass["ToggleButton"](false)
 						end
 					end
-				end)
-				task.spawn(function()
-					repeat
-						gofast = true
-						task.wait(0.15)
-						gofast = false
-						task.wait(0.1)
-					until (not speed["Enabled"])
 				end)
 				RunLoops:BindToHeartbeat("Speed", 1, function(delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
@@ -6397,8 +6404,8 @@ runcode(function()
 						if speedmode["Value"] == "CFrame" then
 							local newlongjumpvelo = longjumpvelo.Unit * math.max((Vector3.zero - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0)
 							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.zero
-							local newpos = spidergoinup and Vector3.zero or (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * ((speedval["Value"] * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1)) - 20))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
-							local movevec = entity.character.Humanoid.MoveDirection.Unit * (lplr.Character:GetAttribute("StatusEffect_speed") and 28 or 20)
+							local newpos = spidergoinup and Vector3.zero or (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * ((speedval["Value"] * getSpeedMultiplier(true)) - 20))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
+							local movevec = entity.character.Humanoid.MoveDirection.Unit * (20 * getSpeedMultiplier())
 							movevec = movevec == movevec and movevec or Vector3.zero
 							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.zero)
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
@@ -6415,7 +6422,7 @@ runcode(function()
 								bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
 							else
 								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.zero or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or (speedmode["Value"] == "Inconsistent" and gofast == false and 20 or speedval["Value"])) * 1) * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * (lplr.Character:GetAttribute("GrimReaperChannel") and 1.6 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
+								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) then
@@ -6443,7 +6450,7 @@ runcode(function()
 	})
 	speedmode = speed.CreateDropdown({
 		["Name"] = "Mode",
-		["List"] = {"Normal", "Inconsistent", "CFrame"},
+		["List"] = {"Normal", "CFrame"},
 		["Function"] = function()
 			if bodyvelo then
 				bodyvelo:Remove()
@@ -6620,19 +6627,15 @@ runcode(function()
 							lastonground = onground
 							allowed = 1
 							if flyacboost["Enabled"] then
-								if flymode["Value"] == "Normal" then
- 									realflyspeed = realflyspeed + 14
-								else
-									realflyspeed = realflyspeed * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1)
-								end
+ 								realflyspeed = realflyspeed * getSpeedMultiplier(true) + (flymode["Value"] == "Normal" and 14 or 6)
 							end
 						else
 							onground = true
 							lastonground = true
-							realflyspeed = realflyspeed * (lplr.Character:GetAttribute("StatusEffect_speed") and 1.2 or 1)
+							realflyspeed = realflyspeed * getSpeedMultiplier(true)
 						end
 						realflyspeed = realflyspeed * allowed
-						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, lplr.Character:GetAttribute("StatusEffect_speed") and 28 or 20))
+						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, 20 * getSpeedMultiplier()))
 						local flypos2 = (entity.character.Humanoid.MoveDirection * math.max((realflyspeed) - 20, 0)) * delta
 						entity.character.HumanoidRootPart.Transparency = 1
 						entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
@@ -7771,7 +7774,7 @@ NoSlowdown = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 			bedwars["sprintTable"]["setSpeed"] = function(tab1, val1)
 				local hum = entity.character.Humanoid
 				if hum then
-					hum.WalkSpeed = math.max(val1 * tab1.moveSpeedMultiplier, 20)
+					hum.WalkSpeed = math.max(20 * tab1.moveSpeedMultiplier, 20)
 				end
 			end
 		else
@@ -8222,7 +8225,7 @@ runcode(function()
 				local aliveplr = isAlive(plr)
 				if aliveplr then
 					if NameTagsShowInventory["Enabled"] then 
-						local inventory = bedwars["getInventory"](plr)
+						local inventory = inventories[plr] or {}
 						if inventory.hand then
 							thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
 							if thing.Hand.Image:find("rbxasset://") then
@@ -9135,7 +9138,7 @@ runcode(function()
 							oldchar.HumanoidRootPart.Velocity = clone.HumanoidRootPart.Velocity
 						else
 							local targetvelo = (clone.HumanoidRootPart.AssemblyLinearVelocity)
-							local speed = clone:GetAttribute("StatusEffect_speed") and 28 or 20
+							local speed = 20 * getSpeedMultiplier()
 							targetvelo = targetvelo.Unit * speed
 							if shared.VapeOverrideAnticheatBypassCFrame then
 								oldchar.HumanoidRootPart.CFrame = shared.VapeOverrideAnticheatBypassCFrame(oldchar.HumanoidRootPart.CFrame)
@@ -9854,7 +9857,8 @@ runcode(function()
 
 	connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]:OnEvent("AngelProgress", function(p3)
 		task.wait(0.5)
-		if bedwars["ClientStoreHandler"]:getState().Kit.angelProgress >= 1 and AutoKit["Enabled"] and lplr.Character:GetAttribute("AngelType") == nil then
+		if not AutoKit["Enabled"] then return end
+		if bedwars["ClientStoreHandler"]:getState().Kit.angelProgress >= 1 and lplr.Character:GetAttribute("AngelType") == nil then
 			bedwars["ClientHandler"]:Get(bedwars["TrinityRemote"]):SendToServer({
 				angel = AutoKitTrinity["Value"]
 			})
@@ -10050,6 +10054,7 @@ runcode(function()
 	local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
 	local oldmove
 	local SafeWalk = {["Enabled"] = false}
+	local SafeWalkMode = {["Value"] = "Optimized"}
 	SafeWalk = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SafeWalk",
 		["Function"] = function(callback)
@@ -10057,12 +10062,28 @@ runcode(function()
 				oldmove = controlmodule.moveFunction
 				controlmodule.moveFunction = function(Self, vec, facecam)
 					if entity.isAlive and (not Scaffold["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
-						local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), blockraycast)
-						local ray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -entity.character.Humanoid.HipHeight * 2, 0), blockraycast)
-						if ray == nil and ray2 then
-							local ray3 = workspace:Raycast(entity.character.HumanoidRootPart.Position + (vec * 1.8), Vector3.new(0, -1000, 0), blockraycast)
-							if ray3 == nil then 
-								vec = Vector3.zero
+						if SafeWalkMode["Value"] == "Optimized" then 
+							local newpos = (entity.character.HumanoidRootPart.Position - Vector3.new(0, entity.character.Humanoid.HipHeight * 2, 0))
+							local ray = getblock(newpos + Vector3.new(0, -6, 0) + vec)
+							for i = 1, 50 do 
+								if ray then break end
+								ray = getblock(newpos + Vector3.new(0, -i * 6, 0) + vec)
+							end
+							local ray2 = getblock(newpos)
+							if ray == nil and ray2 then
+								local ray3 = getblock(newpos + vec) or getblock(newpos + (vec * 1.5))
+								if ray3 == nil then 
+									vec = Vector3.zero
+								end
+							end
+						else
+							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), blockraycast)
+							local ray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -entity.character.Humanoid.HipHeight * 2, 0), blockraycast)
+							if ray == nil and ray2 then
+								local ray3 = workspace:Raycast(entity.character.HumanoidRootPart.Position + (vec * 1.8), Vector3.new(0, -1000, 0), blockraycast)
+								if ray3 == nil then 
+									vec = Vector3.zero
+								end
 							end
 						end
 					end
@@ -10073,6 +10094,11 @@ runcode(function()
 			end
 		end,
 		["HoverText"] = "lets you not walk off because you are bad"
+	})
+	SafeWalkMode = SafeWalk.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Optimized", "Accurate"},
+		["Function"] = function() end
 	})
 end)
 
