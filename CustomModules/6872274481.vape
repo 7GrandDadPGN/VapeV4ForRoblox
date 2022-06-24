@@ -1932,10 +1932,10 @@ local function getEquipped()
 	local obj = currentinventory.hand
 	if obj then
 		local metatab = bedwars["ItemTable"][obj.itemType]
-		if meta["sword"] then
+		if metatab["sword"] then
 			typetext = "sword"
 		end
-		if meta["block"] then
+		if metatab["block"] then
 			typetext = "block"
 		end
 		if obj.itemType:find("bow") then
