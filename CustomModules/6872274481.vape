@@ -1929,18 +1929,10 @@ end
 
 local function getEquipped()
 	local typetext = ""
-	local obj = currentinventory.hand
+	local obj = currentinventory.inventory.hand
 	if obj then
 		local metatab = bedwars["ItemTable"][obj.itemType]
-		if metatab["sword"] then
-			typetext = "sword"
-		end
-		if metatab["block"] then
-			typetext = "block"
-		end
-		if obj.itemType:find("bow") then
-			typetext = "bow"
-		end
+		typetext = metatab.sword and "sword" or metatab.block and "block" or obj.itemType:find("bow") and "bow"
 	end
     return {["Object"] = obj and obj.tool, ["Type"] = typetext}
 end
@@ -2496,24 +2488,26 @@ runcode(function()
 			if callback then
 				RunLoops:BindToHeartbeat("Phase", 1, function()
 					if entity.isAlive and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
-						local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
-						local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
-						local pos3 = entity.character.Head.CFrame.p
-						raycastparameters.FilterDescendantsInstances = {bedwarsblocks, collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
-						local newray = workspace:Raycast(pos3, entity.character.Humanoid.MoveDirection, raycastparameters)
 						if phasedelay <= tick() then
 							nocheck = false
 						end
 						if phasedelay2 <= tick() then
 							slowdownspeed = false
 						end
-						if newray and phasedelay <= tick() and phasedelay2 <= tick() and (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] and holdingshift or GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] == false) then
-							if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) then
-								phasedelay = tick() + 0.075
-								phasedelay2 = tick() + 0.1
-								slowdownspeed = true
-								nocheck = true
-								entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, (newray.Normal * -(3.5 * phasedist["Value"])))
+						if phasedelay <= tick() and phasedelay2 <= tick() and (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] == false or holdingshift) then
+							local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
+							local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
+							local pos3 = entity.character.Head.CFrame.p
+							raycastparameters.FilterDescendantsInstances = {bedwarsblocks, collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
+							local newray = workspace:Raycast(pos3, entity.character.Humanoid.MoveDirection, raycastparameters)
+							if newray then
+								if isPointInMapOccupied(getScaffold(pos, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) and isPointInMapOccupied(getScaffold(pos2, false) + (newray.Normal * -(3 + (3 * phasedist["Value"])))) then
+									phasedelay = tick() + 0.075
+									phasedelay2 = tick() + 0.1
+									slowdownspeed = true
+									nocheck = true
+									entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, (newray.Normal * -(3.5 * phasedist["Value"])))
+								end
 							end
 						end
 					end
@@ -2523,10 +2517,8 @@ runcode(function()
 						oldnocheck = nocheck
 						for i,v in pairs(lplr.Character:GetDescendants()) do
 							if v:IsA("BasePart") then
-								if nocheck then
+								if nocheck and v.Name ~= "HumanoidRootPart" then
 									v.CanCollide = false
-								elseif v.Name == "HumanoidRootPart" then
-									v.CanCollide = true
 								end
 							end
 						end
@@ -7777,8 +7769,10 @@ NoSlowdown = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateO
 					hum.WalkSpeed = math.max(20 * tab1.moveSpeedMultiplier, 20)
 				end
 			end
+			bedwars["sprintTable"]:setSpeed(20)
 		else
 			bedwars["sprintTable"]["setSpeed"] = OldSetSpeedFunc
+			bedwars["sprintTable"]:setSpeed(20)
 			OldSetSpeedFunc = nil
 		end
 	end, 
@@ -9019,9 +9013,11 @@ runcode(function()
 				shared.VapeOverrideAnticheatBypassPre(lplr.Character)
 			end
 			lplr.Character = clone
-			task.spawn(function()
-				repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
-				cam.CFrame = oldcamcframe
+			RunLoops:BindToRenderStep("AnticheatBypassCameraFix", 1, function()
+				if (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01 then 
+					cam.CFrame = CFrame.new(cam.CFrame, cam.CFrame + oldcamcframe.lookVector)
+					UnbindFromRenderStep("AnticheatBypassCameraFix")
+				end
 			end)
 			print("stage 6")
 			game:GetService("RunService"):UnbindFromRenderStep("inflated-balloon:" .. lplr.Name)
@@ -9515,9 +9511,11 @@ runcode(function()
 					end
 					local oldcamcframe = cam.CFrame
 					lplr.Character = oldchar
-					task.spawn(function()
-						repeat task.wait() until (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01
-						cam.CFrame = oldcamcframe
+					RunLoops:BindToRenderStep("AnticheatBypassCameraFix", 1, function()
+						if (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01 then 
+							cam.CFrame = CFrame.new(cam.CFrame, cam.CFrame + oldcamcframe.lookVector)
+							UnbindFromRenderStep("AnticheatBypassCameraFix")
+						end
 					end)
 				end
 				if clone then
