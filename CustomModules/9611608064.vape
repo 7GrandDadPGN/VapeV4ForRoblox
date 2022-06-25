@@ -257,8 +257,11 @@ runcode(function()
 	}
 	RunLoops:BindToHeartbeat("PositionUpdater", 1, function()
 		for i, v in pairs(getAttackable()) do
-			brvelo[v.Player.Name] = v.Character.Head.Position - (brpos[v.PlayerName] or v.Character.Head.Position)
+			brvelo[v.Player.Name] = v.Character.Head.Position - (brpos[v.Player.Name] or v.Character.Head.Position)	
 			brpos[v.Player.Name] = v.Character.Head.Position
+		end
+		if uninjectflag then
+			RunLoops:UnbindFromHeartbeat("PositionUpdater")
 		end
 	end)
 end)
@@ -317,6 +320,7 @@ runcode(function()
 	local SilentAimfunc
 	local SilentAimfunc2
 	local SilentAimfunc3
+	local currentplr
 	SilentAim = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SilentAim",
 		["Function"] = function(callback)
@@ -326,13 +330,12 @@ runcode(function()
 				end
 				SilentAimfunc = debug.getupvalue(br["CrosshairController"].getAimPosition, 5)
 				SilentAimfunc2 = br["GunUtil"].aimconeDirectionAdjustment
-				local currentplr
 				debug.setupvalue(br["CrosshairController"].getAimPosition, 5, {
 					raycast = function(self, origin, direction, args, ...)
 						local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true)
 						currentplr = plr
 						if plr then 
-							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + (brvelo[v.Player.Name] or Vector3.zero)).lookVector * 1000
+							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + brvelo[plr.Player.Name]).lookVector * 1000
 						end
 						return SilentAimfunc:raycast(origin, direction, args, ...)
 					end
