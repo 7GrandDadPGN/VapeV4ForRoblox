@@ -247,6 +247,7 @@ runcode(function()
 		["GunUtil"] = require(repstorage.TS.gun["gun-util"]).GunUtil,
 		["ItemPickupController"] = Flamework.resolveDependency("client/controllers/global/ground-item/item-pickup-controller@ItemPickupController"),
 		["ItemTable"] = require(repstorage.TS.item["item-meta"]).RoyaleItemMeta,
+		["ItemRarityTable"] = debug.getupvalue(require(repstorage.TS.item.rarity["item-rarity-meta"]).getItemRarityMeta, 1),
 		["ItemHolderController"] = Flamework.resolveDependency("client/controllers/global/held-item/item-holder-controller@ItemHolderController"),
 		["InventoryController"] = Flamework.resolveDependency("client/controllers/global/inventory/inventory-controller@InventoryController"),
 		["LobbyClientEvents"] = require(repstorage.rbxts_include.node_modules["@easy-games"].lobby.out.client.events).LobbyClientEvents,
@@ -314,6 +315,7 @@ GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 runcode(function()
 	local SilentAim = {["Enabled"] = false}
 	local SilentAimFOV = {["Value"] = 0}
+	local SilentAimAutoFire = {["Enabled"] = false}
 	local aimfovframecolor = {["Value"] = 0.44}
 	local aimfovshow = {["Enabled"] = false}
 	local aimfovframe
@@ -329,28 +331,19 @@ runcode(function()
 					aimfovframe.Visible = true
 				end
 				SilentAimfunc = debug.getupvalue(br["CrosshairController"].getAimPosition, 5)
-				SilentAimfunc2 = br["GunUtil"].aimconeDirectionAdjustment
 				debug.setupvalue(br["CrosshairController"].getAimPosition, 5, {
 					raycast = function(self, origin, direction, args, ...)
 						local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true)
 						currentplr = plr
 						if plr then 
-							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + brvelo[plr.Player.Name]).lookVector * 1000
+							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + (brvelo[plr.Player.Name] * 6)).lookVector * 1000
 						end
 						return SilentAimfunc:raycast(origin, direction, args, ...)
 					end
 				})
-				br["GunUtil"].aimconeDirectionAdjustment = function(self, origin, direction, ...)
-					if currentplr then
-						return direction
-					end
-					return SilentAimfunc2(self, origin, direction, ...)
-				end
 			else
 				debug.setupvalue(br["CrosshairController"].getAimPosition, 5, SilentAimfunc)
-				br["GunUtil"].aimconeDirectionAdjustment = SilentAimfunc2
 				SilentAimfunc = nil
-				SilentAimfunc2 = nil
 				if aimfovframe then
 					aimfovframe.Visible = false
 				end
@@ -398,6 +391,61 @@ runcode(function()
 				end
 			end
 		end,
+	})
+
+	local function isNotHoveringOverGui()
+		local mousepos = uis:GetMouseLocation() - Vector2.new(0, 36)
+		for i,v in pairs(lplr.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+			if v.Active and v.Visible and v:FindFirstAncestorOfClass("ScreenGui").Enabled then
+				return false
+			end
+		end
+		for i,v in pairs(game:GetService("CoreGui"):GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+			if v.Active and v.Visible and v:FindFirstAncestorOfClass("ScreenGui").Enabled then
+				return false
+			end
+		end
+		return true
+	end
+
+	local pressed = false
+	local shoottime = tick()
+	SilentAimAutoFire = SilentAim.CreateToggle({
+		["Name"] = "AutoFire",
+		["Function"] = function(callback) 
+			if callback then 
+				task.spawn(function()
+					repeat
+						task.wait()
+						if SilentAim["Enabled"] and mouse1click and (isrbxactive and isrbxactive() or iswindowactive and iswindowactive()) then
+							if currentplr then 
+								if shoottime <= tick() then
+									if isNotHoveringOverGui() and GuiLibrary["MainGui"]:FindFirstChild("ScaledGui") and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
+										if pressed then
+											mouse1release()
+										else
+											mouse1press()
+										end
+										pressed = not pressed
+										shoottime = tick() + 0.03
+									else
+										if pressed then
+											mouse1release()
+										end
+										pressed = false
+									end
+								end
+							else
+								if pressed then
+									mouse1release()
+								end
+								pressed = false
+							end
+						end
+					until not SilentAimAutoFire["Enabled"]
+				end)
+			end
+		end
 	})
 end)
 
@@ -1419,7 +1467,7 @@ runcode(function()
 										if v2.item and v2.item.type ~= "" then invcount = invcount + 1 end
 									end
 									local specialitem = (item:find("ammo") or item:find("armor"))
-									local allowed = (item:find("ammo") or (item:find("armor") and itemmeta.armor.maxShield > armor) or ((not specialitem) and (invcount < 6)))
+									local allowed = (item:find("ammo") or (item:find("armor") and itemmeta.armor.maxShield > armor) or ((not specialitem) and (invcount < 7)))
 									local oldslot
 									if not allowed then 
 										for i2,v2 in pairs(inv) do 
@@ -1473,4 +1521,127 @@ runcode(function()
             end
 		end
 	})
+end)
+
+
+runcode(function()
+    local function removeTags(str)
+        str = str:gsub("<br%s*/>", "\n")
+        return (str:gsub("<[^<>]->", ""))
+    end
+
+    local function floorpos(pos)
+        return Vector2.new(math.floor(pos.X), math.floor(pos.Y))
+    end
+
+    local ItemESPFolder = Instance.new("Folder")
+    ItemESPFolder.Name = "ItemESPFolder"
+    ItemESPFolder.Parent = GuiLibrary["MainGui"]
+    local ItemESPDisplayName = {["Enabled"] = false}
+    local ItemESPScale = {["Value"] = 10}
+    local ItemESPFont = {["Value"] = "SourceSans"}
+    local fontitems = {"SourceSans"}
+    local ItemESP = {["Enabled"] = false}
+	local itemsnear = {}
+	local itemremoved
+	local itemrender = {}
+	ItemESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+        ["Name"] = "ItemESP", 
+        ["Function"] = function(callback) 
+            if callback then
+				task.spawn(function()
+					repeat
+						task.wait(0.1)
+						local localchar = isAlive()
+						for i,plr in pairs(collectionservice:GetTagged("ground-item-component")) do 
+							local newval = ((localchar and localchar.HumanoidRootPart.Position or Vector3.new(999999, 99999, 999999)) - plr.Position).Magnitude <= 200
+							local ind = table.find(itemsnear, plr)
+							if newval then
+								if not ind then
+									table.insert(itemsnear, plr)
+								end
+							else
+								if ind then 
+									table.remove(itemsnear, ind)
+								end
+								if itemrender[plr] then 
+									itemrender[plr]:Destroy()
+									itemrender[plr] = nil
+								end
+							end
+						end
+					until (not ItemESP["Enabled"])
+				end)
+				itemremoved = collectionservice:GetInstanceRemovedSignal("ground-item-component"):connect(function(plr)
+					local ind = table.find(itemsnear, plr)
+					if ind then 
+						table.remove(itemsnear, ind)
+					end
+					if itemrender[plr] then 
+						itemrender[plr]:Destroy()
+						itemrender[plr] = nil
+					end
+				end)
+                RunLoops:BindToRenderStep("ItemESP", 500, function()
+					for i,plr in pairs(itemsnear) do 
+                        local thing
+						if itemrender[plr] then
+							thing = itemrender[plr]
+							thing.Visible = false
+						else
+							thing = Instance.new("TextLabel")
+							thing.BackgroundTransparency = 1
+							thing.BackgroundColor3 = Color3.new(0, 0, 0)
+							thing.BorderSizePixel = 0
+							thing.Visible = false
+							thing.RichText = true
+							thing.TextStrokeTransparency = 0
+							thing.TextStrokeColor3 = Color3.new(0, 0, 0)
+							thing.Name = plr.Name
+							thing.Font = Enum.Font.SourceSans
+							thing.TextSize = 14
+							thing.Parent = ItemESPFolder
+							itemrender[plr] = thing
+						end
+						local headPos, headVis = cam:WorldToViewportPoint(plr.Position + Vector3.new(0, 5, 0))
+						
+						if headVis then
+							local item = plr:GetAttribute("displayItem")
+							local itemrarity = br["ItemTable"][item] and br["ItemTable"][item].rarity and br["ItemRarityTable"][br["ItemTable"][item].rarity].gradient.colorTop or Color3.new(1, 1, 1)
+							local nametagSize = textservice:GetTextSize(item, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
+							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
+							thing.Text = item
+							thing.Font = Enum.Font[ItemESPFont["Value"]]
+							thing.TextSize = 14 * (ItemESPScale["Value"] / 10)
+							thing.TextColor3 = itemrarity
+							thing.Visible = headVis
+							thing.Position = UDim2.new(0, headPos.X - thing.Size.X.Offset / 2, 0, (headPos.Y - thing.Size.Y.Offset) - 36)
+						end
+                    end
+                end)
+            else
+				if itemremoved then itemremoved:Disconnect() end
+                RunLoops:UnbindFromRenderStep("ItemESP")
+                ItemESPFolder:ClearAllChildren()
+            end
+        end,
+        ["HoverText"] = "Renders nametags on entities through walls."
+    })
+    for i,v in pairs(Enum.Font:GetEnumItems()) do 
+        if v.Name ~= "SourceSans" then 
+            table.insert(fontitems, v.Name)
+        end
+    end
+    ItemESPFont = ItemESP.CreateDropdown({
+        ["Name"] = "Font",
+        ["List"] = fontitems,
+        ["Function"] = function() end,
+    })
+    ItemESPScale = ItemESP.CreateSlider({
+        ["Name"] = "Scale",
+        ["Function"] = function(val) end,
+        ["Default"] = 10,
+        ["Min"] = 1,
+        ["Max"] = 50
+    })
 end)
