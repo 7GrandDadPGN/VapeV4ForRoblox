@@ -1610,7 +1610,7 @@ runcode(function()
 							local itemrarity = br["ItemTable"][item] and br["ItemTable"][item].rarity and br["ItemRarityTable"][br["ItemTable"][item].rarity].gradient.colorTop or Color3.new(1, 1, 1)
 							local nametagSize = textservice:GetTextSize(item, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
-							thing.Text = item
+							thing.Text = br["ItemTable"][item].displayName
 							thing.Font = Enum.Font[ItemESPFont["Value"]]
 							thing.TextSize = 14 * (ItemESPScale["Value"] / 10)
 							thing.TextColor3 = itemrarity
@@ -1644,4 +1644,60 @@ runcode(function()
         ["Min"] = 1,
         ["Max"] = 50
     })
+end)
+
+runcode(function()
+	local function getHealingItem()
+		local inv = br["InventoryController"]:getPlayerInventory()
+		inv = inv and inv.groups.default or {}
+		for i2,v2 in pairs(inv) do 
+			if v2.item and v2.item.type ~= "" and br["ItemTable"][v2.item.type].bandage then 
+				return v2.item.type, br["ItemTable"][v2.item.type].bandage.healAmount
+			end
+		end
+	end
+
+	local function getShieldItem()
+		local inv = br["InventoryController"]:getPlayerInventory()
+		inv = inv and inv.groups.default or {}
+		for i2,v2 in pairs(inv) do 
+			if v2.item and v2.item.type ~= "" and br["ItemTable"][v2.item.type].shield then 
+				return v2.item.type, br["ItemTable"][v2.item.type].shield.shieldAmount
+			end
+		end
+	end
+
+	local AutoHeal = {["Enabled"] = false}
+	AutoHeal = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoHeal",
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					repeat
+						task.wait()
+						local item, healthrequirement = getHealingItem()
+						local item2, requirement = getShieldItem()
+						local done 
+						if item then 
+							local health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
+							health = health and health.attributes or {health = 100, maxHealth = 100}
+							if health.health <= (health.maxHealth - (healthrequirement >= health.maxHealth and health.maxHealth / 2 or healthrequirement)) then 
+								br["Networking"].NetEvents.client.consume:fire(item)
+								done = true
+							end
+						end
+						if item2 then 
+							local health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
+							health = health and health.attributes or {shield = 100, maxShield = 100}
+							if health.shield <= (health.maxShield - (requirement >= health.maxShield and health.maxShield / 2 or requirement)) then 
+								br["Networking"].NetEvents.client.consume:fire(item2)
+								done = true
+							end
+						end
+						if done then task.wait(.2) end
+					until not AutoHeal["Enabled"]
+				end)
+			end
+		end
+	})
 end)
