@@ -862,8 +862,8 @@ runcode(function()
         local InventoryUtil = require(repstorage.TS.inventory["inventory-util"]).InventoryUtil
         OldClientGet = getmetatable(Client).Get
         getmetatable(Client).Get = function(Self, remotename)
+			local res = OldClientGet(Self, remotename)
 			if remotename == bedwars["AttackRemote"] and not uninjectflag then
-				local res = OldClientGet(Self, remotename)
 				return {
 					["instance"] = res["instance"],
 					["CallServer"] = function(Self, tab)
@@ -883,7 +883,7 @@ runcode(function()
 					end
 				}
 			end
-            return OldClientGet(Self, remotename)
+            return res
         end
         bedwars = {
 			["AnimationUtil"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out["shared"].util["animation-util"]).AnimationUtil,
@@ -6367,6 +6367,7 @@ runcode(function()
 	local speedjump = {["Enabled"] = false}
 	local speedjumpheight = {["Value"] = 20}
 	local speedjumpalways = {["Enabled"] = false}
+	local speedspeedup = {["Enabled"] = false}
 	local speedanimation = {["Enabled"] = false}
 	local speedtick = tick()
 	local bodyvelo
@@ -6396,7 +6397,7 @@ runcode(function()
 						if speedmode["Value"] == "CFrame" then
 							local newlongjumpvelo = longjumpvelo.Unit * math.max((Vector3.zero - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0)
 							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.zero
-							local newpos = spidergoinup and Vector3.zero or (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * ((speedval["Value"] * getSpeedMultiplier(true)) - 20))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
+							local newpos = spidergoinup and Vector3.zero or (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * (((speedval["Value"] + (speedspeedup["Enabled"] and killauranear and (48 - speedval["Value"]) or 0)) * getSpeedMultiplier(true)) - 20))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
 							local movevec = entity.character.Humanoid.MoveDirection.Unit * (20 * getSpeedMultiplier())
 							movevec = movevec == movevec and movevec or Vector3.zero
 							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.zero)
@@ -6443,7 +6444,10 @@ runcode(function()
 	speedmode = speed.CreateDropdown({
 		["Name"] = "Mode",
 		["List"] = {"Normal", "CFrame"},
-		["Function"] = function()
+		["Function"] = function(val)
+			if speedspeedup["Object"] then 
+				speedspeedup["Object"].Visible = val == "CFrame"
+			end
 			if bodyvelo then
 				bodyvelo:Remove()
 			end	
@@ -6477,6 +6481,12 @@ runcode(function()
 		["Name"] = "Always Jump",
 		["Function"] = function() end
 	})
+	speedspeedup = speed.CreateToggle({
+		["Name"] = "Speedup",
+		["Function"] = function() end,
+		["HoverText"] = "Speeds up when using killaura."
+	})
+	speedspeedup["Object"].Visible = speedmode["Value"] == "CFrame"
 	speedanimation = speed.CreateToggle({
 		["Name"] = "Slowdown Anim",
 		["Function"] = function() end
@@ -8973,7 +8983,6 @@ runcode(function()
 			print("stage 4")
 			lplr:Move(Vector3.new(1, 0, 0), false)
 			changed = true
-			local oldcamcframe = cam.CFrame
 			if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
 				clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
 			end
@@ -9012,11 +9021,12 @@ runcode(function()
 			if shared.VapeOverrideAnticheatBypassPre then 
 				shared.VapeOverrideAnticheatBypassPre(lplr.Character)
 			end
+			local oldcamcframe = cam.CFrame
 			lplr.Character = clone
 			RunLoops:BindToRenderStep("AnticheatBypassCameraFix", 1, function()
 				if (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01 then 
-					cam.CFrame = CFrame.new(cam.CFrame, cam.CFrame + oldcamcframe.lookVector)
-					UnbindFromRenderStep("AnticheatBypassCameraFix")
+					cam.CFrame = CFrame.new(cam.CFrame.p, cam.CFrame.p + oldcamcframe.lookVector)
+					RunLoops:UnbindFromRenderStep("AnticheatBypassCameraFix")
 				end
 			end)
 			print("stage 6")
@@ -9513,8 +9523,8 @@ runcode(function()
 					lplr.Character = oldchar
 					RunLoops:BindToRenderStep("AnticheatBypassCameraFix", 1, function()
 						if (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01 then 
-							cam.CFrame = CFrame.new(cam.CFrame, cam.CFrame + oldcamcframe.lookVector)
-							UnbindFromRenderStep("AnticheatBypassCameraFix")
+							cam.CFrame = CFrame.new(cam.CFrame.p, cam.CFrame.p + oldcamcframe.lookVector)
+							RunLoops:UnbindFromRenderStep("AnticheatBypassCameraFix")
 						end
 					end)
 				end
