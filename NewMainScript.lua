@@ -1,13 +1,4 @@
 repeat task.wait() until game:IsLoaded() == true
-if not shared.VapeSwitchServers and not shared.VapeBypass then 
-	if messagebox then 
-		local res = messagebox("Vape is down due to a contentprovider detection found, Will be fixing when I'm home, If you don't care about being banned, you can still use vape.", "Vape", 4)
-		if res ~= 6 then return end
-	else
-		print("vape detection found, poop exploit so no option noob")
-		return
-	end
-end
 local injected = true
 local oldrainbow = false
 local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
