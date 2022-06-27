@@ -1796,8 +1796,8 @@ runcode(function()
 						if plr then 
 							local royaleentity = getBattleRoyaleEntity(plr.Player)
 							if royaleentity and royaleentity:GetAttribute("downed") then
-								if reviving ~= plr.Player.UserId then 
-									reviving = plr.Player.UserId
+								if reviving ~= plr.Player then 
+									reviving = plr.Player
 									revivetick = tick() + 6
 									heallabel.Text = "Healing: "..(plr.Player.DisplayName or plr.Player.Name).." in 6"
 									br["Networking"].NetEvents.client.reviveStarted:fire(plr.Player.UserId)
@@ -1811,6 +1811,12 @@ runcode(function()
 								end
 							end
 						else
+							if reviving then 
+								local royaleentity = getBattleRoyaleEntity(reviving)
+								if royaleentity and royaleentity:GetAttribute("downed") then
+									br["Networking"].NetEvents.client.reviveFailed:fire(reviving.UserId)
+								end
+							end
 							reviving = nil
 						end
 					until (not AutoRevive["Enabled"])
