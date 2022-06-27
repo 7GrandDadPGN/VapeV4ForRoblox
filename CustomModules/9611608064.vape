@@ -341,7 +341,7 @@ runcode(function()
 						local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true)
 						currentplr = plr
 						if plr then 
-							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + (brvelo[plr.Player.Name] * 1.5)).lookVector * 1000
+							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + (brvelo[plr.Player.Name] * 1.4)).lookVector * 1000
 						end
 						return SilentAimfunc:raycast(origin, direction, args, ...)
 					end
@@ -1672,7 +1672,7 @@ runcode(function()
 		end
 		if #healingitems > 0 then 
 			table.sort(healingitems, function(a, b) return a.amount < b.amount end)
-			return healingitems[1].type
+			return healingitems[1].type, healingitems[1].amount
 		else
 			return nil
 		end
@@ -1689,7 +1689,7 @@ runcode(function()
 		end
 		if #healingitems > 0 then 
 			table.sort(healingitems, function(a, b) return a.amount < b.amount end)
-			return healingitems[1].type
+			return healingitems[1].type, healingitems[1].amount
 		else
 			return nil
 		end
@@ -1709,18 +1709,33 @@ runcode(function()
 						local health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
 						health = health and health.attributes or {health = 100, maxHealth = 100, shield = 100, maxShield = 100}
 						if item then 
-							if health.health <= (health.maxHealth - 25) then 
+							if health.health <= (health.maxHealth - (healthrequirement >= health.maxHealth and health.maxHealth / 2 or healthrequirement)) then 
+								local oldhealth = health.health
 								br["Networking"].NetEvents.client.consume:fire(item)
-								done = true
+								for i = 1, 10 do 
+									task.wait(0.1)
+									health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
+									health = health and health.attributes or {health = 100, maxHealth = 100, shield = 100, maxShield = 100}
+									if oldhealth ~= health.health then 
+										break
+									end
+								end
 							end
 						end
 						if item2 then 
-							if health.shield <= (health.maxShield - 25) then 
+							if health.shield <= (health.maxShield - (requirement >= health.maxShield and health.maxShield / 2 or requirement)) then 
+								local oldhealth = health.shield
 								br["Networking"].NetEvents.client.consume:fire(item2)
-								done = true
+								for i = 1, 10 do 
+									task.wait(0.1)
+									health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
+									health = health and health.attributes or {health = 100, maxHealth = 100, shield = 100, maxShield = 100}
+									if oldhealth ~= health.shield then 
+										break
+									end
+								end
 							end
 						end
-						if done then task.wait(.1) end
 					until not AutoHeal["Enabled"]
 				end)
 			end
