@@ -341,7 +341,7 @@ runcode(function()
 						local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true)
 						currentplr = plr
 						if plr then 
-							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + (brvelo[plr.Player.Name] * 2)).lookVector * 1000
+							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + (brvelo[plr.Player.Name] * 1.5)).lookVector * 1000
 						end
 						return SilentAimfunc:raycast(origin, direction, args, ...)
 					end
@@ -1778,7 +1778,7 @@ runcode(function()
 	local heallabel = Instance.new("TextLabel")
 	heallabel.TextSize = 20
 	heallabel.Font = Enum.Font.SourceSans
-	heallabel.TextColor3 = Color3.new(1, 1, 1)
+	heallabel.TextColor3 = Color3.new(1, 0.1, 0.1)
 	heallabel.TextStrokeTransparency = 0
 	heallabel.TextStrokeColor3 = Color3.new()
 	heallabel.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -1820,6 +1820,61 @@ runcode(function()
 							reviving = nil
 						end
 					until (not AutoRevive["Enabled"])
+				end)
+			end
+		end
+	})
+end)
+
+runcode(function()
+	local AutoAirdrop = {["Enabled"] = false}
+	local revivetick = tick()
+	local reviving
+	local heallabel = Instance.new("TextLabel")
+	heallabel.TextSize = 20
+	heallabel.Font = Enum.Font.SourceSans
+	heallabel.TextColor3 = Color3.new(0.1, 1, 0.1)
+	heallabel.TextStrokeTransparency = 0
+	heallabel.TextStrokeColor3 = Color3.new()
+	heallabel.Position = UDim2.new(0.5, 0, 0.5, 20)
+	heallabel.Text = ""
+	heallabel.Parent = GuiLibrary["MainGui"]
+	AutoAirdrop = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoAirdrop",
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					repeat
+						task.wait()
+						local localchar = isAlive()
+						if localchar then
+							heallabel.Visible = false
+							local found
+							for i,v in pairs(collectionservice:GetTagged("AirdropPackage")) do 
+								if v.PrimaryPart and (localchar.HumanoidRootPart.Position - v.PrimaryPart.Position).Magnitude <= 12 then 
+									found = v
+									if reviving ~= v then 
+										reviving = v
+										revivetick = tick() + 3
+										heallabel.Text = "Opening Airdrop in 3"
+									else
+										heallabel.Visible = true
+										heallabel.Text = "Opening Airdrop in "..math.floor((revivetick - tick()) * 10) / 10
+										if revivetick <= tick() then 
+											br["Networking"].NetEvents.client.openAirdropPackage(v)
+											heallabel.Text = "Opening Airdrop"
+										end
+									end
+									break
+								end
+							end
+							if not found then 
+								reviving = nil
+							end
+						else
+							reviving = nil
+						end
+					until (not AutoAirdrop["Enabled"])
 				end)
 			end
 		end
