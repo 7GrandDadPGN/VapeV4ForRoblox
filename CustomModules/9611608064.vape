@@ -1748,10 +1748,10 @@ runcode(function()
 					if oldspinfunc then 
 						task.spawn(function()
 							repeat
-								task.wait(.1)
+								task.wait(.2)
 								if not SpinBot["Enabled"] then break end
 								debug.setupvalue(oldspinfunc, 1, {CurrentCamera = {CFrame = {LookVector = Vector3.new(0, -1, 0)}}})
-								task.wait(.1)
+								task.wait(.2)
 								if not SpinBot["Enabled"] then break end
 								debug.setupvalue(oldspinfunc, 1, {CurrentCamera = {CFrame = {LookVector = Vector3.new(0, 1, 0)}}})
 							until (not SpinBot["Enabled"])
@@ -1773,19 +1773,31 @@ end)
 
 runcode(function()
 	local AutoRevive = {["Enabled"] = false}
+	local revivetick = tick()
+	local reviving
 	AutoRevive = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoRevive",
 		["Function"] = function(callback)
 			if callback then
 				task.spawn(function()
 					repeat
-						task.wait()
+						task.wait(.1)
 						local plr = GetNearestHumanoidToPosition(true, 15)
 						if plr then 
 							local royaleentity = getBattleRoyaleEntity(plr.Player)
 							if royaleentity and royaleentity:GetAttribute("downed") then
-								br["Networking"].NetEvents.client.revive(tonumber(plr.Player:GetAttribute("LivingEntityID")))
+								if reviving ~= plr then 
+									reviving = plr
+									revivetick = tick() + 6
+									br["Networking"].NetEvents.client.reviveStarted:fire(plr.Player.UserId)
+								else
+									if revivetick <= tick() then 
+										br["Networking"].NetEvents.client.revive(tonumber(royaleentity:GetAttribute("entityId")))
+									end
+								end
 							end
+						else
+							reviving = nil
 						end
 					until (not AutoRevive["Enabled"])
 				end)
