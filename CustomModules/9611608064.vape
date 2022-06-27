@@ -1775,24 +1775,38 @@ runcode(function()
 	local AutoRevive = {["Enabled"] = false}
 	local revivetick = tick()
 	local reviving
+	local heallabel = Instance.new("TextLabel")
+	heallabel.TextSize = 20
+	heallabel.Font = Enum.Font.SourceSans
+	heallabel.TextColor3 = Color3.new(1, 1, 1)
+	heallabel.TextStrokeTransparency = 0
+	heallabel.TextStrokeColor3 = Color3.new()
+	heallabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+	heallabel.Text = ""
+	heallabel.Parent = GuiLibrary["MainGui"]
 	AutoRevive = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoRevive",
 		["Function"] = function(callback)
 			if callback then
 				task.spawn(function()
 					repeat
-						task.wait(.1)
+						task.wait()
 						local plr = GetNearestHumanoidToPosition(true, 15)
+						heallabel.Visible = false
 						if plr then 
 							local royaleentity = getBattleRoyaleEntity(plr.Player)
 							if royaleentity and royaleentity:GetAttribute("downed") then
-								if reviving ~= plr then 
-									reviving = plr
+								if reviving ~= plr.Player.UserId then 
+									reviving = plr.Player.UserId
 									revivetick = tick() + 6
+									heallabel.Text = "Healing: "..(plr.Player.DisplayName or plr.Player.Name).." in 6"
 									br["Networking"].NetEvents.client.reviveStarted:fire(plr.Player.UserId)
 								else
+									heallabel.Visible = true
+									heallabel.Text = "Healing: "..(plr.Player.DisplayName or plr.Player.Name).." in "..math.floor((revivetick - tick()) * 10) / 10
 									if revivetick <= tick() then 
-										br["Networking"].NetEvents.client.revive(tonumber(royaleentity:GetAttribute("entityId")))
+										heallabel.Text = "Healed: "..(plr.Player.DisplayName or plr.Player.Name)
+										br["Networking"].NetEvents.client.revive(br["EntityService"]:getLivingEntityByUserId(plr.Player.UserId):getId())
 									end
 								end
 							end
