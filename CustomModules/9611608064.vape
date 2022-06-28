@@ -341,7 +341,8 @@ runcode(function()
 						local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true)
 						currentplr = plr
 						if plr then 
-							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + (brvelo[plr.Player.Name] * 1.4)).lookVector * 1000
+							local newvelo = Vector3.new(brvelo[plr.Player.Name].X * 1.45, brvelo[plr.Player.Name].Y * 0.9, brvelo[plr.Player.Name].Z * 1.45)
+							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + newvelo).lookVector * 1000
 						end
 						return SilentAimfunc:raycast(origin, direction, args, ...)
 					end
