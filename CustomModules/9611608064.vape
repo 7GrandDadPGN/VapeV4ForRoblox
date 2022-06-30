@@ -482,7 +482,7 @@ local function renderNametag(plr)
 	if (br["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[br["HashFunction"](plr.Name..plr.UserId)]) then
  		if lplr ~= plr and br["CheckPlayerType"](lplr) == "DEFAULT" then
 			task.spawn(function()
-				repeat task.wait() until getBattleRoyaleEntity(plr.UserId) and getBattleRoyaleEntity(plr.UserId):GetAttribute("playerConnected")
+				repeat task.wait() until getBattleRoyaleEntity(plr) and getBattleRoyaleEntity(plr):GetAttribute("playerConnected")
 				task.wait(4)
 				repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..clients.ChatStrings2.vape, "All")
 				task.spawn(function()
