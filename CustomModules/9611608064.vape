@@ -2271,6 +2271,7 @@ end)
 
 runcode(function()
 	local oldspinfunc
+	local oldspinfunc2
 	SpinBot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SpinBot",
 		["Function"] = function(callback)
@@ -2285,12 +2286,32 @@ runcode(function()
 							end
 						end
 					end
+					local newcam = Instance.new("Camera")
+					newcam.Name = "NewCamera"
+					newcam.Parent = workspace
+					for i,v in pairs(debug.getprotos(br["ShiftLockController"].enable)) do 
+						if #debug.getconstants(v) > 10 and debug.getconstant(v, 10) == "ZOOM_OUT_SCALER" then 
+							oldspinfunc2 = v
+							break
+						end
+					end
 					if oldspinfunc then 
 						task.spawn(function()
 							repeat
-								task.wait(.2)
+								task.wait()
 								if not SpinBot["Enabled"] then break end
-								debug.setupvalue(oldspinfunc, 1, {CurrentCamera = {CFrame = {LookVector = Vector3.new(0, 1, 0)}}})
+								debug.setupvalue(oldspinfunc, 1, {CurrentCamera = {CFrame = {LookVector = CFrame.Angles(math.rad(tick() * 200 % 360), 0, 0).lookVector}}})
+							until (not SpinBot["Enabled"])
+						end)
+					end
+					if oldspinfunc2 then 
+						task.spawn(function()
+							repeat
+								task.wait()
+								if not SpinBot["Enabled"] then break end
+								br["ShiftLockController"]:disable()
+								uis.MouseBehavior = Enum.MouseBehavior.LockCenter
+								uis.MouseIconEnabled = false
 							until (not SpinBot["Enabled"])
 						end)
 					end
@@ -2302,6 +2323,9 @@ runcode(function()
 				if oldspinfunc then 
 					debug.setupvalue(oldspinfunc, 1, workspace)
 					oldspinfunc = nil
+				end
+				if oldspinfunc2 then 
+					br["ShiftLockController"]:enable()
 				end
 			end
 		end
