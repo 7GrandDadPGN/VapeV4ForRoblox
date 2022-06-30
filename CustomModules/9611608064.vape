@@ -20,6 +20,9 @@ local br = {}
 local brpos = {}
 local brvelo = {}
 local storedshahashes = {}
+local NoSlowdown = {["Enabled"] = false}
+local SilentAim = {["Enabled"] = false}
+local SpinBot = {["Enabled"] = false}
 local clients = {
 	ChatStrings1 = {
 		["KVOP25KYFPPP4"] = "vape",
@@ -244,6 +247,13 @@ local function getBattleRoyaleEntity(plr)
 		end
 	end
 end
+local function getLivingEntity(plr)
+	for i,v in pairs(collectionservice:GetTagged("living-entity-component")) do 
+		if v:GetAttribute("userId") == plr.UserId then 
+			return v
+		end
+	end
+end
 
 local function GetNearestHumanoidToMouse(player, distance, checkvis)
     local closest, returnedplayer = distance, nil
@@ -306,6 +316,16 @@ local function findTouchInterest(tool)
 	return nil
 end
 
+local function betterfind(tab, obj)
+	for i,v in pairs(tab) do
+		if v == obj or type(v) == "table" and v.hash == obj then
+			return v
+		end
+	end
+	return nil
+end
+
+local OldGenerateCommand
 runcode(function()
 	local Flamework = require(repstorage.rbxts_include.node_modules["@flamework"].core.out.flamework).Flamework
 	repeat task.wait() until Flamework.isInitialized
@@ -334,6 +354,7 @@ runcode(function()
 			return playertype, playerattackable
 		end,
 		["ChickynoidClient"] = require(repstorage.rbxts_include.node_modules.chickynoid.src).ChickynoidClient,
+		["DamageEvents"] = repstorage["events-@easy-games/damage:shared/damage-networking@getEvents.Events"],
 		["EntityService"] = Flamework.resolveDependency("@easy-games/damage:server/services/entity/entity-service@EntityService"),
 		["GameQueryUtil"] = require(repstorage.rbxts_include.node_modules["@easy-games"]["game-core"].out).GameQueryUtil,
 		["GunController"] = Flamework.resolveDependency("client/controllers/global/gun/gun-controller@GunController"),
@@ -358,6 +379,7 @@ runcode(function()
 		["ItemRarityTable"] = debug.getupvalue(require(repstorage.TS.item.rarity["item-rarity-meta"]).getItemRarityMeta, 1),
 		["ItemHolderController"] = Flamework.resolveDependency("client/controllers/global/held-item/item-holder-controller@ItemHolderController"),
 		["InventoryController"] = Flamework.resolveDependency("client/controllers/global/inventory/inventory-controller@InventoryController"),
+		["KillFeedController"] = Flamework.resolveDependency("client/controllers/game/kill-feed/kill-feed-controller@KillFeedController"),
 		["LobbyClientEvents"] = require(repstorage.rbxts_include.node_modules["@easy-games"].lobby.out.client.events).LobbyClientEvents,
 		["MatchManagerController"] = Flamework.resolveDependency("@easy-games/minigame-engine:client/controllers/match/match-manager-controller@MatchManagerController"),
 		["Networking"] = require(repstorage.TS.networking),
@@ -367,6 +389,21 @@ runcode(function()
 		["SprintMoveType"] = require(game.ReplicatedStorage.TS.chickynoid["move-type"]["sprint-move-type"]).SprintMoveType,
 		["BaseGun"] = require(repstorage.TS.gun.guns["base-gun"])
 	}
+	OldGenerateCommand = br["ChickynoidClient"].GenerateCommand
+	br["ChickynoidClient"].GenerateCommand = function(self, ...)
+		local res = OldGenerateCommand(self, ...)
+		if NoSlowdown["Enabled"] then 
+			res.sc = false
+			res.sp = true
+		end
+		if SilentAim["Enabled"] then 
+			res.fb = true
+		end
+		if SpinBot["Enabled"] and res.f == nil then 
+			res.fa = cam.CFrame.p + CFrame.Angles(0, math.rad(tick() * 1000 % 360), 0).lookVector * 1000
+		end
+		return res
+	end
 	RunLoops:BindToHeartbeat("PositionUpdater", 1, function()
 		for i, v in pairs(getAttackable()) do
 			brvelo[v.Player.Name] = v.Character.Head.Position - (brpos[v.Player.Name] or v.Character.Head.Position)	
@@ -443,9 +480,9 @@ end)
 
 local function renderNametag(plr)
 	if (br["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[br["HashFunction"](plr.Name..plr.UserId)]) then
-		if lplr ~= plr and br["CheckPlayerType"](lplr) == "DEFAULT" then
+ 		if lplr ~= plr and br["CheckPlayerType"](lplr) == "DEFAULT" then
 			task.spawn(function()
-				repeat task.wait() until plr:GetAttribute("PlayerConnected")
+				repeat task.wait() until getBattleRoyaleEntity(plr.UserId) and getBattleRoyaleEntity(plr.UserId):GetAttribute("playerConnected")
 				task.wait(4)
 				repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..clients.ChatStrings2.vape, "All")
 				task.spawn(function()
@@ -773,6 +810,9 @@ end)
 
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	uninjectflag = true
+	if OldGenerateCommand then
+		br["ChickynoidClient"].GenerateCommand = OldGenerateCommand
+	end
 	if chatconnection then 
 		chatconnection:Disconnect()
 	end
@@ -803,7 +843,6 @@ GuiLibrary["RemoveObject"]("GravityOptionsButton")
 GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 runcode(function()
-	local SilentAim = {["Enabled"] = false}
 	local SilentAimFOV = {["Value"] = 0}
 	local SilentAimAutoFire = {["Enabled"] = false}
 	local aimfovframecolor = {["Value"] = 0.44}
@@ -827,7 +866,7 @@ runcode(function()
 						local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true)
 						currentplr = plr
 						if plr then 
-							local newvelo = Vector3.new(brvelo[plr.Player.Name].X * 1.45, brvelo[plr.Player.Name].Y * 0.9, brvelo[plr.Player.Name].Z * 1.45)
+							local newvelo = Vector3.new(brvelo[plr.Player.Name].X * 1.475, brvelo[plr.Player.Name].Y * 0.9, brvelo[plr.Player.Name].Z * 1.475)
 							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + newvelo).lookVector * 1000
 						end
 						return SilentAimfunc:raycast(origin, direction, args, ...)
@@ -2231,7 +2270,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local SpinBot = {["Enabled"] = false}
 	local oldspinfunc
 	SpinBot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SpinBot",
@@ -2252,9 +2290,6 @@ runcode(function()
 							repeat
 								task.wait(.2)
 								if not SpinBot["Enabled"] then break end
-								debug.setupvalue(oldspinfunc, 1, {CurrentCamera = {CFrame = {LookVector = Vector3.new(0, -1, 0)}}})
-								task.wait(.2)
-								if not SpinBot["Enabled"] then break end
 								debug.setupvalue(oldspinfunc, 1, {CurrentCamera = {CFrame = {LookVector = Vector3.new(0, 1, 0)}}})
 							until (not SpinBot["Enabled"])
 						end)
@@ -2270,6 +2305,50 @@ runcode(function()
 				end
 			end
 		end
+	})
+end)
+
+runcode(function()
+	local AutoToxic = {["Enabled"] = false}
+	local AutoToxicPhrases2 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
+	local justsaid = ""
+	local oldadd
+	AutoToxic = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoToxic",
+		["Function"] = function(callback)
+			if callback then 
+				oldadd = br["DamageEvents"].livingEntityDeath.OnClientEvent:connect(function(p7, p8, p9)
+					if not p9.fromEntity then return end
+					local ent = br["EntityService"]:getLivingEntityById(p7)
+					local ent2 = br["EntityService"]:getLivingEntityById(p9.fromEntity)
+					if ent and ent2 then 
+						if ent2.attributes.playerUserId == lplr.UserId then 
+							local plr = players:GetPlayerByUserId(ent.attributes.playerUserId)
+							if plr then 
+								local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe on top"
+								if custommsg == lastsaid then
+									custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe on top"
+								else
+									lastsaid = custommsg
+								end
+								if custommsg then
+									custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
+								end
+								repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..custommsg, "All")
+							end
+						end
+					end
+				end)
+			else
+				if oldadd then 
+					oldadd:Disconnect()
+				end
+			end
+		end
+	})
+	AutoToxicPhrases2 = AutoToxic.CreateTextList({
+		["Name"] = "ToxicList2",
+		["TempText"] = "phrase (kill) <name>",
 	})
 end)
 
@@ -2325,6 +2404,14 @@ runcode(function()
 				end)
 			end
 		end
+	})
+end)
+
+runcode(function()
+	NoSlowdown = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "NoSlowdown",
+		["Function"] = function() end,
+		["HoverText"] = "Prevents slowdown when consuming items"
 	})
 end)
 
