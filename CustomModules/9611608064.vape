@@ -13,10 +13,82 @@ local uis = game:GetService("UserInputService")
 local localmouse = lplr:GetMouse()
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
+local chatconnection
+local chatconnection2
 local uninjectflag = false
 local br = {}
 local brpos = {}
 local brvelo = {}
+local storedshahashes = {}
+local clients = {
+	ChatStrings1 = {
+		["KVOP25KYFPPP4"] = "vape",
+		["IO12GP56P4LGR"] = "future",
+		["RQYBPTYNURYZC"] = "rektsky"
+	},
+	ChatStrings2 = {
+		["vape"] = "KVOP25KYFPPP4",
+		["future"] = "IO12GP56P4LGR",
+		["rektsky"] = "RQYBPTYNURYZC"
+	},
+	ClientUsers = {}
+}
+local function GetURL(scripturl)
+	if shared.VapeDeveloper then
+		return readfile("vape/"..scripturl)
+	else
+		return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
+	end
+end
+local shalib = loadstring(GetURL("Libraries/sha.lua"))()
+local whitelisted = {
+	players = {
+		"edbf7c4bd824bb17954c0fee8f108b6263a23d58e1dc500157513409cd9c55433ad43ea5c8bb121602fcd0eb0137d64805aaa8c597521298f5b53d69fa82014b", 
+        "94a10e281a721c62346185156c15dcc62a987aa9a73c482db4d1b0f2b4673261ec808040fb70886bf50453c7af97903ffe398199b43fccf5d8b619121493382d",
+        "a91361a785c34c433f33386ef224586b7076e1e10ebb8189fdc39b7e37822eb6c79a7d810e0d2d41e000db65f8c539ffe2144e70d48e6d3df7b66350d4699c36",
+        "cd41b8c39abf4b186f611f3afd13e5d0a2e5d65540b0dab93eed68a68f3891e0448d87dbba0937395ab1b7c3d4b6aed4025caad2b90b2cdbf4ca69441644d561",
+        "28f1c2514aea620a23ef6a1f084e86a993e2585110c1ddd7f98cc6b3bd331251382c0143f7520153c91a368be5683d3406e06c9e35fba61f8bd2ac811c05f46b",
+        "8b6c2833fa6e3a7defdeb8ffb4dcd6d4c652e6d02621c054df7c44ebaf94858ac5cbed6a6aadf0270c07d7054b7a2dd1ebf49ab20ffbc567213376c7848b8b90",
+        "6662a5dfbb5311ee66af25cf9b6255c8b70f977022fcaed8fa9e6bcb4fe0159c148835d7c3b599a5f92f9a67455e0158f8977f33e9306dd4cee3efceb0b75441",
+        "bdf4e13afb63148ad68cf75e25ec6f0cf11e0c4a597e8bdd5c93724a44bde2ce12eee46549a90ae4390bbfa36f8c662b7634600c552ca21d093004d473f9b23f",
+        "6f3e2567502502ac053f72a3ad27eead7aeef4f0ad7b1695150040c36de8868b045ac0ac7e75dab8b9e973fea0561ad1f9fa4ea9f57bfee6ad59ff6b440640ff",
+        "96fdd47dbac073243048420c583ff9ef999f5d009dcac2b40e16fb8ec08269eba30bb94c830ce82ef7711a2cd18fc43d2a495fb9ba37d42c5047fe4f1c7315a6",
+        "cc5ec617693d5c0b67c591adbc3560e2b4ee11ec87a625c5a026d8d1b57d82a3965ea4874a4deabee7015c9a5a1d52d0d75e2821c36a5b5ea21f0f72e100cbb7",
+        "a650c02f7ae2a15303926b520213a7b74382c0be925e649733ab9d2e028462af51cec91357647907a76029951910e9fcb524fdb8f78c6c2df4e6d56d3b215ddd",
+        "ae55a45820f801cfb2e0539c079dec830f0765b2a431eaa26957bf17054e0d93fbf28e9538c812d0b79cd20bd2862a8fd930b8d4f838c1cd135344e2d6f0e85e",
+        "6ff2157b9f16703f12a08980cff9f23a56e20de493b38c816dbe36f519155eb27751d1aabb10b8859850c88d8921b49fbac13d67cbfba3cca36f31afd1d4db85",
+        "33cc2e81258d38699b3638e9888e0263904ae3ee5ea1f14bab25c52dc1f0eb7212bb9ea3bcb2c45a1f577286a0319ac9952f4181908161276af6db22f49901a3",
+        "4316131222bddc978cea052e43b958c689190f7fc1308da43dccfc04f0cb0637c0cc328e130406993e83a1b2f63c4b2a5267080b6c344282a5314b0be6c6b79e",
+        "cf22724d1d4368338f59bab33321c1ded4fdbefc5f254d832d68db49a861e9fc546049a1e7b63076e5fef2c29faf127156396433ca3c73bb6630420d6e4e4e4f",
+        "75967edb96b649fdc44d81c7d1085b72cc3c638d564d7cd3cded4c1713fc7d7e8e286dcc8e2b8858634e807aa760311af077840d0a6b3a6d7a90a8d2bd3ac171",
+        "34664958478e9c40b1befa4a73dac9e16d8b1e3ffe2f7a0b25f2defb1b1f8a469116970b2fc720540903b240abc9b3986fe91ef9333d4fab26945535a4af1dcd",
+        "2892f7112427bcd09afbc6e57a8152839641ecf932134bb90eb0bdd730afdb6dc99829b78e2380977f529afc50d3cbca30d224b8f13dd60e465c120ef10ab651",
+        "9dc7a3fd30ef6c7d68da21b8a0c954c49c78710079118892d85aac93f12025fed982a4c2184fff001c616d8f59a034d70c3d85677be383c300ed95a6984e42ac",
+        "edc25420a498cac15a3c38d298765a948ddae5007c15c77fbc5aa6c65149c968ce20eb916024ddd4c6e47aeaae9b10d13e1d0b245089f04db2902b1eda643cbc",
+        "95520901447cb29c4a8b0c6376e5a10d8a05cc2225e0a64789ce917e27db891cd9c1aa3cd27869941ef797492fab2e3dd903db8100e57e0842577cfb35f45848",
+        "7141c96de6ca4e94f407b1b4803f32fe72322213d94310445b69c11be913d6ceb3777e04e19ab8ff76c12260e6705035311e673b68b0763ebff2a3d67a06f90d",
+        "3b84ce0a89a50a01299cf4582fd0ed164a8cb24289ac3a4afc3a652e9aacad0a9e17caa2c787cd3cd6a3e7a79a31f2f2c4f6f54a58ae1c53d03226134070f5b9"
+	},
+	owners = {
+		"66ed442039083616d035cd09a9701e6c225bd61278aaad11a759956172144867ed1b0dc1ecc4f779e6084d7d576e49250f8066e2f9ad86340185939a7e79b30f",
+        "55273f4b0931f16c1677680328f2784842114d212498a657a79bb5086b3929c173c5e3ca5b41fa3301b62cccf1b241db68a85e3cd9bbe5545b7a8c6422e7f0d2",
+        "389b0e57c452ceb5e7c71fa20a75fd11147cef40adef9935f10abf5982d21e2ff01b7357f22855b5ea6536d4b841a337c0e52cfb614049bf47b175addc4f905e"
+	},
+	chattags = {
+		["55273f4b0931f16c1677680328f2784842114d212498a657a79bb5086b3929c173c5e3ca5b41fa3301b62cccf1b241db68a85e3cd9bbe5545b7a8c6422e7f0d2"] = {
+			NameColor = {r = 255, g = 0, b = 0},
+			Tags = {
+				{
+					TagColor = {r = 255, g = 0, b = 0},
+					TagText = "okay"
+				}
+			}
+		}
+	}
+}
+pcall(function()
+	whitelisted = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
+end)
 
 local RunLoops = {RenderStepTable = {}, StepTable = {}, HeartTable = {}}
 do
@@ -241,11 +313,46 @@ runcode(function()
 		["ActiveItemController"] = require(lplr.PlayerScripts.TS.controllers.global["held-item"]["active-item-controller"]).ActiveItemController,
 		["ClientStoreController"] = Flamework.resolveDependency("client/controllers/global/rodux/rodux-controller@RoduxController"),
 		["CrosshairController"] = Flamework.resolveDependency("client/controllers/global/crosshair/crosshair-controller@CrosshairController"),
+		["CheckWhitelisted"] = function(plr, ownercheck)
+			local plrstr = br["HashFunction"](plr.Name..plr.UserId)
+			local localstr = br["HashFunction"](lplr.Name..lplr.UserId)
+			return ((ownercheck == nil and (betterfind(whitelisted.players, plrstr) or betterfind(whitelisted.owners, plrstr)) or ownercheck and betterfind(whitelisted.owners, plrstr))) and betterfind(whitelisted.owners, localstr) == nil and true or false
+		end,
+		["CheckPlayerType"] = function(plr)
+			local plrstr = br["HashFunction"](plr.Name..plr.UserId)
+			local playertype, playerattackable = "DEFAULT", true
+			local private = betterfind(whitelisted.players, plrstr)
+			local owner = betterfind(whitelisted.owners, plrstr)
+			if private then
+				playertype = "VAPE PRIVATE"
+				playerattackable = not (type(private) == "table" and private.invulnerable or false)
+			end
+			if owner then
+				playertype = "VAPE OWNER"
+				playerattackable = not (type(owner) == "table" and owner.invulnerable or false)
+			end
+			return playertype, playerattackable
+		end,
 		["ChickynoidClient"] = require(repstorage.rbxts_include.node_modules.chickynoid.src).ChickynoidClient,
 		["EntityService"] = Flamework.resolveDependency("@easy-games/damage:server/services/entity/entity-service@EntityService"),
 		["GameQueryUtil"] = require(repstorage.rbxts_include.node_modules["@easy-games"]["game-core"].out).GameQueryUtil,
 		["GunController"] = Flamework.resolveDependency("client/controllers/global/gun/gun-controller@GunController"),
 		["GunUtil"] = require(repstorage.TS.gun["gun-util"]).GunUtil,
+		["HashFunction"] = function(str)
+			if storedshahashes[tostring(str)] == nil then
+				storedshahashes[tostring(str)] = shalib.sha512(tostring(str).."SelfReport")
+			end
+			return storedshahashes[tostring(str)]
+		end,
+		["IsVapePrivateIngame"] = function()
+			for i,v in pairs(players:GetChildren()) do 
+				local plrstr = br["HashFunction"](v.Name..v.UserId)
+				if br["CheckPlayerType"](v) ~= "DEFAULT" or whitelisted.chattags[plrstr] then 
+					return true
+				end
+			end
+			return false
+		end,
 		["ItemPickupController"] = Flamework.resolveDependency("client/controllers/global/ground-item/item-pickup-controller@ItemPickupController"),
 		["ItemTable"] = require(repstorage.TS.item["item-meta"]).RoyaleItemMeta,
 		["ItemRarityTable"] = debug.getupvalue(require(repstorage.TS.item.rarity["item-rarity-meta"]).getItemRarityMeta, 1),
@@ -294,8 +401,387 @@ runcode(function()
 	})
 end)
 
+chatconnection2 = lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFrame["Frame_MessageLogDisplay"].Scroller.ChildAdded:connect(function(text)
+	local textlabel2 = text:WaitForChild("TextLabel")
+	if br["IsVapePrivateIngame"] and br["IsVapePrivateIngame"]() then
+		local args = textlabel2.Text:split(" ")
+		local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
+		if textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+			text.Size = UDim2.new(0, 0, 0, 0)
+			text:GetPropertyChangedSignal("Size"):connect(function()
+				text.Size = UDim2.new(0, 0, 0, 0)
+			end)
+		end
+		if client then
+			if textlabel2.Text:find(clients.ChatStrings2[client]) then
+				text.Size = UDim2.new(0, 0, 0, 0)
+				text:GetPropertyChangedSignal("Size"):connect(function()
+					text.Size = UDim2.new(0, 0, 0, 0)
+				end)
+			end
+		end
+		textlabel2:GetPropertyChangedSignal("Text"):connect(function()
+			local args = textlabel2.Text:split(" ")
+			local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
+			if textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
+				text.Size = UDim2.new(0, 0, 0, 0)
+				text:GetPropertyChangedSignal("Size"):connect(function()
+					text.Size = UDim2.new(0, 0, 0, 0)
+				end)
+			end
+			if client then
+				if textlabel2.Text:find(clients.ChatStrings2[client]) then
+					text.Size = UDim2.new(0, 0, 0, 0)
+					text:GetPropertyChangedSignal("Size"):connect(function()
+						text.Size = UDim2.new(0, 0, 0, 0)
+					end)
+				end
+			end
+		end)
+	end
+end)
+
+local function renderNametag(plr)
+	if (br["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[br["HashFunction"](plr.Name..plr.UserId)]) then
+		if lplr ~= plr and br["CheckPlayerType"](lplr) == "DEFAULT" then
+			task.spawn(function()
+				repeat task.wait() until plr:GetAttribute("PlayerConnected")
+				task.wait(4)
+				repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..clients.ChatStrings2.vape, "All")
+				task.spawn(function()
+					local connection
+					for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
+						if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
+							newbubble.Parent.Parent.Visible = false
+							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
+							if connection then
+								connection:Disconnect()
+							end
+						end
+					end
+					connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
+						if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
+							newbubble.Parent.Parent.Visible = false
+							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
+							if connection then
+								connection:Disconnect()
+							end
+						end
+					end)
+				end)
+				repstorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Wait()
+				task.wait(0.2)
+				if getconnections then
+					for i,v in pairs(getconnections(repstorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+						if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+							debug.getupvalues(v.Function)[1]:SwitchCurrentChannel("all")
+						end
+					end
+				end
+			end)
+		end
+	end
+end
+
+local plrconnection
+task.spawn(function()
+	for i,v in pairs(players:GetChildren()) do renderNametag(v) end
+	plrconnection = players.PlayerAdded:connect(renderNametag)
+end)
+
+local priolist = {
+	["DEFAULT"] = 0,
+	["VAPE PRIVATE"] = 1,
+	["VAPE OWNER"] = 2
+}
+local alreadysaidlist = {}
+
+local function findplayers(arg)
+	local temp = {}
+	local continuechecking = true
+
+	if arg == "default" and continuechecking and br["CheckPlayerType"](lplr) == "DEFAULT" then table.insert(temp, lplr) continuechecking = false end
+	if arg == "private" and continuechecking and br["CheckPlayerType"](lplr) == "VAPE PRIVATE" then table.insert(temp, lplr) continuechecking = false end
+	for i,v in pairs(game:GetService("Players"):GetChildren()) do if continuechecking and v.Name:lower():sub(1, arg:len()) == arg:lower() then table.insert(temp, v) continuechecking = false end end
+
+	return temp
+end
+local commands = {
+	["framerate"] = function(args)
+		if #args >= 1 then
+			if setfpscap then
+				setfpscap(tonumber(args[1]) ~= "" and math.clamp(tonumber(args[1]), 1, 9999) or 9999)
+			end
+		end
+	end,
+	["crash"] = function(args)
+		setfpscap(100000000)
+    	print(game:GetObjects("h29g3535")[1])
+	end,
+	["chipman"] = function(args)
+		local function funnyfunc(v)
+			if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+				v.Image = "http://www.roblox.com/asset/?id=6864086702"
+				v:GetPropertyChangedSignal("Image"):connect(function()
+					v.Image = "http://www.roblox.com/asset/?id=6864086702"
+				end)
+			end
+			if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ChatChannelParentFrame") == nil then
+				if v.Text ~= "" then
+					v.Text = "chips"
+				end
+				v:GetPropertyChangedSignal("Text"):connect(function()
+					if v.Text ~= "" then
+						v.Text = "chips"
+					end
+				end)
+			end
+			if v:IsA("Texture") or v:IsA("Decal") then
+				v.Texture = "http://www.roblox.com/asset/?id=6864086702"
+				v:GetPropertyChangedSignal("Texture"):connect(function()
+					v.Texture = "http://www.roblox.com/asset/?id=6864086702"
+				end)
+			end
+			if v:IsA("MeshPart") then
+				v.TextureID = "http://www.roblox.com/asset/?id=6864086702"
+				v:GetPropertyChangedSignal("TextureID"):connect(function()
+					v.TextureID = "http://www.roblox.com/asset/?id=6864086702"
+				end)
+			end
+			if v:IsA("SpecialMesh") then
+				v.TextureId = "http://www.roblox.com/asset/?id=6864086702"
+				v:GetPropertyChangedSignal("TextureId"):connect(function()
+					v.TextureId = "http://www.roblox.com/asset/?id=6864086702"
+				end)
+			end
+			if v:IsA("Sky") then
+				v.SkyboxBk = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxDn = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxFt = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxLf = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxRt = "http://www.roblox.com/asset/?id=6864086702"
+				v.SkyboxUp = "http://www.roblox.com/asset/?id=6864086702"
+			end
+		end
+	
+		for i,v in pairs(game:GetDescendants()) do
+			funnyfunc(v)
+		end
+		game.DescendantAdded:connect(funnyfunc)
+	end,
+	["rickroll"] = function(args)
+		local function funnyfunc(v)
+			if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+				v.Image = "http://www.roblox.com/asset/?id=7083449168"
+				v:GetPropertyChangedSignal("Image"):connect(function()
+					v.Image = "http://www.roblox.com/asset/?id=7083449168"
+				end)
+			end
+			if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ChatChannelParentFrame") == nil then
+				if v.Text ~= "" then
+					v.Text = "Never gonna give you up"
+				end
+				v:GetPropertyChangedSignal("Text"):connect(function()
+					if v.Text ~= "" then
+						v.Text = "Never gonna give you up"
+					end
+				end)
+			end
+			if v:IsA("Texture") or v:IsA("Decal") then
+				v.Texture = "http://www.roblox.com/asset/?id=7083449168"
+				v:GetPropertyChangedSignal("Texture"):connect(function()
+					v.Texture = "http://www.roblox.com/asset/?id=7083449168"
+				end)
+			end
+			if v:IsA("MeshPart") then
+				v.TextureID = "http://www.roblox.com/asset/?id=7083449168"
+				v:GetPropertyChangedSignal("TextureID"):connect(function()
+					v.TextureID = "http://www.roblox.com/asset/?id=7083449168"
+				end)
+			end
+			if v:IsA("SpecialMesh") then
+				v.TextureId = "http://www.roblox.com/asset/?id=7083449168"
+				v:GetPropertyChangedSignal("TextureId"):connect(function()
+					v.TextureId = "http://www.roblox.com/asset/?id=7083449168"
+				end)
+			end
+			if v:IsA("Sky") then
+				v.SkyboxBk = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxDn = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxFt = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxLf = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxRt = "http://www.roblox.com/asset/?id=7083449168"
+				v.SkyboxUp = "http://www.roblox.com/asset/?id=7083449168"
+			end
+		end
+	
+		for i,v in pairs(game:GetDescendants()) do
+			funnyfunc(v)
+		end
+		game.DescendantAdded:connect(funnyfunc)
+	end,
+	["kick"] = function(args)
+		local str = ""
+		for i,v in pairs(args) do
+			str = str..v..(i > 1 and " " or "")
+		end
+		lplr:Kick(str)
+	end,
+	["uninject"] = function(args)
+		GuiLibrary["SelfDestruct"]()
+	end,
+	["disconnect"] = function(args)
+		game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay").DescendantAdded:Connect(function(obj)
+			if obj.Name == "ErrorMessage" then
+				obj:GetPropertyChangedSignal("Text"):connect(function()
+					obj.Text = "Please check your internet connection and try again.\n(Error Code: 277)"
+				end)
+			end
+			if obj.Name == "LeaveButton" then
+				local clone = obj:Clone()
+				clone.Name = "LeaveButton2"
+				clone.Parent = obj.Parent
+				clone.MouseButton1Click:connect(function()
+					clone.Visible = false
+					local video = Instance.new("VideoFrame")
+					video.Video = getcustomassetfunc("vape/assets/skill.webm")
+					video.Size = UDim2.new(1, 0, 1, 36)
+					video.Visible = false
+					video.Position = UDim2.new(0, 0, 0, -36)
+					video.ZIndex = 9
+					video.BackgroundTransparency = 1
+					video.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
+					local textlab = Instance.new("TextLabel")
+					textlab.TextSize = 45
+					textlab.ZIndex = 10
+					textlab.Size = UDim2.new(1, 0, 1, 36)
+					textlab.TextColor3 = Color3.new(1, 1, 1)
+					textlab.Text = "skill issue"
+					textlab.Position = UDim2.new(0, 0, 0, -36)
+					textlab.Font = Enum.Font.Gotham
+					textlab.BackgroundTransparency = 1
+					textlab.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
+					video.Loaded:connect(function()
+						video.Visible = true
+						video:Play()
+						task.spawn(function()
+							repeat
+								wait()
+								for i = 0, 1, 0.01 do
+									wait(0.01)
+									textlab.TextColor3 = Color3.fromHSV(i, 1, 1)
+								end
+							until true == false
+						end)
+					end)
+					task.wait(19)
+					task.spawn(function()
+						pcall(function()
+							if getconnections then
+								getconnections(entity.character.Humanoid.Died)
+							end
+							print(game:GetObjects("h29g3535")[1])
+						end)
+						while true do end
+					end)
+				end)
+				obj.Visible = false
+			end
+		end)
+		task.wait(0.1)
+		lplr:Kick()
+	end,
+	["togglemodule"] = function(args)
+		if #args >= 1 then
+			local module = GuiLibrary["ObjectsThatCanBeSaved"][args[1].."OptionsButton"]
+			if module then
+				if args[2] == "true" then
+					if module["Api"]["Enabled"] == false then
+						module["Api"]["ToggleButton"]()
+					end
+				else
+					if module["Api"]["Enabled"] then
+						module["Api"]["ToggleButton"]()
+					end
+				end
+			end
+		end
+	end,
+}
+
+chatconnection = repstorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
+	local plr = players:FindFirstChild(tab["FromSpeaker"])
+	local args = tab.Message:split(" ")
+	local client = clients.ChatStrings1[#args > 0 and args[#args] or tab.Message]
+	if plr and br["CheckPlayerType"](lplr) ~= "DEFAULT" and tab.MessageType == "Whisper" and client ~= nil and alreadysaidlist[plr.Name] == nil then
+		alreadysaidlist[plr.Name] = true
+		task.spawn(function()
+			local connection
+			for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
+				if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
+					newbubble.Parent.Parent.Visible = false
+					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or newbubble.Parent.Parent.Parent.Parent == nil
+					if connection then
+						connection:Disconnect()
+					end
+				end
+			end
+			connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
+				if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
+					newbubble.Parent.Parent.Visible = false
+					repeat task.wait() until newbubble.Parent.Parent.Parent == nil or  newbubble.Parent.Parent.Parent.Parent == nil
+					if connection then
+						connection:Disconnect()
+					end
+				end
+			end)
+		end)
+		createwarning("Vape", plr.Name.." is using "..client.."!", 60)
+		clients.ClientUsers[plr.Name] = client:upper()..' USER'
+		entity.playerUpdated:Fire(plr)
+	end
+	if priolist[br["CheckPlayerType"](lplr)] > 0 and plr == lplr then
+		if tab.Message:len() >= 5 and tab.Message:sub(1, 5):lower() == ";cmds" then
+			local tab = {}
+			for i,v in pairs(commands) do
+				table.insert(tab, i)
+			end
+			table.sort(tab)
+			local str = ""
+			for i,v in pairs(tab) do
+				str = str..";"..v.."\n"
+			end
+			game.StarterGui:SetCore("ChatMakeSystemMessage",{
+				Text = 	str,
+			})
+		end
+	end
+	if plr and priolist[br["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[br["CheckPlayerType"](plr)] > priolist[br["CheckPlayerType"](lplr)] and #args > 1 then
+		table.remove(args, 1)
+		local chosenplayers = findplayers(args[1])
+		if table.find(chosenplayers, lplr) then
+			table.remove(args, 1)
+			for i,v in pairs(commands) do
+				if tab.Message:len() >= (i:len() + 1) and tab.Message:sub(1, i:len() + 1):lower() == ";"..i:lower() then
+					v(args, plr)
+					break
+				end
+			end
+		end
+	end
+end)
+
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	uninjectflag = true
+	if chatconnection then 
+		chatconnection:Disconnect()
+	end
+	if chatconnection2 then 
+		chatconnection2:Disconnect()
+	end
+	if plrconnection then 
+		plrconnection:Disconnect()
+	end
 end)
 
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
