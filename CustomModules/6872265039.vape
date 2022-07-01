@@ -14,6 +14,15 @@ local robloxfriends = {}
 local bedwars = {}
 local getfunctions
 local origC0 = nil
+local function GetURL(scripturl)
+	if shared.VapeDeveloper then
+		return readfile("vape/"..scripturl)
+	else
+		return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
+	end
+end
+shared.vapeentity = loadstring(GetURL("Libraries/entityHandler.lua"))()
+local entity = shared.vapeentity
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
 local teleportfunc
 local betterisfile = function(file)
@@ -47,6 +56,11 @@ local function GetURL(scripturl)
 	else
 		return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
 	end
+end
+
+local function addvectortocframe2(cframe, newylevel)
+	local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = cframe:GetComponents()
+	return CFrame.new(x, newylevel, z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
 end
 
 local shalib = loadstring(GetURL("Libraries/sha.lua"))()
@@ -458,7 +472,127 @@ local function Cape(char, texture)
 			wait(0.1)
 		end
 	until not p or p.Parent ~= torso.Parent
-end	
+end
+
+local AnticheatBypassNumbers = {
+	TPSpeed = 0.1,
+	TPCombat = 0.3,
+	TPLerp = 0.39,
+	TPCheck = 15
+}
+
+local function friendCheck(plr, recolor)
+	if GuiLibrary["ObjectsThatCanBeSaved"]["Use FriendsToggle"]["Api"]["Enabled"] then
+		local friend = (table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"]["ObjectList"], plr.Name) and GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"]["ObjectListEnabled"][table.find(GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"]["ObjectList"], plr.Name)] and true or nil)
+		if recolor then
+			return (friend and GuiLibrary["ObjectsThatCanBeSaved"]["Recolor visualsToggle"]["Api"]["Enabled"] and true or nil)
+		else
+			return friend
+		end
+	end
+	return nil
+end
+
+do
+	local invadded = {}
+	local invremoved = {}
+	local armor1 = {}
+	local armor2 = {}
+	local armor3 = {}
+	local hand = {}
+	local healthconnection = {}
+	GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendRefresh.Event:connect(function()
+		entity.fullEntityRefresh()
+	end)
+	entity.isPlayerTargetable = function(plr)
+		return lplr ~= plr and shared.vapeteamcheck(plr) and friendCheck(plr) == nil
+	end
+	entity.playerUpdated = Instance.new("BindableEvent")
+	entity.characterAdded = function(plr, char, localcheck)
+        if char then
+            task.spawn(function()
+                local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
+                local head = char:WaitForChild("Head", 10)
+                local hum = char:WaitForChild("Humanoid", 10)
+                if humrootpart and hum and head then
+                    if localcheck then
+                        entity.isAlive = true
+                        entity.character.Head = head
+                        entity.character.Humanoid = hum
+                        entity.character.HumanoidRootPart = humrootpart
+                    else
+                        table.insert(entity.entityList, {
+                            Player = plr,
+                            Character = char,
+                            RootPart = humrootpart,
+							Head = head,
+							Humanoid = hum,
+                            Targetable = entity.isPlayerTargetable(plr),
+                            Team = plr.Team
+                        })
+                    end
+                    entity.entityConnections[#entity.entityConnections + 1] = char.ChildRemoved:connect(function(part)
+                        if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
+                            if localcheck then
+								if char == lplr.Character then
+									if part.Name == "HumanoidRootPart" then
+										entity.isAlive = false
+										local root = char:FindFirstChild("HumanoidRootPart")
+										if not root then 
+											for i = 1, 30 do 
+												task.wait(0.1)
+												root = char:FindFirstChild("HumanoidRootPart")
+												if root then break end
+											end
+										end
+										if root then 
+											entity.character.HumanoidRootPart = root
+											entity.isAlive = true
+										end
+									else
+										entity.isAlive = false
+									end
+								end
+                            else
+                                entity.removeEntity(plr)
+                            end
+                        end
+                    end)
+                end
+            end)
+        end
+    end
+	entity.entityAdded = function(plr, localcheck, custom)
+        entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterAdded:connect(function(char)
+            entity.refreshEntity(plr, localcheck)
+        end)
+        entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterRemoving:connect(function(char)
+            if localcheck then
+                entity.isAlive = false
+            else
+                entity.removeEntity(plr)
+            end
+        end)
+        entity.entityConnections[#entity.entityConnections + 1] = plr:GetAttributeChangedSignal("Team"):connect(function()
+            if localcheck then
+                entity.fullEntityRefresh()
+            else
+				entity.refreshEntity(plr, localcheck)
+				entity.playerUpdated:Fire(plr)
+				if plr:GetAttribute("Team") == lplr:GetAttribute("Team") then 
+					task.delay(3, function()
+						entity.refreshEntity(plr, localcheck)
+						entity.playerUpdated:Fire(plr)
+					end)
+				end
+            end
+        end)
+        if plr.Character then
+            entity.refreshEntity(plr, localcheck)
+        end
+    end
+	entity.fullEntityRefresh()
+end
 
 local function renderNametag(plr)
 	if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
@@ -827,6 +961,767 @@ runcode(function()
 		end,
 		["HoverText"] = "Fixes third person camera face bug"
 	})
+end)
+
+local AnticheatBypass = {["Enabled"] = false}
+local Scaffold = {["Enabled"] = false}
+local longjump = {["Enabled"] = false}
+local flyvelo
+GuiLibrary["RemoveObject"]("SpeedOptionsButton")
+runcode(function()
+	local speedmode = {["Value"] = "Normal"}
+	local speedval = {["Value"] = 1}
+	local speedjump = {["Enabled"] = false}
+	local speedjumpheight = {["Value"] = 20}
+	local speedjumpalways = {["Enabled"] = false}
+	local speedspeedup = {["Enabled"] = false}
+	local speedanimation = {["Enabled"] = false}
+	local speedtick = tick()
+	local bodyvelo
+	local raycastparameters = RaycastParams.new()
+	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Speed",
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					repeat task.wait() until shared.VapeFullyLoaded
+					if speed["Enabled"] then
+						if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
+							AnticheatBypass["ToggleButton"](false)
+						end
+					end
+				end)
+				local lastnear = false
+				RunLoops:BindToHeartbeat("Speed", 1, function(delta)
+					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+						if speedanimation["Enabled"] then
+							for i,v in pairs(entity.character.Humanoid:GetPlayingAnimationTracks()) do
+								if v.Name == "WalkAnim" or v.Name == "RunAnim" then
+									v:AdjustSpeed(1)
+								end
+							end
+						end
+						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
+						if speedmode["Value"] == "CFrame" then
+							if speedspeedup["Enabled"] and killauranear ~= lastnear then 
+								if killauranear then 
+									speedtick = tick() + 5
+								else
+									speedtick = 0
+								end
+								lastnear = killauranear
+							end
+							local newlongjumpvelo = longjumpvelo.Unit * math.max((Vector3.zero - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0)
+							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.zero
+							local newpos = spidergoinup and Vector3.zero or (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * (((speedval["Value"] + (speedspeedup["Enabled"] and killauranear and speedtick >= tick() and (48 - speedval["Value"]) or 0))) - 20))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
+							local movevec = entity.character.Humanoid.MoveDirection.Unit * 20
+							movevec = movevec == movevec and movevec or Vector3.zero
+							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.zero)
+							raycastparameters.FilterDescendantsInstances = {lplr.Character}
+							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
+							if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
+							if networkownerfunc and networkownerfunc(entity.character.HumanoidRootPart) or networkownerfunc == nil then
+								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(velocheck and movevec.X or 0, entity.character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
+							end
+						else
+							if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= entity.character.HumanoidRootPart) then
+								bodyvelo = Instance.new("BodyVelocity")
+								bodyvelo.Parent = entity.character.HumanoidRootPart
+								bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+							else
+								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.zero or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
+								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * speedval["Value"]
+							end
+						end
+						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) then
+							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
+							end
+						end
+					end
+				end)
+			else
+				RunLoops:UnbindFromHeartbeat("Speed")
+				if bodyvelo then
+					bodyvelo:Remove()
+				end
+				if entity.isAlive then 
+					for i,v in pairs(entity.character.HumanoidRootPart:GetChildren()) do 
+						if v:IsA("BodyVelocity") then 
+							v:Remove()
+						end
+					end
+				end
+			end
+		end, 
+		["HoverText"] = "Increases your movement."
+	})
+	speedmode = speed.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Normal", "CFrame"},
+		["Function"] = function(val)
+			if speedspeedup["Object"] then 
+				speedspeedup["Object"].Visible = val == "CFrame"
+			end
+			if bodyvelo then
+				bodyvelo:Remove()
+			end	
+		end
+	})
+	speedval = speed.CreateSlider({
+		["Name"] = "Speed",
+		["Min"] = 1,
+		["Max"] = 54,
+		["Function"] = function(val) end,
+		["Default"] = 54
+	})
+	speedjumpheight = speed.CreateSlider({
+		["Name"] = "Jump Height",
+		["Min"] = 0,
+		["Max"] = 30,
+		["Default"] = 25,
+		["Function"] = function() end
+	})
+	speedjump = speed.CreateToggle({
+		["Name"] = "AutoJump", 
+		["Function"] = function(callback) 
+			if speedjumpalways["Object"] then
+				speedjump["Object"].ToggleArrow.Visible = callback
+				speedjumpalways["Object"].Visible = callback
+			end
+		end,
+		["Default"] = true
+	})
+	speedjumpalways = speed.CreateToggle({
+		["Name"] = "Always Jump",
+		["Function"] = function() end
+	})
+	speedspeedup = speed.CreateToggle({
+		["Name"] = "Speedup",
+		["Function"] = function() end,
+		["HoverText"] = "Speeds up when using killaura."
+	})
+	speedspeedup["Object"].Visible = speedmode["Value"] == "CFrame"
+	speedanimation = speed.CreateToggle({
+		["Name"] = "Slowdown Anim",
+		["Function"] = function() end
+	})
+	speedjumpalways["Object"].BackgroundTransparency = 0
+	speedjumpalways["Object"].BorderSizePixel = 0
+	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	speedjumpalways["Object"].Visible = speedjump["Enabled"]
+end)
+
+runcode(function()
+	local Disguise = {["Enabled"] = false}
+	local DisguiseId = {["Value"] = ""}
+	local desc
+	
+	local function disguisechar(char)
+		task.spawn(function()
+			if not char then return end
+			char:WaitForChild("Humanoid")
+			char:WaitForChild("Head")
+			if desc == nil then
+				desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"]))
+			end
+			desc.HeightScale = char.Humanoid.HumanoidDescription.HeightScale
+			char.Archivable = true
+			local disguiseclone = char:Clone()
+			disguiseclone.Name = "disguisechar"
+			disguiseclone.Parent = workspace
+			for i,v in pairs(disguiseclone:GetChildren()) do 
+				if v:IsA("Accessory") or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") then  
+					v:Destroy()
+				end
+			end
+			disguiseclone.Humanoid:ApplyDescriptionClientServer(desc)
+			for i,v in pairs(char:GetChildren()) do 
+				if (v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then 
+					v.Parent = game
+				end
+			end
+			char.ChildAdded:connect(function(v)
+				if ((v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors")) and v:GetAttribute("Disguise") == nil then 
+					repeat task.wait() v.Parent = game until v.Parent == game
+				end
+			end)
+			for i,v in pairs(disguiseclone.Animate:GetChildren()) do 
+				v:SetAttribute("Disguise", true)
+				local real = char.Animate:FindFirstChild(v.Name)
+				if v:IsA("StringValue") and real then 
+					real.Parent = game
+					v.Parent = char.Animate
+				end
+			end
+			for i,v in pairs(disguiseclone:GetChildren()) do 
+				v:SetAttribute("Disguise", true)
+				if v:IsA("Accessory") then  
+					for i2,v2 in pairs(v:GetDescendants()) do 
+						if v2:IsA("Weld") and v2.Part1 then 
+							v2.Part1 = char[v2.Part1.Name]
+						end
+					end
+					v.Parent = char
+				elseif v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then  
+					v.Parent = char
+				elseif v.Name == "Head" then 
+					char.Head.MeshId = v.MeshId
+				end
+			end
+			char.Humanoid.HumanoidDescription:SetEmotes(desc:GetEmotes())
+			char.Humanoid.HumanoidDescription:SetEquippedEmotes(desc:GetEquippedEmotes())
+			disguiseclone:Destroy()
+		end)
+	end
+
+	local disguiseconnection
+	Disguise = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Disguise",
+		["Function"] = function(callback)
+			if callback then 
+				disguiseconnection = lplr.CharacterAdded:connect(disguisechar)
+				disguisechar(lplr.Character)
+			else
+				if disguiseconnection then 
+					disguiseconnection:Disconnect()
+				end
+			end
+		end
+	})
+	DisguiseId = Disguise.CreateTextBox({
+		["Name"] = "Disguise",
+		["TempText"] = "Disguise User Id",
+		["FocusLost"] = function(enter) 
+			task.spawn(function() desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"])) end)
+		end
+	})
+end)
+
+runcode(function()
+	local AnticheatBypassTransparent = {["Enabled"] = false}
+	local AnticheatBypassAlternate = {["Enabled"] = false}
+	local AnticheatBypassFlagCheck = {["Enabled"] = false}
+	local AnticheatBypassNotification = {["Enabled"] = false}
+	local AnticheatBypassAnimation = {["Enabled"] = true}
+	local AnticheatBypassAnimationCustom = {["Value"] = ""}
+	local AnticheatBypassDisguise = {["Enabled"] = false}
+	local AnticheatBypassDisguiseCustom = {["Value"] = ""}
+	local AnticheatBypassArrowDodge = {["Enabled"] = false}
+	local AnticheatBypassAutoConfig = {["Enabled"] = false}
+	local AnticheatBypassAutoConfigBig = {["Enabled"] = false}
+	local AnticheatBypassAutoConfigSpeed = {["Value"] = 54}
+	local AnticheatBypassAutoConfigSpeed2 = {["Value"] = 54}
+	local AnticheatBypassTPSpeed = {["Value"] = 13}
+	local AnticheatBypassTPLerp = {["Value"] = 50}
+	local clone
+	local changed = false
+	local anticheatconnection
+	local playedanim = ""
+	local hip
+
+	local function check(oldroot, cloneroot)
+		lagbackedaftertouch = false
+		if oldroot and cloneroot and (oldroot.Position - cloneroot.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
+			--createwarning("AnticheatBypass", "tp check failed by: "..(math.floor(((oldroot.Position - cloneroot.Position).magnitude - AnticheatBypassNumbers.TPCheck) * 100) / 100), 10)
+			local newpos = (oldroot.Position - cloneroot.Position).Unit * AnticheatBypassNumbers.TPCheck
+			newpos = newpos == newpos and newpos or Vector3.zero
+			cloneroot.CFrame = oldroot.CFrame
+			lagbackedaftertouch = true
+		end
+	end
+
+	local function finishcframe(cframe)
+		return shared.VapeOverrideAnticheatBypassCFrame and shared.VapeOverrideAnticheatBypassCFrame(cframe) or cframe
+	end
+
+	local clonesuccess = false
+	local doing = false
+	local function disablestuff()
+		print("stage 1")
+		if uninjectflag then return end
+		repeat task.wait() until entity.isAlive
+		if not AnticheatBypass["Enabled"] then doing = false return end
+		oldcloneroot = entity.character.HumanoidRootPart
+		lplr.Character.Parent = game
+		clone = oldcloneroot:Clone()
+		clone.Parent = lplr.Character
+		oldcloneroot.Parent = cam
+		oldcloneroot.Transparency = AnticheatBypassTransparent["Enabled"] and 1 or 0
+		clone.CFrame = oldcloneroot.CFrame
+		lplr.Character.PrimaryPart = clone
+		lplr.Character.Parent = workspace
+		for i,v in pairs(lplr.Character:GetDescendants()) do 
+			if v:IsA("Weld") or v:IsA("Motor6D") then 
+				if v.Part0 == oldcloneroot then v.Part0 = clone end
+				if v.Part1 == oldcloneroot then v.Part1 = clone end
+			end
+			if v:IsA("BodyVelocity") then 
+				v:Destroy()
+			end
+		end
+		for i,v in pairs(oldcloneroot:GetChildren()) do 
+			if v:IsA("BodyVelocity") then 
+				v:Destroy()
+			end
+		end
+		if hip then 
+			lplr.Character.Humanoid.HipHeight = hip
+		end
+		hip = lplr.Character.Humanoid.HipHeight
+		local bodyvelo = Instance.new("BodyVelocity")
+		bodyvelo.MaxForce = Vector3.new(0, 100000, 0)
+		bodyvelo.Velocity = Vector3.zero
+		bodyvelo.Parent = oldcloneroot
+		createwarning("AnticheatBypass", "Anticheat Bypassed!", 5)
+		print("stage 5")
+		pcall(function()
+			RunLoops:UnbindFromHeartbeat("AnticheatBypass")
+		end)
+		local oldseat 
+		local oldseattab = Instance.new("BindableEvent")
+		RunLoops:BindToHeartbeat("AnticheatBypass", 1, function()
+			if oldcloneroot and clone then
+				oldcloneroot.AssemblyAngularVelocity = clone.AssemblyAngularVelocity
+				if disabletpcheck then
+					oldcloneroot.Velocity = clone.Velocity
+				else
+					local sit = entity.character.Humanoid.Sit
+					if sit ~= oldseat then 
+						if sit then 
+							for i,v in pairs(workspace:GetDescendants()) do 
+								if not v:IsA("Seat") then continue end
+								local weld = v:FindFirstChild("SeatWeld")
+								if weld and weld.Part1 == oldcloneroot then 
+									weld.Part1 = clone
+									pcall(function()
+										for i,v in pairs(getconnections(v:GetPropertyChangedSignal("Occupant"))) do
+											local newfunc = debug.getupvalue(debug.getupvalue(v.Function, 1), 3) 
+											debug.setupvalue(newfunc, 4, {
+												GetPropertyChangedSignal = function(self, prop)
+													return oldseattab.Event
+												end
+											})
+											newfunc()
+										end
+									end)
+								end
+							end
+						else
+							oldseattab:Fire(false)
+						end
+						oldseat = sit	
+					end
+					local targetvelo = (clone.AssemblyLinearVelocity)
+					local speed = (sit and targetvelo.Magnitude or 20)
+					targetvelo = (targetvelo.Unit == targetvelo.Unit and targetvelo.Unit or Vector3.zero) * speed
+					bodyvelo.Velocity = Vector3.new(0, clone.Velocity.Y, 0)
+					oldcloneroot.Velocity = Vector3.new(math.clamp(targetvelo.X, -speed, speed), clone.Velocity.Y, math.clamp(targetvelo.Z, -speed, speed))
+				end
+			end
+		end)
+		local lagbacknum = 0
+		local lagbackcurrent = false
+		local lagbacktime = 0
+		local lagbackchanged = false
+		local lagbacknotification = false
+		local amountoftimes = 0
+		local lastseat
+		print("stage 8")
+		clonesuccess = true
+		local pinglist = {}
+		local fpslist = {}
+
+		local function getaverageframerate()
+			local frames = 0
+			for i,v in pairs(fpslist) do 
+				frames = frames + v
+			end
+			return #fpslist > 0 and (frames / (60 * #fpslist)) <= 1.2 or #fpslist <= 0 or AnticheatBypassAlternate["Enabled"]
+		end
+
+		local function didpingspike()
+			local currentpingcheck = pinglist[1] or math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+			for i,v in pairs(fpslist) do 
+				print("anticheatbypass fps ["..i.."]: "..v)
+				if v < 40 then 
+					return v.." fps"
+				end
+			end
+			for i,v in pairs(pinglist) do 
+				print("anticheatbypass ping ["..i.."]: "..v)
+				if v ~= currentpingcheck and math.abs(v - currentpingcheck) >= 100 then 
+					return currentpingcheck.." => "..v.." ping"
+				else
+					currentpingcheck = v
+				end
+			end
+			return nil
+		end
+
+		local function notlasso()
+			for i,v in pairs(collectionservice:GetTagged("LassoHooked")) do 
+				if v == lplr.Character then 
+					return false
+				end
+			end
+			return true
+		end
+
+		doing = false
+		allowspeed = true
+		task.spawn(function()
+			repeat
+				if (not AnticheatBypass["Enabled"]) then break end
+				local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+				local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
+				if #pinglist >= 10 then 
+					table.remove(pinglist, 1)
+				end
+				if #fpslist >= 10 then 
+					table.remove(fpslist, 1)
+				end
+				table.insert(pinglist, ping)
+				table.insert(fpslist, fps)
+				task.wait(1)
+			until (not AnticheatBypass["Enabled"])
+		end)
+		repeat
+			task.wait()
+			if entity.isAlive then
+				local oldroot = oldcloneroot
+				if oldroot then
+					if networkownerfunc == nil and gethiddenproperty(oldroot, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then
+						if lagbackcurrent == false then
+							lagbacknum = tick() + 8
+							lagbackcurrent = true
+						end
+						if lagbacknum <= tick() then
+							sethiddenproperty(oldroot, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
+						end
+					else
+						lagbackcurrent = false
+					end
+					local cloneroot = clone
+					if cloneroot then
+						if oldroot.Parent ~= nil and ((networkownerfunc and (not networkownerfunc(oldroot)) or networkownerfunc == nil and gethiddenproperty(oldroot, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual)) then
+							if amountoftimes ~= 0 then
+								amountoftimes = 0
+							end
+							if not lagbackchanged then
+								lagbackchanged = true
+								lagbacktime = tick()
+								task.spawn(function()
+									local pingspike = didpingspike() 
+									if pingspike then
+										if AnticheatBypassNotification["Enabled"] then
+											createwarning("AnticheatBypass", "Lagspike Detected : "..pingspike, 10)
+										end
+									else
+										if matchState ~= 2 and notlasso() then
+											lagbacks = lagbacks + 1
+										end
+									end
+									if AnticheatBypassFlagCheck["Enabled"] then
+										task.spawn(function()
+											if AnticheatBypass["Enabled"] then
+												print("toggled")
+												AnticheatBypass["ToggleButton"](false)
+											end
+											local oldclonecharcheck = lplr.Character
+											repeat task.wait() until lplr.Character == nil or lplr.Character.Parent == nil or oldclonecharcheck ~= lplr.Character or (not (networkownerfunc and (not networkownerfunc(oldroot)) or networkownerfunc == nil and gethiddenproperty(oldroot, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual))
+											if AnticheatBypass["Enabled"] == false then
+												print("toggled2")
+												AnticheatBypass["ToggleButton"](false)
+											end
+										end)
+									end
+								end)
+							end
+							if (tick() - lagbacktime) >= 10 and (not lagbacknotification) then
+								lagbacknotification = true
+								createwarning("AnticheatBypass", "You have been lagbacked for a \nawfully long time", 10)
+							end
+							cloneroot.Velocity = Vector3.zero
+							oldroot.Velocity = Vector3.zero
+							cloneroot.CFrame = oldroot.CFrame
+						else
+							lagbackchanged = false
+							lagbacknotification = false
+							if not shared.VapeOverrideAnticheatBypass then
+								if (not disabletpcheck) and entity.character.Humanoid.Sit ~= true then
+									anticheatfunnyyes = true 
+									local frameratecheck = getaverageframerate()
+									local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.22 or 0
+									local framerate2 = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.01 or 0
+									framerate = math.floor((AnticheatBypassNumbers.TPLerp + framerate) * 100) / 100
+									framerate2 = math.floor((AnticheatBypassNumbers.TPSpeed + framerate2) * 100) / 100
+									for i = 1, 2 do 
+										check(oldroot, cloneroot)
+										task.wait(i % 2 == 0 and 0.01 or 0.02)
+										check(oldroot, cloneroot)
+										if oldroot and cloneroot then
+											anticheatfunnyyes = false
+											if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
+												if (Vector3.new(0, oldroot.CFrame.p.Y, 0) - Vector3.new(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 1 then
+													oldroot.CFrame = finishcframe(oldroot.CFrame:lerp(addvectortocframe2(cloneroot.CFrame, oldroot.CFrame.p.Y), framerate))
+												else
+													oldroot.CFrame = finishcframe(oldroot.CFrame:lerp(cloneroot.CFrame, framerate))
+												end
+											end
+										end
+										check(oldroot, cloneroot)
+									end
+									check(oldroot, cloneroot)
+									task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or framerate2)
+									check(oldroot, cloneroot)
+									if oldroot and cloneroot then
+										if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
+											if (Vector3.new(0, oldroot.CFrame.p.Y, 0) - Vector3.new(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 1 then
+												oldroot.CFrame = finishcframe(addvectortocframe2(cloneroot.CFrame, oldroot.CFrame.p.Y))
+											else
+												oldroot.CFrame = finishcframe(cloneroot.CFrame)
+											end
+										end
+									end
+									check(oldroot, cloneroot)
+								else
+									if oldroot and cloneroot then
+										oldroot.CFrame = cloneroot.CFrame
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		until AnticheatBypass["Enabled"] == false or oldcloneroot == nil or oldcloneroot.Parent == nil 
+	end
+
+	local spawncoro
+	local function anticheatbypassenable()
+		task.spawn(function()
+			if spawncoro then return end
+			spawncoro = true
+			allowspeed = false
+			repeat task.wait() until entity.isAlive
+			task.wait(0.4)
+			lplr.Character:WaitForChild("Humanoid", 10)
+			lplr.Character:WaitForChild("LeftHand", 10)
+			lplr.Character:WaitForChild("RightHand", 10)
+			lplr.Character:WaitForChild("LeftFoot", 10)
+			lplr.Character:WaitForChild("RightFoot", 10)
+			lplr.Character:WaitForChild("LeftLowerArm", 10)
+			lplr.Character:WaitForChild("RightLowerArm", 10)
+			lplr.Character:WaitForChild("LeftUpperArm", 10)
+			lplr.Character:WaitForChild("RightUpperArm", 10)
+			lplr.Character:WaitForChild("LeftLowerLeg", 10)
+			lplr.Character:WaitForChild("RightLowerLeg", 10)
+			lplr.Character:WaitForChild("LeftUpperLeg", 10)
+			lplr.Character:WaitForChild("RightUpperLeg", 10)
+			lplr.Character:WaitForChild("UpperTorso", 10)
+			lplr.Character:WaitForChild("LowerTorso", 10)
+			local root = lplr.Character:WaitForChild("HumanoidRootPart", 20)
+			local head = lplr.Character:WaitForChild("Head", 20)
+			task.wait(0.4)
+			spawncoro = false
+			if root ~= nil and head ~= nil then
+				task.spawn(disablestuff)
+			else
+				createwarning("AnticheatBypass", "ur root / head no load L", 30)
+			end
+		end)
+		anticheatconnection = lplr.CharacterAdded:connect(function(char)
+			task.spawn(function()
+				if spawncoro then return end
+				spawncoro = true
+				allowspeed = false
+				repeat task.wait() until entity.isAlive
+				task.wait(0.4)
+				char:WaitForChild("Humanoid", 10)
+				char:WaitForChild("LeftHand", 10)
+				char:WaitForChild("RightHand", 10)
+				char:WaitForChild("LeftFoot", 10)
+				char:WaitForChild("RightFoot", 10)
+				char:WaitForChild("LeftLowerArm", 10)
+				char:WaitForChild("RightLowerArm", 10)
+				char:WaitForChild("LeftUpperArm", 10)
+				char:WaitForChild("RightUpperArm", 10)
+				char:WaitForChild("LeftLowerLeg", 10)
+				char:WaitForChild("RightLowerLeg", 10)
+				char:WaitForChild("LeftUpperLeg", 10)
+				char:WaitForChild("RightUpperLeg", 10)
+				char:WaitForChild("UpperTorso", 10)
+				char:WaitForChild("LowerTorso", 10)
+				local root = char:WaitForChild("HumanoidRootPart", 20)
+				local head = char:WaitForChild("Head", 20)
+				task.wait(0.4)
+				spawncoro = false
+				if root ~= nil and head ~= nil then
+					task.spawn(disablestuff)
+				else
+					createwarning("AnticheatBypass", "ur root / head no load L", 30)
+				end
+			end)
+		end)
+	end
+
+	AnticheatBypass = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AnticheatBypass",
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					anticheatbypassenable()
+				end)
+			else
+				if anticheatconnection then 
+					anticheatconnection:Disconnect()
+				end
+				pcall(function() RunLoops:UnbindFromHeartbeat("AnticheatBypass") end)
+				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil then 
+					lplr.Character.Parent = game
+					oldcloneroot.Parent = lplr.Character
+					lplr.Character.PrimaryPart = oldcloneroot
+					lplr.Character.Parent = workspace
+					oldcloneroot.CanCollide = true
+					oldcloneroot.Transparency = 1
+					for i,v in pairs(lplr.Character:GetDescendants()) do 
+						if v:IsA("Weld") or v:IsA("Motor6D") then 
+							if v.Part0 == clone then v.Part0 = oldcloneroot end
+							if v.Part1 == clone then v.Part1 = oldcloneroot end
+						end
+						if v:IsA("BodyVelocity") then 
+							v:Destroy()
+						end
+					end
+					for i,v in pairs(oldcloneroot:GetChildren()) do 
+						if v:IsA("BodyVelocity") then 
+							v:Destroy()
+						end
+					end
+					lplr.Character.Humanoid.HipHeight = hip or 2
+				end
+				if clone then 
+					clone:Destroy()
+					clone = nil
+				end
+				oldcloneroot = nil
+			end
+		end,
+		["HoverText"] = "Makes speed check more stupid.\n(thank you to MicrowaveOverflow.cpp#7030 for no more clone crap)",
+	})
+	local arrowdodgeconnection
+	local arrowdodgedata
+	
+--[[	AnticheatBypassArrowDodge = AnticheatBypass.CreateToggle({
+		["Name"] = "Arrow Dodge",
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					bedwars["ClientHandler"]:WaitFor("ProjectileLaunch"):andThen(function(p6)
+						arrowdodgeconnection = p6:Connect(function(data)
+							if oldchar and clone and AnticheatBypass["Enabled"] and (arrowdodgedata == nil or arrowdodgedata.launchVelocity ~= data.launchVelocity) and entity.isAlive and tostring(data.projectile):find("arrow") then
+								arrowdodgedata = data
+								local projmetatab = bedwars["ProjectileMeta"][tostring(data.projectile)]
+								local prediction = (projmetatab.predictionLifetimeSec or projmetatab.lifetimeSec or 3)
+								local gravity = (projmetatab.gravitationalAcceleration or 196.2)
+								local multigrav = gravity
+								local offsetshootpos = data.position
+								local pos = (oldchar.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
+								local calculated2 = FindLeadShot(pos, Vector3.zero, (Vector3.zero - data.launchVelocity).magnitude, offsetshootpos, Vector3.zero, multigrav) 
+								local calculated = LaunchDirection(offsetshootpos, pos, (Vector3.zero - data.launchVelocity).magnitude, gravity, false)
+								local initialvelo = calculated--(calculated - offsetshootpos).Unit * launchvelo
+								local initialvelo2 = (calculated2 - offsetshootpos).Unit * (Vector3.zero - data.launchVelocity).magnitude
+								local calculatedvelo = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (Vector3.zero - data.launchVelocity).magnitude
+								if (calculatedvelo - data.launchVelocity).magnitude <= 20 then 
+									oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.6)
+								end
+							end
+						end)
+					end)
+				end)
+			else
+				if arrowdodgeconnection then 
+					arrowdodgeconnection:Disconnect()
+				end
+			end
+		end,
+		["Default"] = true,
+		["HoverText"] = "Dodge arrows (tanqr moment)"
+	})]]
+	AnticheatBypassAlternate = AnticheatBypass.CreateToggle({
+		["Name"] = "Alternate Numbers",
+		["Function"] = function() end
+	})
+	AnticheatBypassTransparent = AnticheatBypass.CreateToggle({
+		["Name"] = "Transparent",
+		["Function"] = function(callback) 
+			if oldcloneroot and AnticheatBypass["Enabled"] then
+				oldcloneroot.Transparency = callback and 1 or 0
+			end
+		end,
+		["Default"] = true
+	})
+	AnticheatBypassFlagCheck = AnticheatBypass.CreateToggle({
+		["Name"] = "Flag Check",
+		["Function"] = function(callback) end,
+		["Default"] = true
+	})
+	local changecheck = false
+--[[	AnticheatBypassCombatCheck = AnticheatBypass.CreateToggle({
+		["Name"] = "Combat Check",
+		["Function"] = function(callback) 
+			if callback then 
+				task.spawn(function()
+					repeat 
+						task.wait(0.1)
+						if (not AnticheatBypassCombatCheck["Enabled"]) then break end
+						if AnticheatBypass["Enabled"] then 
+							local plrs = GetAllNearestHumanoidToPosition(true, 30, 1)
+							combatcheck = #plrs > 0 and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"])
+							if combatcheck ~= changecheck then 
+								if not combatcheck then 
+									combatchecktick = tick() + 1
+								end
+								changecheck = combatcheck
+							end
+						end
+					until (not AnticheatBypassCombatCheck["Enabled"])
+				end)
+			else
+				combatcheck = false
+			end
+		end,
+		["Default"] = true
+	})]]
+	AnticheatBypassNotification = AnticheatBypass.CreateToggle({
+		["Name"] = "Notifications",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+	if shared.VapeDeveloper then 
+		AnticheatBypassTPSpeed = AnticheatBypass.CreateSlider({
+			["Name"] = "TPSpeed",
+			["Function"] = function(val) 
+				AnticheatBypassNumbers.TPSpeed = val / 100
+			end,
+			["Double"] = 100,
+			["Min"] = 1,
+			["Max"] = 100,
+			["Default"] = AnticheatBypassNumbers.TPSpeed * 100,
+		})
+		AnticheatBypassTPLerp = AnticheatBypass.CreateSlider({
+			["Name"] = "TPLerp",
+			["Function"] = function(val) 
+				AnticheatBypassNumbers.TPLerp = val / 100
+			end,
+			["Double"] = 100,
+			["Min"] = 1,
+			["Max"] = 100,
+			["Default"] = AnticheatBypassNumbers.TPLerp * 100,
+		})
+	end
 end)
 
 runcode(function()
