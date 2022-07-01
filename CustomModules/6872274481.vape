@@ -8224,6 +8224,17 @@ runcode(function()
 		return shared.VapeOverrideAnticheatBypassCFrame and shared.VapeOverrideAnticheatBypassCFrame(cframe) or cframe
 	end
 
+	local function check()
+		lagbackedaftertouch = false
+		if clone and oldcloneroot and (oldcloneroot.Position - clone.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
+			--createwarning("AnticheatBypass", "tp check failed by: "..(math.floor(((oldroot.Position - cloneroot.Position).magnitude - AnticheatBypassNumbers.TPCheck) * 100) / 100), 10)
+			local newpos = (oldcloneroot.Position - clone.Position).Unit * AnticheatBypassNumbers.TPCheck
+			newpos = newpos == newpos and newpos or Vector3.zero
+			clone.CFrame = oldcloneroot.CFrame
+			lagbackedaftertouch = true
+		end
+	end
+
 	local clonesuccess = false
 	local doing = false
 	local function disablestuff()
@@ -8433,7 +8444,9 @@ runcode(function()
 									framerate = math.floor((AnticheatBypassNumbers.TPLerp + framerate) * 100) / 100
 									framerate2 = math.floor((AnticheatBypassNumbers.TPSpeed + framerate2) * 100) / 100
 									for i = 1, 2 do 
+										check()
 										task.wait(i % 2 == 0 and 0.01 or 0.02)
+										check()
 										if oldroot and cloneroot then
 											anticheatfunnyyes = false
 											if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
@@ -8444,8 +8457,11 @@ runcode(function()
 												end
 											end
 										end
+										check()
 									end
+									check()
 									task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or framerate2)
+									check()
 									if oldroot and cloneroot then
 										if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
 											if (vec3(0, oldroot.CFrame.p.Y, 0) - vec3(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 1 then
@@ -8455,6 +8471,7 @@ runcode(function()
 											end
 										end
 									end
+									check()
 								else
 									if oldroot and cloneroot then
 										oldroot.CFrame = cloneroot.CFrame
