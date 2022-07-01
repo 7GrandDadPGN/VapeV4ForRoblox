@@ -6963,7 +6963,7 @@ runcode(function()
 				scaffoldtext.Visible = ScaffoldBlockCount["Enabled"]
 				bedwars["SharedConstants"].CpsConstants.BLOCK_PLACE_CPS = math.huge
 				oldspeed = GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["Value"]
-				GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](20)
+			--	GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](20)
 				task.spawn(function()
 					repeat
 						task.wait()
@@ -7023,7 +7023,7 @@ runcode(function()
 				end)
 			else
 				if oldspeed then
-					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](oldspeed)
+			--		GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](oldspeed)
 				end
 				bedwars["SharedConstants"].CpsConstants.BLOCK_PLACE_CPS = 9
 				scaffoldtext.Visible = false
