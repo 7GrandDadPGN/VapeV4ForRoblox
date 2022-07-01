@@ -32,7 +32,8 @@ local kills = 0
 local beds = 0
 local lagbacks = 0
 local reported = 0
-local disguisecheck = false
+local allowspeed = false
+local antivoiding = false
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -86,8 +87,17 @@ local connectionstodisconnect = {}
 local anticheatfunny = false
 local anticheatfunnyyes = false
 local tpstring
-local networkownerfunc = isnetworkowner
+local networkownertick = tick()
+local networkownerfunc = isnetworkowner or function(part)
+	if gethiddenproperty(part, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then 
+		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
+		networkownertick = tick() + 8
+	end
+	return networkownertick <= tick()
+end
 local uninjectflag = false
+local vec3 = Vector3.new
+local cfnew = CFrame.new
 local clients = {
 	ChatStrings1 = {
 		["KVOP25KYFPPP4"] = "vape",
@@ -231,7 +241,7 @@ end
 -- higherArc: if true, use the higher arc. If false, use the lower arc.
 local function LaunchDirection(start, target, v, g, higherArc: boolean)
 	-- get the direction flattened:
-	local horizontal = Vector3.new(target.X - start.X, 0, target.Z - start.Z)
+	local horizontal = vec3(target.X - start.X, 0, target.Z - start.Z)
 	
 	local h = target.Y - start.Y
 	local d = horizontal.Magnitude
@@ -244,7 +254,7 @@ local function LaunchDirection(start, target, v, g, higherArc: boolean)
 	local vec = horizontal.Unit * v
 	
 	-- rotate around the axis perpendicular to that direction...
-	local rotAxis = Vector3.new(-horizontal.Z, 0, horizontal.X)
+	local rotAxis = vec3(-horizontal.Z, 0, horizontal.X)
 	
 	-- ...by the angle amount
 	return CFrame.fromAxisAngle(rotAxis, a) * vec
@@ -267,17 +277,17 @@ local function FindLeadShot(targetPosition: Vector3, targetVelocity: Vector3, pr
 	local goalY = targetPosition.Y + v.Y*timeTaken + 0.5 * a.Y * timeTaken^2
 	local goalZ = targetPosition.Z + v.Z*timeTaken + 0.5 * a.Z * timeTaken^2
 	
-	return Vector3.new(goalX, goalY, goalZ)
+	return vec3(goalX, goalY, goalZ)
 end
 
 local function addvectortocframe(cframe, vec)
 	local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = cframe:GetComponents()
-	return CFrame.new(x + vec.X, y + vec.Y, z + vec.Z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
+	return cfnew(x + vec.X, y + vec.Y, z + vec.Z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
 end
 
 local function addvectortocframe2(cframe, newylevel)
 	local x, y, z, R00, R01, R02, R10, R11, R12, R20, R21, R22 = cframe:GetComponents()
-	return CFrame.new(x, newylevel, z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
+	return cfnew(x, newylevel, z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
 end
 
 local function runcode(func)
@@ -924,6 +934,7 @@ runcode(function()
 			end,
 			["ClickHold"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.ui.lib.util["click-hold"]).ClickHold,
             ["ClientHandler"] = Client,
+			["SharedConstants"] = require(repstorage.TS["shared-constants"]),
             ["ClientHandlerDamageBlock"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.remotes).BlockEngineRemotes.Client,
             ["ClientStoreHandler"] = require(lplr.PlayerScripts.TS.ui.store).ClientStore,
 			["ClientHandlerSyncEvents"] = require(lplr.PlayerScripts.TS["client-sync-events"]).ClientSyncEvents,
@@ -972,6 +983,7 @@ runcode(function()
 				end
 				return storedshahashes[tostring(str)]
 			end,
+			["HangGliderController"] = KnitClient.Controllers.HangGliderController,
 			["HighlightController"] = KnitClient.Controllers.EntityHighlightController,
             ["ItemTable"] = debug.getupvalue(require(repstorage.TS.item["item-meta"]).getItemMeta, 1),
 			["IsVapePrivateIngame"] = function()
@@ -987,7 +999,6 @@ runcode(function()
 			["KatanaController"] = KnitClient.Controllers.DaoController,
 			["KatanaRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.DaoController.onEnable, 4))),
             ["KnockbackTable"] = debug.getupvalue(require(repstorage.TS.damage["knockback-util"]).KnockbackUtil.calculateKnockbackVelocity, 1),
-			["KnockbackTable2"] = require(repstorage.TS.damage["knockback-util"]).KnockbackUtil,
 			["LobbyClientEvents"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"].lobby.out.client.events).LobbyClientEvents,
 			["MapMeta"] = require(repstorage.TS.game.map["map-meta"]),
 			["MissileController"] = KnitClient.Controllers.GuidedProjectileController,
@@ -1023,6 +1034,7 @@ runcode(function()
 			["TrinityRemote"] = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.AngelController).onKitEnabled, 1))),
             ["VictoryScreen"] = require(lplr.PlayerScripts.TS.controllers["game"].match.ui["victory-section"]).VictorySection,
             ["ViewmodelController"] = KnitClient.Controllers.ViewmodelController,
+			["VehicleController"] = KnitClient.Controllers.VehicleController,
 			["WeldTable"] = require(repstorage.TS.util["weld-util"]).WeldUtil,
         }
 		oldbreakremote = getmetatable(bedwars["ClientHandlerDamageBlock"]).Get
@@ -1067,7 +1079,7 @@ runcode(function()
 		bedwars["placeBlock"] = function(newpos, customblock)
 			if getItem(customblock) then
 				blocktable.blockType = customblock
-				return blocktable:placeBlock(Vector3.new(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
+				return blocktable:placeBlock(vec3(newpos.X / 3, newpos.Y / 3, newpos.Z / 3))
 			end
 		end
         task.spawn(function()
@@ -1084,9 +1096,9 @@ runcode(function()
 					end
 				end
 				for i,v in pairs(bedwarsblocks) do 
-					local newray = workspace:Raycast(v.Position + Vector3.new(0, 800, 0), Vector3.new(0, -1000, 0), blockraycast)
+					local newray = workspace:Raycast(v.Position + vec3(0, 800, 0), vec3(0, -1000, 0), blockraycast)
 					if i % 100 == 0 then 
-						task.wait(0.1)
+						task.wait(0.06)
 					end
 					if newray and newray.Position.Y <= lowestypos then
 						lowestypos = newray.Position.Y
@@ -1273,31 +1285,15 @@ GuiLibrary["SelfDestructEvent"].Event:connect(function()
 		getmetatable(bedwars["ClientHandlerDamageBlock"]).Get = oldbreakremote
 	end
 	uninjectflag = true
-	if blocktable then
-		blocktable:disable()
-	end
-	if teleportfunc then
-		teleportfunc:Disconnect()
-	end
-	if chatconnection then
-		chatconnection:Disconnect()
-	end
-	if chatconnection2 then
-		chatconnection2:Disconnect()
-	end
-	if fakeuiconnection then
-		fakeuiconnection:Disconnect()
-	end
-	if oldchannelfunc and oldchanneltab then
-		oldchanneltab.GetChannel = oldchannelfunc
-	end
-	for i2,v2 in pairs(oldchanneltabs) do
-		i2.AddMessageToChannel = v2
-	end
+	if blocktable then blocktable:disable() end
+	if teleportfunc then teleportfunc:Disconnect() end
+	if chatconnection then chatconnection:Disconnect() end
+	if chatconnection2 then chatconnection2:Disconnect() end
+	if fakeuiconnection then fakeuiconnection:Disconnect() end
+	if oldchannelfunc and oldchanneltab then oldchanneltab.GetChannel = oldchannelfunc end
+	for i2,v2 in pairs(oldchanneltabs) do i2.AddMessageToChannel = v2 end
 	for i3,v3 in pairs(connectionstodisconnect) do
-		if v3.Disconnect then
-			pcall(function() v3:Disconnect() end)
-		end
+		if v3.Disconnect then pcall(function() v3:Disconnect() end) end
 	end
 end)
 
@@ -1408,19 +1404,19 @@ local function Cape(char, texture)
 	p.TopSurface = 0
 	p.BottomSurface = 0
 	p.FormFactor = "Custom"
-	p.Size = Vector3.new(0.2,0.2,0.2)
+	p.Size = vec3(0.2,0.2,0.2)
 	p.Transparency = 1
 	local decal = Instance.new("Decal", p)
 	decal.Texture = texture
 	decal.Face = "Back"
 	local msh = Instance.new("BlockMesh", p)
-	msh.Scale = Vector3.new(9,17.5,0.5)
+	msh.Scale = vec3(9,17.5,0.5)
 	local motor = Instance.new("Motor", p)
 	motor.Part0 = p
 	motor.Part1 = torso
 	motor.MaxVelocity = 0.01
-	motor.C0 = CFrame.new(0,2,0) * CFrame.Angles(0,math.rad(90),0)
-	motor.C1 = CFrame.new(0,1,0.45) * CFrame.Angles(0,math.rad(90),0)
+	motor.C0 = cfnew(0,2,0) * CFrame.Angles(0,math.rad(90),0)
+	motor.C1 = cfnew(0,1,0.45) * CFrame.Angles(0,math.rad(90),0)
 	local wave = false
 	repeat wait(1/44)
 		decal.Transparency = torso.Transparency
@@ -1519,7 +1515,7 @@ local function renderNametag(plr)
 		end
 		local nametag = getNametagString(plr)
 		local function charfunc(char)
-			if char and char ~= oldchar then
+			if char then
 				task.spawn(function()
 					pcall(function() 
 						bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
@@ -1538,7 +1534,7 @@ local function renderNametag(plr)
 		end)]]
 
 		charfunc(plr.Character)
-		plr.CharacterAdded:connect(charfunc)
+		connectionstodisconnect[#connectionstodisconnect + 1] = plr.CharacterAdded:connect(charfunc)
 	end
 end
 
@@ -1679,13 +1675,23 @@ do
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
                             if localcheck then
 								if char == lplr.Character then
-									if not disguisecheck then
+									if part.Name == "HumanoidRootPart" then
 										entity.isAlive = false
+										local root = char:FindFirstChild("HumanoidRootPart")
+										if not root then 
+											for i = 1, 30 do 
+												task.wait(0.1)
+												root = char:FindFirstChild("HumanoidRootPart")
+												if root then break end
+											end
+										end
+										if root then 
+											entity.character.HumanoidRootPart = root
+											entity.isAlive = true
+										end
 									else
-										local head = char:WaitForChild("Head", 10)
-										entity.character.Head = head
+										entity.isAlive = false
 									end
-									disguisecheck = false
 								end
                             else
 								if invadded[plr] then invadded[plr]:Disconnect() end 
@@ -2267,7 +2273,7 @@ runcode(function()
 							targetsize = targetsize + 1
 						end
 						if plr and getEquipped()["Type"] == "sword" and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and (AimAssistTargetFrame["Walls"]["Enabled"] and bedwars["SwordController"]:canSee({["instance"] = plr.Character, ["player"] = plr.Player, ["getInstance"] = function() return plr.Character end}) or (not AimAssistTargetFrame["Walls"]["Enabled"])) then
-							cam.CFrame = cam.CFrame:lerp(CFrame.new(cam.CFrame.p, plr.Character.HumanoidRootPart.Position), (1 / AimSpeed["Value"]) - (AimAssistStrafe["Enabled"] and (uis:IsKeyDown(Enum.KeyCode.A) or uis:IsKeyDown(Enum.KeyCode.D)) and 0.01 or 0))
+							cam.CFrame = cam.CFrame:lerp(cfnew(cam.CFrame.p, plr.Character.HumanoidRootPart.Position), (1 / AimSpeed["Value"]) - (AimAssistStrafe["Enabled"] and (uis:IsKeyDown(Enum.KeyCode.A) or uis:IsKeyDown(Enum.KeyCode.D)) and 0.01 or 0))
 						end
 						if getEquipped()["Type"] ~= "bow" then
 							targetinfo.UpdateInfo(targettable, targetsize)
@@ -2434,7 +2440,7 @@ local oldpos2 = Vector3.zero
 local Spider = {["Enabled"] = false}
 
 local function getScaffold(vec, diagonaltoggle)
-	local realvec = Vector3.new(math.floor((vec.X / 3) + 0.5) * 3, math.floor((vec.Y / 3) + 0.5) * 3, math.floor((vec.Z / 3) + 0.5) * 3) 
+	local realvec = vec3(math.floor((vec.X / 3) + 0.5) * 3, math.floor((vec.Y / 3) + 0.5) * 3, math.floor((vec.Z / 3) + 0.5) * 3) 
 	local newpos = (oldpos - realvec)
 	local returedpos = realvec
 	if entity.isAlive then
@@ -2454,7 +2460,7 @@ local longjump = {["Enabled"] = false}
 local longjumpvelo = Vector3.zero
 local spidergoinup = false
 local holdingshift = false
-local targetstrafevelo = Vector3.new(1, 1, 1)
+local targetstrafevelo = vec3(1, 1, 1)
 local targetstrafing = false
 local longjumpticktimer = tick()
 GuiLibrary["RemoveObject"]("SpiderOptionsButton")
@@ -2477,7 +2483,7 @@ runcode(function()
 	end
 
 	local function isPointInMapOccupied(p)
-		local region = Region3.new(p - Vector3.new(1, 1, 1), p + Vector3.new(1, 1, 1))
+		local region = Region3.new(p - vec3(1, 1, 1), p + vec3(1, 1, 1))
 		local possible = workspace:FindPartsInRegion3WithIgnoreList(region, {lplr.Character, unpack(checktable)})
 		return (#possible == 0)
 	end
@@ -2495,8 +2501,8 @@ runcode(function()
 							slowdownspeed = false
 						end
 						if phasedelay <= tick() and phasedelay2 <= tick() and (GuiLibrary["ObjectsThatCanBeSaved"]["SpiderOptionsButton"]["Api"]["Enabled"] == false or holdingshift) then
-							local pos = entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)
-							local pos2 = entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1, 0)
+							local pos = entity.character.HumanoidRootPart.CFrame.p - vec3(0, 1, 0)
+							local pos2 = entity.character.HumanoidRootPart.CFrame.p + vec3(0, 1, 0)
 							local pos3 = entity.character.Head.CFrame.p
 							raycastparameters.FilterDescendantsInstances = {bedwarsblocks, collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
 							local newray = workspace:Raycast(pos3, entity.character.Humanoid.MoveDirection, raycastparameters)
@@ -2584,14 +2590,14 @@ runcode(function()
 							raycastparameters.FilterDescendantsInstances = {bedwarsblocks, collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
 							targetstrafing = false
 							lastreal = plr.Character.HumanoidRootPart.Position
-							local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, entity.character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
+							local playerpos = vec3(plr.Character.HumanoidRootPart.Position.X, entity.character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
 							local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"]
 							local working = true
 							local newray3 = workspace:Raycast(playerpos, CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"], raycastparameters)
 							newpos = newray3 and (playerpos - newray3.Position) * 0.8 or newpos
-							local newray2 = workspace:Raycast(newpos, Vector3.new(0, -15, 0), raycastparameters)
+							local newray2 = workspace:Raycast(newpos, vec3(0, -15, 0), raycastparameters)
 							if newray2 == nil then 
-								newray2 = workspace:Raycast(playerpos + (playerpos - newpos) * 0.4, Vector3.new(0, -15, 0), raycastparameters)
+								newray2 = workspace:Raycast(playerpos + (playerpos - newpos) * 0.4, vec3(0, -15, 0), raycastparameters)
 								if newray2 then 
 									newpos = playerpos + ((playerpos - newpos) * 0.4)
 								end
@@ -2657,26 +2663,16 @@ end)
 runcode(function()
 	local velohorizontal = {["Value"] = 100}
 	local velovertical = {["Value"] = 100}
+	local Velocity = {["Enabled"] = false}
 	local oldhori = bedwars["KnockbackTable"]["kbDirectionStrength"]
 	local oldvert = bedwars["KnockbackTable"]["kbUpwardStrength"]
-	local oldvelo
-	local Velocity = {["Enabled"] = false}
 	Velocity = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Velocity",
 		["Function"] = function(callback)
 			if callback then
-				oldvelo = bedwars["KnockbackTable2"]["applyKnockback"]
-				bedwars["KnockbackTable2"]["applyKnockback"] = function(...)
-					if velohorizontal["Value"] == 0 and Velocity["Enabled"] then
-						return nil
-					end
-					return oldvelo(...)
-				end
 				bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori * (velohorizontal["Value"] / 100)
 				bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert * (velovertical["Value"] / 100)
 			else
-				bedwars["KnockbackTable2"]["applyKnockback"] = oldvelo
-				oldvelo = nil
 				bedwars["KnockbackTable"]["kbDirectionStrength"] = oldhori
 				bedwars["KnockbackTable"]["kbUpwardStrength"] = oldvert
 			end
@@ -2762,52 +2758,6 @@ runcode(function()
 		end,
 		["HoverText"] = "Sets your sprinting to true."
 	})
-
-	local FieldOfViewValue = {["Value"] = 70}
-	local oldfov
-	local FieldOfView = {["Enabled"] = false}
-	local FieldOfViewZoom = {["Enabled"] = false}
-	FieldOfView = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "FOVChanger",
-		["Function"] = function(callback)
-			if callback then
-				if FieldOfViewZoom["Enabled"] then
-					task.spawn(function()
-						repeat
-							task.wait()
-						until uis:IsKeyDown(Enum.KeyCode[FieldOfView["Keybind"] ~= "" and FieldOfView["Keybind"] or "C"]) == false
-						if FieldOfView["Enabled"] then
-							FieldOfView["ToggleButton"](false)
-						end
-					end)
-				end
-				oldfov = bedwars["sprintTable"]["getBaseFOV"]
-				bedwars["sprintTable"]["getBaseFOV"] = function()
-					return FieldOfViewValue["Value"]
-				end
-				cam.FieldOfView = FieldOfViewValue["Value"]
-			else
-				bedwars["sprintTable"]["getBaseFOV"] = oldfov
-				oldfov = nil
-				cam.FieldOfView = bedwars["sprintTable"]:getBaseFOV() * (bedwars["sprintTable"].sprinting and 1.1 or 1)
-			end
-		end
-	})
-	FieldOfViewValue = FieldOfView.CreateSlider({
-		["Name"] = "FOV",
-		["Min"] = 30,
-		["Max"] = 120,
-		["Function"] = function(val)
-			if FieldOfView["Enabled"] then
-				cam.FieldOfView = val * (bedwars["sprintTable"].sprinting and 1.1 or 1)
-			end
-		end
-	})
-	FieldOfViewZoom = FieldOfView.CreateToggle({
-		["Name"] = "Zoom",
-		["Function"] = function() end,
-		["HoverText"] = "optifine zoom lol"
-	})
 end)
 
 GuiLibrary["RemoveObject"]("BlinkOptionsButton")
@@ -2861,11 +2811,39 @@ runcode(function()
 	local antitransparent = {["Value"] = 50}
 	local anticolor = {["Hue"] = 1, ["Sat"] = 1, ["Value"] = 0.55}
 	local AntiVoid = {["Enabled"] = false}
-	local antivoiding = false
 	local lastvalidpos
 
+	local function closestpos(block)
+		local startpos = block.Position - (block.Size / 2) + vec3(1.5, 1.5, 1.5)
+		local endpos = block.Position + (block.Size / 2) - vec3(1.5, 1.5, 1.5)
+		local newpos = block.Position + (entity.character.HumanoidRootPart.Position - block.Position)
+		return vec3(math.clamp(newpos.X, startpos.X, endpos.X), endpos.Y + 3, math.clamp(newpos.Z, startpos.Z, endpos.Z))
+	end
+
+	local function getclosesttop(newmag)
+		local closest, closestmag = nil, newmag * 3
+		if entity.isAlive then 
+			local tops = {}
+			for i,v in pairs(bedwarsblocks) do 
+				local close = getScaffold(closestpos(v), false)
+				if getblock(close) then continue end
+				if (close - entity.character.HumanoidRootPart.Position).magnitude <= newmag * 3 then 
+					table.insert(tops, close)
+				end
+			end
+			for i,v in pairs(tops) do 
+				local mag = (v - entity.character.HumanoidRootPart.Position).magnitude
+				if mag <= closestmag then 
+					closest = v
+					closestmag = mag
+				end
+			end
+		end
+		return closest
+	end
+
 	local function isPointInMapOccupied(p)
-		local region = Region3.new(p - Vector3.new(1, 1, 1), p + Vector3.new(1, 1, 1))
+		local region = Region3.new(p - vec3(1, 1, 1), p + vec3(1, 1, 1))
 		local possible = workspace:FindPartsInRegion3WithWhiteList(region, bedwarsblocks)
 		return (#possible == 0)
 	end
@@ -2876,62 +2854,45 @@ runcode(function()
 			if callback then
 				task.spawn(function()
 					repeat task.wait() until antivoidypos ~= 0
-					repeat
-						task.wait(0.2)
-						if AntiVoid["Enabled"] and entity.isAlive then
-							local newray = getblock(entity.character.HumanoidRootPart.Position + Vector3.new(0, (-entity.character.Humanoid.HipHeight * 2), 0))
-							if newray then
-								lastvalidpos = entity.character.HumanoidRootPart.CFrame
-							end
-						end
-					until AntiVoid["Enabled"] == false
-				end)
-				task.spawn(function()
-					repeat task.wait() until antivoidypos ~= 0
 					if AntiVoid["Enabled"] then
 						antivoidpart = Instance.new("Part")
 						antivoidpart.CanCollide = false
-						antivoidpart.Size = Vector3.new(10000, 1, 10000)
+						antivoidpart.Size = vec3(10000, 1, 10000)
 						antivoidpart.Anchored = true
 						antivoidpart.Material = Enum.Material.Neon
 						antivoidpart.Color = Color3.fromHSV(anticolor["Hue"], anticolor["Sat"], anticolor["Value"])
 						antivoidpart.Transparency = 1 - (antitransparent["Value"] / 100)
-						antivoidpart.Position = Vector3.new(0, antivoidypos, 0)
+						antivoidpart.Position = vec3(0, antivoidypos, 0)
 						antivoidconnection = antivoidpart.Touched:connect(function(touchedpart)
 							if touchedpart.Parent == lplr.Character and entity.isAlive then
 								if AnticheatBypass["Enabled"] then
-									if (not antivoiding) and lastvalidpos and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
+									if (not antivoiding) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 										antivoiding = true
-										local old = entity.character.HumanoidRootPart.CFrame
-										if isPointInMapOccupied(lastvalidpos.p) then
-											if (lastvalidpos.p - entity.character.HumanoidRootPart.CFrame.p).Magnitude <= 40 then
-												for i = 1, 5 do 
-													local new = old:lerp(lastvalidpos, 0.2 * i)
-													entity.character.HumanoidRootPart.Velocity = (new.p - entity.character.HumanoidRootPart.CFrame.p ).Unit * 20
-													entity.character.HumanoidRootPart.CFrame = new
-													task.wait(0.1)
-												end
-											else
-												createwarning("AntiVoid", "Magnitude bigger then 40, failed.", 10)
-												for i = 1, 2 do
-													task.wait(0.1)
-													entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 70, entity.character.HumanoidRootPart.Velocity.Z)
-												end
+										local block = getclosesttop(15)
+										if block then 
+											local old = entity.character.HumanoidRootPart.CFrame
+											local oldx, oldy, oldz = old:ToEulerAnglesXYZ()
+											local newcf = cfnew(block) * CFrame.Angles(oldx, oldy, oldz)
+											for i = 1, 5 do 
+												local new = old:lerp(newcf, 0.2 * i)
+												entity.character.HumanoidRootPart.Velocity = (new.p - entity.character.HumanoidRootPart.CFrame.p).Unit * 20
+												entity.character.HumanoidRootPart.CFrame = new
+												task.wait(0.1)
 											end
 										else
-											createwarning("AntiVoid", "Wall detected, failed.", 10)
+											createwarning("AntiVoid", "No nearby blocks found, failed.", 10)
 											for i = 1, 2 do
 												task.wait(0.1)
-												entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 70, entity.character.HumanoidRootPart.Velocity.Z)
+												entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, 70, entity.character.HumanoidRootPart.Velocity.Z)
 											end
 										end
 										antivoiding = false
 									end
 								else
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
+									entity.character.HumanoidRootPart.Velocity = vec3(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
 									for i = 1, 2 do
 										task.wait(0.1)
-										entity.character.HumanoidRootPart.Velocity = Vector3.new(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
+										entity.character.HumanoidRootPart.Velocity = vec3(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
 									end
 								end
 							end
@@ -3063,34 +3024,34 @@ end
 runcode(function()
 	local BedProtector = {["Enabled"] = false}
 	local bedprotector1stlayer = {
-		Vector3.new(0, 3, 0),
-		Vector3.new(0, 3, 3),
-		Vector3.new(3, 0, 0),
-		Vector3.new(3, 0, 3),
-		Vector3.new(-3, 0, 0),
-		Vector3.new(-3, 0, 3),
-		Vector3.new(0, 0, 6),
-		Vector3.new(0, 0, -3)
+		vec3(0, 3, 0),
+		vec3(0, 3, 3),
+		vec3(3, 0, 0),
+		vec3(3, 0, 3),
+		vec3(-3, 0, 0),
+		vec3(-3, 0, 3),
+		vec3(0, 0, 6),
+		vec3(0, 0, -3)
 	}
 	local bedprotector2ndlayer = {
-		Vector3.new(0, 6, 0),
-		Vector3.new(0, 6, 3),
-		Vector3.new(0, 3, 6),
-		Vector3.new(0, 3, -3),
-		Vector3.new(0, 0, -6),
-		Vector3.new(0, 0, 9),
-		Vector3.new(3, 3, 0),
-		Vector3.new(3, 3, 3),
-		Vector3.new(3, 0, 6),
-		Vector3.new(3, 0, -3),
-		Vector3.new(6, 0, 3),
-		Vector3.new(6, 0, 0),
-		Vector3.new(-3, 3, 3),
-		Vector3.new(-3, 3, 0),
-		Vector3.new(-6, 0, 3),
-		Vector3.new(-6, 0, 0),
-		Vector3.new(-3, 0, 6),
-		Vector3.new(-3, 0, -3),
+		vec3(0, 6, 0),
+		vec3(0, 6, 3),
+		vec3(0, 3, 6),
+		vec3(0, 3, -3),
+		vec3(0, 0, -6),
+		vec3(0, 0, 9),
+		vec3(3, 3, 0),
+		vec3(3, 3, 3),
+		vec3(3, 0, 6),
+		vec3(3, 0, -3),
+		vec3(6, 0, 3),
+		vec3(6, 0, 0),
+		vec3(-3, 3, 3),
+		vec3(-3, 3, 0),
+		vec3(-6, 0, 3),
+		vec3(-6, 0, 0),
+		vec3(-3, 0, 6),
+		vec3(-3, 0, -3),
 	}
 
 	local function getItemFromList(list)
@@ -3224,8 +3185,8 @@ runcode(function()
 											local tool = (not nukerlegit["Enabled"]) and {Name = "wood_axe"} or getEquipped()["Object"]
 											if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] then
 												local res, amount = getbestside(obj.Position)
-												local res2, amount2 = getbestside(obj.Position + Vector3.new(0, 0, 3))
-												bedwars["breakBlock"]((amount < amount2 and obj.Position or obj.Position + Vector3.new(0, 0, 3)), nukereffects["Enabled"], (amount < amount2 and res or res2))
+												local res2, amount2 = getbestside(obj.Position + vec3(0, 0, 3))
+												bedwars["breakBlock"]((amount < amount2 and obj.Position or obj.Position + vec3(0, 0, 3)), nukereffects["Enabled"], (amount < amount2 and res or res2))
 												local animation
 												if nukeranimation["Enabled"] then
 													animation = bedwars["AnimationUtil"].playAnimation(lplr, bedwars["BlockController"]:getAnimationController():getAssetId(1))
@@ -3477,7 +3438,7 @@ runcode(function()
 							local billboard = Instance.new("BillboardGui")
 							billboard.Parent = ChestESPFolder
 							billboard.Name = "chest"
-							billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 1.5)
+							billboard.StudsOffsetWorldSpace = vec3(0, 3, 1.5)
 							billboard.Size = UDim2.new(0, 42, 0, 42)
 							billboard.AlwaysOnTop = true
 							billboard.Adornee = v
@@ -4005,7 +3966,7 @@ runcode(function()
 								local chestitems = currentinventory.inventory.items
 								if #chestitems > 0 then
 									for i3,v3 in pairs(chestitems) do
-										if (v3.itemType == "void_crystal" or v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
+										if v3 and (v3.itemType == "void_crystal" or v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
 											if (not AutoBankTransmitted) or (AutoBankTransmittedType and v3.Name ~= "diamond") then 
 												task.spawn(function()
 													bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
@@ -4071,32 +4032,32 @@ runcode(function()
 	local tempfolder
 	local tempgui
 	local aroundpos = {
-		[1] = Vector3.new(0, 3, 0),
-		[2] = Vector3.new(-3, 3, 0),
-		[3] = Vector3.new(-3, -0, 0),
-		[4] = Vector3.new(-3, -3, 0),
-		[5] = Vector3.new(0, -3, 0),
-		[6] = Vector3.new(3, -3, 0),
-		[7] = Vector3.new(3, -0, 0),
-		[8] = Vector3.new(3, 3, 0),
-		[9] = Vector3.new(0, 3, -3),
-		[10] = Vector3.new(-3, 3, -3),
-		[11] = Vector3.new(-3, -0, -3),
-		[12] = Vector3.new(-3, -3, -3),
-		[13] = Vector3.new(0, -3, -3),
-		[14] = Vector3.new(3, -3, -3),
-		[15] = Vector3.new(3, -0, -3),
-		[16] = Vector3.new(3, 3, -3),
-		[17] = Vector3.new(0, 3, 3),
-		[18] = Vector3.new(-3, 3, 3),
-		[19] = Vector3.new(-3, -0, 3),
-		[20] = Vector3.new(-3, -3, 3),
-		[21] = Vector3.new(0, -3, 3),
-		[22] = Vector3.new(3, -3, 3),
-		[23] = Vector3.new(3, -0, 3),
-		[24] = Vector3.new(3, 3, 3),
-		[25] = Vector3.new(0, -0, 3),
-		[26] = Vector3.new(0, -0, -3)
+		[1] = vec3(0, 3, 0),
+		[2] = vec3(-3, 3, 0),
+		[3] = vec3(-3, -0, 0),
+		[4] = vec3(-3, -3, 0),
+		[5] = vec3(0, -3, 0),
+		[6] = vec3(3, -3, 0),
+		[7] = vec3(3, -0, 0),
+		[8] = vec3(3, 3, 0),
+		[9] = vec3(0, 3, -3),
+		[10] = vec3(-3, 3, -3),
+		[11] = vec3(-3, -0, -3),
+		[12] = vec3(-3, -3, -3),
+		[13] = vec3(0, -3, -3),
+		[14] = vec3(3, -3, -3),
+		[15] = vec3(3, -0, -3),
+		[16] = vec3(3, 3, -3),
+		[17] = vec3(0, 3, 3),
+		[18] = vec3(-3, 3, 3),
+		[19] = vec3(-3, -0, 3),
+		[20] = vec3(-3, -3, 3),
+		[21] = vec3(0, -3, 3),
+		[22] = vec3(3, -3, 3),
+		[23] = vec3(3, -0, 3),
+		[24] = vec3(3, 3, 3),
+		[25] = vec3(0, -0, 3),
+		[26] = vec3(0, -0, -3)
 	}
 
 	local function isNearBlock(pos)
@@ -4122,8 +4083,8 @@ runcode(function()
 	local function removeduplicates(tab)
 		local actualpositions = {}
 		for i,v in pairs(tab) do
-			if table.find(actualpositions, Vector3.new(v.X, v.Y, v.Z)) == nil then
-				table.insert(actualpositions, Vector3.new(v.X, v.Y, v.Z))
+			if table.find(actualpositions, vec3(v.X, v.Y, v.Z)) == nil then
+				table.insert(actualpositions, vec3(v.X, v.Y, v.Z))
 			else
 				table.remove(tab, i)
 			end
@@ -4138,11 +4099,11 @@ runcode(function()
 			local radvec, radius = entity.character.HumanoidRootPart.CFrame:ToAxisAngle()
 			radius = (radius * 57.2957795)
 			radius = math.round(radius / 90) * 90
-			if radvec == Vector3.new(0, -1, 0) and radius == 90 then
+			if radvec == vec3(0, -1, 0) and radius == 90 then
 				radius = 270
 			end
-			local rot = CFrame.new() * CFrame.fromAxisAngle(Vector3.new(0, 1, 0), math.rad(radius))
-			local newpos = CFrame.new(0, 0, 0) * rot * CFrame.new(Vector3.new(v.X, v.Y, v.Z))
+			local rot = cfnew() * CFrame.fromAxisAngle(vec3(0, 1, 0), math.rad(radius))
+			local newpos = cfnew(0, 0, 0) * rot * cfnew(vec3(v.X, v.Y, v.Z))
 			v.X = math.round(newpos.p.X)
 			v.Y = math.round(newpos.p.Y)
 			v.Z = math.round(newpos.p.Z)
@@ -4192,10 +4153,10 @@ runcode(function()
 					end
 					for i2,v2 in pairs(positions.blocks) do
 						local texturetxt = bedwars["getItemMetadata"]((v2["blockType"] == "wool_white" and getwool() or v2["blockType"]))["block"]["greedyMesh"]["textures"][1]
-						local newerpos = (newpos + Vector3.new(v2.X, v2.Y, v2.Z))
+						local newerpos = (newpos + vec3(v2.X, v2.Y, v2.Z))
 						local block = Instance.new("Part")
 						block.Position = newerpos
-						block.Size = Vector3.new(3, 3, 3)
+						block.Size = vec3(3, 3, 3)
 						block.CanCollide = false
 						block.Transparency = (SchematicaTransparency["Value"] == 10 and 0 or 1)
 						block.Anchored = true
@@ -4213,7 +4174,7 @@ runcode(function()
 						repeat
 							task.wait(.1)
 							for i,v in pairs(positions.blocks) do
-								local newerpos = (newpos + Vector3.new(v.X, v.Y, v.Z))
+								local newerpos = (newpos + vec3(v.X, v.Y, v.Z))
 								if entity.isAlive and (entity.character.HumanoidRootPart.Position - newerpos).magnitude <= 30 and isNearBlock(newerpos) and bedwars["BlockController"]:isAllowedPlacement(lplr, getwool(), newerpos / 3, 0) then
 									task.spawn(function()
 										schemplaceblock(newerpos, (v["blockType"] == "wool_white" and getwool() or v["blockType"]), function()
@@ -4314,32 +4275,32 @@ runcode(function()
 	local tempfolder
 	local tempgui
 	local aroundpos = {
-		[1] = Vector3.new(0, 3, 0),
-		[2] = Vector3.new(-3, 3, 0),
-		[3] = Vector3.new(-3, -0, 0),
-		[4] = Vector3.new(-3, -3, 0),
-		[5] = Vector3.new(0, -3, 0),
-		[6] = Vector3.new(3, -3, 0),
-		[7] = Vector3.new(3, -0, 0),
-		[8] = Vector3.new(3, 3, 0),
-		[9] = Vector3.new(0, 3, -3),
-		[10] = Vector3.new(-3, 3, -3),
-		[11] = Vector3.new(-3, -0, -3),
-		[12] = Vector3.new(-3, -3, -3),
-		[13] = Vector3.new(0, -3, -3),
-		[14] = Vector3.new(3, -3, -3),
-		[15] = Vector3.new(3, -0, -3),
-		[16] = Vector3.new(3, 3, -3),
-		[17] = Vector3.new(0, 3, 3),
-		[18] = Vector3.new(-3, 3, 3),
-		[19] = Vector3.new(-3, -0, 3),
-		[20] = Vector3.new(-3, -3, 3),
-		[21] = Vector3.new(0, -3, 3),
-		[22] = Vector3.new(3, -3, 3),
-		[23] = Vector3.new(3, -0, 3),
-		[24] = Vector3.new(3, 3, 3),
-		[25] = Vector3.new(0, -0, 3),
-		[26] = Vector3.new(0, -0, -3)
+		[1] = vec3(0, 3, 0),
+		[2] = vec3(-3, 3, 0),
+		[3] = vec3(-3, -0, 0),
+		[4] = vec3(-3, -3, 0),
+		[5] = vec3(0, -3, 0),
+		[6] = vec3(3, -3, 0),
+		[7] = vec3(3, -0, 0),
+		[8] = vec3(3, 3, 0),
+		[9] = vec3(0, 3, -3),
+		[10] = vec3(-3, 3, -3),
+		[11] = vec3(-3, -0, -3),
+		[12] = vec3(-3, -3, -3),
+		[13] = vec3(0, -3, -3),
+		[14] = vec3(3, -3, -3),
+		[15] = vec3(3, -0, -3),
+		[16] = vec3(3, 3, -3),
+		[17] = vec3(0, 3, 3),
+		[18] = vec3(-3, 3, 3),
+		[19] = vec3(-3, -0, 3),
+		[20] = vec3(-3, -3, 3),
+		[21] = vec3(0, -3, 3),
+		[22] = vec3(3, -3, 3),
+		[23] = vec3(3, -0, 3),
+		[24] = vec3(3, 3, 3),
+		[25] = vec3(0, -0, 3),
+		[26] = vec3(0, -0, -3)
 	}
 
 	local function isNearBlock(pos)
@@ -4365,8 +4326,8 @@ runcode(function()
 	local function removeduplicates(tab)
 		local actualpositions = {}
 		for i,v in pairs(tab) do
-			if table.find(actualpositions, Vector3.new(v.X, v.Y, v.Z)) == nil then
-				table.insert(actualpositions, Vector3.new(v.X, v.Y, v.Z))
+			if table.find(actualpositions, vec3(v.X, v.Y, v.Z)) == nil then
+				table.insert(actualpositions, vec3(v.X, v.Y, v.Z))
 			else
 				table.remove(tab, i)
 			end
@@ -4384,8 +4345,8 @@ runcode(function()
 			if radius == 90 and radvec.Y < -0.9 then
 				radius = 270
 			end
-			local rot = CFrame.new() * CFrame.fromAxisAngle(Vector3.new(0, 1, 0), math.rad(radius))
-			local newpos = CFrame.new(0, 0, 0) * rot * CFrame.new(Vector3.new(v.X, v.Y, v.Z))
+			local rot = cfnew() * CFrame.fromAxisAngle(vec3(0, 1, 0), math.rad(radius))
+			local newpos = cfnew(0, 0, 0) * rot * cfnew(vec3(v.X, v.Y, v.Z))
 			v.X = math.round(newpos.p.X)
 			v.Y = math.round(newpos.p.Y)
 			v.Z = math.round(newpos.p.Z)
@@ -4469,10 +4430,10 @@ runcode(function()
 					end
 					for i2,v2 in pairs(positions.blocks) do
 						local texturetxt = bedwars["getItemMetadata"]((v2["blockType"] == "wool_white" and getwool() or v2["blockType"]))["block"]["greedyMesh"]["textures"][1]
-						local newerpos = (newpos + Vector3.new(v2.X, v2.Y, v2.Z))
+						local newerpos = (newpos + vec3(v2.X, v2.Y, v2.Z))
 						local block = Instance.new("Part")
 						block.Position = newerpos
-						block.Size = Vector3.new(3, 3, 3)
+						block.Size = vec3(3, 3, 3)
 						block.CanCollide = false
 						block.Transparency = (AutoSuffocateTransparency["Value"] == 10 and 0 or 1)
 						block.Anchored = true
@@ -4492,7 +4453,7 @@ runcode(function()
 							task.wait()
 							neededblocks = 0
 							for i,v in pairs(positions.blocks) do
-								local newerpos = (newpos + Vector3.new(v.X, v.Y, v.Z))
+								local newerpos = (newpos + vec3(v.X, v.Y, v.Z))
 								if v.placed then continue end
 								if AutoSuffocate["Enabled"] == false then
 									break
@@ -4601,7 +4562,7 @@ runcode(function()
 								if startlongjump and longjumpmode["Value"] == "AnticheatBypass" then 
 									funnytick = tick() + 0.1
 								end
-								longjumpvelo = (startlongjump and entity.character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or longjumpspeed["Value"]))) or Vector3.zero)
+								longjumpvelo = (startlongjump and entity.character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or (allowspeed == false and 20 or longjumpspeed["Value"])))) or Vector3.zero)
 							end)
 							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
 							repeat task.wait() until (longjumpmode["Value"] == "AnticheatBypass" or anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
@@ -4623,7 +4584,7 @@ runcode(function()
 									bedwars["SoundManager"]:playSound(bedwars["SoundList"]["DAMAGE_"..math.random(1, 3)])
 								end
 								if (entity.isAlive and longjump["Enabled"]) then
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, longjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
+									entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, longjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 								end
 								task.spawn(function()
 									repeat
@@ -4656,7 +4617,7 @@ runcode(function()
 											repeat
 												task.wait()
 												if entity.isAlive then
-													local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -32, 0), blockraycast)
+													local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec3(0, -32, 0), blockraycast)
 													if newray then
 														if longjump["Enabled"] then
 															longjump["ToggleButton"](false)
@@ -4761,15 +4722,15 @@ runcode(function()
 							task.spawn(function()
 								for i = 1, 100 do
 									task.wait(0.01)
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, i * 3, 0)
+									entity.character.HumanoidRootPart.Velocity = vec3(0, i * 3, 0)
 								end
 							end)
 						else
-							entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+							entity.character.HumanoidRootPart.Velocity = vec3(0, HighJumpBoost["Value"], 0)
 							task.spawn(function()
 								for i = 1, 2 do
 									task.wait(0.1)
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
+									entity.character.HumanoidRootPart.Velocity = vec3(0, HighJumpBoost["Value"], 0)
 								end
 							end)
 						end
@@ -4807,7 +4768,7 @@ GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 
 runcode(function()
 	local function roundpos(vec)
-		return Vector3.new(math.round(vec.X / .5) * .65, math.round(vec.Y), math.round(vec.Z / .5) * .65)
+		return vec3(math.round(vec.X / .5) * .65, math.round(vec.Y), math.round(vec.Z / .5) * .65)
 	end
 
 	local spiderspeed = {["Value"] = 0}
@@ -4833,28 +4794,28 @@ runcode(function()
 					if entity.isAlive then
 						if spidermode["Value"] == "Normal" then
 							local vec = entity.character.Humanoid.MoveDirection.Unit * 2
-							local newray = getblock(entity.character.HumanoidRootPart.Position + (vec + Vector3.new(0, 0.1, 0)))
-							local newray2 = getblock(entity.character.HumanoidRootPart.Position + (vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)))
+							local newray = getblock(entity.character.HumanoidRootPart.Position + (vec + vec3(0, 0.1, 0)))
+							local newray2 = getblock(entity.character.HumanoidRootPart.Position + (vec - vec3(0, entity.character.Humanoid.HipHeight, 0)))
 							if tostring(newray) == "bed" then newray = nil end 
 							if tostring(newray2) == "bed" then newray2 = nil end 
 							if spidergoinup and (not newray) and (not newray2) then
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
+								entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
 							end
 							spidergoinup = ((newray or newray2) and true or false)
 							if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false or holdingshift == false) then
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.X or 0, spiderspeed["Value"], newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.Z or 0)
+								entity.character.HumanoidRootPart.Velocity = vec3(newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.X or 0, spiderspeed["Value"], newray2 and newray == nil and entity.character.HumanoidRootPart.Velocity.Z or 0)
 							end
 						else
 							if not spiderpart then 
 								spiderpart = Instance.new("TrussPart")
-								spiderpart.Size = Vector3.new(2, 2, 2)
+								spiderpart.Size = vec3(2, 2, 2)
 								spiderpart.Transparency = 1
 								spiderpart.Anchored = true
 								spiderpart.Parent = cam
 							end
 							local vec = entity.character.HumanoidRootPart.CFrame.lookVector.Unit * 1.5
 							local vec2 = entity.character.HumanoidRootPart.CFrame.lookVector.Unit * .5
-							local newray2, newray2pos = getblock(entity.character.HumanoidRootPart.Position + (vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)))
+							local newray2, newray2pos = getblock(entity.character.HumanoidRootPart.Position + (vec - vec3(0, entity.character.Humanoid.HipHeight, 0)))
 							if tostring(newray2) == "bed" then newray2 = nil end 
 							local newpos = newray2 and (newray2pos * 3) - roundpos(vec2) or Vector3.zero
 							spiderpart.Position = newpos
@@ -4893,17 +4854,6 @@ end)
 
 runcode(function()
 	local killauraboxes = {}
-	for i = 1, 10 do 
-		local killaurabox = Instance.new("BoxHandleAdornment")
-		killaurabox.Transparency = 0.5
-		killaurabox.Color3 = Color3.new(1, 0, 0)
-		killaurabox.Adornee = nil
-		killaurabox.AlwaysOnTop = true
-		killaurabox.Size = Vector3.new(3, 6, 3)
-		killaurabox.ZIndex = 11
-		killaurabox.Parent = GuiLibrary["MainGui"]
-		killauraboxes[i] = killaurabox
-	end
     local killauratargetframe = {["Players"] = {["Enabled"] = false}}
     local killaurarealremote = bedwars["ClientHandler"]:Get(bedwars["AttackRemote"])["instance"]
     local killauramethod = {["Value"] = "Normal"}
@@ -4925,6 +4875,10 @@ runcode(function()
 	local killauracolor = {["Value"] = 0.44}
 	local killauranovape = {["Enabled"] = false}
 	local killauratargethighlight = {["Enabled"] = false}
+	local killaurarangecircle = {["Enabled"] = false}
+	local killaurarangecirclepart
+	local killauraaimcircle = {["Enabled"] = false}
+	local killauraaimcirclepart
 	local killaurahitdelay = tick()
     local killauradelay = 0
     local Killauranear = false
@@ -5020,35 +4974,56 @@ runcode(function()
 	local orig2
 	local anims = {
 		Normal = {
-			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.05},
-			{CFrame = CFrame.new(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.05}
+			{CFrame = cfnew(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.05},
+			{CFrame = cfnew(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.05}
 		},
 		Slow = {
-			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.15},
-			{CFrame = CFrame.new(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.15}
+			{CFrame = cfnew(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.15},
+			{CFrame = cfnew(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.15}
 		},
 		["Vertical Spin"] = {
-			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(8), math.rad(5)), Time = 0.1},
-			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(180), math.rad(3), math.rad(13)), Time = 0.1},
-			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(90), math.rad(-5), math.rad(8)), Time = 0.1},
-			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(-0), math.rad(-0)), Time = 0.1}
+			{CFrame = cfnew(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(8), math.rad(5)), Time = 0.1},
+			{CFrame = cfnew(0, 0, 0) * CFrame.Angles(math.rad(180), math.rad(3), math.rad(13)), Time = 0.1},
+			{CFrame = cfnew(0, 0, 0) * CFrame.Angles(math.rad(90), math.rad(-5), math.rad(8)), Time = 0.1},
+			{CFrame = cfnew(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(-0), math.rad(-0)), Time = 0.1}
 		},
 		Exhibition = {
-			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.1},
-			{CFrame = CFrame.new(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.2}
+			{CFrame = cfnew(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.1},
+			{CFrame = cfnew(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.2}
 		},
 		["Exhibition Old"] = {
-			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.15},
-			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.05},
-			{CFrame = CFrame.new(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.1},
-			{CFrame = CFrame.new(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.05},
-			{CFrame = CFrame.new(0.63, -0.1, 1.37) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.15}
+			{CFrame = cfnew(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.15},
+			{CFrame = cfnew(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-30), math.rad(50), math.rad(-90)), Time = 0.05},
+			{CFrame = cfnew(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.1},
+			{CFrame = cfnew(0.7, -0.71, 0.59) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.05},
+			{CFrame = cfnew(0.63, -0.1, 1.37) * CFrame.Angles(math.rad(-84), math.rad(50), math.rad(-38)), Time = 0.15}
 		}
 	}
+
+	local function closestpos(block, pos)
+		local blockpos = block:GetRenderCFrame()
+		local startpos = (blockpos * cfnew(-(block.Size / 2))).p
+		local endpos = (blockpos * cfnew((block.Size / 2))).p
+		local newpos = block.Position + (pos - block.Position)
+		local x = startpos.X > endpos.X and endpos.X or startpos.X
+		local y = startpos.Y > endpos.Y and endpos.Y or startpos.Y
+		local z = startpos.Z > endpos.Z and endpos.Z or startpos.Z
+		local x2 = startpos.X < endpos.X and endpos.X or startpos.X
+		local y2 = startpos.Y < endpos.Y and endpos.Y or startpos.Y
+		local z2 = startpos.Z < endpos.Z and endpos.Z or startpos.Z
+		return vec3(math.clamp(newpos.X, x, x2), math.clamp(newpos.Y, y, y2), math.clamp(newpos.Z, z, z2))
+	end
+
     Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
         ["Name"] = "Killaura",
         ["Function"] = function(callback)
             if callback then
+				if killauraaimcirclepart then 
+					killauraaimcirclepart.Parent = cam
+				end
+				if killaurarangecirclepart then 
+					killaurarangecirclepart.Parent = cam
+				end
 				task.spawn(function()
 					repeat
 						task.wait()
@@ -5100,14 +5075,21 @@ runcode(function()
 						if v:IsA("BoxHandleAdornment") and v.Adornee then
 							local cf = v.Adornee and v.Adornee.CFrame
 							local onex, oney, onez = cf:ToEulerAnglesXYZ() 
-							v.CFrame = CFrame.new() * CFrame.Angles(-onex, -oney, -onez)
+							v.CFrame = cfnew() * CFrame.Angles(-onex, -oney, -onez)
 						end
 					end
 					if entity.isAlive then
+						if killauraaimcirclepart then 
+							killauraaimcirclepart.Position = targetedplayer and closestpos(targetedplayer.RootPart, entity.character.HumanoidRootPart.Position) or Vector3.zero
+						end
 						local Root = entity.character.HumanoidRootPart
 						if Root then
+							if killaurarangecirclepart then 
+								killaurarangecirclepart.Position = Root.Position - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)
+							end
 							local Neck = entity.character.Head:FindFirstChild("Neck")
-							local RootC0 = Root.Parent and Root.Parent.LowerTorso:FindFirstChild("Root")
+							local LowerTorso = Root.Parent and Root.Parent:FindFirstChild("LowerTorso")
+							local RootC0 = LowerTorso and LowerTorso:FindFirstChild("Root")
 							if Neck and RootC0 then
 								if orig == nil then
 									orig = Neck.C0.p
@@ -5117,16 +5099,16 @@ runcode(function()
 								end
 								if orig2 then
 									if targetedplayer ~= nil and killauracframe["Enabled"] then
-										local targetPos = targetedplayer.RootPart.Position + Vector3.new(0, 2, 0)
-										local direction = (Vector3.new(targetPos.X, targetPos.Y, targetPos.Z) - entity.character.Head.Position).Unit
-										local direction2 = (Vector3.new(targetPos.X, Root.Position.Y, targetPos.Z) - Root.Position).Unit
-										local lookCFrame = (CFrame.new(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction)))
-										local lookCFrame2 = (CFrame.new(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction2)))
-										Neck.C0 = CFrame.new(orig) * CFrame.Angles(lookCFrame.LookVector.Unit.y, 0, 0)
+										local targetPos = targetedplayer.RootPart.Position + vec3(0, 2, 0)
+										local direction = (vec3(targetPos.X, targetPos.Y, targetPos.Z) - entity.character.Head.Position).Unit
+										local direction2 = (vec3(targetPos.X, Root.Position.Y, targetPos.Z) - Root.Position).Unit
+										local lookCFrame = (cfnew(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction)))
+										local lookCFrame2 = (cfnew(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction2)))
+										Neck.C0 = cfnew(orig) * CFrame.Angles(lookCFrame.LookVector.Unit.y, 0, 0)
 										RootC0.C0 = lookCFrame2 + orig2
 									else
-										Neck.C0 = CFrame.new(orig)
-										RootC0.C0 = CFrame.new(orig2)
+										Neck.C0 = cfnew(orig)
+										RootC0.C0 = cfnew(orig2)
 									end
 								end
 							end
@@ -5184,6 +5166,12 @@ runcode(function()
 				for i,v in pairs(killauraboxes) do 
 					v.Adornee = nil
 				end
+				if killauraaimcirclepart then 
+					killauraaimcirclepart.Parent = nil
+				end
+				if killaurarangecirclepart then 
+					killaurarangecirclepart.Parent = nil
+				end
                 bedwars["ViewmodelController"]["playAnimation"] = oldplay
                 bedwars["SoundManager"]["playSound"] = oldsound
                 oldplay = nil
@@ -5194,8 +5182,8 @@ runcode(function()
 						if Root then
 							local Neck = Root.Parent.Head.Neck
 							if orig and orig2 then 
-								Neck.C0 = CFrame.new(orig)
-								Root.Parent.LowerTorso.Root.C0 = CFrame.new(orig2)
+								Neck.C0 = cfnew(orig)
+								Root.Parent.LowerTorso.Root.C0 = cfnew(orig2)
 							end
 						end
 					end
@@ -5219,7 +5207,11 @@ runcode(function()
         ["Name"] = "Attack range",
         ["Min"] = 1,
         ["Max"] = 18,
-        ["Function"] = function(val) end, 
+        ["Function"] = function(val) 
+			if killaurarangecirclepart then 
+				killaurarangecirclepart.Size = Vector3.new(val * 0.7, 0.01, val * 0.7)
+			end
+		end, 
         ["Default"] = 18
     })
     killauraangle = Killaura.CreateSlider({
@@ -5258,9 +5250,6 @@ runcode(function()
 			if killauratargethighlight["Object"] then 
 				killauratargethighlight["Object"].Visible = callback
 			end
-			if killauracolor["Object"] then 
-				killauracolor["Object"].Visible = callback
-			end
 		end,
 		["HoverText"] = "Shows a red box over the opponent."
     })
@@ -5281,10 +5270,10 @@ runcode(function()
 				else
 					killaurabox = Instance.new("BoxHandleAdornment")
 					killaurabox.Transparency = 0.5
-					killaurabox.Color3 = Color3.new(1, 0, 0)
+					killaurabox.Color3 = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor["Value"])
 					killaurabox.Adornee = nil
 					killaurabox.AlwaysOnTop = true
-					killaurabox.Size = Vector3.new(3, 6, 3)
+					killaurabox.Size = vec3(3, 6, 3)
 					killaurabox.ZIndex = 11
 					killaurabox.Parent = GuiLibrary["MainGui"]
 				end
@@ -5292,20 +5281,82 @@ runcode(function()
 			end
 		end
 	})
+	killauratargethighlight["Object"].BorderSizePixel = 0
+	killauratargethighlight["Object"].BackgroundTransparency = 0
+	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	killauratargethighlight["Object"].Visible = false
 	killauracolor = Killaura.CreateColorSlider({
 		["Name"] = "Target Color",
 		["Function"] = function(hue, sat, val) 
 			for i,v in pairs(killauraboxes) do 
 				v[(killauratargethighlight["Enabled"] and "FillColor" or "Color3")] = Color3.fromHSV(hue, sat, val)
 			end
+			if killauraaimcirclepart then 
+				killauraaimcirclepart.Color = Color3.fromHSV(hue, sat, val)
+			end
+			if killaurarangecirclepart then 
+				killaurarangecirclepart.Color = Color3.fromHSV(hue, sat, val)
+			end
 		end,
 		["Default"] = 1
 	})
+	for i = 1, 10 do 
+		local killaurabox = Instance.new("BoxHandleAdornment")
+		killaurabox.Transparency = 0.5
+		killaurabox.Color3 = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor["Value"])
+		killaurabox.Adornee = nil
+		killaurabox.AlwaysOnTop = true
+		killaurabox.Size = vec3(3, 6, 3)
+		killaurabox.ZIndex = 11
+		killaurabox.Parent = GuiLibrary["MainGui"]
+		killauraboxes[i] = killaurabox
+	end
     killauracframe = Killaura.CreateToggle({
         ["Name"] = "Face target",
         ["Function"] = function() end,
 		["HoverText"] = "Makes your character face the opponent."
     })
+	killaurarangecircle = Killaura.CreateToggle({
+		["Name"] = "Range Visualizer",
+		["Function"] = function(callback)
+			if callback then 
+				killaurarangecirclepart = Instance.new("MeshPart")
+				killaurarangecirclepart.MeshId = "rbxassetid://3726303797"
+				killaurarangecirclepart.Color = Color3.new(1, 0, 0)
+				killaurarangecirclepart.CanCollide = false
+				killaurarangecirclepart.Anchored = true
+				killaurarangecirclepart.Material = Enum.Material.Neon
+				killaurarangecirclepart.Size = Vector3.new(killaurarange["Value"] * 0.7, 0.01, killaurarange["Value"] * 0.7)
+				killaurarangecirclepart.Parent = cam
+				bedwars["QueryUtil"]:setQueryIgnored(killaurarangecirclepart, true)
+			else
+				if killaurarangecirclepart then 
+					killaurarangecirclepart:Destroy()
+					killaurarangecirclepart = nil
+				end
+			end
+		end
+	})
+	killauraaimcircle = Killaura.CreateToggle({
+		["Name"] = "Aim Visualizer",
+		["Function"] = function(callback)
+			if callback then 
+				killauraaimcirclepart = Instance.new("Part")
+				killauraaimcirclepart.Shape = Enum.PartType.Ball
+				killauraaimcirclepart.Color = Color3.new(1, 0, 0)
+				killauraaimcirclepart.CanCollide = false
+				killauraaimcirclepart.Anchored = true
+				killauraaimcirclepart.Material = Enum.Material.Neon
+				killauraaimcirclepart.Size = Vector3.new(0.5, 0.5, 0.5)
+				killauraaimcirclepart.Parent = cam
+			else
+				if killauraaimcirclepart then 
+					killauraaimcirclepart:Destroy()
+					killauraaimcirclepart = nil
+				end
+			end
+		end
+	})
     killaurasound = Killaura.CreateToggle({
         ["Name"] = "No Swing Sound",
         ["Function"] = function() end,
@@ -5363,16 +5414,16 @@ runcode(function()
 									local launchvelo = (projmetatab.launchVelocity or 100)
 									local gravity = (projmetatab.gravitationalAcceleration or 196.2)
 									local multigrav = gravity
-									local offsetshootpos = shootpos + Vector3.new(0, 2, 0)
-									local pos = (plr.RootPart.Position + Vector3.new(0, 0.8, 0)) 
-									local newlook = CFrame.new(offsetshootpos, pos) * CFrame.new(Vector3.new(-bedwars["BowConstantsTable"].RelX, 0, 0))
+									local offsetshootpos = shootpos + vec3(0, 2, 0)
+									local pos = (plr.RootPart.Position + vec3(0, 0.8, 0)) 
+									local newlook = cfnew(offsetshootpos, pos) * cfnew(vec3(-bedwars["BowConstantsTable"].RelX, 0, 0))
 									pos = newlook.p + (newlook.lookVector * (offsetshootpos - pos).magnitude)
-									local velo = Vector3.new(plr.RootPart.Velocity.X, plr.RootPart.Velocity.Y / 40, plr.RootPart.Velocity.Z)
+									local velo = vec3(plr.RootPart.Velocity.X, plr.RootPart.Velocity.Y / 40, plr.RootPart.Velocity.Z)
 									local calculated2 = FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.zero, multigrav) 
 									local calculated = LaunchDirection(offsetshootpos, pos, launchvelo, gravity, false)
 									local initialvelo2 = (calculated2 - offsetshootpos).Unit * launchvelo
 									if calculated then 
-										local dir = Vector3.new(initialvelo2.X, calculated.Y, initialvelo2.Z).Unit * (launchvelo - 0.2)
+										local dir = vec3(initialvelo2.X, calculated.Y, initialvelo2.Z).Unit * (launchvelo - 0.2)
 										bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(bow["tool"], ammo, ammo, offsetshootpos, offsetshootpos, dir, game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
 										task.wait(bedwars["ItemTable"][bow.itemType].projectileSource.fireDelaySec)
 									end
@@ -5577,7 +5628,7 @@ connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]
                 end
 			end
 			if AutoToxicWin["Enabled"] then
-				repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS | vxpe.xyz", "All")
+				repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS | vxpe on top", "All")
 			end
 		end
     end
@@ -5616,7 +5667,7 @@ local commands = {
 	end,
 	["lagback"] = function(args)
 		if entity.isAlive then
-			entity.character.HumanoidRootPart.Velocity = Vector3.new(9999999, 9999999, 9999999)
+			entity.character.HumanoidRootPart.Velocity = vec3(9999999, 9999999, 9999999)
 		end
 	end,
 	["jump"] = function(args)
@@ -5654,7 +5705,7 @@ local commands = {
 			task.spawn(function()
 				repeat
 					task.wait(0.2)
-					entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, Vector3.new(0, -20, 0))
+					entity.character.HumanoidRootPart.CFrame = addvectortocframe(entity.character.HumanoidRootPart.CFrame, vec3(0, -20, 0))
 				until not entity.isAlive
 			end)
 		end
@@ -5909,6 +5960,8 @@ runcode(function()
 		["die"] = "Bullying",
 		["lobby"] = "Bullying",
 		["ban"] = "Bullying",
+		["wizard"] = "Bullying",
+		["wissard"] = "Bullying"
 	}
 
 	local reporttableexact = {
@@ -6052,7 +6105,7 @@ runcode(function()
 			if custommsg then
 				custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 			end
-			local msg = custommsg or "I dont care about the fact that I'm hacking, I care about how you died in a block game L "..(plr.DisplayName or plr.Name).." | vxpe.xyz"
+			local msg = custommsg or "I dont care about the fact that I'm hacking, I care about how you died in a block game L "..(plr.DisplayName or plr.Name).." | vxpe on top"
 			repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
 			table.insert(ignoredplayers, plr.UserId)
 		end
@@ -6186,13 +6239,13 @@ runcode(function()
 			end
 			if AutoToxic["Enabled"] then
 				if AutoToxicBedDestroyed["Enabled"] and p14.brokenBedTeam.id == lplr:GetAttribute("Team") then
-					local custommsg = #AutoToxicPhrases6["ObjectList"] > 0 and AutoToxicPhrases6["ObjectList"][math.random(1, #AutoToxicPhrases6["ObjectList"])] or "How dare you break my bed >:( <name> | vxpe.xyz"
+					local custommsg = #AutoToxicPhrases6["ObjectList"] > 0 and AutoToxicPhrases6["ObjectList"][math.random(1, #AutoToxicPhrases6["ObjectList"])] or "How dare you break my bed >:( <name> | vxpe on top"
 					if custommsg then
 						custommsg = custommsg:gsub("<name>", (p14.player.DisplayName or p14.player.Name))
 					end
 					repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
 				elseif AutoToxicBedBreak["Enabled"] and p14.player.UserId == lplr.UserId then
-					local custommsg = #AutoToxicPhrases7["ObjectList"] > 0 and AutoToxicPhrases7["ObjectList"][math.random(1, #AutoToxicPhrases7["ObjectList"])] or "nice bed <teamname> | vxpe.xyz"
+					local custommsg = #AutoToxicPhrases7["ObjectList"] > 0 and AutoToxicPhrases7["ObjectList"][math.random(1, #AutoToxicPhrases7["ObjectList"])] or "nice bed <teamname> | vxpe on top"
 					if custommsg then
 						local team = bedwars["QueueMeta"][queueType].teams[tonumber(p14.brokenBedTeam.id)]
 						local teamname = team and team.displayName:lower() or "white"
@@ -6207,30 +6260,28 @@ runcode(function()
 	local leavesaid = false
 	bedwars["ClientHandler"]:WaitFor("EntityDeathEvent"):andThen(function(p6)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
-			if AnticheatBypass["Enabled"] then
-				if p7.fromEntity == oldchar and p7.entityInstance ~= oldchar then
-					kills = kills + 1
-					bedwars["ClientStoreHandler"]:dispatch({
-						type = "BedwarsIncrementKills", 
-						userId = lplr.UserId
-					})	
-					bedwars["SoundManager"]:playSound(bedwars["SoundList"].KILL)
-				end
-				if p7.entityInstance == oldchar and changed ~= false and p7.entityInstance.Humanoid.Health <= 0 then
-					if not bedwars["GamePlayerUtil"].getGamePlayer(lplr):isSpectator() then
-						cam.CameraSubject = (p7.fromEntity and p7.fromEntity:FindFirstChild("Humanoid") or p7.entityInstance and p7.entityInstance:FindFirstChild("Humanoid") or workspace.RespawnView)
-						bedwars["RespawnController"].respawnTree = bedwars["Roact"].mount(bedwars["Roact"].createElement(bedwars["RespawnTimer"], {
-							RespawnDuration = p7.respawnDuration,
-							KilledByPlayer = (p7.fromEntity and players:GetPlayerFromCharacter(p7.fromEntity)),
-							DamageType = p7.damageType
-						}), lplr.PlayerGui)
+			if p7.fromEntity == lplr.Character and p7.entityInstance ~= lplr.Character then 
+				kills = kills + 1
+				if AutoToxic["Enabled"] then 
+					local plr = {["Name"] = ""}
+					if p7.entityInstance then
+						plr = players:GetPlayerFromCharacter(p7.entityInstance)
+					end
+					if plr and plr:GetAttribute("Spectator") and AutoToxicFinalKill["Enabled"] then
+						local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe on top"
+						if custommsg == lastsaid then
+							custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe on top"
+						else
+							lastsaid = custommsg
+						end
+						if custommsg then
+							custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
+						end
+						repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
 					end
 				end
 			end
-			if p7.fromEntity == lplr.Character and p7.entityInstance ~= lplr.Character then 
-				kills = kills + 1
-			end
-			if leavesaid == false and (p7.entityInstance == lplr.Character or p7.entityInstance == oldchar) then
+			if leavesaid == false and p7.entityInstance == lplr.Character then
 				local plr = {["Name"] = ""}
 				if p7.fromEntity then
 					plr = players:GetPlayerFromCharacter(p7.fromEntity)
@@ -6238,7 +6289,7 @@ runcode(function()
 				if bedwars["GamePlayerUtil"].getGamePlayer(lplr):isSpectator() then
 					leavesaid = true
 					if plr and AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
-						local custommsg = #AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight, thats why you won <name> | vxpe.xyz"
+						local custommsg = #AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight, thats why you won <name> | vxpe on top"
 						if custommsg then
 							custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 						end
@@ -6255,26 +6306,6 @@ runcode(function()
 								})
 							end
 						end
-					end
-				end
-			end
-			if AutoToxic["Enabled"] then
-				if p7.fromEntity and (p7.fromEntity == lplr.Character or p7.fromEntity == oldchar) then
-					local plr = {["Name"] = ""}
-					if p7.entityInstance then
-						plr = players:GetPlayerFromCharacter(p7.entityInstance)
-					end
-					if plr and bedwars["GamePlayerUtil"].getGamePlayer(plr):isSpectator() and AutoToxicFinalKill["Enabled"] then
-						local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe.xyz"
-						if custommsg == lastsaid then
-							custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe.xyz"
-						else
-							lastsaid = custommsg
-						end
-						if custommsg then
-							custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
-						end
-						repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
 					end
 				end
 			end
@@ -6367,6 +6398,7 @@ runcode(function()
 	local speedjump = {["Enabled"] = false}
 	local speedjumpheight = {["Value"] = 20}
 	local speedjumpalways = {["Enabled"] = false}
+	local speedjumpsound = {["Enabled"] = false}
 	local speedspeedup = {["Enabled"] = false}
 	local speedanimation = {["Enabled"] = false}
 	local speedtick = tick()
@@ -6384,6 +6416,7 @@ runcode(function()
 						end
 					end
 				end)
+				local lastnear = false
 				RunLoops:BindToHeartbeat("Speed", 1, function(delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						if speedanimation["Enabled"] then
@@ -6395,32 +6428,43 @@ runcode(function()
 						end
 						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
 						if speedmode["Value"] == "CFrame" then
+							if speedspeedup["Enabled"] and killauranear ~= lastnear then 
+								if killauranear then 
+									speedtick = tick() + 5
+								else
+									speedtick = 0
+								end
+								lastnear = killauranear
+							end
 							local newlongjumpvelo = longjumpvelo.Unit * math.max((Vector3.zero - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0)
 							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.zero
-							local newpos = spidergoinup and Vector3.zero or (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * (((speedval["Value"] + (speedspeedup["Enabled"] and killauranear and (48 - speedval["Value"]) or 0)) * getSpeedMultiplier(true)) - 20))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
+							local newpos = spidergoinup and Vector3.zero or (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * (((speedval["Value"] + (speedspeedup["Enabled"] and killauranear and speedtick >= tick() and (48 - speedval["Value"]) or 0)) * getSpeedMultiplier(true)) - 20))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
 							local movevec = entity.character.Humanoid.MoveDirection.Unit * (20 * getSpeedMultiplier())
 							movevec = movevec == movevec and movevec or Vector3.zero
 							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.zero)
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
 							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
 							if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
-							if networkownerfunc and networkownerfunc(entity.character.HumanoidRootPart) or networkownerfunc == nil then
+							if networkownerfunc(entity.character.HumanoidRootPart) then
 								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(velocheck and movevec.X or 0, entity.character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
+								entity.character.HumanoidRootPart.Velocity = vec3(velocheck and movevec.X or 0, entity.character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
 							end
 						else
 							if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= entity.character.HumanoidRootPart) then
 								bodyvelo = Instance.new("BodyVelocity")
 								bodyvelo.Parent = entity.character.HumanoidRootPart
-								bodyvelo.MaxForce = Vector3.new(100000, 0, 100000)
+								bodyvelo.MaxForce = vec3(100000, 0, 100000)
 							else
-								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.zero or (longjump["Enabled"] and Vector3.new(100000, 0, 100000) or Vector3.new(100000, 0, 100000)))
-								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or (longjumpticktimer >= tick() and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
+								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or antivoiding or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.zero or (longjump["Enabled"] and vec3(100000, 0, 100000) or vec3(100000, 0, 100000)))
+								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((longjumpticktimer >= tick() or allowspeed == false) and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) then
 							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
+								if speedjumpsound["Enabled"] then 
+									pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
+								end
+								entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
 							end
 						end
 					end
@@ -6469,16 +6513,25 @@ runcode(function()
 	})
 	speedjump = speed.CreateToggle({
 		["Name"] = "AutoJump", 
-		["Function"] = function(callback) 
-			if speedjumpalways["Object"] then
+		["Function"] = function(callback)
+			if speedjump["Object"] then
 				speedjump["Object"].ToggleArrow.Visible = callback
+			end
+			if speedjumpalways["Object"] then
 				speedjumpalways["Object"].Visible = callback
+			end
+			if speedjumpsound["Object"] then
+				speedjumpsound["Object"].Visible = callback
 			end
 		end,
 		["Default"] = true
 	})
 	speedjumpalways = speed.CreateToggle({
 		["Name"] = "Always Jump",
+		["Function"] = function() end
+	})
+	speedjumpsound = speed.CreateToggle({
+		["Name"] = "Jump Sound",
 		["Function"] = function() end
 	})
 	speedspeedup = speed.CreateToggle({
@@ -6493,7 +6546,7 @@ runcode(function()
 	})
 	speedjumpalways["Object"].BackgroundTransparency = 0
 	speedjumpalways["Object"].BorderSizePixel = 0
-	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	speedjumpalways["Object"].Visible = speedjump["Enabled"]
 end)
 
@@ -6524,19 +6577,16 @@ runcode(function()
 	local flycorountine
 
 	local function buyballoons()
-		if entity.isAlive and fly["Enabled"] then
+		if not fly["Enabled"] then return end
+		if entity.isAlive then
 			if getItem("balloon") then
 				bedwars["BalloonController"]["inflateBalloon"]()
+				return true
 			end
 		end
+		return false
 	end
-
-	bedwars["ClientHandler"]:WaitFor("BalloonPopped"):andThen(function(p6)
-		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
-			buyballoons()
-		end)
-	end)
-
+	bedwars["ClientHandler"]:WaitFor("BalloonPopped"):andThen(function(p6) connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(buyballoons) end)
 	local flytog = false
 	local flytogtick = tick()
 	local groundtime = tick()
@@ -6566,16 +6616,18 @@ runcode(function()
 						flydown = false
 					end
 				end)
-				local balloons = false
-				if flyautodamage["Enabled"] and entity.isAlive and (queueType and (not queueType:find("mega"))) then
-					buyballoons()
-					if getItem("balloon") then
-						balloons = true
-					end
+				local balloons
+				if entity.isAlive and (queueType and (not queueType:find("mega"))) then
+					balloons = buyballoons()
 				end
 				local megacheck = queueType and queueType:find("mega") and true or false
+				task.spawn(function()
+					repeat task.wait() until queueType ~= "bedwars_test" or (not fly["Enabled"])
+					if not fly["Enabled"] then return end
+					megacheck = queueType and queueType:find("mega") and true or false
+				end)
 				local allowed = entity.isAlive and ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
-				if flyac["Enabled"] and allowed <= 0 and (not balloons) and shared.damageanim then 
+				if flyac["Enabled"] and allowed <= 0 and shared.damageanim and (not balloons) then 
 					shared.damageanim()
 					bedwars["SoundManager"]:playSound(bedwars["SoundList"]["DAMAGE_"..math.random(1, 3)])
 				end
@@ -6600,7 +6652,7 @@ runcode(function()
 							flyacprogressbarframe.Visible = allowed <= 0
 						end
 						if flyac["Enabled"] and allowed <= 0 then 
-							local newray = getblock((AnticheatBypass["Enabled"] and oldchar or entity.character).HumanoidRootPart.Position + Vector3.new(0, (entity.character.Humanoid.HipHeight * -2) - 1, 0))
+							local newray = getblock(entity.character.HumanoidRootPart.Position + vec3(0, (entity.character.Humanoid.HipHeight * -2) - 1, 0))
 							onground = newray and true or false
 							if firsttoggled then 
 								lastonground = not onground
@@ -6636,15 +6688,15 @@ runcode(function()
 							lastonground = true
 							realflyspeed = realflyspeed * getSpeedMultiplier(true)
 						end
-						realflyspeed = realflyspeed * allowed
+						realflyspeed = (allowspeed == false and 20 or realflyspeed) * allowed
 						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, 20 * getSpeedMultiplier()))
 						local flypos2 = (entity.character.Humanoid.MoveDirection * math.max((realflyspeed) - 20, 0)) * delta
 						entity.character.HumanoidRootPart.Transparency = 1
-						entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						entity.character.HumanoidRootPart.Velocity = flypos + (vec3(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
 						if flymode["Value"] == "CFrame" then
 							entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos2
 						end
-						flyvelo = flypos + Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+						flyvelo = flypos + vec3(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
 					end
 				end)
 			else
@@ -6758,6 +6810,9 @@ runcode(function()
 		["Function"] = function() end,
 		["Default"] = true
 	})
+	flydamagecamera["Object"].BorderSizePixel = 0
+	flydamagecamera["Object"].BackgroundTransparency = 0
+	flydamagecamera["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	flydamagecamera["Object"].Visible = false
 	flyac = fly.CreateToggle({
 		["Name"] = "Fly Anyway",
@@ -6779,12 +6834,18 @@ runcode(function()
 		["Function"] = function() end,
 		["HoverText"] = "boosts 1.4s fly",
 	})
+	flyacboost["Object"].BorderSizePixel = 0
+	flyacboost["Object"].BackgroundTransparency = 0
+	flyacboost["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	flyacboost["Object"].Visible = false
 	flyacrisky = fly.CreateToggle({
 		["Name"] = "Risky Fly",
 		["Function"] = function() end,
 		["HoverText"] = "fly for 2s but will flag instantly after 2s"
 	})
+	flyacrisky["Object"].BorderSizePixel = 0
+	flyacrisky["Object"].BackgroundTransparency = 0
+	flyacrisky["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	flyacrisky["Object"].Visible = false
 	flyacprogressbar = fly.CreateToggle({
 		["Name"] = "Progress Bar",
@@ -6823,6 +6884,9 @@ runcode(function()
 		end,
 		["HoverText"] = "show amount of fly time"
 	})
+	flyacprogressbar["Object"].BorderSizePixel = 0
+	flyacprogressbar["Object"].BackgroundTransparency = 0
+	flyacprogressbar["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	flyacprogressbar["Object"].Visible = false
 end)
 
@@ -6847,764 +6911,18 @@ runcode(function()
 	local scaffoldstopmotionval = false
 	local scaffoldposcheck = tick()
 	local scaffoldstopmotionpos = Vector3.zero
-	local scaffoldposchecklist = {
-		[1] = Vector3.new(0, 3, 0),
-		[2] = Vector3.new(-3, 3, 0),
-		[3] = Vector3.new(-3, 0, 0),
-		[4] = Vector3.new(-3, -3, 0),
-		[5] = Vector3.new(0, -3, 0),
-		[6] = Vector3.new(3, -3, 0),
-		[7] = Vector3.new(3, 0, 0),
-		[8] = Vector3.new(3, 3, 0),
-		[9] = Vector3.new(3, 3, -3),
-		[10] = Vector3.new(0, 3, -3),
-		[11] = Vector3.new(-3, 3, -3),
-		[12] = Vector3.new(-3, 0, -3),
-		[13] = Vector3.new(-3, -3, -3),
-		[14] = Vector3.new(0, -3, -3),
-		[15] = Vector3.new(3, -3, -3),
-		[16] = Vector3.new(3, 0, -3),
-		[17] = Vector3.new(3, 3, 3),
-		[18] = Vector3.new(0, 3, 3),
-		[19] = Vector3.new(-3, 3, 3),
-		[20] = Vector3.new(-3, 0, 3),
-		[21] = Vector3.new(-3, -3, 3),
-		[22] = Vector3.new(0, -3, 3),
-		[23] = Vector3.new(3, -3, 3),
-		[24] = Vector3.new(3, 0, 3),
-		[25] = Vector3.new(0, 0, 3),
-		[26] = Vector3.new(0, 0, -3)
-	}
-	local scaffoldposchecklist2 = {
-		[1] = Vector3.new(0, 3, 0),
-		[2] = Vector3.new(-3, 3, 0),
-		[3] = Vector3.new(-3, 0, 0),
-		[4] = Vector3.new(-3, -3, 0),
-		[5] = Vector3.new(0, -3, 0),
-		[6] = Vector3.new(3, -3, 0),
-		[7] = Vector3.new(3, 0, 0),
-		[8] = Vector3.new(3, 3, 0),
-		[9] = Vector3.new(3, 3, -3),
-		[10] = Vector3.new(0, 3, -3),
-		[11] = Vector3.new(-3, 3, -3),
-		[12] = Vector3.new(-3, 0, -3),
-		[13] = Vector3.new(-3, -3, -3),
-		[14] = Vector3.new(0, -3, -3),
-		[15] = Vector3.new(3, -3, -3),
-		[16] = Vector3.new(3, 0, -3),
-		[17] = Vector3.new(3, 3, 3),
-		[18] = Vector3.new(0, 3, 3),
-		[19] = Vector3.new(-3, 3, 3),
-		[20] = Vector3.new(-3, 0, 3),
-		[21] = Vector3.new(-3, -3, 3),
-		[22] = Vector3.new(0, -3, 3),
-		[23] = Vector3.new(3, -3, 3),
-		[24] = Vector3.new(3, 0, 3),
-		[25] = Vector3.new(0, 0, 3),
-		[26] = Vector3.new(0, 0, -3),
-		[27] = Vector3.new(-6, 3, -3),
-		[28] = Vector3.new(-6, -3, 3),
-		[29] = Vector3.new(-6, 0, 3),
-		[30] = Vector3.new(-6, 3, 3),
-		[31] = Vector3.new(-6, 3, 0),
-		[32] = Vector3.new(-6, 0, -3),
-		[33] = Vector3.new(-6, 0, 0),
-		[34] = Vector3.new(-6, -3, -3),
-		[35] = Vector3.new(-6, -3, 0),
-		[36] = Vector3.new(6, 3, -3),
-		[37] = Vector3.new(6, -3, 3),
-		[38] = Vector3.new(6, 0, 3),
-		[39] = Vector3.new(6, 3, 3),
-		[40] = Vector3.new(6, 3, 0),
-		[41] = Vector3.new(6, 0, -3),
-		[42] = Vector3.new(6, 0, 0),
-		[43] = Vector3.new(6, -3, -3),
-		[44] = Vector3.new(6, -3, 0),
-		[45] = Vector3.new(-6, 3, 6),
-		[46] = Vector3.new(-6, 0, 6),
-		[47] = Vector3.new(-3, 3, 6),
-		[48] = Vector3.new(-3, 0, 6),
-		[49] = Vector3.new(-3, -3, 6),
-		[50] = Vector3.new(-6, -3, 6),
-		[51] = Vector3.new(0, -3, 6),
-		[52] = Vector3.new(0, 0, 6),
-		[53] = Vector3.new(0, 3, 6),
-		[54] = Vector3.new(3, 3, 6),
-		[55] = Vector3.new(3, 0, 6),
-		[56] = Vector3.new(3, -3, 6),
-		[57] = Vector3.new(6, -3, 6),
-		[58] = Vector3.new(6, 3, 6),
-		[59] = Vector3.new(6, 0, 6),
-		[60] = Vector3.new(-6, 3, -6),
-		[61] = Vector3.new(-6, 0, -6),
-		[62] = Vector3.new(-3, 3, -6),
-		[63] = Vector3.new(-3, 0, -6),
-		[64] = Vector3.new(-3, -3, -6),
-		[65] = Vector3.new(-6, -3, -6),
-		[66] = Vector3.new(0, -3, -6),
-		[67] = Vector3.new(0, 0, -6),
-		[68] = Vector3.new(0, 3, -6),
-		[69] = Vector3.new(3, 3, -6),
-		[70] = Vector3.new(3, 0, -6),
-		[71] = Vector3.new(3, -3, -6),
-		[72] = Vector3.new(6, -3, -6),
-		[73] = Vector3.new(6, 3, -6),
-		[74] = Vector3.new(6, 0, -6),
-		[75] = Vector3.new(6, 6, -6),
-		[76] = Vector3.new(3, 6, -6),
-		[77] = Vector3.new(0, 6, -6),
-		[78] = Vector3.new(-3, 6, -6),
-		[79] = Vector3.new(-6, 6, -6),
-		[80] = Vector3.new(-6, 6, -3),
-		[81] = Vector3.new(-3, 6, -3),
-		[82] = Vector3.new(0, 6, -3),
-		[83] = Vector3.new(3, 6, -3),
-		[84] = Vector3.new(6, 6, -3),
-		[85] = Vector3.new(6, 6, 0),
-		[86] = Vector3.new(3, 6, 0),
-		[87] = Vector3.new(0, 6, 0),
-		[88] = Vector3.new(-3, 6, 0),
-		[89] = Vector3.new(-6, 6, 0),
-		[90] = Vector3.new(-6, 6, 3),
-		[91] = Vector3.new(-3, 6, 3),
-		[92] = Vector3.new(0, 6, 3),
-		[93] = Vector3.new(3, 6, 3),
-		[94] = Vector3.new(6, 6, 3),
-		[95] = Vector3.new(6, 6, 6),
-		[96] = Vector3.new(3, 6, 6),
-		[97] = Vector3.new(-6, 6, 6),
-		[98] = Vector3.new(-3, 6, 6),
-		[99] = Vector3.new(0, 6, 6),
-		[100] = Vector3.new(6, -6, -6),
-		[101] = Vector3.new(3, -6, -6),
-		[102] = Vector3.new(0, -6, -6),
-		[103] = Vector3.new(-3, -6, -6),
-		[104] = Vector3.new(-6, -6, -6),
-		[105] = Vector3.new(-6, -6, -3),
-		[106] = Vector3.new(-3, -6, -3),
-		[107] = Vector3.new(0, -6, -3),
-		[108] = Vector3.new(3, -6, -3),
-		[109] = Vector3.new(6, -6, -3),
-		[110] = Vector3.new(6, -6, 0),
-		[111] = Vector3.new(3, -6, 0),
-		[112] = Vector3.new(0, -6, 0),
-		[113] = Vector3.new(-3, -6, 0),
-		[114] = Vector3.new(-6, -6, 0),
-		[115] = Vector3.new(-6, -6, 3),
-		[116] = Vector3.new(-3, -6, 3),
-		[117] = Vector3.new(0, -6, 3),
-		[118] = Vector3.new(3, -6, 3),
-		[119] = Vector3.new(6, -6, 3),
-		[120] = Vector3.new(6, -6, 6),
-		[121] = Vector3.new(3, -6, 6),
-		[122] = Vector3.new(-6, -6, 6),
-		[123] = Vector3.new(-3, -6, 6),
-		[124] = Vector3.new(0, -6, 6),
-		[125] = Vector3.new(9, 6, 6),
-		[126] = Vector3.new(9, 6, 3),
-		[127] = Vector3.new(9, 6, 0),
-		[128] = Vector3.new(9, 6, -3),
-		[129] = Vector3.new(9, 6, -6),
-		[130] = Vector3.new(9, 3, -6),
-		[131] = Vector3.new(9, 0, -6),
-		[132] = Vector3.new(9, -3, -6),
-		[133] = Vector3.new(9, -6, -6),
-		[134] = Vector3.new(9, -6, -3),
-		[135] = Vector3.new(9, -6, 0),
-		[136] = Vector3.new(9, -6, 3),
-		[137] = Vector3.new(9, -6, 6),
-		[138] = Vector3.new(9, -3, 6),
-		[139] = Vector3.new(9, 3, 6),
-		[140] = Vector3.new(9, 0, 6),
-		[141] = Vector3.new(9, 3, 3),
-		[142] = Vector3.new(9, 0, 3),
-		[143] = Vector3.new(9, -3, 3),
-		[144] = Vector3.new(9, -3, 0),
-		[145] = Vector3.new(9, 0, 0),
-		[146] = Vector3.new(9, 3, 0),
-		[147] = Vector3.new(9, 3, -3),
-		[148] = Vector3.new(9, 0, -3),
-		[149] = Vector3.new(9, -3, -3),
-		[150] = Vector3.new(-9, 6, 6),
-		[151] = Vector3.new(-9, 6, 3),
-		[152] = Vector3.new(-9, 6, 0),
-		[153] = Vector3.new(-9, 6, -3),
-		[154] = Vector3.new(-9, 6, -6),
-		[155] = Vector3.new(-9, 3, -6),
-		[156] = Vector3.new(-9, 0, -6),
-		[157] = Vector3.new(-9, -3, -6),
-		[158] = Vector3.new(-9, -6, -6),
-		[159] = Vector3.new(-9, -6, -3),
-		[160] = Vector3.new(-9, -6, 0),
-		[161] = Vector3.new(-9, -6, 3),
-		[162] = Vector3.new(-9, -6, 6),
-		[163] = Vector3.new(-9, -3, 6),
-		[164] = Vector3.new(-9, 3, 6),
-		[165] = Vector3.new(-9, 0, 6),
-		[166] = Vector3.new(-9, 3, 3),
-		[167] = Vector3.new(-9, 0, 3),
-		[168] = Vector3.new(-9, -3, 3),
-		[169] = Vector3.new(-9, -3, 0),
-		[170] = Vector3.new(-9, 0, 0),
-		[171] = Vector3.new(-9, 3, 0),
-		[172] = Vector3.new(-9, 3, -3),
-		[173] = Vector3.new(-9, 0, -3),
-		[174] = Vector3.new(-9, -3, -3),
-		[175] = Vector3.new(-9, 6, -9),
-		[176] = Vector3.new(-9, 3, -9),
-		[177] = Vector3.new(-9, 0, -9),
-		[178] = Vector3.new(-9, -3, -9),
-		[179] = Vector3.new(-6, -6, -9),
-		[180] = Vector3.new(-9, -6, -9),
-		[181] = Vector3.new(-6, -3, -9),
-		[182] = Vector3.new(-6, 0, -9),
-		[183] = Vector3.new(-6, 3, -9),
-		[184] = Vector3.new(-6, 6, -9),
-		[185] = Vector3.new(-3, 6, -9),
-		[186] = Vector3.new(0, 6, -9),
-		[187] = Vector3.new(3, 6, -9),
-		[188] = Vector3.new(6, 6, -9),
-		[189] = Vector3.new(9, 6, -9),
-		[190] = Vector3.new(6, 3, -9),
-		[191] = Vector3.new(9, 3, -9),
-		[192] = Vector3.new(3, 3, -9),
-		[193] = Vector3.new(0, 3, -9),
-		[194] = Vector3.new(-3, 3, -9),
-		[195] = Vector3.new(-3, 0, -9),
-		[196] = Vector3.new(0, 0, -9),
-		[197] = Vector3.new(3, 0, -9),
-		[198] = Vector3.new(6, 0, -9),
-		[199] = Vector3.new(9, 0, -9),
-		[200] = Vector3.new(9, -3, -9),
-		[201] = Vector3.new(6, -3, -9),
-		[202] = Vector3.new(3, -3, -9),
-		[203] = Vector3.new(0, -3, -9),
-		[204] = Vector3.new(-3, -3, -9),
-		[205] = Vector3.new(-3, -6, -9),
-		[206] = Vector3.new(0, -6, -9),
-		[207] = Vector3.new(3, -6, -9),
-		[208] = Vector3.new(6, -6, -9),
-		[209] = Vector3.new(9, -6, -9),
-		[210] = Vector3.new(-9, 6, 9),
-		[211] = Vector3.new(-9, 3, 9),
-		[212] = Vector3.new(-9, 0, 9),
-		[213] = Vector3.new(-9, -3, 9),
-		[214] = Vector3.new(-6, -6, 9),
-		[215] = Vector3.new(-9, -6, 9),
-		[216] = Vector3.new(-6, -3, 9),
-		[217] = Vector3.new(-6, 0, 9),
-		[218] = Vector3.new(-6, 3, 9),
-		[219] = Vector3.new(-6, 6, 9),
-		[220] = Vector3.new(-3, 6, 9),
-		[221] = Vector3.new(0, 6, 9),
-		[222] = Vector3.new(3, 6, 9),
-		[223] = Vector3.new(6, 6, 9),
-		[224] = Vector3.new(9, 6, 9),
-		[225] = Vector3.new(6, 3, 9),
-		[226] = Vector3.new(9, 3, 9),
-		[227] = Vector3.new(3, 3, 9),
-		[228] = Vector3.new(0, 3, 9),
-		[229] = Vector3.new(-3, 3, 9),
-		[230] = Vector3.new(-3, 0, 9),
-		[231] = Vector3.new(0, 0, 9),
-		[232] = Vector3.new(3, 0, 9),
-		[233] = Vector3.new(6, 0, 9),
-		[234] = Vector3.new(9, 0, 9),
-		[235] = Vector3.new(9, -3, 9),
-		[236] = Vector3.new(6, -3, 9),
-		[237] = Vector3.new(3, -3, 9),
-		[238] = Vector3.new(0, -3, 9),
-		[239] = Vector3.new(-3, -3, 9),
-		[240] = Vector3.new(-3, -6, 9),
-		[241] = Vector3.new(0, -6, 9),
-		[242] = Vector3.new(3, -6, 9),
-		[243] = Vector3.new(6, -6, 9),
-		[244] = Vector3.new(9, -6, 9),
-		[245] = Vector3.new(-9, 9, 9),
-		[246] = Vector3.new(-6, 9, 9),
-		[247] = Vector3.new(-3, 9, 9),
-		[248] = Vector3.new(0, 9, 9),
-		[249] = Vector3.new(3, 9, 9),
-		[250] = Vector3.new(6, 9, 9),
-		[251] = Vector3.new(9, 9, 9),
-		[252] = Vector3.new(9, 9, 6),
-		[253] = Vector3.new(6, 9, 6),
-		[254] = Vector3.new(3, 9, 6),
-		[255] = Vector3.new(0, 9, 6),
-		[256] = Vector3.new(-3, 9, 6),
-		[257] = Vector3.new(-6, 9, 6),
-		[258] = Vector3.new(-9, 9, 6),
-		[259] = Vector3.new(-9, 9, 3),
-		[260] = Vector3.new(-6, 9, 3),
-		[261] = Vector3.new(-3, 9, 3),
-		[262] = Vector3.new(0, 9, 3),
-		[263] = Vector3.new(3, 9, 3),
-		[264] = Vector3.new(6, 9, 3),
-		[265] = Vector3.new(9, 9, 3),
-		[266] = Vector3.new(9, 9, 0),
-		[267] = Vector3.new(6, 9, 0),
-		[268] = Vector3.new(3, 9, 0),
-		[269] = Vector3.new(-3, 9, 0),
-		[270] = Vector3.new(0, 9, 0),
-		[271] = Vector3.new(-6, 9, 0),
-		[272] = Vector3.new(-9, 9, 0),
-		[273] = Vector3.new(-9, 9, -3),
-		[274] = Vector3.new(-6, 9, -3),
-		[275] = Vector3.new(-3, 9, -3),
-		[276] = Vector3.new(0, 9, -3),
-		[277] = Vector3.new(3, 9, -3),
-		[278] = Vector3.new(6, 9, -3),
-		[279] = Vector3.new(9, 9, -3),
-		[280] = Vector3.new(9, 9, -6),
-		[281] = Vector3.new(3, 9, -6),
-		[282] = Vector3.new(6, 9, -6),
-		[283] = Vector3.new(0, 9, -6),
-		[284] = Vector3.new(-3, 9, -6),
-		[285] = Vector3.new(-6, 9, -6),
-		[286] = Vector3.new(-9, 9, -6),
-		[287] = Vector3.new(-6, 9, -9),
-		[288] = Vector3.new(-9, 9, -9),
-		[289] = Vector3.new(-3, 9, -9),
-		[290] = Vector3.new(0, 9, -9),
-		[291] = Vector3.new(3, 9, -9),
-		[292] = Vector3.new(6, 9, -9),
-		[293] = Vector3.new(9, 9, -9),
-		[294] = Vector3.new(-9, -9, 9),
-		[295] = Vector3.new(-6, -9, 9),
-		[296] = Vector3.new(-3, -9, 9),
-		[297] = Vector3.new(0, -9, 9),
-		[298] = Vector3.new(3, -9, 9),
-		[299] = Vector3.new(6, -9, 9),
-		[300] = Vector3.new(9, -9, 9),
-		[301] = Vector3.new(9, -9, 6),
-		[302] = Vector3.new(6, -9, 6),
-		[303] = Vector3.new(3, -9, 6),
-		[304] = Vector3.new(0, -9, 6),
-		[305] = Vector3.new(-3, -9, 6),
-		[306] = Vector3.new(-6, -9, 6),
-		[307] = Vector3.new(-9, -9, 6),
-		[308] = Vector3.new(-9, -9, 3),
-		[309] = Vector3.new(-6, -9, 3),
-		[310] = Vector3.new(-3, -9, 3),
-		[311] = Vector3.new(0, -9, 3),
-		[312] = Vector3.new(3, -9, 3),
-		[313] = Vector3.new(6, -9, 3),
-		[314] = Vector3.new(9, -9, 3),
-		[315] = Vector3.new(9, -9, 0),
-		[316] = Vector3.new(6, -9, 0),
-		[317] = Vector3.new(3, -9, 0),
-		[318] = Vector3.new(-3, -9, 0),
-		[319] = Vector3.new(0, -9, 0),
-		[320] = Vector3.new(-6, -9, 0),
-		[321] = Vector3.new(-9, -9, 0),
-		[322] = Vector3.new(-9, -9, -3),
-		[323] = Vector3.new(-6, -9, -3),
-		[324] = Vector3.new(-3, -9, -3),
-		[325] = Vector3.new(0, -9, -3),
-		[326] = Vector3.new(3, -9, -3),
-		[327] = Vector3.new(6, -9, -3),
-		[328] = Vector3.new(9, -9, -3),
-		[329] = Vector3.new(9, -9, -6),
-		[330] = Vector3.new(3, -9, -6),
-		[331] = Vector3.new(6, -9, -6),
-		[332] = Vector3.new(0, -9, -6),
-		[333] = Vector3.new(-3, -9, -6),
-		[334] = Vector3.new(-6, -9, -6),
-		[335] = Vector3.new(-9, -9, -6),
-		[336] = Vector3.new(-6, -9, -9),
-		[337] = Vector3.new(-9, -9, -9),
-		[338] = Vector3.new(-3, -9, -9),
-		[339] = Vector3.new(0, -9, -9),
-		[340] = Vector3.new(3, -9, -9),
-		[341] = Vector3.new(6, -9, -9),
-		[342] = Vector3.new(9, -9, -9),
-		[343] = Vector3.new(9, 9, -12),
-		[344] = Vector3.new(-9, -9, -12),
-		[345] = Vector3.new(-6, -9, -12),
-		[346] = Vector3.new(-3, -9, -12),
-		[347] = Vector3.new(3, -9, -12),
-		[348] = Vector3.new(0, -9, -12),
-		[349] = Vector3.new(6, -9, -12),
-		[350] = Vector3.new(9, -9, -12),
-		[351] = Vector3.new(9, -6, -12),
-		[352] = Vector3.new(6, -6, -12),
-		[353] = Vector3.new(3, -6, -12),
-		[354] = Vector3.new(0, -6, -12),
-		[355] = Vector3.new(-3, -6, -12),
-		[356] = Vector3.new(-9, -3, -12),
-		[357] = Vector3.new(-6, -6, -12),
-		[358] = Vector3.new(-9, -6, -12),
-		[359] = Vector3.new(-6, -3, -12),
-		[360] = Vector3.new(-3, -3, -12),
-		[361] = Vector3.new(0, -3, -12),
-		[362] = Vector3.new(3, -3, -12),
-		[363] = Vector3.new(6, -3, -12),
-		[364] = Vector3.new(9, -3, -12),
-		[365] = Vector3.new(9, 0, -12),
-		[366] = Vector3.new(6, 0, -12),
-		[367] = Vector3.new(3, 0, -12),
-		[368] = Vector3.new(0, 0, -12),
-		[369] = Vector3.new(-3, 0, -12),
-		[370] = Vector3.new(-6, 0, -12),
-		[371] = Vector3.new(-9, 0, -12),
-		[372] = Vector3.new(-9, 3, -12),
-		[373] = Vector3.new(-6, 3, -12),
-		[374] = Vector3.new(-3, 3, -12),
-		[375] = Vector3.new(0, 3, -12),
-		[376] = Vector3.new(3, 3, -12),
-		[377] = Vector3.new(6, 3, -12),
-		[378] = Vector3.new(9, 3, -12),
-		[379] = Vector3.new(9, 6, -12),
-		[380] = Vector3.new(6, 6, -12),
-		[381] = Vector3.new(3, 6, -12),
-		[382] = Vector3.new(0, 6, -12),
-		[383] = Vector3.new(-3, 6, -12),
-		[384] = Vector3.new(-6, 6, -12),
-		[385] = Vector3.new(-9, 6, -12),
-		[386] = Vector3.new(-9, 9, -12),
-		[387] = Vector3.new(-6, 9, -12),
-		[388] = Vector3.new(-3, 9, -12),
-		[389] = Vector3.new(0, 9, -12),
-		[390] = Vector3.new(3, 9, -12),
-		[391] = Vector3.new(6, 9, -12),
-		[392] = Vector3.new(9, 9, 12),
-		[393] = Vector3.new(-9, -9, 12),
-		[394] = Vector3.new(-6, -9, 12),
-		[395] = Vector3.new(-3, -9, 12),
-		[396] = Vector3.new(3, -9, 12),
-		[397] = Vector3.new(0, -9, 12),
-		[398] = Vector3.new(6, -9, 12),
-		[399] = Vector3.new(9, -9, 12),
-		[400] = Vector3.new(9, -6, 12),
-		[401] = Vector3.new(6, -6, 12),
-		[402] = Vector3.new(3, -6, 12),
-		[403] = Vector3.new(0, -6, 12),
-		[404] = Vector3.new(-3, -6, 12),
-		[405] = Vector3.new(-9, -3, 12),
-		[406] = Vector3.new(-6, -6, 12),
-		[407] = Vector3.new(-9, -6, 12),
-		[408] = Vector3.new(-6, -3, 12),
-		[409] = Vector3.new(-3, -3, 12),
-		[410] = Vector3.new(0, -3, 12),
-		[411] = Vector3.new(3, -3, 12),
-		[412] = Vector3.new(6, -3, 12),
-		[413] = Vector3.new(9, -3, 12),
-		[414] = Vector3.new(9, 0, 12),
-		[415] = Vector3.new(6, 0, 12),
-		[416] = Vector3.new(3, 0, 12),
-		[417] = Vector3.new(0, 0, 12),
-		[418] = Vector3.new(-3, 0, 12),
-		[419] = Vector3.new(-6, 0, 12),
-		[420] = Vector3.new(-9, 0, 12),
-		[421] = Vector3.new(-9, 3, 12),
-		[422] = Vector3.new(-6, 3, 12),
-		[423] = Vector3.new(-3, 3, 12),
-		[424] = Vector3.new(0, 3, 12),
-		[425] = Vector3.new(3, 3, 12),
-		[426] = Vector3.new(6, 3, 12),
-		[427] = Vector3.new(9, 3, 12),
-		[428] = Vector3.new(9, 6, 12),
-		[429] = Vector3.new(6, 6, 12),
-		[430] = Vector3.new(3, 6, 12),
-		[431] = Vector3.new(0, 6, 12),
-		[432] = Vector3.new(-3, 6, 12),
-		[433] = Vector3.new(-6, 6, 12),
-		[434] = Vector3.new(-9, 6, 12),
-		[435] = Vector3.new(-9, 9, 12),
-		[436] = Vector3.new(-6, 9, 12),
-		[437] = Vector3.new(-3, 9, 12),
-		[438] = Vector3.new(0, 9, 12),
-		[439] = Vector3.new(3, 9, 12),
-		[440] = Vector3.new(6, 9, 12),
-		[441] = Vector3.new(12, 9, 12),
-		[442] = Vector3.new(12, 6, 12),
-		[443] = Vector3.new(12, 3, 12),
-		[444] = Vector3.new(12, 0, 12),
-		[445] = Vector3.new(12, -3, 12),
-		[446] = Vector3.new(12, -6, 12),
-		[447] = Vector3.new(12, -9, 12),
-		[448] = Vector3.new(12, -9, 9),
-		[449] = Vector3.new(12, -6, 9),
-		[450] = Vector3.new(12, -3, 9),
-		[451] = Vector3.new(12, 0, 9),
-		[452] = Vector3.new(12, 6, 9),
-		[453] = Vector3.new(12, 3, 9),
-		[454] = Vector3.new(12, 9, 9),
-		[455] = Vector3.new(12, 9, 6),
-		[456] = Vector3.new(12, 6, 6),
-		[457] = Vector3.new(12, 3, 6),
-		[458] = Vector3.new(12, 0, 6),
-		[459] = Vector3.new(12, -3, 6),
-		[460] = Vector3.new(12, -6, 6),
-		[461] = Vector3.new(12, -9, 6),
-		[462] = Vector3.new(12, -9, 3),
-		[463] = Vector3.new(12, -6, 3),
-		[464] = Vector3.new(12, -3, 3),
-		[465] = Vector3.new(12, 0, 3),
-		[466] = Vector3.new(12, 3, 3),
-		[467] = Vector3.new(12, 6, 3),
-		[468] = Vector3.new(12, 9, 3),
-		[469] = Vector3.new(12, 9, 0),
-		[470] = Vector3.new(12, 6, 0),
-		[471] = Vector3.new(12, 3, 0),
-		[472] = Vector3.new(12, 0, 0),
-		[473] = Vector3.new(12, -3, 0),
-		[474] = Vector3.new(12, -6, 0),
-		[475] = Vector3.new(12, -9, 0),
-		[476] = Vector3.new(12, -9, -3),
-		[477] = Vector3.new(12, -6, -3),
-		[478] = Vector3.new(12, -3, -3),
-		[479] = Vector3.new(12, 0, -3),
-		[480] = Vector3.new(12, 3, -3),
-		[481] = Vector3.new(12, 6, -3),
-		[482] = Vector3.new(12, 9, -3),
-		[483] = Vector3.new(12, 9, -6),
-		[484] = Vector3.new(12, 6, -6),
-		[485] = Vector3.new(12, 3, -6),
-		[486] = Vector3.new(12, 0, -6),
-		[487] = Vector3.new(12, -3, -6),
-		[488] = Vector3.new(12, -6, -6),
-		[489] = Vector3.new(12, -9, -6),
-		[490] = Vector3.new(12, -9, -9),
-		[491] = Vector3.new(12, -6, -9),
-		[492] = Vector3.new(12, -3, -9),
-		[493] = Vector3.new(12, 0, -9),
-		[494] = Vector3.new(12, 3, -9),
-		[495] = Vector3.new(12, 6, -9),
-		[496] = Vector3.new(12, 9, -9),
-		[497] = Vector3.new(12, 9, -12),
-		[498] = Vector3.new(12, 6, -12),
-		[499] = Vector3.new(12, 3, -12),
-		[500] = Vector3.new(12, 0, -12),
-		[501] = Vector3.new(12, -3, -12),
-		[502] = Vector3.new(12, -6, -12),
-		[503] = Vector3.new(12, -9, -12),
-		[504] = Vector3.new(-12, 9, 12),
-		[505] = Vector3.new(-12, 6, 12),
-		[506] = Vector3.new(-12, 3, 12),
-		[507] = Vector3.new(-12, 0, 12),
-		[508] = Vector3.new(-12, -3, 12),
-		[509] = Vector3.new(-12, -6, 12),
-		[510] = Vector3.new(-12, -9, 12),
-		[511] = Vector3.new(-12, -9, 9),
-		[512] = Vector3.new(-12, -6, 9),
-		[513] = Vector3.new(-12, -3, 9),
-		[514] = Vector3.new(-12, 0, 9),
-		[515] = Vector3.new(-12, 6, 9),
-		[516] = Vector3.new(-12, 3, 9),
-		[517] = Vector3.new(-12, 9, 9),
-		[518] = Vector3.new(-12, 9, 6),
-		[519] = Vector3.new(-12, 6, 6),
-		[520] = Vector3.new(-12, 3, 6),
-		[521] = Vector3.new(-12, 0, 6),
-		[522] = Vector3.new(-12, -3, 6),
-		[523] = Vector3.new(-12, -6, 6),
-		[524] = Vector3.new(-12, -9, 6),
-		[525] = Vector3.new(-12, -9, 3),
-		[526] = Vector3.new(-12, -6, 3),
-		[527] = Vector3.new(-12, -3, 3),
-		[528] = Vector3.new(-12, 0, 3),
-		[529] = Vector3.new(-12, 3, 3),
-		[530] = Vector3.new(-12, 6, 3),
-		[531] = Vector3.new(-12, 9, 3),
-		[532] = Vector3.new(-12, 9, 0),
-		[533] = Vector3.new(-12, 6, 0),
-		[534] = Vector3.new(-12, 3, 0),
-		[535] = Vector3.new(-12, 0, 0),
-		[536] = Vector3.new(-12, -3, 0),
-		[537] = Vector3.new(-12, -6, 0),
-		[538] = Vector3.new(-12, -9, 0),
-		[539] = Vector3.new(-12, -9, -3),
-		[540] = Vector3.new(-12, -6, -3),
-		[541] = Vector3.new(-12, -3, -3),
-		[542] = Vector3.new(-12, 0, -3),
-		[543] = Vector3.new(-12, 3, -3),
-		[544] = Vector3.new(-12, 6, -3),
-		[545] = Vector3.new(-12, 9, -3),
-		[546] = Vector3.new(-12, 9, -6),
-		[547] = Vector3.new(-12, 6, -6),
-		[548] = Vector3.new(-12, 3, -6),
-		[549] = Vector3.new(-12, 0, -6),
-		[550] = Vector3.new(-12, -3, -6),
-		[551] = Vector3.new(-12, -6, -6),
-		[552] = Vector3.new(-12, -9, -6),
-		[553] = Vector3.new(-12, -9, -9),
-		[554] = Vector3.new(-12, -6, -9),
-		[555] = Vector3.new(-12, -3, -9),
-		[556] = Vector3.new(-12, 0, -9),
-		[557] = Vector3.new(-12, 3, -9),
-		[558] = Vector3.new(-12, 6, -9),
-		[559] = Vector3.new(-12, 9, -9),
-		[560] = Vector3.new(-12, 9, -12),
-		[561] = Vector3.new(-12, 6, -12),
-		[562] = Vector3.new(-12, 3, -12),
-		[563] = Vector3.new(-12, 0, -12),
-		[564] = Vector3.new(-12, -3, -12),
-		[565] = Vector3.new(-12, -6, -12),
-		[566] = Vector3.new(-12, -9, -12),
-		[567] = Vector3.new(6, 12, 9),
-		[568] = Vector3.new(9, 12, 9),
-		[569] = Vector3.new(9, 12, 6),
-		[570] = Vector3.new(9, 12, 3),
-		[571] = Vector3.new(9, 12, 0),
-		[572] = Vector3.new(9, 12, -3),
-		[573] = Vector3.new(9, 12, -6),
-		[574] = Vector3.new(9, 12, -9),
-		[575] = Vector3.new(9, 12, -12),
-		[576] = Vector3.new(9, 12, 12),
-		[577] = Vector3.new(6, 12, 12),
-		[578] = Vector3.new(12, 12, 12),
-		[579] = Vector3.new(12, 12, 9),
-		[580] = Vector3.new(12, 12, 6),
-		[581] = Vector3.new(12, 12, 3),
-		[582] = Vector3.new(12, 12, 0),
-		[583] = Vector3.new(12, 12, -3),
-		[584] = Vector3.new(12, 12, -6),
-		[585] = Vector3.new(12, 12, -9),
-		[586] = Vector3.new(12, 12, -12),
-		[587] = Vector3.new(-3, 12, 9),
-		[588] = Vector3.new(0, 12, 9),
-		[589] = Vector3.new(3, 12, 9),
-		[590] = Vector3.new(6, 12, 6),
-		[591] = Vector3.new(3, 12, 6),
-		[592] = Vector3.new(0, 12, 6),
-		[593] = Vector3.new(-3, 12, 6),
-		[594] = Vector3.new(-3, 12, 3),
-		[595] = Vector3.new(0, 12, 3),
-		[596] = Vector3.new(3, 12, 3),
-		[597] = Vector3.new(6, 12, 3),
-		[598] = Vector3.new(6, 12, 0),
-		[599] = Vector3.new(3, 12, 0),
-		[600] = Vector3.new(-3, 12, 0),
-		[601] = Vector3.new(0, 12, 0),
-		[602] = Vector3.new(-3, 12, -3),
-		[603] = Vector3.new(0, 12, -3),
-		[604] = Vector3.new(3, 12, -3),
-		[605] = Vector3.new(6, 12, -3),
-		[606] = Vector3.new(3, 12, -6),
-		[607] = Vector3.new(6, 12, -6),
-		[608] = Vector3.new(0, 12, -6),
-		[609] = Vector3.new(-3, 12, -6),
-		[610] = Vector3.new(-3, 12, -9),
-		[611] = Vector3.new(0, 12, -9),
-		[612] = Vector3.new(3, 12, -9),
-		[613] = Vector3.new(6, 12, -9),
-		[614] = Vector3.new(-3, 12, -12),
-		[615] = Vector3.new(0, 12, -12),
-		[616] = Vector3.new(3, 12, -12),
-		[617] = Vector3.new(6, 12, -12),
-		[618] = Vector3.new(-3, 12, 12),
-		[619] = Vector3.new(0, 12, 12),
-		[620] = Vector3.new(3, 12, 12),
-		[621] = Vector3.new(-9, 12, 9),
-		[622] = Vector3.new(-6, 12, 9),
-		[623] = Vector3.new(-6, 12, 6),
-		[624] = Vector3.new(-9, 12, 6),
-		[625] = Vector3.new(-9, 12, 3),
-		[626] = Vector3.new(-6, 12, 3),
-		[627] = Vector3.new(-6, 12, 0),
-		[628] = Vector3.new(-9, 12, 0),
-		[629] = Vector3.new(-9, 12, -3),
-		[630] = Vector3.new(-6, 12, -3),
-		[631] = Vector3.new(-6, 12, -6),
-		[632] = Vector3.new(-9, 12, -6),
-		[633] = Vector3.new(-6, 12, -9),
-		[634] = Vector3.new(-9, 12, -9),
-		[635] = Vector3.new(-9, 12, -12),
-		[636] = Vector3.new(-6, 12, -12),
-		[637] = Vector3.new(-9, 12, 12),
-		[638] = Vector3.new(-6, 12, 12),
-		[639] = Vector3.new(-12, 12, 12),
-		[640] = Vector3.new(-12, 12, 9),
-		[641] = Vector3.new(-12, 12, 6),
-		[642] = Vector3.new(-12, 12, 3),
-		[643] = Vector3.new(-12, 12, 0),
-		[644] = Vector3.new(-12, 12, -3),
-		[645] = Vector3.new(-12, 12, -6),
-		[646] = Vector3.new(-12, 12, -9),
-		[647] = Vector3.new(-12, 12, -12),
-		[648] = Vector3.new(6, -12, 9),
-		[649] = Vector3.new(9, -12, 9),
-		[650] = Vector3.new(9, -12, 6),
-		[651] = Vector3.new(9, -12, 3),
-		[652] = Vector3.new(9, -12, 0),
-		[653] = Vector3.new(9, -12, -3),
-		[654] = Vector3.new(9, -12, -6),
-		[655] = Vector3.new(9, -12, -9),
-		[656] = Vector3.new(9, -12, -12),
-		[657] = Vector3.new(9, -12, 12),
-		[658] = Vector3.new(6, -12, 12),
-		[659] = Vector3.new(12, -12, 12),
-		[660] = Vector3.new(12, -12, 9),
-		[661] = Vector3.new(12, -12, 6),
-		[662] = Vector3.new(12, -12, 3),
-		[663] = Vector3.new(12, -12, 0),
-		[664] = Vector3.new(12, -12, -3),
-		[665] = Vector3.new(12, -12, -6),
-		[666] = Vector3.new(12, -12, -9),
-		[667] = Vector3.new(12, -12, -12),
-		[668] = Vector3.new(-3, -12, 9),
-		[669] = Vector3.new(0, -12, 9),
-		[670] = Vector3.new(3, -12, 9),
-		[671] = Vector3.new(6, -12, 6),
-		[672] = Vector3.new(3, -12, 6),
-		[673] = Vector3.new(0, -12, 6),
-		[674] = Vector3.new(-3, -12, 6),
-		[675] = Vector3.new(-3, -12, 3),
-		[676] = Vector3.new(0, -12, 3),
-		[677] = Vector3.new(3, -12, 3),
-		[678] = Vector3.new(6, -12, 3),
-		[679] = Vector3.new(6, -12, 0),
-		[680] = Vector3.new(3, -12, 0),
-		[681] = Vector3.new(-3, -12, 0),
-		[682] = Vector3.new(0, -12, 0),
-		[683] = Vector3.new(-3, -12, -3),
-		[684] = Vector3.new(0, -12, -3),
-		[685] = Vector3.new(3, -12, -3),
-		[686] = Vector3.new(6, -12, -3),
-		[687] = Vector3.new(3, -12, -6),
-		[688] = Vector3.new(6, -12, -6),
-		[689] = Vector3.new(0, -12, -6),
-		[690] = Vector3.new(-3, -12, -6),
-		[691] = Vector3.new(-3, -12, -9),
-		[692] = Vector3.new(0, -12, -9),
-		[693] = Vector3.new(3, -12, -9),
-		[694] = Vector3.new(6, -12, -9),
-		[695] = Vector3.new(-3, -12, -12),
-		[696] = Vector3.new(0, -12, -12),
-		[697] = Vector3.new(3, -12, -12),
-		[698] = Vector3.new(6, -12, -12),
-		[699] = Vector3.new(-3, -12, 12),
-		[700] = Vector3.new(0, -12, 12),
-		[701] = Vector3.new(3, -12, 12),
-		[702] = Vector3.new(-9, -12, 9),
-		[703] = Vector3.new(-6, -12, 9),
-		[704] = Vector3.new(-6, -12, 6),
-		[705] = Vector3.new(-9, -12, 6),
-		[706] = Vector3.new(-9, -12, 3),
-		[707] = Vector3.new(-6, -12, 3),
-		[708] = Vector3.new(-6, -12, 0),
-		[709] = Vector3.new(-9, -12, 0),
-		[710] = Vector3.new(-9, -12, -3),
-		[711] = Vector3.new(-6, -12, -3),
-		[712] = Vector3.new(-6, -12, -6),
-		[713] = Vector3.new(-9, -12, -6),
-		[714] = Vector3.new(-6, -12, -9),
-		[715] = Vector3.new(-9, -12, -9),
-		[716] = Vector3.new(-9, -12, -12),
-		[717] = Vector3.new(-6, -12, -12),
-		[718] = Vector3.new(-9, -12, 12),
-		[719] = Vector3.new(-6, -12, 12),
-		[720] = Vector3.new(-12, -12, 12),
-		[721] = Vector3.new(-12, -12, 9),
-		[722] = Vector3.new(-12, -12, 6),
-		[723] = Vector3.new(-12, -12, 3),
-		[724] = Vector3.new(-12, -12, 0),
-		[725] = Vector3.new(-12, -12, -3),
-		[726] = Vector3.new(-12, -12, -6),
-		[727] = Vector3.new(-12, -12, -9),
-		[728] = Vector3.new(-12, -12, -12)
-	 }
+	local scaffoldposchecklist = {}
+	task.spawn(function()
+		for x = -3, 3, 3 do 
+			for y = -3, 3, 3 do 
+				for z = -3, 3, 3 do 
+					if vec3(x, y, z) ~= vec3(0, 0, 0) then 
+						table.insert(scaffoldposchecklist, vec3(x, y, z)) 
+					end 
+				end 
+			end 
+		end
+	end)
 
 	local function checkblocks(pos)
 		for i,v in pairs(scaffoldposchecklist) do
@@ -7615,32 +6933,57 @@ runcode(function()
 		return false
 	end
 
-	local function getnearestblock(pos)
-		local nearest, nearestmag = pos, 1000000
-		for i,v in pairs(scaffoldposchecklist2) do
-			local block = getblock(pos + v)
-			if block and entity.isAlive and (entity.character.HumanoidRootPart.Position - block.Position).magnitude <= nearestmag then
-				local suc = pos + v
-				local newestpos = v / 2
-				local correction =  v / 6
-				nearest = getScaffold(suc - (newestpos - correction), false)
-				nearestmag = (entity.character.HumanoidRootPart.Position - block.Position).magnitude
-			end
-		end
-		return nearest
+	local function closestpos(block, pos)
+		local startpos = block.Position - (block.Size / 2) - vec3(1.5, 1.5, 1.5)
+		local endpos = block.Position + (block.Size / 2) + vec3(1.5, 1.5, 1.5)
+		local newpos = block.Position + (pos - block.Position)
+		return vec3(math.clamp(newpos.X, startpos.X, endpos.X), math.clamp(newpos.Y, startpos.Y, endpos.Y), math.clamp(newpos.Z, startpos.Z, endpos.Z))
 	end
 
+	local function getclosesttop(newmag, pos)
+		local closest, closestmag = pos, newmag * 3
+		if entity.isAlive then 
+			for i,v in pairs(bedwarsblocks) do 
+				local close = closestpos(v, pos)
+				local mag = (close - pos).magnitude
+				if mag <= closestmag then 
+					closest = close
+					closestmag = mag
+				end
+			end
+		end
+		return closest
+	end
+
+	local oldspeed
 	Scaffold = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Scaffold",
 		["Function"] = function(callback)
 			if callback then
 				scaffoldtext.Visible = ScaffoldBlockCount["Enabled"]
+				bedwars["SharedConstants"].CpsConstants.BLOCK_PLACE_CPS = math.huge
+				oldspeed = GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["Value"]
+				GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](20)
 				task.spawn(function()
 					repeat
 						task.wait()
 						local equipped = getEquipped()
 						if entity.isAlive and (ScaffoldHandCheck["Enabled"] and equipped["Type"] == "block" or (not ScaffoldHandCheck["Enabled"])) then
 							local wool, woolamount = getwool()
+							if equipped["Type"] == "block" then
+								local equippeditem = getItem(equipped["Object"].Name)
+								woolamount = equippeditem and equippeditem["amount"] or 0
+							end
+							scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
+							if woolamount then
+								if woolamount >= 128 then
+									scaffoldtext.TextColor3 = Color3.fromRGB(9, 255, 198)
+								elseif woolamount >= 64 then
+									scaffoldtext.TextColor3 = Color3.fromRGB(255, 249, 18)
+								else
+									scaffoldtext.TextColor3 = Color3.fromRGB(255, 0, 0)
+								end
+							end
 							if uis:IsKeyDown(Enum.KeyCode.Space) then
 								if scaffoldstopmotionval == false then
 									scaffoldstopmotionval = true
@@ -7651,37 +6994,26 @@ runcode(function()
 							end
 							if wool or equipped["Type"] == "block" then
 								if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil then
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 50, entity.character.HumanoidRootPart.Velocity.Z)
+									entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, 50, entity.character.HumanoidRootPart.Velocity.Z)
 									if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
-										entity.character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, entity.character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
+										entity.character.HumanoidRootPart.CFrame = cfnew(vec3(scaffoldstopmotionpos.X, entity.character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
 									end
 								end
 							end
 							for i = 1, ScaffoldExpand["Value"] do
-								local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval and Vector3.zero or entity.character.Humanoid.MoveDirection) * (i * 3.5))) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.Velocity.Y < 2))
-								newpos = Vector3.new(newpos.X, newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 4 or 0), newpos.Z)
+								local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval and Vector3.zero or entity.character.Humanoid.MoveDirection) * (i * 3.5))) + vec3(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.Velocity.Y < 2))
+								newpos = vec3(newpos.X, newpos.Y - (uis:IsKeyDown(Enum.KeyCode.Space) and ScaffoldTower["Enabled"] and 4 or 0), newpos.Z)
 								if newpos ~= oldpos then
 									if not checkblocks(newpos) then
-										newpos = getnearestblock(newpos)
-									end
-									wool, woolamount = getwool()
-									equipped = getEquipped()
-									if equipped["Type"] == "block" then
-										local equippeditem = getItem(equipped["Object"].Name)
-										woolamount = equippeditem and equippeditem["amount"] or 0
-									end
-									scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
-									if woolamount then
-										if woolamount >= 128 then
-											scaffoldtext.TextColor3 = Color3.fromRGB(9, 255, 198)
-										elseif woolamount >= 64 then
-											scaffoldtext.TextColor3 = Color3.fromRGB(255, 249, 18)
-										else
-											scaffoldtext.TextColor3 = Color3.fromRGB(255, 0, 0)
-										end
+										local oldnewpos = newpos
+										newpos = getScaffold(getclosesttop(20, newpos))
+										if getblock(newpos) then newpos = oldnewpos end
 									end
 									if wool or equipped["Type"] == "block" then
 										task.spawn(bedwars["placeBlock"], newpos, equipped["Type"] == "block" and equipped["Object"].Name or wool)
+										if ScaffoldExpand["Value"] > 1 then 
+											task.wait()
+										end
 										oldpos = newpos
 									end
 								end
@@ -7690,6 +7022,10 @@ runcode(function()
 					until (not Scaffold["Enabled"])
 				end)
 			else
+				if oldspeed then
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](oldspeed)
+				end
+				bedwars["SharedConstants"].CpsConstants.BLOCK_PLACE_CPS = 9
 				scaffoldtext.Visible = false
 				oldpos = Vector3.zero
 				oldpos2 = Vector3.zero
@@ -7843,7 +7179,7 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 								thing = Bedfolder
 								for bedespnumber, bedesppart in pairs(plr:GetChildren()) do
 									local boxhandle = Instance.new("BoxHandleAdornment")
-									boxhandle.Size = bedesppart.Size + Vector3.new(.01, .01, .01)
+									boxhandle.Size = bedesppart.Size + vec3(.01, .01, .01)
 									boxhandle.AlwaysOnTop = true
 									boxhandle.ZIndex = (bedesppart.Name == "Covers" and 10 or 8)
 									boxhandle.Visible = true
@@ -8133,7 +7469,7 @@ runcode(function()
 				local mag = entity.isAlive and (entity.character.HumanoidRootPart.Position - aliveplr.RootPart.Position).magnitude or 0
 				local magcheck = NameTagsRangeLimit["Value"] == 0 or mag <= NameTagsRangeLimit["Value"] 
 				if magcheck then 
-					local headPos, headVis = cam:WorldToViewportPoint((aliveplr.RootPart:GetRenderCFrame() * CFrame.new(0, aliveplr.Head.Size.Y + aliveplr.RootPart.Size.Y, 0)).Position)
+					local headPos, headVis = cam:WorldToViewportPoint((aliveplr.RootPart:GetRenderCFrame() * cfnew(0, aliveplr.Head.Size.Y + aliveplr.RootPart.Size.Y, 0)).Position)
 					
 					if headVis then
 						thing.Text.Visible = headVis
@@ -8212,7 +7548,7 @@ runcode(function()
 				local mag = entity.isAlive and (entity.character.HumanoidRootPart.Position - aliveplr.RootPart.Position).magnitude or 0
 				local magcheck = NameTagsRangeLimit["Value"] == 0 or mag <= NameTagsRangeLimit["Value"] 
 				if magcheck then 
-					local headPos, headVis = cam:WorldToViewportPoint((aliveplr.RootPart:GetRenderCFrame() * CFrame.new(0, aliveplr.Head.Size.Y + aliveplr.RootPart.Size.Y, 0)).Position)
+					local headPos, headVis = cam:WorldToViewportPoint((aliveplr.RootPart:GetRenderCFrame() * cfnew(0, aliveplr.Head.Size.Y + aliveplr.RootPart.Size.Y, 0)).Position)
 					
 					if headVis then
 						thing.Visible = headVis
@@ -8229,7 +7565,7 @@ runcode(function()
 				local aliveplr = isAlive(plr)
 				if aliveplr then
 					if NameTagsShowInventory["Enabled"] then 
-						local inventory = inventories[plr] or {}
+						local inventory = inventories[plr] or {armor = {}}
 						if inventory.hand then
 							thing.Hand.Image = bedwars["getIcon"](inventory.hand, NameTagsShowInventory["Enabled"])
 							if thing.Hand.Image:find("rbxasset://") then
@@ -8273,7 +7609,7 @@ runcode(function()
 						displaynamestr2 = getNametagString(plr)
 						displaynamestr = removeTags(displaynamestr2)
 					end
-					local blocksaway = math.floor(((entity.isAlive and entity.character.HumanoidRootPart.Position or Vector3.new(0, 0, 0)) - aliveplr.RootPart.Position).Magnitude / 3)
+					local blocksaway = math.floor(((entity.isAlive and entity.character.HumanoidRootPart.Position or vec3(0, 0, 0)) - aliveplr.RootPart.Position).Magnitude / 3)
 					local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and "["..blocksaway.."] " or "")..displaynamestr..(NameTagsHealth["Enabled"] and " "..math.floor(aliveplr.Humanoid.Health) or "")
 					local color = HealthbarColorTransferFunction(aliveplr.Humanoid.Health / aliveplr.Humanoid.MaxHealth)
 					local modifiedText = (istarget and '<font color="rgb(255, 0, 0)">[TARGET]</font> ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..blocksaway..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..displaynamestr2..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(aliveplr.Humanoid.Health).."</font>" or '')
@@ -8302,7 +7638,7 @@ runcode(function()
 						displaynamestr2 = getNametagString(plr)
 						displaynamestr = removeTags(displaynamestr2)
 					end
-					local blocksaway = math.floor(((entity.isAlive and entity.character.HumanoidRootPart.Position or Vector3.new(0, 0, 0)) - aliveplr.RootPart.Position).Magnitude / 3)
+					local blocksaway = math.floor(((entity.isAlive and entity.character.HumanoidRootPart.Position or vec3(0, 0, 0)) - aliveplr.RootPart.Position).Magnitude / 3)
 					local rawText = (istarget and "[TARGET] " or "")..(NameTagsDistance["Enabled"] and entity.isAlive and "["..blocksaway.."] " or "")..displaynamestr..(NameTagsHealth["Enabled"] and " "..math.floor(aliveplr.Humanoid.Health) or "")
 					local color = HealthbarColorTransferFunction(aliveplr.Humanoid.Health / aliveplr.Humanoid.MaxHealth)
 					local modifiedText = (istarget and '[TARGET] ' or '')..(NameTagsDistance["Enabled"] and entity.isAlive and '['..blocksaway..'] ' or '')..displaynamestr2..(NameTagsHealth["Enabled"] and ' '..math.floor(aliveplr.Humanoid.Health).."" or '')
@@ -8486,7 +7822,7 @@ runcode(function()
 					table.insert(blocks, v2)
 				end
 			end
-			for i2,v2 in pairs(getallblocks2(pos + Vector3.new(0, 0, 3), v)) do	
+			for i2,v2 in pairs(getallblocks2(pos + vec3(0, 0, 3), v)) do	
 				if table.find(blocks, v2) == nil and v2 ~= "bed" then
 					table.insert(blocks, v2)
 				end
@@ -8552,7 +7888,7 @@ runcode(function()
 							local billboard = Instance.new("BillboardGui")
 							billboard.Parent = BedPlatesFolder
 							billboard.Name = "bed"
-							billboard.StudsOffsetWorldSpace = Vector3.new(0, 3, 1.5)
+							billboard.StudsOffsetWorldSpace = vec3(0, 3, 1.5)
 							billboard.Size = UDim2.new(0, 42, 0, 42)
 							billboard.AlwaysOnTop = true
 							billboard.Adornee = v
@@ -8602,7 +7938,7 @@ runcode(function()
 									projectilemodel:GetPropertyChangedSignal("PrimaryPart"):Wait();
 								end;
 								local bodyforce = Instance.new("BodyForce")
-								bodyforce.Force = Vector3.new(0, projectilemodel.PrimaryPart.AssemblyMass * workspace.Gravity, 0)
+								bodyforce.Force = vec3(0, projectilemodel.PrimaryPart.AssemblyMass * workspace.Gravity, 0)
 								bodyforce.Name = "AntiGravity"
 								bodyforce.Parent = projectilemodel.PrimaryPart
 
@@ -8610,7 +7946,7 @@ runcode(function()
 									task.wait()
 									local aliveplr = isAlive(plr, true)
 									if aliveplr then
-										projectile.model:SetPrimaryPartCFrame(CFrame.new(aliveplr.RootPart.CFrame.p, aliveplr.RootPart.CFrame.p + cam.CFrame.lookVector))
+										projectile.model:SetPrimaryPartCFrame(cfnew(aliveplr.RootPart.CFrame.p, aliveplr.RootPart.CFrame.p + cam.CFrame.lookVector))
 									else
 										createwarning("MissileTP", "Player died before it could TP.", 3)
 										break
@@ -8648,13 +7984,13 @@ runcode(function()
 										projectilemodel:GetPropertyChangedSignal("PrimaryPart"):Wait()
 									end
 									local bodyforce = Instance.new("BodyForce")
-									bodyforce.Force = Vector3.new(0, projectilemodel.PrimaryPart.AssemblyMass * workspace.Gravity, 0)
+									bodyforce.Force = vec3(0, projectilemodel.PrimaryPart.AssemblyMass * workspace.Gravity, 0)
 									bodyforce.Name = "AntiGravity"
 									bodyforce.Parent = projectilemodel.PrimaryPart
 	
 									local aliveplr = isAlive(plr.Player, true)
 									if aliveplr then
-										projectilemodel:SetPrimaryPartCFrame(CFrame.new(aliveplr.RootPart.CFrame.p, aliveplr.RootPart.CFrame.p + cam.CFrame.lookVector))
+										projectilemodel:SetPrimaryPartCFrame(cfnew(aliveplr.RootPart.CFrame.p, aliveplr.RootPart.CFrame.p + cam.CFrame.lookVector))
 										task.wait(0.3)
 										bedwars["RavenTable"]:detonateRaven()
 									else
@@ -8797,12 +8133,12 @@ runcode(function()
 					if AutoBalloon["Enabled"] then
 						antivoidpart = Instance.new("Part")
 						antivoidpart.CanCollide = false
-						antivoidpart.Size = Vector3.new(10000, 1, 10000)
+						antivoidpart.Size = vec3(10000, 1, 10000)
 						antivoidpart.Anchored = true
 						antivoidpart.Transparency = 1
 						antivoidpart.Material = Enum.Material.Neon
 						antivoidpart.Color = Color3.fromRGB(135, 29, 139)
-						antivoidpart.Position = Vector3.new(0, antivoidypos - 50, 0)
+						antivoidpart.Position = vec3(0, antivoidypos - 50, 0)
 						antivoidconnection = antivoidpart.Touched:connect(function(touchedpart)
 							if entity.isAlive and touchedpart:IsDescendantOf(lplr.Character) and balloondebounce == false then
 								balloondebounce = true
@@ -8864,7 +8200,6 @@ end)
 runcode(function()
 	local AnticheatBypassTransparent = {["Enabled"] = false}
 	local AnticheatBypassAlternate = {["Enabled"] = false}
-	local AnticheatBypassFlagCheck = {["Enabled"] = false}
 	local AnticheatBypassNotification = {["Enabled"] = false}
 	local AnticheatBypassAnimation = {["Enabled"] = true}
 	local AnticheatBypassAnimationCustom = {["Value"] = ""}
@@ -8872,534 +8207,307 @@ runcode(function()
 	local AnticheatBypassDisguiseCustom = {["Value"] = ""}
 	local AnticheatBypassArrowDodge = {["Enabled"] = false}
 	local AnticheatBypassAutoConfig = {["Enabled"] = false}
+	local AnticheatBypassAutoConfigBig = {["Enabled"] = false}
+	local AnticheatBypassAutoConfigSpeed = {["Value"] = 54}
+	local AnticheatBypassAutoConfigSpeed2 = {["Value"] = 54}
 	local AnticheatBypassTPSpeed = {["Value"] = 13}
 	local AnticheatBypassTPLerp = {["Value"] = 50}
-	local oldlaunchpos
-	local oldballoon
 	local clone
-	local desc
 	local changed = false
+	local justteleported = false
 	local anticheatconnection
 	local anticheatconnection2
-	local anticheatconnection3
-	local anticheatconnection4
-	local anticheatconnection5
 	local playedanim = ""
-
-	local function check(oldroot, cloneroot)
-		lagbackedaftertouch = false
-		if oldroot and cloneroot and (oldroot.Position - cloneroot.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
-			--createwarning("AnticheatBypass", "tp check failed by: "..(math.floor(((oldroot.Position - cloneroot.Position).magnitude - AnticheatBypassNumbers.TPCheck) * 100) / 100), 10)
-			local newpos = (oldroot.Position - cloneroot.Position).Unit * AnticheatBypassNumbers.TPCheck
-			newpos = newpos == newpos and newpos or Vector3.zero
-			cloneroot.CFrame = oldroot.CFrame
-			lagbackedaftertouch = true
-		end
-	end
+	local hip
 
 	local function finishcframe(cframe)
 		return shared.VapeOverrideAnticheatBypassCFrame and shared.VapeOverrideAnticheatBypassCFrame(cframe) or cframe
 	end
 
 	local clonesuccess = false
+	local doing = false
 	local function disablestuff()
-		if anticheatconnection3 then
-			anticheatconnection3:Disconnect()
-		end
-		if anticheatconnection4 then
-			anticheatconnection4:Disconnect()
-		end
-		if anticheatconnection5 then
-			anticheatconnection5:Disconnect()
-		end
-		print("stage 1")
+		if uninjectflag then return end
 		repeat task.wait() until entity.isAlive
-		task.wait(0.7)
-		if oldballoon then
-			bedwars["BalloonController"].hookBalloon = oldballoon
-			oldballoon = nil
+		if not AnticheatBypass["Enabled"] then doing = false return end
+		oldcloneroot = entity.character.HumanoidRootPart
+		lplr.Character.Parent = game
+		clone = oldcloneroot:Clone()
+		clone.Parent = lplr.Character
+		oldcloneroot.Parent = cam
+		bedwars["QueryUtil"]:setQueryIgnored(oldcloneroot, true)
+		oldcloneroot.Transparency = AnticheatBypassTransparent["Enabled"] and 1 or 0
+		clone.CFrame = oldcloneroot.CFrame
+		lplr.Character.PrimaryPart = clone
+		lplr.Character.Parent = workspace
+		for i,v in pairs(lplr.Character:GetDescendants()) do 
+			if v:IsA("Weld") or v:IsA("Motor6D") then 
+				if v.Part0 == oldcloneroot then v.Part0 = clone end
+				if v.Part1 == oldcloneroot then v.Part1 = clone end
+			end
+			if v:IsA("BodyVelocity") then 
+				v:Destroy()
+			end
 		end
-		print("stage 2")
-		if lplr.Character and lplr.Character ~= clone then
-			oldchar = lplr.Character
-			oldchar.Archivable = true
-			pcall(function()
-				anticheatconnection3 = oldchar:WaitForChild("InventoryFolder", 20):GetPropertyChangedSignal("Value"):connect(function()
-					if clone:FindFirstChild("InventoryFolder") then
-						clone.InventoryFolder.Value = oldchar.InventoryFolder.Value
-					end
-				end)
-				anticheatconnection4 = oldchar:WaitForChild("ObservedChestFolder", 20):GetPropertyChangedSignal("Value"):connect(function()
-					if clone:FindFirstChild("ObservedChestFolder") then
-						clone.ObservedChestFolder.Value = oldchar.ObservedChestFolder.Value
-					end
-				end)
-			end)
-			clone = oldchar:Clone()
-			local clonevar = Instance.new("IntValue")
-			clonevar.Name = "ClonedCharacter"
-			clonevar.Parent = clone
-			clone.Parent = workspace
-			print("stage 3")
-			for i,v in pairs(workspace:GetChildren()) do
-				if v:FindFirstChild("ClonedCharacter") and v ~= clone then
-					v:Remove()
-				end
+		for i,v in pairs(oldcloneroot:GetChildren()) do 
+			if v:IsA("BodyVelocity") then 
+				v:Destroy()
 			end
-			if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
-				clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
-			end 
-			local balloonroot = Instance.new("Part")
-			balloonroot.Transparency = 1
-			balloonroot.Anchored = true
-			balloonroot.Name = "BalloonRoot:"..lplr.Name
-			balloonroot.CanCollide = false
-			balloonroot.Size = Vector3.new(0.2, 0.2, 0.2)
-			balloonroot.Parent = workspace.BalloonRoots
-			bedwars["QueryUtil"]:setQueryIgnored(balloonroot, true)
-			local balloonrootattachment = Instance.new("Attachment")
-			balloonrootattachment.Parent = balloonroot
-			local realballoonroot = balloonroot:Clone()
-			realballoonroot.Parent = balloonroot
-			bedwars["QueryUtil"]:setQueryIgnored(realballoonroot, true)
-			oldballoon = bedwars["BalloonController"].hookBalloon
-			bedwars["BalloonController"].hookBalloon = function(one, two, three, four)
-				if three:GetFullName() == "Attachment" then
-					three = realballoonroot.Attachment
-				end
-				return oldballoon(one, two, three, four)
-			end
-			for i,v in pairs(oldchar:GetDescendants()) do
-				if v:IsA("BasePart") then
-					bedwars["QueryUtil"]:setQueryIgnored(v, true)
-				end
-			end
-			for i,v in pairs(clone:GetDescendants()) do
-				if v:IsA("BasePart") then
-					bedwars["QueryUtil"]:setQueryIgnored(v, true)
-				end
-			end
-			bedwars["QueryUtil"]:setQueryIgnored(clone, true)
-			print("stage 4")
-			lplr:Move(Vector3.new(1, 0, 0), false)
-			changed = true
-			if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
-				clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
-			end
-			repeat 
-				task.wait() 
-				if oldchar ~= lplr.Character then break end
-				if clone:FindFirstChild("HumanoidRootPart") and oldchar:FindFirstChild("HumanoidRootPart") then 
-					clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame 
-				end
-				if networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then
-					if lagbackcurrent == false then
-						lagbacknum = tick() + 8
-						lagbackcurrent = true
-					end
-					if lagbacknum <= tick() then
-						sethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
-					end
+		end
+		if hip then 
+			lplr.Character.Humanoid.HipHeight = hip
+		end
+		hip = lplr.Character.Humanoid.HipHeight
+		local bodyvelo = Instance.new("BodyVelocity")
+		bodyvelo.MaxForce = vec3(0, 100000, 0)
+		bodyvelo.Velocity = Vector3.zero
+		bodyvelo.Parent = oldcloneroot
+		pcall(function()
+			RunLoops:UnbindFromHeartbeat("AnticheatBypass")
+		end)
+		local oldseat 
+		local oldseattab = Instance.new("BindableEvent")
+		RunLoops:BindToHeartbeat("AnticheatBypass", 1, function()
+			if oldcloneroot and clone then
+				oldcloneroot.AssemblyAngularVelocity = clone.AssemblyAngularVelocity
+				if disabletpcheck then
+					oldcloneroot.Velocity = clone.Velocity
 				else
-					lagbackcurrent = false
-				end
-			until oldchar:FindFirstChild("HumanoidRootPart") and (networkownerfunc and networkownerfunc(oldchar.HumanoidRootPart) or networkownerfunc == nil and gethiddenproperty(oldchar.HumanoidRootPart, "NetworkOwnershipRule") == Enum.NetworkOwnership.Automatic)
-			if oldchar ~= lplr.Character then return end
-			print("stage 5")
-			pcall(function()
-				if oldchar:FindFirstChild("Humanoid") then 
-					if AnticheatBypassAnimation["Enabled"] then
-						local anim2 = Instance.new("Animation")
-						anim2.AnimationId = AnticheatBypassAnimationCustom["Value"] ~= "" and "http://www.roblox.com/asset/?id="..AnticheatBypassAnimationCustom["Value"] or "http://www.roblox.com/asset/?id=4940563117"
-						playedanim = anim2.AnimationId
-						local Loaded = oldchar.Humanoid.Animator:LoadAnimation(anim2)
-						Loaded:Play()
-					end
-				end
-			end)
-			shared.VapeRealCharacter = lplr.Character
-			if shared.VapeOverrideAnticheatBypassPre then 
-				shared.VapeOverrideAnticheatBypassPre(lplr.Character)
-			end
-			local oldcamcframe = cam.CFrame
-			lplr.Character = clone
-			RunLoops:BindToRenderStep("AnticheatBypassCameraFix", 1, function()
-				if (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01 then 
-					cam.CFrame = CFrame.new(cam.CFrame.p, cam.CFrame.p + oldcamcframe.lookVector)
-					RunLoops:UnbindFromRenderStep("AnticheatBypassCameraFix")
-				end
-			end)
-			print("stage 6")
-			game:GetService("RunService"):UnbindFromRenderStep("inflated-balloon:" .. lplr.Name)
-			game:GetService("RunService"):BindToRenderStep("inflated-balloon:"..lplr.Name, Enum.RenderPriority.Character.Value, function(p12)
-				local v20 = clone;
-				if v20 ~= nil then
-					v20 = v20:FindFirstChild("UpperTorso");
-					if v20 ~= nil then
-						v20 = v20:FindFirstChild("BodyBackAttachment");
-					end;
-				end;
-				if v20 then
-					realballoonroot.CFrame = v20.WorldCFrame;
-				end;
-			end)
-			connectionstodisconnect[#connectionstodisconnect + 1] = oldchar.AttributeChanged:connect(function(atrib)
-				if clone then
-					if atrib == "Health" and oldchar and oldchar:GetAttribute("Health") <= 0 then
-						lplr.Character = olchar
-						clone:Remove()
-					end
-					if clone and oldchar then
-						clone:SetAttribute(atrib, oldchar:GetAttribute(atrib))
-					end
-				end
-			end)
-			for i,v in pairs(oldchar:GetDescendants()) do
-				if v:IsA("BasePart") or v:IsA("Decal") then
-					v.Transparency = (AnticheatBypassTransparent["Enabled"] and 1 or (v.Name == "HumanoidRootPart" and 1 or 0.5))
-				end
-				if v:IsA("BodyMover") then
-					v:Remove()
-				end
-				if v:IsA("Sound") then
-					v.Volume = 0
-				end
-			end
-			for i,v in pairs(clone:GetDescendants()) do
-				if v:IsA("BodyMover") then
-					v:Remove()
-				end
-				if v:IsA("ForceField") then
-					v:Remove()
-				end
-			end
-			if clone and clone:FindFirstChild("Animate") then
-				clone.Animate:Remove()
-			end
-			if clone and clone:FindFirstChild("Humanoid") then
-				oldchar.Humanoid:Move(Vector3.zero, false)
-				task.wait(0.1)
-				oldchar.Humanoid:Move(Vector3.zero, false)
-			end
-			if oldchar and oldchar:FindFirstChild("Animate") then
-				oldchar.Animate.Disabled = true
-				oldchar.Animate.Parent = clone
-			end
-			if clone:FindFirstChild("Humanoid") and AnticheatBypassDisguise["Enabled"] then
-				pcall(function()
-					if desc == nil then
-						desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1 or tonumber(AnticheatBypassDisguiseCustom["Value"]))
-					end
-					desc.HeightScale = oldchar.Humanoid.HumanoidDescription.HeightScale
-					for i,v in pairs(clone:GetChildren()) do 
-						if v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") then 
-							v:Remove()
-						end
-						if v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil and v:FindFirstChild("Handle") then 
-							v.Handle.Transparency = 1
-						end
-					end
-					disguisecheck = true
-					clone.Humanoid:ApplyDescriptionClientServer(desc)
-				end)
-			end
-			if oldchar and oldchar.Head:FindFirstChild("Nametag") then
-				oldchar.Head.Nametag.Enabled = false
-			end
-			if clone and clone:FindFirstChild("Head") and clone.Head:FindFirstChild("Nametag") then
-				clone.Head.Nametag.Enabled = false
-			end
-			if clone and clone:FindFirstChild("Animate") then
-				clone.Animate.Disabled = false
-			end
-			print("stage 7")
-			pcall(function()
-				RunLoops:UnbindFromStepped("AnticheatBypass")
-			end)
-			local oldseat 
-			RunLoops:BindToStepped("AnticheatBypass", 1, function()
-				if entity.isAlive and oldchar and oldchar:FindFirstChild("HumanoidRootPart") and (not shared.VapeOverrideAnticheatBypass) then
-					if clone and clone:FindFirstChild("HumanoidRootPart") then
-						local clonehum = clone:FindFirstChild("Humanoid")
-						local realhum = oldchar:FindFirstChild("Humanoid")
-						if realhum and clonehum then
-							clonehum.HipHeight = realhum.HipHeight
-							if realhum.SeatPart ~= oldseat then
-								clonehum.Sit = true
-							end
-							if realhum.SeatPart then
-								clone.HumanoidRootPart.Velocity = oldchar.HumanoidRootPart.Velocity
-								clone.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame
-								if not clonehum.Sit then
-									AnticheatBypass["ToggleButton"](false)
-									oldchar.Humanoid.Sit = false
-									AnticheatBypass["ToggleButton"](false)
-								end
-							else
-								clonehum.Sit = false
-							end
-							oldseat = oldchar.Humanoid.SeatPart
-						end
-						if disabletpcheck then
-							oldchar.HumanoidRootPart.Velocity = clone.HumanoidRootPart.Velocity
-						else
-							local targetvelo = (clone.HumanoidRootPart.AssemblyLinearVelocity)
-							local speed = 20 * getSpeedMultiplier()
-							targetvelo = targetvelo.Unit * speed
-							if shared.VapeOverrideAnticheatBypassCFrame then
-								oldchar.HumanoidRootPart.CFrame = shared.VapeOverrideAnticheatBypassCFrame(oldchar.HumanoidRootPart.CFrame)
-							end
-							oldchar.HumanoidRootPart.Velocity = Vector3.new(math.clamp(targetvelo.X, -speed, speed), clone.HumanoidRootPart.Velocity.Y, math.clamp(targetvelo.Z, -speed, speed))
-						end
-					else
-						oldchar.HumanoidRootPart.Velocity = Vector3.zero
-					end
-				end
-			end)
-			local currentclone = clone
-			local currentmodel = oldchar
-			local lagbacknum = 0
-			local lagbackcurrent = false
-			local lagbacktime = 0
-			local lagbackchanged = false
-			local lagbacknotification = false
-			local amountoftimes = 0
-			print("stage 8")
-			clonesuccess = true
-			local pinglist = {}
-			local fpslist = {}
-
-			local function getaverageframerate()
-				local frames = 0
-				for i,v in pairs(fpslist) do 
-					frames = frames + v
-				end
-				return #fpslist > 0 and (frames / (60 * #fpslist)) <= 1.2 or #fpslist <= 0 or AnticheatBypassAlternate["Enabled"]
-			end
-
-			local function didpingspike()
-				local currentpingcheck = pinglist[1] or math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
-				for i,v in pairs(fpslist) do 
-					print("anticheatbypass fps ["..i.."]: "..v)
-					if v < 40 then 
-						return v.." fps"
-					end
-				end
-				for i,v in pairs(pinglist) do 
-					print("anticheatbypass ping ["..i.."]: "..v)
-					if v ~= currentpingcheck and math.abs(v - currentpingcheck) >= 100 then 
-						return currentpingcheck.." => "..v.." ping"
-					else
-						currentpingcheck = v
-					end
-				end
-				return nil
-			end
-
-			local function notlasso()
-				for i,v in pairs(collectionservice:GetTagged("LassoHooked")) do 
-					if v == oldchar then 
-						return false
-					end
-				end
-				return true
-			end
-
-			task.spawn(function()
-				repeat
-					if (not AnticheatBypass["Enabled"]) then break end
-					local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
-					local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
-					if #pinglist >= 10 then 
-						table.remove(pinglist, 1)
-					end
-					if #fpslist >= 10 then 
-						table.remove(fpslist, 1)
-					end
-					table.insert(pinglist, ping)
-					table.insert(fpslist, fps)
-					task.wait(1)
-				until (not AnticheatBypass["Enabled"])
-			end)
-			repeat
-				task.wait()
-				if entity.isAlive then
-					local oldroot = oldchar and oldchar:FindFirstChild("HumanoidRootPart")
-					oldcloneroot = oldroot
-					if oldroot then
-						if networkownerfunc == nil and gethiddenproperty(oldroot, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then
-							if lagbackcurrent == false then
-								lagbacknum = tick() + 8
-								lagbackcurrent = true
-							end
-							if lagbacknum <= tick() then
-								sethiddenproperty(oldroot, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
-							end
-						else
-							lagbackcurrent = false
-						end
-						local cloneroot = clone and clone:FindFirstChild("HumanoidRootPart")
-						if cloneroot then
-							if (networkownerfunc and (not networkownerfunc(oldroot)) or networkownerfunc == nil and gethiddenproperty(oldroot, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual) then
-								if amountoftimes ~= 0 then
-									amountoftimes = 0
-								end
-								if not lagbackchanged then
-									lagbackchanged = true
-									lagbacktime = tick()
-									task.spawn(function()
-										local pingspike = didpingspike() 
-										if pingspike then
-											if AnticheatBypassNotification["Enabled"] then
-												createwarning("AnticheatBypass", "Lagspike Detected : "..pingspike, 10)
-											end
-										else
-											if matchState ~= 2 and notlasso() then
-												lagbacks = lagbacks + 1
-											end
-										end
-										if AnticheatBypassFlagCheck["Enabled"] then
-											task.spawn(function()
-												if AnticheatBypass["Enabled"] then
-													print("toggled")
-													AnticheatBypass["ToggleButton"](false)
+					local sit = entity.character.Humanoid.Sit
+					if sit ~= oldseat then 
+						if sit then 
+							for i,v in pairs(workspace:GetDescendants()) do 
+								if not v:IsA("Seat") then continue end
+								local weld = v:FindFirstChild("SeatWeld")
+								if weld and weld.Part1 == oldcloneroot then 
+									weld.Part1 = clone
+									pcall(function()
+										for i,v in pairs(getconnections(v:GetPropertyChangedSignal("Occupant"))) do
+											local newfunc = debug.getupvalue(debug.getupvalue(v.Function, 1), 3) 
+											debug.setupvalue(newfunc, 4, {
+												GetPropertyChangedSignal = function(self, prop)
+													return oldseattab.Event
 												end
-												repeat
-													task.wait() 
-													if lplr.Character ~= clone then
-														oldchar = lplr.Character
-													end
-												until oldchar == nil or oldchar:FindFirstChild("HumanoidRootPart") == nil or (not (networkownerfunc and (not networkownerfunc(oldroot)) or networkownerfunc == nil and gethiddenproperty(oldroot, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual))
-												local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
-												local oldmove = controlmodule.moveFunction
-												controlmodule.moveFunction = function(self, movedir, ...)
-													movedir = Vector3.zero
-													return oldmove(self, movedir, ...)
-												end
-												task.spawn(function()
-													repeat 
-														task.wait()
-													until lplr.Character == clone or AnticheatBypass["Enabled"] == false
-													controlmodule.moveFunction = oldmove
-												end)
-												if AnticheatBypass["Enabled"] == false then
-													print("toggled2")
-													AnticheatBypass["ToggleButton"](false)
-												end
-											end)
+											})
+											newfunc()
 										end
 									end)
 								end
-								if (tick() - lagbacktime) >= 10 and (not lagbacknotification) then
-									lagbacknotification = true
-									createwarning("AnticheatBypass", "You have been lagbacked for a \nawfully long time", 10)
-								end
-								cloneroot.Velocity = Vector3.zero
-								oldroot.Velocity = Vector3.zero
-								cloneroot.CFrame = oldroot.CFrame
-							else
-								lagbackchanged = false
-								lagbacknotification = false
-								if not shared.VapeOverrideAnticheatBypass then
-									if (not disabletpcheck) then
-										anticheatfunnyyes = true 
-										if clone.Humanoid.MoveDirection ~= Vector3.zero then
-											amountoftimes = amountoftimes + 1
+							end
+						else
+							oldseattab:Fire(false)
+						end
+						oldseat = sit	
+					end
+					local targetvelo = (clone.AssemblyLinearVelocity)
+					local speed = ((sit or bedwars["HangGliderController"].hangGliderActive) and targetvelo.Magnitude or 20 * getSpeedMultiplier())
+					targetvelo = (targetvelo.Unit == targetvelo.Unit and targetvelo.Unit or Vector3.zero) * speed
+					bodyvelo.Velocity = vec3(0, clone.Velocity.Y, 0)
+					oldcloneroot.Velocity = vec3(math.clamp(targetvelo.X, -speed, speed), clone.Velocity.Y, math.clamp(targetvelo.Z, -speed, speed))
+				end
+			end
+		end)
+		local lagbacknum = 0
+		local lagbackcurrent = false
+		local lagbacktime = 0
+		local lagbackchanged = false
+		local lagbacknotification = false
+		local amountoftimes = 0
+		local lastseat
+		clonesuccess = true
+		local pinglist = {}
+		local fpslist = {}
+
+		local function getaverageframerate()
+			local frames = 0
+			for i,v in pairs(fpslist) do 
+				frames = frames + v
+			end
+			return #fpslist > 0 and (frames / (60 * #fpslist)) <= 1.2 or #fpslist <= 0 or AnticheatBypassAlternate["Enabled"]
+		end
+
+		local function didpingspike()
+			local currentpingcheck = pinglist[1] or math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+			for i,v in pairs(fpslist) do 
+				print("anticheatbypass fps ["..i.."]: "..v)
+				if v < 40 then 
+					return v.." fps"
+				end
+			end
+			for i,v in pairs(pinglist) do 
+				print("anticheatbypass ping ["..i.."]: "..v)
+				if v ~= currentpingcheck and math.abs(v - currentpingcheck) >= 100 then 
+					return currentpingcheck.." => "..v.." ping"
+				else
+					currentpingcheck = v
+				end
+			end
+			return nil
+		end
+
+		local function notlasso()
+			for i,v in pairs(collectionservice:GetTagged("LassoHooked")) do 
+				if v == lplr.Character then 
+					return false
+				end
+			end
+			return true
+		end
+
+		doing = false
+		allowspeed = true
+		task.spawn(function()
+			repeat
+				if (not AnticheatBypass["Enabled"]) then break end
+				local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+				local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
+				if #pinglist >= 10 then 
+					table.remove(pinglist, 1)
+				end
+				if #fpslist >= 10 then 
+					table.remove(fpslist, 1)
+				end
+				table.insert(pinglist, ping)
+				table.insert(fpslist, fps)
+				task.wait(1)
+			until (not AnticheatBypass["Enabled"])
+		end)
+		if anticheatconnection2 then anticheatconnection2:Disconnect() end
+		anticheatconnection2 = lplr:GetAttributeChangedSignal("LastTeleported"):connect(function()
+			if not AnticheatBypass["Enabled"] then if anticheatconnection2 then anticheatconnection2:Disconnect() end end
+			clone.CFrame = oldcloneroot.CFrame
+		end)
+		repeat
+			task.wait()
+			if entity.isAlive then
+				local oldroot = oldcloneroot
+				if oldroot then
+					local cloneroot = clone
+					if cloneroot then
+						if oldroot.Parent ~= nil and ((networkownerfunc and (not networkownerfunc(oldroot)) or networkownerfunc == nil and gethiddenproperty(oldroot, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual)) then
+							if amountoftimes ~= 0 then
+								amountoftimes = 0
+							end
+							if not lagbackchanged then
+								lagbackchanged = true
+								lagbacktime = tick()
+								task.spawn(function()
+									local pingspike = didpingspike() 
+									if pingspike then
+										if AnticheatBypassNotification["Enabled"] then
+											createwarning("AnticheatBypass", "Lagspike Detected : "..pingspike, 10)
 										end
-										local frameratecheck = getaverageframerate()
-										local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.22 or 0
-										local framerate2 = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.01 or 0
-										framerate = math.floor((AnticheatBypassNumbers.TPLerp + framerate) * 100) / 100
-										framerate2 = math.floor((AnticheatBypassNumbers.TPSpeed + framerate2) * 100) / 100
-										for i = 1, 2 do 
-											check(oldroot, cloneroot)
-											task.wait(i % 2 == 0 and 0.01 or 0.02)
-											check(oldroot, cloneroot)
-											if oldroot and cloneroot then
-												anticheatfunnyyes = false
-												if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
-													if (Vector3.new(0, oldroot.CFrame.p.Y, 0) - Vector3.new(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 4 then
-														oldroot.CFrame = finishcframe(oldroot.CFrame:lerp(addvectortocframe2(cloneroot.CFrame, oldroot.CFrame.p.Y), framerate))
-													else
-														oldroot.CFrame = finishcframe(oldroot.CFrame:lerp(cloneroot.CFrame, framerate))
-													end
-												end
-											end
-											check(oldroot, cloneroot)
-										end
-										check(oldroot, cloneroot)
-										task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or framerate2)
-										check(oldroot, cloneroot)
-										if oldroot and cloneroot then
-											if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
-												if (Vector3.new(0, oldroot.CFrame.p.Y, 0) - Vector3.new(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 4 then
-													oldroot.CFrame = finishcframe(addvectortocframe2(cloneroot.CFrame, oldroot.CFrame.p.Y))
-												else
-													oldroot.CFrame = finishcframe(cloneroot.CFrame)
-												end
-											end
-										end
-										check(oldroot, cloneroot)
 									else
-										if oldroot and cloneroot then
-											oldroot.CFrame = cloneroot.CFrame
+										if matchState ~= 2 and notlasso() and (not recenttp) then
+											lagbacks = lagbacks + 1
 										end
+									end
+									task.spawn(function()
+										if AnticheatBypass["Enabled"] then
+											AnticheatBypass["ToggleButton"](false)
+										end
+										local oldclonecharcheck = lplr.Character
+										repeat task.wait() until lplr.Character == nil or lplr.Character.Parent == nil or oldclonecharcheck ~= lplr.Character or networkownerfunc(oldroot)
+										if AnticheatBypass["Enabled"] == false then
+											AnticheatBypass["ToggleButton"](false)
+										end
+									end)
+								end)
+							end
+							if (tick() - lagbacktime) >= 10 and (not lagbacknotification) then
+								lagbacknotification = true
+								createwarning("AnticheatBypass", "You have been lagbacked for a \nawfully long time", 10)
+							end
+							cloneroot.Velocity = Vector3.zero
+							oldroot.Velocity = Vector3.zero
+							cloneroot.CFrame = oldroot.CFrame
+						else
+							lagbackchanged = false
+							lagbacknotification = false
+							if not shared.VapeOverrideAnticheatBypass then
+								if (not disabletpcheck) and entity.character.Humanoid.Sit ~= true then
+									anticheatfunnyyes = true 
+									local frameratecheck = getaverageframerate()
+									local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.22 or 0
+									local framerate2 = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.01 or 0
+									framerate = math.floor((AnticheatBypassNumbers.TPLerp + framerate) * 100) / 100
+									framerate2 = math.floor((AnticheatBypassNumbers.TPSpeed + framerate2) * 100) / 100
+									for i = 1, 2 do 
+										task.wait(i % 2 == 0 and 0.01 or 0.02)
+										if oldroot and cloneroot then
+											anticheatfunnyyes = false
+											if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
+												if (vec3(0, oldroot.CFrame.p.Y, 0) - vec3(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 1 then
+													oldroot.CFrame = finishcframe(oldroot.CFrame:lerp(addvectortocframe2(cloneroot.CFrame, oldroot.CFrame.p.Y), framerate))
+												else
+													oldroot.CFrame = finishcframe(oldroot.CFrame:lerp(cloneroot.CFrame, framerate))
+												end
+											end
+										end
+									end
+									task.wait(combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or framerate2)
+									if oldroot and cloneroot then
+										if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
+											if (vec3(0, oldroot.CFrame.p.Y, 0) - vec3(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 1 then
+												oldroot.CFrame = finishcframe(addvectortocframe2(cloneroot.CFrame, oldroot.CFrame.p.Y))
+											else
+												oldroot.CFrame = finishcframe(cloneroot.CFrame)
+											end
+										end
+									end
+								else
+									if oldroot and cloneroot then
+										oldroot.CFrame = cloneroot.CFrame
 									end
 								end
 							end
 						end
 					end
 				end
-			until AnticheatBypass["Enabled"] == false or currentclone ~= clone or currentmodel ~= oldchar or lplr.Character ~= clone
-		end
+			end
+		until AnticheatBypass["Enabled"] == false or oldcloneroot == nil or oldcloneroot.Parent == nil 
 	end
 
+	local spawncoro
 	local function anticheatbypassenable()
-		anticheatconnection2 = lplr.CharacterRemoving:connect(function()
-			if clone and clone:FindFirstChild("ClonedCharacter") then
-				if changed == false then
-					clone:Remove()
-				end
+		task.spawn(function()
+			if spawncoro then return end
+			spawncoro = true
+			allowspeed = false
+			repeat task.wait() until entity.isAlive
+			task.wait(0.4)
+			lplr.Character:WaitForChild("Humanoid", 10)
+			lplr.Character:WaitForChild("LeftHand", 10)
+			lplr.Character:WaitForChild("RightHand", 10)
+			lplr.Character:WaitForChild("LeftFoot", 10)
+			lplr.Character:WaitForChild("RightFoot", 10)
+			lplr.Character:WaitForChild("LeftLowerArm", 10)
+			lplr.Character:WaitForChild("RightLowerArm", 10)
+			lplr.Character:WaitForChild("LeftUpperArm", 10)
+			lplr.Character:WaitForChild("RightUpperArm", 10)
+			lplr.Character:WaitForChild("LeftLowerLeg", 10)
+			lplr.Character:WaitForChild("RightLowerLeg", 10)
+			lplr.Character:WaitForChild("LeftUpperLeg", 10)
+			lplr.Character:WaitForChild("RightUpperLeg", 10)
+			lplr.Character:WaitForChild("UpperTorso", 10)
+			lplr.Character:WaitForChild("LowerTorso", 10)
+			local root = lplr.Character:WaitForChild("HumanoidRootPart", 20)
+			local head = lplr.Character:WaitForChild("Head", 20)
+			task.wait(0.4)
+			spawncoro = false
+			if root ~= nil and head ~= nil then
+				task.spawn(disablestuff)
+			else
+				createwarning("AnticheatBypass", "ur root / head no load L", 30)
 			end
 		end)
-		shared.VapeRealCharacter = nil
-		if lplr.Character ~= clone then
-			task.spawn(function()
-				repeat task.wait() until entity.isAlive
-				lplr.Character:WaitForChild("Humanoid", 10)
-				lplr.Character:WaitForChild("LeftHand", 10)
-				lplr.Character:WaitForChild("RightHand", 10)
-				lplr.Character:WaitForChild("LeftFoot", 10)
-				lplr.Character:WaitForChild("RightFoot", 10)
-				lplr.Character:WaitForChild("LeftLowerArm", 10)
-				lplr.Character:WaitForChild("RightLowerArm", 10)
-				lplr.Character:WaitForChild("LeftUpperArm", 10)
-				lplr.Character:WaitForChild("RightUpperArm", 10)
-				lplr.Character:WaitForChild("LeftLowerLeg", 10)
-				lplr.Character:WaitForChild("RightLowerLeg", 10)
-				lplr.Character:WaitForChild("LeftUpperLeg", 10)
-				lplr.Character:WaitForChild("RightUpperLeg", 10)
-				lplr.Character:WaitForChild("UpperTorso", 10)
-				lplr.Character:WaitForChild("LowerTorso", 10)
-				local root = lplr.Character:WaitForChild("HumanoidRootPart", 20)
-				local head = lplr.Character:WaitForChild("Head", 20)
-				task.wait(0.4)
-				if root ~= nil and head ~= nil then
-					if changed == false then
-						if lplr.Character ~= clone and lplr.Character:FindFirstChild("ClonedCharacter") == nil then
-							print("disable stuff")
-							spawn(disablestuff)
-						end
-					else
-						changed = false
-					end
-				else
-					createwarning("AnticheatBypass", "ur root / head no load L", 30)
-				end
-			end)
-		end
 		anticheatconnection = lplr.CharacterAdded:connect(function(char)
 			task.spawn(function()
+				if spawncoro then return end
+				spawncoro = true
+				allowspeed = false
+				repeat task.wait() until entity.isAlive
+				task.wait(0.4)
 				char:WaitForChild("Humanoid", 10)
 				char:WaitForChild("LeftHand", 10)
 				char:WaitForChild("RightHand", 10)
@@ -9418,15 +8526,9 @@ runcode(function()
 				local root = char:WaitForChild("HumanoidRootPart", 20)
 				local head = char:WaitForChild("Head", 20)
 				task.wait(0.4)
+				spawncoro = false
 				if root ~= nil and head ~= nil then
-					if changed == false then
-						if char ~= clone and char:FindFirstChild("ClonedCharacter") == nil then
-							shared.VapeRealCharacter = nil
-							spawn(disablestuff)
-						end
-					else
-						changed = false
-					end
+					task.spawn(disablestuff)
 				else
 					createwarning("AnticheatBypass", "ur root / head no load L", 30)
 				end
@@ -9454,7 +8556,8 @@ runcode(function()
 							for i,v in pairs(bedwars["QueueMeta"][queueType].teams) do 
 								amountofplayers = amountofplayers + v.maxPlayers
 							end
-							if amountofplayers > 24 then
+							if amountofplayers > 24 and AnticheatBypassAutoConfigBig["Enabled"] then
+								allowspeed = true
 								pcall(function()
 									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](42)
 									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("CFrame")
@@ -9463,10 +8566,11 @@ runcode(function()
 									GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("AnticheatBypass")
 								end)
 							else
+								allowspeed = false
 								pcall(function()
-									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](54)
+									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](amountofplayers > 24 and AnticheatBypassAutoConfigSpeed2["Value"] or AnticheatBypassAutoConfigSpeed["Value"])
 									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("Normal")
-									GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](54)
+									GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](amountofplayers > 24 and AnticheatBypassAutoConfigSpeed2["Value"] or AnticheatBypassAutoConfigSpeed["Value"])
 									GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("Normal")
 									GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("Normal")
 								end)
@@ -9474,75 +8578,48 @@ runcode(function()
 							end
 						end
 					else
+						allowspeed = false
 						anticheatbypassenable()
 					end
 				end)
 			else
-				oldcloneroot = nil
-				shared.VapeRealCharacter = nil
-				if oldballoon then
-					bedwars["BalloonController"].hookBalloon = oldballoon
-					oldballoon = nil
-				end
-				oldlaunchpos = nil
-				if clone and clone:FindFirstChild("Animate") and oldchar then
-					local anim = clone:FindFirstChild("Animate")
-					anim.Parent = oldchar	
-					task.spawn(function()
-						anim.Disabled = true 
-						anim.Disabled = false
-					end)
-				end
-				if anticheatconnection then
+				allowspeed = true
+				if anticheatconnection then 
 					anticheatconnection:Disconnect()
 				end
-				if anticheatconnection2 then
-					anticheatconnection2:Disconnect()
-				end
-				RunLoops:UnbindFromHeartbeat("AnticheatBypass")
-				if oldchar and clonesuccess then
-					if oldchar:FindFirstChild("Humanoid") then
-						for i2,v2 in pairs(oldchar.Humanoid.Animator:GetPlayingAnimationTracks()) do
-							if v2.Animation.AnimationId == playedanim then
-								v2:Stop()
-							end
+				if anticheatconnection2 then anticheatconnection2:Disconnect() end
+				pcall(function() RunLoops:UnbindFromHeartbeat("AnticheatBypass") end)
+				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil then 
+					lplr.Character.Parent = game
+					oldcloneroot.Parent = lplr.Character
+					lplr.Character.PrimaryPart = oldcloneroot
+					lplr.Character.Parent = workspace
+					oldcloneroot.CanCollide = true
+					oldcloneroot.Transparency = 1
+					for i,v in pairs(lplr.Character:GetDescendants()) do 
+						if v:IsA("Weld") or v:IsA("Motor6D") then 
+							if v.Part0 == clone then v.Part0 = oldcloneroot end
+							if v.Part1 == clone then v.Part1 = oldcloneroot end
+						end
+						if v:IsA("BodyVelocity") then 
+							v:Destroy()
 						end
 					end
-					for i,v in pairs(oldchar:GetDescendants()) do
-						if (v:IsA("BasePart") or v:IsA("Decal")) then
-							v.Transparency = (v.Name ~= "HumanoidRootPart" and 0 or 1)
-						end
-						if v:IsA("BodyMover") then
-							v:Remove()
-						end
-						if v:IsA("Sound") then
-							v.Volume = 1
+					for i,v in pairs(oldcloneroot:GetChildren()) do 
+						if v:IsA("BodyVelocity") then 
+							v:Destroy()
 						end
 					end
-					local oldcamcframe = cam.CFrame
-					lplr.Character = oldchar
-					RunLoops:BindToRenderStep("AnticheatBypassCameraFix", 1, function()
-						if (oldcamcframe.lookVector - cam.CFrame.lookVector).magnitude >= 0.01 then 
-							cam.CFrame = CFrame.new(cam.CFrame.p, cam.CFrame.p + oldcamcframe.lookVector)
-							RunLoops:UnbindFromRenderStep("AnticheatBypassCameraFix")
-						end
-					end)
+					lplr.Character.Humanoid.HipHeight = hip or 2
 				end
-				if clone then
-					clone:Remove()
+				if clone then 
+					clone:Destroy()
+					clone = nil
 				end
-				if anticheatconnection3 then
-					anticheatconnection3:Disconnect()
-				end
-				if anticheatconnection4 then
-					anticheatconnection4:Disconnect()
-				end
-				if anticheatconnection5 then
-					anticheatconnection5:Disconnect()
-				end
+				oldcloneroot = nil
 			end
 		end,
-		["HoverText"] = "Makes speed check more stupid.",
+		["HoverText"] = "Makes speed check more stupid.\n(thank you to MicrowaveOverflow.cpp#7030 for no more clone crap)",
 	})
 	local arrowdodgeconnection
 	local arrowdodgedata
@@ -9561,12 +8638,12 @@ runcode(function()
 								local gravity = (projmetatab.gravitationalAcceleration or 196.2)
 								local multigrav = gravity
 								local offsetshootpos = data.position
-								local pos = (oldchar.HumanoidRootPart.Position + Vector3.new(0, 0.8, 0)) 
+								local pos = (oldchar.HumanoidRootPart.Position + vec3(0, 0.8, 0)) 
 								local calculated2 = FindLeadShot(pos, Vector3.zero, (Vector3.zero - data.launchVelocity).magnitude, offsetshootpos, Vector3.zero, multigrav) 
 								local calculated = LaunchDirection(offsetshootpos, pos, (Vector3.zero - data.launchVelocity).magnitude, gravity, false)
 								local initialvelo = calculated--(calculated - offsetshootpos).Unit * launchvelo
 								local initialvelo2 = (calculated2 - offsetshootpos).Unit * (Vector3.zero - data.launchVelocity).magnitude
-								local calculatedvelo = Vector3.new(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (Vector3.zero - data.launchVelocity).magnitude
+								local calculatedvelo = vec3(initialvelo2.X, (initialvelo and initialvelo.Y or initialvelo2.Y), initialvelo2.Z).Unit * (Vector3.zero - data.launchVelocity).magnitude
 								if (calculatedvelo - data.launchVelocity).magnitude <= 20 then 
 									oldchar.HumanoidRootPart.CFrame = oldchar.HumanoidRootPart.CFrame:lerp(clone.HumanoidRootPart.CFrame, 0.6)
 								end
@@ -9585,9 +8662,50 @@ runcode(function()
 	})]]
 	AnticheatBypassAutoConfig = AnticheatBypass.CreateToggle({
 		["Name"] = "Auto Config",
+		["Function"] = function(callback) 
+			if AnticheatBypassAutoConfigSpeed["Object"] then 
+				AnticheatBypassAutoConfigSpeed["Object"].Visible = callback
+			end
+			if AnticheatBypassAutoConfigSpeed2["Object"] then 
+				AnticheatBypassAutoConfigSpeed2["Object"].Visible = callback
+			end
+			if AnticheatBypassAutoConfigBig["Object"] then 
+				AnticheatBypassAutoConfigBig["Object"].Visible = callback
+			end
+		end,
+		["Default"] = true
+	})
+	AnticheatBypassAutoConfigSpeed = AnticheatBypass.CreateSlider({
+		["Name"] = "Speed",
+		["Function"] = function() end,
+		["Min"] = 1,
+		["Max"] = GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["Max"],
+		["Default"] = GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["Default"]
+	})
+	AnticheatBypassAutoConfigSpeed["Object"].BorderSizePixel = 0
+	AnticheatBypassAutoConfigSpeed["Object"].BackgroundTransparency = 0
+	AnticheatBypassAutoConfigSpeed["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	AnticheatBypassAutoConfigSpeed["Object"].Visible = false
+	AnticheatBypassAutoConfigSpeed2 = AnticheatBypass.CreateSlider({
+		["Name"] = "Big Mode Speed",
+		["Function"] = function() end,
+		["Min"] = 1,
+		["Max"] = GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["Max"],
+		["Default"] = GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["Default"]
+	})
+	AnticheatBypassAutoConfigSpeed2["Object"].BorderSizePixel = 0
+	AnticheatBypassAutoConfigSpeed2["Object"].BackgroundTransparency = 0
+	AnticheatBypassAutoConfigSpeed2["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	AnticheatBypassAutoConfigSpeed2["Object"].Visible = false
+	AnticheatBypassAutoConfigBig = AnticheatBypass.CreateToggle({
+		["Name"] = "Big Mode CFrame",
 		["Function"] = function() end,
 		["Default"] = true
 	})
+	AnticheatBypassAutoConfigBig["Object"].BorderSizePixel = 0
+	AnticheatBypassAutoConfigBig["Object"].BackgroundTransparency = 0
+	AnticheatBypassAutoConfigBig["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	AnticheatBypassAutoConfigBig["Object"].Visible = false
 	AnticheatBypassAlternate = AnticheatBypass.CreateToggle({
 		["Name"] = "Alternate Numbers",
 		["Function"] = function() end
@@ -9595,22 +8713,10 @@ runcode(function()
 	AnticheatBypassTransparent = AnticheatBypass.CreateToggle({
 		["Name"] = "Transparent",
 		["Function"] = function(callback) 
-			if oldchar and AnticheatBypass["Enabled"] then
-				for i,v in pairs(oldchar:GetDescendants()) do
-					if v:IsA("BasePart") or v:IsA("Decal") then
-						v.Transparency = (AnticheatBypassTransparent["Enabled"] and 1 or (v.Name == "HumanoidRootPart" and 1 or 0.5))
-					end
-					if v:IsA("BodyMover") then
-						v:Remove()
-					end
-				end
+			if oldcloneroot and AnticheatBypass["Enabled"] then
+				oldcloneroot.Transparency = callback and 1 or 0
 			end
 		end,
-		["Default"] = true
-	})
-	AnticheatBypassFlagCheck = AnticheatBypass.CreateToggle({
-		["Name"] = "Flag Check",
-		["Function"] = function(callback) end,
 		["Default"] = true
 	})
 	local changecheck = false
@@ -9644,26 +8750,6 @@ runcode(function()
 		["Name"] = "Notifications",
 		["Function"] = function() end,
 		["Default"] = true
-	})
-	AnticheatBypassAnimation = AnticheatBypass.CreateToggle({
-		["Name"] = "Play Animation",
-		["Function"] = function() end,
-	})
-	AnticheatBypassDisguise = AnticheatBypass.CreateToggle({
-		["Name"] = "Disguise",
-		["Function"] = function() end,
-	})
-	AnticheatBypassAnimationCustom = AnticheatBypass.CreateTextBox({
-		["Name"] = "Animation",
-		["TempText"] = "Animation Id",
-		["FocusLost"] = function(enter) end
-	})
-	AnticheatBypassDisguiseCustom = AnticheatBypass.CreateTextBox({
-		["Name"] = "Disguise",
-		["TempText"] = "Disguise User Id",
-		["FocusLost"] = function(enter) 
-			task.spawn(function() desc = players:GetHumanoidDescriptionFromUserId(AnticheatBypassDisguiseCustom["Value"] == "" and 1268933422 or tonumber(AnticheatBypassDisguiseCustom["Value"])) end)
-		end
 	})
 	if shared.VapeDeveloper then 
 		AnticheatBypassTPSpeed = AnticheatBypass.CreateSlider({
@@ -9732,11 +8818,11 @@ runcode(function()
 				end)
 				task.spawn(function()
 					local snowpart = Instance.new("Part")
-					snowpart.Size = Vector3.new(240, 0.5, 240)
+					snowpart.Size = vec3(240, 0.5, 240)
 					snowpart.Name = "SnowParticle"
 					snowpart.Transparency = 1
 					snowpart.CanCollide = false
-					snowpart.Position = Vector3.new(0, 120, 286)
+					snowpart.Position = vec3(0, 120, 286)
 					snowpart.Anchored = true
 					snowpart.Parent = workspace
 					local snow = Instance.new("ParticleEmitter")
@@ -9753,7 +8839,7 @@ runcode(function()
 					snow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
 					snow.Parent = snowpart
 					local windsnow = Instance.new("ParticleEmitter")
-					windsnow.Acceleration = Vector3.new(0,0,1)
+					windsnow.Acceleration = vec3(0,0,1)
 					windsnow.RotSpeed = NumberRange.new(100)
 					windsnow.VelocitySpread = 35
 					windsnow.Rate = 28
@@ -9769,7 +8855,7 @@ runcode(function()
 					for i = 1, 30 do
 						for i2 = 1, 30 do
 							local clone = snowpart:Clone()
-							clone.Position = Vector3.new(240 * (i - 1), 120, 240 * (i2 - 1))
+							clone.Position = vec3(240 * (i - 1), 120, 240 * (i2 - 1))
 							clone.Parent = workspace
 						end
 					end
@@ -9806,9 +8892,9 @@ runcode(function()
 							["item"] = item["tool"]
 						})
 					else
-						local newray = workspace:Raycast((oldcloneroot or entity.character.HumanoidRootPart).Position, Vector3.new(0, -76, 0), blockraycast)
+						local newray = workspace:Raycast((oldcloneroot or entity.character.HumanoidRootPart).Position, vec3(0, -76, 0), blockraycast)
 						if newray ~= nil then
-							bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(pot["tool"], "heal_splash_potion", "heal_splash_potion", (oldcloneroot or entity.character.HumanoidRootPart).Position, Vector3.new(0, -70, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
+							bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(pot["tool"], "heal_splash_potion", "heal_splash_potion", (oldcloneroot or entity.character.HumanoidRootPart).Position, vec3(0, -70, 0), game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
 						end
 					end
 				end
@@ -10026,15 +9112,13 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				vapecapeconnection = lplr.CharacterAdded:connect(function(char)
-					if char ~= oldchar then
-						task.spawn(function()
-							pcall(function() 
-								Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
-							end)
+					task.spawn(function()
+						pcall(function() 
+							Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
 						end)
-					end
+					end)
 				end)
-				if lplr.Character and lplr.Character ~= oldchar then
+				if lplr.Character then
 					task.spawn(function()
 						pcall(function() 
 							Cape(lplr.Character, getcustomassetfunc("vape/assets/VapeCape.png"))
@@ -10071,11 +9155,11 @@ runcode(function()
 				controlmodule.moveFunction = function(Self, vec, facecam)
 					if entity.isAlive and (not Scaffold["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 						if SafeWalkMode["Value"] == "Optimized" then 
-							local newpos = (entity.character.HumanoidRootPart.Position - Vector3.new(0, entity.character.Humanoid.HipHeight * 2, 0))
-							local ray = getblock(newpos + Vector3.new(0, -6, 0) + vec)
+							local newpos = (entity.character.HumanoidRootPart.Position - vec3(0, entity.character.Humanoid.HipHeight * 2, 0))
+							local ray = getblock(newpos + vec3(0, -6, 0) + vec)
 							for i = 1, 50 do 
 								if ray then break end
-								ray = getblock(newpos + Vector3.new(0, -i * 6, 0) + vec)
+								ray = getblock(newpos + vec3(0, -i * 6, 0) + vec)
 							end
 							local ray2 = getblock(newpos)
 							if ray == nil and ray2 then
@@ -10085,10 +9169,10 @@ runcode(function()
 								end
 							end
 						else
-							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), blockraycast)
-							local ray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -entity.character.Humanoid.HipHeight * 2, 0), blockraycast)
+							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + vec, vec3(0, -1000, 0), blockraycast)
+							local ray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec3(0, -entity.character.Humanoid.HipHeight * 2, 0), blockraycast)
 							if ray == nil and ray2 then
-								local ray3 = workspace:Raycast(entity.character.HumanoidRootPart.Position + (vec * 1.8), Vector3.new(0, -1000, 0), blockraycast)
+								local ray3 = workspace:Raycast(entity.character.HumanoidRootPart.Position + (vec * 1.8), vec3(0, -1000, 0), blockraycast)
 								if ray3 == nil then 
 									vec = Vector3.zero
 								end
@@ -10128,9 +9212,9 @@ runcode(function()
 						if entity.isAlive then
 							if breadcrumbtrail == nil then
 								breadcrumbattachment = Instance.new("Attachment")
-								breadcrumbattachment.Position = Vector3.new(0, 0.07 - 2.9, 0.5)
+								breadcrumbattachment.Position = vec3(0, 0.07 - 2.9, 0.5)
 								breadcrumbattachment2 = Instance.new("Attachment")
-								breadcrumbattachment2.Position = Vector3.new(0, -0.07 - 2.9, 0.5)
+								breadcrumbattachment2.Position = vec3(0, -0.07 - 2.9, 0.5)
 								breadcrumbtrail = Instance.new("Trail")
 								breadcrumbtrail.Attachment0 = breadcrumbattachment 
 								breadcrumbtrail.Attachment1 = breadcrumbattachment2
@@ -10182,6 +9266,92 @@ runcode(function()
 end)
 
 runcode(function()
+	local Disguise = {["Enabled"] = false}
+	local DisguiseId = {["Value"] = ""}
+	local desc
+	
+	local function disguisechar(char)
+		task.spawn(function()
+			if not char then return end
+			char:WaitForChild("Humanoid")
+			char:WaitForChild("Head")
+			if desc == nil then
+				desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"]))
+			end
+			desc.HeightScale = char.Humanoid.HumanoidDescription.HeightScale
+			char.Archivable = true
+			local disguiseclone = char:Clone()
+			disguiseclone.Name = "disguisechar"
+			disguiseclone.Parent = workspace
+			for i,v in pairs(disguiseclone:GetChildren()) do 
+				if v:IsA("Accessory") or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") then  
+					v:Destroy()
+				end
+			end
+			disguiseclone.Humanoid:ApplyDescriptionClientServer(desc)
+			for i,v in pairs(char:GetChildren()) do 
+				if (v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then 
+					v.Parent = game
+				end
+			end
+			char.ChildAdded:connect(function(v)
+				if ((v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors")) and v:GetAttribute("Disguise") == nil then 
+					repeat task.wait() v.Parent = game until v.Parent == game
+				end
+			end)
+			for i,v in pairs(disguiseclone.Animate:GetChildren()) do 
+				v:SetAttribute("Disguise", true)
+				local real = char.Animate:FindFirstChild(v.Name)
+				if v:IsA("StringValue") and real then 
+					real.Parent = game
+					v.Parent = char.Animate
+				end
+			end
+			for i,v in pairs(disguiseclone:GetChildren()) do 
+				v:SetAttribute("Disguise", true)
+				if v:IsA("Accessory") then  
+					for i2,v2 in pairs(v:GetDescendants()) do 
+						if v2:IsA("Weld") and v2.Part1 then 
+							v2.Part1 = char[v2.Part1.Name]
+						end
+					end
+					v.Parent = char
+				elseif v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then  
+					v.Parent = char
+				elseif v.Name == "Head" then 
+					char.Head.MeshId = v.MeshId
+				end
+			end
+			char.Humanoid.HumanoidDescription:SetEmotes(desc:GetEmotes())
+			char.Humanoid.HumanoidDescription:SetEquippedEmotes(desc:GetEquippedEmotes())
+			disguiseclone:Destroy()
+		end)
+	end
+
+	local disguiseconnection
+	Disguise = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Disguise",
+		["Function"] = function(callback)
+			if callback then 
+				disguiseconnection = lplr.CharacterAdded:connect(disguisechar)
+				disguisechar(lplr.Character)
+			else
+				if disguiseconnection then 
+					disguiseconnection:Disconnect()
+				end
+			end
+		end
+	})
+	DisguiseId = Disguise.CreateTextBox({
+		["Name"] = "Disguise",
+		["TempText"] = "Disguise User Id",
+		["FocusLost"] = function(enter) 
+			task.spawn(function() desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"])) end)
+		end
+	})
+end)
+
+runcode(function()
 	local oldaim
 	local oldplr
 	local oldmove
@@ -10203,7 +9373,7 @@ runcode(function()
 						plr = {Character = {Humanoid = {MoveDirection = Vector3.zero}, GetAttribute = function() end, HumanoidRootPart = {Position = mouse.Hit.p, Velocity = Vector3.zero}}}
 					end
 					if plr then
-						local shootpos = bowtable:getLaunchPosition(oldchar or shootpospart)
+						local shootpos = bowtable:getLaunchPosition(shootpospart)
 						if not shootpos then
 							return oldaim(bowtable, projmeta, worldmeta, shootpospart, ...)
 						end
@@ -10216,8 +9386,8 @@ runcode(function()
 						local gravity = (projmetatab.gravitationalAcceleration or 196.2)
 						local multigrav = gravity * projmeta.gravityMultiplier
 						local offsetshootpos = shootpos + projmeta.fromPositionOffset
-					 	local pos = (plr.Character[BowAimbotPart["Value"]].Position + Vector3.new(0, 0.8, 0)) 
-						local newlook = CFrame.new(offsetshootpos, pos) * CFrame.new(Vector3.new(-bedwars["BowConstantsTable"].RelX, 0, 0))
+					 	local pos = (plr.Character[BowAimbotPart["Value"]].Position + vec3(0, 0.8, 0)) 
+						local newlook = cfnew(offsetshootpos, pos) * cfnew(vec3(-bedwars["BowConstantsTable"].RelX, 0, 0))
 						pos = newlook.p + (newlook.lookVector * (offsetshootpos - pos).magnitude)
 						oldplr = plr
 						if plr ~= oldplr then
@@ -10227,18 +9397,18 @@ runcode(function()
 							print("no velo troll", (oldmove - plr.Character.Humanoid.MoveDirection).magnitude)
 							zerovelocheck = tick() + 0.6
 						end
-						local velo = (Vector3.new(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 40, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
+						local velo = (vec3(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 40, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
 						if projmeta.projectile == "telepearl" then
 							velo = Vector3.zero
 						end
 						local calculated2 = FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.zero, multigrav) 
-						pos = pos + Vector3.new(0, velo.Y + (plr.Character:GetAttribute("InflatedBalloons") and plr.Character:GetAttribute("InflatedBalloons") > 0 and velo.Y > 0 and 1 or 0), 0)
+						pos = pos + vec3(0, velo.Y + (plr.Character:GetAttribute("InflatedBalloons") and plr.Character:GetAttribute("InflatedBalloons") > 0 and velo.Y > 0 and 1 or 0), 0)
 						local calculated = LaunchDirection(offsetshootpos, pos, launchvelo, gravity, false)
 						local initialvelo2 = (calculated2 - offsetshootpos).Unit * launchvelo
 						oldmove = plr.Character.Humanoid.MoveDirection
 						if calculated then
 							return {
-								initialVelocity = Vector3.new(initialvelo2.X, calculated.Y, initialvelo2.Z).Unit * (launchvelo - 0.2),
+								initialVelocity = vec3(initialvelo2.X, calculated.Y, initialvelo2.Z).Unit * (launchvelo - 0.2),
 								positionFrom = offsetshootpos,
 								deltaT = prediction,
 								gravitationalAcceleration = multigrav,
@@ -10373,8 +9543,8 @@ runcode(function()
 					if entity.isAlive then
 						if chinahattrail == nil or chinahattrail.Parent == nil then
 							chinahattrail = Instance.new("Part")
-							chinahattrail.CFrame = entity.character.Head.CFrame * CFrame.new(0, 1.1, 0)
-							chinahattrail.Size = Vector3.new(3, 0.7, 3)
+							chinahattrail.CFrame = entity.character.Head.CFrame * cfnew(0, 1.1, 0)
+							chinahattrail.Size = vec3(3, 0.7, 3)
 							chinahattrail.Name = "ChinaHat"
 							chinahattrail.Material = Enum.Material.Neon
 							chinahattrail.Color = Color3.fromHSV(ChinaHatColor["Hue"], ChinaHatColor["Sat"], ChinaHatColor["Value"])
@@ -10384,10 +9554,10 @@ runcode(function()
 							chinahatmesh.Parent = chinahattrail
 							chinahatmesh.MeshType = "FileMesh"
 							chinahatmesh.MeshId = "http://www.roblox.com/asset/?id=1778999"
-							chinahatmesh.Scale = Vector3.new(3, 0.6, 3)
+							chinahatmesh.Scale = vec3(3, 0.6, 3)
 							chinahattrail.Parent = workspace.Camera
 						end
-						chinahattrail.CFrame = entity.character.Head.CFrame * CFrame.new(0, 1.1, 0)
+						chinahattrail.CFrame = entity.character.Head.CFrame * cfnew(0, 1.1, 0)
 						chinahattrail.Velocity = Vector3.zero
 						chinahattrail.LocalTransparencyModifier = ((cam.CFrame.Position - cam.Focus.Position).Magnitude <= 0.6 and 1 or 0)
 					else
@@ -10770,7 +9940,7 @@ runcode(function()
 						debug.setupvalue(bedwars["DamageIndicator"], 10, {
 							Create = function(self, obj, ...)
 								task.spawn(function()
-									obj.Parent.Parent.Parent.Parent.Velocity = Vector3.new((math.random(-50, 50) / 100) * damagetab.velX, (math.random(50, 60) / 100) * damagetab.velY, (math.random(-50, 50) / 100) * damagetab.velZ)
+									obj.Parent.Parent.Parent.Parent.Velocity = vec3((math.random(-50, 50) / 100) * damagetab.velX, (math.random(50, 60) / 100) * damagetab.velY, (math.random(-50, 50) / 100) * damagetab.velZ)
 									local textcompare = obj.Parent.TextColor3
 									if textcompare ~= Color3.fromRGB(85, 255, 85) then
 										local newtween = game:GetService("TweenService"):Create(obj.Parent, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {
