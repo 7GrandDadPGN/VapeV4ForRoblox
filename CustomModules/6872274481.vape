@@ -8225,13 +8225,8 @@ runcode(function()
 	end
 
 	local function check()
-		lagbackedaftertouch = false
-		if clone and oldcloneroot and (oldcloneroot.Position - clone.Position).magnitude >= AnticheatBypassNumbers.TPCheck then
-			--createwarning("AnticheatBypass", "tp check failed by: "..(math.floor(((oldroot.Position - cloneroot.Position).magnitude - AnticheatBypassNumbers.TPCheck) * 100) / 100), 10)
-			local newpos = (oldcloneroot.Position - clone.Position).Unit * AnticheatBypassNumbers.TPCheck
-			newpos = newpos == newpos and newpos or Vector3.zero
+		if clone and oldcloneroot and (oldcloneroot.Position - clone.Position).magnitude >= (AnticheatBypassNumbers.TPCheck * getSpeedMultiplier()) then
 			clone.CFrame = oldcloneroot.CFrame
-			lagbackedaftertouch = true
 		end
 	end
 
