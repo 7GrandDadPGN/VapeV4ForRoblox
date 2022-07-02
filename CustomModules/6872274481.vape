@@ -873,7 +873,33 @@ runcode(function()
         OldClientGet = getmetatable(Client).Get
         getmetatable(Client).Get = function(Self, remotename)
 			local res = OldClientGet(Self, remotename)
-			if remotename == bedwars["AttackRemote"] and not uninjectflag then
+			if uninjectflag then return res end
+			if remotename == "DamageBlock" then
+				return {
+					["CallServerAsync"] = function(Self, tab)
+						local block = bedwars["BlockController"]:getStore():getBlockAt(tab.blockRef.blockPosition)
+						if block and block.Name == "bed" then
+							if getWhitelistedBed(block) then
+								return {andThen = function(self, func) 
+									func("failed")
+								end}
+							end
+						end
+						return res:CallServerAsync(tab)
+					end,
+					["CallServer"] = function(Self, tab)
+						local block = bedwars["BlockController"]:getStore():getBlockAt(tab.blockRef.blockPosition)
+						if block and block.Name == "bed" then
+							if getWhitelistedBed(block) then
+								return {andThen = function(self, func) 
+									func("failed")
+								end}
+							end
+						end
+						return res:CallServer(tab)
+					end
+				}
+			elseif remotename == bedwars["AttackRemote"] then
 				return {
 					["instance"] = res["instance"],
 					["CallServer"] = function(Self, tab)
@@ -935,7 +961,6 @@ runcode(function()
 			["ClickHold"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.ui.lib.util["click-hold"]).ClickHold,
             ["ClientHandler"] = Client,
 			["SharedConstants"] = require(repstorage.TS["shared-constants"]),
-            ["ClientHandlerDamageBlock"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.remotes).BlockEngineRemotes.Client,
             ["ClientStoreHandler"] = require(lplr.PlayerScripts.TS.ui.store).ClientStore,
 			["ClientHandlerSyncEvents"] = require(lplr.PlayerScripts.TS["client-sync-events"]).ClientSyncEvents,
             ["CombatConstant"] = require(repstorage.TS.combat["combat-constant"]).CombatConstant,
@@ -1037,37 +1062,6 @@ runcode(function()
 			["VehicleController"] = KnitClient.Controllers.VehicleController,
 			["WeldTable"] = require(repstorage.TS.util["weld-util"]).WeldUtil,
         }
-		oldbreakremote = getmetatable(bedwars["ClientHandlerDamageBlock"]).Get
-		getmetatable(bedwars["ClientHandlerDamageBlock"]).Get = function(Self, remotename, ...)
-			local res = oldbreakremote(Self, remotename, ...)
-			if remotename == "DamageBlock" then
-				return {
-					["CallServerAsync"] = function(Self, tab)
-						local block = bedwars["BlockController"]:getStore():getBlockAt(tab.blockRef.blockPosition)
-						if block and block.Name == "bed" then
-							if getWhitelistedBed(block) then
-								return {andThen = function(self, func) 
-									func("failed")
-								end}
-							end
-						end
-						return res:CallServerAsync(tab)
-					end,
-					["CallServer"] = function(Self, tab)
-						local block = bedwars["BlockController"]:getStore():getBlockAt(tab.blockRef.blockPosition)
-						if block and block.Name == "bed" then
-							if getWhitelistedBed(block) then
-								return {andThen = function(self, func) 
-									func("failed")
-								end}
-							end
-						end
-						return res:CallServer(tab)
-					end
-				}
-			end
-			return res
-		end
 		oldbob = bedwars["ViewmodelController"]["playAnimation"]
         bedwars["ViewmodelController"]["playAnimation"] = function(Self, id, ...)
             if id == 11 and nobob["Enabled"] and entity.isAlive then
@@ -1281,9 +1275,6 @@ GuiLibrary["SelfDestructEvent"].Event:connect(function()
 	if OldClientGet then
 		getmetatable(bedwars["ClientHandler"]).Get = OldClientGet
 	end
-	if oldbreakremote then
-		getmetatable(bedwars["ClientHandlerDamageBlock"]).Get = oldbreakremote
-	end
 	uninjectflag = true
 	if blocktable then blocktable:disable() end
 	if teleportfunc then teleportfunc:Disconnect() end
@@ -1486,7 +1477,7 @@ local function renderNametag(plr)
 					for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
 						if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
 							newbubble.Parent.Parent.Visible = false
-							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
+							repeat task.wait() until newbubble:IsDescendantOf(nil) 
 							if connection then
 								connection:Disconnect()
 							end
@@ -1495,7 +1486,7 @@ local function renderNametag(plr)
 					connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
 						if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
 							newbubble.Parent.Parent.Visible = false
-							repeat task.wait() until newbubble.Parent.Parent.Parent.Parent == nil
+							repeat task.wait() until newbubble:IsDescendantOf(nil)
 							if connection then
 								connection:Disconnect()
 							end
@@ -1882,7 +1873,7 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
 	local block, blockpos = nil, nil
 	if not bypass then block, blockpos = getlastblock(pos, normal) end
 	if not block then block, blockpos = getblock(pos) end
-    if blockpos then
+    if blockpos and block then
         if bedwars["BlockEngineClientEvents"].DamageBlock:fire(block.Name, blockpos, block):isCancelled() then
             return nil
         end
