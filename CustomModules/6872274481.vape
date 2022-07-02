@@ -905,7 +905,7 @@ runcode(function()
 					["CallServer"] = function(Self, tab)
 						local suc, plr = pcall(function() return players:GetPlayerFromCharacter(tab.entityInstance) end)
 						if suc and plr then
-							local playertype, playerattackable = bedwars["CheckPlayerType"](lplr)
+							local playertype, playerattackable = bedwars["CheckPlayerType"](plr)
 							if not playerattackable then 
 								return nil
 							end
