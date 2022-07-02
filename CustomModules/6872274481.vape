@@ -119,7 +119,6 @@ local function GetURL(scripturl)
 	end
 end
 local shalib = loadstring(GetURL("Libraries/sha.lua"))()
-shared.vapeentity = loadstring(GetURL("Libraries/entityHandler.lua"))()
 local entity = shared.vapeentity
 local whitelisted = {
 	players = {
@@ -8385,8 +8384,17 @@ runcode(function()
 		if anticheatconnection2 then anticheatconnection2:Disconnect() end
 		anticheatconnection2 = lplr:GetAttributeChangedSignal("LastTeleported"):connect(function()
 			if not AnticheatBypass["Enabled"] then if anticheatconnection2 then anticheatconnection2:Disconnect() end end
+			if not (clone and oldcloneroot) then return end
 			clone.CFrame = oldcloneroot.CFrame
 		end)
+		shared.VapeRealCharacter = {
+			Humanoid = entity.character.Humanoid,
+			Head = entity.character.Head,
+			HumanoidRootPart = oldcloneroot
+		}
+		if shared.VapeOverrideAnticheatBypassPre then 
+			shared.VapeOverrideAnticheatBypassPre(lplr.Character)
+		end
 		repeat
 			task.wait()
 			if entity.isAlive then
@@ -8490,6 +8498,7 @@ runcode(function()
 			if spawncoro then return end
 			spawncoro = true
 			allowspeed = false
+			shared.VapeRealCharacter = nil
 			repeat task.wait() until entity.isAlive
 			task.wait(0.4)
 			lplr.Character:WaitForChild("Humanoid", 10)
@@ -8522,6 +8531,7 @@ runcode(function()
 				if spawncoro then return end
 				spawncoro = true
 				allowspeed = false
+				shared.VapeRealCharacter = nil
 				repeat task.wait() until entity.isAlive
 				task.wait(0.4)
 				char:WaitForChild("Humanoid", 10)
@@ -8594,6 +8604,7 @@ runcode(function()
 							end
 						end
 					else
+						shared.VapeRealCharacter = nil
 						allowspeed = false
 						anticheatbypassenable()
 					end
