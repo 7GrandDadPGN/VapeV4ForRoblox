@@ -1159,7 +1159,7 @@ shared.VapeTargetInfo = {
 			for i,v in pairs(tab) do
 				local plr = game:GetService("Players"):FindFirstChild(i)
 				targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
-				targethealthgreen:TweenSize(UDim2.new(v["Health"] / v["MaxHealth"], 0, 0, 4), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
+				targethealthgreen:TweenSize(UDim2.new(math.clamp(v["Health"] / v["MaxHealth"], 0, 1), 0, 0, 4), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
 				targethealth.Text = (math.floor((v["Health"] / 5) * 10) / 10).." hp"
 				targethealthgreen.BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])
 				targetname.Text = (TargetInfoDisplayNames["Enabled"] and plr and plr.DisplayName or i)

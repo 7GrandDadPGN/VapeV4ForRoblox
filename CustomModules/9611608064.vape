@@ -1,4 +1,10 @@
--- Credits to Inf Yield & all the other scripts that helped me make bypasses
+--[[ 
+	Credits
+	Infinite Yield - Blink
+	DevForum - lots of rotation math because I hate it
+	Radical Loading Bar - ProximityPrompt render code
+	Please notify me if you need credits
+]]
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
 local textservice = game:GetService("TextService")
@@ -20,9 +26,14 @@ local br = {}
 local brpos = {}
 local brvelo = {}
 local storedshahashes = {}
+local silentaimfire = false
+local triggerbotfire = false
 local NoSlowdown = {["Enabled"] = false}
 local SilentAim = {["Enabled"] = false}
 local SpinBot = {["Enabled"] = false}
+local TriggerBot = {["Enabled"] = false}
+local vec3 = Vector3.new
+local cfnew = CFrame.new
 local clients = {
 	ChatStrings1 = {
 		["KVOP25KYFPPP4"] = "vape",
@@ -255,7 +266,7 @@ local function getLivingEntity(plr)
 	end
 end
 
-local function GetNearestHumanoidToMouse(player, distance, checkvis)
+local function GetNearestHumanoidToMouse(player, distance, checkvis, origin)
     local closest, returnedplayer = distance, nil
 	for i, v in pairs(getAttackable()) do
 		local vec, vis = cam:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
@@ -264,7 +275,8 @@ local function GetNearestHumanoidToMouse(player, distance, checkvis)
 			if mag <= closest then
 				if checkvis then 
 					rayparams.FilterDescendantsInstances = {lplr.Character}
-					local res = br["GameQueryUtil"]:raycast(cam.CFrame.p, CFrame.lookAt(cam.CFrame.p, v.Character.Head:GetRenderCFrame().p).lookVector * 1000, rayparams)
+					local campos = origin or cam.CFrame.p
+					local res = br["GameQueryUtil"]:raycast(campos, CFrame.lookAt(campos, v.Character.Head:GetRenderCFrame().p).lookVector * 1000, rayparams)
 					if res == nil or res.Instance and res.Instance:IsDescendantOf(v.Character) ~= true then continue end
 				end
 				closest = mag
@@ -390,6 +402,7 @@ runcode(function()
 		["BaseGun"] = require(repstorage.TS.gun.guns["base-gun"])
 	}
 	OldGenerateCommand = br["ChickynoidClient"].GenerateCommand
+	local oldsniped
 	br["ChickynoidClient"].GenerateCommand = function(self, ...)
 		local res = OldGenerateCommand(self, ...)
 		if NoSlowdown["Enabled"] then 
@@ -398,20 +411,43 @@ runcode(function()
 		end
 		if SilentAim["Enabled"] then 
 			res.fb = true
+			if silentaimfire then 
+				local spread = br["CrosshairController"]:getBulletSpread()
+				local defaultspread = br["CrosshairController"]:getActiveItemMeta()
+				defaultspread = defaultspread and defaultspread.gun and defaultspread.gun.aimcone
+				if defaultspread then
+					local issniper = defaultspread and defaultspread.bulletSpread <= 3
+					local sniped = spread <= (math.floor((defaultspread.bulletSpread - (issniper and defaultspread.bulletSpread * defaultspread.bulletSpreadAimMult or 0)) * 10) / 10)
+					if (not issniper) and silentaimfire <= 200 or sniped and (br["CrosshairController"].gunController:getLastFireTime() - workspace:GetServerTimeNow()) < 0 then 
+						res.f = 1
+					end
+				end
+			end
+		end
+		if TriggerBot["Enabled"] and triggerbotfire then 
+			res.fb = true
+			res.f = 1
 		end
 		if SpinBot["Enabled"] and res.f == nil then 
 			res.fa = cam.CFrame.p + CFrame.Angles(0, math.rad(tick() * 1000 % 360), 0).lookVector * 1000
 		end
 		return res
 	end
-	RunLoops:BindToHeartbeat("PositionUpdater", 1, function()
-		for i, v in pairs(getAttackable()) do
-			brvelo[v.Player.Name] = v.Character.Head.Position - (brpos[v.Player.Name] or v.Character.Head.Position)	
-			brpos[v.Player.Name] = v.Character.Head.Position
-		end
-		if uninjectflag then
-			RunLoops:UnbindFromHeartbeat("PositionUpdater")
-		end
+	task.spawn(function()
+		repeat
+			task.wait(0.1)
+			for i, v in pairs(getAttackable()) do
+				local char = br["ChickynoidClient"].characters[v.Player.UserId]
+				if char then
+					local newpos = char.characterData.pos
+					if brpos[v.Player.Name] == nil then brpos[v.Player.Name] = newpos end
+					if brvelo[v.Player.Name] == nil then brvelo[v.Player.Name] = Vector3.zero end
+					local newvelo = (newpos - (brpos[v.Player.Name] or newpos)) * 10
+					brvelo[v.Player.Name] = newvelo
+					brpos[v.Player.Name] = newpos
+				end
+			end
+		until uninjectflag
 	end)
 end)
 
@@ -842,6 +878,120 @@ GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
 GuiLibrary["RemoveObject"]("GravityOptionsButton")
 GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
+
+--skidded off the devforum because I hate projectile math
+-- Compute 2D launch angle
+-- v: launch velocity
+-- g: gravity (positive) e.g. 196.2
+-- d: horizontal distance
+-- h: vertical distance
+-- higherArc: if true, use the higher arc. If false, use the lower arc.
+local function LaunchAngle(v: number, g: number, d: number, h: number, higherArc: boolean)
+	local v2 = v * v
+	local v4 = v2 * v2
+	local root = math.sqrt(v4 - g*(g*d*d + 2*h*v2))
+	if not higherArc then root = -root end
+	return math.atan((v2 + root) / (g * d))
+end
+
+-- Compute 3D launch direction from
+-- start: start position
+-- target: target position
+-- v: launch velocity
+-- g: gravity (positive) e.g. 196.2
+-- higherArc: if true, use the higher arc. If false, use the lower arc.
+local function LaunchDirection(start, target, v, g, higherArc: boolean)
+	-- get the direction flattened:
+	local horizontal = vec3(target.X - start.X, 0, target.Z - start.Z)
+	
+	local h = target.Y - start.Y
+	local d = horizontal.Magnitude
+	local a = LaunchAngle(v, g, d, h, higherArc)
+	
+	-- NaN ~= NaN, computation couldn't be done (e.g. because it's too far to launch)
+	if a ~= a then return nil end
+	
+	-- speed if we were just launching at a flat angle:
+	local vec = horizontal.Unit * v
+	
+	-- rotate around the axis perpendicular to that direction...
+	local rotAxis = vec3(-horizontal.Z, 0, horizontal.X)
+	
+	-- ...by the angle amount
+	return CFrame.fromAxisAngle(rotAxis, a) * vec
+end
+
+local function FindLeadShot(targetPosition: Vector3, targetVelocity: Vector3, projectileSpeed: Number, shooterPosition: Vector3, shooterVelocity: Vector3, gravity: Number)
+	local distance = (targetPosition - shooterPosition).Magnitude
+
+	local p = targetPosition - shooterPosition
+	local v = targetVelocity - shooterVelocity
+	local a = Vector3.zero
+
+	local timeTaken = (distance / projectileSpeed)
+	
+	if gravity > 0 then
+		local timeTaken = projectileSpeed/gravity+math.sqrt(2*distance/gravity+projectileSpeed^2/gravity^2)
+	end
+
+	local goalX = targetPosition.X + v.X*timeTaken + 0.5 * a.X * timeTaken^2
+	local goalY = targetPosition.Y + v.Y*timeTaken + 0.5 * a.Y * timeTaken^2
+	local goalZ = targetPosition.Z + v.Z*timeTaken + 0.5 * a.Z * timeTaken^2
+	
+	return vec3(goalX, goalY, goalZ)
+end
+
+local function createProgressBarGradient(parent, leftSide)
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.fromScale(0.5, 1)
+	frame.Position = UDim2.fromScale(leftSide and 0 or 0.5, 0)
+	frame.BackgroundTransparency = 1
+	frame.ClipsDescendants = true
+	frame.Parent = parent
+
+	local image = Instance.new("ImageLabel")
+	image.BackgroundTransparency = 1
+	image.Size = UDim2.fromScale(2, 1)
+	image.Position = UDim2.fromScale(leftSide and 0 or -1, 0)
+	image.Image = "rbxasset://textures/ui/Controls/RadialFill.png"
+	image.Parent = frame
+
+	local gradient = Instance.new("UIGradient")
+	gradient.Transparency = NumberSequence.new {
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(.4999, 0),
+		NumberSequenceKeypoint.new(.5, 1),
+		NumberSequenceKeypoint.new(1, 1)
+	}
+	gradient.Rotation = leftSide and 180 or 0
+	gradient.Parent = image
+
+	return gradient
+end
+
+local function createCircularProgressBar()
+	local bar = Instance.new("Frame")
+	bar.Name = "CircularProgressBar"
+	bar.Size = UDim2.fromOffset(58, 58)
+	bar.AnchorPoint = Vector2.new(0.5, 0.5)
+	bar.Position = UDim2.fromScale(0.5, 0.5)
+	bar.BackgroundTransparency = 1
+
+	local gradient1 = createProgressBarGradient(bar, true)
+	local gradient2 = createProgressBarGradient(bar, false)
+
+	local progress = Instance.new("NumberValue")
+	progress.Name = "Progress"
+	progress.Parent = bar
+	progress.Changed:Connect(function(value)
+		local angle = math.clamp(value * 360, 0, 360)
+		gradient1.Rotation = math.clamp(angle, 180, 360)
+		gradient2.Rotation = math.clamp(angle, 0, 180)
+	end)
+
+	return bar
+end
+
 runcode(function()
 	local SilentAimFOV = {["Value"] = 0}
 	local SilentAimAutoFire = {["Enabled"] = false}
@@ -852,6 +1002,7 @@ runcode(function()
 	local SilentAimfunc2
 	local SilentAimfunc3
 	local currentplr
+	local currentplrpos
 	SilentAim = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SilentAim",
 		["Function"] = function(callback)
@@ -863,15 +1014,64 @@ runcode(function()
 				SilentAimfunc2 = br["ShiftLockController"].isAiming
 				debug.setupvalue(br["CrosshairController"].getAimPosition, 5, {
 					raycast = function(self, origin, direction, args, ...)
-						local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true)
-						currentplr = plr
-						if plr then 
-							local newvelo = Vector3.new(brvelo[plr.Player.Name].X * 1.475, brvelo[plr.Player.Name].Y * 0.9, brvelo[plr.Player.Name].Z * 1.475)
-							direction = CFrame.lookAt(origin, plr.Character.Head:GetRenderCFrame().p + newvelo).lookVector * 1000
+						local helditem = br["ItemHolderController"]:getActiveItemType()
+						helditem = helditem and br["ItemTable"][helditem] or {}
+						if helditem.gun and helditem.gun.aimcone then
+							local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, origin)
+							if plr then 
+								local shootpos = plr.Character.Head.Position
+								local shootmag = (origin - shootpos).Magnitude
+								if helditem.projectile then 
+									if shootmag <= (helditem.projectile.maxDistance or 1500) then 
+										local newshootpos2 = LaunchDirection(origin, shootpos, helditem.projectile.speed, workspace.Gravity - (workspace.Gravity / helditem.projectile.drop), false)
+										local newshootpos = FindLeadShot(shootpos, brvelo[plr.Player.Name], helditem.projectile.speed, origin, Vector3.zero, workspace.Gravity - (workspace.Gravity / helditem.projectile.drop))
+										direction = CFrame.lookAt(origin, Vector3.new(newshootpos.X, newshootpos2.Y, newshootpos.Z)).lookVector * 1000
+										currentplr = plr.Player
+										currentplrpos = shootmag
+									else
+										currentplr = nil
+										currentplrpos = nil
+									end
+								else
+									if shootmag <= (helditem.gun.aimcone.maxRange or 1500) then 
+										direction = CFrame.lookAt(origin, shootpos).lookVector * 1000
+										currentplr = plr.Player
+										currentplrpos = shootmag
+									else
+										currentplr = nil
+										currentplrpos = nil
+									end
+								end
+							else
+								currentplr = nil
+								currentplrpos = nil
+							end
+						else
+							currentplr = nil
+							currentplrpos = nil
 						end
 						return SilentAimfunc:raycast(origin, direction, args, ...)
 					end
 				})
+				task.spawn(function()
+					local oldcurrent
+					repeat
+						task.wait()
+						local targettable = {}
+						local targetsize = 0
+						if currentplr then 
+							local plrattr = br["EntityService"]:getLivingEntityById(currentplr:GetAttribute("LivingEntityID"))
+							plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100, shield = 0}
+							targettable[currentplr.Name] = {
+								["UserId"] = currentplr.UserId,
+								["Health"] = (plrattr.health + plrattr.shield),
+								["MaxHealth"] = plrattr.maxHealth
+							}
+							targetsize = targetsize + 1
+						end
+						targetinfo.UpdateInfo(targettable, targetsize)
+					until (not SilentAim["Enabled"])
+				end)
 				br["ShiftLockController"].isAiming = function() return true end
 			else
 				debug.setupvalue(br["CrosshairController"].getAimPosition, 5, SilentAimfunc)
@@ -951,32 +1151,40 @@ runcode(function()
 				task.spawn(function()
 					repeat
 						task.wait()
-						if SilentAim["Enabled"] and mouse1click and (isrbxactive and isrbxactive() or iswindowactive and iswindowactive()) then
-							if currentplr then 
-								if shoottime <= tick() then
-									if isNotHoveringOverGui() and GuiLibrary["MainGui"]:FindFirstChild("ScaledGui") and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
-										if pressed then
-											mouse1release()
-										else
-											mouse1press()
-										end
-										pressed = not pressed
-										shoottime = tick() + 0.03
-									else
-										if pressed then
-											mouse1release()
-										end
-										pressed = false
-									end
+						silentaimfire = SilentAim["Enabled"] and currentplrpos
+					until not SilentAimAutoFire["Enabled"]
+				end)
+			else
+				silentaimfire = false
+			end
+		end
+	})
+end)
+
+runcode(function()
+	local rayparams = RaycastParams.new()
+	rayparams.FilterType = Enum.RaycastFilterType.Blacklist
+	TriggerBot =  GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "TriggerBot",
+		["Function"] = function(callback)
+			if callback then 
+				task.spawn(function()
+					repeat
+						task.wait()	
+						local ray = cam:ViewportPointToRay(cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2, 12)
+						rayparams.FilterDescendantsInstances = {lplr.Character}
+						local raycast = br["GameQueryUtil"]:raycast(ray.Origin, ray.Direction * 1000, rayparams)
+						local plr
+						if raycast then
+							for i,v in pairs(getAttackable()) do 
+								if raycast.Instance:IsDescendantOf(v.Character) then 
+									plr = v.Player
+									break
 								end
-							else
-								if pressed then
-									mouse1release()
-								end
-								pressed = false
 							end
 						end
-					until not SilentAimAutoFire["Enabled"]
+						triggerbotfire = plr and true or false
+					until (not TriggerBot["Enabled"])
 				end)
 			end
 		end
@@ -1092,8 +1300,8 @@ runcode(function()
 									plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100}
 									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
 									local rootSize = (aliveplr.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + vec3(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - vec3(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
 									rootPos = rootPos
 									if rootVis then
 										--thing.Visible = rootVis
@@ -1146,21 +1354,28 @@ runcode(function()
 								
 								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
 								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
-									local rootPos, rootVis = cam:WorldToViewportPoint(plr.HumanoidRootPart.Position)
+									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
+									if not rootVis then continue end
 									local rigcheck = aliveplr.Humanoid.RigType == Enum.HumanoidRigType.R6
-									if rootVis and plr.Character:FindFirstChild((rigcheck and "Torso" or "UpperTorso")) and plr.Character:FindFirstChild((rigcheck and "Left Arm" or "LeftHand")) and plr.Character:FindFirstChild((rigcheck and "Right Arm" or "RightHand")) and plr.Character:FindFirstChild((rigcheck and "Left Leg" or "LeftFoot")) and plr.Character:FindFirstChild((rigcheck and "Right Leg" or "RightFoot")) and plr.Character:FindFirstChild("Head") then
-										local head = CalculateObjectPosition((aliveplr.Head.CFrame).p)
-										local headfront = CalculateObjectPosition((aliveplr.Head.CFrame * CFrame.new(0, 0, -0.5)).p)
-										local toplefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-1.5, 0.8, 0)).p)
-										local toprighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(1.5, 0.8, 0)).p)
-										local toptorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, 0.8, 0)).p)
-										local bottomtorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local bottomlefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-0.5, -0.8, 0)).p)
-										local bottomrighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0.5, -0.8, 0)).p)
-										local leftarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Arm" or "LeftHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local rightarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Arm" or "RightHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local leftleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Leg" or "LeftFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local rightleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Leg" or "RightFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
+									local torsoobj = aliveplr:FindFirstChild((rigcheck and "Torso" or "UpperTorso"))
+									local leftarmobj = aliveplr:FindFirstChild((rigcheck and "Left Arm" or "LeftHand"))
+									local rightarmobj = aliveplr:FindFirstChild((rigcheck and "Right Arm" or "RightHand"))
+									local leftlegobj = aliveplr:FindFirstChild((rigcheck and "Left Leg" or "LeftFoot"))
+									local rightlegobj = aliveplr:FindFirstChild((rigcheck and "Right Leg" or "RightFoot"))
+									local headobj = aliveplr:FindFirstChild("Head")
+									if torsoobj and leftarmobj and rightarmobj and leftlegobj and rightlegobj and headobj then
+										local head = CalculateObjectPosition((headobj.CFrame).p)
+										local headfront = CalculateObjectPosition((headobj.CFrame * cfnew(0, 0, -0.5)).p)
+										local toplefttorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(-1.5, 1, 0)).p)
+										local toprighttorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(1.5, 1, 0)).p)
+										local toptorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(0, 1, 0)).p)
+										local bottomtorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(0, -1, 0)).p)
+										local bottomlefttorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(-0.5, -1, 0)).p)
+										local bottomrighttorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(0.5, -1, 0)).p)
+										local leftarm = CalculateObjectPosition((leftarmobj.CFrame).p)
+										local rightarm = CalculateObjectPosition((rightarmobj.CFrame).p)
+										local leftleg = CalculateObjectPosition((leftlegobj.CFrame).p)
+										local rightleg = CalculateObjectPosition((rightlegobj.CFrame).p)
 										thing.Torso.From = toplefttorso
 										thing.Torso.To = toprighttorso
 										thing.Torso.Visible = true
@@ -1304,8 +1519,8 @@ runcode(function()
 									plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100}
 									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
 									local rootSize = (aliveplr.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + vec3(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - vec3(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
 									rootPos = rootPos
 									if rootVis then
 										if ESPHealthBar["Enabled"] then
@@ -1371,21 +1586,28 @@ runcode(function()
 								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
 								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
 									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
+									if not rootVis then continue end
 									local rigcheck = aliveplr.Humanoid.RigType == Enum.HumanoidRigType.R6
-									if rootVis and plr.Character:FindFirstChild((rigcheck and "Torso" or "UpperTorso")) and plr.Character:FindFirstChild((rigcheck and "Left Arm" or "LeftHand")) and plr.Character:FindFirstChild((rigcheck and "Right Arm" or "RightHand")) and plr.Character:FindFirstChild((rigcheck and "Left Leg" or "LeftFoot")) and plr.Character:FindFirstChild((rigcheck and "Right Leg" or "RightFoot")) and plr.Character:FindFirstChild("Head") then
+									local torsoobj = aliveplr:FindFirstChild((rigcheck and "Torso" or "UpperTorso"))
+									local leftarmobj = aliveplr:FindFirstChild((rigcheck and "Left Arm" or "LeftHand"))
+									local rightarmobj = aliveplr:FindFirstChild((rigcheck and "Right Arm" or "RightHand"))
+									local leftlegobj = aliveplr:FindFirstChild((rigcheck and "Left Leg" or "LeftFoot"))
+									local rightlegobj = aliveplr:FindFirstChild((rigcheck and "Right Leg" or "RightFoot"))
+									local headobj = aliveplr:FindFirstChild("Head")
+									if torsoobj and leftarmobj and rightarmobj and leftlegobj and rightlegobj and headobj then
 										thing.Visible = true
-										local head = CalculateObjectPosition((aliveplr.Head.CFrame).p)
-										local headfront = CalculateObjectPosition((aliveplr.Head.CFrame * CFrame.new(0, 0, -0.5)).p)
-										local toplefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-1.5, 0.8, 0)).p)
-										local toprighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(1.5, 0.8, 0)).p)
-										local toptorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, 0.8, 0)).p)
-										local bottomtorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local bottomlefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-0.5, -0.8, 0)).p)
-										local bottomrighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0.5, -0.8, 0)).p)
-										local leftarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Arm" or "LeftHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local rightarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Arm" or "RightHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local leftleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Leg" or "LeftFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local rightleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Leg" or "RightFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
+										local head = CalculateObjectPosition((headobj.CFrame).p)
+										local headfront = CalculateObjectPosition((headobj.CFrame * cfnew(0, 0, -0.5)).p)
+										local toplefttorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(-1.5, 1, 0)).p)
+										local toprighttorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(1.5, 1, 0)).p)
+										local toptorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(0, 1, 0)).p)
+										local bottomtorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(0, -1, 0)).p)
+										local bottomlefttorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(-0.5, -1, 0)).p)
+										local bottomrighttorso = CalculateObjectPosition((torsoobj.CFrame * cfnew(0.5, -1, 0)).p)
+										local leftarm = CalculateObjectPosition((leftarmobj.CFrame).p)
+										local rightarm = CalculateObjectPosition((rightarmobj.CFrame).p)
+										local leftleg = CalculateObjectPosition((leftlegobj.CFrame).p)
+										local rightleg = CalculateObjectPosition((rightlegobj.CFrame).p)
 										CalculateLine(toplefttorso, toprighttorso, thing.TopTorsoLine)
 										CalculateLine(toptorso, bottomtorso, thing.MiddleTorsoLine)
 										CalculateLine(bottomlefttorso, bottomrighttorso, thing.BottomTorsoLine)
@@ -1416,8 +1638,8 @@ runcode(function()
 								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
 									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
 									local rootSize = (aliveplr.HumanoidRootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position + vec3(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
+									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position - vec3(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
 									rootPos = rootPos
 									if rootVis then
 										thing.Visible = rootVis
@@ -1583,9 +1805,9 @@ runcode(function()
 						local aliveplr = isAlive(plr)
 						if aliveplr and plr ~= lplr and (ArrowsTeammate["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
 							local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.HumanoidRootPart.Position)
-							local camcframeflat = CFrame.new(cam.CFrame.p, cam.CFrame.p + cam.CFrame.lookVector * Vector3.new(1, 0, 1))
+							local camcframeflat = cfnew(cam.CFrame.p, cam.CFrame.p + cam.CFrame.lookVector * vec3(1, 0, 1))
 							local pointRelativeToCamera = camcframeflat:pointToObjectSpace(aliveplr.HumanoidRootPart.Position)
-							local unitRelativeVector = (pointRelativeToCamera * Vector3.new(1, 0, 1)).unit
+							local unitRelativeVector = (pointRelativeToCamera * vec3(1, 0, 1)).unit
 							local rotation = math.atan2(unitRelativeVector.Z, unitRelativeVector.X)
 							thing.Visible = not rootVis
 							thing.Rotation = math.deg(rotation)
@@ -1654,10 +1876,10 @@ runcode(function()
 
 								local aliveplr = isAlive(plr, TracersAlive["Enabled"])
 								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
-									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.Character.HumanoidRootPart).Position)
-									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.Character.HumanoidRootPart).Position)
+									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
+									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
 									if rootScrPos.Z < 0 then
-										tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
+										tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(vec3(0, 0, -1))));
 									end
 									local tracerPos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
 									local screensize = cam.ViewportSize
@@ -1694,7 +1916,7 @@ runcode(function()
 									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
 									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
 									if rootScrPos.Z < 0 then
-										tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
+										tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(vec3(0, 0, -1))));
 									end
 									local tracerPos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
 									local screensize = cam.ViewportSize
@@ -1837,15 +2059,15 @@ runcode(function()
 	
 								local aliveplr = isAlive(plr, NameTagsAlive["Enabled"])
 								if aliveplr and plr ~= lplr and (NameTagsTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
-									local headPos, headVis = cam:WorldToViewportPoint((aliveplr.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, aliveplr.Head.Size.Y + aliveplr.HumanoidRootPart.Size.Y, 0)).Position)
+									local headPos, headVis = cam:WorldToViewportPoint((aliveplr.HumanoidRootPart:GetRenderCFrame() * cfnew(0, aliveplr.Head.Size.Y + aliveplr.HumanoidRootPart.Size.Y, 0)).Position)
 									
 									if headVis then
 										local plrattr = br["EntityService"]:getLivingEntityById(plr:GetAttribute("LivingEntityID"))
-										plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100}
+										plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100, shield = 0}
 										local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
-										local blocksaway = math.floor(((localchar and localchar.HumanoidRootPart.Position or Vector3.new(0,0,0)) - aliveplr.HumanoidRootPart.Position).magnitude / 3)
-										local color = HealthbarColorTransferFunction(plrattr.health / plrattr.maxHealth)
-										thing.Text.Text = (NameTagsDistance["Enabled"] and entity.isAlive and '['..blocksaway..'] ' or '')..displaynamestr..(NameTagsHealth["Enabled"] and ' '..math.floor(plrattr.health).."" or '')
+										local blocksaway = math.floor(((localchar and localchar.HumanoidRootPart.Position or vec3(0,0,0)) - aliveplr.HumanoidRootPart.Position).magnitude / 3)
+										local color = HealthbarColorTransferFunction((plrattr.health + plrattr.shield) / plrattr.maxHealth)
+										thing.Text.Text = (NameTagsDistance["Enabled"] and entity.isAlive and '['..blocksaway..'] ' or '')..displaynamestr..(NameTagsHealth["Enabled"] and ' '..math.floor((plrattr.health + plrattr.shield)).."" or '')
 										thing.Text.Size = 17 * (NameTagsScale["Value"] / 10)
 										thing.Text.Color = getPlayerColor(plr) or Color3.fromHSV(NameTagsColor["Hue"], NameTagsColor["Sat"], NameTagsColor["Value"])
 										thing.Text.Visible = headVis
@@ -1876,15 +2098,15 @@ runcode(function()
 									
 								local aliveplr = isAlive(plr, NameTagsAlive["Enabled"])
 								if aliveplr and plr ~= lplr and (NameTagsTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
-									local headPos, headVis = cam:WorldToViewportPoint((aliveplr.HumanoidRootPart:GetRenderCFrame() * CFrame.new(0, aliveplr.Head.Size.Y + aliveplr.HumanoidRootPart.Size.Y, 0)).Position)
+									local headPos, headVis = cam:WorldToViewportPoint((aliveplr.HumanoidRootPart:GetRenderCFrame() * cfnew(0, aliveplr.Head.Size.Y + aliveplr.HumanoidRootPart.Size.Y, 0)).Position)
 									headPos = headPos
 									
 									if headVis then
 										local plrattr = br["EntityService"]:getLivingEntityById(plr:GetAttribute("LivingEntityID"))
-										plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100}
+										plrattr = plrattr and plrattr.attributes or {health = 100, maxHealth = 100, shield = 0}
 										local rawText = (NameTagsDistance["Enabled"] and localchar and "["..math.floor(((localchar and localchar.HumanoidRootPart.Position or Vector3.zero) - aliveplr.HumanoidRootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(plrattr.health) or "")
-										local color = HealthbarColorTransferFunction(plrattr.health / plrattr.maxHealth)
-										local modifiedText = (NameTagsDistance["Enabled"] and localchar and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor(((localchar and localchar.HumanoidRootPart.Position or Vector3.zero) - aliveplr.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(plrattr.health).."</font>" or '')
+										local color = HealthbarColorTransferFunction((plrattr.health + plrattr.shield) / plrattr.maxHealth)
+										local modifiedText = (NameTagsDistance["Enabled"] and localchar and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor(((localchar and localchar.HumanoidRootPart.Position or Vector3.zero) - aliveplr.HumanoidRootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor((plrattr.health + plrattr.shield)).."</font>" or '')
 										local nametagSize = textservice:GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 										thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 										thing.Text = modifiedText
@@ -1989,7 +2211,7 @@ runcode(function()
 						local localchar = isAlive()
 						if localchar then 
 							for i,v in pairs(collectionservice:GetTagged("ground-item-component")) do 
-								local item = v:GetAttribute("displayItem")
+								local item = v:GetAttribute("itemType")
 								local itemmeta = br["ItemTable"][item]
 								if (v.Position - localchar.HumanoidRootPart.Position).magnitude <= 9.5 and itemmeta then
 									local armor = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
@@ -2010,12 +2232,14 @@ runcode(function()
 									local allowed = (gottenitem and br["ItemTable"][item].maxStackSize and br["ItemTable"][item].maxStackSize > 1 and (br["ItemTable"][item].maxStackSize - gottenitem.stackCount) > 0 or item:find("ammo") or (item:find("armor") and itemmeta.armor.maxShield > armor) or ((not specialitem) and (invcount < 7)))
 									local oldslot
 									if not allowed then 
+										local alreadygot = false
 										for i2,v2 in pairs(inv) do 
 											if v2.item and v2.item.type then
 												local helditemmeta = br["ItemTable"][v2.item.type]
-												if helditemmeta.displayName == itemmeta.displayName then 
+												if helditemmeta.displayName == itemmeta.displayName and (not alreadygot) then 
 													allowed = (itemmeta.rarity or 0) > (helditemmeta.rarity or 0)
 													if allowed then 
+														alreadygot = true
 														oldslot = br["ItemHolderController"].currentSlotId
 														br["ItemHolderController"]:setSlot(i2 - 1)
 													end
@@ -2024,7 +2248,7 @@ runcode(function()
 										end
 									end
 									if allowed then 
-										br["ItemPickupController"]:pickupItem({instance = v, getItemMeta = function() return itemmeta end})
+										br["ItemPickupController"]:pickupItem({instance = v, getItemMeta = function() return itemmeta end, attributes = v:GetAttributes()})
 										if oldslot then 
 											br["ItemHolderController"]:setSlot(oldslot)
 										end
@@ -2094,7 +2318,7 @@ runcode(function()
 						task.wait(0.1)
 						local localchar = isAlive()
 						for i,plr in pairs(collectionservice:GetTagged("ground-item-component")) do 
-							local newval = ((localchar and localchar.HumanoidRootPart.Position or Vector3.new(999999, 99999, 999999)) - plr.Position).Magnitude <= 200
+							local newval = ((localchar and localchar.HumanoidRootPart.Position or vec3(999999, 99999, 999999)) - plr.Position).Magnitude <= 200
 							local ind = table.find(itemsnear, plr)
 							if newval then
 								if not ind then
@@ -2143,10 +2367,10 @@ runcode(function()
 							thing.Parent = ItemESPFolder
 							itemrender[plr] = thing
 						end
-						local headPos, headVis = cam:WorldToViewportPoint(plr.Position + Vector3.new(0, 5, 0))
+						local headPos, headVis = cam:WorldToViewportPoint(plr.Position + vec3(0, 5, 0))
 						
 						if headVis then
-							local item = plr:GetAttribute("displayItem")
+							local item = plr:GetAttribute("itemType")
 							local itemrarity = br["ItemTable"][item] and br["ItemTable"][item].rarity and br["ItemRarityTable"][br["ItemTable"][item].rarity].gradient.colorTop or Color3.new(1, 1, 1)
 							local nametagSize = textservice:GetTextSize(item, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 							thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
@@ -2380,40 +2604,66 @@ runcode(function()
 	local AutoRevive = {["Enabled"] = false}
 	local revivetick = tick()
 	local reviving
-	local heallabel = Instance.new("TextLabel")
-	heallabel.TextSize = 20
-	heallabel.Font = Enum.Font.SourceSans
-	heallabel.TextColor3 = Color3.new(1, 0.1, 0.1)
-	heallabel.TextStrokeTransparency = 0
-	heallabel.TextStrokeColor3 = Color3.new()
-	heallabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-	heallabel.Text = ""
-	heallabel.Parent = GuiLibrary["MainGui"]
+	local billboard
 	AutoRevive = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoRevive",
 		["Function"] = function(callback)
 			if callback then
+				local billboardtween
+				billboard = Instance.new("BillboardGui")
+				billboard.Parent = GuiLibrary["MainGui"]
+				billboard.Name = "Revive"
+				billboard.StudsOffsetWorldSpace = vec3(0, 3, 0)
+				billboard.Size = UDim2.new(0, 64, 0, 64)
+				billboard.Enabled = false
+				billboard.AlwaysOnTop = true
+				local billboardimage = Instance.new("ImageLabel")
+				billboardimage.Size = UDim2.new(0, 44, 0, 44)
+				billboardimage.AnchorPoint = Vector2.new(0.5, 0.5)
+				billboardimage.Position = UDim2.new(0.5, 0, 0.5, 0)
+				billboardimage.BackgroundTransparency = 1
+				billboardimage.ZIndex = 3
+				billboardimage.Image = "rbxassetid://8104352347"
+				billboardimage.Parent = billboard
+				local billboardimagecircle = Instance.new("UICorner")
+				billboardimagecircle.CornerRadius = UDim.new(0, 512)
+				billboardimagecircle.Parent = billboardimage
+				local frame = Instance.new("Frame")
+				frame.Size = UDim2.new(1, 0, 1, 0)
+				frame.BackgroundColor3 = Color3.new(0, 0, 0)
+				frame.BackgroundTransparency = 0.5
+				frame.Parent = billboard
+				local uicorner = Instance.new("UICorner")
+				uicorner.CornerRadius = UDim.new(0, 4)
+				uicorner.Parent = frame
+				local circle = createCircularProgressBar()
+				circle.Parent = frame
 				task.spawn(function()
 					repeat
 						task.wait()
 						local plr = GetNearestHumanoidToPosition(true, 15)
-						heallabel.Visible = false
 						if plr then 
 							local royaleentity = getBattleRoyaleEntity(plr.Player)
 							if royaleentity and royaleentity:GetAttribute("downed") then
 								if reviving ~= plr.Player then 
 									reviving = plr.Player
 									revivetick = tick() + 6
-									heallabel.Text = "Healing: "..(plr.Player.DisplayName or plr.Player.Name).." in 6"
+									if billboardtween then billboardtween:Cancel() end
+									circle.Progress.Value = 0
+									billboardtween = game:GetService("TweenService"):Create(circle.Progress, TweenInfo.new(6, Enum.EasingStyle.Linear), {Value = 1})
+									billboardtween:Play()
 									br["Networking"].NetEvents.client.reviveStarted:fire(plr.Player.UserId)
 								else
-									heallabel.Visible = true
-									heallabel.Text = "Healing: "..(plr.Player.DisplayName or plr.Player.Name).." in "..math.floor((revivetick - tick()) * 10) / 10
+									billboardimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..plr.Player.UserId..'&w=420&h=420'
+									billboard.Adornee = plr.Character.HumanoidRootPart
+									billboard.Enabled = true
 									if revivetick <= tick() then 
-										heallabel.Text = "Healed: "..(plr.Player.DisplayName or plr.Player.Name)
 										br["Networking"].NetEvents.client.revive(br["EntityService"]:getLivingEntityByUserId(plr.Player.UserId):getId())
 									end
 								end
+							else
+								billboard.Adornee = nil
+								billboard.Enabled = false
 							end
 						else
 							if reviving then 
@@ -2422,10 +2672,16 @@ runcode(function()
 									br["Networking"].NetEvents.client.reviveFailed:fire(reviving.UserId)
 								end
 							end
+							billboard.Adornee = nil
+							billboard.Enabled = false
 							reviving = nil
 						end
 					until (not AutoRevive["Enabled"])
 				end)
+			else
+				if billboard then
+					billboard:Destroy()
+				end
 			end
 		end
 	})
@@ -2443,25 +2699,45 @@ runcode(function()
 	local AutoAirdrop = {["Enabled"] = false}
 	local revivetick = tick()
 	local reviving
-	local heallabel = Instance.new("TextLabel")
-	heallabel.TextSize = 20
-	heallabel.Font = Enum.Font.SourceSans
-	heallabel.TextColor3 = Color3.new(0.1, 1, 0.1)
-	heallabel.TextStrokeTransparency = 0
-	heallabel.TextStrokeColor3 = Color3.new()
-	heallabel.Position = UDim2.new(0.5, 0, 0.5, 20)
-	heallabel.Text = ""
-	heallabel.Parent = GuiLibrary["MainGui"]
+	local billboard
 	AutoAirdrop = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoAirdrop",
 		["Function"] = function(callback)
 			if callback then
+				local billboardtween
+				billboard = Instance.new("BillboardGui")
+				billboard.Parent = GuiLibrary["MainGui"]
+				billboard.Name = "Airdrop"
+				billboard.StudsOffsetWorldSpace = vec3(0, 3, 0)
+				billboard.Size = UDim2.new(0, 64, 0, 64)
+				billboard.Enabled = false
+				billboard.AlwaysOnTop = true
+				local billboardimage = Instance.new("ImageLabel")
+				billboardimage.Size = UDim2.new(0, 44, 0, 44)
+				billboardimage.AnchorPoint = Vector2.new(0.5, 0.5)
+				billboardimage.Position = UDim2.new(0.5, 0, 0.5, 0)
+				billboardimage.BackgroundTransparency = 1
+				billboardimage.ZIndex = 3
+				billboardimage.Image = "rbxassetid://8104352347"
+				billboardimage.Parent = billboard
+				local billboardimagecircle = Instance.new("UICorner")
+				billboardimagecircle.CornerRadius = UDim.new(0, 512)
+				billboardimagecircle.Parent = billboardimage
+				local frame = Instance.new("Frame")
+				frame.Size = UDim2.new(1, 0, 1, 0)
+				frame.BackgroundColor3 = Color3.new(0, 0, 0)
+				frame.BackgroundTransparency = 0.5
+				frame.Parent = billboard
+				local uicorner = Instance.new("UICorner")
+				uicorner.CornerRadius = UDim.new(0, 4)
+				uicorner.Parent = frame
+				local circle = createCircularProgressBar()
+				circle.Parent = frame
 				task.spawn(function()
 					repeat
 						task.wait()
 						local localchar = isAlive()
 						if localchar then
-							heallabel.Visible = false
 							local found
 							for i,v in pairs(collectionservice:GetTagged("AirdropPackage")) do 
 								if v.PrimaryPart and (localchar.HumanoidRootPart.Position - v.PrimaryPart.Position).Magnitude <= 12 then 
@@ -2469,13 +2745,15 @@ runcode(function()
 									if reviving ~= v then 
 										reviving = v
 										revivetick = tick() + 3
-										heallabel.Text = "Opening Airdrop in 3"
+										if billboardtween then billboardtween:Cancel() end
+										circle.Progress.Value = 0
+										billboardtween = game:GetService("TweenService"):Create(circle.Progress, TweenInfo.new(3, Enum.EasingStyle.Linear), {Value = 1})
+										billboardtween:Play()
 									else
-										heallabel.Visible = true
-										heallabel.Text = "Opening Airdrop in "..math.floor((revivetick - tick()) * 10) / 10
+										billboard.Adornee = v.PrimaryPart
+										billboard.Enabled = true
 										if revivetick <= tick() then 
 											br["Networking"].NetEvents.client.openAirdropPackage(v)
-											heallabel.Text = "Opening Airdrop"
 										end
 									end
 									break
@@ -2483,12 +2761,20 @@ runcode(function()
 							end
 							if not found then 
 								reviving = nil
+								billboard.Adornee = nil
+								billboard.Enabled = false
 							end
 						else
 							reviving = nil
+							billboard.Adornee = nil
+							billboard.Enabled = false
 						end
 					until (not AutoAirdrop["Enabled"])
 				end)
+			else
+				if billboard then
+					billboard:Destroy()
+				end
 			end
 		end
 	})
