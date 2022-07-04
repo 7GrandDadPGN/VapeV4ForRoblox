@@ -1021,10 +1021,12 @@ runcode(function()
 							if plr then 
 								local shootpos = plr.Character.Head.Position
 								local shootmag = (origin - shootpos).Magnitude
-								if helditem.projectile then 
-									if shootmag <= (helditem.projectile.maxDistance or 1500) then 
-										local newshootpos2 = LaunchDirection(origin, shootpos, helditem.projectile.speed, workspace.Gravity - (workspace.Gravity / helditem.projectile.drop), false)
-										local newshootpos = FindLeadShot(shootpos, brvelo[plr.Player.Name], helditem.projectile.speed, origin, Vector3.zero, workspace.Gravity - (workspace.Gravity / helditem.projectile.drop))
+								if helditem.gun.projectile then 
+									if shootmag <= (helditem.gun.projectile.maxDistance or 1500) then 
+										local shoottime = (shootmag / 1500)
+										local shootmagspeed = shoottime > 0.3 and 1.2 or 2
+										local newshootpos2 = Vector3.new(0, shootpos.Y + (shoottime / helditem.gun.projectile.drop / shootmagspeed), 0)
+										local newshootpos = FindLeadShot(shootpos, brvelo[plr.Player.Name], helditem.gun.projectile.speed, origin, Vector3.zero, 0)
 										direction = CFrame.lookAt(origin, Vector3.new(newshootpos.X, newshootpos2.Y, newshootpos.Z)).lookVector * 1000
 										currentplr = plr.Player
 										currentplrpos = shootmag
