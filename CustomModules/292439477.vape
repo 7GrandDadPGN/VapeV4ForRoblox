@@ -346,6 +346,9 @@ getfunctions = function()
 					break
 				end
 			end
+			if rawget(v, "getTime") then 
+				phantomforces["GameClock"] = v
+			end
 			if rawget(v, "isdeployed") then
 				phantomforces["Menu"] = v
 			end
@@ -743,6 +746,7 @@ phantomforces["Character"].updatecharacter = function(spawnPos)
 end
 phantomforces["Network"].send = function(self, method, ...)
 	if checkcaller() then return oldsend(self, method, ...) end
+	if not method then return oldsend(self, method, ...) end
     local args = {...}
 	local checkmethod = method
 	checkmethod = checkmethod:gsub("%W", "")
@@ -985,8 +989,8 @@ phantomforces["Network"].send = function(self, method, ...)
 			thirdpersonstuff.updater["set"..checkmethod](args[1])
 		end
 		if checkmethod == "equip" then
-			local gunstats = realreq(game:GetService("ReplicatedStorage").GunModules[phantomforces["GameLogic"].currentgun.name])
-			local model = game:GetService("ReplicatedStorage").ExternalModels[phantomforces["GameLogic"].currentgun.name]
+			local gunstats = realreq(game:GetService("ReplicatedStorage").Content.ProductionContent.GunModules[phantomforces["GameLogic"].currentgun.name])
+			local model = game:GetService("ReplicatedStorage").Content.ProductionContent.ExternalModels[phantomforces["GameLogic"].currentgun.name]
 			thirdpersonstuff.updater[phantomforces["GameLogic"].currentgun.knife and "equipknife" or "equip"](gunstats, model)
 		end
 	end
@@ -3157,7 +3161,7 @@ runcode(function()
 									if char then
 										local ray = workspace:FindPartOnRayWithWhitelist(Ray.new(phantomforces["Camera"].cframe.p, CFrame.lookAt(phantomforces["Camera"].cframe.p, char.Head.Position + vec3(0, 0.5, 0)).LookVector * 1000), {table.unpack(phantomforces["Ray"].raycastwhitelist), char})
 										if ray and ray.Parent == char then
-											phantomforces["Network"]:send(phantomforces["SpotRemote"], plr, true)
+											phantomforces["Network"]:send(phantomforces["SpotRemote"], plr, true, phantomforces["GameClock"].getTime())
 										end
 									end
 								end
