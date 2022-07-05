@@ -4935,13 +4935,14 @@ runcode(function()
 		if killauratarget["Enabled"] then
 			table.insert(attackedplayers, plr)
 		end
-		if killaurahitdelay > tick() then 
+		if killaurahitdelay >= tick() then 
 			return nil
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
 		local selfrootpos = (oldcloneroot or entity.character.HumanoidRootPart).Position
 		local selfpos = selfrootpos + (killaurarange["Value"] > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
 		if sword and sword["tool"] then
+			killaurahitdelay = tick() + bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed + 0.1
 			local attacksuccess = killaurarealremote:InvokeServer({
 				["weapon"] = sword["tool"],
 				["chargedAttack"] = {chargeRatio = 1},
@@ -4955,9 +4956,6 @@ runcode(function()
 					["selfPosition"] = hashvec(selfpos)
 				}
 			})
-			if attacksuccess then 
-				killaurahitdelay = tick() + bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed
-			end
 		end
 	end
 
@@ -5112,7 +5110,7 @@ runcode(function()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
-							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, 1, false, oldcloneroot and oldcloneroot.Position)
+							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, killauratargets["Value"], false, oldcloneroot and oldcloneroot.Position)
 							local attackedplayers = {}
 							local firstplayercodedone = {done = false}
 							for i,plr in pairs(plrs) do
