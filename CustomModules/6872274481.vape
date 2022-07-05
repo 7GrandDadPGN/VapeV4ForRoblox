@@ -2696,7 +2696,7 @@ runcode(function()
 	})
 end)
 
-runcode(function()
+--[[runcode(function()
 	local oldclick
 	local oldattackspeeds = {}
 	local noclickdelay = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
@@ -2726,7 +2726,7 @@ runcode(function()
 		end, 
 		["HoverText"] = "Disables Bedwars's delay between attacks on swords"
 	})
-end)
+end)]]
 
 runcode(function()
 	local Sprint = {["Enabled"] = false}
@@ -4955,7 +4955,7 @@ runcode(function()
 					["selfPosition"] = hashvec(selfpos)
 				}
 			})
-			if attacksuccess and bedwars["ItemTable"][sword["tool"].Name].sword.respectAttackSpeedOnServer then 
+			if attacksuccess then 
 				killaurahitdelay = tick() + bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed
 			end
 		end
@@ -5112,7 +5112,7 @@ runcode(function()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
-							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, killauratargets["Value"], false, oldcloneroot and oldcloneroot.Position)
+							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, 1, false, oldcloneroot and oldcloneroot.Position)
 							local attackedplayers = {}
 							local firstplayercodedone = {done = false}
 							for i,plr in pairs(plrs) do
@@ -6691,7 +6691,7 @@ runcode(function()
 							lastonground = true
 							realflyspeed = realflyspeed * getSpeedMultiplier(true)
 						end
-						realflyspeed = (allowspeed == false and 20 or realflyspeed) * allowed
+						realflyspeed = (flymode["Value"] == "Normal" and allowspeed == false and 20 or realflyspeed) * allowed
 						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, 20 * getSpeedMultiplier()))
 						local flypos2 = (entity.character.Humanoid.MoveDirection * math.max((realflyspeed) - 20, 0)) * delta
 						entity.character.HumanoidRootPart.Transparency = 1
