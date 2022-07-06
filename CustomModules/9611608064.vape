@@ -2466,7 +2466,7 @@ runcode(function()
 			local item = getActiveItem(v.Character)
 			if item then 
 				local itemmeta = br["ItemTable"][item]
-				if itemmeta and itemmeta.damage >= (health.health + health.shield) then 
+				if itemmeta and itemmeta.damage and itemmeta.damage >= (health.health + health.shield) then 
 					return v.Player
 				end
 			end
