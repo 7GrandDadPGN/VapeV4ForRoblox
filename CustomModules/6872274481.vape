@@ -1934,12 +1934,12 @@ local function getEquipped()
     return {["Object"] = obj and obj.tool, ["Type"] = typetext}
 end
 
-local function GetAllNearestHumanoidToPosition(player, distance, amount, targetcheck, overridepos)
+local function GetAllNearestHumanoidToPosition(player, distance, amount, targetcheck, overridepos, sortfunc)
 	local returnedplayer = {}
 	local currentamount = 0
     if entity.isAlive then -- alive check
         for i, v in pairs(entity.entityList) do -- loop through players
-            if (v.Targetable or targetcheck) and targetCheck(v) and currentamount < amount then -- checks
+            if (v.Targetable or targetcheck) and targetCheck(v) then -- checks
                 local mag = (entity.character.HumanoidRootPart.Position - v.RootPart.Position).magnitude
 				if overridepos and mag > distance then 
 					mag = (overridepos - v.RootPart.Position).magnitude
@@ -1976,6 +1976,10 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 					currentamount = currentamount + 1
                 end
 			end
+		end
+		if currentamount > 0 and sortfunc then 
+			table.sort(returnedplayer, sortfunc)
+			returnedplayer = {returnedplayer[1]}
 		end
 	end
 	return returnedplayer -- table of attackable entities
@@ -4846,6 +4850,7 @@ end)
 runcode(function()
 	local killauraboxes = {}
     local killauratargetframe = {["Players"] = {["Enabled"] = false}}
+	local killaurasortmethod = {["Value"] = "Distance"}
     local killaurarealremote = bedwars["ClientHandler"]:Get(bedwars["AttackRemote"])["instance"]
     local killauramethod = {["Value"] = "Normal"}
 	local killauraothermethod = {["Value"] = "Normal"}
@@ -4881,6 +4886,41 @@ runcode(function()
 	local targettable = {}
 	local targetsize = 0
 	local animationdelay = tick()
+
+	local function getStrength(plr)
+		local inv = inventories[plr.Player]
+		local strength = 0
+		local strongestsword = 0
+		if inv then
+			for i,v in pairs(inv.items) do 
+				local itemmeta = bedwars["ItemTable"][v.itemType]
+				if itemmeta and itemmeta.sword and itemmeta.sword.damage > strongestsword then 
+					strongestsword = itemmeta.sword.damage / 100
+				end	
+			end
+			strength = strength + strongestsword
+			for i,v in pairs(inv.armor) do 
+				local itemmeta = bedwars["ItemTable"][v.itemType]
+				if itemmeta and itemmeta.armor then 
+					strength = strength + (itemmeta.armor.damageReductionMultiplier or 0)
+				end
+			end
+			strength = strength
+		end
+		return strength
+	end
+
+	local killaurasortmethods = {
+		Distance = function(a, b)
+			return (a.RootPart.Position - entity.character.HumanoidRootPart.Position).Magnitude < (b.RootPart.Position - entity.character.HumanoidRootPart.Position).Magnitude
+		end,
+		Health = function(a, b) 
+			return a.Character.Humanoid.Health < b.Character.Humanoid.Health
+		end,
+		Threat = function(a, b) 
+			return getStrength(a) > getStrength(b)
+		end,
+	}
 
 	local function newAttackEntity(plr, firstplayercodedone, attackedplayers)
 		if not entity.isAlive then
@@ -5115,7 +5155,7 @@ runcode(function()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
-							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, 1, false, oldcloneroot and oldcloneroot.Position)
+							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, 1, false, (oldcloneroot and oldcloneroot.Position or entity.character.HumanoidRootPart.Position), killaurasortmethods[killaurasortmethod["Value"]])
 							local attackedplayers = {}
 							local firstplayercodedone = {done = false}
 							for i,plr in pairs(plrs) do
@@ -5197,6 +5237,13 @@ runcode(function()
         ["HoverText"] = "Attack players around you\nwithout aiming at them."
     })
     killauratargetframe = Killaura.CreateTargetWindow({})
+	local sortmethods = {"Distance"}
+	for i,v in pairs(killaurasortmethods) do if i ~= "Distance" then table.insert(sortmethods, i) end end
+	killaurasortmethod = Killaura.CreateDropdown({
+		["Name"] = "Sort",
+		["Function"] = function() end,
+		["List"] = sortmethods
+	})
     killaurarange = Killaura.CreateSlider({
         ["Name"] = "Attack range",
         ["Min"] = 1,
