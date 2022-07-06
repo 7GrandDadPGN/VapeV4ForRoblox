@@ -266,7 +266,7 @@ local function getLivingEntity(plr)
 	end
 end
 
-local function GetNearestHumanoidToMouse(player, distance, checkvis, origin)
+local function GetNearestHumanoidToMouse(player, distance, checkvis, origin, part)
     local closest, returnedplayer = distance, nil
 	for i, v in pairs(getAttackable()) do
 		local vec, vis = cam:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
@@ -276,7 +276,7 @@ local function GetNearestHumanoidToMouse(player, distance, checkvis, origin)
 				if checkvis then 
 					rayparams.FilterDescendantsInstances = {lplr.Character}
 					local campos = origin or cam.CFrame.p
-					local res = br["GameQueryUtil"]:raycast(campos, CFrame.lookAt(campos, v.Character.Head:GetRenderCFrame().p).lookVector * 1000, rayparams)
+					local res = br["GameQueryUtil"]:raycast(campos, CFrame.lookAt(campos, v.Character[part or "Head"]:GetRenderCFrame().p).lookVector * 1000, rayparams)
 					if res == nil or res.Instance and res.Instance:IsDescendantOf(v.Character) ~= true then continue end
 				end
 				closest = mag
@@ -995,6 +995,7 @@ end
 runcode(function()
 	local SilentAimFOV = {["Value"] = 0}
 	local SilentAimAutoFire = {["Enabled"] = false}
+	local SilentAimPosition = {["Value"] = "Head"}
 	local aimfovframecolor = {["Value"] = 0.44}
 	local aimfovshow = {["Enabled"] = false}
 	local aimfovframe
@@ -1017,9 +1018,9 @@ runcode(function()
 						local helditem = br["ItemHolderController"]:getActiveItemType()
 						helditem = helditem and br["ItemTable"][helditem] or {}
 						if helditem.gun and helditem.gun.aimcone then
-							local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, origin)
+							local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, origin, SilentAimPosition["Value"])
 							if plr then 
-								local shootpos = plr.Character.Head.Position
+								local shootpos = plr.Character[SilentAimPosition["Value"]].Position
 								local shootmag = (origin - shootpos).Magnitude
 								if helditem.gun.projectile then 
 									if shootmag <= (helditem.gun.projectile.maxDistance or 1500) then 
@@ -1085,6 +1086,11 @@ runcode(function()
 				end
 			end
 		end
+	})
+	SilentAimPosition = SilentAim.CreateDropdown({
+		["Name"] = "Aim Position",
+		["List"] = {"Head", "HumanoidRootPart", "LowerTorso"},
+		["Function"] = function() end
 	})
 	SilentAimFOV = SilentAim.CreateSlider({
 		["Name"] = "FOV",
@@ -2447,6 +2453,28 @@ runcode(function()
 		end
 	end
 
+	local function getActiveItem(mod)
+		for i,v in pairs(mod:GetChildren()) do 
+			if v:GetAttribute("ActiveItem") then return v.Name end
+		end
+	end
+
+	local function isScary()
+		local health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
+		health = health and health.attributes or {health = 100, maxHealth = 100, shield = 100, maxShield = 100}
+		for i,v in pairs(getAttackable()) do 
+			local item = getActiveItem(v.Character)
+			if item then 
+				local itemmeta = br["ItemTable"][item]
+				if itemmeta and itemmeta.damage >= (health.health + health.shield) then 
+					return v.Player
+				end
+			end
+		end
+		return nil
+	end
+
+	local warned
 	local AutoHeal = {["Enabled"] = false}
 	AutoHeal = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoHeal",
@@ -2461,7 +2489,7 @@ runcode(function()
 						local health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
 						health = health and health.attributes or {health = 100, maxHealth = 100, shield = 100, maxShield = 100}
 						if item then 
-							if health.health <= (health.maxHealth - (healthrequirement >= health.maxHealth and health.maxHealth / 2 or healthrequirement)) then 
+							if health.health <= (health.maxHealth - (healthrequirement >= health.maxHealth and health.maxHealth / 2 or healthrequirement)) or isScary() then 
 								local oldhealth = health.health
 								br["Networking"].NetEvents.client.consume:fire(item)
 								for i = 1, 10 do 
@@ -2475,7 +2503,7 @@ runcode(function()
 							end
 						end
 						if item2 then 
-							if health.shield <= (health.maxShield - (requirement >= health.maxShield and health.maxShield / 2 or requirement)) then 
+							if health.shield <= (health.maxShield - (requirement >= health.maxShield and health.maxShield or requirement)) or isScary() then 
 								local oldhealth = health.shield
 								br["Networking"].NetEvents.client.consume:fire(item2)
 								for i = 1, 10 do 
@@ -2488,6 +2516,11 @@ runcode(function()
 								end
 							end
 						end
+						local scary = isScary()
+						if warned ~= scary and warned then 
+							createwarning("AutoHeal", (scary.DisplayName or scary.Name).." is looking at you with a sniper!", 10)
+						end
+						warned = scary
 					until not AutoHeal["Enabled"]
 				end)
 			end
