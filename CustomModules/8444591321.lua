@@ -3,7 +3,7 @@ local checkpublicreponum = 0
 local checkpublicrepo
 checkpublicrepo = function(id)
 	local suc, req = pcall(function() return requestfunc({
-		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".vape",
+		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".lua",
 		Method = "GET"
 	}) end)
 	if not suc then
@@ -32,8 +32,8 @@ checkpublicrepo = function(id)
 end
 
 shared.CustomSaveVape = 6872274481
-if pcall(function() readfile("vape/CustomModules/6872274481.vape") end) then
-	loadstring(readfile("vape/CustomModules/6872274481.vape"))()
+if pcall(function() readfile("vape/CustomModules/6872274481.lua") end) then
+	loadstring(readfile("vape/CustomModules/6872274481.lua"))()
 else
 	local publicrepo = checkpublicrepo("6872274481")
 	if publicrepo then
