@@ -402,11 +402,10 @@ runcode(function()
 		["BaseGun"] = require(repstorage.TS.gun.guns["base-gun"])
 	}
 	OldGenerateCommand = br["ChickynoidClient"].GenerateCommand
-	local oldsniped
+	local oldsniped = tick()
 	br["ChickynoidClient"].GenerateCommand = function(self, ...)
 		local res = OldGenerateCommand(self, ...)
 		if NoSlowdown["Enabled"] then 
-			res.sc = false
 			res.sp = true
 		end
 		if SilentAim["Enabled"] then 
@@ -428,8 +427,12 @@ runcode(function()
 			res.fb = true
 			res.f = 1
 		end
-		if SpinBot["Enabled"] and res.f == nil then 
-			res.fa = cam.CFrame.p + CFrame.Angles(0, math.rad(tick() * 1000 % 360), 0).lookVector * 1000
+		if SpinBot["Enabled"] then 
+			if res.f then
+				oldsniped = tick() + 0.1
+			elseif oldsniped <= tick() then
+				res.fa = cam.CFrame.p + CFrame.Angles(0, math.rad(tick() * 1000 % 360), 0).lookVector * 1000
+			end
 		end
 		return res
 	end
@@ -2419,116 +2422,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local function getHealingItem()
-		local inv = br["InventoryController"]:getPlayerInventory()
-		inv = inv and inv.groups.default or {}
-		local healingitems = {}
-		for i2,v2 in pairs(inv) do 
-			if v2.item and v2.item.type ~= "" and br["ItemTable"][v2.item.type].bandage then 
-				table.insert(healingitems, {type = v2.item.type, amount = br["ItemTable"][v2.item.type].bandage.healAmount})
-			end
-		end
-		if #healingitems > 0 then 
-			table.sort(healingitems, function(a, b) return a.amount < b.amount end)
-			return healingitems[1].type, healingitems[1].amount
-		else
-			return nil
-		end
-	end
-
-	local function getShieldItem()
-		local inv = br["InventoryController"]:getPlayerInventory()
-		inv = inv and inv.groups.default or {}
-		local healingitems = {}
-		for i2,v2 in pairs(inv) do 
-			if v2.item and v2.item.type ~= "" and br["ItemTable"][v2.item.type].shield then 
-				table.insert(healingitems, {type = v2.item.type, amount = br["ItemTable"][v2.item.type].shield.shieldAmount})
-			end
-		end
-		if #healingitems > 0 then 
-			table.sort(healingitems, function(a, b) return a.amount < b.amount end)
-			return healingitems[1].type, healingitems[1].amount
-		else
-			return nil
-		end
-	end
-
-	local function getActiveItem(mod)
-		for i,v in pairs(mod:GetChildren()) do 
-			if v:GetAttribute("ActiveItem") then return v.Name end
-		end
-	end
-
-	local function isScary()
-		local health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
-		health = health and health.attributes or {health = 100, maxHealth = 100, shield = 100, maxShield = 100}
-		for i,v in pairs(getAttackable()) do 
-			local item = getActiveItem(v.Character)
-			if item then 
-				local itemmeta = br["ItemTable"][item]
-				if itemmeta and itemmeta.damage and itemmeta.damage >= (health.health + health.shield) then 
-					return v.Player
-				end
-			end
-		end
-		return nil
-	end
-
-	local warned
-	local AutoHeal = {["Enabled"] = false}
-	AutoHeal = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoHeal",
-		["Function"] = function(callback)
-			if callback then
-				task.spawn(function()
-					repeat
-						task.wait()
-						local item, healthrequirement = getHealingItem()
-						local item2, requirement = getShieldItem()
-						local done 
-						local health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
-						health = health and health.attributes or {health = 100, maxHealth = 100, shield = 100, maxShield = 100}
-						if item then 
-							if health.health <= (health.maxHealth - (healthrequirement >= health.maxHealth and health.maxHealth / 2 or healthrequirement)) or isScary() then 
-								local oldhealth = health.health
-								br["Networking"].NetEvents.client.consume:fire(item)
-								for i = 1, 10 do 
-									task.wait(0.1)
-									health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
-									health = health and health.attributes or {health = 100, maxHealth = 100, shield = 100, maxShield = 100}
-									if oldhealth ~= health.health then 
-										break
-									end
-								end
-							end
-						end
-						if item2 then 
-							if health.shield <= (health.maxShield - (requirement >= health.maxShield and health.maxShield or requirement)) or isScary() then 
-								local oldhealth = health.shield
-								br["Networking"].NetEvents.client.consume:fire(item2)
-								for i = 1, 10 do 
-									task.wait(0.1)
-									health = br["EntityService"]:getLivingEntityById(lplr:GetAttribute("LivingEntityID"))
-									health = health and health.attributes or {health = 100, maxHealth = 100, shield = 100, maxShield = 100}
-									if oldhealth ~= health.shield then 
-										break
-									end
-								end
-							end
-						end
-						local scary = isScary()
-						if warned ~= scary and warned then 
-							createwarning("AutoHeal", (scary.DisplayName or scary.Name).." is looking at you with a sniper!", 10)
-						end
-						warned = scary
-					until not AutoHeal["Enabled"]
-				end)
-			end
-		end
-	})
-end)
-
-runcode(function()
 	local oldspinfunc
 	local oldspinfunc2
 	SpinBot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -2593,13 +2486,23 @@ end)
 
 runcode(function()
 	local AutoToxic = {["Enabled"] = false}
+	local AutoToxicPhrases = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 	local AutoToxicPhrases2 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 	local justsaid = ""
 	local oldadd
+	local autoleaveconnection
 	AutoToxic = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoToxic",
 		["Function"] = function(callback)
 			if callback then 
+				task.spawn(function()
+					local matchdoc = br["MatchManagerController"]:waitForMatchDocument()
+					autoleaveconnection = matchdoc:watchAttribute("matchState", function(state)
+						if state == 2 then 
+							repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS | vxpe on top", "All")
+						end
+					end)
+				end)
 				oldadd = br["DamageEvents"].livingEntityDeath.OnClientEvent:connect(function(p7, p8, p9)
 					if not p9.fromEntity then return end
 					local ent = br["EntityService"]:getLivingEntityById(p7)
@@ -2626,8 +2529,15 @@ runcode(function()
 				if oldadd then 
 					oldadd:Disconnect()
 				end
+				if autoleaveconnection then 
+					autoleaveconnection:Disconnect()
+				end
 			end
 		end
+	})
+	AutoToxicPhrases = AutoToxic.CreateTextList({
+		["Name"] = "ToxicList",
+		["TempText"] = "phrase (win)",
 	})
 	AutoToxicPhrases2 = AutoToxic.CreateTextList({
 		["Name"] = "ToxicList2",
