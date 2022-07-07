@@ -575,8 +575,6 @@ if shared.VapeExecuted then
 				if obj then 
 					if v["Type"] == "OptionsButton" then
 						if v["Enabled"] then
-							--print(api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"], i, v["Enabled"])
-							--local time = tick()
 							api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
 						end
 						if v["Keybind"] ~= "" then
