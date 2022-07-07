@@ -8626,39 +8626,10 @@ runcode(function()
 							end
 						end
 					end)
-					if AnticheatBypassAutoConfig["Enabled"] then 
-						repeat task.wait() until queueType ~= "bedwars_test"
-						if AnticheatBypass["Enabled"] then
-							local amountofplayers = 0
-							for i,v in pairs(bedwars["QueueMeta"][queueType].teams) do 
-								amountofplayers = amountofplayers + v.maxPlayers
-							end
-							if amountofplayers > 24 and AnticheatBypassAutoConfigBig["Enabled"] then
-								allowspeed = true
-								pcall(function()
-									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](42)
-									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("CFrame")
-									GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](42)
-									GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
-									GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("AnticheatBypass")
-								end)
-							else
-								allowspeed = false
-								pcall(function()
-									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](amountofplayers > 24 and AnticheatBypassAutoConfigSpeed2["Value"] or AnticheatBypassAutoConfigSpeed["Value"])
-									GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("Normal")
-									GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](amountofplayers > 24 and AnticheatBypassAutoConfigSpeed2["Value"] or AnticheatBypassAutoConfigSpeed["Value"])
-									GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("Normal")
-									GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpModeDropdown"]["Api"]["SetValue"]("Normal")
-								end)
-								anticheatbypassenable()
-							end
-						end
-					else
-						shared.VapeRealCharacter = nil
-						allowspeed = false
-						anticheatbypassenable()
-					end
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](30)
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("CFrame")
+					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](30)
+					GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
 				end)
 			else
 				allowspeed = true
