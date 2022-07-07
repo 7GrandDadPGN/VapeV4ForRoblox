@@ -32,7 +32,7 @@ checkpublicrepo = function(id)
 end
 
 shared.CustomSaveVape = 8542275097
-if shared.luaDeveloper then
+if shared.VapeDeveloper then
 	if pcall(function() readfile("vape/CustomModules/8542275097.lua") end) then
 		loadstring(readfile("vape/CustomModules/8542275097.lua"))()
 	end
