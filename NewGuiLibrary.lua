@@ -106,18 +106,16 @@ if shared.VapeExecuted then
 		game.Loaded:Wait()
 	end
 
-	if not is_sirhurt_closure and syn and syn.protect_gui then
+	if gethui then
+		local gui = Instance.new("ScreenGui")
+		gui.Name = randomString()
+		gui.DisplayOrder = 999
+		gui.Parent = gethui()
+	elseif not is_sirhurt_closure and syn and syn.protect_gui then
 		local gui = Instance.new("ScreenGui")
 		gui.Name = randomString()
 		gui.DisplayOrder = 999
 		syn.protect_gui(gui)
-		gui.Parent = game:GetService("CoreGui")
-		api["MainGui"] = gui
-	elseif gethui then
-		local gui = Instance.new("ScreenGui")
-		gui.Name = randomString()
-		gui.DisplayOrder = 999
-		--gui.Parent = gethui()
 		gui.Parent = game:GetService("CoreGui")
 		api["MainGui"] = gui
 	elseif game:GetService("CoreGui"):FindFirstChild('RobloxGui') then
@@ -580,7 +578,6 @@ if shared.VapeExecuted then
 							--print(api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"], i, v["Enabled"])
 							--local time = tick()
 							api["ObjectsThatCanBeSaved"][i]["Api"]["ToggleButton"](false)
-							--print('Loaded '..i..' in '..tick() - time)
 						end
 						if v["Keybind"] ~= "" then
 							api["ObjectsThatCanBeSaved"][i]["Api"]["SetKeybind"](v["Keybind"])
@@ -6229,7 +6226,9 @@ if shared.VapeExecuted then
 			frame:GetPropertyChangedSignal("Position"):connect(function()
 				obj.Position = UDim2.new(obj.Position.X.Scale, obj.Position.X.Offset, frame.Position.Y.Scale, frame.Position.Y.Offset)
 			end)
-			frame:TweenPosition(newpos, dir, style, tim, override)
+			pcall(function()
+				frame:TweenPosition(newpos, dir, style, tim, override)
+			end)
 			frame.Parent = nil
 			task.wait(tim)
 			frame:Remove()

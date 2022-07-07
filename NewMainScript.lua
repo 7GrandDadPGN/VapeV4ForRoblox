@@ -105,7 +105,7 @@ local checkpublicreponum = 0
 local checkpublicrepo
 checkpublicrepo = function(id)
 	local suc, req = pcall(function() return requestfunc({
-		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".vape",
+		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".lua",
 		Method = "GET"
 	}) end)
 	if not suc then
@@ -1064,21 +1064,19 @@ local TargetInfoDisplayNames = TargetInfo.CreateToggle({
 	["Function"] = function() end,
 	["Default"] = true
 })
+local TargetInfoBackground = {["Enabled"] = false}
 local targetinfobkg1 = Instance.new("Frame")
 targetinfobkg1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 targetinfobkg1.BorderSizePixel = 0
+targetinfobkg1.BackgroundTransparency = 1
 targetinfobkg1.Size = UDim2.new(0, 220, 0, 72)
-targetinfobkg1.Position = UDim2.new(0, 0, 0, 0)
+targetinfobkg1.Position = UDim2.new(0, 0, 0, 5)
 targetinfobkg1.Parent = TargetInfo.GetCustomChildren()
-local targetinfobkg2 = targetinfobkg1:Clone()
-targetinfobkg2.ZIndex = 0
-targetinfobkg2.Position = UDim2.new(0, 0, 0, -6)
-targetinfobkg2.Size = UDim2.new(0, 220, 0, 86)
-targetinfobkg2.Parent = targetinfobkg1
 local targetinfobkg3 = Instance.new("Frame")
 targetinfobkg3.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 targetinfobkg3.Size = UDim2.new(0, 220, 0, 80)
-targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
+targetinfobkg3.BackgroundTransparency = 0.25
+targetinfobkg3.Position = UDim2.new(0, 0, 0, 0)
 targetinfobkg3.Name = "MainInfo"
 targetinfobkg3.Parent = targetinfobkg1
 local targetname = Instance.new("TextLabel")
@@ -1095,19 +1093,6 @@ targetname.ZIndex = 2
 targetname.TextXAlignment = Enum.TextXAlignment.Left
 targetname.TextYAlignment = Enum.TextYAlignment.Top
 targetname.Parent = targetinfobkg3
-local targethealth = Instance.new("TextLabel")
-targethealth.TextColor3 = Color3.fromRGB(95, 94, 95)
-targethealth.Font = Enum.Font.SourceSans
-targethealth.Size = UDim2.new(0, 0, 0, 0)
-targethealth.TextSize = 17
-targethealth.Position = UDim2.new(0, 210, 0, 6)
-targethealth.BackgroundTransparency = 1
-targethealth.Text = '20'..' hp'
-targethealth.TextScaled = false
-targethealth.ZIndex = 2
-targethealth.TextXAlignment = Enum.TextXAlignment.Right
-targethealth.TextYAlignment = Enum.TextYAlignment.Top
-targethealth.Parent = targetinfobkg3
 local targethealthbkg = Instance.new("Frame")
 targethealthbkg.BackgroundColor3 = Color3.fromRGB(43, 42, 43)
 targethealthbkg.Size = UDim2.new(0, 138, 0, 4)
@@ -1115,41 +1100,54 @@ targethealthbkg.Position = UDim2.new(0, 72, 0, 29)
 targethealthbkg.Parent = targetinfobkg3
 local targethealthgreen = Instance.new("Frame")
 targethealthgreen.BackgroundColor3 = Color3.fromRGB(40, 137, 109)
-targethealthgreen.Size = UDim2.new(1, 0, 0, 4)
+targethealthgreen.Size = UDim2.new(1, 0, 1, 0)
 targethealthgreen.ZIndex = 3
 targethealthgreen.Parent = targethealthbkg
+local targethealthyellow = Instance.new("Frame")
+targethealthyellow.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+targethealthyellow.Size = UDim2.new(0, 0, 1, 0)
+targethealthyellow.ZIndex = 4
+targethealthyellow.AnchorPoint = Vector2.new(1, 0)
+targethealthyellow.Position = UDim2.new(-1, 0, 0, 0)
+targethealthyellow.Parent = targethealthgreen
 local targetimage = Instance.new("ImageLabel")
 targetimage.Size = UDim2.new(0, 61, 0, 61)
 targetimage.BackgroundTransparency = 1
 targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..game:GetService("Players").LocalPlayer.UserId..'&w=420&h=420'
 targetimage.Position = UDim2.new(0, 5, 0, 10)
 targetimage.Parent = targetinfobkg3
-local round1 = Instance.new("UICorner")
-round1.CornerRadius = UDim.new(0, 4)
-round1.Parent = targetinfobkg2
 local round2 = Instance.new("UICorner")
 round2.CornerRadius = UDim.new(0, 4)
 round2.Parent = targetinfobkg3
 local round3 = Instance.new("UICorner")
-round3.CornerRadius = UDim.new(0, 8)
+round3.CornerRadius = UDim.new(0, 1024)
 round3.Parent = targethealthbkg
 local round4 = Instance.new("UICorner")
-round4.CornerRadius = UDim.new(0, 8)
+round4.CornerRadius = UDim.new(0, 1024)
 round4.Parent = targethealthgreen
+local round42 = Instance.new("UICorner")
+round42.CornerRadius = UDim.new(0, 1024)
+round42.Parent = targethealthyellow
 local round5 = Instance.new("UICorner")
 round5.CornerRadius = UDim.new(0, 4)
 round5.Parent = targetimage
+TargetInfoBackground = TargetInfo.CreateToggle({
+	["Name"] = "Use Background",
+	["Function"] = function(callback) 
+		targetinfobkg3.BackgroundTransparency = callback and 0.25 or 1
+		targetname.TextColor3 = callback and Color3.fromRGB(162, 162, 162) or Color3.new(1, 1, 1)
+		targetname.Size = UDim2.new(0, 80, 0, callback and 16 or 18)
+		targethealthbkg.Size = UDim2.new(0, 138, 0, callback and 4 or 7)
+	end,
+	["Default"] = true
+})
 local oldhealth = 100
 local allowedtween = true
 TargetInfo.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):connect(function()
 	if TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.new(0, 220, 0, 0) then
 		targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
-		targetinfobkg2.BackgroundTransparency = 0
-		targetinfobkg1.BackgroundTransparency = 0
 	else
 		targetinfobkg3.Position = UDim2.new(0, 0, 0, 40)
-		targetinfobkg2.BackgroundTransparency = 1
-		targetinfobkg1.BackgroundTransparency = 1
 	end
 end)
 shared.VapeTargetInfo = {
@@ -1159,8 +1157,8 @@ shared.VapeTargetInfo = {
 			for i,v in pairs(tab) do
 				local plr = game:GetService("Players"):FindFirstChild(i)
 				targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
-				targethealthgreen:TweenSize(UDim2.new(math.clamp(v["Health"] / v["MaxHealth"], 0, 1), 0, 0, 4), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
-				targethealth.Text = (math.floor((v["Health"] / 5) * 10) / 10).." hp"
+				targethealthgreen:TweenSize(UDim2.new(math.clamp(v["Health"] / v["MaxHealth"], 0, 1), 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
+				targethealthyellow:TweenSize(UDim2.new(math.clamp((v["Health"] / v["MaxHealth"]) - 1, 0, 1), 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
 				targethealthgreen.BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])
 				targetname.Text = (TargetInfoDisplayNames["Enabled"] and plr and plr.DisplayName or i)
 			end
@@ -1252,19 +1250,38 @@ local tabcategorycolor = {
 	["WorldWindow"] = Color3.fromRGB(70, 73, 16)
 }
 
+local function getSaturation(val)
+	local sat = 0.9
+	if val < 0.03 then 
+		sat = 0.75 + (0.15 * math.clamp(val / 0.03, 0, 1))
+	end
+	if val > 0.59 then 
+		sat = 0.9 - (0.4 * math.clamp((val - 0.59) / 0.07, 0, 1))
+	end
+	if val > 0.68 then 
+		sat = 0.5 + (0.4 * math.clamp((val - 0.68) / 0.14, 0, 1))
+	end
+	if val > 0.89 then 
+		sat = 0.9 - (0.15 * math.clamp((val - 0.89) / 0.1, 0, 1))
+	end
+	return sat
+end
+
 GuiLibrary["UpdateUI"] = function()
 	pcall(function()
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-		--onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		local maincolor = getSaturation(GuiLibrary["Settings"]["GUIObject"]["Color"])
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+		--onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
 		local rainbowcolor2 = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.05) or 0)
 		rainbowcolor2 = rainbowcolor2 % 1
+        local gradsat = textguigradient["Enabled"] and getSaturation(rainbowcolor2) or maincolor
 		onethinggrad.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1)),
-			ColorSequenceKeypoint.new(1, Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 1, 1))
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], gradsat, 1))
 		})
 		onethinggrad2.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], (rainbowcolor2 == GuiLibrary["Settings"]["GUIObject"]["Color"] or (not textguigradient["Enabled"])) and 0 or 1, 1)),
-			ColorSequenceKeypoint.new(1, Color3.fromHSV(rainbowcolor2, (rainbowcolor2 == GuiLibrary["Settings"]["GUIObject"]["Color"] or (not textguigradient["Enabled"])) and 0 or 1, 1))
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], (rainbowcolor2 == GuiLibrary["Settings"]["GUIObject"]["Color"] or (not textguigradient["Enabled"])) and 0 or maincolor, 1)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(rainbowcolor2, (rainbowcolor2 == GuiLibrary["Settings"]["GUIObject"]["Color"] or (not textguigradient["Enabled"])) and 0 or gradsat, 1))
 		})
 		onetext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
 		onecustomtext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
@@ -1274,7 +1291,7 @@ GuiLibrary["UpdateUI"] = function()
 		for i2,v2 in pairs(textwithoutthing:split("\n")) do
 			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (i2 + (textguigradient["Enabled"] and 2 or 0))) or 0)
 			rainbowcolor = rainbowcolor % 1
-			local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
+			local newcolor = Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1)
 			local splittext = v2:split(":")
 			splittext = #splittext > 1 and {splittext[1], " "..splittext[2]} or {v2, ""}
 			if TextGuiUseCategoryColor["Enabled"] and GuiLibrary["ObjectsThatCanBeSaved"][splittext[1].."OptionsButton"] and tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][splittext[1].."OptionsButton"]["Object"].Parent.Parent.Name.."Window"] then
@@ -1296,24 +1313,24 @@ GuiLibrary["UpdateUI"] = function()
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "TargetFrame" then
 				if v["Object2"].Visible then
-					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
 				end
 			end
 			if v["Type"] == "TargetButton" then
 				if v["Api"]["Enabled"] then
-					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
 				end
 			end
 			if v["Type"] == "CircleListFrame" then
 				if v["Object2"].Visible then
-					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
 				end
 			end
 			if (v["Type"] == "Button" or v["Type"] == "ButtonMain") and v["Api"]["Enabled"] then
 				buttons = buttons + 1
 				local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * tabsortorder[i]) or 0)
 				rainbowcolor = rainbowcolor % 1
-				local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
+				local newcolor = Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1)
 				v["Object"].ButtonText.TextColor3 = newcolor
 				if v["Object"]:FindFirstChild("ButtonIcon") then
 					v["Object"].ButtonIcon.ImageColor3 = newcolor
@@ -1321,13 +1338,13 @@ GuiLibrary["UpdateUI"] = function()
 			end
 			if v["Type"] == "OptionsButton" then
 				if v["Api"]["Enabled"] then
-					local newcolor = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					local newcolor = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
 					if not oldrainbow then
 						local rainbowcolor2 = table.find(tabsortorder2, v["Object"].Parent.Parent.Name)
 						rainbowcolor2 = rainbowcolor2 and (rainbowcolor2 - 1) > 0 and GuiLibrary["ObjectsThatCanBeSaved"][tabsortorder2[rainbowcolor2 - 1].."Window"]["SortOrder"] or 0
 						local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (rainbowcolor2 + v["SortOrder"])) or 0)
 						rainbowcolor = rainbowcolor % 1
-						newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
+						newcolor = Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1)
 					end
 					v["Object"].BackgroundColor3 = newcolor
 				end
@@ -1336,31 +1353,31 @@ GuiLibrary["UpdateUI"] = function()
 				if v["Api"]["Enabled"] then
 					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
 					rainbowcolor = rainbowcolor % 1
-					local newcolor = Color3.fromHSV(rainbowcolor, 0.7, 0.9)
+					local newcolor = Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1)
 					v["Object"].ImageColor3 = newcolor
 				end
 			end
 			if (v["Type"] == "Toggle" or v["Type"] == "ToggleMain") and v["Api"]["Enabled"] then
-					v["Object"].ToggleFrame1.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					v["Object"].ToggleFrame1.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
 			end
 			if v["Type"] == "Slider" or v["Type"] == "SliderMain" then
-				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-				v["Object"].Slider.FillSlider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+				v["Object"].Slider.FillSlider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
 			end
 			if v["Type"] == "TwoSlider" then
-				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-				v["Object"].Slider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-				v["Object"].Slider.ButtonSlider2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+				v["Object"].Slider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+				v["Object"].Slider.ButtonSlider2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
 			end
 		end
 		local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
 		rainbowcolor = rainbowcolor % 1
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(rainbowcolor, 0.7, 0.9) or Color3.fromRGB(199, 199, 199))
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1) or Color3.fromRGB(199, 199, 199))
 		for i3, v3 in pairs(ProfilesTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
 		--	pcall(function()
 				if v3:IsA("TextButton") and v3.ItemText.Text == GuiLibrary["CurrentProfile"] then
-					v3.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-					v3.ImageButton.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					v3.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+					v3.ImageButton.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
 					v3.ItemText.TextColor3 = Color3.new(1, 1, 1)
 					v3.ItemText.TextStrokeTransparency = 0.75
 				end
@@ -1601,9 +1618,9 @@ if shared.VapeIndependent then
 	shared.VapeFullyLoaded = true
 	return GuiLibrary
 else
-	loadstring(GetURL("AnyGame.vape"))()
-	if betterisfile("vape/CustomModules/"..game.PlaceId..".vape") then
-		loadstring(readfile("vape/CustomModules/"..game.PlaceId..".vape"))()
+	loadstring(GetURL("AnyGame.lua"))()
+	if betterisfile("vape/CustomModules/"..game.PlaceId..".lua") then
+		loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
 	else
 		local publicrepo = checkpublicrepo(game.PlaceId)
 		if publicrepo then
@@ -1611,8 +1628,8 @@ else
 		end
 	end
 	if shared.VapePrivate then
-		if pcall(function() readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape") end) then
-			loadstring(readfile("vapeprivate/CustomModules/"..game.PlaceId..".vape"))()
+		if pcall(function() readfile("vapeprivate/CustomModules/"..game.PlaceId..".lua") end) then
+			loadstring(readfile("vapeprivate/CustomModules/"..game.PlaceId..".lua"))()
 		end	
 	end
 	GuiLibrary["LoadSettings"](shared.VapeCustomProfile)
