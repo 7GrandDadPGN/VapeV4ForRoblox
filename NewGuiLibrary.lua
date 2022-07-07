@@ -110,7 +110,8 @@ if shared.VapeExecuted then
 		local gui = Instance.new("ScreenGui")
 		gui.Name = randomString()
 		gui.DisplayOrder = 999
-		gui.Parent = game:GetService("CoreGui")
+		gui.Parent = gethui()
+		api["MainGui"] = gui
 	elseif not is_sirhurt_closure and syn and syn.protect_gui then
 		local gui = Instance.new("ScreenGui")
 		gui.Name = randomString()
