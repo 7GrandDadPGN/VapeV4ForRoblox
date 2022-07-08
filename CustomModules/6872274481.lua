@@ -776,7 +776,7 @@ end
 local function getShield(char)
 	local shield = 0
 	for i,v in pairs(char:GetAttributes()) do 
-		if i:find("Shield") then 
+		if i:find("Shield") and type(v) == "number" then 
 			shield = shield + v
 		end
 	end
@@ -6746,7 +6746,7 @@ runcode(function()
 							lastonground = onground
 							allowed = 1
 							if flyacboost["Enabled"] then
- 								realflyspeed = realflyspeed * getSpeedMultiplier(true) + (flymode["Value"] == "Normal" and 14 or 6)
+ 								realflyspeed = realflyspeed * getSpeedMultiplier(true) + (flymode["Value"] == "Normal" and 14 or 4)
 							end
 						else
 							onground = true
@@ -8624,9 +8624,9 @@ runcode(function()
 							end
 						end
 					end)
-					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](30)
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](28)
 					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("CFrame")
-					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](30)
+					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](28)
 					GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
 				end)
 			else
@@ -8976,6 +8976,21 @@ runcode(function()
 		["Max"] = 99,
 		["Default"] = 70,
 		["Function"] = function() end
+	})
+end)
+
+runcode(function()
+	local TPForward = {["Enabled"] = false}
+	TPForward = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "TPForward",
+		["Function"] = function(callback)
+			if callback then
+				if entity.isAlive then 
+					entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + entity.character.HumanoidRootPart.CFrame.lookVector * 5.5
+				end
+				TPForward["ToggleButton"](false)
+			end
+		end
 	})
 end)
 
