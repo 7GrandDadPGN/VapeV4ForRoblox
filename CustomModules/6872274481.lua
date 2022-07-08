@@ -4741,7 +4741,7 @@ runcode(function()
 						end
 					end
 				else
-					createwarning("LongJump", "Wait "..(math.floor((HighJumpTick - tick()) * 10) / 10).." before retoggling.", 1)
+					createwarning("HighJump", "Wait "..(math.floor((HighJumpTick - tick()) * 10) / 10).." before retoggling.", 1)
 				end
 				HighJump["ToggleButton"](false)
 			end
@@ -8980,13 +8980,19 @@ runcode(function()
 end)
 
 runcode(function()
+	local TPForwardDelay = tick()
 	local TPForward = {["Enabled"] = false}
 	TPForward = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "TPForward",
 		["Function"] = function(callback)
 			if callback then
 				if entity.isAlive then 
-					entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + entity.character.HumanoidRootPart.CFrame.lookVector * 5.5
+					if TPForwardDelay <= tick() then
+						entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + entity.character.HumanoidRootPart.CFrame.lookVector * 5.5
+						TPForwardDelay = tick() + 5
+					else
+						createwarning("TPForward", "Wait "..(math.floor((TPForwardDelay - tick()) * 10) / 10).." before retoggling.", 1)
+					end
 				end
 				TPForward["ToggleButton"](false)
 			end
