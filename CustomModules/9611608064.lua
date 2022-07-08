@@ -28,7 +28,6 @@ local brvelo = {}
 local storedshahashes = {}
 local silentaimfire = false
 local triggerbotfire = false
-local NoSlowdown = {["Enabled"] = false}
 local SilentAim = {["Enabled"] = false}
 local SpinBot = {["Enabled"] = false}
 local TriggerBot = {["Enabled"] = false}
@@ -343,6 +342,7 @@ runcode(function()
 	repeat task.wait() until Flamework.isInitialized
 	br = {
 		["ActiveItemController"] = require(lplr.PlayerScripts.TS.controllers.global["held-item"]["active-item-controller"]).ActiveItemController,
+		["BaseGun"] = require(repstorage.TS.gun.guns["base-gun"]),
 		["ClientStoreController"] = Flamework.resolveDependency("client/controllers/global/rodux/rodux-controller@RoduxController"),
 		["CrosshairController"] = Flamework.resolveDependency("client/controllers/global/crosshair/crosshair-controller@CrosshairController"),
 		["CheckWhitelisted"] = function(plr, ownercheck)
@@ -405,9 +405,6 @@ runcode(function()
 	local oldsniped = tick()
 	br["ChickynoidClient"].GenerateCommand = function(self, ...)
 		local res = OldGenerateCommand(self, ...)
-		if NoSlowdown["Enabled"] then 
-			res.sp = true
-		end
 		if SilentAim["Enabled"] then 
 			res.fb = true
 			if silentaimfire then 
@@ -998,6 +995,7 @@ end
 runcode(function()
 	local SilentAimFOV = {["Value"] = 0}
 	local SilentAimAutoFire = {["Enabled"] = false}
+	local SilentAimAutoPart = {["Enabled"] = true}
 	local SilentAimPosition = {["Value"] = "Head"}
 	local aimfovframecolor = {["Value"] = 0.44}
 	local aimfovshow = {["Enabled"] = false}
@@ -1021,16 +1019,27 @@ runcode(function()
 						local helditem = br["ItemHolderController"]:getActiveItemType()
 						helditem = helditem and br["ItemTable"][helditem] or {}
 						if helditem.gun and helditem.gun.aimcone then
-							local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, origin, SilentAimPosition["Value"])
+							local aimpart = SilentAimPosition["Value"]
+							if SilentAimAutoPart["Value"] then 
+								aimpart = defaultspread.bulletSpread <= 3 and "Head" or "HumanoidRootPart"
+							end
+							local neworigin = origin
+							if br["ChickynoidClient"].localChickynoid then
+								neworigin = CFrame.Angles(0, br["ChickynoidClient"].localChickynoid.simulation.state.angle, 0) * Vector3.new(1.5, 0, 0) + (br["ChickynoidClient"].localChickynoid.simulation.state.pos + Vector3.new(0, 1.8, 0))
+							end
+							local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, neworigin, aimpart)
 							if plr then 
-								local shootpos = plr.Character[SilentAimPosition["Value"]].Position
-								local shootmag = (origin - shootpos).Magnitude
+								local shootpos = plr.Character[aimpart].Position + (brvelo[plr.Player.Name] and brvelo[plr.Player.Name].Unit * 0.1 or Vector3.zero)
+								local shootmag = (neworigin - shootpos).Magnitude
+								if SilentAimAutoPart["Value"] then 
+									aimpart = defaultspread.bulletSpread <= 3 and shootmag <= 600 and "Head" or "HumanoidRootPart"
+								end
 								if helditem.gun.projectile then 
 									if shootmag <= (helditem.gun.projectile.maxDistance or 1500) then 
 										local shoottime = (shootmag / 1500)
 										local shootmagspeed = shoottime > 0.3 and 1.2 or 2
 										local newshootpos2 = Vector3.new(0, shootpos.Y + (shoottime / helditem.gun.projectile.drop / shootmagspeed), 0)
-										local newshootpos = FindLeadShot(shootpos, brvelo[plr.Player.Name], helditem.gun.projectile.speed, origin, Vector3.zero, 0)
+										local newshootpos = FindLeadShot(shootpos, brvelo[plr.Player.Name], helditem.gun.projectile.speed, neworigin, Vector3.zero, 0)
 										direction = CFrame.lookAt(origin, Vector3.new(newshootpos.X, newshootpos2.Y, newshootpos.Z)).lookVector * 1000
 										currentplr = plr.Player
 										currentplrpos = shootmag
@@ -1094,6 +1103,11 @@ runcode(function()
 		["Name"] = "Aim Position",
 		["List"] = {"Head", "HumanoidRootPart", "LowerTorso"},
 		["Function"] = function() end
+	})
+	SilentAimAutoPart = SilentAim.CreateToggle({
+		["Name"] = "Auto Position",
+		["Function"] = function() end,
+		["Default"] = true
 	})
 	SilentAimFOV = SilentAim.CreateSlider({
 		["Name"] = "FOV",
@@ -2633,10 +2647,36 @@ runcode(function()
 end)
 
 runcode(function()
-	NoSlowdown = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "NoSlowdown",
-		["Function"] = function() end,
-		["HoverText"] = "Prevents slowdown when consuming items"
+	local BulletTracers = {["Enabled"] = false}
+	local bulletconnection
+	local oldbulleteffect
+	BulletTracers = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "BulletTracers",
+		["Function"] = function(callback)
+			if callback then 
+				bulletconnection = br["ChickynoidClient"].weaponsClient.OnBulletImpact:Connect(function(p4, p5)
+					br["BaseGun"]:unpackPacket(p5)
+					if p5.player and p5.player.userId == lplr.UserId then 
+						local distance = (p5.origin - p5.position).Magnitude
+						local p = Instance.new("Part")
+						p.Anchored = true
+						p.CanCollide = false
+						p.Transparency = 0.5
+						p.Color = Color3.fromRGB(0, 255, 0)
+						p.Material = Enum.Material.Neon
+						p.Size = vec3(0.05, 0.05, distance)
+						p.CFrame = CFrame.lookAt(p5.origin, p5.position)*CFrame.new(0, 0, -distance/2)
+						br["GameQueryUtil"]:setQueryIgnored(p, true)
+						p.Parent = lplr.Character
+						game:GetService("Debris"):AddItem(p, 3)
+					end
+				end)
+			else
+				if bulletconnection then 
+					bulletconnection:Disconnect()
+				end
+			end
+		end
 	})
 end)
 
