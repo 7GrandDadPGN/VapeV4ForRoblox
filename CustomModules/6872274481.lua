@@ -935,6 +935,8 @@ runcode(function()
 			["AngelUtil"] = require(repstorage.TS.games.bedwars.kit.kits.angel["angel-kit"]),
 			["AppController"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.controllers["app-controller"]).AppController,
 			["AttackRemote"] = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.SwordController)["attackEntity"])),
+			["BatteryRemote"] = getremote(debug.getconstants(debug.getproto(debug.getproto(KnitClient.Controllers.BatteryController.KnitStart, 1), 1))),
+			["BatteryEffectController"] = KnitClient.Controllers.BatteryEffectsController,
             ["BalloonController"] = KnitClient.Controllers.BalloonController,
             ["BlockController"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out).BlockEngine,
             ["BlockController2"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client.placement["block-placer"]).BlockPlacer,
@@ -2042,9 +2044,9 @@ runcode(function()
 	local handround = Instance.new("UICorner")
 	handround.CornerRadius = UDim.new(0, 4)
 	handround.Parent = handsquare
-	local helemtsquare = handsquare:Clone()
-	helemtsquare.Position = UDim2.new(0, 100, 0, 39)
-	helemtsquare.Parent = targetinfo["Object"].GetCustomChildren().Frame.MainInfo
+	local helmetsquare = handsquare:Clone()
+	helmetsquare.Position = UDim2.new(0, 100, 0, 39)
+	helmetsquare.Parent = targetinfo["Object"].GetCustomChildren().Frame.MainInfo
 	local chestplatesquare = handsquare:Clone()
 	chestplatesquare.Position = UDim2.new(0, 127, 0, 39)
 	chestplatesquare.Parent = targetinfo["Object"].GetCustomChildren().Frame.MainInfo
@@ -2056,6 +2058,12 @@ runcode(function()
 	uselesssquare.Parent = targetinfo["Object"].GetCustomChildren().Frame.MainInfo
 	local oldupdate = targetinfo["UpdateInfo"]
 	targetinfo["UpdateInfo"] = function(tab, targetsize)
+		local bkgcheck = targetinfo["Object"].GetCustomChildren().Frame.MainInfo.BackgroundTransparency == 1
+		handsquare.BackgroundTransparency = bkgcheck and 1 or 0
+		helmetsquare.BackgroundTransparency = bkgcheck and 1 or 0
+		chestplatesquare.BackgroundTransparency = bkgcheck and 1 or 0
+		bootssquare.BackgroundTransparency = bkgcheck and 1 or 0
+		uselesssquare.BackgroundTransparency = bkgcheck and 1 or 0
 		pcall(function()
 			for i,v in pairs(tab) do
 				local plr = players[i]
@@ -2067,9 +2075,9 @@ runcode(function()
 						handsquare.Image = ""
 					end
 					if inventory.armor[4] then
-						helemtsquare.Image = bedwars["getIcon"](inventory.armor[4], true)
+						helmetsquare.Image = bedwars["getIcon"](inventory.armor[4], true)
 					else
-						helemtsquare.Image = ""
+						helmetsquare.Image = ""
 					end
 					if inventory.armor[5] then
 						chestplatesquare.Image = bedwars["getIcon"](inventory.armor[5], true)
@@ -8982,13 +8990,14 @@ end)
 runcode(function()
 	local TPForwardDelay = tick()
 	local TPForward = {["Enabled"] = false}
+	local TPForwardValue = {["Value"] = 12}
 	TPForward = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "TPForward",
 		["Function"] = function(callback)
 			if callback then
 				if entity.isAlive then 
 					if TPForwardDelay <= tick() then
-						entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + entity.character.HumanoidRootPart.CFrame.lookVector * 5.5
+						entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + entity.character.HumanoidRootPart.CFrame.lookVector * (TPForwardValue["Value"] - .5)
 						TPForwardDelay = tick() + 5
 					else
 						createwarning("TPForward", "Wait "..(math.floor((TPForwardDelay - tick()) * 10) / 10).." before retoggling.", 1)
@@ -8997,6 +9006,13 @@ runcode(function()
 				TPForward["ToggleButton"](false)
 			end
 		end
+	})
+	TPForwardValue = TPForward.CreateSlider({
+		["Name"] = "TP",
+		["Function"] = function() end,
+		["Min"] = 1,
+		["Max"] = 6,
+		["Default"] = 6
 	})
 end)
 
@@ -9062,6 +9078,20 @@ runcode(function()
 												v:Destroy()
 												collectionservice:RemoveTag(v, "treeOrb")
 											end
+										end
+									end
+								until (not AutoKit["Enabled"])
+							end)
+						elseif kit == "battery" then 
+							task.spawn(function()
+								repeat
+									task.wait()
+									local itemdrops = bedwars["BatteryEffectController"].liveBatteries
+									for i,v in pairs(itemdrops) do
+										if entity.isAlive and AutoKit["Enabled"] and (entity.character.HumanoidRootPart.Position - v.position).magnitude <= 10 then
+											bedwars["ClientHandler"]:Get(bedwars["BatteryRemote"]):SendToServer({
+												batteryId = i
+											})
 										end
 									end
 								until (not AutoKit["Enabled"])
