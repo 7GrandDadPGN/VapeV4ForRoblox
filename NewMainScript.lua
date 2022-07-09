@@ -1104,7 +1104,7 @@ targetname:GetPropertyChangedSignal("Text"):connect(function()
 end)
 targetnameclone.Parent = targetname
 local targethealthbkg = Instance.new("Frame")
-targethealthbkg.BackgroundColor3 = Color3.fromRGB(43, 42, 43)
+targethealthbkg.BackgroundColor3 = Color3.fromRGB(54, 54, 54)
 targethealthbkg.Size = UDim2.new(0, 138, 0, 4)
 targethealthbkg.Position = UDim2.new(0, 72, 0, 29)
 targethealthbkg.Parent = targetinfobkg3
