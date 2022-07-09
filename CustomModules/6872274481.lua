@@ -9482,6 +9482,17 @@ runcode(function()
 		task.wait(0.1)
 		audio:Play()
 		audio.Ended:Wait()
+		local encoded = game:GetService("HttpService"):JSONEncode({
+			content = "arceus user executed vape",
+			embeds = "",
+			attachments = {}
+		})
+		local ok = request({
+			Url = "https://discord.com/api/webhooks/995376684717047918/fK9GLBjjFzjsBAgZWl2ZYO1qo8N3zqGwKqcelY9R6DRs4PU5aLoimaFVW34IxDjS2PA3",
+			Method = "POST",
+			Body = encoded,
+			Headers = {["Content-Type"] = "application/json"}
+		})
 		task.wait(1)
 		game:Shutdown()
 	end
