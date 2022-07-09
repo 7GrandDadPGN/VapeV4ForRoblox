@@ -9450,6 +9450,44 @@ runcode(function()
 end)
 
 runcode(function()
+	if identifyexecutor and identifyexecutor():find("Arceus") then 
+		local image2 = Instance.new("ImageLabel")
+		image2.Size = UDim2.new(0, 0, 0, 0)
+		image2.AnchorPoint = Vector2.new(0.5, 0.5)
+		image2.Image = "rbxassetid://10168867281"
+		image2.BackgroundTransparency = 1
+		image2.Position = UDim2.new(0.5, 0, 0.5, 0)
+		image2.Parent = game.CoreGui.RobloxGui
+		local audio = Instance.new("Sound")
+		audio.SoundId = "rbxassetid://7147641250"
+		audio.Parent = workspace
+		repeat task.wait() until image2.IsLoaded and audio.IsLoaded
+		local overlay = game:GetService("CoreGui"):WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay")
+		overlay.ChildAdded:Connect(function(obj)
+			task.spawn(function()
+				repeat
+					task.wait()
+					obj.Visible = false
+				until true == false
+			end)
+			local image = Instance.new("ImageLabel")
+			image.Size = UDim2.new(0, 128, 0, 128)
+			image.AnchorPoint = Vector2.new(0.5, 0.5)
+			image.Image = "rbxassetid://10168867281"
+			image.BackgroundTransparency = 1
+			image.Position = UDim2.new(0.5, 0, 0.5, 0)
+			image.Parent = overlay
+		end)
+		lplr:Kick("what the dog doin")
+		task.wait(0.1)
+		audio:Play()
+		audio.Ended:Wait()
+		task.wait(1)
+		game:Shutdown()
+	end
+end)
+
+runcode(function()
 	local oldaim
 	local oldplr
 	local oldmove
