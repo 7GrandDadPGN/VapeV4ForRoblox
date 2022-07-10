@@ -275,7 +275,7 @@ local function GetNearestHumanoidToMouse(player, distance, checkvis, origin, par
 				if checkvis then 
 					rayparams.FilterDescendantsInstances = {lplr.Character}
 					local campos = origin or cam.CFrame.p
-					local res = br["GameQueryUtil"]:raycast(campos, CFrame.lookAt(campos, v.Character[part or "Head"]:GetRenderCFrame().p).lookVector * 1000, rayparams)
+					local res = br["GameQueryUtil"]:raycast(campos, CFrame.lookAt(campos, v.Character[part or "Head"].Position).lookVector * 1000, rayparams)
 					if res == nil or res.Instance and res.Instance:IsDescendantOf(v.Character) ~= true then continue end
 				end
 				closest = mag
@@ -295,7 +295,7 @@ local function GetNearestHumanoidToPosition(player, distance, checkvis)
 			if mag <= closest then
 				if checkvis then 
 					rayparams.FilterDescendantsInstances = {lplr.Character}
-					local res = br["GameQueryUtil"]:raycast(cam.CFrame.p, CFrame.lookAt(cam.CFrame.p, v.Character.Head:GetRenderCFrame().p).lookVector * 1000, rayparams)
+					local res = br["GameQueryUtil"]:raycast(cam.CFrame.p, CFrame.lookAt(cam.CFrame.p, v.Character.Head.Position).lookVector * 1000, rayparams)
 					if res == nil or res.Instance and res.Instance:IsDescendantOf(v.Character) ~= true then continue end
 				end
 				closest = mag
@@ -1039,7 +1039,7 @@ runcode(function()
 										local shoottime = (shootmag / 1500)
 										local shootmagspeed = shoottime > 0.3 and 1.2 or 2
 										local newshootpos2 = Vector3.new(0, shootpos.Y + (shoottime / helditem.gun.projectile.drop / shootmagspeed), 0)
-										local newshootpos = FindLeadShot(shootpos, brvelo[plr.Player.Name], helditem.gun.projectile.speed, neworigin, Vector3.zero, 0)
+										local newshootpos = FindLeadShot(shootpos, (brvelo[plr.Player.Name] or Vector3.zero) * 1.1, helditem.gun.projectile.speed, neworigin, Vector3.zero, 0)
 										direction = CFrame.lookAt(origin, Vector3.new(newshootpos.X, newshootpos2.Y, newshootpos.Z)).lookVector * 1000
 										currentplr = plr.Player
 										currentplrpos = shootmag
@@ -1879,6 +1879,7 @@ runcode(function()
 	local TracersTransparency = {["Value"] = 1}
 	local TracersStartPosition = {["Value"] = "Middle"}
 	local TracersEndPosition = {["Value"] = "Head"}
+	local TracersThreat = {["Enabled"] = true}
 	local TracersTeammates = {["Enabled"] = true}
 	local TracersAlive = {["Enabled"] = false}
 	local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
@@ -1886,6 +1887,7 @@ runcode(function()
 		["Function"] = function(callback) 
 			if callback then
 				RunLoops:BindToRenderStep("Tracers", 500, function()
+					local localchar = isAlive()
 					for i,plr in pairs(players:GetChildren()) do
 							local thing
 							if TracersDrawing["Enabled"] then
@@ -1901,6 +1903,13 @@ runcode(function()
 
 								local aliveplr = isAlive(plr, TracersAlive["Enabled"])
 								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									if TracersThreat["Enabled"] and localchar then 
+										local comparedlookvec = CFrame.lookAt(aliveplr.Head.Position, localchar.Head.Position).lookVector
+										local compareto = aliveplr.Head.CFrame.lookVector
+										local check = math.atan2(comparedlookvec.X, comparedlookvec.Z)
+										local check2 = math.atan2(compareto.X, comparedlookvec.Z)
+										if math.abs(check - check2) > 0.2 or math.abs(comparedlookvec.Y - compareto.Y) > 0.2 then continue end
+									end
 									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
 									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
 									if rootScrPos.Z < 0 then
@@ -1938,6 +1947,13 @@ runcode(function()
 								
 								local aliveplr = isAlive(plr, TracersAlive["Enabled"])
 								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or plr:GetAttribute("teamId") ~= lplr:GetAttribute("teamId")) then
+									if TracersThreat["Enabled"] and localchar then 
+										local comparedlookvec = CFrame.lookAt(aliveplr.Head.Position, localchar.Head.Position).lookVector
+										local compareto = aliveplr.Head.CFrame.lookVector
+										local check = math.atan2(comparedlookvec.X, comparedlookvec.Z)
+										local check2 = math.atan2(compareto.X, comparedlookvec.Z)
+										if math.abs(check - check2) > 0.2 or math.abs(comparedlookvec.Y - compareto.Y) > 0.2 then continue end
+									end
 									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
 									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.HumanoidRootPart).Position)
 									if rootScrPos.Z < 0 then
@@ -2010,6 +2026,10 @@ runcode(function()
 			end
 		end
 	})
+	TracersThreat = Tracers.CreateToggle({
+		["Name"] = "Threat Check",
+		["Function"] = function() end
+	})
 	TracersAlive = Tracers.CreateToggle({
 		["Name"] = "Alive Check",
 		["Function"] = function() end
@@ -2059,9 +2079,9 @@ runcode(function()
 			["Function"] = function(callback) 
 				if callback then
 					RunLoops:BindToRenderStep("NameTags", 500, function()
+						local localchar = isAlive()
 						for i,plr in pairs(players:GetChildren()) do
 							local thing
-							local localchar = isAlive()
 							if NameTagsDrawing["Enabled"] then
 								if nametagsfolderdrawing[plr.Name] then
 									thing = nametagsfolderdrawing[plr.Name]
