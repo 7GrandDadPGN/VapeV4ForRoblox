@@ -71,6 +71,7 @@ local currentinventory = {
 local Hitboxes = {["Enabled"] = false}
 local Reach = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
+local flyspeedboost = {["Enabled"] = false}
 local nobob = {["Enabled"] = false}
 local AnticheatBypass = {["Enabled"] = false}
 local AnticheatBypassCombatCheck = {["Enabled"] = false}
@@ -1076,8 +1077,8 @@ runcode(function()
         }
 		oldbob = bedwars["ViewmodelController"]["playAnimation"]
         bedwars["ViewmodelController"]["playAnimation"] = function(Self, id, ...)
-            if id == 11 and nobob["Enabled"] and entity.isAlive then
-                id = 4
+            if id == 19 and nobob["Enabled"] and entity.isAlive then
+                id = 11
             end
             return oldbob(Self, id, ...)
         end
@@ -4979,9 +4980,9 @@ runcode(function()
 			firstplayercodedone.done = true
 			if animationdelay <= tick() then
 				animationdelay = tick() + 0.17
-				bedwars["ViewmodelController"]:playAnimation(7)
+				bedwars["ViewmodelController"]:playAnimation(15)
 				if plrentity ~= nil and entity.isAlive and killauraswing["Enabled"] == false then
-					plrentity:playAnimation(0)
+					plrentity:playAnimation(1)
 				else
 					if plrentity == nil then
 						plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
@@ -5109,10 +5110,10 @@ runcode(function()
                     return oldsound(tab, soundid, ...)
                 end
                 bedwars["ViewmodelController"]["playAnimation"] = function(Self, id, ...)
-                    if id == 7 and killauranear and killauraswing["Enabled"] and entity.isAlive then
+                    if id == 15 and killauranear and killauraswing["Enabled"] and entity.isAlive then
                         return nil
                     end
-                    if id == 7 and killauranear and killauraanimation["Enabled"] and entity.isAlive then
+                    if id == 15 and killauranear and killauraanimation["Enabled"] and entity.isAlive then
                         return nil
                     end
                     return oldplay(Self, id, ...)
@@ -6139,7 +6140,9 @@ runcode(function()
 				if alreadyreported[plr] == nil then
 					task.spawn(function()
 						reported = reported + 1
-						players:ReportAbuse(plr, reportreason, "he said a bad word")
+						if syn == nil or syn.toast_notification == nil then
+							players:ReportAbuse(plr, reportreason, "he said a bad word")
+						end
 					end)
 					if AutoReportNotify["Enabled"] then 
 						local warning = createwarning("AutoReport", "Reported "..plr.Name.." for\n"..reportreason..' ('..reportedmatch..')', 15)
@@ -6468,12 +6471,15 @@ runcode(function()
 	local speedval = {["Value"] = 1}
 	local speedjump = {["Enabled"] = false}
 	local speedjumpheight = {["Value"] = 20}
+	local speedvelonum = {["Value"] = 3}
 	local speedjumpalways = {["Enabled"] = false}
 	local speedjumpsound = {["Enabled"] = false}
 	local speedspeedup = {["Enabled"] = false}
 	local speedanimation = {["Enabled"] = false}
 	local speedtick = tick()
+	local jumptick = tick()
 	local bodyvelo
+	local doingfunny = false
 	local raycastparameters = RaycastParams.new()
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Speed",
@@ -6488,6 +6494,7 @@ runcode(function()
 					end
 				end)
 				local lastnear = false
+				local lastfunny = false
 				RunLoops:BindToHeartbeat("Speed", 1, function(delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						if speedanimation["Enabled"] then
@@ -6526,22 +6533,49 @@ runcode(function()
 								bodyvelo.Parent = entity.character.HumanoidRootPart
 								bodyvelo.MaxForce = vec3(100000, 0, 100000)
 							else
-								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or antivoiding or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.zero or (longjump["Enabled"] and vec3(100000, 0, 100000) or vec3(100000, 0, 100000)))
-								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((longjumpticktimer >= tick() or allowspeed == false) and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
+								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or antivoiding or uninjectflag) and Vector3.zero or vec3(100000, 0, 100000))
+								--bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((longjumpticktimer >= tick() or allowspeed == false) and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 						end
-						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) then
-							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
+						if jumptick <= tick() and ((entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) or fly["Enabled"]) and entity.character.Humanoid.MoveDirection ~= Vector3.zero and (not Scaffold["Enabled"]) then 
+							jumptick = tick() + 0.51
+							if (not fly["Enabled"]) then
 								if speedjumpsound["Enabled"] then 
 									pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
 								end
-								entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
+								entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+							end
+							doingfunny = true
+							local doboost = false
+							if lastfunny ~= fly["Enabled"] then 
+								if fly["Enabled"] and flyspeedboost["Enabled"] then 
+									doboost = true
+								end
+							end
+							lastfunny = fly["Enabled"]
+							for i = 10, 0, -1 do 
+								task.wait(speedvelonum["Value"] / 1000)
+								local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and 70 or speedval["Value"]) * (i / 10))
+								local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * 20
+								
+								if newvelo.Magnitude > 20 then 
+									if bodyvelo then bodyvelo.Velocity = newvelo end
+								else
+									if bodyvelo then bodyvelo.Velocity = newvelo2 end
+									doingfunny = false
+								end
+							end
+						else
+							if bodyvelo and (not doingfunny) then 
+								local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * 20
+        						bodyvelo.Velocity = newvelo2
 							end
 						end
 					end
 				end)
 			else
 				RunLoops:UnbindFromHeartbeat("Speed")
+				doingfunny = false
 				if bodyvelo then
 					bodyvelo:Remove()
 				end
@@ -6571,9 +6605,17 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 54,
+		["Max"] = 55,
 		["Function"] = function(val) end,
-		["Default"] = 54
+		["Default"] = 55
+	})
+	speedvelonum = speed.CreateSlider({
+		["Name"] = "Velocity Delay",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Function"] = function(val) end,
+		["Default"] = 30,
+		["Double"] = 1000
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -6714,9 +6756,9 @@ runcode(function()
 						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
 						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						local realflyspeed = flyspeed["Value"]
-						if allowed > 0 then
-							mass = mass + (flytog and -10 or 10)
-						end
+					--	if allowed > 0 then
+							mass = mass + (allowed > 0 and 10 or 3) * (flytog and -1 or 1)
+						--end
 						if flytogtick <= tick() then
 							flytog = not flytog
 							flytogtick = tick() + 0.2
@@ -6733,7 +6775,7 @@ runcode(function()
 							end
 							if lastonground ~= onground then 
 								if (not onground) then 
-									groundtime = tick() + (flyacrisky["Enabled"] and 2 or 1.4)
+									groundtime = tick() + (flyacrisky["Enabled"] and 2.3 or 1.4)
 									if flyacprogressbarframe then 
 										flyacprogressbarframe.Frame:TweenSize(UDim2.new(0, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, groundtime - tick(), true)
 									end
@@ -6749,12 +6791,12 @@ runcode(function()
 								end
 							end
 							if flyacprogressbarframe then 
-								flyacprogressbarframe.TextLabel.Text = (onground and (flyacrisky["Enabled"] and 2 or 1.4) or math.floor((groundtime - tick()) * 10) / 10).."s"
+								flyacprogressbarframe.TextLabel.Text = (onground and (flyacrisky["Enabled"] and 2.3 or 1.4) or math.floor((groundtime - tick()) * 10) / 10).."s"
 							end
 							lastonground = onground
 							allowed = 1
 							if flyacboost["Enabled"] then
- 								realflyspeed = realflyspeed * getSpeedMultiplier(true) + (flymode["Value"] == "Normal" and 14 or 4)
+ 								realflyspeed = realflyspeed * getSpeedMultiplier(true) + (flymode["Value"] == "Normal" and 14 or 8)
 							end
 						else
 							onground = true
@@ -6765,9 +6807,9 @@ runcode(function()
 						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, 20 * getSpeedMultiplier()))
 						local flypos2 = (entity.character.Humanoid.MoveDirection * math.max((realflyspeed) - 20, 0)) * delta
 						entity.character.HumanoidRootPart.Transparency = 1
-						entity.character.HumanoidRootPart.Velocity = flypos + (vec3(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
-						if flymode["Value"] == "CFrame" then
-							entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos2
+						entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z) + (vec3(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						if flymode["Value"] == "CFrame" and entity.character.HumanoidRootPart.Velocity.Magnitude <= 20 then
+					--		entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos2
 						end
 						flyvelo = flypos + vec3(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
 					end
@@ -6823,6 +6865,10 @@ runcode(function()
 		["Function"] = function() end, 
 		["Default"] = true,
 		["HoverText"] = "Pops balloons when fly is disabled."
+	})
+	flyspeedboost = fly.CreateToggle({
+		["Name"] = "Boost Speed",
+		["Function"] = function() end
 	})
 	local oldcamupdate
 	local camcontrol
@@ -8088,7 +8134,7 @@ runcode(function()
 						v:Stop()
 					end
 				end)
-				bedwars["ViewmodelController"]:playAnimation(4)
+				bedwars["ViewmodelController"]:playAnimation(11)
 			else
 				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
 				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
@@ -8097,7 +8143,7 @@ runcode(function()
 						v:Stop()
 					end
 				end)
-				bedwars["ViewmodelController"]:playAnimation(4)
+				bedwars["ViewmodelController"]:playAnimation(11)
 			end
 		end,
 		["HoverText"] = "Removes the ugly bobbing when you move and makes sword farther"
@@ -8632,9 +8678,9 @@ runcode(function()
 							end
 						end
 					end)
-					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](28)
-					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("CFrame")
-					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](28)
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](50)
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("Velocity")
+					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](20)
 					GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
 				end)
 			else
