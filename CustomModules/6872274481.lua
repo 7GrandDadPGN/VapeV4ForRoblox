@@ -6527,8 +6527,16 @@ runcode(function()
 								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
 								entity.character.HumanoidRootPart.Velocity = vec3(velocheck and movevec.X or 0, entity.character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
 							end
+							if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) then
+								if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
+									if speedjumpsound["Enabled"] then 
+										pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
+									end
+									entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
+								end 
+							end
 						else
-							if (bodyvelo == nil or bodyvelo ~= nil and bodyvelo.Parent ~= entity.character.HumanoidRootPart) then
+							if (bodyvelo == nil or bodyvelo.Parent ~= entity.character.HumanoidRootPart) then
 								bodyvelo = Instance.new("BodyVelocity")
 								bodyvelo.Parent = entity.character.HumanoidRootPart
 								bodyvelo.MaxForce = vec3(100000, 0, 100000)
@@ -6536,39 +6544,39 @@ runcode(function()
 								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or antivoiding or uninjectflag) and Vector3.zero or vec3(100000, 0, 100000))
 								--bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((longjumpticktimer >= tick() or allowspeed == false) and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
-						end
-						if jumptick <= tick() and ((entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) or fly["Enabled"]) and entity.character.Humanoid.MoveDirection ~= Vector3.zero and (not Scaffold["Enabled"]) then 
-							jumptick = tick() + 0.51
-							if (not fly["Enabled"]) then
-								if speedjumpsound["Enabled"] then 
-									pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
+							if jumptick <= tick() and ((entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) or fly["Enabled"]) and entity.character.Humanoid.MoveDirection ~= Vector3.zero and (not Scaffold["Enabled"]) then 
+								jumptick = tick() + 0.51
+								if (not fly["Enabled"]) then
+									if speedjumpsound["Enabled"] then 
+										pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
+									end
+									entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 								end
-								entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-							end
-							doingfunny = true
-							local doboost = false
-							if lastfunny ~= fly["Enabled"] then 
-								if fly["Enabled"] and flyspeedboost["Enabled"] then 
-									doboost = true
+								doingfunny = true
+								local doboost = false
+								if lastfunny ~= fly["Enabled"] then 
+									if fly["Enabled"] and flyspeedboost["Enabled"] then 
+										doboost = true
+									end
 								end
-							end
-							lastfunny = fly["Enabled"]
-							for i = 10, 0, -1 do 
-								task.wait(speedvelonum["Value"] / 1000)
-								local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and 70 or speedval["Value"]) * (i / 10))
-								local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * 20
-								
-								if newvelo.Magnitude > 20 then 
-									if bodyvelo then bodyvelo.Velocity = newvelo end
-								else
-									if bodyvelo then bodyvelo.Velocity = newvelo2 end
-									doingfunny = false
+								lastfunny = fly["Enabled"]
+								for i = 10, 0, -1 do 
+									task.wait(speedvelonum["Value"] / 1000)
+									local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and 70 or speedval["Value"]) * (i / 10))
+									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * 20
+									
+									if newvelo.Magnitude > 20 then 
+										if bodyvelo then bodyvelo.Velocity = newvelo end
+									else
+										if bodyvelo then bodyvelo.Velocity = newvelo2 end
+										doingfunny = false
+									end
 								end
-							end
-						else
-							if bodyvelo and (not doingfunny) then 
-								local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * 20
-        						bodyvelo.Velocity = newvelo2
+							else
+								if bodyvelo and (not doingfunny) then 
+									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * 20
+									bodyvelo.Velocity = newvelo2
+								end
 							end
 						end
 					end
@@ -6775,7 +6783,7 @@ runcode(function()
 							end
 							if lastonground ~= onground then 
 								if (not onground) then 
-									groundtime = tick() + (flyacrisky["Enabled"] and 2.3 or 1.4)
+									groundtime = tick() + (flyacrisky["Enabled"] and 2.6 or 1.4)
 									if flyacprogressbarframe then 
 										flyacprogressbarframe.Frame:TweenSize(UDim2.new(0, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, groundtime - tick(), true)
 									end
@@ -6791,7 +6799,7 @@ runcode(function()
 								end
 							end
 							if flyacprogressbarframe then 
-								flyacprogressbarframe.TextLabel.Text = (onground and (flyacrisky["Enabled"] and 2.3 or 1.4) or math.floor((groundtime - tick()) * 10) / 10).."s"
+								flyacprogressbarframe.TextLabel.Text = (onground and (flyacrisky["Enabled"] and 2.6 or 1.4) or math.floor((groundtime - tick()) * 10) / 10).."s"
 							end
 							lastonground = onground
 							allowed = 1
