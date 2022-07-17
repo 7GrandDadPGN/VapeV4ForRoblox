@@ -6480,6 +6480,7 @@ runcode(function()
 	local jumptick = tick()
 	local bodyvelo
 	local doingfunny = false
+	local timesdone = 0
 	local raycastparameters = RaycastParams.new()
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Speed",
@@ -6494,7 +6495,6 @@ runcode(function()
 					end
 				end)
 				local lastnear = false
-				local lastfunny = false
 				RunLoops:BindToHeartbeat("Speed", 1, function(delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						if speedanimation["Enabled"] then
@@ -6504,6 +6504,7 @@ runcode(function()
 								end
 							end
 						end
+						local allowedvelo = (20 * getSpeedMultiplier())
 						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
 						if speedmode["Value"] == "CFrame" then
 							if speedspeedup["Enabled"] and killauranear ~= lastnear then 
@@ -6517,7 +6518,7 @@ runcode(function()
 							local newlongjumpvelo = longjumpvelo.Unit * math.max((Vector3.zero - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0)
 							newlongjumpvelo = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.zero
 							local newpos = spidergoinup and Vector3.zero or (longjump["Enabled"] and newlongjumpvelo or (entity.character.Humanoid.MoveDirection * (((speedval["Value"] + (speedspeedup["Enabled"] and killauranear and speedtick >= tick() and (48 - speedval["Value"]) or 0)) * getSpeedMultiplier(true)) - 20))) * delta * (GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or 1)
-							local movevec = entity.character.Humanoid.MoveDirection.Unit * (20 * getSpeedMultiplier())
+							local movevec = entity.character.Humanoid.MoveDirection.Unit * allowedvelo
 							movevec = movevec == movevec and movevec or Vector3.zero
 							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.zero)
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
@@ -6544,9 +6545,9 @@ runcode(function()
 								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or antivoiding or uninjectflag) and Vector3.zero or vec3(100000, 0, 100000))
 								--bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((longjumpticktimer >= tick() or allowspeed == false) and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
-							if jumptick <= tick() and ((entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) or fly["Enabled"]) and entity.character.Humanoid.MoveDirection ~= Vector3.zero and (not Scaffold["Enabled"]) then 
+							if jumptick <= tick() and ((entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) or fly["Enabled"]) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then 
 								jumptick = tick() + 0.51
-								if (not fly["Enabled"]) then
+								if (not fly["Enabled"]) and (not Scaffold["Enabled"]) then
 									if speedjumpsound["Enabled"] then 
 										pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
 									end
@@ -6554,27 +6555,28 @@ runcode(function()
 								end
 								doingfunny = true
 								local doboost = false
-								if lastfunny ~= fly["Enabled"] then 
-									if fly["Enabled"] and flyspeedboost["Enabled"] then 
+								if fly["Enabled"] and flyspeedboost["Enabled"] then
+									if timesdone < 2 then
 										doboost = true
+										timesdone = timesdone + 1
 									end
+								else
+									timesdone = 0
 								end
-								lastfunny = fly["Enabled"]
 								for i = 10, 0, -1 do 
 									task.wait(speedvelonum["Value"] / 1000)
 									local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and 70 or speedval["Value"]) * (i / 10))
-									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * 20
-									
-									if newvelo.Magnitude > 20 then 
+									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z)
+									if newvelo.Magnitude > allowedvelo then 
 										if bodyvelo then bodyvelo.Velocity = newvelo end
 									else
-										if bodyvelo then bodyvelo.Velocity = newvelo2 end
+										if bodyvelo then bodyvelo.Velocity = newvelo2 * allowedvelo end
 										doingfunny = false
 									end
 								end
 							else
 								if bodyvelo and (not doingfunny) then 
-									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * 20
+									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * allowedvelo
 									bodyvelo.Velocity = newvelo2
 								end
 							end
