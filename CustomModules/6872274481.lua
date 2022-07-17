@@ -4975,26 +4975,23 @@ runcode(function()
 		if angle >= math.rad(killauraangle["Value"]) then
 			return nil
 		end
+		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
+		if not (sword and sword["tool"]) then
+			return nil
+		end
+		local swordmeta = bedwars["ItemTable"][sword["tool"].Name]
 		if (not firstplayercodedone.done) then
 			killauranear = true
 			firstplayercodedone.done = true
 			if animationdelay <= tick() then
 				animationdelay = tick() + 0.17
-				bedwars["ViewmodelController"]:playAnimation(15)
-				if plrentity ~= nil and entity.isAlive and killauraswing["Enabled"] == false then
-					plrentity:playAnimation(1)
-				else
-					if plrentity == nil then
-						plrentity = bedwars["getEntityTable"].getLocalPlayerEntity()
-					end
-				end
-				bedwars["SoundManager"]:playSound(bedwars["SoundList"]["SWORD_SWING_"..math.random(1, 2)])
+				bedwars["SwordController"]:playSwordEffect(swordmeta)
 			end
 		end
 		if killauratarget["Enabled"] then
 			table.insert(attackedplayers, plr)
 		end
-		if killaurahitdelay >= tick() then 
+		if (tick() - bedwars["SwordController"].lastAttack) < (bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed + 0.08) then 
 			return nil
 		end
 		if oldcloneroot then 
@@ -5002,24 +4999,26 @@ runcode(function()
 				return nil
 			end
 		end
-		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
 		local selfrootpos = (oldcloneroot or entity.character.HumanoidRootPart).Position
 		local selfpos = selfrootpos + (killaurarange["Value"] > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
-		if sword and sword["tool"] then
-			killaurahitdelay = tick() + bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed + 0.1
-			local attacksuccess = killaurarealremote:InvokeServer({
-				["weapon"] = sword["tool"],
-				["chargedAttack"] = {chargeRatio = 1},
-				["entityInstance"] = plr.Character,
-				["validate"] = {
-					["raycast"] = {
-						["cameraPosition"] = hashvec(cam.CFrame.p), 
-						["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, root.Position).Unit.Direction)
-					},
-					["targetPosition"] = hashvec(root.Position),
-					["selfPosition"] = hashvec(selfpos)
-				}
-			})
+		local newtick = tick()
+		bedwars["SwordController"].lastAttack = newtick
+		local attacksuccess = killaurarealremote:InvokeServer({
+			["weapon"] = sword["tool"],
+			["chargedAttack"] = {chargeRatio = 1},
+			["entityInstance"] = plr.Character,
+			["validate"] = {
+				["raycast"] = {
+					["cameraPosition"] = hashvec(cam.CFrame.p), 
+					["cursorDirection"] = hashvec(Ray.new(cam.CFrame.p, root.Position).Unit.Direction)
+				},
+				["targetPosition"] = hashvec(root.Position),
+				["selfPosition"] = hashvec(selfpos)
+			}
+		})
+		if not attacksuccess and bedwars["SwordController"].lastAttack == newtick then 
+			bedwars["SwordController"].lastAttack = bedwars["SwordController"].lastAttack
+			return
 		end
 	end
 
@@ -6556,7 +6555,7 @@ runcode(function()
 								doingfunny = true
 								local doboost = false
 								if fly["Enabled"] and flyspeedboost["Enabled"] then
-									if timesdone < 2 then
+									if timesdone < 1 then
 										doboost = true
 										timesdone = timesdone + 1
 									end
@@ -8990,12 +8989,14 @@ end)
 runcode(function()
 	local autoheal = {["Enabled"] = false}
 	local autohealval = {["Value"] = 100}
+	local autohealspeed = {["Enabled"] = true}
 
 	local function autohealfunc()
 		if entity.isAlive then
 			local item = getItem("apple")
 			local shield = getItem("big_shield") or getItem("mini_shield")
 			local pot = getItem("heal_splash_potion")
+			local speedpotion = getItem("speed_potion")
 			if item or pot then
 				if lplr.Character:GetAttribute("Health") <= (lplr.Character:GetAttribute("MaxHealth") - (100 - autohealval["Value"])) then
 					if item then
@@ -9010,6 +9011,11 @@ runcode(function()
 					end
 				end
 			end
+			if speedpotion and (not lplr.Character:GetAttribute("StatusEffect_speed")) then 
+				bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServerAsync({
+					["item"] = speedpotion["tool"]
+				})
+			end
 			if shield then
 				if lplr.Character:GetAttribute("Shield_POTION") and ((not lplr.Character:GetAttribute("Shield_POTION")) or lplr.Character:GetAttribute("Shield_POTION") == 0) then
 					bedwars["ClientHandler"]:Get(bedwars["EatRemote"]):CallServerAsync({
@@ -9021,7 +9027,7 @@ runcode(function()
 	end
 
 	autoheal = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoHeal",
+		["Name"] = "AutoConsume",
 		["Function"] = function(callback)
 			if callback then
 				task.spawn(function()
@@ -9040,6 +9046,11 @@ runcode(function()
 		["Max"] = 99,
 		["Default"] = 70,
 		["Function"] = function() end
+	})
+	autohealspeed = autoheal.CreateToggle({
+		["Name"] = "Speed Potions",
+		["Function"] = function() end,
+		["Default"] = true
 	})
 end)
 
