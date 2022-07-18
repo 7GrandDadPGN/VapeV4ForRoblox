@@ -5483,7 +5483,7 @@ runcode(function()
 									local initialvelo2 = (calculated2 - offsetshootpos).Unit * launchvelo
 									if calculated then 
 										local dir = vec3(initialvelo2.X, calculated.Y, initialvelo2.Z).Unit * (launchvelo - 0.2)
-										bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(bow["tool"], ammo, ammo, offsetshootpos, offsetshootpos, dir, game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1})
+										bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(bow["tool"], ammo, ammo, offsetshootpos, offsetshootpos, dir, game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1}, workspace:GetServerTimeNow())
 										task.wait(bedwars["ItemTable"][bow.itemType].projectileSource.fireDelaySec)
 									end
 								end
@@ -6544,9 +6544,9 @@ runcode(function()
 								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or antivoiding or uninjectflag) and Vector3.zero or vec3(100000, 0, 100000))
 								--bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((longjumpticktimer >= tick() or allowspeed == false) and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
-							if jumptick <= tick() and ((entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) or fly["Enabled"]) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then 
+							if jumptick <= tick() and entity.character.Humanoid.MoveDirection ~= Vector3.zero then 
 								jumptick = tick() + 0.51
-								if (not fly["Enabled"]) and (not Scaffold["Enabled"]) then
+								if (not fly["Enabled"]) and (not Scaffold["Enabled"]) and (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) then
 									if speedjumpsound["Enabled"] then 
 										pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
 									end
@@ -6563,8 +6563,8 @@ runcode(function()
 									timesdone = 0
 								end
 								for i = 10, 0, -1 do 
-									task.wait(speedvelonum["Value"] / 1000)
-									local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and 70 or speedval["Value"]) * (i / 10))
+									task.wait(0.03)
+									local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and 68 or speedval["Value"]) * (i / 10))
 									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z)
 									if newvelo.Magnitude > allowedvelo then 
 										if bodyvelo then bodyvelo.Velocity = newvelo end
@@ -6614,17 +6614,9 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 55,
+		["Max"] = 46,
 		["Function"] = function(val) end,
-		["Default"] = 55
-	})
-	speedvelonum = speed.CreateSlider({
-		["Name"] = "Velocity Delay",
-		["Min"] = 1,
-		["Max"] = 100,
-		["Function"] = function(val) end,
-		["Default"] = 30,
-		["Double"] = 1000
+		["Default"] = 46
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
