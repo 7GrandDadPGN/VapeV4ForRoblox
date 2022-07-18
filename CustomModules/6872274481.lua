@@ -31,6 +31,8 @@ local antivoidypos = 0
 local kills = 0
 local beds = 0
 local lagbacks = 0
+local otherlagbacks = 0
+local lagbackevent = Instance.new("BindableEvent")
 local reported = 0
 local allowspeed = false
 local antivoiding = false
@@ -72,6 +74,8 @@ local Hitboxes = {["Enabled"] = false}
 local Reach = {["Enabled"] = false}
 local Killaura = {["Enabled"] = false}
 local flyspeedboost = {["Enabled"] = false}
+local flyspeed = {["Value"] = 40}
+local flyallowedcheck = 0
 local nobob = {["Enabled"] = false}
 local AnticheatBypass = {["Enabled"] = false}
 local AnticheatBypassCombatCheck = {["Enabled"] = false}
@@ -5653,6 +5657,7 @@ local AutoToxicBedDestroyed = {["Enabled"] = false}
 local AutoToxicRespond = {["Enabled"] = false}
 local AutoToxicFinalKill = {["Enabled"] = false}
 local AutoToxicTeam = {["Enabled"] = false}
+local AutoToxicLagback = {["Enabled"] = false}
 local AutoToxicPhrases = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicPhrases2 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicPhrases3 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
@@ -5660,6 +5665,7 @@ local AutoToxicPhrases4 = {["RefreshValues"] = function() end, ["ObjectList"] = 
 local AutoToxicPhrases5 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicPhrases6 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local AutoToxicPhrases7 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
+local AutoToxicPhrases8 = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
 local victorysaid = false
 local responddelay = false
 local lastsaid = ""
@@ -5674,6 +5680,19 @@ local function toxicfindstr(str, tab)
 	end
 	return false
 end
+
+lagbackevent.Event:connect(function(plr)
+	if AutoToxic["Enabled"] then
+		if AutoToxicLagback["Enabled"] then
+			local custommsg = #AutoToxicPhrases8["ObjectList"] > 0 and AutoToxicPhrases8["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
+			if custommsg then
+				custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
+			end
+			local msg = custommsg or "Imagine lagbacking L "..(plr.DisplayName or plr.Name).." | vxpe on top"
+			repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+		end
+	end
+end)
 
 connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]:OnEvent("MatchEndEvent", function(winstuff)
     local myTeam = bedwars["ClientStoreHandler"]:getState().Game.myTeam
@@ -6020,7 +6039,9 @@ runcode(function()
 		["lobby"] = "Bullying",
 		["ban"] = "Bullying",
 		["wizard"] = "Bullying",
-		["wisard"] = "Bullying"
+		["wisard"] = "Bullying",
+		["witch"] = "Bullying",
+		["magic"] = "Bullying",
 	}
 
 	local function removerepeat(str)
@@ -6428,6 +6449,11 @@ runcode(function()
 		["Name"] = "Teammates",
 		["Function"] = function() end, 
 	})
+	AutoToxicLagback = AutoToxic.CreateToggle({
+		["Name"] = "Lagback",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
 	AutoToxicPhrases = AutoToxic.CreateTextList({
 		["Name"] = "ToxicList",
 		["TempText"] = "phrase (win)",
@@ -6460,6 +6486,11 @@ runcode(function()
 		["TempText"] = "phrase (text to respond to)",
 	})
 	AutoToxicPhrases5["Object"].AddBoxBKG.AddBox.TextSize = 12
+	AutoToxicPhrases8 = AutoToxic.CreateTextList({
+		["Name"] = "ToxicList8",
+		["TempText"] = "phrase (lagback) <name>",
+	})
+	AutoToxicPhrases8["Object"].AddBoxBKG.AddBox.TextSize = 12
 end)
 
 local Scaffold = {["Enabled"] = false}
@@ -6479,7 +6510,9 @@ runcode(function()
 	local jumptick = tick()
 	local bodyvelo
 	local doingfunny = false
+	local didboosttick = tick()
 	local timesdone = 0
+	local boosttimes = 0
 	local raycastparameters = RaycastParams.new()
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Speed",
@@ -6555,16 +6588,17 @@ runcode(function()
 								doingfunny = true
 								local doboost = false
 								if fly["Enabled"] and flyspeedboost["Enabled"] then
-									if timesdone < 1 then
+									if timesdone < 2 then
 										doboost = true
 										timesdone = timesdone + 1
+										didboosttick = tick() + 2
 									end
 								else
 									timesdone = 0
 								end
 								for i = 10, 0, -1 do 
 									task.wait(0.03)
-									local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and 68 or speedval["Value"]) * (i / 10))
+									local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and (timesdone > 1 and 55 or 68) or (flyallowedcheck > 0 and fly["Enabled"] and flyspeed["Value"] or speedval["Value"]) * ((didboosttick <= tick() or fly["Enabled"]) and (boosttimes % 3 == 0 and 0.8 or 1) or 0)) * (i / 10))
 									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z)
 									if newvelo.Magnitude > allowedvelo then 
 										if bodyvelo then bodyvelo.Velocity = newvelo end
@@ -6573,6 +6607,7 @@ runcode(function()
 										doingfunny = false
 									end
 								end
+								boosttimes = boosttimes + 1
 							else
 								if bodyvelo and (not doingfunny) then 
 									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * allowedvelo
@@ -6614,9 +6649,9 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 46,
+		["Max"] = 44,
 		["Function"] = function(val) end,
-		["Default"] = 46
+		["Default"] = 44
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -6669,7 +6704,6 @@ local flymissile
 runcode(function()
 	local OldNoFallFunction
 	local flymode = {["Value"] = "Normal"}
-	local flyspeed = {["Value"] = 40}
 	local flyverticalspeed = {["Value"] = 40}
 	local flyupanddown = {["Enabled"] = true}
 	local flypop = {["Enabled"] = true}
@@ -6755,6 +6789,7 @@ runcode(function()
 				RunLoops:BindToHeartbeat("Fly", 1, function(delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
+						flyallowedcheck = allowed
 						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						local realflyspeed = flyspeed["Value"]
 					--	if allowed > 0 then
@@ -8674,14 +8709,17 @@ runcode(function()
 					task.spawn(function()
 						repeat task.wait() until shared.VapeFullyLoaded
 						if AnticheatBypass["Enabled"] then
+							if not GuiLibrary["ObjectsThatCanBeSaved"]["FlyBoost SpeedToggle"]["Api"]["Enabled"] then 
+								GuiLibrary["ObjectsThatCanBeSaved"]["FlyBoost SpeedToggle"]["Api"]["ToggleButton"](true)
+							end
 							if AutoReport["Enabled"] == false then
 								AutoReport["ToggleButton"](false)
 							end
 						end
 					end)
-					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](49)
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](44)
 					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("Velocity")
-					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](20)
+					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](44)
 					GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
 				end)
 			else
@@ -9646,41 +9684,85 @@ runcode(function()
 	label.Parent = overlayframe
 	Overlay["Bypass"] = true
 	local oldnetworkowner
+	local teleported = {}
+	local teleported2 = {}
+	local teleportconnections = {}
+	local matchstatechanged = 0
+	local matchstatetick = tick()
 	local mapname = "to4_Blossom"
+
+	task.spawn(function()
+		mapname = workspace:WaitForChild("Map"):WaitForChild("Worlds"):GetChildren()[1].Name
+		mapname = mapname ~= "Void_World" and string.gsub(string.split(mapname, "_")[2], "-", "") or "Blank"
+	end)
+	task.spawn(function()
+		bedwars["ClientHandler"]:OnEvent("ProjectileImpact", function(p3)
+			if uninjectflag then return end
+			if p3.projectile == "telepearl" then 
+				teleported[p3.shooterPlayer] = true
+			elseif p3.projectile == "swap_ball" then
+				teleported[p3.shooterPlayer] = true
+				if p3.hitEntity then 
+					local plr = players:GetPlayerFromCharacter(p3.hitEntity)
+					if plr then teleported[plr] = true end
+				end
+			end
+		end)
+		repeat
+			wait(1)
+			if matchState ~= matchstatechanged then 
+				if matchState == 1 then 
+					matchstatetick = tick() + 5
+				end
+				matchstatechanged = matchState
+			end
+			if not tpstring then
+				tpstring = tick().."/"..kills.."/"..beds.."/"..(victorysaid and 1 or 0).."/"..(1).."/"..(0).."/"..(0).."/"..(0)
+				origtpstring = tpstring
+			end
+			if entity.isAlive and entity.character.Humanoid.Health > 0 and (not AnticheatBypass["Enabled"]) and networkownerfunc then 
+				local newnetworkowner = networkownerfunc(entity.character.HumanoidRootPart)
+				if oldnetworkowner ~= nil and oldnetworkowner ~= newnetworkowner and newnetworkowner == false then 
+					lagbacks = lagbacks + 1
+				end
+				oldnetworkowner = newnetworkowner
+			else
+				oldnetworkowner = nil
+			end
+			for i,v in pairs(entity.entityList) do 
+				if teleportconnections[v.Player.Name.."1"] then continue end
+				teleportconnections[v.Player.Name.."1"] = v.Player:GetAttributeChangedSignal("LastTeleported"):connect(function()
+					if uninjectflag then return end
+					for i = 1, 15 do 
+						task.wait(0.1)
+						if teleported[v.Player] or teleported2[v.Player] or matchstatetick > tick() then break end
+					end
+					if teleported[v.Player] == nil and teleported2[v.Player] == nil and math.abs(v.Player:GetAttribute("SpawnTime") - v.Player:GetAttribute("LastTeleported")) > 1 and matchstatetick <= tick() then 
+						otherlagbacks = otherlagbacks + 1
+						lagbackevent:Fire(v.Player)
+					end
+					teleported[v.Player] = nil
+				end)
+				teleportconnections[v.Player.Name.."2"] = v.Player:GetAttributeChangedSignal("PlayerConnected"):connect(function()
+					teleported2[v.Player] = true
+					task.delay(5, function()
+						teleported2[v.Player] = nil
+					end)
+				end)
+			end
+			local splitted = origtpstring:split("/")
+			label.Text = "Session Info\nTime Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\nKills : "..(splitted[2] + kills).."\nBeds : "..(splitted[3] + beds).."\nWins : "..(splitted[4] + (victorysaid and 1 or 0)).."\nGames : "..splitted[5].."\nLagbacks : "..(splitted[6] + lagbacks).."\nUniversal Lagbacks : "..(splitted[7] + otherlagbacks).."\nReported : "..(splitted[8] + reported).."\nMap : "..mapname
+			local textsize = textservice:GetTextSize(label.Text, label.TextSize, label.Font, Vector2.new(100000, 100000))
+			overlayframe.Size = UDim2.new(0, math.max(textsize.X, 200), 0, (textsize.Y * 1.2) + 10)
+			tpstring = splitted[1].."/"..(splitted[2] + kills).."/"..(splitted[3] + beds).."/"..(splitted[4] + (victorysaid and 1 or 0)).."/"..(splitted[5] + 1).."/"..(splitted[6] + lagbacks).."/"..(splitted[7] + otherlagbacks).."/"..(splitted[8] + reported)
+		until uninjectflag
+	end)
+
 	GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
 		["Name"] = "Overlay", 
 		["Icon"] = "vape/assets/TargetIcon1.png", 
 		["Function"] = function(callback)
 			Overlay.SetVisible(callback) 
-			if callback then
-				task.spawn(function()
-					mapname = workspace:WaitForChild("Map"):WaitForChild("Worlds"):GetChildren()[1].Name
-					mapname = mapname ~= "Void_World" and string.gsub(string.split(mapname, "_")[2], "-", "") or "Blank"
-				end)
-				task.spawn(function()
-					repeat
-						wait(1)
-						if not tpstring then
-							tpstring = tick().."/"..kills.."/"..beds.."/"..(victorysaid and 1 or 0).."/"..(1).."/"..(0).."/"..(0)
-							origtpstring = tpstring
-						end
-						if entity.isAlive and (not AnticheatBypass["Enabled"]) and networkownerfunc then 
-							local newnetworkowner = networkownerfunc(entity.character.HumanoidRootPart)
-							if oldnetworkowner ~= nil and oldnetworkowner ~= newnetworkowner and newnetworkowner == false then 
-								lagbacks = lagbacks + 1
-							end
-							oldnetworkowner = newnetworkowner
-						else
-							oldnetworkowner = nil
-						end
-						local splitted = origtpstring:split("/")
-						label.Text = "Session Info\nTime Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\nKills : "..(splitted[2] + kills).."\nBeds : "..(splitted[3] + beds).."\nWins : "..(splitted[4] + (victorysaid and 1 or 0)).."\nGames : "..splitted[5].."\nLagbacks : "..(splitted[6] + lagbacks).."\nReported : "..(splitted[7] + reported).."\nMap : "..mapname
-						local textsize = textservice:GetTextSize(label.Text, label.TextSize, label.Font, Vector2.new(100000, 100000))
-						overlayframe.Size = UDim2.new(0, math.max(textsize.X, 200), 0, (textsize.Y * 1.2) + 10)
-						tpstring = splitted[1].."/"..(splitted[2] + kills).."/"..(splitted[3] + beds).."/"..(splitted[4] + (victorysaid and 1 or 0)).."/"..(splitted[5] + 1).."/"..(splitted[6] + lagbacks).."/"..(splitted[7] + reported)
-					until (Overlay and Overlay.GetCustomChildren() and Overlay.GetCustomChildren().Parent and Overlay.GetCustomChildren().Parent.Visible == false)
-				end)
-			end
 		end, 
 		["Priority"] = 2
 	})
