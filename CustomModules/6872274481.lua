@@ -6514,6 +6514,16 @@ runcode(function()
 	local timesdone = 0
 	local boosttimes = 0
 	local raycastparameters = RaycastParams.new()
+	local funni = false
+	local lasthit = tick()
+
+	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p6)
+		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
+			if (p7.knockbackMultiplier and p7.knockbackMultiplier.disabled) or p7.entityInstance ~= lplr.Character then return end
+			lasthit = tick() + 1
+		end)
+	end)
+
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Speed",
 		["Function"] = function(callback)
@@ -6560,14 +6570,6 @@ runcode(function()
 								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
 								entity.character.HumanoidRootPart.Velocity = vec3(velocheck and movevec.X or 0, entity.character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
 							end
-							if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) then
-								if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
-									if speedjumpsound["Enabled"] then 
-										pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
-									end
-									entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
-								end 
-							end
 						else
 							if (bodyvelo == nil or bodyvelo.Parent ~= entity.character.HumanoidRootPart) then
 								bodyvelo = Instance.new("BodyVelocity")
@@ -6578,27 +6580,22 @@ runcode(function()
 								--bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((longjumpticktimer >= tick() or allowspeed == false) and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
 							end
 							if jumptick <= tick() and entity.character.Humanoid.MoveDirection ~= Vector3.zero then 
-								jumptick = tick() + 0.51
-								if (not fly["Enabled"]) and (not Scaffold["Enabled"]) and (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) then
-									if speedjumpsound["Enabled"] then 
-										pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
-									end
-									entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-								end
+								jumptick = tick() + 0.4
 								doingfunny = true
 								local doboost = false
 								if fly["Enabled"] and flyspeedboost["Enabled"] then
 									if timesdone < 2 then
 										doboost = true
 										timesdone = timesdone + 1
-										didboosttick = tick() + 2
+										didboosttick = tick() + 1.5
 									end
 								else
 									timesdone = 0
 								end
+								local did = funni
 								for i = 10, 0, -1 do 
 									task.wait(0.03)
-									local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and (timesdone > 1 and 55 or 68) or (flyallowedcheck > 0 and fly["Enabled"] and flyspeed["Value"] or speedval["Value"]) * ((didboosttick <= tick() or fly["Enabled"]) and (boosttimes % 3 == 0 and 0.8 or 1) or 0)) * (i / 10))
+									local newvelo = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z) * ((doboost and 55 or (flyallowedcheck > 0 and fly["Enabled"] and flyspeed["Value"] or (speedval["Value"] * (lasthit >= tick() and 1.3 or 1))) * ((didboosttick <= tick() or fly["Enabled"]) and 1 or 0)) * (i / 10))
 									local newvelo2 = Vector3.new(entity.character.Humanoid.MoveDirection.X, 0, entity.character.Humanoid.MoveDirection.Z)
 									if newvelo.Magnitude > allowedvelo then 
 										if bodyvelo then bodyvelo.Velocity = newvelo end
@@ -6607,6 +6604,7 @@ runcode(function()
 										doingfunny = false
 									end
 								end
+								if did then funni = false end
 								boosttimes = boosttimes + 1
 							else
 								if bodyvelo and (not doingfunny) then 
@@ -6614,6 +6612,14 @@ runcode(function()
 									bodyvelo.Velocity = newvelo2
 								end
 							end
+						end
+						if speedjump["Enabled"] and (speedjumpalways["Enabled"] and (not Scaffold["Enabled"]) or jumpcheck) then
+							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.zero then
+								if speedjumpsound["Enabled"] then 
+									pcall(function() entity.character.HumanoidRootPart.Jumping:Play() end)
+								end
+								entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
+							end 
 						end
 					end
 				end)
@@ -6649,9 +6655,9 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 44,
+		["Max"] = 38,
 		["Function"] = function(val) end,
-		["Default"] = 44
+		["Default"] = 38
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -6880,9 +6886,9 @@ runcode(function()
 	flyspeed = fly.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 54,
+		["Max"] = 38,
 		["Function"] = function(val) end, 
-		["Default"] = 54
+		["Default"] = 38
 	})
 	flyverticalspeed = fly.CreateSlider({
 		["Name"] = "Vertical Speed",
@@ -8717,9 +8723,9 @@ runcode(function()
 							end
 						end
 					end)
-					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](44)
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](38)
 					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("Velocity")
-					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](44)
+					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](38)
 					GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
 				end)
 			else
@@ -9720,7 +9726,7 @@ runcode(function()
 				tpstring = tick().."/"..kills.."/"..beds.."/"..(victorysaid and 1 or 0).."/"..(1).."/"..(0).."/"..(0).."/"..(0)
 				origtpstring = tpstring
 			end
-			if entity.isAlive and entity.character.Humanoid.Health > 0 and (not AnticheatBypass["Enabled"]) and networkownerfunc then 
+			if entity.isAlive and (not AnticheatBypass["Enabled"]) and networkownerfunc then 
 				local newnetworkowner = networkownerfunc(entity.character.HumanoidRootPart)
 				if oldnetworkowner ~= nil and oldnetworkowner ~= newnetworkowner and newnetworkowner == false then 
 					lagbacks = lagbacks + 1
