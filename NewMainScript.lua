@@ -1185,7 +1185,7 @@ shared.VapeTargetInfo = {
 				targethealthgreen:TweenSize(UDim2.new(math.clamp(v["Health"] / v["MaxHealth"], 0, 1), 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
 				targethealthyellow:TweenSize(UDim2.new(math.clamp((v["Health"] / v["MaxHealth"]) - 1, 0, 1), 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
 				if healthtween then healthtween:Cancel() end
-				healthtween = game:GetService("TweenService"):Create(targethealthgreen, TweenInfo.new(Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25), {BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])})
+				healthtween = game:GetService("TweenService"):Create(targethealthgreen, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])})
 				healthtween:Play()
 				targetname.Text = (TargetInfoDisplayNames["Enabled"] and plr and plr.DisplayName or i)
 			end
