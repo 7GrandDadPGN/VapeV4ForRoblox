@@ -2888,35 +2888,13 @@ runcode(function()
 						antivoidpart.Position = vec3(0, antivoidypos, 0)
 						antivoidconnection = antivoidpart.Touched:connect(function(touchedpart)
 							if touchedpart.Parent == lplr.Character and entity.isAlive then
-								if AnticheatBypass["Enabled"] then
-									if (not antivoiding) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
-										antivoiding = true
-										local block = getclosesttop(15)
-										if block then 
-											local old = entity.character.HumanoidRootPart.CFrame
-											local oldx, oldy, oldz = old:ToEulerAnglesXYZ()
-											local newcf = cfnew(block) * CFrame.Angles(oldx, oldy, oldz)
-											for i = 1, 5 do 
-												local new = old:lerp(newcf, 0.2 * i)
-												entity.character.HumanoidRootPart.Velocity = (new.p - entity.character.HumanoidRootPart.CFrame.p).Unit * 20
-												entity.character.HumanoidRootPart.CFrame = new
-												task.wait(0.1)
-											end
-										else
-											createwarning("AntiVoid", "No nearby blocks found, failed.", 10)
-											for i = 1, 2 do
-												task.wait(0.1)
-												entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, 70, entity.character.HumanoidRootPart.Velocity.Z)
-											end
-										end
-										antivoiding = false
+								if (not antivoiding) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
+									antivoiding = true
+									for i = 1, 20 do
+										task.wait(0.04)
+										entity.character.HumanoidRootPart.Velocity = vec3(0, i * 3, 0)
 									end
-								else
-									entity.character.HumanoidRootPart.Velocity = vec3(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
-									for i = 1, 2 do
-										task.wait(0.1)
-										entity.character.HumanoidRootPart.Velocity = vec3(0, (antivoidmethod["Value"] == "Dynamic" and math.clamp((math.abs(entity.character.HumanoidRootPart.Velocity.Y) + 2), 1, 50) or 50), 0)
-									end
+									antivoiding = false
 								end
 							end
 						end)
@@ -3981,11 +3959,9 @@ runcode(function()
 						if echest == nil then 
 							echest = repstorage.Inventories:FindFirstChild(lplr.Name.."_personal")
 						end	
-						if (p3.Name == "void_crystal" or p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond" or (p3.Name == "apple" and (not autobankapple))) and echest then
-							if (not AutoBankTransmitted) or (AutoBankTransmittedType and p3.Name ~= "diamond") then 
-								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
-								refreshbank()
-							end
+						if (((p3.Name == "void_crystal" or p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and (not AutoBankTransmitted) or (AutoBankTransmittedType and p3.Name ~= "diamond")) or (p3.Name == "apple" and (not autobankapple))) and echest then
+							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
+							refreshbank()
 						end
 					end
 				end)
@@ -6587,11 +6563,13 @@ runcode(function()
 					end
 				end)
 				speedcheck = lplr:GetAttributeChangedSignal("LastTeleported"):connect(function()
-					slowdowntick = tick() + 3
-					local warning = createwarning("Speed", "Teleport Detected\nSlowing down speed for 3s.", 3)
-					pcall(function()
-						warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
-					end)
+					if math.abs(lplr:GetAttribute("SpawnTime") - lplr:GetAttribute("LastTeleported")) > 1 and matchstatetick <= tick() and matchState ~= 0 then
+						slowdowntick = tick() + 3
+						local warning = createwarning("Speed", "Teleport Detected\nSlowing down speed for 3s.", 3)
+						pcall(function()
+							warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+						end)
+					end
 				end)
 				local lastnear = false
 				local velonum = 0
