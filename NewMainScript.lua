@@ -864,8 +864,8 @@ local function UpdateHud()
 			table.sort(tableofmodules, function(a, b) return a["Text"]:lower() < b["Text"]:lower() end)
 		else
 			table.sort(tableofmodules, function(a, b) 
-				local textsize1 = (translations[a["Text"]] ~= nil and translations[a["Text"]] or a["Text"])..(a["ExtraText"] and a["ExtraText"]() or "")
-				local textsize2 = (translations[b["Text"]] ~= nil and translations[b["Text"]] or b["Text"])..(b["ExtraText"] and b["ExtraText"]() or "")
+				local textsize1 = (translations[a["Text"]] ~= nil and translations[a["Text"]] or a["Text"])..(a["ExtraText"]() ~= "" and " "..a["ExtraText"]() or "")
+				local textsize2 = (translations[b["Text"]] ~= nil and translations[b["Text"]] or b["Text"])..(b["ExtraText"]() ~= "" and " "..b["ExtraText"]() or "")
 				textsize1 = game:GetService("TextService"):GetTextSize(textsize1, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
 				textsize2 = game:GetService("TextService"):GetTextSize(textsize2, onetext.TextSize, onetext.Font, Vector2.new(1000000, 1000000))
 				return textsize1.X > textsize2.X 
@@ -1167,6 +1167,7 @@ TargetInfoBackground = TargetInfo.CreateToggle({
 })
 local oldhealth = 100
 local allowedtween = true
+local healthtween
 TargetInfo.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):connect(function()
 	if TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.new(0, 220, 0, 0) then
 		targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
@@ -1183,7 +1184,9 @@ shared.VapeTargetInfo = {
 				targetimage.Image = 'rbxthumb://type=AvatarHeadShot&id='..v["UserId"]..'&w=420&h=420'
 				targethealthgreen:TweenSize(UDim2.new(math.clamp(v["Health"] / v["MaxHealth"], 0, 1), 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
 				targethealthyellow:TweenSize(UDim2.new(math.clamp((v["Health"] / v["MaxHealth"]) - 1, 0, 1), 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
-				targethealthgreen.BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])
+				if healthtween then healthtween:Cancel() end
+				healthtween = game:GetService("TweenService"):Create(targethealthgreen, TweenInfo.new(Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25), {BackgroundColor3 = HealthbarColorTransferFunction(v["Health"] / v["MaxHealth"])})
+				healthtween:Play()
 				targetname.Text = (TargetInfoDisplayNames["Enabled"] and plr and plr.DisplayName or i)
 			end
 		end
