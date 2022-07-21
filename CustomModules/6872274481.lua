@@ -3614,11 +3614,11 @@ runcode(function()
 			if AutoBuyArmor["Enabled"] == false or shoptype ~= "item" then return end
 			local currentarmor = (inv.armor[2] ~= "empty" and inv.armor[2].itemType:find("chestplate") ~= nil) and inv.armor[2] or nil
 			local armorindex = (currentarmor and table.find(armors, currentarmor.itemType) or 0) + 1
-			if currentarmor ~= nil and table.find(armors, currentarmor.itemType) == nil then return end
+			if armors[armorindex] == nil then return end
 			local highestbuyable = nil
 			for i = armorindex, #armors, 1 do 
 				local shopitem = getShopItem(armors[i])
-				if shopitem and (AutoBuyTierSkip["Enabled"] or i == (armorindex + 1)) then 
+				if shopitem and (AutoBuyTierSkip["Enabled"] or i == armorindex) then 
 					local currency = getItem(shopitem.currency, inv.items)
 					if currency and currency["amount"] >= shopitem.price then 
 						highestbuyable = shopitem
@@ -3959,10 +3959,16 @@ runcode(function()
 						if echest == nil then 
 							echest = repstorage.Inventories:FindFirstChild(lplr.Name.."_personal")
 						end	
-						if (((p3.Name == "void_crystal" or p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") and (not AutoBankTransmitted) or (AutoBankTransmittedType and p3.Name ~= "diamond")) or (p3.Name == "apple" and (not autobankapple))) and echest then
-							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
-							refreshbank()
+						if not echest then return end
+						if p3.Name == "apple" then 
+							if autobankapple then return end
+						elseif (p3.Name == "void_crystal" or p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") then
+							if not ((not AutoBankTransmitted) or (AutoBankTransmittedType and p3.Name ~= "diamond")) then return end
+						else
+							return
 						end
+						bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, p3)
+						refreshbank()
 					end
 				end)
 				task.spawn(function()
