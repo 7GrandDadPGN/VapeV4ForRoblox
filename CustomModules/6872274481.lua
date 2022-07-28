@@ -5115,6 +5115,7 @@ runcode(function()
 		local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
 		bedwars["SwordController"].lastAttack = tick() + (ping > 100 and 0 or 0.06)
 		local attacksuccess = killaurarealremote:InvokeServer({
+			["bye"] = "lex",
 			["weapon"] = sword["tool"],
 			["chargedAttack"] = {chargeRatio = 1},
 			["entityInstance"] = plr.Character,
