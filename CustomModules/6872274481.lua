@@ -35,7 +35,7 @@ local otherlagbacks = 0
 local matchstatetick = 0
 local lagbackevent = Instance.new("BindableEvent")
 local reported = 0
-local allowspeed = false
+local allowspeed = true
 local antivoiding = false
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
@@ -997,6 +997,7 @@ runcode(function()
             ["EatRemote"] = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.ConsumeController).onEnable, 1))),
             ["EquipItemRemote"] = getremote(debug.getconstants(debug.getprotos(shared.oldequipitem or require(repstorage.TS.entity.entities["inventory-entity"]).InventoryEntity.equipItem)[3])),
 			["FishermanTable"] = KnitClient.Controllers.FishermanController,
+			["FovController"] = KnitClient.Controllers.FovController,
 			["GameAnimationUtil"] = require(repstorage.TS.animation["animation-util"]).GameAnimationUtil,
 			["GamePlayerUtil"] = require(repstorage.TS.player["player-util"]).GamePlayerUtil,
             ["getEntityTable"] = require(repstorage.TS.entity["entity-util"]).EntityUtil,
@@ -1568,36 +1569,21 @@ local function getPlayerColor(plr)
 	return (friendCheck(plr, true) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"]) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color)
 end
 
-shared.vapeteamcheck = function(plr)
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
-end
-
 local function targetCheck(plr)
 	return plr and plr.Humanoid and plr.Humanoid.Health > 0 and plr.Character:FindFirstChild("ForceField") == nil
 end
 
 do
-	local invadded = {}
-	local invremoved = {}
-	local armor1 = {}
-	local armor2 = {}
-	local armor3 = {}
-	local hand = {}
-	local healthconnection = {}
-	connectionstodisconnect[#connectionstodisconnect + 1] = GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendRefresh.Event:connect(function()
-		entity.fullEntityRefresh()
-	end)
 	entity.isPlayerTargetable = function(plr)
-		return lplr ~= plr and shared.vapeteamcheck(plr) and friendCheck(plr) == nil
+		return ((not GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"]) or lplr:GetAttribute("Team") ~= plr:GetAttribute("Team")) and friendCheck(plr) == nil
 	end
-	entity.playerUpdated = Instance.new("BindableEvent")
 	entity.characterAdded = function(plr, char, localcheck)
         if char then
             task.spawn(function()
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10)
                 local hum = char:WaitForChild("Humanoid", 10)
-                if humrootpart and hum and head then
+                if humrootpart and hum and head and entity.getEntityFromPlayer(plr) == nil then
                     if localcheck then
                         entity.isAlive = true
                         entity.character.Head = head
@@ -1607,82 +1593,65 @@ do
 						local newent = {
                             Player = plr,
                             Character = char,
+                            HumanoidRootPart = humrootpart,
                             RootPart = humrootpart,
-							Head = head,
-							Humanoid = hum,
+                            Head = head,
+                            Humanoid = hum,
                             Targetable = entity.isPlayerTargetable(plr),
                             Team = plr.Team,
-							Connections = {}
+                            Connections = {}
                         }
 						local inv = char:WaitForChild("InventoryFolder", 5)
 						if inv then 
-							if inv.Value then
-								newent.Connections[#newent.Connections + 1] = inv.Value.ChildAdded:connect(function(item)
-								--	inventories[plr] = bedwars["getInventory2"](plr)
-								end)
-								newent.Connections[#newent.Connections + 1] = inv.Value.ChildRemoved:connect(function(item)
-								--	inventories[plr] = bedwars["getInventory2"](plr)
-								end)
-							end
 							local armorobj1 = char:WaitForChild("ArmorInvItem_0", 5)
 							local armorobj2 = char:WaitForChild("ArmorInvItem_1", 5)
 							local armorobj3 = char:WaitForChild("ArmorInvItem_2", 5)
 							local handobj = char:WaitForChild("HandInvItem", 5)
 							if armorobj1 then
-								newent.Connections[#newent.Connections + 1] = armorobj1.Changed:connect(function() 
+								table.insert(newent.Connections, armorobj1.Changed:connect(function() 
 									task.delay(0.3, function() 
 										inventories[plr] = bedwars["getInventory2"](plr) 
 										entity.entityUpdatedEvent:Fire(newent)
 									end)
-								end)
+								end))
 							end
 							if armorobj2 then
-								newent.Connections[#newent.Connections + 1] = armorobj2.Changed:connect(function() 
+								table.insert(newent.Connections, armorobj2.Changed:connect(function() 
 									task.delay(0.3, function() 
 										inventories[plr] = bedwars["getInventory2"](plr) 
 										entity.entityUpdatedEvent:Fire(newent)
 									end)
-								end)
+								end))
 							end
 							if armorobj3 then
-								newent.Connections[#newent.Connections + 1] = armorobj3.Changed:connect(function() 
+								table.insert(newent.Connections, armorobj3.Changed:connect(function() 
 									task.delay(0.3, function() 
 										inventories[plr] = bedwars["getInventory2"](plr) 
 										entity.entityUpdatedEvent:Fire(newent)
 									end)
-								end)
+								end))
 							end
 							if handobj then
-								newent.Connections[#newent.Connections + 1] = handobj.Changed:connect(function() 
+								table.insert(newent.Connections, handobj.Changed:connect(function() 
 									task.delay(0.3, function() 
 										inventories[plr] = bedwars["getInventory2"](plr)
 										entity.entityUpdatedEvent:Fire(newent)
 									end)
-								end)
+								end))
 							end
 						end
-						task.delay(1, function()
-							inventories[plr] = bedwars["getInventory2"](plr)
+						task.delay(0.3, function() 
+							inventories[plr] = bedwars["getInventory2"](plr) 
 							entity.entityUpdatedEvent:Fire(newent)
 						end)
-						newent.Connections[#newent.Connections + 1] = hum:GetPropertyChangedSignal("Health"):connect(function()
-							if hum.Health <= 0 then 
-								entity.refreshEntity(plr, localcheck)
-								entity.entityUpdatedEvent:Fire(newent)
-							else
-								entity.entityUpdatedEvent:Fire(newent)
-							end
-						end)
-						newent.Connections[#newent.Connections + 1] = hum:GetPropertyChangedSignal("MaxHealth"):connect(function() entity.entityUpdatedEvent:Fire(newent) end)
-						newent.Connections[#newent.Connections + 1] = char.AttributeChanged:connect(function(attr)
-							if attr:find("Shield") then 
-								entity.entityUpdatedEvent:Fire(newent)
-							end
-						end)
+						table.insert(newent.Connections, hum:GetPropertyChangedSignal("Health"):connect(function() entity.entityUpdatedEvent:Fire(newent) end))
+						table.insert(newent.Connections, hum:GetPropertyChangedSignal("MaxHealth"):connect(function() entity.entityUpdatedEvent:Fire(newent) end))
+						table.insert(newent.Connections, char.AttributeChanged:connect(function(attr) if attr:find("Shield") then entity.entityUpdatedEvent:Fire(newent) end end))
                         table.insert(entity.entityList, newent)
+						entity.entityToPlayerList[plr] = newent
 						entity.entityAddedEvent:Fire(newent)
                     end
-                    entity.entityConnections[#entity.entityConnections + 1] = char.ChildRemoved:connect(function(part)
+					table.insert(entity.entityConnections, char.ChildRemoved:connect(function(part)
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
                             if localcheck then
 								if char == lplr.Character then
@@ -1705,33 +1674,26 @@ do
 									end
 								end
                             else
-								if invadded[plr] then invadded[plr]:Disconnect() end 
-								if invremoved[plr] then invremoved[plr]:Disconnect() end 
-								if armor1[plr] then armor1[plr]:Disconnect() end 
-								if armor2[plr] then armor2[plr]:Disconnect() end 
-								if armor3[plr] then armor3[plr]:Disconnect() end 
-								if hand[plr] then hand[plr]:Disconnect() end 
-								if healthconnection[plr] then healthconnection[plr]:Disconnect() end
                                 entity.removeEntity(plr)
                             end
                         end
-                    end)
+                    end))
                 end
             end)
         end
     end
 	entity.entityAdded = function(plr, localcheck, custom)
-        entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterAdded:connect(function(char)
+       	table.insert(entity.entityConnections, plr.CharacterAdded:connect(function(char)
             entity.refreshEntity(plr, localcheck)
-        end)
-        entity.entityConnections[#entity.entityConnections + 1] = plr.CharacterRemoving:connect(function(char)
+        end))
+        table.insert(entity.entityConnections, plr.CharacterRemoving:connect(function(char)
             if localcheck then
                 entity.isAlive = false
             else
                 entity.removeEntity(plr)
             end
-        end)
-        entity.entityConnections[#entity.entityConnections + 1] = plr:GetAttributeChangedSignal("Team"):connect(function()
+        end))
+        table.insert(entity.entityConnections, plr:GetAttributeChangedSignal("Team"):connect(function()
             if localcheck then
                 entity.fullEntityRefresh()
             else
@@ -1745,11 +1707,20 @@ do
 						if newent then entity.entityUpdatedEvent:Fire(newent) end
 					end)
 				end
+				lastteam = plr:GetAttribute("Team")
+            end
+        end))
+		task.spawn(function()
+            if not plr.Character then
+                for i = 1, 10 do 
+                    task.wait(0.1)
+                    if plr.Character then break end
+                end
+            end
+            if plr.Character then
+                entity.refreshEntity(plr, localcheck)
             end
         end)
-        if plr.Character then
-            entity.refreshEntity(plr, localcheck)
-        end
     end
 	entity.fullEntityRefresh()
 end
@@ -2781,6 +2752,57 @@ runcode(function()
 		end,
 		["HoverText"] = "Sets your sprinting to true."
 	})
+
+	
+	local FieldOfViewValue = {["Value"] = 70}
+	local oldfov
+	local oldfov2
+	local FieldOfView = {["Enabled"] = false}
+	local FieldOfViewZoom = {["Enabled"] = false}
+	FieldOfView = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "FOVChanger",
+		["Function"] = function(callback)
+			if callback then
+				if FieldOfViewZoom["Enabled"] then
+					task.spawn(function()
+						repeat
+							task.wait()
+						until uis:IsKeyDown(Enum.KeyCode[FieldOfView["Keybind"] ~= "" and FieldOfView["Keybind"] or "C"]) == false
+						if FieldOfView["Enabled"] then
+							FieldOfView["ToggleButton"](false)
+						end
+					end)
+				end
+				oldfov = bedwars["FovController"]["setFOV"]
+				oldfov2 = bedwars["FovController"]["getFOV"]
+				bedwars["FovController"]["setFOV"] = function(self, fov)
+					return oldfov(self, FieldOfViewValue["Value"])
+				end
+				bedwars["FovController"]["getFOV"] = function(self, fov)
+					return oldfov2(self, FieldOfViewValue["Value"])
+				end
+			else
+				bedwars["FovController"]["setFOV"] = oldfov
+				bedwars["FovController"]["getFOV"] = oldfov2
+			end
+			bedwars["FovController"]:setFOV(bedwars["ClientStoreHandler"]:getState().Settings.fov)
+		end
+	})
+	FieldOfViewValue = FieldOfView.CreateSlider({
+		["Name"] = "FOV",
+		["Min"] = 30,
+		["Max"] = 120,
+		["Function"] = function(val)
+			if FieldOfView["Enabled"] then
+				cam.FieldOfView = val * (bedwars["sprintTable"].sprinting and 1.1 or 1)
+			end
+		end
+	})
+	FieldOfViewZoom = FieldOfView.CreateToggle({
+		["Name"] = "Zoom",
+		["Function"] = function() end,
+		["HoverText"] = "optifine zoom lol"
+	})
 end)
 
 GuiLibrary["RemoveObject"]("BlinkOptionsButton")
@@ -2888,11 +2910,11 @@ runcode(function()
 						antivoidpart.Position = vec3(0, antivoidypos, 0)
 						antivoidconnection = antivoidpart.Touched:connect(function(touchedpart)
 							if touchedpart.Parent == lplr.Character and entity.isAlive then
-								if (not antivoiding) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
+								if (not antivoiding) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and entity.character.Humanoid.Health > 0 then
 									antivoiding = true
 									for i = 1, 20 do
 										task.wait(0.04)
-										entity.character.HumanoidRootPart.Velocity = vec3(0, i * 3, 0)
+										entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, i * 3, entity.character.HumanoidRootPart.Velocity.Z)
 									end
 									antivoiding = false
 								end
@@ -3507,6 +3529,8 @@ runcode(function()
 end)
 
 local autobankapple = false
+local autobankballoon = false
+local autobankballoonevent = Instance.new("BindableEvent")
 runcode(function()
 	local AutoBuy = {["Enabled"] = false}
 	local AutoBuyArmor = {["Enabled"] = false}
@@ -3866,6 +3890,7 @@ runcode(function()
 	local AutoBankRange = {["Value"] = 20}
 	local AutoBankTransmitted, AutoBankTransmittedType = false, false
 	local autobankoldapple
+	local autobankoldballoon
 	local autobankui
 
 	local function refreshbank()
@@ -3886,7 +3911,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				autobankui = Instance.new("Frame")
-				autobankui.Size = UDim2.new(0, 200, 0, 40)
+				autobankui.Size = UDim2.new(0, 240, 0, 40)
 				autobankui.Position = UDim2.new(0, 0, 0, -200)
 				task.spawn(function()
 					repeat
@@ -3896,7 +3921,7 @@ runcode(function()
 							if hotbar then 
 								local healthbar = hotbar["1"]:FindFirstChild("HotbarHealthbarContainer")
 								if healthbar then 
-									autobankui.Position = UDim2.new(0.5, -100, 0, healthbar.AbsolutePosition.Y - 50)
+									autobankui.Position = UDim2.new(0.5, -120, 0, healthbar.AbsolutePosition.Y - 50)
 								end
 							end
 						else
@@ -3943,11 +3968,16 @@ runcode(function()
 				apple.Position = UDim2.new(0, 160, 0, 0)
 				apple.Name = "apple"
 				apple.Parent = autobankui
+				local balloon = emerald:Clone()
+				balloon.Image = bedwars["getIcon"]({itemType = "balloon"}, true)
+				balloon.Position = UDim2.new(0, 200, 0, 0)
+				balloon.Name = "balloon"
+				balloon.Parent = autobankui
 				local echest = repstorage.Inventories:FindFirstChild(lplr.Name.."_personal")
 				if entity.isAlive and echest then
 					local chestitems = currentinventory.inventory.items
 					for i3,v3 in pairs(chestitems) do
-						if (v3.itemType == "void_crystal" or v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond" or v3.itemType == "apple") then
+						if (v3.itemType == "void_crystal" or v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond" or v3.itemType == "apple" or v3.itemType == "balloon") then
 							bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
 							refreshbank()
 						end
@@ -3962,6 +3992,8 @@ runcode(function()
 						if not echest then return end
 						if p3.Name == "apple" then 
 							if autobankapple then return end
+						elseif p3.Name == "balloon" then 
+							if autobankballoon then autobankballoonevent:Fire() return end
 						elseif (p3.Name == "void_crystal" or p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") then
 							if not ((not AutoBankTransmitted) or (AutoBankTransmittedType and p3.Name ~= "diamond")) then return end
 						else
@@ -3978,15 +4010,50 @@ runcode(function()
 						if echest == nil then 
 							echest = repstorage.Inventories:FindFirstChild(lplr.Name.."_personal")
 						end
+						if autobankballoon then 
+							local chestitems = echest and echest:GetChildren() or {}
+							if #chestitems > 0 then
+								for i3,v3 in pairs(chestitems) do
+									if v3:IsA("Accessory") and v3.Name == "balloon" then
+										if (not getItem("balloon")) then
+											task.spawn(function()
+												bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
+												refreshbank()
+											end)
+										end
+									end
+								end
+							end
+						end
+						if autobankballoon ~= autobankoldballoon then 
+							if entity.isAlive then
+								if not autobankballoon then
+									local chestitems = currentinventory.inventory.items
+									if #chestitems > 0 then
+										for i3,v3 in pairs(chestitems) do
+											if v3 and v3.itemType == "balloon" then
+												task.spawn(function()
+													bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
+													refreshbank()
+												end)
+											end
+										end
+									end
+								end
+							end
+							autobankoldballoon = autobankballoon
+						end
 						if autobankapple then 
 							local chestitems = echest and echest:GetChildren() or {}
 							if #chestitems > 0 then
 								for i3,v3 in pairs(chestitems) do
 									if v3:IsA("Accessory") and v3.Name == "apple" then
-										task.spawn(function()
-											bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
-											refreshbank()
-										end)
+										if (not getItem("apple")) then
+											task.spawn(function()
+												bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
+												refreshbank()
+											end)
+										end
 									end
 								end
 							end
@@ -4054,7 +4121,7 @@ runcode(function()
 				local chestitems = echest and echest:GetChildren() or {}
 				if #chestitems > 0 then
 					for i3,v3 in pairs(chestitems) do
-						if v3:IsA("Accessory") and (v3.Name == "void_crystal" or v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond" or v3.Name == "apple") then
+						if v3:IsA("Accessory") and (v3.Name == "void_crystal" or v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "diamond" or v3.Name == "apple" or v3.Name == "balloon") then
 							task.spawn(function()
 								bedwars["ClientHandler"]:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
 							end)
@@ -4753,6 +4820,7 @@ runcode(function()
 end)
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
+
 runcode(function()
 	local HighJumpMode = {["Value"] = "Normal"}
 	local HighJumpBoost = {["Value"] = 1}
@@ -4975,6 +5043,7 @@ runcode(function()
 			return getStrength(a) > getStrength(b)
 		end,
 	}
+	local lastplr
 
 	local function newAttackEntity(plr, firstplayercodedone, attackedplayers)
 		if not entity.isAlive then
@@ -4993,13 +5062,6 @@ runcode(function()
 		if killauragui["Enabled"] and (not (#bedwars["AppController"]:getOpenApps() <= 1 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false)) then
 			return nil
 		end
-		local playertype, playerattackable = bedwars["CheckPlayerType"](plr.Player)
-		if not playerattackable then
-			return nil
-		end
-		if killauranovape["Enabled"] and clients.ClientUsers[plr.Player.Name] then
-			return nil
-		end
 		local root = plr.RootPart
 		if not root then 
 			return nil
@@ -5011,10 +5073,7 @@ runcode(function()
 			return nil
 		end
 		local sword = (equipped.Object and (equipped.Object.Name == "frying_pan" or equipped.Object.Name == "baguette") and {tool = equipped.Object} or getSword())
-		if not (sword and sword["tool"]) then
-			return nil
-		end
-		local swordmeta = bedwars["ItemTable"][sword["tool"].Name]
+		local swordmeta = bedwars["ItemTable"][sword and sword["tool"] and sword["tool"].Name or "wood_sword"]
 		if (not firstplayercodedone.done) then
 			killauranear = true
 			firstplayercodedone.done = true
@@ -5028,7 +5087,17 @@ runcode(function()
 		if killauratarget["Enabled"] then
 			table.insert(attackedplayers, plr)
 		end
-		if (tick() - bedwars["SwordController"].lastAttack) < (bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed + 0.1) then 
+		if not (sword and sword["tool"]) then
+			return nil
+		end
+		local playertype, playerattackable = bedwars["CheckPlayerType"](plr.Player)
+		if not playerattackable then
+			return nil
+		end
+		if killauranovape["Enabled"] and clients.ClientUsers[plr.Player.Name] then
+			return nil
+		end
+		if (tick() - bedwars["SwordController"].lastAttack) < bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed then 
 			return nil
 		end
 		if oldcloneroot then 
@@ -5036,10 +5105,15 @@ runcode(function()
 				return nil
 			end
 		end
-		local selfrootpos = (oldcloneroot or entity.character.HumanoidRootPart).Position
+		local selfroot = (oldcloneroot or entity.character.HumanoidRootPart)
+		local selfrootpos = selfroot.Position
+		local selfcheck = selfrootpos - (selfroot.Velocity * 0.163)
+		if (selfcheck - (root.Position + (root.Velocity * 0.05))).Magnitude > 18 then 
+			return nil
+		end
 		local selfpos = selfrootpos + (killaurarange["Value"] > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
-		local newtick = tick()
-		bedwars["SwordController"].lastAttack = newtick
+		local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+		bedwars["SwordController"].lastAttack = tick() + (ping > 100 and 0 or 0.06)
 		local attacksuccess = killaurarealremote:InvokeServer({
 			["weapon"] = sword["tool"],
 			["chargedAttack"] = {chargeRatio = 1},
@@ -5053,10 +5127,7 @@ runcode(function()
 				["selfPosition"] = hashvec(selfpos)
 			}
 		})
-		if not attacksuccess and bedwars["SwordController"].lastAttack == newtick then 
-			bedwars["SwordController"].lastAttack = bedwars["SwordController"].lastAttack
-			return
-		end
+		bedwars["SwordController"].lastAttack = attacksuccess and tick() + (ping > 100 and 0 or 0.06) or 0
 	end
 
 	local orig
@@ -5069,6 +5140,10 @@ runcode(function()
 		Slow = {
 			{CFrame = cfnew(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(295), math.rad(55), math.rad(290)), Time = 0.15},
 			{CFrame = cfnew(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.15}
+		},
+		New = {
+			{CFrame = CFrame.new(0.69, -0.77, 0.37) * CFrame.Angles(math.rad(-33), math.rad(57), math.rad(-81)), Time = 0.12},
+			{CFrame = CFrame.new(0.74, -0.92, -0.22) * CFrame.Angles(math.rad(147), math.rad(71), math.rad(53)), Time = 0.12}
 		},
 		["Vertical Spin"] = {
 			{CFrame = cfnew(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(8), math.rad(5)), Time = 0.1},
@@ -5226,6 +5301,7 @@ runcode(function()
 								v.Adornee = attacked and ((not killauratargethighlight["Enabled"]) and attacked.RootPart or (not GuiLibrary["ObjectsThatCanBeSaved"]["ChamsOptionsButton"]["Api"]["Enabled"]) and attacked.Character or nil)
 							end
 							if (#plrs <= 0) then
+								lastplr = nil
 								targetedplayer = nil
 								killauranear = false
 								pcall(function()
@@ -5322,7 +5398,7 @@ runcode(function()
     })]]
     killauraanimmethod = Killaura.CreateDropdown({
         ["Name"] = "Animation", 
-        ["List"] = {"Normal", "Slow", "Vertical Spin", "Exhibition", "Exhibition Old"},
+        ["List"] = {"Normal", "Slow", "New", "Vertical Spin", "Exhibition", "Exhibition Old"},
         ["Function"] = function(val) end
     })
     killauramouse = Killaura.CreateToggle({
@@ -5713,7 +5789,7 @@ end
 lagbackevent.Event:connect(function(plr)
 	if AutoToxic["Enabled"] then
 		if AutoToxicLagback["Enabled"] then
-			local custommsg = #AutoToxicPhrases8["ObjectList"] > 0 and AutoToxicPhrases8["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
+			local custommsg = #AutoToxicPhrases8["ObjectList"] > 0 and AutoToxicPhrases8["ObjectList"][math.random(1, #AutoToxicPhrases8["ObjectList"])]
 			if custommsg then
 				custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 			end
@@ -6201,8 +6277,6 @@ runcode(function()
 						end)
 					end
 					alreadyreported[plr] = true
-				else
-					print("already reported: "..plr.Name)
 				end
             end
         end
@@ -6569,7 +6643,7 @@ runcode(function()
 					end
 				end)
 				speedcheck = lplr:GetAttributeChangedSignal("LastTeleported"):connect(function()
-					if math.abs(lplr:GetAttribute("SpawnTime") - lplr:GetAttribute("LastTeleported")) > 1 and matchstatetick <= tick() and matchState ~= 0 then
+					if math.abs(lplr:GetAttribute("SpawnTime") - lplr:GetAttribute("LastTeleported")) > 1 and matchstatetick <= tick() and matchState ~= 0 and speedmode["Value"] == "Heatseeker" then
 						slowdowntick = tick() + 3
 						local warning = createwarning("Speed", "Teleport Detected\nSlowing down speed for 3s.", 3)
 						pcall(function()
@@ -6777,7 +6851,8 @@ runcode(function()
 
 	local function buyballoons()
 		if not fly["Enabled"] then return end
-		if entity.isAlive then
+		if entity.isAlive and (lplr.Character:GetAttribute("InflatedBalloons") or 0) < 1 then
+			autobankballoon = true
 			if getItem("balloon") then
 				bedwars["BalloonController"]["inflateBalloon"]()
 				return true
@@ -6785,9 +6860,18 @@ runcode(function()
 		end
 		return false
 	end
+	local popping = false
 	bedwars["ClientHandler"]:WaitFor("BalloonPopped"):andThen(function(p6) connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(a)
-		if a.inflatedBalloon and a.inflatedBalloon:GetAttribute("BalloonOwner") == lplr.UserId then buyballoons() end
+		if a.inflatedBalloon and a.inflatedBalloon:GetAttribute("BalloonOwner") == lplr.UserId then 
+			lastonground = not onground
+			repeat task.wait() if not fly["Enabled"] then break end until (lplr.Character:GetAttribute("InflatedBalloons") or 0) <= 0
+			buyballoons() 
+		end
 	end) end)
+	connectionstodisconnect[#connectionstodisconnect + 1] = autobankballoonevent.Event:connect(function()
+		repeat task.wait() until getItem("balloon")
+		buyballoons()
+	end)
 	local flytog = false
 	local flytogtick = tick()
 	local groundtime = tick()
@@ -6904,6 +6988,8 @@ runcode(function()
 			else
 				flyup = false
 				flydown = false
+				autobankballoon = false
+				waitingforballoon = false
 				flypress:Disconnect()
 				flyendpress:Disconnect()
 				RunLoops:UnbindFromHeartbeat("Fly")
@@ -8219,6 +8305,10 @@ end)
 runcode(function()
 	local nobobdepth = {["Value"] = 8}
 	local nobobhorizontal = {["Value"] = 8}
+	local rotationx = {["Value"] = 0}
+	local rotationy = {["Value"] = 0}
+	local rotationz = {["Value"] = 0}
+	local oldc1
 	nobob = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "NoBob",
 		["Function"] = function(callback) 
@@ -8231,6 +8321,8 @@ runcode(function()
 					end
 				end)
 				bedwars["ViewmodelController"]:playAnimation(11)
+				oldc1 = cam.Viewmodel.RightHand.RightWrist.C1
+				cam.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(rotationx["Value"]), math.rad(rotationy["Value"]), math.rad(rotationz["Value"]))
 			else
 				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
 				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
@@ -8240,6 +8332,7 @@ runcode(function()
 					end
 				end)
 				bedwars["ViewmodelController"]:playAnimation(11)
+				cam.Viewmodel.RightHand.RightWrist.C1 = oldc1
 			end
 		end,
 		["HoverText"] = "Removes the ugly bobbing when you move and makes sword farther"
@@ -8263,6 +8356,36 @@ runcode(function()
 		["Function"] = function(val)
 			if nobob["Enabled"] then
 				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", (val / 10))
+			end
+		end
+	})
+	rotationx = nobob.CreateSlider({
+		["Name"] = "RotX",
+		["Min"] = 0,
+		["Max"] = 360,
+		["Function"] = function(val)
+			if nobob["Enabled"] then
+				cam.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(rotationx["Value"]), math.rad(rotationy["Value"]), math.rad(rotationz["Value"]))
+			end
+		end
+	})
+	rotationy = nobob.CreateSlider({
+		["Name"] = "RotY",
+		["Min"] = 0,
+		["Max"] = 360,
+		["Function"] = function(val)
+			if nobob["Enabled"] then
+				cam.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(rotationx["Value"]), math.rad(rotationy["Value"]), math.rad(rotationz["Value"]))
+			end
+		end
+	})
+	rotationz = nobob.CreateSlider({
+		["Name"] = "RotZ",
+		["Min"] = 0,
+		["Max"] = 360,
+		["Function"] = function(val)
+			if nobob["Enabled"] then
+				cam.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(rotationx["Value"]), math.rad(rotationy["Value"]), math.rad(rotationz["Value"]))
 			end
 		end
 	})
@@ -9425,77 +9548,6 @@ runcode(function()
 	})
 end)
 
-GuiLibrary["RemoveObject"]("BreadcrumbsOptionsButton")
-runcode(function()
-	local Breadcrumbs = {["Enabled"] = false}
-	local BreadcrumbsLifetime = {["Value"] = 20}
-	local breadcrumbtrail
-	local breadcrumbattachment
-	local breadcrumbattachment2
-	Breadcrumbs = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "Breadcrumbs",
-		["Function"] = function(callback)
-			if callback then
-				task.spawn(function()
-					repeat
-						task.wait(0.3)
-						if (not Breadcrumbs["Enabled"]) then return end
-						if entity.isAlive then
-							if breadcrumbtrail == nil then
-								breadcrumbattachment = Instance.new("Attachment")
-								breadcrumbattachment.Position = vec3(0, 0.07 - 2.9, 0.5)
-								breadcrumbattachment2 = Instance.new("Attachment")
-								breadcrumbattachment2.Position = vec3(0, -0.07 - 2.9, 0.5)
-								breadcrumbtrail = Instance.new("Trail")
-								breadcrumbtrail.Attachment0 = breadcrumbattachment 
-								breadcrumbtrail.Attachment1 = breadcrumbattachment2
-								breadcrumbtrail.Color = ColorSequence.new(Color3.new(1, 0, 0), Color3.new(0, 0, 1))
-								breadcrumbtrail.FaceCamera = true
-								breadcrumbtrail.Lifetime = BreadcrumbsLifetime["Value"] / 10
-								breadcrumbtrail.Enabled = true
-							else
-								local trailfound = false
-								for i,v in pairs(lplr.Character:GetChildren()) do
-									if v:IsA("Trail") then
-										if trailfound then	
-											v:Remove()
-										else
-											trailfound = true
-										end
-									end
-								end
-								breadcrumbattachment.Parent = entity.character.HumanoidRootPart
-								breadcrumbattachment2.Parent = entity.character.HumanoidRootPart
-								breadcrumbtrail.Parent = lplr.Character
-							end
-						end
-					until (not Breadcrumbs["Enabled"])
-				end)
-			else
-				if breadcrumbtrail then
-					breadcrumbtrail:Remove()
-					if entity.isAlive then 
-						for i,v in pairs(lplr.Character:GetChildren()) do
-							if v:IsA("Trail") then
-								v:Remove()
-							end
-						end
-					end
-					breadcrumbtrail = nil
-				end
-			end
-		end,
-		["HoverText"] = "Shows a trail behind your character"
-	})
-	BreadcrumbsLifetime = Breadcrumbs.CreateSlider({
-		["Name"] = "Lifetime",
-		["Min"] = 1,
-		["Max"] = 100,
-		["Function"] = function(val) end,
-		["Default"] = 20
-	})
-end)
-
 runcode(function()
 	local Disguise = {["Enabled"] = false}
 	local DisguiseId = {["Value"] = ""}
@@ -9625,7 +9677,6 @@ runcode(function()
 							oldmove = nil
 						end
 						if oldmove and (oldmove - plr.Character.Humanoid.MoveDirection).magnitude >= 1.7 then
-							print("no velo troll", (oldmove - plr.Character.Humanoid.MoveDirection).magnitude)
 							zerovelocheck = tick() + 0.6
 						end
 						local velo = (vec3(plr.Character.HumanoidRootPart.Velocity.X, plr.Character.HumanoidRootPart.Velocity.Y / 40, plr.Character.HumanoidRootPart.Velocity.Z) * (zerovelocheck <= tick() and 1.15 or 0.3))
@@ -9743,6 +9794,14 @@ runcode(function()
 				end
 			end
 		end)
+		local function notlasso()
+			for i,v in pairs(collectionservice:GetTagged("LassoHooked")) do 
+				if v == lplr.Character then 
+					return false
+				end
+			end
+			return true
+		end
 		repeat
 			wait(1)
 			if matchState ~= matchstatechanged then 
@@ -9757,7 +9816,7 @@ runcode(function()
 			end
 			if entity.isAlive and (not AnticheatBypass["Enabled"]) and networkownerfunc then 
 				local newnetworkowner = networkownerfunc(entity.character.HumanoidRootPart)
-				if oldnetworkowner ~= nil and oldnetworkowner ~= newnetworkowner and newnetworkowner == false then 
+				if oldnetworkowner ~= nil and oldnetworkowner ~= newnetworkowner and newnetworkowner == false and notlasso() then 
 					lagbacks = lagbacks + 1
 				end
 				oldnetworkowner = newnetworkowner
@@ -9770,9 +9829,9 @@ runcode(function()
 					if uninjectflag then return end
 					for i = 1, 15 do 
 						task.wait(0.1)
-						if teleported[v.Player] or teleported2[v.Player] or matchstatetick > tick() then break end
+						if teleported[v.Player] or teleported2[v.Player] or matchstatetick > tick() or math.abs(v.Player:GetAttribute("SpawnTime") - v.Player:GetAttribute("LastTeleported")) < 3 then break end
 					end
-					if teleported[v.Player] == nil and teleported2[v.Player] == nil and math.abs(v.Player:GetAttribute("SpawnTime") - v.Player:GetAttribute("LastTeleported")) > 1 and matchstatetick <= tick() then 
+					if v.Player ~= nil and teleported[v.Player] == nil and teleported2[v.Player] == nil and math.abs(v.Player:GetAttribute("SpawnTime") - v.Player:GetAttribute("LastTeleported")) > 3 and matchstatetick <= tick() then 
 						otherlagbacks = otherlagbacks + 1
 						lagbackevent:Fire(v.Player)
 					end
@@ -10206,7 +10265,7 @@ runcode(function()
 						damagetab.blowUpSize = 32
 						damagetab.blowUpCompleteDuration = 0
 						damagetab.anchoredDuration = 0
-						debug.setconstant(bedwars["ViewmodelController"].show, 5, "")
+						debug.setconstant(bedwars["ViewmodelController"].show, 37, "")
 						debug.setconstant(bedwars["DamageIndicator"], 81, Enum.Font.LuckiestGuy)
 						debug.setconstant(bedwars["DamageIndicator"], 100, "Enabled")
 						debug.setconstant(bedwars["DamageIndicator"], 116, 0.3)
@@ -10227,12 +10286,12 @@ runcode(function()
 								return game:GetService("TweenService"):Create(obj, ...)
 							end
 						})
-						sethiddenproperty(lighting, "Technology", "Compatibility")
-						lighting.Ambient = Color3.fromRGB(89, 89, 89)
-						lighting.Brightness = 2
-						lighting.EnvironmentDiffuseScale = 0
-						lighting.EnvironmentSpecularScale = 0
-						lighting.OutdoorAmbient = Color3.fromRGB(201, 201, 201)
+						sethiddenproperty(lighting, "Technology", "ShadowMap")
+						lighting.Ambient = Color3.fromRGB(69, 69, 69)
+						lighting.Brightness = 3
+						lighting.EnvironmentDiffuseScale = 1
+						lighting.EnvironmentSpecularScale = 1
+						lighting.OutdoorAmbient = Color3.fromRGB(69, 69, 69)
 						lighting.Atmosphere.Density = 0.1
 						lighting.Atmosphere.Offset = 0.25
 						lighting.Atmosphere.Color = Color3.fromRGB(198, 198, 198)

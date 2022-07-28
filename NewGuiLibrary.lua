@@ -301,7 +301,7 @@ if shared.VapeExecuted then
 		vertext.Position = UDim2.new(1 / api["MainRescale"].Scale, -(vertextsize.X) - 20, 1 / api["MainRescale"].Scale, -25)
 	end)
 
-	local function dragGUI(gui, tab)
+	local function dragGUI(gui)
 		spawn(function()
 			local dragging
 			local dragInput

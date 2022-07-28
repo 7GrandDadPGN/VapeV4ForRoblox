@@ -16,6 +16,7 @@ end)
 local targetinfo = shared.VapeTargetInfo
 local uis = game:GetService("UserInputService")
 local localmouse = lplr:GetMouse()
+local v3check = syn and syn.toast_notification and "V3" or ""
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -144,11 +145,13 @@ local function getcustomassetfunc(path)
 end
 
 shared.vapeteamcheck = function(plr)
-	return (GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] and (plr.Team ~= lplr.Team or (lplr.Team == nil or #lplr.Team:GetPlayers() == #players:GetChildren())) or GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"] == false)
+	return (not GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"]) or plr.Team ~= lplr.Team or lplr.Team == nil
 end
 
 local function targetCheck(plr)
-	return plr and plr.Humanoid.Health > 0 and plr.Character:FindFirstChild("ForceField") == nil
+	local ForceField = not plr.Character.FindFirstChildWhichIsA(plr.Character, "ForceField")
+	local state = plr.Humanoid.GetState(plr.Humanoid)
+	return state ~= Enum.HumanoidStateType.Dead and state ~= Enum.HumanoidStateType.Physics and ForceField
 end
 
 do
@@ -169,27 +172,29 @@ local function isAlive(plr, alivecheck)
 	return entity.isAlive
 end
 
-local function vischeck(char, part, ignorelist)
-	local rayparams = RaycastParams.new()
-	rayparams.FilterDescendantsInstances = {lplr.Character, char, cam, table.unpack(ignorelist or {})}
-	local ray = workspace.Raycast(workspace, cam.CFrame.p, CFrame.lookAt(cam.CFrame.p, char[part].Position).lookVector.Unit * (cam.CFrame.p - char[part].Position).Magnitude, rayparams)
+local function vischeck(char, checktable)
+	local rayparams = checktable.IgnoreObject or RaycastParams.new()
+	if not checktable.IgnoreObject then 
+		rayparams.FilterDescendantsInstances = {lplr.Character, char, cam, table.unpack(checktable.IgnoreTable or {})}
+	end
+	local ray = workspace.Raycast(workspace, checktable.Origin, CFrame.lookAt(checktable.Origin, char[checktable.AimPart].Position).lookVector * (checktable.Origin - char[checktable.AimPart].Position).Magnitude, rayparams)
 	return not ray
---	local unpacked = unpack(cam.GetPartsObscuringTarget(cam, {lplr.Character[part].Position, char[part].Position}, {lplr.Character, char, cam, table.unpack(ignorelist or {})}))
-	--return not unpacked
 end
 
 local function runcode(func)
 	func()
 end
 
-local function GetAllNearestHumanoidToPosition(player, distance, amount, checkvis, vistab)
+local function GetAllNearestHumanoidToPosition(player, distance, amount, checktab)
 	local returnedplayer = {}
 	local currentamount = 0
+	checktab = checktab or {}
     if entity.isAlive then
 		for i, v in pairs(entity.entityList) do -- loop through players
-            if (targetcheck or v.Targetable) and targetCheck(v) and currentamount < amount then -- checks
-				if checkvis then
-					if not vischeck(v.Character, "Head", vistab) then continue end
+			if not v.Targetable then continue end
+            if targetCheck(v) and currentamount < amount then -- checks
+				if checktab.WallCheck then
+					if not vischeck(v.Character, checktab) then continue end
 				end
                 local mag = (entity.character.HumanoidRootPart.Position - v.RootPart.Position).magnitude
                 if mag <= distance then -- mag check
@@ -202,13 +207,15 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, checkvi
 	return returnedplayer
 end
 
-local function GetNearestHumanoidToPosition(player, distance, checkvis, vistab)
+local function GetNearestHumanoidToPosition(player, distance, checktab)
 	local closest, returnedplayer, targetpart = distance, nil, nil
+	checktab = checktab or {}
 	if entity.isAlive then
 		for i, v in pairs(entity.entityList) do -- loop through players
-            if (targetcheck or v.Targetable) and targetCheck(v) then -- checks
-				if checkvis then
-					if not vischeck(v.Character, "Head", vistab) then continue end
+			if not v.Targetable then continue end
+            if targetCheck(v) then -- checks
+				if checktab.WallCheck then
+					if not vischeck(v.Character, checktab) then continue end
 				end
                 local mag = (entity.character.HumanoidRootPart.Position - v.RootPart.Position).magnitude
                 if mag <= closest then -- mag check
@@ -221,15 +228,17 @@ local function GetNearestHumanoidToPosition(player, distance, checkvis, vistab)
 	return returnedplayer
 end
 
-local function GetNearestHumanoidToMouse(player, distance, checkvis, ignorelist)
+local function GetNearestHumanoidToMouse(player, distance, checktab)
     local closest, returnedplayer = distance, nil
+	checktab = checktab or {}
     if entity.isAlive then
 		for i, v in pairs(entity.entityList) do -- loop through players
-            if (targetcheck or v.Targetable) and targetCheck(v) then -- checks
-				if checkvis then
-					if not vischeck(v.Character, "HumanoidRootPart") then continue end
+			if not v.Targetable then continue end
+            if targetCheck(v) then -- checks
+				if checktab.WallCheck then
+					if not vischeck(v.Character, checktab) then continue end
 				end
-                local vec, vis = cam.WorldToScreenPoint(cam, v.RootPart.Position)
+                local vec, vis = cam.WorldToScreenPoint(cam, v.Character[checktab.AimPart].Position)
 				local mag = (uis.GetMouseLocation(uis) - Vector2.new(vec.X, vec.Y)).magnitude
                 if vis and mag <= closest then -- mag check
                     closest = mag
@@ -261,6 +270,10 @@ local function findTouchInterest(tool)
 	end
 	return nil
 end
+
+GuiLibrary["SelfDestructEvent"].Event:connect(function()
+	entity.selfDestruct()
+end)
 
 local radarcam = Instance.new("Camera")
 radarcam.FieldOfView = 45
@@ -432,6 +445,7 @@ end
 local mousefunctions = mouse1release and mouse1press and (isrbxactive or iswindowactive) and true or false
 runcode(function()
 	local aimfov = {["Value"] = 1}
+	local aimmag = {["Value"] = 0}
 	local aimfovshow = {["Enabled"] = false}
 	local aimvischeck = {["Enabled"] = false}
 	local aimwallbang = {["Enabled"] = false}
@@ -445,7 +459,6 @@ runcode(function()
 	local aimmethod = {["Value"] = "FindPartOnRayWithIgnoreList"}
 	local aimmode = {["Value"] = "Legit"}
 	local aimmethodmode = {["Value"] = "Whitelist"}
-	local aimtable = {["FindPartOnRayWithIgnoreList"] = 1, ["FindPartOnRayWithWhitelist"] = 1, ["FindPartOnRay"] = 1, ["ScreenPointToRay"] = 3, ["ViewportPointToRay"] = 3, ["Raycast"] = 2}
 	local aimignoredscripts = {["ObjectList"] = {}}
 	local aimbound
 	local shoottime = tick()
@@ -453,7 +466,9 @@ runcode(function()
 	local recentlyshottick = tick()
 	local aimfovframe
 	local pressed = false
+	local filterobj
 	local tar = nil
+	local AimAssist = {["Enabled"] = false}
 
 	local function isNotHoveringOverGui()
 		local mousepos = uis:GetMouseLocation() - Vector2.new(0, 36)
@@ -470,11 +485,176 @@ runcode(function()
 		return true
 	end
 
-	local AimAssist = {["Enabled"] = false}
+	local silentaimfunctions = {
+		FindPartOnRayWithIgnoreList = function(Args)
+			local origin = Args[1].Origin
+			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or "HumanoidRootPart"
+			local plr
+			if aimmode["Value"] == "Legit" then
+				plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
+					WallCheck = aimvischeck["Enabled"],
+					AimPart = tar,
+					Origin = origin,
+					IgnoreTable = aimsmartab
+				})
+			else
+				plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
+					WallCheck = aimvischeck["Enabled"],
+					AimPart = tar,
+					Origin = origin,
+					IgnoreTable = aimsmartab
+				})
+			end
+			if not plr then
+				return
+			end
+			tar = plr.Character[tar]
+			recentlyshotplr = plr
+			recentlyshottick = tick() + 1
+			local direction = CFrame.lookAt(origin, tar.Position)
+			if aimwallbang["Enabled"] then
+				return {tar, tar.Position, direction.lookVector * (aimmag["Value"] ~= 0 and aimmag["Value"] or Args[1].Direction.Magnitude), tar.Material}
+			end
+			Args[1] = Ray.new(origin, direction.lookVector * (aimmag["Value"] ~= 0 and aimmag["Value"] or Args[1].Direction.Magnitude))
+			return
+		end,
+		Raycast = function(Args)
+			local origin = Args[1]
+			local ignoreobject = Args[3]
+			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or "HumanoidRootPart"
+			local plr
+			if aimmode["Value"] == "Legit" then
+				plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
+					WallCheck = aimvischeck["Enabled"],
+					AimPart = tar,
+					Origin = origin,
+					IgnoreObject = ignoreobject
+				})
+			else
+				plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
+					WallCheck = aimvischeck["Enabled"],
+					AimPart = tar,
+					Origin = origin,
+					IgnoreObject = ignoreobject
+				})
+			end
+			if not plr then
+				return
+			end
+			tar = plr.Character[tar]
+			recentlyshotplr = plr
+			recentlyshottick = tick() + 1
+			local direction = CFrame.lookAt(origin, tar.Position)
+			Args[2] = direction.lookVector * (aimmag["Value"] ~= 0 and aimmag["Value"] or Args[2].Magnitude)
+			if aimwallbang["Enabled"] then
+				local haha = RaycastParams.new()
+				haha.FilterType = Enum.RaycastFilterType.Whitelist
+				haha.FilterDescendantsInstances = {tar}
+				Args[3] = haha
+			end
+			return
+		end,
+		ScreenPointToRay = function(Args)
+			local origin = cam.CFrame.p
+			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or "HumanoidRootPart"
+			local plr
+			if aimmode["Value"] == "Legit" then
+				plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
+					WallCheck = aimvischeck["Enabled"],
+					AimPart = tar,
+					Origin = origin,
+					IgnoreTable = aimsmartab
+				})
+			else
+				plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
+					WallCheck = aimvischeck["Enabled"],
+					AimPart = tar,
+					Origin = origin,
+					IgnoreTable = aimsmartab
+				})
+			end
+			if not plr then
+				return
+			end
+			tar = plr.Character[tar]
+			recentlyshotplr = plr
+			recentlyshottick = tick() + 1
+			local direction = CFrame.lookAt(origin, tar.Position)
+			return {Ray.new(direction.p, direction.lookVector)}
+		end
+	}
+	silentaimfunctions.FindPartOnRayWithWhitelist = silentaimfunctions.FindPartOnRayWithIgnoreList
+	silentaimfunctions.FindPartOnRay = silentaimfunctions.FindPartOnRayWithIgnoreList
+	silentaimfunctions.ViewportPointToRay = silentaimfunctions.ScreenPointToRay
+
+	local silentaimenabled = {
+		Normal = function()
+			if not aimbound then
+				aimbound = true
+				local oldnamecall
+				oldnamecall = hookmetamethod(game, "__namecall", function(self, ...)
+					if (not AimAssist["Enabled"]) then
+						return oldnamecall(self, ...)
+					end
+					local NamecallMethod = getnamecallmethod()
+					if NamecallMethod ~= aimmethod["Value"] then
+						return oldnamecall(self, ...)
+					end 
+					if checkcaller() then
+						return oldnamecall(self, ...)
+					end
+					local calling = getcallingscript() 
+					if calling then
+						local list = #aimignoredscripts["ObjectList"] > 0 and aimignoredscripts["ObjectList"] or {"ControlScript", "ControlModule"}
+						if table.find(list, tostring(calling)) then
+							return oldnamecall(self, ...)
+						end
+					end
+					local Args = {...}
+					local res = silentaimfunctions[aimmethod["Value"]](Args)
+					if res then 
+						return unpack(res)
+					end
+					return oldnamecall(self, unpack(Args))
+				end)
+			end
+		end,
+		NormalV3 = function()
+			if not aimbound then
+				aimbound = true
+				filterobj = NamecallFilter.new(aimmethod["Value"])
+				local oldnamecall
+				oldnamecall = hookmetamethod(game, "__namecall", getfilter(filterobj, function(self, ...) return oldnamecall(self, ...) end, function(self, ...)
+					if (not AimAssist["Enabled"]) then
+						return oldnamecall(self, ...)
+					end
+					if checkcaller() then
+						return oldnamecall(self, ...)
+					end
+					local calling = getcallingscript() 
+					if calling then
+						local list = #aimignoredscripts["ObjectList"] > 0 and aimignoredscripts["ObjectList"] or {"ControlScript", "ControlModule"}
+						if table.find(list, tostring(calling)) then
+							return oldnamecall(self, ...)
+						end
+					end
+					local Args = {...}
+					local res = silentaimfunctions[aimmethod["Value"]](Args)
+					if res then 
+						return unpack(res)
+					end
+					return oldnamecall(self, unpack(Args))
+				end))
+			end
+		end
+	}
+
+	local methodused
 	AimAssist = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SilentAim", 
 		["Function"] = function(callback) 
 			if callback then
+				methodused = "Normal"..v3check
 				spawn(function()
 					repeat
 						task.wait(0.1)
@@ -497,160 +677,10 @@ runcode(function()
 				if aimfovframe then
 					aimfovframe.Visible = aimmode["Value"] ~= "Blatant"
 				end
-				if not aimbound then
-					aimbound = true
-					local oldnamecall
-					oldnamecall = hookmetamethod(game, "__namecall", function(self, ...)
-						if (not AimAssist["Enabled"]) then
-							return oldnamecall(self, ...)
-						end
-						local NamecallMethod = getnamecallmethod()
-						if NamecallMethod ~= aimmethod["Value"] then
-							return oldnamecall(self, ...)
-						end 
-						if checkcaller() then
-							return oldnamecall(self, ...)
-						end
-						local Args = {...}
-						local calling = getcallingscript() 
-						if calling then
-							local list = #aimignoredscripts["ObjectList"] > 0 and aimignoredscripts["ObjectList"] or {"ControlScript", "ControlModule"}
-							if table.find(list, tostring(calling)) then
-								return oldnamecall(self, ...)
-							else
-							--	print("SilentAim ["..NamecallMethod.."]: "..tostring(calling))
-								if aimtable[aimmethod["Value"]] == 1 then
-									if type(Args[2]) == "table" then
-									--	local str = "{"
-									--	for i,v in pairs(Args[2]) do 
-										--	str = str..tostring(v)..(#Args[2] == i and "}" or ", ")
-										--end
-									--	print("FilterInstances ["..#Args[2].."]: "..str)
-									end
-								elseif aimtable[aimmethod["Value"]] == 2 then
-									if aimmethodmode["Value"] ~= "All" and aimmethodmode["Value"] ~= Args[3].FilterType.Name then
-										return oldnamecall(self, ...)
-									else
-									--	local str = "{"
-									--	for i,v in pairs(Args[3].FilterDescendantsInstances) do 
-									--		str = str..tostring(v)..(#Args[3].FilterDescendantsInstances == i and "}" or ", ")
-									--	end
-									--	print("FilterInstances ["..#Args[3].FilterDescendantsInstances.."]: "..str)
-										--print("FilterType: "..Args[3].FilterType.Name)
-									end
-								end
-							end
-						end
-						local plr
-						if aimmode["Value"] == "Legit" then
-							plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
-						else
-							plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
-						end
-						if not plr then
-							return oldnamecall(self, ...)
-						end
-						recentlyshotplr = plr
-						recentlyshottick = tick() + 3
-						local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Head or plr.RootPart
-						if aimtable[aimmethod["Value"]] == 1 then
-							local mag = (Vector3.new() - Args[1].Direction).Magnitude
-							local direction = CFrame.lookAt(Args[1].Origin, tar.Position).lookVector * mag
-							Args[1] = Ray.new(Args[1].Origin, direction)
-							if aimwallbang["Enabled"] then
-								return tar, tar.Position, direction, tar.Material
-							end
-						elseif aimtable[aimmethod["Value"]] == 2 then
-							local mag = (Vector3.new() - Args[2]).Magnitude
-							local direction = CFrame.lookAt(Args[1], tar.Position).lookVector * mag
-							Args[2] = direction
-							if aimwallbang["Enabled"] then
-								local haha = RaycastParams.new()
-								haha.FilterType = Enum.RaycastFilterType.Whitelist
-								haha.FilterDescendantsInstances = {tar}
-								Args[3] = haha
-							end
-						elseif aimtable[aimmethod["Value"]] == 3 then
-							local direction = CFrame.lookAt(cam.CFrame.p, tar.Position).lookVector.Unit
-							return Ray.new(cam.CFrame.p, direction)
-						end
-						return oldnamecall(self, unpack(Args))
-					end)
-					--[[local oldindex
-					oldindex = hookmetamethod(game, "__index", function(Self, Val)
-						if (not tar) or (not AimAssist["Enabled"]) then
-							return oldindex(Self, Val)
-						end
-						if checkcaller() then
-							return oldindex(Self, Val)
-						end
-						if aimmethod["Value"] ~= "Mouse" then
-							return oldindex(Self, Val)
-						end
-						local calling = getcallingscript() 
-						if calling then
-							local list = #aimignoredscripts["ObjectList"] > 0 and aimignoredscripts["ObjectList"] or {"ControlModule"}
-							if table.find(list, tostring(calling)) then
-								return oldindex(Self, Val)
-							end
-						end
-						local plr
-						if aimmode["Value"] == "Legit" then
-							plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
-						else
-							plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
-						end
-						if not plr then
-							return oldindex(Self, Val)
-						end
-						local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and plr.Character.Head or plr.Character.HumanoidRootPart
-						if tostring(Val) == "Hit" then
-							return tar.CFrame
-						elseif tostring(Val) == "Target" then
-							return tar
-						elseif tostring(Val) == "UnitRay" then
-							local direction = CFrame.lookAt(Self.UnitRay.Origin, tar.Position).lookVector.Unit
-							return Ray.new(Self.UnitRay.Origin, direction)
-						end
-
-						return oldindex(Self, Val)
-					end)]]
+				if silentaimenabled[methodused] then 
+					silentaimenabled[methodused]()
 				end
-			--[[	BindToRenderStep("AimAssist", 1, function() 
-					if entity.isAlive then
-						local targettable = {}
-						local targetsize = 0
-						if plr and (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimhitchance["Value"] then
-							targettable[plr.Player.Name] = {
-								["UserId"] = plr.Player.UserId,
-								["Health"] = plr.Character.Humanoid.Health,
-								["MaxHealth"] = plr.Character.Humanoid.MaxHealth
-							}
-							targetsize = targetsize + 1
-							if aimautofire["Enabled"] then
-								if mouse1click and iswindowactive() and shoottime <= tick() and isNotHoveringOverGui() and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
-									if pressed then
-										mouse1release()
-									else
-										mouse1press()
-									end
-									pressed = not pressed
-									shoottime = tick() + 0.01
-								end
-							end
-							targetinfo.UpdateInfo(targettable, targetsize)
-						else
-							if pressed then
-								mouse1release()
-							end
-							pressed = false
-							tar = nil
-							targetinfo.UpdateInfo({}, 0)
-						end
-					end
-				end)]]
 			else
-			--	UnbindFromRenderStep("AimAssist") 
 				tar = nil 
 			end
 		end,
@@ -679,6 +709,9 @@ runcode(function()
 		["List"] = {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay"},
 		["Function"] = function(val)
 			aimmethodmode["Object"].Visible = val == "Raycast"
+			if filterobj then 
+				filterobj.NamecallMethod = val
+			end
 		end
 	})
 	aimfovframecolor = AimAssist.CreateColorSlider({
@@ -714,6 +747,13 @@ runcode(function()
 		["Function"] = function(val) end,
 		["Default"] = 25
 	})
+	aimmag = AimAssist.CreateSlider({
+		["Name"] = "Ray Length", 
+		["Min"] = 0,
+		["Max"] = 1000, 
+		["Function"] = function(val) end,
+		["Default"] = 0
+	})
 	aimfovshow = AimAssist.CreateToggle({
 		["Name"] = "FOV Circle",
 		["Function"] = function(callback) 
@@ -725,7 +765,7 @@ runcode(function()
 				aimfovframe.BackgroundColor3 = Color3.fromHSV(aimfovframecolor["Hue"], aimfovframecolor["Sat"], aimfovframecolor["Value"])
 				aimfovframe.Size = UDim2.new(0, aimfov["Value"], 0, aimfov["Value"])
 				aimfovframe.AnchorPoint = Vector2.new(0.5, 0.5)
-				aimfovframe.Position = UDim2.new(0.5, 0, 0.5, 0)
+				aimfovframe.Position = UDim2.new(0.5, 0, 0.5, -18)
 				aimfovframe.Parent = GuiLibrary["MainGui"]
 				local corner = Instance.new("UICorner")
 				corner.CornerRadius = UDim.new(0, 2048)
@@ -756,9 +796,19 @@ runcode(function()
 						if AimAssist["Enabled"] then
 							local plr
 							if aimmode["Value"] == "Legit" then
-								plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
+								plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
+									WallCheck = aimvischeck["Enabled"],
+									AimPart = "Head",
+									Origin = cam.CFrame.p,
+									IgnoreTable = aimsmartab
+								})
 							else
-								plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], aimvischeck["Enabled"], aimsmartab)
+								plr = GetNearestHumanoidToPosition(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
+									WallCheck = aimvischeck["Enabled"],
+									AimPart = "Head",
+									Origin = cam.CFrame.p,
+									IgnoreTable = aimsmartab
+								})
 							end
 							if plr then
 								if mouse1click and (isrbxactive and isrbxactive() or iswindowactive and iswindowactive()) and shoottime <= tick() then
@@ -769,7 +819,7 @@ runcode(function()
 											mouse1press()
 										end
 										pressed = not pressed
-										shoottime = tick() + 0.01
+										shoottime = tick() + 0.001
 									else
 										if pressed then
 											mouse1release()
@@ -790,17 +840,26 @@ runcode(function()
 		end,
 		["HoverText"] = "Automatically fires gun",
 	})
+	local aimsmartconnection
 	aimsmartignore = AimAssist.CreateToggle({
 		["Name"] = "Smart Ignore",
 		["Function"] = function(callback)
 			if callback then
-				for i,v in pairs(workspace:GetChildren()) do
-					if v.Name:lower():find("junk") or v.Name:lower():find("trash") or v.Name:lower():find("ignore") then
+				aimsmartconnection = workspace.DescendantAdded:Connect(function(v)
+					local lowername = v.Name:lower()
+					if lowername:find("junk") or lowername:find("trash") or lowername:find("ignore") or lowername:find("particle") or lowername:find("spawn") or lowername:find("bullet") or lowername:find("debris") then
+						table.insert(aimsmartab, v)
+					end
+				end)
+				for i,v in pairs(workspace:GetDescendants()) do
+					local lowername = v.Name:lower()
+					if lowername:find("junk") or lowername:find("trash") or lowername:find("ignore") or lowername:find("particle") or lowername:find("spawn") or lowername:find("bullet") or lowername:find("debris") then
 						table.insert(aimsmartab, v)
 					end
 				end
 			else
 				table.clear(aimsmartab)
+				if aimsmartconnection then aimsmartconnection:Disconnect() end
 			end
 		end,
 		["HoverText"] = "Ignores certain folders and what not with certain names"
@@ -1119,6 +1178,7 @@ runcode(function()
 	local flymethod = {["Value"] = "Normal"}
 	local flymovemethod = {["Value"] = "MoveDirection"}
 	local flykeys = {["Value"] = "Space/LeftControl"}
+	local flystate = {["Value"] = "Normal"}
 	local flyplatformtoggle = {["Enabled"] = false}
 	local flyplatformstanding = {["Enabled"] = false}
 	local flyplatform
@@ -1200,6 +1260,9 @@ runcode(function()
 						end
 						local movevec = (flymovemethod["Value"] == "Manual" and (not (w or s or a or d)) and Vector3.new() or entity.character.Humanoid.MoveDirection).Unit
 						movevec = movevec == movevec and movevec or Vector3.new()
+						if flystate["Value"] ~= "None" then 
+							entity.character.Humanoid:ChangeState(Enum.HumanoidStateType[flystate["Value"]])
+						end
 						if flymethod["Value"] == "Normal" then
 							if flyplatformstanding["Enabled"] then
 								entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, entity.character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
@@ -1237,7 +1300,7 @@ runcode(function()
 							end
 						end
 						if flyplatform then
-							flyplatform.CFrame = (flymethod["Value"] == "Jump" and flyjumpcf or entity.character.HumanoidRootPart.CFrame * CFrame.new(0, -entity.character.Humanoid.HipHeight * 2, 0))
+							flyplatform.CFrame = (flymethod["Value"] == "Jump" and flyjumpcf or entity.character.HumanoidRootPart.CFrame * CFrame.new(0, -entity.character.Humanoid.HipHeight * (flymethod["Value"] == "Normal" and 1.75 or 2), 0))
 							flyplatform.Velocity = Vector3.new()
 							flyplatform.Parent = cam
 						end
@@ -1280,6 +1343,13 @@ runcode(function()
 	flykeys = fly.CreateDropdown({
 		["Name"] = "Keys", 
 		["List"] = {"Space/LeftControl", "Space/LeftShift", "E/Q", "Space/Q"},
+		["Function"] = function(val) end
+	})
+	local states = {"None"}
+	for i,v in pairs(Enum.HumanoidStateType:GetEnumItems()) do if v.Name ~= "Dead" and v.Name ~= "None" then table.insert(states, v.Name) end end
+	flystate = fly.CreateDropdown({
+		["Name"] = "State", 
+		["List"] = states,
 		["Function"] = function(val) end
 	})
 	flyspeed = fly.CreateSlider({
@@ -1414,7 +1484,7 @@ Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOpt
 									}
 									targetsize = targetsize + 1
 									if killauracframe["Enabled"] then
-										entity.character.RootPart.CFrame = CFrame.new(entity.character.RootPart.Position, Vector3.new(v.RootPart.Position.X, entity.character.RootPart.Position.Y, v.RootPart.Position.Z))
+										entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.Position, Vector3.new(v.RootPart.Position.X, entity.character.HumanoidRootPart.Position.Y, v.RootPart.Position.Z))
 									end
 									if killauratick <= tick() then
 										tool:Activate()
@@ -2036,37 +2106,10 @@ ArrowsTeammate = Arrows.CreateToggle({
 })
 
 runcode(function()
-	local ESPFolder = Instance.new("Folder")
-	ESPFolder.Name = "ESPFolder"
-	ESPFolder.Parent = GuiLibrary["MainGui"]
 	local espfolderdrawing = {}
-	players.PlayerRemoving:connect(function(plr)
-		if ESPFolder:FindFirstChild(plr.Name) then
-			ESPFolder[plr.Name]:Remove()
-		end
-		if espfolderdrawing[plr.Name] then
-			pcall(function()
-				pcall(function()
-					espfolderdrawing[plr.Name].Quad1:Remove()
-					espfolderdrawing[plr.Name].Quad2:Remove()
-					espfolderdrawing[plr.Name].Quad3:Remove()
-					espfolderdrawing[plr.Name].Quad4:Remove()
-				end)
-				pcall(function()
-					espfolderdrawing[plr.Name].Head:Remove()
-					espfolderdrawing[plr.Name].Head2:Remove()
-					espfolderdrawing[plr.Name].Torso:Remove()
-					espfolderdrawing[plr.Name].Torso2:Remove()
-					espfolderdrawing[plr.Name].Torso3:Remove()
-					espfolderdrawing[plr.Name].LeftArm:Remove()
-					espfolderdrawing[plr.Name].RightArm:Remove()
-					espfolderdrawing[plr.Name].LeftLeg:Remove()
-					espfolderdrawing[plr.Name].RightLeg:Remove()
-				end)
-				espfolderdrawing[plr.Name] = nil
-			end)
-		end
-	end)
+	local methodused
+	local espfolder = Instance.new("Folder")
+	espfolder.Parent = GuiLibrary["MainGui"]
 
 	local function floorpos(pos)
 		return Vector2.new(math.floor(pos.X), math.floor(pos.Y))
@@ -2074,498 +2117,591 @@ runcode(function()
 
 	local ESPColor = {["Value"] = 0.44}
 	local ESPHealthBar = {["Enabled"] = false}
+	local ESPBoundingBox = {["Enabled"] = true}
+	local ESPName = {["Enabled"] = true}
 	local ESPMethod = {["Value"] = "2D"}
-	local ESPDrawing = {["Enabled"] = false}
 	local ESPTeammates = {["Enabled"] = true}
-	local ESPAlive = {["Enabled"] = false}
+	local espconnections = {}
+	local addedconnection
+	local removedconnection
+	local updatedconnection
+
+	local espfuncs1 = {
+		Drawing2D = function(plr)
+			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			local thing = {}
+			thing.entity = plr
+			thing.Quad1 = Drawing.new("Quad")
+			thing.Quad1.Thickness = 2
+			thing.Quad1.Transparency = ESPBoundingBox["Enabled"] and 1 or 0
+			thing.Quad1.ZIndex = 2
+			thing.Quad1.Color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+			thing.Quad2 = Drawing.new("Quad")
+			thing.Quad2.Thickness = ESPBoundingBox["Enabled"] and 3 or 0
+			thing.Quad2.Transparency = ESPBoundingBox["Enabled"] and 0.5 or 0
+			thing.Quad2.ZIndex = 1
+			thing.Quad2.Color = Color3.new(0, 0, 0)
+			if ESPHealthBar["Enabled"] then 
+				thing.Quad3 = Drawing.new("Line")
+				thing.Quad3.Thickness = 1
+				thing.Quad3.ZIndex = 2
+				thing.Quad3.Color = Color3.new(0, 1, 0)
+				thing.Quad4 = Drawing.new("Line")
+				thing.Quad4.Thickness = 3
+				thing.Quad4.Transparency = 0.5
+				thing.Quad4.ZIndex = 1
+				thing.Quad4.Color = Color3.new(0, 0, 0)
+			end
+			if ESPName["Enabled"] then 
+				thing.Text = Drawing.new("Text")
+				thing.Text.Text = plr.Player.DisplayName or plr.Player.Name
+				thing.Text.ZIndex = 2
+				thing.Text.Color = thing.Quad1.Color
+				thing.Text.Center = true
+				thing.Text.Size = 20
+				thing.Drop = Drawing.new("Text")
+				thing.Drop.Color = Color3.new()
+				thing.Drop.Text = plr.Player.DisplayName or plr.Player.Name
+				thing.Drop.ZIndex = 1
+				thing.Drop.Center = true
+				thing.Drop.Size = 20
+			end
+			espfolderdrawing[plr.Player] = thing
+		end,
+		Drawing2DV3 = function(plr)
+			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			local toppoint = PointInstance.new(plr.RootPart, CFrame.new(2, 3, 0))
+			local bottompoint = PointInstance.new(plr.RootPart, CFrame.new(-2, -3.5, 0))
+			local newobj = RectDynamic.new(toppoint)
+			newobj.BottomRight = bottompoint
+			newobj.Outlined = ESPBoundingBox["Enabled"]
+			newobj.Opacity = ESPBoundingBox["Enabled"] and 1 or 0
+			newobj.OutlineOpacity = 0.5
+			newobj.Color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+			local newobj2 = {}
+			local newobj3 = {}
+			if ESPHealthBar["Enabled"] then 
+				local topoffset = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(-2, 3, 0)), Vector2.new(-5, -1))
+				local bottomoffset = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(-2, -3.5, 0)), Vector2.new(-3, 1))
+				local healthoffset = PointOffset.new(bottomoffset, Vector2.new(-1, -1))
+				local healthoffset2 = PointOffset.new(bottomoffset, Vector2.new(-1, -((bottomoffset.ScreenPos.Y - topoffset.ScreenPos.Y) - 1)))
+				newobj2.Bkg = RectDynamic.new(topoffset)
+				newobj2.Bkg.Filled = true
+				newobj2.Bkg.Opacity = 0.5
+				newobj2.Bkg.BottomRight = bottomoffset
+				newobj2.Line = RectDynamic.new(healthoffset)
+				newobj2.Line.Filled = true
+				newobj2.Line.YAlignment = YAlignment.Bottom
+				newobj2.Line.BottomRight = healthoffset2
+				newobj2.Line.Color = HealthbarColorTransferFunction(plr.Humanoid.Health / plr.Humanoid.MaxHealth)
+				newobj2.Offset = healthoffset2
+				newobj2.TopOffset = topoffset
+				newobj2.BottomOffset = bottomoffset
+			end
+			if ESPName["Enabled"] then 
+				local nameoffset1 = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(0, 3, 0)), Vector2.new(0, -15))
+				local nameoffset2 = PointOffset.new(nameoffset1, Vector2.new(1, 1))
+				newobj3.Text = TextDynamic.new(nameoffset1)
+				newobj3.Text.Text = plr.Player.DisplayName or plr.Player.Name
+				newobj3.Text.Color = newobj.Color
+				newobj3.Text.ZIndex = 2
+				newobj3.Text.Size = 20
+				newobj3.Drop = TextDynamic.new(nameoffset2)
+				newobj3.Drop.Text = plr.Player.DisplayName or plr.Player.Name
+				newobj3.Drop.Color = Color3.new()
+				newobj3.Drop.ZIndex = 1
+				newobj3.Drop.Size = 20
+			end
+			espfolderdrawing[plr.Player] = {entity = plr, Main = newobj, HealthBar = newobj2, Name = newobj3}
+		end,
+		DrawingSkeleton = function(plr)
+			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			local thing = {}
+			thing.Head = Drawing.new("Line")
+			thing.Head2 = Drawing.new("Line")
+			thing.Torso = Drawing.new("Line")
+			thing.Torso2 = Drawing.new("Line")
+			thing.Torso3 = Drawing.new("Line")
+			thing.LeftArm = Drawing.new("Line")
+			thing.RightArm = Drawing.new("Line")
+			thing.LeftLeg = Drawing.new("Line")
+			thing.RightLeg = Drawing.new("Line")
+			local color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+			for i,v in pairs(thing) do v.Thickness = 2 v.Color = color end
+			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
+		end,
+		DrawingSkeletonV3 = function(plr)
+			if ESPTeammates["Enabled"] and plr.Targetable then return end
+			thing = {Main = {}, entity = plr}
+			local rigcheck = plr.Humanoid.RigType == Enum.HumanoidRigType.R6
+			local head = PointInstance.new(plr.Head)
+			head.RotationType = CFrameRotationType.TargetRelative
+			local headfront = PointInstance.new(plr.Head, CFrame.new(0, 0, -0.5))
+			headfront.RotationType = CFrameRotationType.TargetRelative
+			local toplefttorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(-1.5, 0.8, 0))
+			toplefttorso.RotationType = CFrameRotationType.TargetRelative
+			local toprighttorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(1.5, 0.8, 0))
+			toprighttorso.RotationType = CFrameRotationType.TargetRelative
+			local toptorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(0, 0.8, 0))
+			toptorso.RotationType = CFrameRotationType.TargetRelative
+			local bottomtorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(0, -0.8, 0))
+			bottomtorso.RotationType = CFrameRotationType.TargetRelative
+			local bottomlefttorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(-0.5, -0.8, 0))
+			bottomlefttorso.RotationType = CFrameRotationType.TargetRelative
+			local bottomrighttorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(0.5, -0.8, 0))
+			bottomrighttorso.RotationType = CFrameRotationType.TargetRelative
+			local leftarm = PointInstance.new(plr.Character[(rigcheck and "Left Arm" or "LeftHand")], CFrame.new(0, -0.8, 0))
+			leftarm.RotationType = CFrameRotationType.TargetRelative
+			local rightarm = PointInstance.new(plr.Character[(rigcheck and "Right Arm" or "RightHand")], CFrame.new(0, -0.8, 0))
+			rightarm.RotationType = CFrameRotationType.TargetRelative
+			local leftleg = PointInstance.new(plr.Character[(rigcheck and "Left Leg" or "LeftFoot")], CFrame.new(0, -0.8, 0))
+			leftleg.RotationType = CFrameRotationType.TargetRelative
+			local rightleg = PointInstance.new(plr.Character[(rigcheck and "Right Leg" or "RightFoot")], CFrame.new(0, -0.8, 0))
+			rightleg.RotationType = CFrameRotationType.TargetRelative
+			thing.Main.Head = LineDynamic.new(toptorso, head)
+			thing.Main.Head2 = LineDynamic.new(head, headfront)
+			thing.Main.Torso = LineDynamic.new(toplefttorso, toprighttorso)
+			thing.Main.Torso2 = LineDynamic.new(toptorso, bottomtorso)
+			thing.Main.Torso3 = LineDynamic.new(bottomlefttorso, bottomrighttorso)
+			thing.Main.LeftArm = LineDynamic.new(toplefttorso, leftarm)
+			thing.Main.RightArm = LineDynamic.new(toprighttorso, rightarm)
+			thing.Main.LeftLeg = LineDynamic.new(bottomlefttorso, leftleg)
+			thing.Main.RightLeg = LineDynamic.new(bottomrighttorso, rightleg)
+			local color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+			for i,v in pairs(thing) do v.Thickness = 2 v.Color = color end
+			espfolderdrawing[plr.Player] = thing
+		end,
+		Drawing3D = function(plr)
+			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			local thing = {}
+			thing.Line1 = Drawing.new("Line")
+			thing.Line2 = Drawing.new("Line")
+			thing.Line3 = Drawing.new("Line")
+			thing.Line4 = Drawing.new("Line")
+			thing.Line5 = Drawing.new("Line")
+			thing.Line6 = Drawing.new("Line")
+			thing.Line7 = Drawing.new("Line")
+			thing.Line8 = Drawing.new("Line")
+			thing.Line9 = Drawing.new("Line")
+			thing.Line10 = Drawing.new("Line")
+			thing.Line11 = Drawing.new("Line")
+			thing.Line12 = Drawing.new("Line")
+			local color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+			for i,v in pairs(thing) do v.Thickness = 1 v.Color = color end
+			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
+		end,
+		Drawing3DV3 = function(plr)
+			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			thing = {}
+			local point1 = PointInstance.new(plr.RootPart, CFrame.new(1.5, 3, 1.5))
+			point1.RotationType = CFrameRotationType.Ignore
+			local point2 = PointInstance.new(plr.RootPart, CFrame.new(1.5, -3, 1.5))
+			point2.RotationType = CFrameRotationType.Ignore
+			local point3 = PointInstance.new(plr.RootPart, CFrame.new(-1.5, 3, 1.5))
+			point3.RotationType = CFrameRotationType.Ignore
+			local point4 = PointInstance.new(plr.RootPart, CFrame.new(-1.5, -3, 1.5))
+			point4.RotationType = CFrameRotationType.Ignore
+			local point5 = PointInstance.new(plr.RootPart, CFrame.new(1.5, 3, -1.5))
+			point5.RotationType = CFrameRotationType.Ignore
+			local point6 = PointInstance.new(plr.RootPart, CFrame.new(1.5, -3, -1.5))
+			point6.RotationType = CFrameRotationType.Ignore
+			local point7 = PointInstance.new(plr.RootPart, CFrame.new(-1.5, 3, -1.5))
+			point7.RotationType = CFrameRotationType.Ignore
+			local point8 = PointInstance.new(plr.RootPart, CFrame.new(-1.5, -3, -1.5))
+			point8.RotationType = CFrameRotationType.Ignore
+			thing.Line1 = LineDynamic.new(point1, point2)
+			thing.Line2 = LineDynamic.new(point3, point4)
+			thing.Line3 = LineDynamic.new(point5, point6)
+			thing.Line4 = LineDynamic.new(point7, point8)
+			thing.Line5 = LineDynamic.new(point1, point3)
+			thing.Line6 = LineDynamic.new(point1, point5)
+			thing.Line7 = LineDynamic.new(point5, point7)
+			thing.Line8 = LineDynamic.new(point7, point3)
+			thing.Line9 = LineDynamic.new(point2, point4)
+			thing.Line10 = LineDynamic.new(point2, point6)
+			thing.Line11 = LineDynamic.new(point6, point8)
+			thing.Line12 = LineDynamic.new(point8, point4)
+			local color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
+			for i,v in pairs(thing) do v.Thickness = 1 v.Color = color end
+			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
+		end
+	}
+	local espfuncs2 = {
+		Drawing2D = function(ent)
+			local v = espfolderdrawing[ent]
+			espfolderdrawing[ent] = nil
+			if v then 
+				for i2,v2 in pairs(v) do
+					if v2.Color then 
+						pcall(function() v2.Visible = false v2:Remove() end)
+					end
+				end
+			end
+		end,
+		Drawing2DV3 = function(ent)
+			local v = espfolderdrawing[ent]
+			espfolderdrawing[ent] = nil
+			if v then
+				v.Main.Visible = false
+				for i2,v2 in pairs(v.HealthBar) do
+					if typeof(v2):find("Point") == nil then 
+						v2.Visible = false
+					end
+				end
+				for i2,v2 in pairs(v.Name) do
+					if typeof(v2):find("Point") == nil then 
+						v2.Visible = false
+					end
+				end
+			end
+		end,
+		Drawing3D = function(ent)
+			local v = espfolderdrawing[ent]
+			espfolderdrawing[ent] = nil
+			if v then 
+				for i2,v2 in pairs(v.Main) do
+					pcall(function() v2.Visible = false v2:Remove() end)
+				end
+			end
+		end,
+		Drawing3DV3 = function(ent)
+			local v = espfolderdrawing[ent]
+			espfolderdrawing[ent] = nil
+			if v then
+				for i2,v2 in pairs(v.Main) do
+					if typeof(v2):find("Dynamic") then 
+						v2.Visible = false
+					end
+				end
+			end
+		end,
+		DrawingSkeleton = function(ent)
+			local v = espfolderdrawing[ent]
+			espfolderdrawing[ent] = nil
+			if v then 
+				for i2,v2 in pairs(v.Main) do
+					pcall(function() v2.Visible = false v2:Remove() end)
+				end
+			end
+		end,
+		DrawingSkeletonV3 = function(ent)
+			local v = espfolderdrawing[ent]
+			espfolderdrawing[ent] = nil
+			if v then 
+				for i2,v2 in pairs(v.Main) do
+					if typeof(v2):find("Dynamic") then 
+						v2.Visible = false
+					end
+				end
+			end
+		end
+	}
+	local espupdatefuncs = {
+		Drawing2D = function(ent)
+			local v = espfolderdrawing[ent.Player]
+			if v and v.Quad3 then 
+				local color = HealthbarColorTransferFunction(ent.Humanoid.Health / ent.Humanoid.MaxHealth)
+				v.Quad3.Color = color
+			end
+		end,
+		Drawing2DV3 = function(ent)
+			local v = espfolderdrawing[ent.Player]
+			if v and v.HealthBar.Line then 
+				local health = ent.Humanoid.Health / ent.Humanoid.MaxHealth
+				local color = HealthbarColorTransferFunction(health)
+				v.HealthBar.Line.Color = color
+			end
+		end
+	}
+	local espcolorfuncs = {
+		Drawing2D = function(hue, sat, value)
+			local color = Color3.fromHSV(hue, sat, value)
+			for i,v in pairs(espfolderdrawing) do 
+				v.Quad1.Color = getPlayerColor(v.entity.Player) or color
+				if v.Text then 
+					v.Text.Color = v.Quad1.Color
+				end
+			end
+		end,
+		Drawing2DV3 = function(hue, sat, value)
+			local color = Color3.fromHSV(hue, sat, value)
+			for i,v in pairs(espfolderdrawing) do 
+				v.Main.Color = getPlayerColor(v.entity.Player) or color
+				if v.Name.Text then 
+					v.Name.Text.Color = v.Main.Color
+				end
+			end
+		end,
+		Drawing3D = function(hue, sat, value)
+			local color = Color3.fromHSV(hue, sat, value)
+			for i,v in pairs(espfolderdrawing) do 
+				for i2,v2 in pairs(v.Main) do
+					v2.Color = getPlayerColor(v.entity.Player) or color
+				end
+			end
+		end,
+		Drawing3DV3 = function(hue, sat, value)
+			local color = Color3.fromHSV(hue, sat, value)
+			for i,v in pairs(espfolderdrawing) do 
+				for i2,v2 in pairs(v.Main) do
+					if typeof(v2):find("Dynamic") then 
+						v2.Color = getPlayerColor(v.entity.Player) or color
+					end
+				end
+			end
+		end,
+		DrawingSkeleton = function(hue, sat, value)
+			local color = Color3.fromHSV(hue, sat, value)
+			for i,v in pairs(espfolderdrawing) do 
+				for i2,v2 in pairs(v.Main) do
+					v2.Color = getPlayerColor(v.entity.Player) or color
+				end
+			end
+		end,
+		DrawingSkeletonV3 = function(hue, sat, value)
+			local color = Color3.fromHSV(hue, sat, value)
+			for i,v in pairs(espfolderdrawing) do 
+				for i2,v2 in pairs(v.Main) do
+					if typeof(v2):find("Dynamic") then 
+						v2.Color = getPlayerColor(v.entity.Player) or color
+					end
+				end
+			end
+		end,
+	}
+	local esploop = {
+		Drawing2D = function()
+			for i,v in pairs(espfolderdrawing) do 
+				local rootPos, rootVis = cam:WorldToViewportPoint(v.entity.RootPart.Position)
+				local rootSize = (v.entity.RootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
+				local headPos, headVis = cam:WorldToViewportPoint(v.entity.RootPart.Position + Vector3.new(0, 3, 0))
+				local legPos, legVis = cam:WorldToViewportPoint(v.entity.RootPart.Position - Vector3.new(0, 3.5, 0))
+				if not rootVis then 
+					v.Quad1.Visible = false
+					v.Quad2.Visible = false
+					if v.Quad3 then 
+						v.Quad3.Visible = false
+						v.Quad4.Visible = false
+					end
+					if v.Text then 
+						v.Text.Visible = false
+						v.Drop.Visible = false
+					end
+					continue 
+				end
+				local sizex, sizey = (rootSize / rootPos.Z), (headPos.Y - legPos.Y) 
+				local posx, posy = (rootPos.X - sizex / 2),  ((rootPos.Y - sizey / 2))
+				v.Quad1.PointA = floorpos(Vector2.new(posx + sizex, posy))
+				v.Quad1.PointB = floorpos(Vector2.new(posx, posy))
+				v.Quad1.PointC = floorpos(Vector2.new(posx, posy + sizey))
+				v.Quad1.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
+				v.Quad1.Visible = true
+				v.Quad2.PointA = floorpos(Vector2.new(posx + sizex, posy))
+				v.Quad2.PointB = floorpos(Vector2.new(posx, posy))
+				v.Quad2.PointC = floorpos(Vector2.new(posx, posy + sizey))
+				v.Quad2.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
+				v.Quad2.Visible = true
+				if v.Quad3 then 
+					local healthposy = sizey * math.clamp(v.entity.Humanoid.Health / v.entity.Humanoid.MaxHealth, 0, 1)
+					v.Quad3.Visible = true
+					v.Quad3.From = floorpos(Vector2.new(posx - 4, posy + sizey - (sizey - healthposy)))
+					v.Quad3.To = floorpos(Vector2.new(posx - 4, posy))
+					v.Quad4.Visible = true
+					v.Quad4.From = floorpos(Vector2.new(posx - 4, posy + 1))
+					v.Quad4.To = floorpos(Vector2.new(posx - 4, posy + sizey - 1))
+				end
+				if v.Text then 
+					v.Text.Visible = true
+					v.Drop.Visible = true
+					v.Text.Position = floorpos(Vector2.new(posx + (sizex / 2), posy + (sizey - 25)))
+					v.Drop.Position = v.Text.Position + Vector2.new(1, 1)
+				end
+			end
+		end,
+		Drawing2DV3 = function()
+			for i,v in pairs(espfolderdrawing) do 
+				if v.HealthBar.Offset then 
+					v.HealthBar.Offset.Offset = Vector2.new(-1, -(((v.HealthBar.BottomOffset.ScreenPos.Y - v.HealthBar.TopOffset.ScreenPos.Y) - 1) * (v.entity.Humanoid.Health / v.entity.Humanoid.MaxHealth)))
+				end
+			end
+		end,
+		Drawing3D = function()
+			for i,v in pairs(espfolderdrawing) do 
+				local rootPos, rootVis = cam:WorldToViewportPoint(v.entity.RootPart.Position)
+				if not rootVis then 
+					for i,v in pairs(v.Main) do 
+						v.Visible = false
+					end
+					continue 
+				end
+				for i,v in pairs(v.Main) do 
+					v.Visible = true
+				end
+				local point1 = CalculateObjectPosition(v.entity.RootPart.Position + Vector3.new(1.5, 3, 1.5))
+				local point2 = CalculateObjectPosition(v.entity.RootPart.Position + Vector3.new(1.5, -3, 1.5))
+				local point3 = CalculateObjectPosition(v.entity.RootPart.Position + Vector3.new(-1.5, 3, 1.5))
+				local point4 = CalculateObjectPosition(v.entity.RootPart.Position + Vector3.new(-1.5, -3, 1.5))
+				local point5 = CalculateObjectPosition(v.entity.RootPart.Position + Vector3.new(1.5, 3, -1.5))
+				local point6 = CalculateObjectPosition(v.entity.RootPart.Position + Vector3.new(1.5, -3, -1.5))
+				local point7 = CalculateObjectPosition(v.entity.RootPart.Position + Vector3.new(-1.5, 3, -1.5))
+				local point8 = CalculateObjectPosition(v.entity.RootPart.Position + Vector3.new(-1.5, -3, -1.5))
+				v.Main.Line1.From = point1
+				v.Main.Line1.To = point2
+				v.Main.Line2.From = point3
+				v.Main.Line2.To = point4
+				v.Main.Line3.From = point5
+				v.Main.Line3.To = point6
+				v.Main.Line4.From = point7
+				v.Main.Line4.To = point8
+				v.Main.Line5.From = point1
+				v.Main.Line5.To = point3
+				v.Main.Line6.From = point1
+				v.Main.Line6.To = point5
+				v.Main.Line7.From = point5
+				v.Main.Line7.To = point7
+				v.Main.Line8.From = point7
+				v.Main.Line8.To = point3
+				v.Main.Line9.From = point2
+				v.Main.Line9.To = point4
+				v.Main.Line10.From = point2
+				v.Main.Line10.To = point6
+				v.Main.Line11.From = point6
+				v.Main.Line11.To = point8
+				v.Main.Line12.From = point8
+				v.Main.Line12.To = point4
+			end
+		end,
+		DrawingSkeleton = function()
+			for i,v in pairs(espfolderdrawing) do 
+				local rootPos, rootVis = cam:WorldToViewportPoint(v.entity.RootPart.Position)
+				if not rootVis then 
+					for i,v in pairs(v.Main) do 
+						v.Visible = false
+					end
+					continue 
+				end
+				for i,v in pairs(v.Main) do 
+					v.Visible = true
+				end
+				local rigcheck = v.entity.Humanoid.RigType == Enum.HumanoidRigType.R6
+				local head = CalculateObjectPosition((v.entity.Head.CFrame).p)
+				local headfront = CalculateObjectPosition((v.entity.Head.CFrame * CFrame.new(0, 0, -0.5)).p)
+				local toplefttorso = CalculateObjectPosition((v.entity.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-1.5, 0.8, 0)).p)
+				local toprighttorso = CalculateObjectPosition((v.entity.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(1.5, 0.8, 0)).p)
+				local toptorso = CalculateObjectPosition((v.entity.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, 0.8, 0)).p)
+				local bottomtorso = CalculateObjectPosition((v.entity.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, -0.8, 0)).p)
+				local bottomlefttorso = CalculateObjectPosition((v.entity.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-0.5, -0.8, 0)).p)
+				local bottomrighttorso = CalculateObjectPosition((v.entity.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0.5, -0.8, 0)).p)
+				local leftarm = CalculateObjectPosition((v.entity.Character[(rigcheck and "Left Arm" or "LeftHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
+				local rightarm = CalculateObjectPosition((v.entity.Character[(rigcheck and "Right Arm" or "RightHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
+				local leftleg = CalculateObjectPosition((v.entity.Character[(rigcheck and "Left Leg" or "LeftFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
+				local rightleg = CalculateObjectPosition((v.entity.Character[(rigcheck and "Right Leg" or "RightFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
+				v.Main.Torso.From = toplefttorso
+				v.Main.Torso.To = toprighttorso
+				v.Main.Torso2.From = toptorso
+				v.Main.Torso2.To = bottomtorso
+				v.Main.Torso3.From = bottomlefttorso
+				v.Main.Torso3.To = bottomrighttorso
+				v.Main.LeftArm.From = toplefttorso
+				v.Main.LeftArm.To = leftarm
+				v.Main.RightArm.From = toprighttorso
+				v.Main.RightArm.To = rightarm
+				v.Main.LeftLeg.From = bottomlefttorso
+				v.Main.LeftLeg.To = leftleg
+				v.Main.RightLeg.From = bottomrighttorso
+				v.Main.RightLeg.To = rightleg
+				v.Main.Head.From = toptorso
+				v.Main.Head.To = head
+				v.Main.Head2.From = head
+				v.Main.Head2.To = headfront
+			end
+		end
+	}
+
 	local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "ESP", 
 		["Function"] = function(callback) 
 			if callback then
-				RunLoops:BindToRenderStep("ESP", 500, function()
-					for i,plr in pairs(players:GetChildren()) do
-						local thing
-						if ESPDrawing["Enabled"] then 
-							if ESPMethod["Value"] == "2D" then
-								if espfolderdrawing[plr.Name] then
-									thing = espfolderdrawing[plr.Name]
-									thing.Quad1.Visible = false
-									thing.Quad1.Color = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									thing.Quad2.Visible = false
-									thing.Quad3.Visible = false
-									thing.Quad4.Visible = false
-								else
-									espfolderdrawing[plr.Name] = {}
-									espfolderdrawing[plr.Name].Quad1 = Drawing.new("Quad")
-									espfolderdrawing[plr.Name].Quad1.Thickness = 1
-									espfolderdrawing[plr.Name].Quad1.ZIndex = 2
-									espfolderdrawing[plr.Name].Quad1.Color = Color3.new(1, 1, 1)
-									espfolderdrawing[plr.Name].Quad2 = Drawing.new("Quad")
-									espfolderdrawing[plr.Name].Quad2.Thickness = 2
-									espfolderdrawing[plr.Name].Quad2.ZIndex = 1
-									espfolderdrawing[plr.Name].Quad2.Color = Color3.new(0, 0, 0)
-									espfolderdrawing[plr.Name].Quad3 = Drawing.new("Line")
-									espfolderdrawing[plr.Name].Quad3.Thickness = 1
-									espfolderdrawing[plr.Name].Quad3.ZIndex = 2
-									espfolderdrawing[plr.Name].Quad3.Color = Color3.new(0, 0, 0)
-									espfolderdrawing[plr.Name].Quad4 = Drawing.new("Line")
-									espfolderdrawing[plr.Name].Quad4.Thickness = 2
-									espfolderdrawing[plr.Name].Quad4.ZIndex = 1
-									espfolderdrawing[plr.Name].Quad4.Color = Color3.new(0, 0, 0)
-									thing = espfolderdrawing[plr.Name]
-								end
-
-								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
-								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
-									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position)
-									local rootSize = (aliveplr.RootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-									rootPos = rootPos
-									if rootVis then
-										--thing.Visible = rootVis
-										local sizex, sizey = (rootSize / rootPos.Z), (headPos.Y - legPos.Y) 
-										local posx, posy = (rootPos.X - sizex / 2),  ((rootPos.Y - sizey / 2))
-										if ESPHealthBar["Enabled"] then
-											local color = HealthbarColorTransferFunction(aliveplr.Humanoid.Health / aliveplr.Humanoid.MaxHealth)
-											thing.Quad3.Color = color
-											thing.Quad3.Visible = true
-											thing.Quad4.From = floorpos(Vector2.new(posx - 4, posy + 1))
-											thing.Quad4.To = floorpos(Vector2.new(posx - 4, posy + sizey - 1))
-											thing.Quad4.Visible = true
-											local healthposy = sizey * math.clamp(aliveplr.Humanoid.Health / aliveplr.Humanoid.MaxHealth, 0, 1)
-											thing.Quad3.From = floorpos(Vector2.new(posx - 4, posy + sizey - (sizey - healthposy)))
-											thing.Quad3.To = floorpos(Vector2.new(posx - 4, posy))
-											--thing.HealthLineMain.Size = UDim2.new(0, 1, math.clamp(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth, 0, 1), (math.clamp(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth, 0, 1) == 0 and 0 or -2))
-										end
-										thing.Quad1.PointA = floorpos(Vector2.new(posx + sizex, posy))
-										thing.Quad1.PointB = floorpos(Vector2.new(posx, posy))
-										thing.Quad1.PointC = floorpos(Vector2.new(posx, posy + sizey))
-										thing.Quad1.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
-										thing.Quad1.Visible = true
-										thing.Quad2.PointA = floorpos(Vector2.new(posx + sizex, posy))
-										thing.Quad2.PointB = floorpos(Vector2.new(posx, posy))
-										thing.Quad2.PointC = floorpos(Vector2.new(posx, posy + sizey))
-										thing.Quad2.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
-										thing.Quad2.Visible = true
-									end
-								end
-							else
-								if espfolderdrawing[plr.Name] then
-									thing = espfolderdrawing[plr.Name]
-									for linenum, line in pairs(thing) do
-										line.Color = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-										line.Visible = false
-									end
-								else
-									thing = {}
-									thing.Head = Drawing.new("Line")
-									thing.Head2 = Drawing.new("Line")
-									thing.Torso = Drawing.new("Line")
-									thing.Torso2 = Drawing.new("Line")
-									thing.Torso3 = Drawing.new("Line")
-									thing.LeftArm = Drawing.new("Line")
-									thing.RightArm = Drawing.new("Line")
-									thing.LeftLeg = Drawing.new("Line")
-									thing.RightLeg = Drawing.new("Line")
-									espfolderdrawing[plr.Name] = thing
-								end
-								
-								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
-								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
-									local rootPos, rootVis = cam:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-									local rigcheck = aliveplr.Humanoid.RigType == Enum.HumanoidRigType.R6
-									if rootVis and plr.Character:FindFirstChild((rigcheck and "Torso" or "UpperTorso")) and plr.Character:FindFirstChild((rigcheck and "Left Arm" or "LeftHand")) and plr.Character:FindFirstChild((rigcheck and "Right Arm" or "RightHand")) and plr.Character:FindFirstChild((rigcheck and "Left Leg" or "LeftFoot")) and plr.Character:FindFirstChild((rigcheck and "Right Leg" or "RightFoot")) and plr.Character:FindFirstChild("Head") then
-										local head = CalculateObjectPosition((aliveplr.Head.CFrame).p)
-										local headfront = CalculateObjectPosition((aliveplr.Head.CFrame * CFrame.new(0, 0, -0.5)).p)
-										local toplefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-1.5, 0.8, 0)).p)
-										local toprighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(1.5, 0.8, 0)).p)
-										local toptorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, 0.8, 0)).p)
-										local bottomtorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local bottomlefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-0.5, -0.8, 0)).p)
-										local bottomrighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0.5, -0.8, 0)).p)
-										local leftarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Arm" or "LeftHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local rightarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Arm" or "RightHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local leftleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Leg" or "LeftFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local rightleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Leg" or "RightFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										thing.Torso.From = toplefttorso
-										thing.Torso.To = toprighttorso
-										thing.Torso.Visible = true
-										thing.Torso2.From = toptorso
-										thing.Torso2.To = bottomtorso
-										thing.Torso2.Visible = true
-										thing.Torso3.From = bottomlefttorso
-										thing.Torso3.To = bottomrighttorso
-										thing.Torso3.Visible = true
-										thing.LeftArm.From = toplefttorso
-										thing.LeftArm.To = leftarm
-										thing.LeftArm.Visible = true
-										thing.RightArm.From = toprighttorso
-										thing.RightArm.To = rightarm
-										thing.RightArm.Visible = true
-										thing.LeftLeg.From = bottomlefttorso
-										thing.LeftLeg.To = leftleg
-										thing.LeftLeg.Visible = true
-										thing.RightLeg.From = bottomrighttorso
-										thing.RightLeg.To = rightleg
-										thing.RightLeg.Visible = true
-										thing.Head.From = toptorso
-										thing.Head.To = head
-										thing.Head.Visible = true
-										thing.Head2.From = head
-										thing.Head2.To = headfront
-										thing.Head2.Visible = true
-										--[[CalculateLine(toplefttorso, toprighttorso, thing.TopTorsoLine)
-										CalculateLine(toptorso, bottomtorso, thing.MiddleTorsoLine)
-										CalculateLine(bottomlefttorso, bottomrighttorso, thing.BottomTorsoLine)
-										CalculateLine(toplefttorso, leftarm, thing.LeftArm)
-										CalculateLine(toprighttorso, rightarm, thing.RightArm)
-										CalculateLine(bottomlefttorso, leftleg, thing.LeftLeg)
-										CalculateLine(bottomrighttorso, rightleg, thing.RightLeg)
-										CalculateLine(toptorso, head, thing.Head)
-										CalculateLine(head, headfront, thing.HeadForward)]]
-									end
-								end
-							end
-						else
-							if ESPMethod["Value"] == "2D" then
-								if ESPFolder:FindFirstChild(plr.Name) then
-									thing = ESPFolder[plr.Name]
-									thing.Visible = false
-									thing.Line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									thing.Line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									thing.Line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									thing.Line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-								else
-									thing = Instance.new("Frame")
-									thing.BackgroundTransparency = 1
-									thing.BorderSizePixel = 0
-									thing.Visible = false
-									thing.Name = plr.Name
-									thing.Parent = ESPFolder
-									local line1 = Instance.new("Frame")
-									line1.BorderSizePixel = 0
-									line1.Name = "Line1"
-									line1.ZIndex = 2
-									line1.Size = UDim2.new(1, -2, 0, 1)
-									line1.Position = UDim2.new(0, 1, 0, 1)
-									line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									line1.Parent = thing
-									local line2 = Instance.new("Frame")
-									line2.BorderSizePixel = 0
-									line2.Name = "Line2"
-									line2.Size = UDim2.new(1, -2, 0, 1)
-									line2.ZIndex = 2
-									line2.Position = UDim2.new(0, 1, 1, -2)
-									line2.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									line2.Parent = thing
-									local line3 = Instance.new("Frame")
-									line3.BorderSizePixel = 0
-									line3.Name = "Line3"
-									line3.Size = UDim2.new(0, 1, 1, -2)
-									line3.Position = UDim2.new(0, 1, 0, 1)
-									line3.ZIndex = 2
-									line3.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									line3.Parent = thing
-									local line4 = Instance.new("Frame")
-									line4.BorderSizePixel = 0
-									line4.Name = "Line4"
-									line4.Size = UDim2.new(0, 1, 1, -2)
-									line4.Position = UDim2.new(1, -2, 0, 1)
-									line4.ZIndex = 2
-									line4.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									line4.Parent = thing
-									local line1clone = line1:Clone()
-									line1clone.ZIndex = 1
-									line1clone.Size = UDim2.new(1, 0, 0, 3)
-									line1clone.BackgroundTransparency = 0.5
-									line1clone.Position = UDim2.new(0, 0, 0, 0)
-									line1clone.BackgroundColor3 = Color3.new(0, 0, 0)
-									line1clone.Parent = thing
-									local line2clone = line2:Clone()
-									line2clone.ZIndex = 1
-									line2clone.Size = UDim2.new(1, 0, 0, 3)
-									line2clone.BackgroundTransparency = 0.5
-									line2clone.Position = UDim2.new(0, 0, 1, -3)
-									line2clone.BackgroundColor3 = Color3.new(0, 0, 0)
-									line2clone.Parent = thing
-									local line3clone = line3:Clone()
-									line3clone.ZIndex = 1
-									line3clone.Size = UDim2.new(0, 3, 1, 0)
-									line3clone.BackgroundTransparency = 0.5
-									line3clone.Position = UDim2.new(0, 0, 0, 0)
-									line3clone.BackgroundColor3 = Color3.new(0, 0, 0)
-									line3clone.Parent = thing
-									local line4clone = line4:Clone()
-									line4clone.ZIndex = 1
-									line4clone.Size = UDim2.new(0, 3, 1, 0)
-									line4clone.BackgroundTransparency = 0.5
-									line4clone.Position = UDim2.new(1, -3, 0, 0)
-									line4clone.BackgroundColor3 = Color3.new(0, 0, 0)
-									line4clone.Parent = thing
-									local healthline = Instance.new("Frame")
-									healthline.BorderSizePixel = 0
-									healthline.Name = "HealthLineMain"
-									healthline.ZIndex = 2
-									healthline.AnchorPoint = Vector2.new(0, 1)
-									healthline.Visible = ESPHealthBar["Enabled"]
-									healthline.Size = UDim2.new(0, 1, 1, -2)
-									healthline.Position = UDim2.new(0, -4, 1, -1)
-									healthline.BackgroundColor3 = Color3.new(0, 1, 0)
-									healthline.Parent = thing
-									local healthlineclone = healthline:Clone()
-									healthlineclone.ZIndex = 1
-									healthlineclone.AnchorPoint = Vector2.new(0, 0)
-									healthlineclone.Size = UDim2.new(0, 3, 1, 0)
-									healthlineclone.BackgroundTransparency = 0.5
-									healthlineclone.Visible = ESPHealthBar["Enabled"]
-									healthlineclone.Name = "HealthLineBKG"
-									healthlineclone.Position = UDim2.new(0, -5, 0, 0)
-									healthlineclone.BackgroundColor3 = Color3.new(0, 0, 0)
-									healthlineclone.Parent = thing
-								end
-								
-								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
-								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
-									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position)
-									local rootSize = (aliveplr.RootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-									rootPos = rootPos
-									if rootVis then
-										if ESPHealthBar["Enabled"] then
-											local color = HealthbarColorTransferFunction(aliveplr.Humanoid.Health / aliveplr.Humanoid.MaxHealth)
-											thing.HealthLineMain.BackgroundColor3 = color
-											thing.HealthLineMain.Size = UDim2.new(0, 1, math.clamp(aliveplr.Humanoid.Health / aliveplr.Humanoid.MaxHealth, 0, 1), (math.clamp(aliveplr.Humanoid.Health / aliveplr.Humanoid.MaxHealth, 0, 1) == 0 and 0 or -2))
-										end
-										thing.Visible = rootVis
-										thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
-										thing.Position = UDim2.new(0, rootPos.X - thing.Size.X.Offset / 2, 0, (rootPos.Y - thing.Size.Y.Offset / 2) - 36)
-									end
-								end
-							end
-							if ESPMethod["Value"] == "Skeleton" then
-								if ESPFolder:FindFirstChild(plr.Name) then
-									thing = ESPFolder[plr.Name]
-									thing.Visible = false
-									for linenum, line in pairs(thing:GetChildren()) do
-										line.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									end
-								else
-									thing = Instance.new("Frame")
-									thing.BackgroundTransparency = 1
-									thing.BorderSizePixel = 0
-									thing.Visible = false
-									thing.Name = plr.Name
-									thing.Parent = ESPFolder
-									local line1 = Instance.new("Frame")
-									line1.BorderSizePixel = 0
-									line1.Name = "TopTorsoLine"
-									line1.AnchorPoint = Vector2.new(0.5, 0.5)
-									line1.ZIndex = 2
-									line1.Size = UDim2.new(0, 0, 0, 0)
-									line1.Position = UDim2.new(0, 0, 0, 0)
-									line1.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-									line1.Parent = thing
-									local line2 = line1:Clone()
-									line2.Name = "MiddleTorsoLine"
-									line2.Parent = thing
-									local line3 = line1:Clone()
-									line3.Name = "BottomTorsoLine"
-									line3.Parent = thing
-									local line4 = line1:Clone()
-									line4.Name = "LeftArm"
-									line4.Parent = thing
-									local line5 = line1:Clone()
-									line5.Name = "RightArm"
-									line5.Parent = thing
-									local line6 = line1:Clone()
-									line6.Name = "LeftLeg"
-									line6.Parent = thing
-									local line7 = line1:Clone()
-									line7.Name = "RightLeg"
-									line7.Parent = thing
-									local line8 = line1:Clone()
-									line8.Name = "Head"
-									line8.Parent = thing
-									local line9 = line1:Clone()
-									line9.Name = "HeadForward"
-									line9.Parent = thing
-								end
-								
-								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
-								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
-									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position)
-									local rigcheck = aliveplr.Humanoid.RigType == Enum.HumanoidRigType.R6
-									if rootVis and plr.Character:FindFirstChild((rigcheck and "Torso" or "UpperTorso")) and plr.Character:FindFirstChild((rigcheck and "Left Arm" or "LeftHand")) and plr.Character:FindFirstChild((rigcheck and "Right Arm" or "RightHand")) and plr.Character:FindFirstChild((rigcheck and "Left Leg" or "LeftFoot")) and plr.Character:FindFirstChild((rigcheck and "Right Leg" or "RightFoot")) and plr.Character:FindFirstChild("Head") then
-										thing.Visible = true
-										local head = CalculateObjectPosition((aliveplr.Head.CFrame).p)
-										local headfront = CalculateObjectPosition((aliveplr.Head.CFrame * CFrame.new(0, 0, -0.5)).p)
-										local toplefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-1.5, 0.8, 0)).p)
-										local toprighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(1.5, 0.8, 0)).p)
-										local toptorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, 0.8, 0)).p)
-										local bottomtorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local bottomlefttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(-0.5, -0.8, 0)).p)
-										local bottomrighttorso = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Torso" or "UpperTorso")].CFrame * CFrame.new(0.5, -0.8, 0)).p)
-										local leftarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Arm" or "LeftHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local rightarm = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Arm" or "RightHand")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local leftleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Left Leg" or "LeftFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										local rightleg = CalculateObjectPosition((aliveplr.Character[(rigcheck and "Right Leg" or "RightFoot")].CFrame * CFrame.new(0, -0.8, 0)).p)
-										CalculateLine(toplefttorso, toprighttorso, thing.TopTorsoLine)
-										CalculateLine(toptorso, bottomtorso, thing.MiddleTorsoLine)
-										CalculateLine(bottomlefttorso, bottomrighttorso, thing.BottomTorsoLine)
-										CalculateLine(toplefttorso, leftarm, thing.LeftArm)
-										CalculateLine(toprighttorso, rightarm, thing.RightArm)
-										CalculateLine(bottomlefttorso, leftleg, thing.LeftLeg)
-										CalculateLine(bottomrighttorso, rightleg, thing.RightLeg)
-										CalculateLine(toptorso, head, thing.Head)
-										CalculateLine(head, headfront, thing.HeadForward)
-									end
-								end
-							end
-							if ESPMethod["Value"] == "VideoFrame" then
-								if ESPFolder:FindFirstChild(plr.Name) then
-									thing = ESPFolder[plr.Name]
-									thing.Visible = false
-								else
-									thing = Instance.new("ImageLabel")
-									thing.BackgroundTransparency = 1
-									thing.BorderSizePixel = 0
-									thing.Image = getcustomassetfunc("honestlyquiteincredible.png")
-									thing.Visible = false
-									thing.Name = plr.Name
-									thing.Parent = ESPFolder
-								end
-								
-								local aliveplr = isAlive(plr, ESPAlive["Enabled"])
-								if aliveplr and plr ~= lplr and (ESPTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
-									local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position)
-									local rootSize = (aliveplr.RootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-									local headPos, headVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position + Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-									local legPos, legVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position - Vector3.new(0, 1 + (rigcheck and 2 or aliveplr.Humanoid.HipHeight), 0))
-									rootPos = rootPos
-									if rootVis then
-										thing.Visible = rootVis
-										thing.Size = UDim2.new(0, rootSize / rootPos.Z, 0, headPos.Y - legPos.Y)
-										thing.Position = UDim2.new(0, rootPos.X - thing.Size.X.Offset / 2, 0, (rootPos.Y - thing.Size.Y.Offset / 2) - 36)
-									end
-								end
-							end
+				methodused = "Drawing"..ESPMethod["Value"]..v3check
+				if espfuncs2[methodused] then
+					removedconnection = entity.entityRemovedEvent:connect(espfuncs2[methodused])
+				end
+				if espfuncs1[methodused] then
+					local addfunc = espfuncs1[methodused]
+					addedconnection = entity.entityAddedEvent:connect(function(ent)
+						if espfolderdrawing[ent] then 
+							espfuncs2[methodused](ent)
 						end
+						addfunc(ent)
+					end)
+					for i,v in pairs(entity.entityList) do 
+						addfunc(v)
 					end
-				end)
+				end
+				if espupdatefuncs[methodused] then
+					updatedconnection = entity.entityUpdatedEvent:connect(espupdatefuncs[methodused])
+					for i,v in pairs(entity.entityList) do 
+						espupdatefuncs[methodused](v)
+					end
+				end
+				if esploop[methodused] then 
+					RunLoops:BindToRenderStep("ESP", 1, esploop[methodused])
+				end
 			else
-				RunLoops:UnbindFromRenderStep("ESP") 
-				ESPFolder:ClearAllChildren()
-				for i,v in pairs(espfolderdrawing) do 
-					pcall(function()
-						espfolderdrawing[i].Quad1:Remove()
-						espfolderdrawing[i].Quad2:Remove()
-						espfolderdrawing[i].Quad3:Remove()
-						espfolderdrawing[i].Quad4:Remove()
-						espfolderdrawing[i] = nil
-					end)
-					pcall(function()
-						espfolderdrawing[i].Head:Remove()
-						espfolderdrawing[i].Head2:Remove()
-						espfolderdrawing[i].Torso:Remove()
-						espfolderdrawing[i].Torso2:Remove()
-						espfolderdrawing[i].Torso3:Remove()
-						espfolderdrawing[i].LeftArm:Remove()
-						espfolderdrawing[i].RightArm:Remove()
-						espfolderdrawing[i].LeftLeg:Remove()
-						espfolderdrawing[i].RightLeg:Remove()
-						espfolderdrawing[i] = nil
-					end)
+				RunLoops:UnbindFromRenderStep("ESP")
+				if addedconnection then 
+					addedconnection:Disconnect()
+				end
+				if updatedconnection then 
+					updatedconnection:Disconnect()
+				end
+				if removedconnection then 
+					removedconnection:Disconnect()
+				end
+				for i,v in pairs(entity.entityList) do 
+					if espfuncs2[methodused] and espfolderdrawing[v.Player] then
+						espfuncs2[methodused](v.Player)
+					end
 				end
 			end
 		end,
 		["HoverText"] = "Extra Sensory Perception\nRenders an ESP on players."
 	})
-	ESPMethod = ESP.CreateDropdown({
-		["Name"] = "Mode",
-		["List"] = {"2D", "Skeleton", "VideoFrame"},
-		["Function"] = function(val)
-			ESPFolder:ClearAllChildren()
-			for i,v in pairs(espfolderdrawing) do 
-				pcall(function()
-					espfolderdrawing[i].Quad1:Remove()
-					espfolderdrawing[i].Quad2:Remove()
-					espfolderdrawing[i].Quad3:Remove()
-					espfolderdrawing[i].Quad4:Remove()
-					espfolderdrawing[i] = nil
-				end)
-				pcall(function()
-					espfolderdrawing[i].Head:Remove()
-					espfolderdrawing[i].Head2:Remove()
-					espfolderdrawing[i].Torso:Remove()
-					espfolderdrawing[i].Torso2:Remove()
-					espfolderdrawing[i].Torso3:Remove()
-					espfolderdrawing[i].LeftArm:Remove()
-					espfolderdrawing[i].RightArm:Remove()
-					espfolderdrawing[i].LeftLeg:Remove()
-					espfolderdrawing[i].RightLeg:Remove()
-					espfolderdrawing[i] = nil
-				end)
-			end
-			ESPHealthBar["Object"].Visible = (val == "2D")
-		end,
-	})
 	ESPColor = ESP.CreateColorSlider({
 		["Name"] = "Player Color", 
-		["Function"] = function(val) end
-	})
-	ESPHealthBar = ESP.CreateToggle({
-		["Name"] = "Health Bar", 
-		["Function"] = function(callback)
-			if callback then 
-				for i,v in pairs(ESPFolder:GetChildren()) do
-					v.HealthLineMain.Visible = true
-					v.HealthLineBKG.Visible = true
-				end
-			else
-				for i,v in pairs(ESPFolder:GetChildren()) do
-					v.HealthLineMain.Visible = false
-					v.HealthLineBKG.Visible = false
-				end
+		["Function"] = function(hue, sat, val) 
+			if ESP["Enabled"] and espcolorfuncs[methodused] then 
+				espcolorfuncs[methodused](hue, sat, val)
 			end
 		end
 	})
-	ESPTeammates = ESP.CreateToggle({
-		["Name"] = "Teammates",
-		["Function"] = function() end,
-		["Default"] = true
-	})
-	ESPDrawing = ESP.CreateToggle({
-		["Name"] = "Drawing",
-		["Function"] = function() 
-			ESPFolder:ClearAllChildren()
-			for i,v in pairs(espfolderdrawing) do 
-				pcall(function()
-					espfolderdrawing[i].Quad1:Remove()
-					espfolderdrawing[i].Quad2:Remove()
-					espfolderdrawing[i].Quad3:Remove()
-					espfolderdrawing[i].Quad4:Remove()
-					espfolderdrawing[i] = nil
-				end)
-				pcall(function()
-					espfolderdrawing[i].Head:Remove()
-					espfolderdrawing[i].Head2:Remove()
-					espfolderdrawing[i].Torso:Remove()
-					espfolderdrawing[i].Torso2:Remove()
-					espfolderdrawing[i].Torso3:Remove()
-					espfolderdrawing[i].LeftArm:Remove()
-					espfolderdrawing[i].RightArm:Remove()
-					espfolderdrawing[i].LeftLeg:Remove()
-					espfolderdrawing[i].RightLeg:Remove()
-					espfolderdrawing[i] = nil
-				end)
-			end
+	ESPMethod = ESP.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"2D", "3D", "Skeleton"},
+		["Function"] = function(val)
+			if ESP["Enabled"] then ESP["ToggleButton"](true) ESP["ToggleButton"](true) end
+			ESPBoundingBox["Object"].Visible = (val == "2D")
+			ESPHealthBar["Object"].Visible = (val == "2D")
+			ESPName["Object"].Visible = (val == "2D")
 		end,
 	})
-	ESPAlive = ESP.CreateToggle({
-		["Name"] = "Alive Check",
-		["Function"] = function() end
+	ESPBoundingBox = ESP.CreateToggle({
+		["Name"] = "Bounding Box",
+		["Function"] = function() if ESP["Enabled"] then ESP["ToggleButton"](true) ESP["ToggleButton"](true) end end,
+		["Default"] = true
+	})
+	ESPTeammates = ESP.CreateToggle({
+		["Name"] = "Priority Only",
+		["Function"] = function() if ESP["Enabled"] then ESP["ToggleButton"](true) ESP["ToggleButton"](true) end end,
+		["Default"] = true
+	})
+	ESPHealthBar = ESP.CreateToggle({
+		["Name"] = "Health Bar", 
+		["Function"] = function(callback) if ESP["Enabled"] then ESP["ToggleButton"](true) ESP["ToggleButton"](true) end end
+	})
+	ESPName = ESP.CreateToggle({
+		["Name"] = "Name", 
+		["Function"] = function(callback) if ESP["Enabled"] then ESP["ToggleButton"](true) ESP["ToggleButton"](true) end end
 	})
 end)
 
@@ -2732,6 +2868,7 @@ local Health = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 	end,
 	["HoverText"] = "Displays your health in the center of your screen."
 })
+
 
 runcode(function()
 	local function removeTags(str)
@@ -3060,6 +3197,162 @@ local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOpt
 })
 
 runcode(function()
+	local tracersfolderdrawing = {}
+	local methodused
+
+	local function floorpos(pos)
+		return Vector2.new(math.floor(pos.X), math.floor(pos.Y))
+	end
+
+	local TracersColor = {["Value"] = 0.44}
+	local TracersTransparency = {["Value"] = 1}
+	local TracersStartPosition = {["Value"] = "Middle"}
+	local TracersEndPosition = {["Value"] = "Head"}
+	local TracersTeammates = {["Enabled"] = true}
+	local tracersconnections = {}
+	local addedconnection
+	local removedconnection
+	local updatedconnection
+
+	local tracersfuncs1 = {
+		Drawing = function(plr)
+			if TracersTeammates["Enabled"] and (not plr.Targetable) then return end
+			local newobj = Drawing.new("Line")
+			newobj.Thickness = 1
+			newobj.Transparency = 1 - (TracersTransparency["Value"] / 100)
+			tracersfolderdrawing[plr.Player] = {entity = plr, Main = newobj}
+		end,
+		DrawingV3 = function(plr)
+			if TracersTeammates["Enabled"] and (not plr.Targetable) then return end
+			local toppoint = PointInstance.new(plr[TracersEndPosition["Value"] == "Torso" and "RootPart" or "Head"])
+			local bottompoint = Point2D.new(UDim2.new(0.5, 0, TracersStartPosition["Value"] == "Middle" and 0.5 or 1, 0))
+			local newobj = LineDynamic.new(toppoint, bottompoint)
+			newobj.Opacity = 1 - (TracersTransparency["Value"] / 100)
+			newobj.Color = getPlayerColor(plr.Player) or Color3.fromHSV(TracersColor["Hue"], TracersColor["Sat"], TracersColor["Value"])
+			tracersfolderdrawing[plr.Player] = {entity = plr, Main = newobj}
+		end,
+	}
+	local tracersfuncs2 = {
+		Drawing = function(ent)
+			local v = tracersfolderdrawing[ent]
+			tracersfolderdrawing[ent] = nil
+			if v then 
+				pcall(function() v.Main.Visible = false v.Main:Remove() end)
+			end
+		end,
+	}
+	local tracerscolorfuncs = {
+		Drawing = function(hue, sat, value)
+			local color = Color3.fromHSV(hue, sat, value)
+			for i,v in pairs(tracersfolderdrawing) do 
+				v.Main.Color = getPlayerColor(v.entity.Player) or color
+			end
+		end
+	}
+	tracerscolorfuncs.DrawingV3 = tracerscolorfuncs.Drawing
+	tracersfuncs2.DrawingV3 = tracersfuncs2.Drawing
+	local tracersloop = {
+		Drawing = function()
+			for i,v in pairs(tracersfolderdrawing) do 
+				local rootPart = v.entity[TracersEndPosition["Value"] == "Torso" and "RootPart" or "Head"].Position
+				local rootPos, rootVis = cam:WorldToViewportPoint(rootPart)
+				if rootPos.Z < 0 and TracersStartPosition["Value"] ~= "Bottom" then
+					local tempPos = cam.CFrame:pointToObjectSpace(rootPart)
+					tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))))
+					rootPos, rootVis = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
+				end
+				local screensize = cam.ViewportSize
+				local startVector = Vector2.new(screensize.X / 2, (TracersStartPosition["Value"] == "Middle" and screensize.Y / 2 or screensize.Y))
+				local endVector = Vector2.new(rootPos.X, rootPos.Y)
+				v.Main.Visible = true
+				v.Main.From = startVector
+				v.Main.To = endVector
+			end
+		end,
+	}
+
+	local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Tracers", 
+		["Function"] = function(callback) 
+			if callback then
+				methodused = "Drawing"..v3check
+				if tracersfuncs2[methodused] then
+					removedconnection = entity.entityRemovedEvent:connect(tracersfuncs2[methodused])
+				end
+				if tracersfuncs1[methodused] then
+					local addfunc = tracersfuncs1[methodused]
+					addedconnection = entity.entityAddedEvent:connect(function(ent)
+						if tracersfolderdrawing[ent] then 
+							tracersfuncs2[methodused](ent)
+						end
+						addfunc(ent)
+					end)
+					for i,v in pairs(entity.entityList) do 
+						addfunc(v)
+					end
+				end
+				if tracersloop[methodused] then 
+					RunLoops:BindToRenderStep("Tracers", 1, tracersloop[methodused])
+				end
+			else
+				RunLoops:UnbindFromRenderStep("Tracers")
+				if addedconnection then 
+					addedconnection:Disconnect()
+				end
+				if updatedconnection then 
+					updatedconnection:Disconnect()
+				end
+				if removedconnection then 
+					removedconnection:Disconnect()
+				end
+				for i,v in pairs(entity.entityList) do 
+					if tracersfuncs2[methodused] and tracersfolderdrawing[v.Player] then
+						tracersfuncs2[methodused](v.Player)
+					end
+				end
+			end
+		end,
+		["HoverText"] = "Extra Sensory Perception\nRenders an Tracers on players."
+	})
+	TracersStartPosition = Tracers.CreateDropdown({
+		["Name"] = "Start Position",
+		["List"] = {"Middle", "Bottom"},
+		["Function"] = function() if Tracers["Enabled"] then Tracers["ToggleButton"](true) Tracers["ToggleButton"](true) end end
+	})
+	TracersEndPosition = Tracers.CreateDropdown({
+		["Name"] = "End Position",
+		["List"] = {"Head", "Torso"},
+		["Function"] = function() if Tracers["Enabled"] then Tracers["ToggleButton"](true) Tracers["ToggleButton"](true) end end
+	})
+	TracersColor = Tracers.CreateColorSlider({
+		["Name"] = "Player Color", 
+		["Function"] = function(hue, sat, val) 
+			if Tracers["Enabled"] and tracerscolorfuncs[methodused] then 
+				tracerscolorfuncs[methodused](hue, sat, val)
+			end
+		end
+	})
+	TracersTransparency = Tracers.CreateSlider({
+		["Name"] = "Transparency", 
+		["Min"] = 1,
+		["Max"] = 100, 
+		["Function"] = function(val) 
+			for i,v in pairs(tracersfolderdrawing) do 
+				if v.Main then 
+					v.Main[methodused == "DrawingV3" and "Opacity" or "Transparency"] = 1 - (val / 100)
+				end
+			end
+		end,
+		["Default"] = 0
+	})
+	TracersTeammates = Tracers.CreateToggle({
+		["Name"] = "Priority Only",
+		["Function"] = function() if Tracers["Enabled"] then Tracers["ToggleButton"](true) Tracers["ToggleButton"](true) end end,
+		["Default"] = true
+	})
+end)
+
+--[[runcode(function()
 	local TracersFolder = Instance.new("Folder")
 	TracersFolder.Name = "TracersFolder"
 	TracersFolder.Parent = GuiLibrary["MainGui"]
@@ -3101,7 +3394,7 @@ runcode(function()
 								end
 
 								local aliveplr = isAlive(plr, TracersAlive["Enabled"])
-								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
+								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or aliveplr.Targetable) then
 									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.RootPart).Position)
 									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.RootPart).Position)
 									if rootScrPos.Z < 0 then
@@ -3138,7 +3431,7 @@ runcode(function()
 								end
 								
 								local aliveplr = isAlive(plr)
-								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
+								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or aliveplr.Targetable) then
 									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.RootPart).Position)
 									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.RootPart).Position)
 									if rootScrPos.Z < 0 then
@@ -3215,7 +3508,7 @@ runcode(function()
 		["Name"] = "Alive Check",
 		["Function"] = function() end
 	})
-end)
+end)]]
 
 Spring = {} do
 	Spring.__index = Spring
@@ -3591,10 +3884,10 @@ runcode(function()
 						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = {lplr.Character}
 						raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
-						local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + vec, Vector3.new(0, -1000, 0), raycastparameters)
+						local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + (vec * 0.5), Vector3.new(0, -1000, 0), raycastparameters)
 						local ray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -entity.character.Humanoid.HipHeight * 2, 0), raycastparameters)
 						if ray == nil and ray2 then
-							vec = Vector3.new()
+							vec = Vector3.zero
 						end
 					end
 					return oldmove(Self, vec, facecam)
@@ -3684,6 +3977,9 @@ end)
 runcode(function()
 	local Breadcrumbs = {["Enabled"] = false}
 	local BreadcrumbsLifetime = {["Value"] = 20}
+	local BreadcrumbsThickness = {["Value"] = 7}
+	local BreadcrumbsFadeIn = {["Value"] = 0.44}
+	local BreadcrumbsFadeOut = {["Value"] = 0.44}
 	local breadcrumbtrail
 	local breadcrumbattachment
 	local breadcrumbattachment2
@@ -3698,21 +3994,22 @@ runcode(function()
 						if entity.isAlive then
 							if breadcrumbtrail == nil then
 								breadcrumbattachment = Instance.new("Attachment")
-								breadcrumbattachment.Position = Vector3.new(0, 0.07 - 2.9, 0.5)
+								breadcrumbattachment.Position = Vector3.new(0, 0.07 - 2.7, 0)
 								breadcrumbattachment2 = Instance.new("Attachment")
-								breadcrumbattachment2.Position = Vector3.new(0, -0.07 - 2.9, 0.5)
+								breadcrumbattachment2.Position = Vector3.new(0, -0.07 - 2.7, 0)
 								breadcrumbtrail = Instance.new("Trail")
 								breadcrumbtrail.Attachment0 = breadcrumbattachment 
 								breadcrumbtrail.Attachment1 = breadcrumbattachment2
-								breadcrumbtrail.Color = ColorSequence.new(Color3.new(1, 0, 0), Color3.new(0, 0, 1))
+								breadcrumbtrail.Color = ColorSequence.new(Color3.fromHSV(BreadcrumbsFadeIn["Hue"], BreadcrumbsFadeIn["Sat"], BreadcrumbsFadeIn["Value"]), Color3.fromHSV(BreadcrumbsFadeOut["Hue"], BreadcrumbsFadeOut["Sat"], BreadcrumbsFadeOut["Value"]))
 								breadcrumbtrail.FaceCamera = true
 								breadcrumbtrail.Lifetime = BreadcrumbsLifetime["Value"] / 10
 								breadcrumbtrail.Enabled = true
-								breadcrumbtrail.Parent = cam
 							else
-								breadcrumbattachment.Parent = entity.character.HumanoidRootPart
-								breadcrumbattachment2.Parent = entity.character.HumanoidRootPart
-								breadcrumbtrail.Parent = cam
+								pcall(function()
+									breadcrumbattachment.Parent = entity.character.HumanoidRootPart
+									breadcrumbattachment2.Parent = entity.character.HumanoidRootPart
+									breadcrumbtrail.Parent = cam
+								end)
 							end
 						end
 					until (not Breadcrumbs["Enabled"])
@@ -3726,12 +4023,48 @@ runcode(function()
 		end,
 		["HoverText"] = "Shows a trail behind your character"
 	})
+	BreadcrumbsFadeIn = Breadcrumbs.CreateColorSlider({
+		["Name"] = "Fade In",
+		["Function"] = function(hue, sat, val)
+			if breadcrumbtrail then 
+				breadcrumbtrail.Color = ColorSequence.new(Color3.fromHSV(hue, sat, val), Color3.fromHSV(BreadcrumbsFadeOut["Hue"], BreadcrumbsFadeOut["Sat"], BreadcrumbsFadeOut["Value"]))
+			end
+		end
+	})
+	BreadcrumbsFadeOut = Breadcrumbs.CreateColorSlider({
+		["Name"] = "Fade Out",
+		["Function"] = function(hue, sat, val)
+			if breadcrumbtrail then 
+				breadcrumbtrail.Color = ColorSequence.new(Color3.fromHSV(BreadcrumbsFadeIn["Hue"], BreadcrumbsFadeIn["Sat"], BreadcrumbsFadeIn["Value"]), Color3.fromHSV(hue, sat, val))
+			end
+		end
+	})
 	BreadcrumbsLifetime = Breadcrumbs.CreateSlider({
 		["Name"] = "Lifetime",
 		["Min"] = 1,
 		["Max"] = 100,
-		["Function"] = function(val) end,
-		["Default"] = 20
+		["Function"] = function(val) 
+			if breadcrumbtrail then 
+				breadcrumbtrail.Lifetime = val / 10
+			end
+		end,
+		["Default"] = 20,
+		["Double"] = 10
+	})
+	BreadcrumbsThickness = Breadcrumbs.CreateSlider({
+		["Name"] = "Thickness",
+		["Min"] = 1,
+		["Max"] = 30,
+		["Function"] = function(val) 
+			if breadcrumbattachment then 
+				breadcrumbattachment.Position = Vector3.new(0, (val / 100) - 2.7, 0)
+			end
+			if breadcrumbattachment2 then 
+				breadcrumbattachment2.Position = Vector3.new(0, -(val / 100) - 2.7, 0)
+			end
+		end,
+		["Default"] = 7,
+		["Double"] = 10
 	})
 end)
 
