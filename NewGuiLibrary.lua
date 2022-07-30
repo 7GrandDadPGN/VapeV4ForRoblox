@@ -106,7 +106,13 @@ if shared.VapeExecuted then
 		game.Loaded:Wait()
 	end
 
-	if not is_sirhurt_closure and syn and syn.protect_gui then
+	if gethui then
+		local gui = Instance.new("ScreenGui")
+		gui.Name = randomString()
+		gui.DisplayOrder = 999
+		gui.Parent = gethui()
+		api["MainGui"] = gui
+	elseif not is_sirhurt_closure and syn and syn.protect_gui then
 		local gui = Instance.new("ScreenGui")
 		gui.Name = randomString()
 		gui.DisplayOrder = 999
@@ -6351,8 +6357,16 @@ if shared.VapeExecuted then
 
 	local holdingcontrol = false
 
+	local function bettergetfocus()
+		if KRNL_LOADED then 
+			return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+		else
+			return game:GetService("UserInputService"):GetFocusedTextBox()
+		end
+	end
+
 	api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(function(input1)
-		if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+		if bettergetfocus() == nil then
 			if input1.KeyCode == Enum.KeyCode[api["GUIKeybind"]] and api["KeybindCaptured"] == false then
 				clickgui.Visible = not clickgui.Visible
 				game:GetService("UserInputService").OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
