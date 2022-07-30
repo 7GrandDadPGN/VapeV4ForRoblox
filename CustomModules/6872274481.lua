@@ -987,6 +987,7 @@ runcode(function()
 			["ConstantManager"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out["shared"].constant["constant-manager"]).ConstantManager,
 			["CooldownController"] = KnitClient.Controllers.CooldownController,
             ["damageTable"] = KnitClient.Controllers.DamageController,
+			["DinoRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.DinoTamerController.KnitStart, 3))),
 			["DaoRemote"] = getremote(debug.getconstants(debug.getprotos(KnitClient.Controllers.DaoController.onEnable)[4])),
 			["DamageController"] = KnitClient.Controllers.DamageController,
 			["DamageIndicator"] = KnitClient.Controllers.DamageIndicatorController.spawnDamageIndicator,
