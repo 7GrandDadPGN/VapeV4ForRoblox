@@ -445,7 +445,6 @@ end
 local mousefunctions = mouse1release and mouse1press and (isrbxactive or iswindowactive) and true or false
 runcode(function()
 	local aimfov = {["Value"] = 1}
-	local aimmag = {["Value"] = 0}
 	local aimfovshow = {["Enabled"] = false}
 	local aimvischeck = {["Enabled"] = false}
 	local aimwallbang = {["Enabled"] = false}
@@ -513,9 +512,9 @@ runcode(function()
 			recentlyshottick = tick() + 1
 			local direction = CFrame.lookAt(origin, tar.Position)
 			if aimwallbang["Enabled"] then
-				return {tar, tar.Position, direction.lookVector * (aimmag["Value"] ~= 0 and aimmag["Value"] or Args[1].Direction.Magnitude), tar.Material}
+				return {tar, tar.Position, direction.lookVector * Args[1].Direction.Magnitude, tar.Material}
 			end
-			Args[1] = Ray.new(origin, direction.lookVector * (aimmag["Value"] ~= 0 and aimmag["Value"] or Args[1].Direction.Magnitude))
+			Args[1] = Ray.new(origin, direction.lookVector * Args[1].Direction.Magnitude)
 			return
 		end,
 		Raycast = function(Args)
@@ -545,7 +544,7 @@ runcode(function()
 			recentlyshotplr = plr
 			recentlyshottick = tick() + 1
 			local direction = CFrame.lookAt(origin, tar.Position)
-			Args[2] = direction.lookVector * (aimmag["Value"] ~= 0 and aimmag["Value"] or Args[2].Magnitude)
+			Args[2] = direction.lookVector * Args[2].Magnitude
 			if aimwallbang["Enabled"] then
 				local haha = RaycastParams.new()
 				haha.FilterType = Enum.RaycastFilterType.Whitelist
@@ -746,13 +745,6 @@ runcode(function()
 		["Max"] = 100, 
 		["Function"] = function(val) end,
 		["Default"] = 25
-	})
-	aimmag = AimAssist.CreateSlider({
-		["Name"] = "Ray Length", 
-		["Min"] = 0,
-		["Max"] = 1000, 
-		["Function"] = function(val) end,
-		["Default"] = 0
 	})
 	aimfovshow = AimAssist.CreateToggle({
 		["Name"] = "FOV Circle",
@@ -2130,17 +2122,18 @@ runcode(function()
 		Drawing2D = function(plr)
 			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
 			local thing = {}
-			thing.entity = plr
-			thing.Quad1 = Drawing.new("Quad")
-			thing.Quad1.Thickness = 2
+			thing.Quad1 = Drawing.new("Square")
 			thing.Quad1.Transparency = ESPBoundingBox["Enabled"] and 1 or 0
 			thing.Quad1.ZIndex = 2
 			thing.Quad1.Color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-			thing.Quad2 = Drawing.new("Quad")
-			thing.Quad2.Thickness = ESPBoundingBox["Enabled"] and 3 or 0
-			thing.Quad2.Transparency = ESPBoundingBox["Enabled"] and 0.5 or 0
-			thing.Quad2.ZIndex = 1
-			thing.Quad2.Color = Color3.new(0, 0, 0)
+			thing.QuadLine2 = Drawing.new("Square")
+			thing.QuadLine2.Transparency = ESPBoundingBox["Enabled"] and 0.5 or 0
+			thing.QuadLine2.ZIndex = 1
+			thing.QuadLine2.Color = Color3.new(0, 0, 0)
+			thing.QuadLine3 = Drawing.new("Square")
+			thing.QuadLine3.Transparency = ESPBoundingBox["Enabled"] and 0.5 or 0
+			thing.QuadLine3.ZIndex = 1
+			thing.QuadLine3.Color = Color3.new(0, 0, 0)
 			if ESPHealthBar["Enabled"] then 
 				thing.Quad3 = Drawing.new("Line")
 				thing.Quad3.Thickness = 1
@@ -2166,7 +2159,7 @@ runcode(function()
 				thing.Drop.Center = true
 				thing.Drop.Size = 20
 			end
-			espfolderdrawing[plr.Player] = thing
+			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
 		end,
 		Drawing2DV3 = function(plr)
 			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
@@ -2331,10 +2324,8 @@ runcode(function()
 			local v = espfolderdrawing[ent]
 			espfolderdrawing[ent] = nil
 			if v then 
-				for i2,v2 in pairs(v) do
-					if v2.Color then 
-						pcall(function() v2.Visible = false v2:Remove() end)
-					end
+				for i2,v2 in pairs(v.Main) do
+					pcall(function() v2.Visible = false v2:Remove() end)
 				end
 			end
 		end,
@@ -2399,9 +2390,9 @@ runcode(function()
 	local espupdatefuncs = {
 		Drawing2D = function(ent)
 			local v = espfolderdrawing[ent.Player]
-			if v and v.Quad3 then 
+			if v and v.Main.Quad3 then 
 				local color = HealthbarColorTransferFunction(ent.Humanoid.Health / ent.Humanoid.MaxHealth)
-				v.Quad3.Color = color
+				v.Main.Quad3.Color = color
 			end
 		end,
 		Drawing2DV3 = function(ent)
@@ -2417,9 +2408,9 @@ runcode(function()
 		Drawing2D = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
 			for i,v in pairs(espfolderdrawing) do 
-				v.Quad1.Color = getPlayerColor(v.entity.Player) or color
-				if v.Text then 
-					v.Text.Color = v.Quad1.Color
+				v.Main.Quad1.Color = getPlayerColor(v.entity.Player) or color
+				if v.Main.Text then 
+					v.Main.Text.Color = v.Main.Quad1.Color
 				end
 			end
 		end,
@@ -2473,48 +2464,45 @@ runcode(function()
 		Drawing2D = function()
 			for i,v in pairs(espfolderdrawing) do 
 				local rootPos, rootVis = cam:WorldToViewportPoint(v.entity.RootPart.Position)
-				local rootSize = (v.entity.RootPart.Size.X * 1200) * (cam.ViewportSize.X / 1920)
-				local headPos, headVis = cam:WorldToViewportPoint(v.entity.RootPart.Position + Vector3.new(0, 3, 0))
-				local legPos, legVis = cam:WorldToViewportPoint(v.entity.RootPart.Position - Vector3.new(0, 3.5, 0))
 				if not rootVis then 
-					v.Quad1.Visible = false
-					v.Quad2.Visible = false
-					if v.Quad3 then 
-						v.Quad3.Visible = false
-						v.Quad4.Visible = false
+					v.Main.Quad1.Visible = false
+					v.Main.QuadLine2.Visible = false
+					v.Main.QuadLine3.Visible = false
+					if v.Main.Quad3 then 
+						v.Main.Quad3.Visible = false
+						v.Main.Quad4.Visible = false
 					end
-					if v.Text then 
-						v.Text.Visible = false
-						v.Drop.Visible = false
+					if v.Main.Text then 
+						v.Main.Text.Visible = false
+						v.Main.Drop.Visible = false
 					end
 					continue 
 				end
-				local sizex, sizey = (rootSize / rootPos.Z), (headPos.Y - legPos.Y) 
+				local sizex, sizey = (3100 / rootPos.Z), -(5000 / rootPos.Z)
 				local posx, posy = (rootPos.X - sizex / 2),  ((rootPos.Y - sizey / 2))
-				v.Quad1.PointA = floorpos(Vector2.new(posx + sizex, posy))
-				v.Quad1.PointB = floorpos(Vector2.new(posx, posy))
-				v.Quad1.PointC = floorpos(Vector2.new(posx, posy + sizey))
-				v.Quad1.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
-				v.Quad1.Visible = true
-				v.Quad2.PointA = floorpos(Vector2.new(posx + sizex, posy))
-				v.Quad2.PointB = floorpos(Vector2.new(posx, posy))
-				v.Quad2.PointC = floorpos(Vector2.new(posx, posy + sizey))
-				v.Quad2.PointD = floorpos(Vector2.new(posx + sizex, posy + sizey))
-				v.Quad2.Visible = true
-				if v.Quad3 then 
+				v.Main.Quad1.Position = floorpos(Vector2.new(posx, posy))
+				v.Main.Quad1.Size = floorpos(Vector2.new(sizex, sizey))
+				v.Main.Quad1.Visible = true
+				v.Main.QuadLine2.Position = floorpos(Vector2.new(posx - 1, posy + 1))
+				v.Main.QuadLine2.Size = floorpos(Vector2.new(sizex + 2, sizey - 2))
+				v.Main.QuadLine2.Visible = true
+				v.Main.QuadLine3.Position = floorpos(Vector2.new(posx + 1, posy - 1))
+				v.Main.QuadLine3.Size = floorpos(Vector2.new(sizex - 2, sizey + 2))
+				v.Main.QuadLine3.Visible = true
+				if v.Main.Quad3 then 
 					local healthposy = sizey * math.clamp(v.entity.Humanoid.Health / v.entity.Humanoid.MaxHealth, 0, 1)
-					v.Quad3.Visible = true
-					v.Quad3.From = floorpos(Vector2.new(posx - 4, posy + sizey - (sizey - healthposy)))
-					v.Quad3.To = floorpos(Vector2.new(posx - 4, posy))
-					v.Quad4.Visible = true
-					v.Quad4.From = floorpos(Vector2.new(posx - 4, posy + 1))
-					v.Quad4.To = floorpos(Vector2.new(posx - 4, posy + sizey - 1))
+					v.Main.Quad3.Visible = v.entity.Humanoid.Health > 0
+					v.Main.Quad3.From = floorpos(Vector2.new(posx - 4, posy + (sizey - (sizey - healthposy))))
+					v.Main.Quad3.To = floorpos(Vector2.new(posx - 4, posy))
+					v.Main.Quad4.Visible = true
+					v.Main.Quad4.From = floorpos(Vector2.new(posx - 4, posy))
+					v.Main.Quad4.To = floorpos(Vector2.new(posx - 4, (posy + sizey)))
 				end
-				if v.Text then 
-					v.Text.Visible = true
-					v.Drop.Visible = true
-					v.Text.Position = floorpos(Vector2.new(posx + (sizex / 2), posy + (sizey - 25)))
-					v.Drop.Position = v.Text.Position + Vector2.new(1, 1)
+				if v.Main.Text then 
+					v.Main.Text.Visible = true
+					v.Main.Drop.Visible = true
+					v.Main.Text.Position = floorpos(Vector2.new(posx + (sizex / 2), posy + (sizey - 25)))
+					v.Main.Drop.Position = v.Main.Text.Position + Vector2.new(1, 1)
 				end
 			end
 		end,
@@ -2522,6 +2510,7 @@ runcode(function()
 			for i,v in pairs(espfolderdrawing) do 
 				if v.HealthBar.Offset then 
 					v.HealthBar.Offset.Offset = Vector2.new(-1, -(((v.HealthBar.BottomOffset.ScreenPos.Y - v.HealthBar.TopOffset.ScreenPos.Y) - 1) * (v.entity.Humanoid.Health / v.entity.Humanoid.MaxHealth)))
+					v.HealthBar.Line.Visible = v.entity.Humanoid.Health > 0
 				end
 			end
 		end,

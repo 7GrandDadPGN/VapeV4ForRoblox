@@ -1,6 +1,5 @@
 local entity = {
     entityList = {},
-    entityToPlayerList = {},
     entityConnections = {},
     isAlive = false,
     character = {
@@ -54,17 +53,19 @@ do
     end
 
     entity.getEntityFromPlayer = function(char)
-        local ent = entity.entityToPlayerList[char]
-        return table.find(entity.entityList, ent), ent
+        for i,v in next, entity.entityList do
+            if v.Player == char then 
+                return i, v
+            end
+        end
     end
 
     entity.removeEntity = function(obj)
         local tableIndex, ent = entity.getEntityFromPlayer(obj)
         if tableIndex then
             entity.entityRemovedEvent:Fire(obj)
-            for i,v in pairs(ent.Connections or {}) do if v.Disconnect then v:Disconnect() end end
+            for i,v in next, (ent.Connections or {}) do if v.Disconnect then v:Disconnect() end end
             table.remove(entity.entityList, tableIndex)
-            entity.entityToPlayerList[obj] = nil
         end
     end
 
@@ -79,7 +80,7 @@ do
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10) or humrootpart and {Position = humrootpart.Position + Vector3.new(0, 3, 0), Name = "Head", Size = Vector3.new(1, 1, 1), CFrame = humrootpart.CFrame + Vector3.new(0, 3, 0), Parent = char}
                 local hum = char:WaitForChild("Humanoid", 10) or char:FindFirstChildWhichIsA("Humanoid")
-                if humrootpart and hum and head and entity.entityToPlayerList[plr] == nil then
+                if humrootpart and hum and head then
                     if localcheck then
                         entity.isAlive = true
                         entity.character.Head = head
@@ -100,7 +101,6 @@ do
                         table.insert(newent.Connections, hum:GetPropertyChangedSignal("Health"):connect(function() entity.entityUpdatedEvent:Fire(newent) end))
                         table.insert(newent.Connections, hum:GetPropertyChangedSignal("MaxHealth"):connect(function() entity.entityUpdatedEvent:Fire(newent) end))
                         table.insert(entity.entityList, newent)
-                        entity.entityToPlayerList[plr] = newent
                         entity.entityAddedEvent:Fire(newent)
                     end
                     table.insert(entity.entityConnections, char.ChildRemoved:connect(function(part)
