@@ -4969,6 +4969,91 @@ runcode(function()
 	})
 end)
 
+
+runcode(function()
+	local function roundpos(pos)
+		return Vector3.new(math.round(pos.X / 3) * 3, math.round(pos.Y / 3) * 3, math.round(pos.Z / 3) * 3)
+	end
+	
+	local TPAura = {["Enabled"] = false}
+	TPAura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "TPAura",
+		["Function"] = function(callback)
+			if callback then 
+				spawn(function()
+					repeat
+						task.wait(0.03)
+						local plr = GetNearestHumanoidToPosition(true, 1000)
+						if plr then
+							game:GetService("ReplicatedStorage"):FindFirstChild("events-@easy-games/game-core:shared/game-core-networking@getEvents.Events").useAbility:FireServer("void_turret_fire", {
+								target = plr.Character,
+								fromTurret = {
+									Name = "void_turret",
+									Position = roundpos(plr.Character.HumanoidRootPart.Position),
+									Parent = workspace.Map.Worlds:GetChildren()[1].Blocks
+								}
+							})
+							task.delay(1.8, function() bedwars["SwordController"]:playSwordEffect(bedwars["ItemTable"]["wood_sword"]) end)
+							task.wait(2.4)
+						end
+					until (not TPAura["Enabled"])
+				end)
+			end
+		end
+	})
+
+	local DinoExploit = {["Enabled"] = false}
+	local dinoconnection
+	DinoExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "DinoExploit",
+		["Function"] = function(callback)
+			if callback then 
+				game:GetService("ReplicatedStorage"):FindFirstChild("events-@easy-games/game-core:shared/game-core-networking@getEvents.Events").useAbility:FireServer("dino_charge")
+				task.spawn(function()
+					if GuiLibrary["MainGui"]:FindFirstChild("bar") then return end
+					if lplr.Character then 
+						lplr.Character:SetAttribute("SpeedBoost", 3)
+						local allowed = true
+						dinoconnection = bedwars["ClientHandler"]:Get(bedwars["DinoRemote"]):Connect(function()
+							if lplr.Character then 
+								lplr.Character:SetAttribute("SpeedBoost", nil)
+							end
+							allowed = false
+							dinoconnection:Disconnect()
+						end)
+						task.delay(10, function()
+							if lplr.Character and allowed then 
+								lplr.Character:SetAttribute("SpeedBoost", nil)
+							end
+							if dinoconnection then dinoconnection:Disconnect() end
+						end)
+					end
+					local bar = Instance.new("Frame")
+					bar.Size = UDim2.new(0.3, 0, 0, 10)
+					bar.AnchorPoint = Vector2.new(0.5, 0.5)
+					bar.BorderSizePixel = 0
+					bar.BackgroundTransparency = 0.5
+					bar.BackgroundColor3 = Color3.new()
+					bar.Position = UDim2.new(0.5, 0, 0.75, 0)
+					bar.Name = "bar"
+					bar.Parent = GuiLibrary["MainGui"]
+					local bar2 = bar:Clone()
+					bar2.Size = UDim2.new(1, 0, 1, 0)
+					bar2.AnchorPoint = Vector2.new(0, 0)
+					bar2.Position = UDim2.new(0, 0, 0, 0)
+					bar2.BackgroundTransparency = 0
+					bar2.BackgroundColor3 = Color3.new(1, 1, 1)
+					bar2.Parent = bar
+					bar2:TweenSize(UDim2.new(0, 0, 1, 0), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 60)
+					task.wait(60)
+					bar:Destroy()
+				end)
+				DinoExploit["ToggleButton"](false)
+			end
+		end
+	})
+end)
+
 runcode(function()
 	local killauraboxes = {}
     local killauratargetframe = {["Players"] = {["Enabled"] = false}}
