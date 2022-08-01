@@ -4904,7 +4904,7 @@ runcode(function()
 							task.spawn(function()
 								for i = 1, 100 do
 									task.wait(0.01)
-									entity.character.HumanoidRootPart.Velocity = vec3(0, i * 3, 0)
+									entity.character.HumanoidRootPart.Velocity = vec3(0, i * 2.5, 0)
 								end
 							end)
 						else
