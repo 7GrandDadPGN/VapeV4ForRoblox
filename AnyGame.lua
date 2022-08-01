@@ -2142,14 +2142,17 @@ runcode(function()
 			thing.Quad1 = Drawing.new("Square")
 			thing.Quad1.Transparency = ESPBoundingBox["Enabled"] and 1 or 0
 			thing.Quad1.ZIndex = 2
+			thing.Quad1.Thickness = 1
 			thing.Quad1.Color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
 			thing.QuadLine2 = Drawing.new("Square")
 			thing.QuadLine2.Transparency = ESPBoundingBox["Enabled"] and 0.5 or 0
 			thing.QuadLine2.ZIndex = 1
+			thing.QuadLine2.Thickness = 1
 			thing.QuadLine2.Color = Color3.new(0, 0, 0)
 			thing.QuadLine3 = Drawing.new("Square")
 			thing.QuadLine3.Transparency = ESPBoundingBox["Enabled"] and 0.5 or 0
 			thing.QuadLine3.ZIndex = 1
+			thing.QuadLine3.Thickness = 1
 			thing.QuadLine3.Color = Color3.new(0, 0, 0)
 			if ESPHealthBar["Enabled"] then 
 				thing.Quad3 = Drawing.new("Line")
