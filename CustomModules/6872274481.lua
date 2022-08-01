@@ -6632,6 +6632,7 @@ runcode(function()
 	AutoToxicPhrases8["Object"].AddBoxBKG.AddBox.TextSize = 12
 end)
 
+local slowdowntick = tick()
 local Scaffold = {["Enabled"] = false}
 local flyvelo
 local flyboosting = false
@@ -6655,7 +6656,6 @@ runcode(function()
 	local boosttimes = 0
 	local raycastparameters = RaycastParams.new()
 	local funni = false
-	local slowdowntick = tick()
 	local speedcheck
 	local tweenservice = game:GetService("TweenService")
 
@@ -6686,7 +6686,7 @@ runcode(function()
 					end
 				end)
 				speedcheck = lplr:GetAttributeChangedSignal("LastTeleported"):connect(function()
-					if math.abs(lplr:GetAttribute("SpawnTime") - lplr:GetAttribute("LastTeleported")) > 1 and matchstatetick <= tick() and matchState ~= 0 and speedmode["Value"] == "Heatseeker" then
+					if math.abs(lplr:GetAttribute("SpawnTime") - lplr:GetAttribute("LastTeleported")) > 1 and matchstatetick <= tick() and matchState ~= 0 then
 						slowdowntick = tick() + 3
 						local warning = createwarning("Speed", "Teleport Detected\nSlowing down speed for 3s.", 3)
 						pcall(function()
@@ -6726,7 +6726,9 @@ runcode(function()
 							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
 							if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
 							if networkownerfunc(entity.character.HumanoidRootPart) then
-								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
+								if slowdowntick <= tick() then
+									entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
+								end
 								entity.character.HumanoidRootPart.Velocity = vec3(velocheck and movevec.X or 0, entity.character.HumanoidRootPart.Velocity.Y, velocheck and movevec.Z or 0)
 							end
 						elseif speedmode["Value"] == "Normal" then 
@@ -6736,7 +6738,8 @@ runcode(function()
 								bodyvelo.MaxForce = vec3(9e9, 0, 9e9)
 							else
 								bodyvelo.MaxForce = ((entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing or entity.character.Humanoid.Sit or spidergoinup or antivoiding or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] or uninjectflag) and Vector3.zero or (longjump["Enabled"] and vec3(9e9, 0, 9e9) or vec3(9e9, 0, 9e9)))
-								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((longjumpticktimer >= tick()) and 20) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
+								bodyvelo.Velocity = longjump["Enabled"] and longjumpvelo or entity.character.Humanoid.MoveDirection * ((GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] and 0 or ((longjumpticktimer >= tick() or slowdowntick >= tick()) and allowedvelo) or speedval["Value"]) * 1) * getSpeedMultiplier(true) * (slowdownspeed and slowdownspeedval or 1) * (bedwars["RavenTable"]["spawningRaven"] and 0 or 1) * ((combatcheck or combatchecktick >= tick()) and AnticheatBypassCombatCheck["Enabled"] and (not longjump["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and 0.84 or 1)
+								print(bodyvelo.Velocity.Magnitude)
 							end
 						else
 							if jumptick <= tick() and entity.character.Humanoid.MoveDirection ~= Vector3.zero then 
@@ -6872,7 +6875,6 @@ runcode(function()
 	local flypop = {["Enabled"] = true}
 	local flyautodamage = {["Enabled"] = true}
 	local flyac = {["Enabled"] = false}
-	local flyacboost = {["Enabled"] = false}
 	local flyacprogressbar = {["Enabled"] = false}
 	local flydamageanim = {["Enabled"] = false}
 	local flyspeedboost = {["Enabled"] = false}
@@ -7004,8 +7006,8 @@ runcode(function()
 							end
 							lastonground = onground
 							allowed = 1
-							if flyacboost["Enabled"] then
- 								realflyspeed = realflyspeed * getSpeedMultiplier(true) + (flymode["Value"] == "Normal" and 14 or 8)
+							if flyspeedboost["Enabled"] then
+ 								realflyspeed = realflyspeed * getSpeedMultiplier(true) + (flymode["Value"] == "Normal" and 14 or 5)
 							end
 						else
 							onground = true
@@ -7021,6 +7023,9 @@ runcode(function()
 							entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos2
 						end
 						flyvelo = flypos + vec3(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+						if slowdowntick <= tick() + 0.8 then 
+							slowdowntick = tick() + 0.75
+						end
 					end
 				end)
 			else
@@ -7144,9 +7149,6 @@ runcode(function()
 	flyac = fly.CreateToggle({
 		["Name"] = "Fly Anyway",
 		["Function"] = function(callback) 
-			if flyacboost["Object"] then 
-				flyacboost["Object"].Visible = callback
-			end
 			if flyspeedboost["Object"] then 
 				flyspeedboost["Object"].Visible = callback
 			end
@@ -7157,15 +7159,6 @@ runcode(function()
 		end,
 		["HoverText"] = "Enables fly without balloons for 1.4s"
 	})
-	flyacboost = fly.CreateToggle({
-		["Name"] = "Fly Boost",
-		["Function"] = function() end,
-		["HoverText"] = "boosts 1.4s fly",
-	})
-	flyacboost["Object"].BorderSizePixel = 0
-	flyacboost["Object"].BackgroundTransparency = 0
-	flyacboost["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	flyacboost["Object"].Visible = false
 	flyspeedboost = fly.CreateToggle({
 		["Name"] = "Boost Speed",
 		["Function"] = function() end,
@@ -8935,10 +8928,10 @@ runcode(function()
 							end
 						end
 					end)
-					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](74)
-					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("Heatseeker")
-					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](74)
-					GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("Heatseeker")
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](28)
+					GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["SetValue"]("CFrame")
+					GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](28)
+					GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("CFrame")
 				end)
 			else
 				allowspeed = true
