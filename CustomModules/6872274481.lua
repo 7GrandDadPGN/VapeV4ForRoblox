@@ -1896,29 +1896,25 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
 				healthbarblocktable.breakingBlockPosition = blockhealthbarpos.blockPosition
 			end
             blockdmg = bedwars["BlockController"]:calculateBlockDamage(lplr, blockhealthbarpos)
-			healthbarblocktable.blockHealth = healthbarblocktable.blockHealth - blockdmg
-            if healthbarblocktable.blockHealth < 0 then
-                healthbarblocktable.blockHealth = 0
-            end
             bedwars["ClientHandlerDamageBlock"]:Get("DamageBlock"):CallServerAsync({
                 blockRef = blockhealthbarpos, 
                 hitPosition = blockpos * 3, 
                 hitNormal = Vector3.FromNormalId(normal)
             }):andThen(function(result)
-				if result == "failed" then
-					healthbarblocktable.blockHealth = healthbarblocktable.blockHealth + blockdmg
+				if result ~= "failed" then
+					healthbarblocktable.blockHealth = math.max(healthbarblocktable.blockHealth - blockdmg, 0)
+					if effects then
+						bedwars["BlockBreaker"]:updateHealthbar(blockhealthbarpos, healthbarblocktable.blockHealth, block:GetAttribute("MaxHealth"), blockdmg)
+						if healthbarblocktable.blockHealth <= 0 then
+							bedwars["BlockBreaker"].breakEffect:playBreak(block.Name, blockhealthbarpos.blockPosition, lplr)
+							bedwars["BlockBreaker"].healthbarMaid:DoCleaning()
+							healthbarblocktable.breakingBlockPosition = Vector3.zero
+						else
+							bedwars["BlockBreaker"].breakEffect:playHit(block.Name, blockhealthbarpos.blockPosition, lplr)
+						end
+					end
 				end
 			end)
-            if effects then
-				bedwars["BlockBreaker"]:updateHealthbar(blockhealthbarpos, healthbarblocktable.blockHealth, block:GetAttribute("MaxHealth"), blockdmg)
-                if healthbarblocktable.blockHealth <= 0 then
-                    bedwars["BlockBreaker"].breakEffect:playBreak(block.Name, blockhealthbarpos.blockPosition, lplr)
-                    bedwars["BlockBreaker"].healthbarMaid:DoCleaning()
-					healthbarblocktable.breakingBlockPosition = Vector3.zero
-                else
-                    bedwars["BlockBreaker"].breakEffect:playHit(block.Name, blockhealthbarpos.blockPosition, lplr)
-                end
-            end
         end
     end
 end	
@@ -5176,13 +5172,13 @@ runcode(function()
 		end
 		local selfroot = (oldcloneroot or entity.character.HumanoidRootPart)
 		local selfrootpos = selfroot.Position
-		local selfcheck = selfrootpos - (selfroot.Velocity * 0.163)
+		local selfcheck = selfrootpos - (selfroot.Velocity * 0.164)
 		if (selfcheck - (root.Position + (root.Velocity * 0.05))).Magnitude > 18 then 
 			return nil
 		end
 		local selfpos = selfrootpos + (killaurarange["Value"] > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
 		local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
-		bedwars["SwordController"].lastAttack = tick() + (ping > 100 and 0 or 0.06)
+		bedwars["SwordController"].lastAttack = tick() + (ping > 120 and -0.08 or 0) or 0
 		local attacksuccess = killaurarealremote:InvokeServer({
 			["bye"] = "lex",
 			["weapon"] = sword["tool"],
@@ -5197,7 +5193,7 @@ runcode(function()
 				["selfPosition"] = hashvec(selfpos)
 			}
 		})
-		bedwars["SwordController"].lastAttack = attacksuccess and tick() + (ping > 100 and 0 or 0.06) or 0
+		bedwars["SwordController"].lastAttack = attacksuccess and tick() + (ping > 120 and -0.08 or 0) or 0
 	end
 
 	local orig
@@ -5212,8 +5208,8 @@ runcode(function()
 			{CFrame = cfnew(0.69, -0.71, 0.6) * CFrame.Angles(math.rad(200), math.rad(60), math.rad(1)), Time = 0.15}
 		},
 		New = {
-			{CFrame = CFrame.new(0.69, -0.77, 0.37) * CFrame.Angles(math.rad(-33), math.rad(57), math.rad(-81)), Time = 0.12},
-			{CFrame = CFrame.new(0.74, -0.92, -0.22) * CFrame.Angles(math.rad(147), math.rad(71), math.rad(53)), Time = 0.12}
+			{CFrame = CFrame.new(0.69, -0.77, 0.37 + 1.1) * CFrame.Angles(math.rad(-33), math.rad(57), math.rad(-81)), Time = 0.12},
+			{CFrame = CFrame.new(0.74, -0.92, -0.22 + 1.1) * CFrame.Angles(math.rad(147), math.rad(71), math.rad(53)), Time = 0.12}
 		},
 		["Vertical Spin"] = {
 			{CFrame = cfnew(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(8), math.rad(5)), Time = 0.1},
@@ -9954,7 +9950,7 @@ runcode(function()
 			local splitted = origtpstring:split("/")
 			label.Text = "Session Info\nTime Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\nKills : "..(splitted[2] + kills).."\nBeds : "..(splitted[3] + beds).."\nWins : "..(splitted[4] + (victorysaid and 1 or 0)).."\nGames : "..splitted[5].."\nLagbacks : "..(splitted[6] + lagbacks).."\nUniversal Lagbacks : "..(splitted[7] + otherlagbacks).."\nReported : "..(splitted[8] + reported).."\nMap : "..mapname
 			local textsize = textservice:GetTextSize(label.Text, label.TextSize, label.Font, Vector2.new(9e9, 9e9))
-			overlayframe.Size = UDim2.new(0, math.max(textsize.X, 200), 0, (textsize.Y * 1.2) + 10)
+			overlayframe.Size = UDim2.new(0, math.max(textsize.X + 19, 200), 0, (textsize.Y * 1.2) + 10)
 			tpstring = splitted[1].."/"..(splitted[2] + kills).."/"..(splitted[3] + beds).."/"..(splitted[4] + (victorysaid and 1 or 0)).."/"..(splitted[5] + 1).."/"..(splitted[6] + lagbacks).."/"..(splitted[7] + otherlagbacks).."/"..(splitted[8] + reported)
 		until uninjectflag
 	end)
