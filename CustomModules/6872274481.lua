@@ -37,6 +37,13 @@ local lagbackevent = Instance.new("BindableEvent")
 local reported = 0
 local allowspeed = true
 local antivoiding = false
+local bettergetfocus = function()
+	if KRNL_LOADED then 
+		return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+	else
+		return game:GetService("UserInputService"):GetFocusedTextBox()
+	end
+end
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -1889,13 +1896,17 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
 				healthbarblocktable.breakingBlockPosition = blockhealthbarpos.blockPosition
 			end
             blockdmg = bedwars["BlockController"]:calculateBlockDamage(lplr, blockhealthbarpos)
+			healthbarblocktable.blockHealth = healthbarblocktable.blockHealth - blockdmg
+            if healthbarblocktable.blockHealth < 0 then
+                healthbarblocktable.blockHealth = 0
+            end
             bedwars["ClientHandlerDamageBlock"]:Get("DamageBlock"):CallServerAsync({
                 blockRef = blockhealthbarpos, 
                 hitPosition = blockpos * 3, 
                 hitNormal = Vector3.FromNormalId(normal)
             }):andThen(function(result)
-				if result ~= "failed" then
-					healthbarblocktable.blockHealth = math.max(healthbarblocktable.blockHealth - blockdmg, 0)
+				if result == "failed" then
+					healthbarblocktable.blockHealth = healthbarblocktable.blockHealth + blockdmg
 				end
 			end)
             if effects then
@@ -2264,7 +2275,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				aimbegan = uis.InputBegan:connect(function(input1)
-					if uis:GetFocusedTextBox() == nil and input1.UserInputType == Enum.UserInputType.MouseButton1 then
+					if bettergetfocus() == nil and input1.UserInputType == Enum.UserInputType.MouseButton1 then
 						aimactive = true
 					end
 				end)
@@ -2955,7 +2966,7 @@ runcode(function()
 					repeat
 						task.wait(0.03)
 						local plr = GetNearestHumanoidToPosition(true, 1000)
-						if plr then
+						if plr and (not bedwars["CheckWhitelisted"](plr)) then
 							game:GetService("ReplicatedStorage"):FindFirstChild("events-@easy-games/game-core:shared/game-core-networking@getEvents.Events").useAbility:FireServer("void_turret_fire", {
 								target = plr.Character,
 								fromTurret = {
@@ -5801,7 +5812,7 @@ runcode(function()
 				task.spawn(function()
 					repeat
 						task.wait()
-						if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Inventory.opened) and (uis:IsKeyDown(Enum.KeyCode.Q) or uis:IsKeyDown(Enum.KeyCode.Backspace)) and uis:GetFocusedTextBox() == nil then
+						if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Inventory.opened) and (uis:IsKeyDown(Enum.KeyCode.Q) or uis:IsKeyDown(Enum.KeyCode.Backspace)) and bettergetfocus() == nil then
 							task.spawn(bedwars["DropItem"])
 						end
 					until (not FastDrop)
@@ -6683,6 +6694,20 @@ runcode(function()
 	local speedcheck
 	local tweenservice = game:GetService("TweenService")
 
+	local function numbertween(orig, goal, timee, func)
+		local tween
+		local int = Instance.new("IntValue")
+		int.Value = orig
+		int:GetPropertyChangedSignal("Value"):connect(function()
+			if func(int.Value) then tween:Cancel() end
+		end)
+		tween = tweenservice:Create(int, TweenInfo.new(timee, Enum.EasingStyle.Linear), {Value = goal})
+		tween.Completed:connect(function()
+			int:Destroy()
+		end)
+		tween:Play()
+	end
+
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Speed",
 		["Function"] = function(callback)
@@ -6751,19 +6776,22 @@ runcode(function()
 						else
 							if jumptick <= tick() and entity.character.Humanoid.MoveDirection ~= Vector3.zero then 
 								jumptick = tick() + 0.66
-								local newspeed = fly["Enabled"] and (flyboosting and 88 or flyspeed["Value"]) or speedval["Value"]
-								for i = 1, 4 do 
+								local newspeed = (fly["Enabled"] and (flyboosting and 88 or flyspeed["Value"]) or speedval["Value"]) - 16
+								--[[for i = 1, 4 do 
 									task.wait(0.03)
 									velonum = ((i * ((newspeed - allowedvelo) / 4)) + allowedvelo)
-								end
-								for i = 10, 1, -1 do 
+								end]]
+								numbertween(allowedvelo, newspeed, 0.12, function(val) velonum = val end)
+								task.wait(0.12)
+								numbertween(newspeed, 0, 0.3, function(val) velonum = val end)
+								--[[for i = 10, 1, -1 do 
 									task.wait(0.03)
 									velonum = (newspeed * (i / 10))
-								end
+								end]]
 								boosttimes = boosttimes + 1
 							end
 							if velonum > allowedvelo and slowdowntick <= tick() then 
-								velonum = math.max(velonum - (1000 * delta), allowedvelo)
+								--velonum = math.max(velonum - (1000 * delta), allowedvelo)
 							else
 								velonum = allowedvelo * (boosttimes % 2 == 0 and 0.95 or 1)
 							end
@@ -6929,7 +6957,7 @@ runcode(function()
 				olddeflate = bedwars["BalloonController"]["deflateBalloon"]
 				bedwars["BalloonController"]["deflateBalloon"] = function() end
 				flypress = uis.InputBegan:connect(function(input1)
-					if flyupanddown["Enabled"] and uis:GetFocusedTextBox() == nil then
+					if flyupanddown["Enabled"] and bettergetfocus() == nil then
 						if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
 							flyup = true
 						end
@@ -7329,7 +7357,7 @@ runcode(function()
 								scaffoldstopmotionval = false
 							end
 							if wool or equipped["Type"] == "block" then
-								if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and uis:GetFocusedTextBox() == nil then
+								if ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and bettergetfocus() == nil then
 									entity.character.HumanoidRootPart.Velocity = vec3(entity.character.HumanoidRootPart.Velocity.X, 50, entity.character.HumanoidRootPart.Velocity.Z)
 									if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
 										entity.character.HumanoidRootPart.CFrame = cfnew(vec3(scaffoldstopmotionpos.X, entity.character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
@@ -9315,98 +9343,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local DisguiseAll = {["Enabled"] = false}
-	local DisguiseAllId = {["Value"] = ""}
-	local disguiseadded
-	local desc
-	
-	local function disguisechar(char)
-		task.spawn(function()
-			if not char then return end
-			char:WaitForChild("Humanoid")
-			char:WaitForChild("Head")
-			if desc == nil then
-				desc = players:GetHumanoidDescriptionFromUserId(DisguiseAllId["Value"] == "" and 239702688 or tonumber(DisguiseAllId["Value"]))
-			end
-			desc.HeightScale = char.Humanoid.HumanoidDescription.HeightScale
-			char.Archivable = true
-			local disguiseclone = char:Clone()
-			disguiseclone.Name = "disguisechar"
-			disguiseclone.Parent = workspace
-			for i,v in pairs(disguiseclone:GetChildren()) do 
-				if v:IsA("Accessory") or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") then  
-					v:Destroy()
-				end
-			end
-			disguiseclone.Humanoid:ApplyDescriptionClientServer(desc)
-			for i,v in pairs(char:GetChildren()) do 
-				if (v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then 
-					v.Parent = game
-				end
-			end
-			char.ChildAdded:connect(function(v)
-				if ((v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors")) and v:GetAttribute("Disguise") == nil then 
-					repeat task.wait() v.Parent = game until v.Parent == game
-				end
-			end)
-			pcall(function()
-				for i,v in pairs(disguiseclone.Animate:GetChildren()) do 
-					v:SetAttribute("Disguise", true)
-					local real = char.Animate:FindFirstChild(v.Name)
-					if v:IsA("StringValue") and real then 
-						real.Parent = game
-						v.Parent = char.Animate
-					end
-				end
-			end)
-			for i,v in pairs(disguiseclone:GetChildren()) do 
-				v:SetAttribute("Disguise", true)
-				if v:IsA("Accessory") then  
-					for i2,v2 in pairs(v:GetDescendants()) do 
-						if v2:IsA("Weld") and v2.Part1 then 
-							v2.Part1 = char[v2.Part1.Name]
-						end
-					end
-					v.Parent = char
-				elseif v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then  
-					v.Parent = char
-				elseif v.Name == "Head" then 
-					char.Head.MeshId = v.MeshId
-				end
-			end
-			char.Humanoid.HumanoidDescription:SetEmotes(desc:GetEmotes())
-			char.Humanoid.HumanoidDescription:SetEquippedEmotes(desc:GetEquippedEmotes())
-			disguiseclone:Destroy()
-		end)
-	end
-
-	DisguiseAll = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "DisguiseAll",
-		["Function"] = function(callback)
-			if callback then 
-				disguiseadded = entity.entityAddedEvent:connect(function(ent)
-					disguisechar(ent.Character)
-				end)
-				for i,ent in pairs(entity.entityList) do 
-					disguisechar(ent.Character)
-				end
-			else
-				if disguiseadded then 
-					disguiseadded:Disconnect()
-				end
-			end
-		end
-	})
-	DisguiseAllId = DisguiseAll.CreateTextBox({
-		["Name"] = "Disguise",
-		["TempText"] = "Disguise User Id",
-		["FocusLost"] = function(enter) 
-			task.spawn(function() desc = players:GetHumanoidDescriptionFromUserId(DisguiseAllId["Value"] == "" and 239702688 or tonumber(DisguiseAllId["Value"])) end)
-		end
-	})
-end)
-
-runcode(function()
 	local AutoKit = {["Enabled"] = false}
 	local AutoKitTrinity = {["Value"] = "Void"}
 	local function GetTeammateThatNeedsMost()
@@ -9908,6 +9844,8 @@ runcode(function()
 	local teleported = {}
 	local teleported2 = {}
 	local teleportconnections = {}
+	local pinglist = {}
+	local fpslist = {}
 	local matchstatechanged = 0
 	local mapname = "to4_Blossom"
 
@@ -9928,6 +9866,26 @@ runcode(function()
 				end
 			end
 		end)
+
+		local function didpingspike()
+			local currentpingcheck = pinglist[1] or math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+			for i,v in pairs(fpslist) do 
+				print("anticheatbypass fps ["..i.."]: "..v)
+				if v < 40 then 
+					return v.." fps"
+				end
+			end
+			for i,v in pairs(pinglist) do 
+				print("anticheatbypass ping ["..i.."]: "..v)
+				if v ~= currentpingcheck and math.abs(v - currentpingcheck) >= 100 then 
+					return currentpingcheck.." => "..v.." ping"
+				else
+					currentpingcheck = v
+				end
+			end
+			return nil
+		end
+
 		local function notlasso()
 			for i,v in pairs(collectionservice:GetTagged("LassoHooked")) do 
 				if v == lplr.Character then 
@@ -9937,6 +9895,16 @@ runcode(function()
 			return true
 		end
 		repeat
+			local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
+			local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
+			if #pinglist >= 10 then 
+				table.remove(pinglist, 1)
+			end
+			if #fpslist >= 10 then 
+				table.remove(fpslist, 1)
+			end
+			table.insert(pinglist, ping)
+			table.insert(fpslist, fps)
 			wait(1)
 			if matchState ~= matchstatechanged then 
 				if matchState == 1 then 
@@ -9951,7 +9919,12 @@ runcode(function()
 			if entity.isAlive and (not AnticheatBypass["Enabled"]) and networkownerfunc then 
 				local newnetworkowner = networkownerfunc(entity.character.HumanoidRootPart)
 				if oldnetworkowner ~= nil and oldnetworkowner ~= newnetworkowner and newnetworkowner == false and notlasso() then 
-					lagbacks = lagbacks + 1
+					local falseflag = didpingspike()
+					if falseflag then 
+						createwarning("AnticheatBypass", "Lagspike Detected : "..falseflag, 10)
+					else
+						lagbacks = lagbacks + 1
+					end
 				end
 				oldnetworkowner = newnetworkowner
 			else
@@ -10721,7 +10694,7 @@ if shared.nobolineupdate then
 			realgui.Parent = gethui()
 		end
 		fakeuiconnection = uis.InputBegan:connect(function(input1)
-			if uis:GetFocusedTextBox() == nil then
+			if bettergetfocus() == nil then
 				if input1.KeyCode == Enum.KeyCode[GuiLibrary["GUIKeybind"]] and GuiLibrary["KeybindCaptured"] == false then
 					realgui.Enabled = not realgui.Enabled
 					uis.OverrideMouseIconBehavior = (realgui.Enabled and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
