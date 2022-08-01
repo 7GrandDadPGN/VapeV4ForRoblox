@@ -23,6 +23,13 @@ local function GetURL(scripturl)
 		return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
 	end
 end
+local bettergetfocus = function()
+	if KRNL_LOADED then 
+		return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+	else
+		return game:GetService("UserInputService"):GetFocusedTextBox()
+	end
+end
 local entity = shared.vapeentity
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
 local teleportfunc
@@ -728,7 +735,7 @@ runcode(function()
 			if callback then
 				--buyballoons()
 				flypress = uis.InputBegan:connect(function(input1)
-					if flyupanddown["Enabled"] and uis:GetFocusedTextBox() == nil then
+					if flyupanddown["Enabled"] and bettergetfocus() == nil then
 						if input1.KeyCode == Enum.KeyCode.Space then
 							flyup = true
 						end
@@ -2057,7 +2064,7 @@ if shared.nobolineupdate then
 			realgui.Parent = gethui()
 		end
 		fakeuiconnection = uis.InputBegan:connect(function(input1)
-			if uis:GetFocusedTextBox() == nil then
+			if bettergetfocus() == nil then
 				if input1.KeyCode == Enum.KeyCode[GuiLibrary["GUIKeybind"]] and GuiLibrary["KeybindCaptured"] == false then
 					realgui.Enabled = not realgui.Enabled
 					uis.OverrideMouseIconBehavior = (realgui.Enabled and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)

@@ -76,10 +76,6 @@ if isfolder(customdir.."Profiles") == false then
 	makefolder(customdir.."Profiles")
 end
 if not betterisfile("vape/language.dat") then
-	local suc, res = pcall(function() return gethiddenproperty(game:GetService("Players").LocalPlayer, "ReplicatedLocaleId") end)
-	writefile("vape/language.dat", suc and res or "en-us")
-end
-if not pcall(function() return GetURL("translations/"..readfile("vape/language.dat")..".vapetranslation") end) then
 	writefile("vape/language.dat", "en-us")
 end
 local assetver = checkassetversion()

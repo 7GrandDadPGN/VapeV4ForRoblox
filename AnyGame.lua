@@ -1948,6 +1948,9 @@ end)
 runcode(function()
 	local bodyspin
 	local spinbotspeed = {["Value"] = 1}
+	local spinbotx = {["Enabled"] = false}
+	local spinboty = {["Enabled"] = false}
+	local spinbotz = {["Enabled"] = false}
 	local spinbot = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SpinBot",
 		["Function"] = function(callback)
@@ -1956,11 +1959,12 @@ runcode(function()
 					if entity.isAlive then
 						if (bodyspin == nil or bodyspin ~= nil and bodyspin.Parent ~= entity.character.HumanoidRootPart) then
 							bodyspin = Instance.new("BodyAngularVelocity")
-							bodyspin.MaxTorque = Vector3.new(0, math.huge, 0)
-							bodyspin.AngularVelocity = Vector3.new(0, spinbotspeed["Value"], 0)
+							bodyspin.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+							bodyspin.AngularVelocity = Vector3.new(spinbotspeed["Value"], spinbotspeed["Value"], spinbotspeed["Value"])
 							bodyspin.Parent = entity.character.HumanoidRootPart
 						else
-							bodyspin.AngularVelocity = Vector3.new(0, spinbotspeed["Value"], 0)
+							bodyspin.MaxTorque = Vector3.new(spinbotx["Enabled"] and math.huge or 0, spinboty["Enabled"] and math.huge or 0, spinbotz["Enabled"] and math.huge or 0)
+							bodyspin.AngularVelocity = Vector3.new(spinbotspeed["Value"], spinbotspeed["Value"], spinbotspeed["Value"])
 						end
 					end
 				end)
@@ -1978,6 +1982,19 @@ runcode(function()
 		["Min"] = 1,
 		["Max"] = 100,
 		["Default"] = 40,
+		["Function"] = function() end
+	})
+	spinbotx = spinbot.CreateToggle({
+		["Name"] = "Spin X",
+		["Function"] = function() end
+	})
+	spinboty = spinbot.CreateToggle({
+		["Name"] = "Spin Y",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+	spinbotz = spinbot.CreateToggle({
+		["Name"] = "Spin Z",
 		["Function"] = function() end
 	})
 end)
@@ -2624,6 +2641,9 @@ runcode(function()
 						addfunc(ent)
 					end)
 					for i,v in pairs(entity.entityList) do 
+						if espfolderdrawing[ent] then 
+							espfuncs2[methodused](ent)
+						end
 						addfunc(v)
 					end
 				end
@@ -2647,9 +2667,11 @@ runcode(function()
 				if removedconnection then 
 					removedconnection:Disconnect()
 				end
-				for i,v in pairs(entity.entityList) do 
-					if espfuncs2[methodused] and espfolderdrawing[v.Player] then
-						espfuncs2[methodused](v.Player)
+				if espfuncs2[methodused] then
+					for i,v in pairs(entity.entityList) do 
+						if espfolderdrawing[v.Player] then
+							espfuncs2[methodused](v.Player)
+						end
 					end
 				end
 			end
