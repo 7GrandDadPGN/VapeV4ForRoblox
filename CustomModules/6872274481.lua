@@ -2949,37 +2949,6 @@ end)
 
 
 runcode(function()
-	local function roundpos(pos)
-		return Vector3.new(math.round(pos.X / 3) * 3, math.round(pos.Y / 3) * 3, math.round(pos.Z / 3) * 3)
-	end
-	
-	local TPAura = {["Enabled"] = false}
-	TPAura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "TPAura",
-		["Function"] = function(callback)
-			if callback then 
-				spawn(function()
-					repeat
-						task.wait(0.03)
-						local plr = GetNearestHumanoidToPosition(true, 1000)
-						if plr and (not bedwars["CheckWhitelisted"](plr.Player)) then
-							game:GetService("ReplicatedStorage"):FindFirstChild("events-@easy-games/game-core:shared/game-core-networking@getEvents.Events").useAbility:FireServer("void_turret_fire", {
-								target = plr.Character,
-								fromTurret = {
-									Name = "void_turret",
-									Position = roundpos(plr.Character.HumanoidRootPart.Position),
-									Parent = workspace.Map.Worlds:GetChildren()[1].Blocks
-								}
-							})
-							task.delay(1.8, function() bedwars["SwordController"]:playSwordEffect(bedwars["ItemTable"]["wood_sword"]) end)
-							task.wait(2.4)
-						end
-					until (not TPAura["Enabled"])
-				end)
-			end
-		end
-	})
-
 	local DinoExploit = {["Enabled"] = false}
 	local dinoconnection
 	DinoExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
