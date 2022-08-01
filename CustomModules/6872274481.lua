@@ -2966,7 +2966,7 @@ runcode(function()
 					repeat
 						task.wait(0.03)
 						local plr = GetNearestHumanoidToPosition(true, 1000)
-						if plr and (not bedwars["CheckWhitelisted"](plr)) then
+						if plr and (not bedwars["CheckWhitelisted"](plr.Player)) then
 							game:GetService("ReplicatedStorage"):FindFirstChild("events-@easy-games/game-core:shared/game-core-networking@getEvents.Events").useAbility:FireServer("void_turret_fire", {
 								target = plr.Character,
 								fromTurret = {
