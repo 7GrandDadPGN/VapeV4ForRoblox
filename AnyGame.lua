@@ -1293,8 +1293,8 @@ runcode(function()
 						end
 						if flyplatform then
 							flyplatform.CFrame = (flymethod["Value"] == "Jump" and flyjumpcf or entity.character.HumanoidRootPart.CFrame * CFrame.new(0, -entity.character.Humanoid.HipHeight * (flymethod["Value"] == "Normal" and 1.75 or 2), 0))
-							flyplatform.Velocity = Vector3.new()
 							flyplatform.Parent = cam
+							entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
 						end
 					else
 						flyalivecheck = false
@@ -1311,8 +1311,7 @@ runcode(function()
 					entity.character.Humanoid.PlatformStand = false
 				end
 				if flyplatform then
-					flyplatform:Remove()
-					flyplatform = nil
+					flyplatform.Parent = nil
 				end
 			end
 		end,
@@ -1372,7 +1371,7 @@ runcode(function()
 				flyplatform.Transparency = 1
 			else
 				if flyplatform then 
-					flyplatform:Remove()
+					flyplatform:Destroy()
 					flyplatform = nil 
 				end
 			end
