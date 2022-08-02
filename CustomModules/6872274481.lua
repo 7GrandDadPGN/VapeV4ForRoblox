@@ -7007,7 +7007,7 @@ runcode(function()
 							lastonground = onground
 							allowed = 1
 							if flyspeedboost["Enabled"] then
- 								realflyspeed = realflyspeed * getSpeedMultiplier(true) + (flymode["Value"] == "Normal" and 14 or 5)
+ 								realflyspeed = realflyspeed * getSpeedMultiplier(true) + (flymode["Value"] == "Normal" and 14 or 4)
 							end
 						else
 							onground = true
