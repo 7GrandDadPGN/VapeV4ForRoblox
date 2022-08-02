@@ -1312,6 +1312,7 @@ runcode(function()
 				end
 				if flyplatform then
 					flyplatform.Parent = nil
+					entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
 				end
 			end
 		end,
