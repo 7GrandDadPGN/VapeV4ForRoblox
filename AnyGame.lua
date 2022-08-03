@@ -2638,7 +2638,7 @@ runcode(function()
 				if espfuncs1[methodused] then
 					local addfunc = espfuncs1[methodused]
 					addedconnection = entity.entityAddedEvent:connect(function(ent)
-						if espfolderdrawing[ent] then return end
+						if espfolderdrawing[ent.Player] then return end
 						addfunc(ent)
 					end)
 					for i,v in pairs(entity.entityList) do 
@@ -2648,7 +2648,7 @@ runcode(function()
 				if espupdatefuncs[methodused] then
 					updatedconnection = entity.entityUpdatedEvent:connect(espupdatefuncs[methodused])
 					for i,v in pairs(entity.entityList) do 
-						if espfolderdrawing[ent] then continue end
+						if espfolderdrawing[v.Player] then continue end
 						espupdatefuncs[methodused](v)
 					end
 				end
