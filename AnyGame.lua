@@ -1294,7 +1294,7 @@ runcode(function()
 						if flyplatform then
 							flyplatform.CFrame = (flymethod["Value"] == "Jump" and flyjumpcf or entity.character.HumanoidRootPart.CFrame * CFrame.new(0, -entity.character.Humanoid.HipHeight * (flymethod["Value"] == "Normal" and 1.75 or 2), 0))
 							flyplatform.Parent = cam
-							entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+							entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
 						end
 					else
 						flyalivecheck = false
@@ -2638,21 +2638,17 @@ runcode(function()
 				if espfuncs1[methodused] then
 					local addfunc = espfuncs1[methodused]
 					addedconnection = entity.entityAddedEvent:connect(function(ent)
-						if espfolderdrawing[ent] then 
-							espfuncs2[methodused](ent)
-						end
+						if espfolderdrawing[ent] then return end
 						addfunc(ent)
 					end)
 					for i,v in pairs(entity.entityList) do 
-						if espfolderdrawing[ent] then 
-							espfuncs2[methodused](ent)
-						end
 						addfunc(v)
 					end
 				end
 				if espupdatefuncs[methodused] then
 					updatedconnection = entity.entityUpdatedEvent:connect(espupdatefuncs[methodused])
 					for i,v in pairs(entity.entityList) do 
+						if espfolderdrawing[ent] then continue end
 						espupdatefuncs[methodused](v)
 					end
 				end
