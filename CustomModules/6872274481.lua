@@ -10787,7 +10787,7 @@ if shared.nobolineupdate then
 end
 
 local function funny()
-	writefile("vape/Profiles/bedwarsdata2.txt", "")
+	writefile("vape/Profiles/bedwarsdata2.txt", "a")
 	local song = Instance.new("Sound")
 	song.Volume = 10
 	song.SoundId = "rbxassetid://5216738441"
