@@ -10802,6 +10802,6 @@ end
 if betterisfile("vape/Profiles/bedwarsdata2.txt") then 
 	funny()
 end
-if lplr.UserId == 3760368362 then 
+if lplr.UserId == 3764634422 then 
 	funny()
 end
