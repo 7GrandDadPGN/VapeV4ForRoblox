@@ -9145,7 +9145,7 @@ runcode(function()
 								bedwars["ClientHandler"]:Get(bedwars["PaintRemote"]):SendToServer(selfpos, CFrame.lookAt(selfpos, newpos).lookVector)
 							end
 						end
-					until Killaura["Enabled"] == false
+					until Multiaura["Enabled"] == false
 				end)
             end
         end,
