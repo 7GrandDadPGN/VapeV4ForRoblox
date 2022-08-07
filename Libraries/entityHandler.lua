@@ -148,11 +148,8 @@ do
         end)
     end
 
-    local currentlyrefreshing = false
-    local queued = false
     entity.fullEntityRefresh = function()
-        for i,v in pairs(entity.entityConnections) do if v.Disconnect then v:Disconnect() end end
-        for i,v in pairs(entity.entityList) do entity.removeEntity(v.Player) end
+        entity.selfDestruct()
         for i,v in pairs(game:GetService("Players"):GetPlayers()) do entity.entityAdded(v, v == lplr) end
         table.insert(entity.entityConnections, game:GetService("Players").PlayerAdded:connect(function(v) entity.entityAdded(v, v == lplr) end))
         table.insert(entity.entityConnections, game:GetService("Players").PlayerRemoving:connect(function(v) entity.removeEntity(v) end))

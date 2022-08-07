@@ -263,12 +263,7 @@ local function CalculateLine(startVector, endVector, obj)
 end
 
 local function findTouchInterest(tool)
-	for i,v in pairs(tool:GetDescendants()) do
-		if v:IsA("TouchTransmitter") then
-			return v
-		end
-	end
-	return nil
+	return tool and tool:FindFirstChildWhichIsA("TouchTransmitter", true)
 end
 
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
@@ -1194,6 +1189,11 @@ runcode(function()
 					flyposy = entity.character.HumanoidRootPart.CFrame.p.Y
 					flyalivecheck = true
 				end
+				local changetick = tick() + 0.2
+				w = uis:IsKeyDown(Enum.KeyCode.W) and -1 or 0
+				s = uis:IsKeyDown(Enum.KeyCode.S) and 1 or 0
+				a = uis:IsKeyDown(Enum.KeyCode.A) and -1 or 0
+				d = uis:IsKeyDown(Enum.KeyCode.D) and 1 or 0
 				flypress = uis.InputBegan:connect(function(input1)
 					if uis:GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.W then
@@ -1250,8 +1250,8 @@ runcode(function()
 							flyposy = entity.character.HumanoidRootPart.CFrame.p.Y
 							flyalivecheck = true
 						end
-						local movevec = (flymovemethod["Value"] == "Manual" and (not (w or s or a or d)) and Vector3.new() or entity.character.Humanoid.MoveDirection).Unit
-						movevec = movevec == movevec and movevec or Vector3.new()
+						local movevec = (flymovemethod["Value"] == "Manual" and cam.CFrame:VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entity.character.Humanoid.MoveDirection).Unit
+						movevec = movevec == movevec and Vector3.new(movevec.X, 0, movevec.Z) or Vector3.new()
 						if flystate["Value"] ~= "None" then 
 							entity.character.Humanoid:ChangeState(Enum.HumanoidStateType[flystate["Value"]])
 						end
@@ -1282,7 +1282,6 @@ runcode(function()
 								if flyplatformstanding["Enabled"] then
 									entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, entity.character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
 								end
-								entity.character.HumanoidRootPart.Velocity = Vector3.new()
 							else
 								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, 0, flypos.Z)
 								if entity.character.HumanoidRootPart.Velocity.Y < -(entity.character.Humanoid.JumpPower - ((flyup and flyverticalspeed["Value"] or 0) - (flydown and flyverticalspeed["Value"] or 0))) then
@@ -1292,9 +1291,11 @@ runcode(function()
 							end
 						end
 						if flyplatform then
-							flyplatform.CFrame = (flymethod["Value"] == "Jump" and flyjumpcf or entity.character.HumanoidRootPart.CFrame * CFrame.new(0, -entity.character.Humanoid.HipHeight * (flymethod["Value"] == "Normal" and 1.75 or 2), 0))
+							flyplatform.CFrame = (flymethod["Value"] == "Jump" and flyjumpcf or entity.character.HumanoidRootPart.CFrame * CFrame.new(0, -entity.character.Humanoid.HipHeight - 1.52, 0))
 							flyplatform.Parent = cam
-							entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+							if flyup or changetick >= tick() then 
+								entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+							end
 						end
 					else
 						flyalivecheck = false
@@ -1329,7 +1330,7 @@ runcode(function()
 	})
 	flymovemethod = fly.CreateDropdown({
 		["Name"] = "Movement", 
-		["List"] = {"MoveDirection", "Manual"},
+		["List"] = {"Manual", "MoveDirection"},
 		["Function"] = function(val) end
 	})
 	flykeys = fly.CreateDropdown({
@@ -1439,94 +1440,260 @@ hitboxoption = Hitbox.CreateDropdown({
 	end
 })
 
-local killauraaps = {["GetRandomValue"] = function() return 1 end}
-local killaurarange = {["Value"] = 1}
-local killauraangle = {["Value"] = 90}
-local killauratarget = {["Value"] = 1}
-local killauramouse = {["Enabled"] = false}
-local killauratargetframe = {["Players"] = {["Enabled"] = false}}
-local killauracframe = {["Enabled"] = false}
-local Killaura = {["Enabled"] = false}
-local killauratick = tick()
 local killauranear = false
-Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-	["Name"] = "Killaura", 
-	["Function"] = function(callback)
-		if callback then
-			RunLoops:BindToRenderStep("Killaura", 1, function() 
-				killauranear = false
-				if entity.isAlive then
-					local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
-					local plr = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
-					if tool and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) then
-						local touch = findTouchInterest(tool)
-						if touch then
-							local targettable = {}
-							local targetsize = 0
-							for i,v in pairs(plr) do
-								local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
-								local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
-								local angle = math.acos(localfacing:Dot(vec))
-								if angle <= math.rad(killauraangle["Value"]) then
-									killauranear = true
-									targettable[v.Player.Name] = {
-										["UserId"] = v.Player.UserId,
-										["Health"] = v.Character.Humanoid.Health,
-										["MaxHealth"] = v.Character.Humanoid.MaxHealth
-									}
-									targetsize = targetsize + 1
-									if killauracframe["Enabled"] then
-										entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.Position, Vector3.new(v.RootPart.Position.X, entity.character.HumanoidRootPart.Position.Y, v.RootPart.Position.Z))
+runcode(function()
+	local killauraboxes = {}
+	local killauraaps = {["GetRandomValue"] = function() return 1 end}
+	local killauratarget = {["Enabled"] = false}
+	local killauratargethighlight = {["Enabled"] = false}
+	local killaurarangecircle = {["Enabled"] = false}
+	local killaurarangecirclepart
+	local killauracolor = {["Value"] = 0.44}
+	local killaurarange = {["Value"] = 1}
+	local killauraangle = {["Value"] = 90}
+	local killauramouse = {["Enabled"] = false}
+	local killauratargetframe = {["Players"] = {["Enabled"] = false}}
+	local killauracframe = {["Enabled"] = false}
+	local Killaura = {["Enabled"] = false}
+	local killauratick = tick()
+	Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Killaura", 
+		["Function"] = function(callback)
+			if callback then
+				local targetedplayer
+				RunLoops:BindToHeartbeat("Killaura", 1, function()
+					for i,v in pairs(killauraboxes) do 
+						if v:IsA("BoxHandleAdornment") and v.Adornee then
+							local cf = v.Adornee and v.Adornee.CFrame
+							local onex, oney, onez = cf:ToEulerAnglesXYZ() 
+							v.CFrame = CFrame.new() * CFrame.Angles(-onex, -oney, -onez)
+						end
+					end
+					if entity.isAlive then
+						if killauraaimcirclepart then 
+							killauraaimcirclepart.Position = targetedplayer and closestpos(targetedplayer.RootPart, entity.character.HumanoidRootPart.Position) or Vector3.zero
+						end
+						local Root = entity.character.HumanoidRootPart
+						if Root then
+							if killaurarangecirclepart then 
+								killaurarangecirclepart.Position = Root.Position - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)
+							end
+							local Neck = entity.character.Head:FindFirstChild("Neck")
+							local LowerTorso = Root.Parent and Root.Parent:FindFirstChild("LowerTorso")
+							local RootC0 = LowerTorso and LowerTorso:FindFirstChild("Root")
+							if Neck and RootC0 then
+								if orig == nil then
+									orig = Neck.C0.p
+								end
+								if orig2 == nil then
+									orig2 = RootC0.C0.p
+								end
+								if orig2 then
+									if targetedplayer ~= nil and killauracframe["Enabled"] then
+										local targetPos = targetedplayer.RootPart.Position + Vector3.new(0, 2, 0)
+										local direction = (Vector3.new(targetPos.X, targetPos.Y, targetPos.Z) - entity.character.Head.Position).Unit
+										local direction2 = (Vector3.new(targetPos.X, Root.Position.Y, targetPos.Z) - Root.Position).Unit
+										local lookCFrame = (CFrame.new(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction)))
+										local lookCFrame2 = (CFrame.new(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction2)))
+										Neck.C0 = CFrame.new(orig) * CFrame.Angles(lookCFrame.LookVector.Unit.y, 0, 0)
+										RootC0.C0 = lookCFrame2 + orig2
+									else
+										Neck.C0 = CFrame.new(orig)
+										RootC0.C0 = CFrame.new(orig2)
 									end
-									if killauratick <= tick() then
+								end
+							end
+						end
+					end
+				end)
+				task.spawn(function()
+					repeat
+						task.wait()
+						local targettable = {}
+						local targetsize = 0
+						local attackedplayers = {}
+						if entity.isAlive then
+							local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+							local touch = findTouchInterest(tool)
+							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
+							if tool and touch then
+								if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
+									if killauratick <= tick() and #plrs > 0 then
 										tool:Activate()
 										killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
 									end
-									firetouchinterest(touch.Parent, v.RootPart, 1)
-									firetouchinterest(touch.Parent, v.RootPart, 0)
+									for i,v in pairs(plrs) do
+										local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
+										local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
+										local angle = math.acos(localfacing:Dot(vec))
+										if angle <= math.rad(killauraangle["Value"]) then
+											killauranear = true
+											targettable[v.Player.Name] = {
+												["UserId"] = v.Player.UserId,
+												["Health"] = v.Character.Humanoid.Health,
+												["MaxHealth"] = v.Character.Humanoid.MaxHealth
+											}
+											targetsize = targetsize + 1
+											if killauratarget["Enabled"] then
+												table.insert(attackedplayers, v)
+											end
+											if targetsize == 1 then 
+												targetedplayer = v
+											end
+											firetouchinterest(touch.Parent, v.RootPart, 1)
+											firetouchinterest(touch.Parent, v.RootPart, 0)
+										end
+									end
 								end
 							end
-							targetinfo.UpdateInfo(targettable, targetsize)
+							for i,v in pairs(killauraboxes) do 
+								local attacked = attackedplayers[i]
+								v.Adornee = attacked and ((not killauratargethighlight["Enabled"]) and attacked.RootPart or (not GuiLibrary["ObjectsThatCanBeSaved"]["ChamsOptionsButton"]["Api"]["Enabled"]) and attacked.Character or nil)
+							end
+							if (#plrs <= 0) then
+								lastplr = nil
+								targetedplayer = nil
+								killauranear = false
+							end
 						end
-					end
+						targetinfo.UpdateInfo(targettable, targetsize)
+					until (not Killaura["Enabled"])
+				end)
+			else
+				RunLoops:UnbindFromHeartbeat("Killaura") 
+                killauranear = false
+				for i,v in pairs(killauraboxes) do 
+					v.Adornee = nil
 				end
-			end)
-		else
-			RunLoops:UnbindFromRenderStep("Killaura")
-			killauranear = false
+				if killaurarangecirclepart then 
+					killaurarangecirclepart.Parent = nil
+				end
+			end
+		end,
+		["HoverText"] = "Attack players around you\nwithout aiming at them."
+	})
+	killauratargetframe = Killaura.CreateTargetWindow({})
+	killauraaps = Killaura.CreateTwoSlider({
+		["Name"] = "Attacks per second",
+		["Min"] = 1,
+		["Max"] = 20,
+		["Default"] = 8,
+		["Default2"] = 12
+	})
+	killaurarange = Killaura.CreateSlider({
+		["Name"] = "Attack range",
+		["Min"] = 1,
+		["Max"] = 150, 
+		["Function"] = function(val) 
+			if killaurarangecirclepart then 
+				killaurarangecirclepart.Size = Vector3.new(val * 0.7, 0.01, val * 0.7)
+			end
 		end
-	end,
-	["HoverText"] = "Attack players around you\nwithout aiming at them."
-})
-killauratargetframe = Killaura.CreateTargetWindow({})
-killauraaps = Killaura.CreateTwoSlider({
-	["Name"] = "Attacks per second",
-	["Min"] = 1,
-	["Max"] = 20,
-	["Default"] = 8,
-	["Default2"] = 12
-})
-killaurarange = Killaura.CreateSlider({
-	["Name"] = "Attack range",
-	["Min"] = 1,
-	["Max"] = 150, 
-	["Function"] = function(val) end
-})
-killauraangle = Killaura.CreateSlider({
-	["Name"] = "Max angle",
-	["Min"] = 1,
-	["Max"] = 360, 
-	["Function"] = function(val) end,
-	["Default"] = 90
-})
-killauramouse = Killaura.CreateToggle({
-	["Name"] = "Require mouse down", 
-	["Function"] = function() end
-})
-killauracframe = Killaura.CreateToggle({
-	["Name"] = "Face target", 
-	["Function"] = function() end
-})
+	})
+	killauraangle = Killaura.CreateSlider({
+		["Name"] = "Max angle",
+		["Min"] = 1,
+		["Max"] = 360, 
+		["Function"] = function(val) end,
+		["Default"] = 90
+	})
+	killauramouse = Killaura.CreateToggle({
+		["Name"] = "Require mouse down", 
+		["Function"] = function() end
+	})
+	killauratarget = Killaura.CreateToggle({
+        ["Name"] = "Show target",
+        ["Function"] = function(callback) 
+			if killauratargethighlight["Object"] then 
+				killauratargethighlight["Object"].Visible = callback
+			end
+		end,
+		["HoverText"] = "Shows a red box over the opponent."
+    })
+	killauratargethighlight = Killaura.CreateToggle({
+		["Name"] = "Use New Highlight",
+		["Function"] = function(callback) 
+			for i,v in pairs(killauraboxes) do 
+				v:Remove()
+			end
+			for i = 1, 10 do 
+				local killaurabox
+				if callback then 
+					killaurabox = Instance.new("Highlight")
+					killaurabox.FillTransparency = 0.5
+					killaurabox.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+					killaurabox.OutlineTransparency = 1
+					killaurabox.Parent = GuiLibrary["MainGui"]
+				else
+					killaurabox = Instance.new("BoxHandleAdornment")
+					killaurabox.Transparency = 0.5
+					killaurabox.Color3 = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor["Value"])
+					killaurabox.Adornee = nil
+					killaurabox.AlwaysOnTop = true
+					killaurabox.Size = Vector3.new(3, 6, 3)
+					killaurabox.ZIndex = 11
+					killaurabox.Parent = GuiLibrary["MainGui"]
+				end
+				killauraboxes[i] = killaurabox
+			end
+		end
+	})
+	killauratargethighlight["Object"].BorderSizePixel = 0
+	killauratargethighlight["Object"].BackgroundTransparency = 0
+	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	killauratargethighlight["Object"].Visible = false
+	killauracolor = Killaura.CreateColorSlider({
+		["Name"] = "Target Color",
+		["Function"] = function(hue, sat, val) 
+			for i,v in pairs(killauraboxes) do 
+				v[(killauratargethighlight["Enabled"] and "FillColor" or "Color3")] = Color3.fromHSV(hue, sat, val)
+			end
+			if killauraaimcirclepart then 
+				killauraaimcirclepart.Color = Color3.fromHSV(hue, sat, val)
+			end
+			if killaurarangecirclepart then 
+				killaurarangecirclepart.Color = Color3.fromHSV(hue, sat, val)
+			end
+		end,
+		["Default"] = 1
+	})
+	for i = 1, 10 do 
+		local killaurabox = Instance.new("BoxHandleAdornment")
+		killaurabox.Transparency = 0.5
+		killaurabox.Color3 = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor["Value"])
+		killaurabox.Adornee = nil
+		killaurabox.AlwaysOnTop = true
+		killaurabox.Size = Vector3.new(3, 6, 3)
+		killaurabox.ZIndex = 11
+		killaurabox.Parent = GuiLibrary["MainGui"]
+		killauraboxes[i] = killaurabox
+	end
+    killauracframe = Killaura.CreateToggle({
+        ["Name"] = "Face target",
+        ["Function"] = function() end,
+		["HoverText"] = "Makes your character face the opponent."
+    })
+	killaurarangecircle = Killaura.CreateToggle({
+		["Name"] = "Range Visualizer",
+		["Function"] = function(callback)
+			if callback then 
+				killaurarangecirclepart = Instance.new("MeshPart")
+				killaurarangecirclepart.MeshId = "rbxassetid://3726303797"
+				killaurarangecirclepart.Color = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor["Value"])
+				killaurarangecirclepart.CanCollide = false
+				killaurarangecirclepart.Anchored = true
+				killaurarangecirclepart.Material = Enum.Material.Neon
+				killaurarangecirclepart.Size = Vector3.new(killaurarange["Value"] * 0.7, 0.01, killaurarange["Value"] * 0.7)
+				killaurarangecirclepart.Parent = cam
+			else
+				if killaurarangecirclepart then 
+					killaurarangecirclepart:Destroy()
+					killaurarangecirclepart = nil
+				end
+			end
+		end
+	})
+end)
 
 local longjumpboost = {["Value"] = 1}
 local longjumpdisabler = {["Enabled"] = false}
@@ -2114,6 +2281,96 @@ ArrowsTeammate = Arrows.CreateToggle({
 	["Default"] = true
 })
 
+
+runcode(function()
+	local Disguise = {["Enabled"] = false}
+	local DisguiseId = {["Value"] = ""}
+	local desc
+	
+	local function disguisechar(char)
+		task.spawn(function()
+			if not char then return end
+			char:WaitForChild("Humanoid")
+			char:WaitForChild("Head")
+			if desc == nil then
+				desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"]))
+			end
+			desc.HeightScale = char.Humanoid.HumanoidDescription.HeightScale
+			char.Archivable = true
+			local disguiseclone = char:Clone()
+			disguiseclone.Name = "disguisechar"
+			disguiseclone.Parent = workspace
+			for i,v in pairs(disguiseclone:GetChildren()) do 
+				if v:IsA("Accessory") or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") then  
+					v:Destroy()
+				end
+			end
+			disguiseclone.Humanoid:ApplyDescriptionClientServer(desc)
+			for i,v in pairs(char:GetChildren()) do 
+				if (v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then 
+					v.Parent = game
+				end
+			end
+			char.ChildAdded:connect(function(v)
+				if ((v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors")) and v:GetAttribute("Disguise") == nil then 
+					repeat task.wait() v.Parent = game until v.Parent == game
+				end
+			end)
+			for i,v in pairs(disguiseclone.Animate:GetChildren()) do 
+				v:SetAttribute("Disguise", true)
+				local real = char.Animate:FindFirstChild(v.Name)
+				if v:IsA("StringValue") and real then 
+					real.Parent = game
+					v.Parent = char.Animate
+				end
+			end
+			for i,v in pairs(disguiseclone:GetChildren()) do 
+				v:SetAttribute("Disguise", true)
+				if v:IsA("Accessory") then  
+					for i2,v2 in pairs(v:GetDescendants()) do 
+						if v2:IsA("Weld") and v2.Part1 then 
+							v2.Part1 = char[v2.Part1.Name]
+						end
+					end
+					v.Parent = char
+				elseif v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then  
+					v.Parent = char
+				elseif v.Name == "Head" then 
+					char.Head.MeshId = v.MeshId
+				end
+			end
+			local localface = char:FindFirstChild("face", true)
+			local cloneface = disguiseclone:FindFirstChild("face", true)
+			if localface and cloneface then localface.Parent = game cloneface.Parent = char.Head end
+			char.Humanoid.HumanoidDescription:SetEmotes(desc:GetEmotes())
+			char.Humanoid.HumanoidDescription:SetEquippedEmotes(desc:GetEquippedEmotes())
+			disguiseclone:Destroy()
+		end)
+	end
+
+	local disguiseconnection
+	Disguise = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Disguise",
+		["Function"] = function(callback)
+			if callback then 
+				disguiseconnection = lplr.CharacterAdded:connect(disguisechar)
+				disguisechar(lplr.Character)
+			else
+				if disguiseconnection then 
+					disguiseconnection:Disconnect()
+				end
+			end
+		end
+	})
+	DisguiseId = Disguise.CreateTextBox({
+		["Name"] = "Disguise",
+		["TempText"] = "Disguise User Id",
+		["FocusLost"] = function(enter) 
+			task.spawn(function() desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"])) end)
+		end
+	})
+end)
+
 runcode(function()
 	local espfolderdrawing = {}
 	local methodused
@@ -2627,7 +2884,8 @@ runcode(function()
 		end
 	}
 
-	local ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	local ESP = {Enabled = false}
+	ESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "ESP", 
 		["Function"] = function(callback) 
 			if callback then
@@ -2637,18 +2895,18 @@ runcode(function()
 				end
 				if espfuncs1[methodused] then
 					local addfunc = espfuncs1[methodused]
-					addedconnection = entity.entityAddedEvent:connect(function(ent)
-						if espfolderdrawing[ent.Player] then return end
-						addfunc(ent)
-					end)
 					for i,v in pairs(entity.entityList) do 
+						if espfolderdrawing[v.Player] then espfuncs2[methodused](v.Player) end
 						addfunc(v)
 					end
+					addedconnection = entity.entityAddedEvent:connect(function(ent)
+						if espfolderdrawing[ent.Player] then espfuncs2[methodused](ent.Player) end
+						addfunc(ent)
+					end)
 				end
 				if espupdatefuncs[methodused] then
 					updatedconnection = entity.entityUpdatedEvent:connect(espupdatefuncs[methodused])
 					for i,v in pairs(entity.entityList) do 
-						if espfolderdrawing[v.Player] then continue end
 						espupdatefuncs[methodused](v)
 					end
 				end
