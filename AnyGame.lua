@@ -1506,61 +1506,59 @@ runcode(function()
 						end
 					end
 				end)
-				task.spawn(function()
-					repeat
-						task.wait()
-						local targettable = {}
-						local targetsize = 0
-						local attackedplayers = {}
-						if entity.isAlive then
-							local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
-							local touch = findTouchInterest(tool)
-							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
-							if tool and touch then
-								if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
-									if killauratick <= tick() and #plrs > 0 then
-										tool:Activate()
-										killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
-									end
-									for i,v in pairs(plrs) do
-										local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
-										local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
-										local angle = math.acos(localfacing:Dot(vec))
-										if angle <= math.rad(killauraangle["Value"]) then
-											killauranear = true
-											targettable[v.Player.Name] = {
-												["UserId"] = v.Player.UserId,
-												["Health"] = v.Character.Humanoid.Health,
-												["MaxHealth"] = v.Character.Humanoid.MaxHealth
-											}
-											targetsize = targetsize + 1
-											if killauratarget["Enabled"] then
-												table.insert(attackedplayers, v)
-											end
-											if targetsize == 1 then 
-												targetedplayer = v
-											end
-											firetouchinterest(touch.Parent, v.RootPart, 1)
-											firetouchinterest(touch.Parent, v.RootPart, 0)
+				RunLoops:BindToRenderStep("Killaura", 1, function()
+					local targettable = {}
+					local targetsize = 0
+					local attackedplayers = {}
+					if entity.isAlive then
+						local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+						local touch = findTouchInterest(tool)
+						local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
+						if tool and touch then
+							if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
+								if killauratick <= tick() and #plrs > 0 then
+									tool:Activate()
+									killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
+								end
+								for i,v in pairs(plrs) do
+									local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
+									local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
+									local angle = math.acos(localfacing:Dot(vec))
+									if angle <= math.rad(killauraangle["Value"]) then
+										killauranear = true
+										targettable[v.Player.Name] = {
+											["UserId"] = v.Player.UserId,
+											["Health"] = v.Character.Humanoid.Health,
+											["MaxHealth"] = v.Character.Humanoid.MaxHealth
+										}
+										targetsize = targetsize + 1
+										if killauratarget["Enabled"] then
+											table.insert(attackedplayers, v)
 										end
+										if targetsize == 1 then 
+											targetedplayer = v
+										end
+										firetouchinterest(touch.Parent, v.RootPart, 1)
+										firetouchinterest(touch.Parent, v.RootPart, 0)
 									end
 								end
 							end
-							for i,v in pairs(killauraboxes) do 
-								local attacked = attackedplayers[i]
-								v.Adornee = attacked and ((not killauratargethighlight["Enabled"]) and attacked.RootPart or (not GuiLibrary["ObjectsThatCanBeSaved"]["ChamsOptionsButton"]["Api"]["Enabled"]) and attacked.Character or nil)
-							end
-							if (#plrs <= 0) then
-								lastplr = nil
-								targetedplayer = nil
-								killauranear = false
-							end
 						end
-						targetinfo.UpdateInfo(targettable, targetsize)
-					until (not Killaura["Enabled"])
+						for i,v in pairs(killauraboxes) do 
+							local attacked = attackedplayers[i]
+							v.Adornee = attacked and ((not killauratargethighlight["Enabled"]) and attacked.RootPart or (not GuiLibrary["ObjectsThatCanBeSaved"]["ChamsOptionsButton"]["Api"]["Enabled"]) and attacked.Character or nil)
+						end
+						if (#plrs <= 0) then
+							lastplr = nil
+							targetedplayer = nil
+							killauranear = false
+						end
+					end
+					targetinfo.UpdateInfo(targettable, targetsize)
 				end)
 			else
 				RunLoops:UnbindFromHeartbeat("Killaura") 
+				RunLoops:UnbindFromRenderStep("Killaura")
                 killauranear = false
 				for i,v in pairs(killauraboxes) do 
 					v.Adornee = nil
