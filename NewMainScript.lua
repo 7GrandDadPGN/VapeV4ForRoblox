@@ -1411,7 +1411,10 @@ end
 
 GUISettings.CreateToggle({
 	["Name"] = "Blur Background", 
-	["Function"] = function(callback) GuiLibrary["MainBlur"].Size = (callback and 25 or 0) end,
+	["Function"] = function(callback) 
+		GuiLibrary["MainBlur"].Size = (callback and 25 or 0) 
+		game:GetService("RunService"):SetRobloxGuiFocused(GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible and callback) 
+	end,
 	["Default"] = true,
 	["HoverText"] = "Blur the background of the GUI"
 })
@@ -1530,7 +1533,7 @@ GuiLibrary["SelfDestruct"] = function()
 	end
 	teleportfunc:Disconnect()
 	GuiLibrary["MainGui"]:Remove()
-	GuiLibrary["MainBlur"]:Remove()
+	game:GetService("RunService"):SetRobloxGuiFocused(false)	
 end
 
 GeneralSettings.CreateButton2({
@@ -1632,7 +1635,7 @@ if shared.VapeIndependent then
 		end
 		if shared.VapeOpenGui then
 			GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = true
-			GuiLibrary["MainBlur"].Enabled = true	
+			game:GetService("RunService"):SetRobloxGuiFocused(GuiLibrary["MainBlur"].Size ~= 0) 
 			shared.VapeOpenGui = nil
 		end
 
@@ -1678,7 +1681,7 @@ else
 	end
 	if shared.VapeOpenGui then
 		GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = true
-		GuiLibrary["MainBlur"].Enabled = true	
+		game:GetService("RunService"):SetRobloxGuiFocused(GuiLibrary["MainBlur"].Size ~= 0) 
 		shared.VapeOpenGui = nil
 	end
 
