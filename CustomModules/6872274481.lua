@@ -10361,7 +10361,7 @@ runcode(function()
 
 	local function getriches(plr)
 		local richval = 0
-		for i,v in pairs(bedwars["getInventory"](plr)["items"]) do 
+		for i,v in pairs(inventories[plr]["items"]) do 
 			if v.itemType == "emerald" then
 				richval = richval + v.amount * 2
 			elseif v.itemType == "diamond" then
@@ -10375,7 +10375,7 @@ runcode(function()
 
 	local function getriches2(plr)
 		local richval = 0
-		for i,v in pairs(bedwars["getInventory"](plr)["armor"]) do 
+		for i,v in pairs(inventories[plr]["armor"]) do 
 			if v ~= "empty" then 
 				richval = richval + bedwars["ItemTable"][v.itemType].armor.damageReductionMultiplier
 			end
@@ -10479,22 +10479,6 @@ runcode(function()
 		["List"] = {"Mouse", "Range", "Rich", "Armor Rich", "Armor Poor"},
 		["Function"] = function() end
 	})
-
-	local function getBow()
-		local bestsword, ammo, bestswordnum  = nil, nil, 0
-		for i5, v5 in pairs(bedwars["getInventory"](lplr)["items"]) do
-			if v5["itemType"]:find("bow") then
-				local tab = bedwars["ItemTable"][v5["itemType"]].projectileSource.ammoItemTypes
-				local tab2 = tab[#tab]
-				if bedwars["ProjectileMeta"][tab2].combat.damage > bestswordnum then
-					bestswordnum = bedwars["ProjectileMeta"][tab2].combat.damage
-					bestsword = v5["tool"]
-					ammo = tab2
-				end
-			end
-		end
-		return bestsword, ammo
-	end
 
 	local function shootproj(bow)
 		debug.getupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10).Client:WaitFor(bedwars["ProjectileRemote"]):andThen(function(rem)
