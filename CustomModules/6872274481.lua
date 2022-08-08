@@ -10320,6 +10320,32 @@ runcode(function()
 	})
 end)
 
+runcode(function()
+	local PartialDisabler = {["Enabled"] = false}
+	local oldplay
+	PartialDisabler = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "PartialDisabler",
+		["Function"] = function(callback)
+			if callback then 
+				oldplay = workspace.DescendantAdded:connect(function(item)
+					if item:IsA("Sound") and item.SoundId == "rbxassetid://7681584765" then 
+						item.Volume = 0
+					end
+				end)
+				task.spawn(function()
+					repeat
+						task.wait(0.2)
+						bedwars["ClientHandler"]:Get("RocktBeltUsed"):SendToServer({
+							player = lplr
+						})
+					until (not PartialDisabler["Enabled"])
+				end)
+			else
+				if oldplay then oldplay:Disconnect() end
+			end
+		end
+	})
+end)
 
 runcode(function()
 	local BowExploit = {["Enabled"] = false}
