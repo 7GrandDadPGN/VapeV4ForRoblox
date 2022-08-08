@@ -9127,9 +9127,11 @@ runcode(function()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Multiaura["Enabled"] then
 							local plrs = GetAllNearestHumanoidToPosition(true, 17.999, 1, false)
 							for i,plr in pairs(plrs) do
-								local selfpos = entity.character.HumanoidRootPart.Position
-								local newpos = plr.RootPart.Position
-								bedwars["ClientHandler"]:Get(bedwars["PaintRemote"]):SendToServer(selfpos, CFrame.lookAt(selfpos, newpos).lookVector)
+								if not bedwars["CheckWhitelisted"](plr.Player) then 
+									local selfpos = entity.character.HumanoidRootPart.Position
+									local newpos = plr.RootPart.Position
+									bedwars["ClientHandler"]:Get(bedwars["PaintRemote"]):SendToServer(selfpos, CFrame.lookAt(selfpos, newpos).lookVector)
+								end
 							end
 						end
 					until Multiaura["Enabled"] == false
