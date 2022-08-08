@@ -110,16 +110,19 @@ if shared.VapeExecuted then
 		local gui = Instance.new("ScreenGui")
 		gui.Name = randomString()
 		gui.DisplayOrder = 999
+		gui.OnTopOfCoreBlur = true
 		gui.Parent = gethui()
 		api["MainGui"] = gui
 	elseif not is_sirhurt_closure and syn and syn.protect_gui then
 		local gui = Instance.new("ScreenGui")
 		gui.Name = randomString()
 		gui.DisplayOrder = 999
+		gui.OnTopOfCoreBlur = true
 		syn.protect_gui(gui)
 		gui.Parent = game:GetService("CoreGui")
 		api["MainGui"] = gui
 	elseif game:GetService("CoreGui"):FindFirstChild('RobloxGui') then
+		game:GetService("CoreGui").RobloxGui.OnTopOfCoreBlur = true
 		api["MainGui"] = game:GetService("CoreGui").RobloxGui
 	end
 
@@ -291,10 +294,7 @@ if shared.VapeExecuted then
 	hudgui.BackgroundTransparency = 1
 	hudgui.Visible = true
 	hudgui.Parent = scaledgui
-	api["MainBlur"] = Instance.new("BlurEffect")
-	api["MainBlur"].Size = 25
-	api["MainBlur"].Parent = game:GetService("Lighting")
-	api["MainBlur"].Enabled = false
+	api["MainBlur"] = {Size = 25}
 	api["MainRescale"] = Instance.new("UIScale")
 	api["MainRescale"].Parent = scaledgui
 	api["MainRescale"]:GetPropertyChangedSignal("Scale"):connect(function()
@@ -6370,7 +6370,7 @@ if shared.VapeExecuted then
 			if input1.KeyCode == Enum.KeyCode[api["GUIKeybind"]] and api["KeybindCaptured"] == false then
 				clickgui.Visible = not clickgui.Visible
 				game:GetService("UserInputService").OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
-				api["MainBlur"].Enabled = clickgui.Visible	
+				game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and api["MainBlur"].Size ~= 0)	
 				if OnlineProfilesBigFrame.Visible then
 					OnlineProfilesBigFrame.Visible = false
 				end
