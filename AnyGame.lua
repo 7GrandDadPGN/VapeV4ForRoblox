@@ -3547,15 +3547,15 @@ runcode(function()
 				end
 				if tracersfuncs1[methodused] then
 					local addfunc = tracersfuncs1[methodused]
+					for i,v in pairs(entity.entityList) do 
+						addfunc(v)
+					end
 					addedconnection = entity.entityAddedEvent:connect(function(ent)
 						if tracersfolderdrawing[ent] then 
 							tracersfuncs2[methodused](ent)
 						end
 						addfunc(ent)
 					end)
-					for i,v in pairs(entity.entityList) do 
-						addfunc(v)
-					end
 				end
 				if tracersloop[methodused] then 
 					RunLoops:BindToRenderStep("Tracers", 1, tracersloop[methodused])
