@@ -922,7 +922,7 @@ runcode(function()
 			elseif remotename == bedwars["AttackRemote"] then
 				return {
 					["instance"] = res["instance"],
-					["CallServer"] = function(Self, tab)
+					["SendToServer"] = function(Self, tab)
 						local suc, plr = pcall(function() return players:GetPlayerFromCharacter(tab.entityInstance) end)
 						if suc and plr then
 							local playertype, playerattackable = bedwars["CheckPlayerType"](plr)
@@ -935,13 +935,13 @@ runcode(function()
 							local newres = hashvec(tab.validate.selfPosition.value + (mag > 14.4 and (CFrame.lookAt(tab.validate.selfPosition.value, tab.validate.targetPosition.value).lookVector * 4) or Vector3.zero))
 							tab.validate.selfPosition = newres
 						end
-						return res:CallServer(tab)
+						return res:SendToServer(tab)
 					end
 				}
 			end
             return res
         end
-        bedwars = {
+		bedwars = {
 			["AnimationUtil"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out["shared"].util["animation-util"]).AnimationUtil,
 			["AngelUtil"] = require(repstorage.TS.games.bedwars.kit.kits.angel["angel-kit"]),
 			["AppController"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.controllers["app-controller"]).AppController,
@@ -5133,7 +5133,7 @@ runcode(function()
 		if killauranovape["Enabled"] and clients.ClientUsers[plr.Player.Name] then
 			return nil
 		end
-		if (tick() - bedwars["SwordController"].lastAttack) < bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed then 
+		if (workspace:GetServerTimeNow() - bedwars["SwordController"].lastAttack) < bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed then 
 			return nil
 		end
 		if oldcloneroot then 
@@ -5149,9 +5149,8 @@ runcode(function()
 		end
 		local selfpos = selfrootpos + (killaurarange["Value"] > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
 		local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
-		bedwars["SwordController"].lastAttack = tick() + (ping > 120 and -0.08 or 0) or 0
-		local attacksuccess = killaurarealremote:InvokeServer({
-			["bye"] = "lex",
+		bedwars["SwordController"].lastAttack = workspace:GetServerTimeNow() - 0.11
+		killaurarealremote:FireServer({
 			["weapon"] = sword["tool"],
 			["chargedAttack"] = {chargeRatio = 1},
 			["entityInstance"] = plr.Character,
@@ -5164,7 +5163,6 @@ runcode(function()
 				["selfPosition"] = hashvec(selfpos)
 			}
 		})
-		bedwars["SwordController"].lastAttack = attacksuccess and tick() + (ping > 120 and -0.08 or 0) or 0
 	end
 
 	local orig
@@ -5596,6 +5594,252 @@ runcode(function()
 	end
 end)
 
+
+runcode(function()
+	local BowExploit = {["Enabled"] = false}
+	local BowExploitTarget = {["Value"] = "Mouse"}
+	local BowExploitCamera = {["Enabled"] = false}
+	local BowExploitAutoShoot = {["Enabled"] = false}
+	local BowExploitAutoShootFOV = {["Value"] = 1000}
+	local oldrealremote
+	local noveloproj = {
+		"fireball",
+		"telepearl"
+	}
+
+	local function getriches(plr)
+		local richval = 0
+		for i,v in pairs(inventories[plr]["items"]) do 
+			if v.itemType == "emerald" then
+				richval = richval + v.amount * 2
+			elseif v.itemType == "diamond" then
+				richval = richval +  v.amount * 1.5
+			elseif v.itemType == "iron" then
+				richval = richval +  v.amount
+			end
+		end
+		return richval
+	end
+
+	local function getriches2(plr)
+		local richval = 0
+		for i,v in pairs(inventories[plr]["armor"]) do 
+			if v ~= "empty" then 
+				richval = richval + bedwars["ItemTable"][v.itemType].armor.damageReductionMultiplier
+			end
+		end
+		return richval
+	end
+
+	local function getRich()
+		local closest, returnedplayer = 0, nil
+		if entity.isAlive then
+			for i, v in pairs(entity.entityList) do -- loop through players
+				if (v.Targetable or targetcheck) and targetCheck(v) then
+					local mag = getriches(v)
+					if mag >= closest then
+						closest = mag
+						returnedplayer = v
+					end
+				end
+			end
+		end
+		return returnedplayer
+	end
+
+	local function getArmorRich(richcheck)
+		local closest, returnedplayer = (richcheck and 0 or 99999), nil
+		if entity.isAlive then
+			for i, v in pairs(entity.entityList) do -- loop through players
+				if (v.Targetable or targetcheck) and targetCheck(v) then
+					local mag = getriches2(v)
+					if (richcheck and mag >= closest or (not richcheck) and mag <= closest) then
+						closest = mag
+						returnedplayer = v
+					end
+				end
+			end
+		end
+		return returnedplayer
+	end
+
+	BowExploit = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "ProjectileExploit",
+		["Function"] = function(callback)
+			if callback then 
+				oldrealremote = debug.getupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10)
+				debug.setupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10, {
+					Client = {
+						WaitFor = function(self6, remote)
+							local res = bedwars["ClientHandler"]:Get(remote)
+							return {
+								andThen = function(self5, func) 
+									return func({
+										CallServerAsync = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
+											local plr
+											if BowExploitTarget["Value"] == "Mouse" then 
+												plr = GetNearestHumanoidToMouse(true, 10000, false)
+											elseif BowExploitTarget["Value"] == "Range" then
+												plr = GetNearestHumanoidToPosition(true, BowExploitAutoShootFOV["Value"])
+											elseif BowExploitTarget["Value"] == "Rich" then
+												plr = getRich()
+											else
+												plr = getArmorRich(BowExploitTarget["Value"]:find("Rich") and true or false)
+											end
+											if plr then 
+												local plrtype, plrattackable = bedwars["CheckPlayerType"](plr.Player)
+												plr = plrattackable and plr
+											end
+											if plr then
+												local newlaunchpos = (plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, plr.Character.Humanoid.MoveDirection ~= Vector3.new() and 0.5 or 1, 0)).p
+												local newlaunchvelo = plr.Character.Humanoid.MoveDirection ~= Vector3.new() and table.find(noveloproj, proj2) == nil and CFrame.lookAt(newlaunchpos, plr.Character.HumanoidRootPart.CFrame.p + plr.Character.Humanoid.MoveDirection).lookVector.Unit * bedwars["ProjectileMeta"][proj2].launchVelocity or Vector3.new(0, -1, 0).Unit * bedwars["ProjectileMeta"][proj2].launchVelocity
+												launchvelo = newlaunchvelo
+												launchpos1 = newlaunchpos
+												tab1.drawDurationSeconds = 10
+											end
+											launchpos2 = shared.VapeRealCharacter and shared.VapeRealCharacter.HumanoidRootPart.Position or lplr.Character.HumanoidRootPart.Position
+											local called = res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
+											if plr then 
+												spawn(function()
+													task.wait(0.4)
+													for i = 1, 3 do 
+														bedwars["ClientHandler"]:Get(bedwars["ProjectileHitRemote"]):SendToServer(tag, plr.Character)
+													end
+												end)
+											end
+											return called
+										end
+									})
+								end
+							}
+						end
+					}
+				})
+			else
+				if isAlive() then
+					cam.CameraSubject = lplr.Character.Humanoid
+				end
+				debug.setupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10, {
+					Client = bedwars["ClientHandler"]
+				})
+				oldrealremote = nil
+			end
+		end
+	})
+	BowExploitTarget = BowExploit.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Mouse", "Range", "Rich", "Armor Rich", "Armor Poor"},
+		["Function"] = function() end
+	})
+
+	local function shootproj(bow)
+		debug.getupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10).Client:WaitFor(bedwars["ProjectileRemote"]):andThen(function(rem)
+			local pos = shared.VapeRealCharacter and shared.VapeRealCharacter.HumanoidRootPart.Position or lplr.Character.HumanoidRootPart.Position
+			local tag = game:GetService("HttpService"):GenerateGUID(true)
+			local tab = bedwars["ItemTable"][bow.Name].projectileSource.ammoItemTypes
+			local ammo = tab[#tab]
+			rem:CallServerAsync(bow, ammo, ammo, pos, pos, Vector3.new(0, -1, 0), tag, {
+				drawDurationSeconds = 10
+			})
+		end)
+	end
+
+	BowExploitCamera = BowExploit.CreateToggle({
+		["Name"] = "Camera View",
+		["Function"] = function() end
+	})
+	BowExploitAutoShoot = BowExploit.CreateToggle({
+		["Name"] = "AutoShoot",
+		["Function"] = function(callback) 
+			if callback then 
+				spawn(function()
+					repeat
+						task.wait()
+						if BowExploit["Enabled"] then 
+							local bow = getItem("wood_bow")
+							local bow2 = getItem("wood_crossbow")
+							local bow3 = getItem("tactical_crossbow")
+							if getItem("arrow") then 
+								local plr
+								if BowExploitTarget["Value"] == "Mouse" then 
+									plr = GetNearestHumanoidToMouse(true, 10000, false)
+								elseif BowExploitTarget["Value"] == "Range" then
+									plr = GetNearestHumanoidToPosition(true, BowExploitAutoShootFOV["Value"])
+								elseif BowExploitTarget["Value"] == "Rich" then
+									plr = getRich()
+								else
+									plr = getArmorRich(BowExploitTarget["Value"]:find("Rich") and true or false)
+								end
+								if plr then
+									if BowExploitCamera["Enabled"] and isAlive() then 
+										cam.CameraSubject = plr.Character.Humanoid
+									end
+									local nowait = false
+									if bow then 
+										shootproj(bow.tool)
+										task.wait(0.4)
+										nowait = true
+									end
+									if bow2 then 
+										shootproj(bow2.tool)
+										task.wait(nowait and 0.4 or 0.7)
+										nowait = true
+									end
+									if bow3 then 
+										shootproj(bow3.tool)
+										task.wait(nowait and 0.4 or 0.7)
+										nowait = true
+									end
+								else
+									if BowExploitCamera["Enabled"] and isAlive() then 
+										cam.CameraSubject = lplr.Character.Humanoid
+									end
+								end
+							end
+						end
+					until (not BowExploitAutoShoot["Enabled"])
+				end)
+			end
+		end 
+	})
+	BowExploitAutoShootFOV = BowExploit.CreateSlider({
+		["Name"] = "AutoShoot FOV",
+		["Function"] = function() end,
+		["Min"] = 1,
+		["Max"] = 1000,
+		["Default"] = 1000
+	})
+end)
+
+
+runcode(function()
+	local Multiaura = {["Enabled"] = false}
+    Multiaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+        ["Name"] = "MultiAura",
+        ["Function"] = function(callback)
+            if callback then
+                task.spawn(function()
+					repeat
+						task.wait(0.03)
+						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Multiaura["Enabled"] then
+							local plrs = GetAllNearestHumanoidToPosition(true, 17.999, 1, false)
+							for i,plr in pairs(plrs) do
+								local plrtype, plrattackable = bedwars["CheckPlayerType"](plr.Player)
+								if plrattackable then 
+									local selfpos = entity.character.HumanoidRootPart.Position
+									local newpos = plr.RootPart.Position
+									bedwars["ClientHandler"]:Get(bedwars["PaintRemote"]):SendToServer(selfpos, CFrame.lookAt(selfpos, newpos).lookVector)
+								end
+							end
+						end
+					until Multiaura["Enabled"] == false
+				end)
+            end
+        end,
+        ["HoverText"] = "Attack players around you\nwithout aiming at them."
+    })
+end)
+
 runcode(function()
 	local BowAura = {["Enabled"] = false}
 	local BowAuraRange = {["Value"] = 40}
@@ -5611,6 +5855,8 @@ runcode(function()
 							if bow and getItem("arrow") then
 								local plr = GetNearestHumanoidToPosition(true, BowAuraRange["Value"], oldcloneroot and oldcloneroot.Position)
 								if plr and bedwars["SwordController"]:canSee({["instance"] = plr.Character, ["player"] = plr.Player, ["getInstance"] = function() return plr.Character end}) then 
+									local plrtype, plrattackable = bedwars["CheckPlayerType"](plr.Player)
+									if not playerattackable then continue end
 									local tab = bedwars["ItemTable"][bow.itemType].projectileSource.ammoItemTypes
 									local ammo = tab[#tab]
 									local projmetatab = bedwars["ProjectileMeta"][ammo]
@@ -6987,7 +7233,7 @@ runcode(function()
 							end
 							if groundtime <= tick() and (not onground) then 
 								if fly["Enabled"] then 
-								--	fly["ToggleButton"](false)
+									fly["ToggleButton"](false)
 								end
 							end
 							if flyacprogressbarframe then 
@@ -9116,33 +9362,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local Multiaura = {["Enabled"] = false}
-    Multiaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-        ["Name"] = "MultiAura",
-        ["Function"] = function(callback)
-            if callback then
-                task.spawn(function()
-					repeat
-						task.wait(0.03)
-						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Multiaura["Enabled"] then
-							local plrs = GetAllNearestHumanoidToPosition(true, 17.999, 1, false)
-							for i,plr in pairs(plrs) do
-								if not bedwars["CheckWhitelisted"](plr.Player) then 
-									local selfpos = entity.character.HumanoidRootPart.Position
-									local newpos = plr.RootPart.Position
-									bedwars["ClientHandler"]:Get(bedwars["PaintRemote"]):SendToServer(selfpos, CFrame.lookAt(selfpos, newpos).lookVector)
-								end
-							end
-						end
-					until Multiaura["Enabled"] == false
-				end)
-            end
-        end,
-        ["HoverText"] = "Attack players around you\nwithout aiming at them."
-    })
-end)
-
-runcode(function()
 	GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "WinterTheme",
 		["Function"] = function(callback)
@@ -10319,245 +10538,6 @@ runcode(function()
 				createwarning("OldBedwars", "Disabled Next Game", 10)
 			end
 		end
-	})
-end)
-
-runcode(function()
-	local PartialDisabler = {["Enabled"] = false}
-	local oldplay
-	PartialDisabler = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "PartialDisabler",
-		["Function"] = function(callback)
-			if callback then 
-				oldplay = workspace.DescendantAdded:connect(function(item)
-					if item:IsA("Sound") and item.SoundId == "rbxassetid://7681584765" then 
-						item.Volume = 0
-					end
-				end)
-				task.spawn(function()
-					repeat
-						task.wait(0.2)
-						bedwars["ClientHandler"]:Get("RocktBeltUsed"):SendToServer({
-							player = lplr
-						})
-					until (not PartialDisabler["Enabled"])
-				end)
-			else
-				if oldplay then oldplay:Disconnect() end
-			end
-		end
-	})
-end)
-
-runcode(function()
-	local BowExploit = {["Enabled"] = false}
-	local BowExploitTarget = {["Value"] = "Mouse"}
-	local BowExploitCamera = {["Enabled"] = false}
-	local BowExploitAutoShoot = {["Enabled"] = false}
-	local BowExploitAutoShootFOV = {["Value"] = 1000}
-	local oldrealremote
-	local noveloproj = {
-		"fireball",
-		"telepearl"
-	}
-
-	local function getriches(plr)
-		local richval = 0
-		for i,v in pairs(inventories[plr]["items"]) do 
-			if v.itemType == "emerald" then
-				richval = richval + v.amount * 2
-			elseif v.itemType == "diamond" then
-				richval = richval +  v.amount * 1.5
-			elseif v.itemType == "iron" then
-				richval = richval +  v.amount
-			end
-		end
-		return richval
-	end
-
-	local function getriches2(plr)
-		local richval = 0
-		for i,v in pairs(inventories[plr]["armor"]) do 
-			if v ~= "empty" then 
-				richval = richval + bedwars["ItemTable"][v.itemType].armor.damageReductionMultiplier
-			end
-		end
-		return richval
-	end
-
-	local function getRich()
-		local closest, returnedplayer = 0, nil
-		if entity.isAlive then
-			for i, v in pairs(entity.entityList) do -- loop through players
-				if (v.Targetable or targetcheck) and targetCheck(v) then
-					local mag = getriches(v)
-					if mag >= closest then
-						closest = mag
-						returnedplayer = v
-					end
-				end
-			end
-		end
-		return returnedplayer
-	end
-
-	local function getArmorRich(richcheck)
-		local closest, returnedplayer = (richcheck and 0 or 99999), nil
-		if entity.isAlive then
-			for i, v in pairs(entity.entityList) do -- loop through players
-				if (v.Targetable or targetcheck) and targetCheck(v) then
-					local mag = getriches2(v)
-					if (richcheck and mag >= closest or (not richcheck) and mag <= closest) then
-						closest = mag
-						returnedplayer = v
-					end
-				end
-			end
-		end
-		return returnedplayer
-	end
-
-	BowExploit = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "ProjectileExploit",
-		["Function"] = function(callback)
-			if callback then 
-				oldrealremote = debug.getupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10)
-				debug.setupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10, {
-					Client = {
-						WaitFor = function(self6, remote)
-							local res = bedwars["ClientHandler"]:Get(remote)
-							return {
-								andThen = function(self5, func) 
-									return func({
-										CallServerAsync = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
-											local plr
-											if BowExploitTarget["Value"] == "Mouse" then 
-												plr = GetNearestHumanoidToMouse(true, 10000, false)
-											elseif BowExploitTarget["Value"] == "Range" then
-												plr = GetNearestHumanoidToPosition(true, BowExploitAutoShootFOV["Value"])
-											elseif BowExploitTarget["Value"] == "Rich" then
-												plr = getRich()
-											else
-												plr = getArmorRich(BowExploitTarget["Value"]:find("Rich") and true or false)
-											end
-											if plr then
-												local newlaunchpos = (plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, plr.Character.Humanoid.MoveDirection ~= Vector3.new() and 0.5 or 1, 0)).p
-												local newlaunchvelo = plr.Character.Humanoid.MoveDirection ~= Vector3.new() and table.find(noveloproj, proj2) == nil and CFrame.lookAt(newlaunchpos, plr.Character.HumanoidRootPart.CFrame.p + plr.Character.Humanoid.MoveDirection).lookVector.Unit * bedwars["ProjectileMeta"][proj2].launchVelocity or Vector3.new(0, -1, 0).Unit * bedwars["ProjectileMeta"][proj2].launchVelocity
-												launchvelo = newlaunchvelo
-												launchpos1 = newlaunchpos
-												tab1.drawDurationSeconds = 10
-											end
-											launchpos2 = shared.VapeRealCharacter and shared.VapeRealCharacter.HumanoidRootPart.Position or lplr.Character.HumanoidRootPart.Position
-											local called = res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
-											if plr then 
-												spawn(function()
-													task.wait(0.4)
-													for i = 1, 3 do 
-														bedwars["ClientHandler"]:Get(bedwars["ProjectileHitRemote"]):SendToServer(tag, plr.Character)
-													end
-												end)
-											end
-											return called
-										end
-									})
-								end
-							}
-						end
-					}
-				})
-			else
-				if isAlive() then
-					cam.CameraSubject = lplr.Character.Humanoid
-				end
-				debug.setupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10, {
-					Client = bedwars["ClientHandler"]
-				})
-				oldrealremote = nil
-			end
-		end
-	})
-	BowExploitTarget = BowExploit.CreateDropdown({
-		["Name"] = "Mode",
-		["List"] = {"Mouse", "Range", "Rich", "Armor Rich", "Armor Poor"},
-		["Function"] = function() end
-	})
-
-	local function shootproj(bow)
-		debug.getupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10).Client:WaitFor(bedwars["ProjectileRemote"]):andThen(function(rem)
-			local pos = shared.VapeRealCharacter and shared.VapeRealCharacter.HumanoidRootPart.Position or lplr.Character.HumanoidRootPart.Position
-			local tag = game:GetService("HttpService"):GenerateGUID(true)
-			local tab = bedwars["ItemTable"][bow.Name].projectileSource.ammoItemTypes
-			local ammo = tab[#tab]
-			rem:CallServerAsync(bow, ammo, ammo, pos, pos, Vector3.new(0, -1, 0), tag, {
-				drawDurationSeconds = 10
-			})
-		end)
-	end
-
-	BowExploitCamera = BowExploit.CreateToggle({
-		["Name"] = "Camera View",
-		["Function"] = function() end
-	})
-	BowExploitAutoShoot = BowExploit.CreateToggle({
-		["Name"] = "AutoShoot",
-		["Function"] = function(callback) 
-			if callback then 
-				spawn(function()
-					repeat
-						task.wait()
-						if BowExploit["Enabled"] then 
-							local bow = getItem("wood_bow")
-							local bow2 = getItem("wood_crossbow")
-							local bow3 = getItem("tactical_crossbow")
-							if getItem("arrow") then 
-								local plr
-								if BowExploitTarget["Value"] == "Mouse" then 
-									plr = GetNearestHumanoidToMouse(true, 10000, false)
-								elseif BowExploitTarget["Value"] == "Range" then
-									plr = GetNearestHumanoidToPosition(true, BowExploitAutoShootFOV["Value"])
-								elseif BowExploitTarget["Value"] == "Rich" then
-									plr = getRich()
-								else
-									plr = getArmorRich(BowExploitTarget["Value"]:find("Rich") and true or false)
-								end
-								if plr then
-									if BowExploitCamera["Enabled"] and isAlive() then 
-										cam.CameraSubject = plr.Character.Humanoid
-									end
-									local nowait = false
-									if bow then 
-										shootproj(bow.tool)
-										task.wait(0.4)
-										nowait = true
-									end
-									if bow2 then 
-										shootproj(bow2.tool)
-										task.wait(nowait and 0.4 or 0.7)
-										nowait = true
-									end
-									if bow3 then 
-										shootproj(bow3.tool)
-										task.wait(nowait and 0.4 or 0.7)
-										nowait = true
-									end
-								else
-									if BowExploitCamera["Enabled"] and isAlive() then 
-										cam.CameraSubject = lplr.Character.Humanoid
-									end
-								end
-							end
-						end
-					until (not BowExploitAutoShoot["Enabled"])
-				end)
-			end
-		end 
-	})
-	BowExploitAutoShootFOV = BowExploit.CreateSlider({
-		["Name"] = "AutoShoot FOV",
-		["Function"] = function() end,
-		["Min"] = 1,
-		["Max"] = 1000,
-		["Default"] = 1000
 	})
 end)
 
