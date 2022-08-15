@@ -8,7 +8,8 @@ local entity = {
         HumanoidRootPart = {}
     }
 }
-local lplr = game:GetService("Players").LocalPlayer
+local players = game:GetService("Players")
+local lplr = players.LocalPlayer
 local entityadded = Instance.new("BindableEvent")
 local entityremoved = Instance.new("BindableEvent")
 local entityupdated = Instance.new("BindableEvent")
@@ -47,9 +48,9 @@ do
         end,
     }
     entity.isPlayerTargetable = function(plr)
-        if plr.Team ~= lplr.Team or lplr.Team == nil then
-            return true
-        end
+        if (not lplr.Team) then return true end
+        if plr.Team ~= lplr.Team then return true end
+        return plr.Team and #plr.Team:GetPlayers() == #players:GetPlayers()
     end
 
     entity.getEntityFromPlayer = function(char)
@@ -129,6 +130,12 @@ do
             end
         end))
         table.insert(entity.entityConnections, plr:GetPropertyChangedSignal("Team"):connect(function()
+            for i,v in next, entity.entityList do
+                local newtarget = entity.isPlayerTargetable(v.Player)
+                if v.Targetable ~= newtarget then 
+                    entity.refreshEntity(plr, localcheck)
+                end
+            end
             if localcheck then
                 entity.fullEntityRefresh()
             else
@@ -150,9 +157,9 @@ do
 
     entity.fullEntityRefresh = function()
         entity.selfDestruct()
-        for i,v in pairs(game:GetService("Players"):GetPlayers()) do entity.entityAdded(v, v == lplr) end
-        table.insert(entity.entityConnections, game:GetService("Players").PlayerAdded:connect(function(v) entity.entityAdded(v, v == lplr) end))
-        table.insert(entity.entityConnections, game:GetService("Players").PlayerRemoving:connect(function(v) entity.removeEntity(v) end))
+        for i,v in pairs(players:GetPlayers()) do entity.entityAdded(v, v == lplr) end
+        table.insert(entity.entityConnections, players.PlayerAdded:connect(function(v) entity.entityAdded(v, v == lplr) end))
+        table.insert(entity.entityConnections, players.PlayerRemoving:connect(function(v) entity.removeEntity(v) end))
     end
 
     entity.selfDestruct = function()
