@@ -642,7 +642,7 @@ OnlineProfilesButton.MouseButton1Click:connect(function()
 					profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 				end)
 				profiledownload.MouseButton1Click:connect(function()
-					writefile(customdir.."Profiles/"..v2["ProfileName"]..tostring(game.PlaceId)..".vapeprofile.txt", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles/"..v2["OnlineProfileName"], true)))
+					writefile(customdir.."Profiles/"..v2["ProfileName"]..tostring(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles/"..v2["OnlineProfileName"], true)))
 					GuiLibrary["Profiles"][v2["ProfileName"]] = {["Keybind"] = "", ["Selected"] = false}
 					local profiles = {}
 					for i,v in pairs(GuiLibrary["Profiles"]) do 
@@ -1198,16 +1198,14 @@ GUI.CreateCustomToggle({
 local GeneralSettings = GUI.CreateDivider2("General Settings")
 local ModuleSettings = GUI.CreateDivider2("Module Settings")
 local GUISettings = GUI.CreateDivider2("GUI Settings")
-ModuleSettings.CreateToggle({
-	["Name"] = "Teams by server", 
-	["Function"] = function() end,
-})
-ModuleSettings.CreateToggle({
+local teamsbycolor = {Enabled = false}
+teamsbycolor = ModuleSettings.CreateToggle({
 	["Name"] = "Teams by color", 
-	["Function"] = function() end,
+	["Function"] = function() if teamsbycolor.Refresh then teamsbycolor.Refresh:Fire() end end,
 	["Default"] = true,
 	["HoverText"] = "Ignore players with the selected name color"
 })
+teamsbycolor.Refresh = Instance.new("BindableEvent")
 local MiddleClickInput
 ModuleSettings.CreateToggle({
 	["Name"] = "MiddleClick friends", 
@@ -1449,14 +1447,6 @@ cam:GetPropertyChangedSignal("ViewportSize"):connect(function()
 		GuiLibrary["MainRescale"].Scale = math.clamp(cam.ViewportSize.X / 1920, 0.5, 1)
 	end
 end)
-GeneralSettings.CreateToggle({
-	["Name"] = "Enable Multi-Keybinding", 
-	["Function"] = function() end
-})
-GeneralSettings.CreateToggle({
-	["Name"] = "Discord integration", 
-	["Function"] = function() end
-})
 local ToggleNotifications = {["Object"] = nil}
 local Notifications = {}
 Notifications = GUISettings.CreateToggle({
@@ -1540,8 +1530,9 @@ GeneralSettings.CreateButton2({
 	["Name"] = "RESET CURRENT PROFILE", 
 	["Function"] = function()
 		local vapeprivate = shared.VapePrivate
+		local id = (shared.CustomSaveVape or game.PlaceId)
 		GuiLibrary["SelfDestruct"]()
-		delfile(customdir.."Profiles/"..(GuiLibrary["CurrentProfile"] == "default" and "" or GuiLibrary["CurrentProfile"])..game.PlaceId..".vapeprofile.txt")
+		delfile(customdir.."Profiles/"..(GuiLibrary["CurrentProfile"] == "default" and "" or GuiLibrary["CurrentProfile"])..id..".vapeprofile.txt")
 		shared.VapeSwitchServers = true
 		shared.VapeOpenGui = true
 		shared.VapePrivate = vapeprivate
