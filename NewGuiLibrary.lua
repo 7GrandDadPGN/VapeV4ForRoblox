@@ -106,7 +106,7 @@ if shared.VapeExecuted then
 		game.Loaded:Wait()
 	end
 
-	if gethui then
+	if gethui and (not KRNL_LOADED) then
 		local gui = Instance.new("ScreenGui")
 		gui.Name = randomString()
 		gui.DisplayOrder = 999
