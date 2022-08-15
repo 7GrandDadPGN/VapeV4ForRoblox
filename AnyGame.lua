@@ -2278,7 +2278,7 @@ local Arrows = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 					end
 					
 					local aliveplr = isAlive(plr)
-					if aliveplr and plr ~= lplr and (ArrowsTeammate["Enabled"] or shared.vapeteamcheck(plr)) then
+					if aliveplr and plr ~= lplr and (ArrowsTeammate["Enabled"] or aliveplr.Targetable) then
 						local rootPos, rootVis = cam:WorldToViewportPoint(aliveplr.RootPart.Position)
 						local camcframeflat = CFrame.new(cam.CFrame.p, cam.CFrame.p + cam.CFrame.lookVector * Vector3.new(1, 0, 1))
 						local pointRelativeToCamera = camcframeflat:pointToObjectSpace(aliveplr.RootPart.Position)
@@ -3033,7 +3033,7 @@ runcode(function()
 						end
 
 						local aliveplr = isAlive(plr, ChamsAlive["Enabled"])
-						if aliveplr and plr ~= lplr and (ChamsTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
+						if aliveplr and plr ~= lplr and (ChamsTeammates["Enabled"] or aliveplr.Targetable) then
 							if ChamsFolder:FindFirstChild(plr.Name) == nil then
 								local chamfolder = Instance.new("Highlight")
 								chamfolder.Name = plr.Name
@@ -3229,7 +3229,7 @@ runcode(function()
 							end
 
 							local aliveplr = isAlive(plr, NameTagsAlive["Enabled"])
-							if aliveplr and plr ~= lplr and (NameTagsTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
+							if aliveplr and plr ~= lplr and (NameTagsTeammates["Enabled"] or aliveplr.Targetable) then
 								local headPos, headVis = cam:WorldToViewportPoint((aliveplr.RootPart:GetRenderCFrame() * CFrame.new(0, aliveplr.Head.Size.Y + aliveplr.RootPart.Size.Y, 0)).Position)
 								
 								if headVis then
@@ -3281,7 +3281,7 @@ runcode(function()
 							end
 								
 							local aliveplr = isAlive(plr, NameTagsAlive["Enabled"])
-							if aliveplr and plr ~= lplr and (NameTagsTeammates["Enabled"] or shared.vapeteamcheck(plr)) then
+							if aliveplr and plr ~= lplr and (NameTagsTeammates["Enabled"] or aliveplr.Targetable) then
 								local headPos, headVis = cam:WorldToViewportPoint((aliveplr.RootPart:GetRenderCFrame() * CFrame.new(0, aliveplr.Head.Size.Y + aliveplr.RootPart.Size.Y, 0)).Position)
 								headPos = headPos
 								
