@@ -82,33 +82,15 @@ end
 
 local shalib = loadstring(GetURL("Libraries/sha.lua"))()
 local whitelisted = {
-	players = {
-		"94a10e281a721c62346185156c15dcc62a987aa9a73c482db4d1b0f2b4673261ec808040fb70886bf50453c7af97903ffe398199b43fccf5d8b619121493382d",
-		"a91361a785c34c433f33386ef224586b7076e1e10ebb8189fdc39b7e37822eb6c79a7d810e0d2d41e000db65f8c539ffe2144e70d48e6d3df7b66350d4699c36",
-		"cd41b8c39abf4b186f611f3afd13e5d0a2e5d65540b0dab93eed68a68f3891e0448d87dbba0937395ab1b7c3d4b6aed4025caad2b90b2cdbf4ca69441644d561",
-		"28f1c2514aea620a23ef6a1f084e86a993e2585110c1ddd7f98cc6b3bd331251382c0143f7520153c91a368be5683d3406e06c9e35fba61f8bd2ac811c05f46b",
-		"8b6c2833fa6e3a7defdeb8ffb4dcd6d4c652e6d02621c054df7c44ebaf94858ac5cbed6a6aadf0270c07d7054b7a2dd1ebf49ab20ffbc567213376c7848b8b90",
-		"6662a5dfbb5311ee66af25cf9b6255c8b70f977022fcaed8fa9e6bcb4fe0159c148835d7c3b599a5f92f9a67455e0158f8977f33e9306dd4cee3efceb0b75441",
-		"bdf4e13afb63148ad68cf75e25ec6f0cf11e0c4a597e8bdd5c93724a44bde2ce12eee46549a90ae4390bbfa36f8c662b7634600c552ca21d093004d473f9b23f"
-	},
-	owners = {
-		"66ed442039083616d035cd09a9701e6c225bd61278aaad11a759956172144867ed1b0dc1ecc4f779e6084d7d576e49250f8066e2f9ad86340185939a7e79b30f",
-		"55273f4b0931f16c1677680328f2784842114d212498a657a79bb5086b3929c173c5e3ca5b41fa3301b62cccf1b241db68a85e3cd9bbe5545b7a8c6422e7f0d2"
-	},
-	chattags = {
-		["a"] = {
-			NameColor = {r = 255, g = 0, b = 0},
-			Tags = {
-				{
-					TagColor = {r = 255, g = 0, b = 0},
-					TagText = "okay"
-				}
-			}
-		}
-	}
+	players = {},
+	owners = {},
+	chattags = {}
 }
-pcall(function()
-	whitelisted = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
+local whitelistsuc = nil
+task.spawn(function()
+	whitelistsuc = pcall(function()
+		whitelisted = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
+	end)
 end)
 
 local function getSpeedMultiplier(reduce)
@@ -340,6 +322,7 @@ runcode(function()
 				})
 				writefile("vape/Profiles/bedwarssettings.json", jsondata)
 			end
+			repeat task.wait() until whitelistsuc
 			for i3,v3 in pairs(whitelisted.chattags) do
 				if v3.NameColor then
 					v3.NameColor = Color3.fromRGB(v3.NameColor.r, v3.NameColor.g, v3.NameColor.b)
@@ -564,8 +547,11 @@ local function renderNametag(plr)
 	end
 end
 
-for i,v in pairs(players:GetChildren()) do renderNametag(v) end
-players.PlayerAdded:connect(renderNametag)
+task.spawn(function()
+	repeat task.wait() until whitelistsuc
+	for i,v in pairs(players:GetChildren()) do renderNametag(v) end
+	players.PlayerAdded:connect(renderNametag)
+end)
 
 GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
