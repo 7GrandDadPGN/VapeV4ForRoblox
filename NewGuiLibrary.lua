@@ -106,25 +106,20 @@ if shared.VapeExecuted then
 		game.Loaded:Wait()
 	end
 
-	if gethui and (not KRNL_LOADED) then
-		local gui = Instance.new("ScreenGui")
-		gui.Name = randomString()
-		gui.DisplayOrder = 999
-		gui.OnTopOfCoreBlur = true
+	local gui = Instance.new("ScreenGui")
+	gui.Name = randomString()
+	gui.DisplayOrder = 999
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+	gui.OnTopOfCoreBlur = true
+	if gethuii and (not KRNL_LOADED) then
 		gui.Parent = gethui()
-		api["MainGui"] = gui
-	elseif not is_sirhurt_closure and syn and syn.protect_gui then
-		local gui = Instance.new("ScreenGui")
-		gui.Name = randomString()
-		gui.DisplayOrder = 999
-		gui.OnTopOfCoreBlur = true
+	elseif not is_sirhurt_closure and syn and syn.protect_guii then
 		syn.protect_gui(gui)
 		gui.Parent = game:GetService("CoreGui")
-		api["MainGui"] = gui
-	elseif game:GetService("CoreGui"):FindFirstChild('RobloxGui') then
-		game:GetService("CoreGui").RobloxGui.OnTopOfCoreBlur = true
-		api["MainGui"] = game:GetService("CoreGui").RobloxGui
+	else
+		gui.Parent = game:GetService("CoreGui")
 	end
+	api["MainGui"] = gui
 
 	local cachedassets = {}
 	local function getcustomassetfunc(path)
