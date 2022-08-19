@@ -1,6 +1,8 @@
 local entity = {
     entityList = {},
     entityConnections = {},
+    entityPlayerConnections = {},
+    entityIds = {},
     isAlive = false,
     character = {
         Head = {},
@@ -78,17 +80,22 @@ do
     entity.characterAdded = function(plr, char, localcheck, refresh)
         if char then
             task.spawn(function()
+                local id = game:GetService("HttpService"):GenerateGUID(true)
+                entity.entityIds[plr.Name] = id
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10) or humrootpart and {Position = humrootpart.Position + Vector3.new(0, 3, 0), Name = "Head", Size = Vector3.new(1, 1, 1), CFrame = humrootpart.CFrame + Vector3.new(0, 3, 0), Parent = char}
                 local hum = char:WaitForChild("Humanoid", 10) or char:FindFirstChildWhichIsA("Humanoid")
+                if entity.entityIds[plr.Name] ~= id then return end
                 if humrootpart and hum and head then
+                    local childremoved
+                    local newent
                     if localcheck then
                         entity.isAlive = true
                         entity.character.Head = head
                         entity.character.Humanoid = hum
                         entity.character.HumanoidRootPart = humrootpart
                     else
-                        local newent = {
+                       newent = {
                             Player = plr,
                             Character = char,
                             HumanoidRootPart = humrootpart,
@@ -104,15 +111,20 @@ do
                         table.insert(entity.entityList, newent)
                         entity.entityAddedEvent:Fire(newent)
                     end
-                    table.insert(entity.entityConnections, char.ChildRemoved:connect(function(part)
+                    childremoved = char.ChildRemoved:connect(function(part)
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
+                            childremoved:Disconnect()
                             if localcheck then
                                 entity.isAlive = false
                             else
                                 entity.removeEntity(plr)
                             end
                         end
-                    end))
+                    end)
+                    if newent then 
+                        table.insert(newent.Connections, childremoved)
+                    end
+                    table.insert(entity.entityConnections, childremoved)
                 end
             end)
         end
@@ -163,6 +175,7 @@ do
     end
 
     entity.selfDestruct = function()
+        for i,v in pairs(entity.entityIds) do entity.entityIds[i] = nil end
         for i,v in pairs(entity.entityConnections) do if v.Disconnect then v:Disconnect() end end
         for i,v in pairs(entity.entityList) do 
             entity.removeEntity(v.Player)

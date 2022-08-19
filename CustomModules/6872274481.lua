@@ -1562,17 +1562,22 @@ do
 	entity.characterAdded = function(plr, char, localcheck)
         if char then
             task.spawn(function()
+				local id = game:GetService("HttpService"):GenerateGUID(true)
+                entity.entityIds[plr.Name] = id
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10)
                 local hum = char:WaitForChild("Humanoid", 10)
+				if entity.entityIds[plr.Name] ~= id then return end
                 if humrootpart and hum and head then
+					local childremoved
+                    local newent
                     if localcheck then
                         entity.isAlive = true
                         entity.character.Head = head
                         entity.character.Humanoid = hum
                         entity.character.HumanoidRootPart = humrootpart
                     else
-						local newent = {
+						newent = {
                             Player = plr,
                             Character = char,
                             HumanoidRootPart = humrootpart,
@@ -1589,6 +1594,7 @@ do
 							local armorobj2 = char:WaitForChild("ArmorInvItem_1", 5)
 							local armorobj3 = char:WaitForChild("ArmorInvItem_2", 5)
 							local handobj = char:WaitForChild("HandInvItem", 5)
+							if entity.entityIds[plr.Name] ~= id then return end
 							if armorobj1 then
 								table.insert(newent.Connections, armorobj1.Changed:connect(function() 
 									task.delay(0.3, function() 
@@ -1632,10 +1638,11 @@ do
                         table.insert(entity.entityList, newent)
 						entity.entityAddedEvent:Fire(newent)
                     end
-					table.insert(entity.entityConnections, char.ChildRemoved:connect(function(part)
+					childremoved = char.ChildRemoved:connect(function(part)
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
+                            childremoved:Disconnect()
                             if localcheck then
-								if char == lplr.Character then
+                                if char == lplr.Character then
 									if part.Name == "HumanoidRootPart" then
 										entity.isAlive = false
 										local root = char:FindFirstChild("HumanoidRootPart")
@@ -1658,7 +1665,11 @@ do
                                 entity.removeEntity(plr)
                             end
                         end
-                    end))
+                    end)
+                    if newent then 
+                        table.insert(newent.Connections, childremoved)
+                    end
+                    table.insert(entity.entityConnections, childremoved)
                 end
             end)
         end
@@ -7769,7 +7780,6 @@ runcode(function()
 	local fpsboostdamageeffect = {["Enabled"] = false}
 
 	local function fpsboosttextures()
-		if not removetextures["Enabled"] then return end
 		task.spawn(function()
 			repeat task.wait() until matchState ~= 0
 			for i,v in pairs(bedwarsblocks) do
@@ -10475,6 +10485,87 @@ runcode(function()
 	})
 end)
 
+
+runcode(function()
+	local trollage
+	local remote = bedwars["ClientHandler"]:Get(bedwars["PickupRemote"])
+	local ServerCrasher = {["Enabled"] = false}
+	ServerCrasher = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "LagbackAllLoop",
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					if not trollage then 
+						trollage = {}
+						local lasttbl
+						for i = 1,150000 do
+							trollage[#trollage+1] = (lasttbl or {})
+							lasttbl = trollage[#trollage]
+						end
+					end
+					repeat
+						task.wait(0.3)
+						task.spawn(function() 
+							pcall(function() remote:CallServer(trollage) end)
+						end)
+					until (not ServerCrasher["Enabled"])
+				end)
+			end
+		end
+	})
+	local ServerCrasher2 = {["Enabled"] = false}
+	ServerCrasher2 = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "LagbackAll",
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					if not trollage then 
+						trollage = {}
+						local lasttbl
+						for i = 1,150000 do
+							trollage[#trollage+1] = (lasttbl or {})
+							lasttbl = trollage[#trollage]
+						end
+					end
+					for i = 1, 15 do 
+						task.wait(0.3)
+						task.spawn(function() 
+							pcall(function() remote:CallServer(trollage) end)
+						end)
+					end
+				end)
+				ServerCrasher2["ToggleButton"](false)
+			end
+		end
+	})
+end)
+
+runcode(function()
+	local Disabler = {["Enabled"] = false}
+	Disabler = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AnticheatDisabler",
+		["Function"] = function(callback)
+			if callback then
+				if (matchState == 0 or lplr.Character:FindFirstChildWhichIsA("ForceField")) then
+					task.spawn(function()
+						entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+						entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+						repeat task.wait() until entity.character.Humanoid.MoveDirection ~= Vector3.zero
+						task.wait(0.2)
+						entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+						entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Running)
+						workspace.Gravity = 192.6
+						createwarning("AnticheatDisabler", "Disabled Anticheat!", 10)
+					end)
+				else
+					createwarning("AnticheatDisabler", "Failed to disable", 10)
+				end
+				Disabler["ToggleButton"](false)
+			end
+		end
+	})
+end)
+
 task.spawn(function()
 	local url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/bedwarsdata"
 
@@ -10660,3 +10751,4 @@ task.spawn(function()
 		until uninjectflag
 	end)
 end)
+
