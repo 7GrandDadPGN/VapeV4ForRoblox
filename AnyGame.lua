@@ -486,7 +486,7 @@ runcode(function()
 	local silentaimfunctions = {
 		FindPartOnRayWithIgnoreList = function(Args)
 			local origin = Args[1].Origin
-			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or "HumanoidRootPart"
+			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or aimautofire["Enabled"] and "Head" or "HumanoidRootPart"
 			local plr
 			if aimmode["Value"] == "Legit" then
 				plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
@@ -519,7 +519,7 @@ runcode(function()
 		Raycast = function(Args)
 			local origin = Args[1]
 			local ignoreobject = Args[3]
-			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or "HumanoidRootPart"
+			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or aimautofire["Enabled"] and "Head" or "HumanoidRootPart"
 			local plr
 			if aimmode["Value"] == "Legit" then
 				plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
@@ -554,7 +554,7 @@ runcode(function()
 		end,
 		ScreenPointToRay = function(Args)
 			local origin = cam.CFrame.p
-			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or "HumanoidRootPart"
+			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or aimautofire["Enabled"] and "Head" or "HumanoidRootPart"
 			local plr
 			if aimmode["Value"] == "Legit" then
 				plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
@@ -1437,6 +1437,7 @@ local killauranear = false
 runcode(function()
 	local killauraboxes = {}
 	local killauraaps = {["GetRandomValue"] = function() return 1 end}
+	local killauramethod = {["Value"] = "Normal"}
 	local killauratarget = {["Enabled"] = false}
 	local killauratargethighlight = {["Enabled"] = false}
 	local killaurarangecircle = {["Enabled"] = false}
@@ -1504,42 +1505,49 @@ runcode(function()
 					local targetsize = 0
 					local attackedplayers = {}
 					if entity.isAlive then
-						local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
-						local touch = findTouchInterest(tool)
 						local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
-						if tool and touch then
-							if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
-								if killauratick <= tick() and #plrs > 0 then
-									tool:Activate()
-									killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
-								end
-								for i,v in pairs(plrs) do
-									local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
-									local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
-									local angle = math.acos(localfacing:Dot(vec))
-									if angle <= math.rad(killauraangle["Value"]) then
-										killauranear = true
-										targettable[v.Player.Name] = {
-											["UserId"] = v.Player.UserId,
-											["Health"] = v.Character.Humanoid.Health,
-											["MaxHealth"] = v.Character.Humanoid.MaxHealth
-										}
-										targetsize = targetsize + 1
-										if killauratarget["Enabled"] then
-											table.insert(attackedplayers, v)
-										end
-										if targetsize == 1 then 
-											targetedplayer = v
-										end
-										local parts = workspace:GetPartBoundsInBox(v.RootPart.CFrame, v.Character:GetExtentsSize())
-										for i,v in pairs(parts) do 
-											if not v:IsDescendantOf(lplr.Character) then 
-												firetouchinterest(touch.Parent, v, 1)
-												firetouchinterest(touch.Parent, v, 0)
-											end
-										end
-									end
-								end
+						if #plrs > 0 then
+                            local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+                            local touch = findTouchInterest(tool)
+                            if tool and touch then
+                                if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
+                                    for i,v in pairs(plrs) do
+                                        local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
+                                        local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
+                                        local angle = math.acos(localfacing:Dot(vec))
+                                        if angle <= math.rad(killauraangle["Value"]) then
+                                            if killauratick <= tick() then
+                                                tool:Activate()
+                                                killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
+                                            end
+                                            killauranear = true
+                                            targettable[v.Player.Name] = {
+                                                ["UserId"] = v.Player.UserId,
+                                                ["Health"] = v.Character.Humanoid.Health,
+                                                ["MaxHealth"] = v.Character.Humanoid.MaxHealth
+                                            }
+                                            targetsize = targetsize + 1
+                                            if killauratarget["Enabled"] then
+                                                table.insert(attackedplayers, v)
+                                            end
+                                            if targetsize == 1 then 
+                                                targetedplayer = v
+                                            end
+                                            if killauramethod["Value"] == "Bypass" then
+                                                local parts = workspace:GetPartBoundsInBox(v.RootPart.CFrame, v.Character:GetExtentsSize())
+                                                for i,v2 in pairs(parts) do 
+                                                    if not v2:IsDescendantOf(lplr.Character) then 
+                                                        firetouchinterest(touch.Parent, v2, 1)
+                                                        firetouchinterest(touch.Parent, v2, 0)
+                                                    end
+                                                end
+                                            else
+                                                firetouchinterest(touch.Parent, v.RootPart, 1)
+                                                firetouchinterest(touch.Parent, v.RootPart, 0)
+                                            end
+                                        end
+                                    end
+                                end
 							end
 						end
 						for i,v in pairs(killauraboxes) do 
@@ -1569,6 +1577,11 @@ runcode(function()
 		["HoverText"] = "Attack players around you\nwithout aiming at them."
 	})
 	killauratargetframe = Killaura.CreateTargetWindow({})
+	killauramethod = Killaura.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Normal", "Bypass"},
+		["Function"] = function() end
+	})
 	killauraaps = Killaura.CreateTwoSlider({
 		["Name"] = "Attacks per second",
 		["Min"] = 1,
@@ -2315,12 +2328,19 @@ runcode(function()
 	local function disguisechar(char)
 		task.spawn(function()
 			if not char then return end
-			char:WaitForChild("Humanoid")
+			local hum = char:WaitForChild("Humanoid")
 			char:WaitForChild("Head")
+			local desc
 			if desc == nil then
-				desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"]))
+				local suc = false
+				repeat
+					suc = pcall(function()
+						desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"]))
+					end)
+					task.wait(1)
+				until suc
 			end
-			desc.HeightScale = char.Humanoid.HumanoidDescription.HeightScale
+			desc.HeightScale = hum:WaitForChild("HumanoidDescription").HeightScale
 			char.Archivable = true
 			local disguiseclone = char:Clone()
 			disguiseclone.Name = "disguisechar"

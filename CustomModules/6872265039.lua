@@ -562,6 +562,7 @@ GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
+GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 
 teleportfunc = lplr.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
@@ -800,11 +801,10 @@ runcode(function()
 			tab = {
 				[1] = "Trinity",
 				[2] = "Grim Reaper",
-				[3] = "Infernal Shielder",
-				[4] = "Eldertree",
-				[5] = "Barbarian",
-				[6] = "Melody",
-				[7] = "Baker"
+				[3] = "Eldertree",
+				[4] = "Barbarian",
+				[5] = "Melody",
+				[6] = "Baker"
 			}
 			tab2 = {}
 		end

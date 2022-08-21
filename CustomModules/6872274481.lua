@@ -1454,84 +1454,159 @@ local function getSpeedMultiplier(reduce)
 	return reduce and speed ~= 1 and speed * (0.9 - (0.15 * math.floor(speed))) or speed
 end
 
-local function renderNametag(plr)
-	if (bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]) then
-		local playerlist = game:GetService("CoreGui"):FindFirstChild("PlayerList")
-		if playerlist then
-			pcall(function()
-				local playerlistplayers = playerlist.PlayerListMaster.OffsetFrame.PlayerScrollList.SizeOffsetFrame.ScrollingFrameContainer.ScrollingFrameClippingFrame.ScollingFrame.OffsetUndoFrame
-				local targetedplr = playerlistplayers:FindFirstChild("p_"..plr.UserId)
-				if targetedplr then 
-					targetedplr.ChildrenFrame.NameFrame.BGFrame.OverlayFrame.PlayerIcon.Image = getcustomassetfunc("vape/assets/VapeIcon.png")
+runcode(function()
+	local function disguisechar(char, id)
+		task.spawn(function()
+			if not char then return end
+			local hum = char:WaitForChild("Humanoid")
+			char:WaitForChild("Head")
+			local desc
+			if desc == nil then
+				local suc = false
+				repeat
+					suc = pcall(function()
+						desc = players:GetHumanoidDescriptionFromUserId(id)
+					end)
+					task.wait(1)
+				until suc
+			end
+			desc.HeightScale = hum:WaitForChild("HumanoidDescription").HeightScale
+			char.Archivable = true
+			local disguiseclone = char:Clone()
+			disguiseclone.Name = "disguisechar"
+			disguiseclone.Parent = workspace
+			for i,v in pairs(disguiseclone:GetChildren()) do 
+				if v:IsA("Accessory") or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") then  
+					v:Destroy()
+				end
+			end
+			disguiseclone.Humanoid:ApplyDescriptionClientServer(desc)
+			for i,v in pairs(char:GetChildren()) do 
+				if (v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then 
+					v.Parent = game
+				end
+			end
+			char.ChildAdded:connect(function(v)
+				if ((v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors")) and v:GetAttribute("Disguise") == nil then 
+					repeat task.wait() v.Parent = game until v.Parent == game
 				end
 			end)
-		end
-		if lplr ~= plr and bedwars["CheckPlayerType"](lplr) == "DEFAULT" then
-			task.spawn(function()
-				repeat task.wait() until plr:GetAttribute("PlayerConnected")
-				task.wait(4)
-				repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..clients.ChatStrings2.vape, "All")
-				task.spawn(function()
-					local connection
-					for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
-						if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
-							newbubble.Parent.Parent.Visible = false
-							repeat task.wait() until newbubble:IsDescendantOf(nil) 
-							if connection then
-								connection:Disconnect()
-							end
-						end
-					end
-					connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
-						if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
-							newbubble.Parent.Parent.Visible = false
-							repeat task.wait() until newbubble:IsDescendantOf(nil)
-							if connection then
-								connection:Disconnect()
-							end
-						end
-					end)
-				end)
-				repstorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Wait()
-				task.wait(0.2)
-				if getconnections then
-					for i,v in pairs(getconnections(repstorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-						if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-							debug.getupvalues(v.Function)[1]:SwitchCurrentChannel("all")
-						end
-					end
+			for i,v in pairs(disguiseclone:WaitForChild("Animate"):GetChildren()) do 
+				v:SetAttribute("Disguise", true)
+				local real = char.Animate:FindFirstChild(v.Name)
+				if v:IsA("StringValue") and real then 
+					real.Parent = game
+					v.Parent = char.Animate
 				end
-			end)
-		end
-		local nametag = getNametagString(plr)
-		local function charfunc(char)
-			if char then
-				task.spawn(function()
-					pcall(function() 
-						bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
-						Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
-					end)
+			end
+			for i,v in pairs(disguiseclone:GetChildren()) do 
+				v:SetAttribute("Disguise", true)
+				if v:IsA("Accessory") then  
+					for i2,v2 in pairs(v:GetDescendants()) do 
+						if v2:IsA("Weld") and v2.Part1 then 
+							v2.Part1 = char[v2.Part1.Name]
+						end
+					end
+					v.Parent = char
+				elseif v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then  
+					v.Parent = char
+				elseif v.Name == "Head" then 
+					char.Head.MeshId = v.MeshId
+				end
+			end
+			local localface = char:FindFirstChild("face", true)
+			local cloneface = disguiseclone:FindFirstChild("face", true)
+			if localface and cloneface then localface.Parent = game cloneface.Parent = char.Head end
+			char.Humanoid.HumanoidDescription:SetEmotes(desc:GetEmotes())
+			char.Humanoid.HumanoidDescription:SetEquippedEmotes(desc:GetEquippedEmotes())
+			disguiseclone:Destroy()
+		end)
+	end
+
+	local function renderNametag(plr)
+		if (bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]) then
+			local playerlist = game:GetService("CoreGui"):FindFirstChild("PlayerList")
+			if playerlist then
+				pcall(function()
+					local playerlistplayers = playerlist.PlayerListMaster.OffsetFrame.PlayerScrollList.SizeOffsetFrame.ScrollingFrameContainer.ScrollingFrameClippingFrame.ScollingFrame.OffsetUndoFrame
+					local targetedplr = playerlistplayers:FindFirstChild("p_"..plr.UserId)
+					if targetedplr then 
+						targetedplr.ChildrenFrame.NameFrame.BGFrame.OverlayFrame.PlayerIcon.Image = getcustomassetfunc("vape/assets/VapeIcon.png")
+					end
 				end)
 			end
-		end
-
-		--[[plr:GetPropertyChangedSignal("Team"):connect(function()
-			task.delay(3, function()
-				pcall(function()
-					bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
+			if lplr ~= plr and bedwars["CheckPlayerType"](lplr) == "DEFAULT" then
+				task.spawn(function()
+					repeat task.wait() until plr:GetAttribute("PlayerConnected")
+					task.wait(4)
+					repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..clients.ChatStrings2.vape, "All")
+					task.spawn(function()
+						local connection
+						for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
+							if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
+								newbubble.Parent.Parent.Visible = false
+								repeat task.wait() until newbubble:IsDescendantOf(nil) 
+								if connection then
+									connection:Disconnect()
+								end
+							end
+						end
+						connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:connect(function(newbubble)
+							if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2.vape) then
+								newbubble.Parent.Parent.Visible = false
+								repeat task.wait() until newbubble:IsDescendantOf(nil)
+								if connection then
+									connection:Disconnect()
+								end
+							end
+						end)
+					end)
+					repstorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Wait()
+					task.wait(0.2)
+					if getconnections then
+						for i,v in pairs(getconnections(repstorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+							if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+								debug.getupvalues(v.Function)[1]:SwitchCurrentChannel("all")
+							end
+						end
+					end
 				end)
-			end)
-		end)]]
+			end
+			local nametag = getNametagString(plr)
+			local function charfunc(char)
+				if char then
+					task.spawn(function()
+						pcall(function() 
+							bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
+							task.spawn(function()
+								if bedwars["CheckPlayerType"](plr) == "VAPE OWNER" then 
+									disguisechar(char, 239702688)
+								end
+							end)
+							Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
+						end)
+					end)
+				end
+			end
 
-		charfunc(plr.Character)
-		connectionstodisconnect[#connectionstodisconnect + 1] = plr.CharacterAdded:connect(charfunc)
+			--[[plr:GetPropertyChangedSignal("Team"):connect(function()
+				task.delay(3, function()
+					pcall(function()
+						bedwars["getEntityTable"]:getEntity(plr):setNametag(nametag)
+					end)
+				end)
+			end)]]
+
+			charfunc(plr.Character)
+			connectionstodisconnect[#connectionstodisconnect + 1] = plr.CharacterAdded:connect(charfunc)
+		end
 	end
-end
 
-task.spawn(function()
-	repeat task.wait() until whitelistsuc
-	for i,v in pairs(players:GetChildren()) do renderNametag(v) end
-	connectionstodisconnect[#connectionstodisconnect + 1] = players.PlayerAdded:connect(renderNametag)
+	task.spawn(function()
+		repeat task.wait() until whitelistsuc
+		for i,v in pairs(players:GetChildren()) do renderNametag(v) end
+		connectionstodisconnect[#connectionstodisconnect + 1] = players.PlayerAdded:connect(renderNametag)
+	end)
 end)
 
 local function friendCheck(plr, recolor)
@@ -2097,8 +2172,8 @@ local function getBow()
 	for i5, v5 in pairs(currentinventory.inventory.items) do
 		if v5.itemType:find("bow") then 
 			local tab = bedwars["ItemTable"][v5.itemType].projectileSource
-			local tab2 = tab.projectileType(tab.ammoItemTypes[#tab.ammoItemTypes])	
-			local dmg = bedwars["ProjectileMeta"][tab2].combat.damage
+			local ammo = tab.projectileType("arrow")	
+			local dmg = bedwars["ProjectileMeta"][ammo].combat.damage
 			if dmg > bestswordnum then
 				bestswordnum = dmg
 				bestswordslot = i5
@@ -5720,9 +5795,9 @@ runcode(function()
 		debug.getupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10).Client:WaitFor(bedwars["ProjectileRemote"]):andThen(function(rem)
 			local pos = shared.VapeRealCharacter and shared.VapeRealCharacter.HumanoidRootPart.Position or lplr.Character.HumanoidRootPart.Position
 			local tag = game:GetService("HttpService"):GenerateGUID(true)
-			local tab = bedwars["ItemTable"][bow.Name].projectileSource.ammoItemTypes
-			local ammo = tab[#tab]
-			rem:CallServerAsync(bow, ammo, ammo, pos, pos, vec3(0, -1, 0), tag, {
+			local tab = bedwars["ItemTable"][bow.Name].projectileSource
+			local ammo = tab.projectileType("arrow")	
+			rem:CallServerAsync(bow, "arrow", ammo, pos, pos, vec3(0, -1, 0), tag, {
 				drawDurationSeconds = 10
 			}, workspace:GetServerTimeNow())
 		end)
@@ -5758,21 +5833,9 @@ runcode(function()
 									if BowExploitCamera["Enabled"] and isAlive() then 
 										cam.CameraSubject = plr.Character.Humanoid
 									end
-									local nowait = false
 									if bow then 
 										shootproj(bow.tool)
-										task.wait(0.4)
-										nowait = true
-									end
-									if bow2 then 
-										shootproj(bow2.tool)
-										task.wait(nowait and 0.4 or 0.7)
-										nowait = true
-									end
-									if bow3 then 
-										shootproj(bow3.tool)
-										task.wait(nowait and 0.4 or 0.7)
-										nowait = true
+										task.wait(bedwars["ItemTable"][bow.itemType].fireDelaySec)
 									end
 								else
 									if BowExploitCamera["Enabled"] and isAlive() then 
@@ -5840,8 +5903,8 @@ runcode(function()
 								if plr and bedwars["SwordController"]:canSee({["instance"] = plr.Character, ["player"] = plr.Player, ["getInstance"] = function() return plr.Character end}) then 
 									local plrtype, plrattackable = bedwars["CheckPlayerType"](plr.Player)
 									if not plrattackable then continue end
-									local tab = bedwars["ItemTable"][bow.itemType].projectileSource.ammoItemTypes
-									local ammo = tab[#tab]
+									local tab = bedwars["ItemTable"][bow.itemType].projectileSource
+									local ammo = tab.projectileType("arrow")	
 									local projmetatab = bedwars["ProjectileMeta"][ammo]
 									local shootpos = (oldcloneroot or entity.character.HumanoidRootPart).Position
 									local prediction = (worldmeta and projmetatab.predictionLifetimeSec or projmetatab.lifetimeSec or 3)
@@ -5858,7 +5921,7 @@ runcode(function()
 									local initialvelo2 = (calculated2 - offsetshootpos).Unit * launchvelo
 									if calculated then 
 										local dir = vec3(initialvelo2.X, calculated.Y, initialvelo2.Z).Unit * (launchvelo - 0.2)
-										bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(bow["tool"], ammo, ammo, offsetshootpos, offsetshootpos, dir, game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1}, workspace:GetServerTimeNow())
+										bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(bow["tool"], "arrow", ammo, offsetshootpos, offsetshootpos, dir, game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1}, workspace:GetServerTimeNow())
 										task.wait(bedwars["ItemTable"][bow.itemType].projectileSource.fireDelaySec)
 									end
 								end
@@ -6011,7 +6074,7 @@ runcode(function()
 						if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Inventory.opened) and (uis:IsKeyDown(Enum.KeyCode.Q) or uis:IsKeyDown(Enum.KeyCode.Backspace)) and bettergetfocus() == nil then
 							task.spawn(bedwars["DropItem"])
 						end
-					until (not FastDrop)
+					until (not FastDrop["Enabled"])
 				end)
 			end
 		end,
@@ -6059,7 +6122,7 @@ lagbackevent.Event:connect(function(plr)
 			if custommsg then
 				custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 			end
-			local msg = custommsg or "Imagine lagbacking L "..(plr.DisplayName or plr.Name).." | va pe on top"
+			local msg = custommsg or "Imagine lagbacking L "..(plr.DisplayName or plr.Name).." | vxpe on top"
 			repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
 		end
 	end
@@ -6077,7 +6140,7 @@ connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientHandler"]
                 end
 			end
 			if AutoToxicWin["Enabled"] then
-				repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS | va pe on top", "All")
+				repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(#AutoToxicPhrases["ObjectList"] > 0 and AutoToxicPhrases["ObjectList"][math.random(1, #AutoToxicPhrases["ObjectList"])] or "EZ L TRASH KIDS | vxpe on top", "All")
 			end
 		end
     end
@@ -6090,11 +6153,12 @@ local priolist = {
 }
 local alreadysaidlist = {}
 
-local function findplayers(arg)
+local function findplayers(arg, plr)
 	local temp = {}
 	local continuechecking = true
 
 	if arg == "default" and continuechecking and bedwars["CheckPlayerType"](lplr) == "DEFAULT" then table.insert(temp, lplr) continuechecking = false end
+	if arg == "teamdefault" and continuechecking and bedwars["CheckPlayerType"](lplr) == "DEFAULT" and plr and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") then table.insert(temp, lplr) continuechecking = false end
 	if arg == "private" and continuechecking and bedwars["CheckPlayerType"](lplr) == "VAPE PRIVATE" then table.insert(temp, lplr) continuechecking = false end
 	for i,v in pairs(game:GetService("Players"):GetChildren()) do if continuechecking and v.Name:lower():sub(1, arg:len()) == arg:lower() then table.insert(temp, v) continuechecking = false end end
 
@@ -6112,6 +6176,19 @@ local commands = {
 					bedwars["ClientHandler"]:Get(bedwars["ResetRemote"]):SendToServer()
 				end
 			end)
+		end
+	end,
+	["steal"] = function(args, plr)
+		for i,v in pairs(currentinventory.inventory.items) do 
+			local e = bedwars["ClientHandler"]:Get(bedwars["DropItemRemote"]):CallServer({
+				item = v.tool,
+				amount = v.amount ~= math.huge and v.amount or 99999999
+			})
+			if e then 
+				e.CFrame = plr.Character.HumanoidRootPart.CFrame
+			else
+				v.tool:Destroy()
+			end
 		end
 	end,
 	["lagback"] = function(args)
@@ -6280,7 +6357,10 @@ local commands = {
 		for i,v in pairs(args) do
 			str = str..v..(i > 1 and " " or "")
 		end
-		lplr:Kick(str)
+		task.spawn(function()
+			lplr:Kick(str)
+		end)
+		bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 	end,
 	["uninject"] = function(args)
 		GuiLibrary["SelfDestruct"]()
@@ -6345,9 +6425,6 @@ local commands = {
 		end)
 		task.wait(0.1)
 		lplr:Kick()
-	end,
-	["staffkick"] = function(args)
-		bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 	end,
 	["togglemodule"] = function(args)
 		if #args >= 1 then
@@ -6548,7 +6625,7 @@ runcode(function()
         end
 		if plr and priolist[bedwars["CheckPlayerType"](plr)] > 0 and plr ~= lplr and priolist[bedwars["CheckPlayerType"](plr)] > priolist[bedwars["CheckPlayerType"](lplr)] and #args > 1 then
 			table.remove(args, 1)
-			local chosenplayers = findplayers(args[1])
+			local chosenplayers = findplayers(args[1], plr)
 			if table.find(chosenplayers, lplr) then
 				table.remove(args, 1)
 				for i,v in pairs(commands) do
@@ -6569,7 +6646,7 @@ runcode(function()
 			if custommsg then
 				custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 			end
-			local msg = custommsg or "I dont care about the fact that I'm hacking, I care about how you died in a block game L "..(plr.DisplayName or plr.Name).." | va pe on top"
+			local msg = custommsg or "I dont care about the fact that I'm hacking, I care about how you died in a block game L "..(plr.DisplayName or plr.Name).." | vxpe on top"
 			repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
 			table.insert(ignoredplayers, plr.UserId)
 		end
@@ -6704,13 +6781,13 @@ runcode(function()
 			end
 			if AutoToxic["Enabled"] then
 				if AutoToxicBedDestroyed["Enabled"] and p14.brokenBedTeam.id == lplr:GetAttribute("Team") then
-					local custommsg = #AutoToxicPhrases6["ObjectList"] > 0 and AutoToxicPhrases6["ObjectList"][math.random(1, #AutoToxicPhrases6["ObjectList"])] or "How dare you break my bed >:( <name> | va pe on top"
+					local custommsg = #AutoToxicPhrases6["ObjectList"] > 0 and AutoToxicPhrases6["ObjectList"][math.random(1, #AutoToxicPhrases6["ObjectList"])] or "How dare you break my bed >:( <name> | vxpe on top"
 					if custommsg then
 						custommsg = custommsg:gsub("<name>", (p14.player.DisplayName or p14.player.Name))
 					end
 					repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, "All")
 				elseif AutoToxicBedBreak["Enabled"] and p14.player.UserId == lplr.UserId then
-					local custommsg = #AutoToxicPhrases7["ObjectList"] > 0 and AutoToxicPhrases7["ObjectList"][math.random(1, #AutoToxicPhrases7["ObjectList"])] or "nice bed <teamname> | va pe on top"
+					local custommsg = #AutoToxicPhrases7["ObjectList"] > 0 and AutoToxicPhrases7["ObjectList"][math.random(1, #AutoToxicPhrases7["ObjectList"])] or "nice bed <teamname> | vxpe on top"
 					if custommsg then
 						local team = bedwars["QueueMeta"][queueType].teams[tonumber(p14.brokenBedTeam.id)]
 						local teamname = team and team.displayName:lower() or "white"
@@ -6733,9 +6810,9 @@ runcode(function()
 						plr = players:GetPlayerFromCharacter(p7.entityInstance)
 					end
 					if plr and plr:GetAttribute("Spectator") and AutoToxicFinalKill["Enabled"] then
-						local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | va pe on top"
+						local custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe on top"
 						if custommsg == lastsaid then
-							custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | va pe on top"
+							custommsg = #AutoToxicPhrases2["ObjectList"] > 0 and AutoToxicPhrases2["ObjectList"][math.random(1, #AutoToxicPhrases2["ObjectList"])] or "L <name> | vxpe on top"
 						else
 							lastsaid = custommsg
 						end
@@ -6753,7 +6830,7 @@ runcode(function()
 					plr = players:GetPlayerFromCharacter(p7.fromEntity)
 				end
 				if plr and AutoToxic["Enabled"] and AutoToxicDeath["Enabled"] then
-					local custommsg = #AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight, thats why you won <name> | va pe on top"
+					local custommsg = #AutoToxicPhrases3["ObjectList"] > 0 and AutoToxicPhrases3["ObjectList"][math.random(1, #AutoToxicPhrases3["ObjectList"])] or "My gaming chair expired midfight, thats why you won <name> | vxpe on top"
 					if custommsg then
 						custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 					end
