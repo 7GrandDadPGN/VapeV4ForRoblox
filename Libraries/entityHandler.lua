@@ -77,6 +77,13 @@ do
         entity.characterAdded(plr, plr.Character, localcheck, true)
     end
 
+    entity.getHealth = function(plr) -- Override this function to get health on games that dont use humanoid.health
+        local tableIndex, ent = entity.getEntityFromPlayer(plr)
+        if ent then 
+            return ent.Humanoid.Health
+        end
+    end
+
     entity.characterAdded = function(plr, char, localcheck, refresh)
         if char then
             task.spawn(function()
@@ -106,6 +113,17 @@ do
                             Team = plr.Team,
                             Connections = {}
                         }
+                        setmetatable(newent, {
+                            __tostring = function()
+                                return newent.Player.Name
+                            end,
+                            __index = function(t, k) 
+                                if k == 'Health' then 
+                                    return entity.getHealth(newent.Player)
+                                end
+                                return rawget(t, k)
+                            end
+                        })
                         table.insert(newent.Connections, hum:GetPropertyChangedSignal("Health"):connect(function() entity.entityUpdatedEvent:Fire(newent) end))
                         table.insert(newent.Connections, hum:GetPropertyChangedSignal("MaxHealth"):connect(function() entity.entityUpdatedEvent:Fire(newent) end))
                         table.insert(entity.entityList, newent)
