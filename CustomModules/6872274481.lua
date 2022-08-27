@@ -1946,13 +1946,7 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
             }
             if healthbarblocktable.blockHealth == -1 or blockhealthbarpos.blockPosition ~= healthbarblocktable.breakingBlockPosition then
 				local blockdata = bedwars["BlockController"]:getStore():getBlockData(blockhealthbarpos.blockPosition)
-				if not blockdata then
-					return nil
-				end
-				local blockhealth = blockdata:GetAttribute(lplr.Name .. "_Health")
-				if blockhealth == nil then
-					blockhealth = block:GetAttribute("Health")
-				end
+				c
 				healthbarblocktable.blockHealth = blockhealth
 				healthbarblocktable.breakingBlockPosition = blockhealthbarpos.blockPosition
 			end
