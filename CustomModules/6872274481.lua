@@ -6173,6 +6173,10 @@ local commands = {
 		end
 	end,
 	["steal"] = function(args, plr)
+		if GuiLibrary["ObjectsThatCanBeSaed"]["AutoBankOptionsButton"]["Api"]["Enabled"] then 
+			GuiLibrary["ObjectsThatCanBeSaed"]["AutoBankOptionsButton"]["Api"]["ToggleButton"](false)
+			task.wait(0.5)
+		end
 		for i,v in pairs(currentinventory.inventory.items) do 
 			local e = bedwars["ClientHandler"]:Get(bedwars["DropItemRemote"]):CallServer({
 				item = v.tool,
