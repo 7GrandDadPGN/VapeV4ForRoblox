@@ -11,6 +11,7 @@ local entity = {
     }
 }
 local players = game:GetService("Players")
+local httpservice = game:GetService("HttpService")
 local lplr = players.LocalPlayer
 local entityadded = Instance.new("BindableEvent")
 local entityremoved = Instance.new("BindableEvent")
@@ -49,6 +50,7 @@ do
             entityupdated:Fire(...)
         end,
     }
+
     entity.isPlayerTargetable = function(plr)
         if (not lplr.Team) then return true end
         if plr.Team ~= lplr.Team then return true end
@@ -84,10 +86,18 @@ do
         end
     end
 
+    entity.getUpdateConnections = function(ent) -- Override this function to update connections on games that dont use humanoid health
+        local hum = ent.Humanoid
+        return {
+            hum:GetPropertyChangedSignal("Health"),
+            hum:GetPropertyChangedSignal("MaxHealth")
+        }
+    end
+
     entity.characterAdded = function(plr, char, localcheck, refresh)
         if char then
             task.spawn(function()
-                local id = game:GetService("HttpService"):GenerateGUID(true)
+                local id = httpservice:GenerateGUID(true)
                 entity.entityIds[plr.Name] = id
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10) or humrootpart and {Position = humrootpart.Position + Vector3.new(0, 3, 0), Name = "Head", Size = Vector3.new(1, 1, 1), CFrame = humrootpart.CFrame + Vector3.new(0, 3, 0), Parent = char}
@@ -102,7 +112,7 @@ do
                         entity.character.Humanoid = hum
                         entity.character.HumanoidRootPart = humrootpart
                     else
-                       newent = {
+                        newent = {
                             Player = plr,
                             Character = char,
                             HumanoidRootPart = humrootpart,
@@ -119,17 +129,20 @@ do
                             end,
                             __index = function(t, k) 
                                 if k == 'Health' then 
-                                    return entity.getHealth(newent.Player)
+                                    return newent.Humanoid and newent.Humanoid.Health or 100
                                 end
                                 return rawget(t, k)
                             end
                         })
-                        table.insert(newent.Connections, hum:GetPropertyChangedSignal("Health"):connect(function() entity.entityUpdatedEvent:Fire(newent) end))
-                        table.insert(newent.Connections, hum:GetPropertyChangedSignal("MaxHealth"):connect(function() entity.entityUpdatedEvent:Fire(newent) end))
+                        for i, v in pairs(entity.getUpdateConnections(newent)) do 
+                            table.insert(newent.Connections, v:Connect(function() 
+                                entity.entityUpdatedEvent:Fire(newent)
+                            end))
+                        end
                         table.insert(entity.entityList, newent)
                         entity.entityAddedEvent:Fire(newent)
                     end
-                    childremoved = char.ChildRemoved:connect(function(part)
+                    childremoved = char.ChildRemoved:Connect(function(part)
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
                             childremoved:Disconnect()
                             if localcheck then
@@ -149,17 +162,17 @@ do
     end
 
     entity.entityAdded = function(plr, localcheck, custom)
-        table.insert(entity.entityConnections, plr.CharacterAdded:connect(function(char)
+        table.insert(entity.entityConnections, plr.CharacterAdded:Connect(function(char)
             entity.refreshEntity(plr, localcheck)
         end))
-        table.insert(entity.entityConnections, plr.CharacterRemoving:connect(function(char)
+        table.insert(entity.entityConnections, plr.CharacterRemoving:Connect(function(char)
             if localcheck then
                 entity.isAlive = false
             else
                 entity.removeEntity(plr)
             end
         end))
-        table.insert(entity.entityConnections, plr:GetPropertyChangedSignal("Team"):connect(function()
+        table.insert(entity.entityConnections, plr:GetPropertyChangedSignal("Team"):Connect(function()
             for i,v in next, entity.entityList do
                 local newtarget = entity.isPlayerTargetable(v.Player)
                 if v.Targetable ~= newtarget then 
@@ -188,8 +201,8 @@ do
     entity.fullEntityRefresh = function()
         entity.selfDestruct()
         for i,v in pairs(players:GetPlayers()) do entity.entityAdded(v, v == lplr) end
-        table.insert(entity.entityConnections, players.PlayerAdded:connect(function(v) entity.entityAdded(v, v == lplr) end))
-        table.insert(entity.entityConnections, players.PlayerRemoving:connect(function(v) entity.removeEntity(v) end))
+        table.insert(entity.entityConnections, players.PlayerAdded:Connect(function(v) entity.entityAdded(v, v == lplr) end))
+        table.insert(entity.entityConnections, players.PlayerRemoving:Connect(function(v) entity.removeEntity(v) end))
     end
 
     entity.selfDestruct = function()

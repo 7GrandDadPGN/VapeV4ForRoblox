@@ -77,7 +77,6 @@ if shared.VapeExecuted then
 		until not shared.VapeExecuted
 	end))
 
-	local holdingshift = false
 	local capturedslider = nil
 	local clickgui = {["Visible"] = true}
 
@@ -292,7 +291,7 @@ if shared.VapeExecuted then
 	api["MainBlur"] = {Size = 25}
 	api["MainRescale"] = Instance.new("UIScale")
 	api["MainRescale"].Parent = scaledgui
-	api["MainRescale"]:GetPropertyChangedSignal("Scale"):connect(function()
+	api["MainRescale"]:GetPropertyChangedSignal("Scale"):Connect(function()
 		vertext.Position = UDim2.new(1 / api["MainRescale"].Scale, -(vertextsize.X) - 20, 1 / api["MainRescale"].Scale, -25)
 	end)
 
@@ -359,6 +358,12 @@ if shared.VapeExecuted then
 				end
 				if v["Type"] == "SliderMain" then
 					WindowTable[i] = {["Type"] = "SliderMain", ["Value"] = v["Api"]["Value"]}
+				end
+				if v["Type"] == "DropdownMain" then
+					WindowTable[i] = {["Type"] = "DropdownMain", ["Value"] = v["Api"]["Value"]}
+				end
+				if v["Type"] == "TextBoxMain" then
+					WindowTable[i] = {["Type"] = "TextBoxMain", ["Value"] = v["Api"]["Value"]}
 				end
 				if (v["Type"] == "Button" or v["Type"] == "Toggle" or v["Type"] == "ExtrasButton" or v["Type"] == "TargetButton") then
 					api["Settings"][i] = {["Type"] = "Button", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
@@ -471,14 +476,19 @@ if shared.VapeExecuted then
 							end
 						end
 					end
+					if v["Type"] == "DropdownMain" then 
+						print("set val", i)
+						obj["Api"]["SetValue"](v["Value"])
+					end
 					if v["Type"] == "ColorSliderMain" then
 						obj["Api"]["SetValue"](v["Value"])
 						obj["Api"]["SetRainbow"](v["RainbowValue"])
-					--	obj["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -7, 0, -7)
 					end
 					if v["Type"] == "SliderMain" then
 						obj["Api"]["SetValue"](v["Value"])
-					--	obj["Object"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -7, 0, -7)
+					end
+					if v["Type"] == "TextBoxMain" then
+						obj["Api"]["SetValue"](v["Value"])
 					end
 				end
 				if v["Type"] == "GUIKeybind" then
@@ -693,10 +703,10 @@ if shared.VapeExecuted then
 		settingswheel.BackgroundTransparency = 1
 		settingswheel.Parent = windowtitle
 		settingswheel.ImageColor3 = Color3.fromRGB(150, 150, 150)
-		settingswheel.MouseEnter:connect(function()
+		settingswheel.MouseEnter:Connect(function()
 			settingswheel.ImageColor3 = Color3.fromRGB(255, 255, 255)
 		end)
-		settingswheel.MouseLeave:connect(function()
+		settingswheel.MouseLeave:Connect(function()
 			settingswheel.ImageColor3 = Color3.fromRGB(150, 150, 150)
 		end)
 		local discordbutton = settingswheel:Clone()
@@ -705,7 +715,7 @@ if shared.VapeExecuted then
 		discordbutton.Image = getcustomassetfunc("vape/assets/DiscordIcon.png")
 		discordbutton.Position = UDim2.new(1, -52, 0, 13)
 		discordbutton.Parent = windowtitle
-		discordbutton.MouseButton1Click:connect(function()
+		discordbutton.MouseButton1Click:Connect(function()
 			spawn(function()
 				for i = 1, 14 do
 					spawn(function()
@@ -766,10 +776,10 @@ if shared.VapeExecuted then
 		local settingsexitround = Instance.new("UICorner")
 		settingsexitround.CornerRadius = UDim.new(0, 16)
 		settingsexitround.Parent = settingsexit
-		settingsexit.MouseEnter:connect(function()
+		settingsexit.MouseEnter:Connect(function()
 			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		end)
-		settingsexit.MouseLeave:connect(function()
+		settingsexit.MouseLeave:Connect(function()
 			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = settingsexithovercolor, ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 		end)
 		local children = Instance.new("Frame")
@@ -822,10 +832,10 @@ if shared.VapeExecuted then
 		local overlaysexitround = Instance.new("UICorner")
 		overlaysexitround.CornerRadius = UDim.new(0, 16)
 		overlaysexitround.Parent = overlaysexit
-		overlaysexit.MouseEnter:connect(function()
+		overlaysexit.MouseEnter:Connect(function()
 			game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		end)
-		overlaysexit.MouseLeave:connect(function()
+		overlaysexit.MouseLeave:Connect(function()
 			game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 		end)
 		local overlaysbutton = Instance.new("ImageButton")
@@ -890,19 +900,19 @@ if shared.VapeExecuted then
 		local uilistlayout2 = Instance.new("UIListLayout")
 		uilistlayout2.SortOrder = Enum.SortOrder.LayoutOrder
 		uilistlayout2.Parent = children2
-		uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+		uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			if children2.Visible then
 				windowtitle.Size = UDim2.new(0, 220, 0, 476)
 			end
 		end)
-		uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+		uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			overlaysbkg.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 		end)
 		local uilistlayout3 = Instance.new("UIListLayout")
 		uilistlayout3.SortOrder = Enum.SortOrder.LayoutOrder
 		uilistlayout3.Parent = overlayschildren
-		uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+		uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			overlaystitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			overlaystitle.Position = UDim2.new(0, 0, 1, -(48 + (uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))))
 		end)
@@ -919,7 +929,7 @@ if shared.VapeExecuted then
 		windowbackbutton.Visible = false
 		windowbackbutton.ImageTransparency = 0.55
 		windowbackbutton.BackgroundTransparency = 1
-		windowbackbutton.MouseButton1Click:connect(function()
+		windowbackbutton.MouseButton1Click:Connect(function()
 			windowlogo1.Visible = true
 			settingswheel.Visible = true
 			children.Visible = true
@@ -930,10 +940,10 @@ if shared.VapeExecuted then
 			windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 			windowtitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		end)
-		windowbackbutton.MouseEnter:connect(function()
+		windowbackbutton.MouseEnter:Connect(function()
 			windowbackbutton.ImageTransparency = 0
 		end)
-		windowbackbutton.MouseLeave:connect(function()
+		windowbackbutton.MouseLeave:Connect(function()
 			windowbackbutton.ImageTransparency = 0.55
 		end)
 		windowbackbutton.Image = getcustomassetfunc("vape/assets/BackIcon.png")
@@ -942,7 +952,7 @@ if shared.VapeExecuted then
 		windowapi["ExpandToggle"] = function() end
 		api["ObjectsThatCanBeSaved"]["GUIWindow"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "Window", ["Api"] = windowapi}
 
-		settingswheel.MouseButton1Click:connect(function()
+		settingswheel.MouseButton1Click:Connect(function()
 			windowlogo1.Visible = false
 			settingswheel.Visible = false
 			children.Visible = false
@@ -959,7 +969,7 @@ if shared.VapeExecuted then
 			windowtitle.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 		end)
 
-		settingsexit.MouseButton1Click:connect(function()
+		settingsexit.MouseButton1Click:Connect(function()
 			windowlogo1.Visible = true
 			settingswheel.Visible = true
 			children.Visible = true
@@ -972,10 +982,10 @@ if shared.VapeExecuted then
 			windowtitle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		end)
 
-		overlaysbutton.MouseButton1Click:connect(function()
+		overlaysbutton.MouseButton1Click:Connect(function()
 			overlaysbkg.Visible = true
 		end)
-		overlaysexit.MouseButton1Click:connect(function()
+		overlaysexit.MouseButton1Click:Connect(function()
 			overlaysbkg.Visible = false
 		end)
 
@@ -1077,15 +1087,15 @@ if shared.VapeExecuted then
 			if argstable["Default"] then
 				buttonapi["ToggleButton"](argstable["Default"], true)
 			end
-			toggleframe1.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
-			toggleframe1.MouseEnter:connect(function()
+			toggleframe1.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+			toggleframe1.MouseEnter:Connect(function()
 				if buttonapi["Enabled"] == false then
 					pcall(function()
 						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
 					end)
 				end
 			end)
-			toggleframe1.MouseLeave:connect(function()
+			toggleframe1.MouseLeave:Connect(function()
 				if buttonapi["Enabled"] == false then
 					pcall(function()
 						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -1177,7 +1187,7 @@ if shared.VapeExecuted then
 				windowbackbutton2.Visible = false
 				windowbackbutton2.ImageTransparency = 0.55
 				windowbackbutton2.BackgroundTransparency = 1
-				windowbackbutton2.MouseButton1Click:connect(function()
+				windowbackbutton2.MouseButton1Click:Connect(function()
 					children3.Visible = false
 					children2.Visible = true
 					settingstext.Text = "Settings"
@@ -1188,23 +1198,23 @@ if shared.VapeExecuted then
 					windowbackbutton2.Visible = false
 					windowbackbutton.Visible = true
 				end)
-				windowbackbutton2.MouseEnter:connect(function()
+				windowbackbutton2.MouseEnter:Connect(function()
 					windowbackbutton2.ImageTransparency = 0
 				end)
-				windowbackbutton2.MouseLeave:connect(function()
+				windowbackbutton2.MouseLeave:Connect(function()
 					windowbackbutton2.ImageTransparency = 0.55
 				end)
 				windowbackbutton2.Image = getcustomassetfunc("vape/assets/BackIcon.png")
 				windowbackbutton2.Parent = windowtitle
-				button.MouseEnter:connect(function() 
+				button.MouseEnter:Connect(function() 
 					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
 					buttontext.TextColor3 = Color3.fromRGB(207, 207, 207)
 				end)
-				button.MouseLeave:connect(function() 
+				button.MouseLeave:Connect(function() 
 					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 					buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 				end)
-				button.MouseButton1Click:connect(function()
+				button.MouseButton1Click:Connect(function()
 					children2.Visible = false
 					children3.Visible = true
 					windowbackbutton.Visible = false
@@ -1215,7 +1225,7 @@ if shared.VapeExecuted then
 					settingsbox2.Visible = false
 					settingsbox.Visible = false
 				end)
-				settingsexit.MouseButton1Click:connect(function()
+				settingsexit.MouseButton1Click:Connect(function()
 					children3.Visible = false
 					windowbackbutton2.Visible = false
 				end)
@@ -1294,8 +1304,8 @@ if shared.VapeExecuted then
 					if argstable["Default"] then
 						buttonapi["ToggleButton"](argstable["Default"], true)
 					end
-					buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
-					buttontext.MouseEnter:connect(function()
+					buttontext.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+					buttontext.MouseEnter:Connect(function()
 						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 							hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 							local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -1307,12 +1317,12 @@ if shared.VapeExecuted then
 						end
 					end)
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-						buttontext.MouseMoved:connect(function(x, y)
+						buttontext.MouseMoved:Connect(function(x, y)
 							hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 							hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 						end)
 					end
-					buttontext.MouseLeave:connect(function()
+					buttontext.MouseLeave:Connect(function()
 						hoverbox.Visible = false
 						if buttonapi["Enabled"] == false then
 							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -1434,26 +1444,26 @@ if shared.VapeExecuted then
 							end
 						end)
 					end)
-					text2.MouseEnter:connect(function()
+					text2.MouseEnter:Connect(function()
 						textdown.Visible = true
 					end)
-					text2.MouseLeave:connect(function()
+					text2.MouseLeave:Connect(function()
 						textdown.Visible = false
 					end)
-					text2.MouseButton1Click:connect(function()
+					text2.MouseButton1Click:Connect(function()
 						text3.Visible = true
 						text2.Visible = false
 						text3:CaptureFocus()
 						text3.Text = text2.Text
 					end)
-					text3.FocusLost:connect(function(enter)
+					text3.FocusLost:Connect(function(enter)
 						text3.Visible = false
 						text2.Visible = true
 						if enter then
 							sliderapi["SetValue"](tonumber(text3.Text))
 						end
 					end)
-					frame.MouseEnter:connect(function()
+					frame.MouseEnter:Connect(function()
 						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 							hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 							local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -1462,12 +1472,12 @@ if shared.VapeExecuted then
 						end
 					end)
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-						frame.MouseMoved:connect(function(x, y)
+						frame.MouseMoved:Connect(function(x, y)
 							hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 							hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 						end)
 					end
-					frame.MouseLeave:connect(function()
+					frame.MouseLeave:Connect(function()
 						hoverbox.Visible = false
 					end)
 					api["ObjectsThatCanBeSaved"][argstable["Name"].."Slider"] = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
@@ -1512,11 +1522,11 @@ if shared.VapeExecuted then
 					uicorner2.CornerRadius = UDim.new(0, 3)
 					uicorner2.Parent = toggleframe2
 			
-					toggleframe1.MouseButton1Click:connect(function() argstable["Function"]() end)
-					toggleframe1.MouseEnter:connect(function()
+					toggleframe1.MouseButton1Click:Connect(function() argstable["Function"]() end)
+					toggleframe1.MouseEnter:Connect(function()
 						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
 					end)
-					toggleframe1.MouseLeave:connect(function()
+					toggleframe1.MouseLeave:Connect(function()
 						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 					end)
 					
@@ -1597,7 +1607,7 @@ if shared.VapeExecuted then
 			local bindround = Instance.new("UICorner")
 			bindround.CornerRadius = UDim.new(0, 6)
 			bindround.Parent = bindbkg
-			bindbkg.MouseButton1Click:connect(function()
+			bindbkg.MouseButton1Click:Connect(function()
 				if api["KeybindCaptured"] == false then
 					api["KeybindCaptured"] = true
 					spawn(function()
@@ -1619,12 +1629,12 @@ if shared.VapeExecuted then
 					end)
 				end
 			end)
-			bindbkg.MouseEnter:connect(function() 
+			bindbkg.MouseEnter:Connect(function() 
 				bindimg.Image = getcustomassetfunc("vape/assets/PencilIcon.png") 
 				bindimg.Visible = true
 				bindtext.Visible = false
 			end)
-			bindbkg.MouseLeave:connect(function() 
+			bindbkg.MouseLeave:Connect(function() 
 				bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
 				if api["GUIKeybind"] ~= "" then
 					bindimg.Visible = false
@@ -1743,6 +1753,7 @@ if shared.VapeExecuted then
 			slider3.Name = "ButtonSlider"
 			sliderapi["Value"] = slidercolors[4]:ToHSV()
 			sliderapi["RainbowValue"] = false
+			sliderapi["Object"] = frame
 			sliderapi["SetValue"] = function(val)
 				slider3.Image = (sliderapi["RainbowValue"] and getcustomassetfunc("vape/assets/ColorSlider2.png") or getcustomassetfunc("vape/assets/ColorSlider1.png"))
 				sliderrainbow.Image = (sliderapi["RainbowValue"] and getcustomassetfunc("vape/assets/RainbowIcon2.png") or getcustomassetfunc("vape/assets/RainbowIcon1.png"))
@@ -1781,7 +1792,7 @@ if shared.VapeExecuted then
 					end))
 				end
 			end
-			sliderrainbow.MouseButton1Click:connect(function()
+			sliderrainbow.MouseButton1Click:Connect(function()
 				sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				sliderrainbow.Image = (sliderapi["RainbowValue"] and getcustomassetfunc("vape/assets/RainbowIcon2.png") or getcustomassetfunc("vape/assets/RainbowIcon1.png"))
 			end)
@@ -1913,8 +1924,8 @@ if shared.VapeExecuted then
 			if argstable["Default"] then
 				buttonapi["ToggleButton"](argstable["Default"], true)
 			end
-			buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
-			buttontext.MouseEnter:connect(function()
+			buttontext.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+			buttontext.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -1926,12 +1937,12 @@ if shared.VapeExecuted then
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-				buttontext.MouseMoved:connect(function(x, y)
+				buttontext.MouseMoved:Connect(function(x, y)
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 				end)
 			end
-			buttontext.MouseLeave:connect(function()
+			buttontext.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 				if buttonapi["Enabled"] == false then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -2010,8 +2021,8 @@ if shared.VapeExecuted then
 				end
 			end
 
-			button.MouseButton1Click:connect(function() buttonapi["ToggleButton"](true) end)
-			button.MouseEnter:connect(function() 
+			button.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](true) end)
+			button.MouseEnter:Connect(function() 
 				if overlaysbkg.Visible == false then
 					if not buttonapi["Enabled"] then
 						game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
@@ -2022,7 +2033,7 @@ if shared.VapeExecuted then
 					end
 				end
 			end)
-			button.MouseLeave:connect(function() 
+			button.MouseLeave:Connect(function() 
 				if overlaysbkg.Visible == false then
 					if not buttonapi["Enabled"] then
 						game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
@@ -2117,7 +2128,7 @@ if shared.VapeExecuted then
 		local uilistlayout = Instance.new("UIListLayout")
 		uilistlayout.SortOrder = Enum.SortOrder.LayoutOrder
 		uilistlayout.Parent = children2
-		uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+		uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			if children2.Visible then
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 				
@@ -2287,26 +2298,26 @@ if shared.VapeExecuted then
 					end
 				end)
 			end)
-			text2.MouseEnter:connect(function()
+			text2.MouseEnter:Connect(function()
 				textdown.Visible = true
 			end)
-			text2.MouseLeave:connect(function()
+			text2.MouseLeave:Connect(function()
 				textdown.Visible = false
 			end)
-			text2.MouseButton1Click:connect(function()
+			text2.MouseButton1Click:Connect(function()
 				text3.Visible = true
 				text2.Visible = false
 				text3:CaptureFocus()
 				text3.Text = text2.Text
 			end)
-			text3.FocusLost:connect(function(enter)
+			text3.FocusLost:Connect(function(enter)
 				text3.Visible = false
 				text2.Visible = true
 				if enter then
 					sliderapi["SetValue"](tonumber(text3.Text))
 				end
 			end)
-			frame.MouseEnter:connect(function()
+			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -2315,12 +2326,12 @@ if shared.VapeExecuted then
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-				frame.MouseMoved:connect(function(x, y)
+				frame.MouseMoved:Connect(function(x, y)
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 				end)
 			end
-			frame.MouseLeave:connect(function()
+			frame.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 			end)
 			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Slider"] = {["Type"] = "SliderMain", ["Object"] = frame, ["Api"] = sliderapi}
@@ -2373,14 +2384,14 @@ if shared.VapeExecuted then
 				end
 			end
 
-			framebox.FocusLost:connect(function(enter) 
+			framebox.FocusLost:Connect(function(enter) 
 				textapi["SetValue"](framebox.Text, true)
 				if argstable["FocusLost"] then
 					argstable["FocusLost"](enter)
 				end
 			end)
 
-			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBox", ["Api"] = textapi, ["Object"] = frame}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBoxMain", ["Api"] = textapi, ["Object"] = frame}
 
 			return textapi
 		end
@@ -2450,7 +2461,7 @@ if shared.VapeExecuted then
 			windowtitle.Visible = false
 			windowtitle.ZIndex = 3
 			windowtitle.Parent = clickgui
-			frame:GetPropertyChangedSignal("AbsolutePosition"):connect(function()
+			frame:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
 				windowtitle.Position = UDim2.new(0, frame.Size.X.Offset + frame.AbsolutePosition.X + 2, 0, frame.AbsolutePosition.Y)
 			end)
 			local windowshadow = Instance.new("ImageLabel")
@@ -2498,7 +2509,7 @@ if shared.VapeExecuted then
 			local uilistlayout = Instance.new("UIListLayout")
 			uilistlayout.SortOrder = Enum.SortOrder.LayoutOrder
 			uilistlayout.Parent = children
-			uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+			uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 			end)
 		
@@ -2583,7 +2594,7 @@ if shared.VapeExecuted then
 				local uilistlayout3 = Instance.new("UIListLayout")
 				uilistlayout3.Padding = UDim.new(0, 3)
 				uilistlayout3.Parent = scrollframe
-				uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+				uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 					scrollframe.CanvasSize = UDim2.new(0, 0, 0, uilistlayout3.AbsoluteContentSize.Y)
 					scrollframe.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105))
 					scrollframebkg.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105) + 3)
@@ -2645,22 +2656,22 @@ if shared.VapeExecuted then
 						friendcircle2.Position = UDim2.new(0, 1, 0, 1)
 						friendcircle2.Visible = not objenabled
 						friendcircle2.Parent = friendcircle	
-						itemframe:GetPropertyChangedSignal("BackgroundColor3"):connect(function()
+						itemframe:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 							friendcircle2.BackgroundColor3 = itemframe.BackgroundColor3
 						end)
-						itemframe.MouseEnter:connect(function()
+						itemframe.MouseEnter:Connect(function()
 							itemframe.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 							hoveredover[i] = true
 						end)
-						itemframe.MouseLeave:connect(function()
+						itemframe.MouseLeave:Connect(function()
 							itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 							hoveredover[i] = nil
 						end)
-						itemframe.MouseButton1Click:connect(function()
+						itemframe.MouseButton1Click:Connect(function()
 							textapi["ObjectListEnabled"][i] = not textapi["ObjectListEnabled"][i]
 							textapi["RefreshValues"](textapi["ObjectList"])
 						end)
-						itemframe.MouseButton2Click:connect(function()
+						itemframe.MouseButton2Click:Connect(function()
 							textapi["ObjectListEnabled"][i] = not textapi["ObjectListEnabled"][i]
 							textapi["RefreshValues"](textapi["ObjectList"])
 						end)
@@ -2672,7 +2683,7 @@ if shared.VapeExecuted then
 						deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
 						deletebutton.Position = UDim2.new(1, -16, 0, 14)
 						deletebutton.Parent = itemframe
-						deletebutton.MouseButton1Click:connect(function()
+						deletebutton.MouseButton1Click:Connect(function()
 							table.remove(textapi["ObjectList"], i)
 							textapi["ObjectListEnabled"][i] = nil
 							textapi["RefreshValues"](textapi["ObjectList"])
@@ -2684,7 +2695,7 @@ if shared.VapeExecuted then
 				end
 		
 				api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TextCircleList"] = {["Type"] = "TextCircleList", ["Api"] = textapi}
-				addbutton.MouseButton1Click:connect(function() 
+				addbutton.MouseButton1Click:Connect(function() 
 					local num = #textapi["ObjectList"] + 1
 					textapi["ObjectList"][num] = textbox.Text
 					textapi["ObjectListEnabled"][num] = true
@@ -2767,7 +2778,7 @@ if shared.VapeExecuted then
 				if argstable["Default"] then
 					buttonapi["ToggleButton"](argstable["Default"], true)
 				end
-				buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+				buttontext.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
 				api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TargetButton"] = {["Type"] = "TargetButton", ["Object"] = buttontext, ["Api"] = buttonapi}
 				return buttonapi
 			end]]
@@ -2777,18 +2788,18 @@ if shared.VapeExecuted then
 				Color = (argstablemain3["Type"] == "Blacklist" and Color3.fromRGB(250, 50, 56) or Color3.fromRGB(5, 134, 105))
 			})
 		
-			drop1.MouseButton1Click:connect(function()
+			drop1.MouseButton1Click:Connect(function()
 				windowtitle.Visible = not windowtitle.Visible
 				if not windowtitle.Visible then
 					game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 				end
 			end)
-			drop1.MouseEnter:connect(function()
+			drop1.MouseEnter:Connect(function()
 				if not windowtitle.Visible then
 					game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 				end
 			end)
-			drop1.MouseLeave:connect(function()
+			drop1.MouseLeave:Connect(function()
 				if not windowtitle.Visible then
 					game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(38, 37, 38)}):Play()
 				end
@@ -2839,7 +2850,7 @@ if shared.VapeExecuted then
 			drop2.Position = UDim2.new(0, 0, 0, 0)
 			drop2.ZIndex = 4
 			drop2.BackgroundTransparency = 1
-			drop1:GetPropertyChangedSignal("Text"):connect(function()
+			drop1:GetPropertyChangedSignal("Text"):Connect(function()
 				drop2.Text = drop1.Text
 			end)
 			drop2.ExpandButton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
@@ -2872,23 +2883,23 @@ if shared.VapeExecuted then
 			thing2.BackgroundColor3 = Color3.fromRGB(53, 52, 53)
 			thing2.Parent = dropframe
 			drop2.Parent = dropframe
-			drop2.MouseButton1Click:connect(function()
+			drop2.MouseButton1Click:Connect(function()
 				dropframe.Visible = not dropframe.Visible
 				hoverbox.TextSize = (dropframe.Visible and 0 or 15)
 				--children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 12 or 0) + 10)
 			end)
-			drop1.MouseButton1Click:connect(function()
+			drop1.MouseButton1Click:Connect(function()
 				dropframe.Visible = not dropframe.Visible
 				hoverbox.TextSize = (dropframe.Visible and 0 or 15)
 				--children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 12 or 0) + 10)
 			end)
-			drop1.MouseEnter:connect(function()
+			drop1.MouseEnter:Connect(function()
 				thing.BackgroundColor3 = Color3.fromRGB(49, 48, 49)
 			end)
-			drop1.MouseLeave:connect(function()
+			drop1.MouseLeave:Connect(function()
 				thing.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
 			end)
-			frame.MouseEnter:connect(function()
+			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -2897,12 +2908,12 @@ if shared.VapeExecuted then
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-				frame.MouseMoved:connect(function(x, y)
+				frame.MouseMoved:Connect(function(x, y)
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 				end)
 			end
-			frame.MouseLeave:connect(function()
+			frame.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 			end)
 			local placeholder = 0
@@ -2939,7 +2950,7 @@ if shared.VapeExecuted then
 					drop2.BorderSizePixel = 0
 					drop2.Name = listobj
 					drop2.Parent = dropframe
-					drop2.MouseButton1Click:connect(function()
+					drop2.MouseButton1Click:Connect(function()
 						hoverbox.TextSize = 15
 						dropapi["Value"] = listobj
 						drop1.Text = "   "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"]).." - "..listobj
@@ -2949,10 +2960,10 @@ if shared.VapeExecuted then
 						dropapi["UpdateList"](list)
 						api["UpdateHudEvent"]:Fire()
 					end)
-					drop2.MouseEnter:connect(function()
+					drop2.MouseEnter:Connect(function()
 						drop2.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 					end)
-					drop2.MouseLeave:connect(function()
+					drop2.MouseLeave:Connect(function()
 						drop2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					end)
 					placeholder = placeholder + 19
@@ -2966,7 +2977,7 @@ if shared.VapeExecuted then
 				dropapi["UpdateList"](list)
 			end
 			dropapi["UpdateList"](list)
-			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Dropdown"] = {["Type"] = "Dropdown", ["Object"] = frame, ["Api"] = dropapi}
+			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Dropdown"] = {["Type"] = "DropdownMain", ["Object"] = frame, ["Api"] = dropapi}
 
 			return dropapi
 		end
@@ -3023,6 +3034,7 @@ if shared.VapeExecuted then
 			slider3.Name = "ButtonSlider"
 			sliderapi["Value"] = 0.44
 			sliderapi["RainbowValue"] = false
+			sliderapi["Object"] = frame
 			sliderapi["SetValue"] = function(val)
 				val = math.clamp(val, min, max)
 				text2.BackgroundColor3 = Color3.fromHSV(val, 1, 1)
@@ -3104,7 +3116,7 @@ if shared.VapeExecuted then
 					end
 				end)
 			end)
-			frame.MouseEnter:connect(function()
+			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -3113,12 +3125,12 @@ if shared.VapeExecuted then
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-				frame.MouseMoved:connect(function(x, y)
+				frame.MouseMoved:Connect(function(x, y)
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 				end)
 			end
-			frame.MouseLeave:connect(function()
+			frame.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 			end)
 			api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."SliderColor"] = {["Type"] = "ColorSliderMain", ["Object"] = frame, ["Api"] = sliderapi}
@@ -3199,8 +3211,8 @@ if shared.VapeExecuted then
 			if argstable["Default"] then
 				buttonapi["ToggleButton"](argstable["Default"], true)
 			end
-			buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
-			buttontext.MouseEnter:connect(function()
+			buttontext.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+			buttontext.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -3212,12 +3224,12 @@ if shared.VapeExecuted then
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-				buttontext.MouseMoved:connect(function(x, y)
+				buttontext.MouseMoved:Connect(function(x, y)
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 				end)
 			end
-			buttontext.MouseLeave:connect(function()
+			buttontext.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 				if buttonapi["Enabled"] == false then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -3237,16 +3249,16 @@ if shared.VapeExecuted then
 			end
 		end
 		
-		clickgui:GetPropertyChangedSignal("Visible"):connect(windowapi["CheckVis"])
+		clickgui:GetPropertyChangedSignal("Visible"):Connect(windowapi["CheckVis"])
 		windowapi["CheckVis"]()
 		
 		windowapi["GetCustomChildren"] = function()
 			return children
 		end
 		
-		expandbutton.MouseButton1Click:connect(windowapi["PinnedToggle"])
-		windowtitle.MouseButton2Click:connect(windowapi["ExpandToggle"])
-		optionsbutton.MouseButton1Click:connect(windowapi["ExpandToggle"])
+		expandbutton.MouseButton1Click:Connect(windowapi["PinnedToggle"])
+		windowtitle.MouseButton2Click:Connect(windowapi["ExpandToggle"])
+		optionsbutton.MouseButton1Click:Connect(windowapi["ExpandToggle"])
 		api["ObjectsThatCanBeSaved"][argstablemain["Name"].."CustomWindow"] = {["Object"] = windowtitle, ["ChildrenObject"] = children, ["Type"] = "CustomWindow", ["Api"] = windowapi}
 		
 		return windowapi
@@ -3289,7 +3301,7 @@ if shared.VapeExecuted then
 		windowbackbutton.Position = UDim2.new(0, 15, 0, 13)
 		windowbackbutton.Visible = false
 		windowbackbutton.BackgroundTransparency = 1
-		windowbackbutton.MouseButton1Click:connect(function()
+		windowbackbutton.MouseButton1Click:Connect(function()
 			if currentexpandedbutton then
 				currentexpandedbutton["ExpandToggle"]()
 			end
@@ -3340,7 +3352,7 @@ if shared.VapeExecuted then
 		local uilistlayout = Instance.new("UIListLayout")
 		uilistlayout.SortOrder = Enum.SortOrder.LayoutOrder
 		uilistlayout.Parent = children
-		uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+		uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			if children.Visible then
 				windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 0, 605))
 				children.CanvasSize = UDim2.new(0, 0, 0, uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
@@ -3369,9 +3381,9 @@ if shared.VapeExecuted then
 			end
 		end
 
-		windowtitle.MouseButton2Click:connect(windowapi["ExpandToggle"])
-		expandbutton.MouseButton1Click:connect(windowapi["ExpandToggle"])
-		expandbutton.MouseButton2Click:connect(windowapi["ExpandToggle"])
+		windowtitle.MouseButton2Click:Connect(windowapi["ExpandToggle"])
+		expandbutton.MouseButton1Click:Connect(windowapi["ExpandToggle"])
+		expandbutton.MouseButton2Click:Connect(windowapi["ExpandToggle"])
 
 		windowapi["CreateOptionsButton"] = function(argstablemain)
 			local buttonapi = {}
@@ -3424,7 +3436,7 @@ if shared.VapeExecuted then
 			local uilistlayout2 = Instance.new("UIListLayout")
 			uilistlayout2.SortOrder = Enum.SortOrder.LayoutOrder
 			uilistlayout2.Parent = children2
-			uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+			uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 				children2.Size = UDim2.new(0, 220, 0, uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 				--if children2.Visible then
 					--windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(85 + (uilistlayout2.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale)), 0, 605))
@@ -3487,13 +3499,13 @@ if shared.VapeExecuted then
 			bindround.CornerRadius = UDim.new(0, 6)
 			bindround.Parent = bindbkg
 			if argstablemain["HoverText"] and type(argstablemain["HoverText"]) == "string" then
-				button.MouseEnter:connect(function() 
+				button.MouseEnter:Connect(function() 
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					local textsize = game:GetService("TextService"):GetTextSize(argstablemain["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 					hoverbox.Text = "  "..argstablemain["HoverText"]:gsub("\n", "\n  ")
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end)
-				button.MouseMoved:connect(function(x, y)
+				button.MouseMoved:Connect(function(x, y)
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 				end)
@@ -3647,7 +3659,7 @@ if shared.VapeExecuted then
 				local uilistlayout3 = Instance.new("UIListLayout")
 				uilistlayout3.Padding = UDim.new(0, 3)
 				uilistlayout3.Parent = scrollframe
-				uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+				uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 					scrollframe.CanvasSize = UDim2.new(0, 0, 0, uilistlayout3.AbsoluteContentSize.Y)
 					scrollframe.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105))
 					scrollframebkg.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105) + 3)
@@ -3694,7 +3706,7 @@ if shared.VapeExecuted then
 						deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
 						deletebutton.Position = UDim2.new(1, -16, 0, 14)
 						deletebutton.Parent = itemframe
-						deletebutton.MouseButton1Click:connect(function()
+						deletebutton.MouseButton1Click:Connect(function()
 							table.remove(textapi["ObjectList"], table.find(textapi["ObjectList"], v))
 							textapi["RefreshValues"](textapi["ObjectList"])
 							if argstable["RemoveFunction"] then
@@ -3707,7 +3719,7 @@ if shared.VapeExecuted then
 					end
 				end
 
-				addbutton.MouseButton1Click:connect(function() 
+				addbutton.MouseButton1Click:Connect(function() 
 					table.insert(textapi["ObjectList"], textbox.Text)
 					textapi["RefreshValues"](textapi["ObjectList"])
 					if argstable["AddFunction"] then
@@ -3761,7 +3773,7 @@ if shared.VapeExecuted then
 					end
 				end
 
-				textbox.FocusLost:connect(function(enter) 
+				textbox.FocusLost:Connect(function(enter) 
 					textapi["SetValue"](textbox.Text, true)
 					if argstable["FocusLost"] then
 						argstable["FocusLost"](enter)
@@ -3840,7 +3852,7 @@ if shared.VapeExecuted then
 				windowtitle.Visible = false
 				windowtitle.ZIndex = 3
 				windowtitle.Parent = clickgui
-				frame:GetPropertyChangedSignal("AbsolutePosition"):connect(function()
+				frame:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
 					windowtitle.Position = UDim2.new(0, frame.Size.X.Offset + frame.AbsolutePosition.X + 2, 0, frame.AbsolutePosition.Y)
 				end)
 				local windowshadow = Instance.new("ImageLabel")
@@ -3893,7 +3905,7 @@ if shared.VapeExecuted then
 				local uilistlayout = Instance.new("UIListLayout")
 				uilistlayout.SortOrder = Enum.SortOrder.LayoutOrder
 				uilistlayout.Parent = children
-				uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+				uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 					windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 				end)
 
@@ -3986,8 +3998,8 @@ if shared.VapeExecuted then
 					if argstable["Default"] then
 						buttonapi["ToggleButton"](argstable["Default"], true)
 					end
-					buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
-					buttontext.MouseEnter:connect(function()
+					buttontext.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+					buttontext.MouseEnter:Connect(function()
 						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 							hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 							local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -3999,12 +4011,12 @@ if shared.VapeExecuted then
 						end
 					end)
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-						buttontext.MouseMoved:connect(function(x, y)
+						buttontext.MouseMoved:Connect(function(x, y)
 							hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 							hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 						end)
 					end
-					buttontext.MouseLeave:connect(function()
+					buttontext.MouseLeave:Connect(function()
 						hoverbox.Visible = false
 						if buttonapi["Enabled"] == false then
 							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -4086,7 +4098,7 @@ if shared.VapeExecuted then
 					if argstable["Default"] then
 						buttonapi["ToggleButton"](argstable["Default"], true)
 					end
-					buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+					buttontext.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
 					api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TargetButton"] = {["Type"] = "TargetButton", ["Object"] = buttontext, ["Api"] = buttonapi}
 					return buttonapi
 				end
@@ -4140,18 +4152,18 @@ if shared.VapeExecuted then
 					["Default"] = (argstablemain3["Default3"] or false)
 				})
 
-				drop1.MouseButton1Click:connect(function()
+				drop1.MouseButton1Click:Connect(function()
 					windowtitle.Visible = not windowtitle.Visible
 					if not windowtitle.Visible then
 						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 					end
 				end)
-				drop1.MouseEnter:connect(function()
+				drop1.MouseEnter:Connect(function()
 					if not windowtitle.Visible then
 						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 					end
 				end)
-				drop1.MouseLeave:connect(function()
+				drop1.MouseLeave:Connect(function()
 					if not windowtitle.Visible then
 						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(38, 37, 38)}):Play()
 					end
@@ -4227,7 +4239,7 @@ if shared.VapeExecuted then
 				windowtitle.Visible = false
 				windowtitle.ZIndex = 3
 				windowtitle.Parent = clickgui
-				frame:GetPropertyChangedSignal("AbsolutePosition"):connect(function()
+				frame:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
 					windowtitle.Position = UDim2.new(0, frame.Size.X.Offset + frame.AbsolutePosition.X + 2, 0, frame.AbsolutePosition.Y)
 				end)
 				local windowshadow = Instance.new("ImageLabel")
@@ -4275,7 +4287,7 @@ if shared.VapeExecuted then
 				local uilistlayout = Instance.new("UIListLayout")
 				uilistlayout.SortOrder = Enum.SortOrder.LayoutOrder
 				uilistlayout.Parent = children
-				uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+				uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 					windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 				end)
 
@@ -4360,7 +4372,7 @@ if shared.VapeExecuted then
 					local uilistlayout3 = Instance.new("UIListLayout")
 					uilistlayout3.Padding = UDim.new(0, 3)
 					uilistlayout3.Parent = scrollframe
-					uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+					uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 						scrollframe.CanvasSize = UDim2.new(0, 0, 0, uilistlayout3.AbsoluteContentSize.Y)
 						scrollframe.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105))
 						scrollframebkg.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y, 1, 105) + 3)
@@ -4422,22 +4434,22 @@ if shared.VapeExecuted then
 							friendcircle2.Position = UDim2.new(0, 1, 0, 1)
 							friendcircle2.Visible = not objenabled
 							friendcircle2.Parent = friendcircle	
-							itemframe:GetPropertyChangedSignal("BackgroundColor3"):connect(function()
+							itemframe:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 								friendcircle2.BackgroundColor3 = itemframe.BackgroundColor3
 							end)
-							itemframe.MouseEnter:connect(function()
+							itemframe.MouseEnter:Connect(function()
 								itemframe.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 								hoveredover[i] = true
 							end)
-							itemframe.MouseLeave:connect(function()
+							itemframe.MouseLeave:Connect(function()
 								itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 								hoveredover[i] = nil
 							end)
-							itemframe.MouseButton1Click:connect(function()
+							itemframe.MouseButton1Click:Connect(function()
 								textapi["ObjectListEnabled"][i] = not textapi["ObjectListEnabled"][i]
 								textapi["RefreshValues"](textapi["ObjectList"])
 							end)
-							itemframe.MouseButton2Click:connect(function()
+							itemframe.MouseButton2Click:Connect(function()
 								textapi["ObjectListEnabled"][i] = not textapi["ObjectListEnabled"][i]
 								textapi["RefreshValues"](textapi["ObjectList"])
 							end)
@@ -4449,7 +4461,7 @@ if shared.VapeExecuted then
 							deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
 							deletebutton.Position = UDim2.new(1, -16, 0, 14)
 							deletebutton.Parent = itemframe
-							deletebutton.MouseButton1Click:connect(function()
+							deletebutton.MouseButton1Click:Connect(function()
 								table.remove(textapi["ObjectList"], i)
 								textapi["ObjectListEnabled"][i] = nil
 								textapi["RefreshValues"](textapi["ObjectList"])
@@ -4461,7 +4473,7 @@ if shared.VapeExecuted then
 					end
 			
 					api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TextCircleList"] = {["Type"] = "TextCircleList", ["Api"] = textapi}
-					addbutton.MouseButton1Click:connect(function() 
+					addbutton.MouseButton1Click:Connect(function() 
 						local num = #textapi["ObjectList"] + 1
 						textapi["ObjectList"][num] = textbox.Text
 						textapi["ObjectListEnabled"][num] = true
@@ -4544,7 +4556,7 @@ if shared.VapeExecuted then
 					if argstable["Default"] then
 						buttonapi["ToggleButton"](argstable["Default"], true)
 					end
-					buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+					buttontext.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
 					api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."TargetButton"] = {["Type"] = "TargetButton", ["Object"] = buttontext, ["Api"] = buttonapi}
 					return buttonapi
 				end]]
@@ -4554,18 +4566,18 @@ if shared.VapeExecuted then
 					Color = (argstablemain3["Type"] == "Blacklist" and Color3.fromRGB(250, 50, 56) or Color3.fromRGB(5, 134, 105))
 				})
 
-				drop1.MouseButton1Click:connect(function()
+				drop1.MouseButton1Click:Connect(function()
 					windowtitle.Visible = not windowtitle.Visible
 					if not windowtitle.Visible then
 						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 					end
 				end)
-				drop1.MouseEnter:connect(function()
+				drop1.MouseEnter:Connect(function()
 					if not windowtitle.Visible then
 						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 					end
 				end)
-				drop1.MouseLeave:connect(function()
+				drop1.MouseLeave:Connect(function()
 					if not windowtitle.Visible then
 						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(38, 37, 38)}):Play()
 					end
@@ -4616,7 +4628,7 @@ if shared.VapeExecuted then
 				drop2.Position = UDim2.new(0, 0, 0, 0)
 				drop2.ZIndex = 9
 				drop2.BackgroundTransparency = 1
-				drop1:GetPropertyChangedSignal("Text"):connect(function()
+				drop1:GetPropertyChangedSignal("Text"):Connect(function()
 					drop2.Text = drop1.Text
 				end)
 				drop2.ExpandButton2.Image = getcustomassetfunc("vape/assets/UpArrow.png")
@@ -4650,25 +4662,25 @@ if shared.VapeExecuted then
 				thing2.BackgroundColor3 = Color3.fromRGB(53, 52, 53)
 				thing2.Parent = dropframe
 				drop2.Parent = dropframe
-				drop2.MouseButton1Click:connect(function()
+				drop2.MouseButton1Click:Connect(function()
 					dropframe.Visible = not dropframe.Visible
 					local num = (dropframe.Visible and 10 or 0) + (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * (dropframe.Visible and 13 or 9) * (api["MainRescale"].Scale) or 0) + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale)
 				--	children.CanvasSize = UDim2.new(0, 0, 0, num)
 				--	windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 				end)
-				drop1.MouseButton1Click:connect(function()
+				drop1.MouseButton1Click:Connect(function()
 					dropframe.Visible = not dropframe.Visible
 					local num = (dropframe.Visible and 10 or 0) + (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * (dropframe.Visible and 13 or 9) * (api["MainRescale"].Scale) or 0) + (40 * api["MainRescale"].Scale)) * (1 / api["MainRescale"].Scale)
 				--	children.CanvasSize = UDim2.new(0, 0, 0, num)
 				--	windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 				end)
-				drop1.MouseEnter:connect(function()
+				drop1.MouseEnter:Connect(function()
 					thing.BackgroundColor3 = Color3.fromRGB(49, 48, 49)
 				end)
-				drop1.MouseLeave:connect(function()
+				drop1.MouseLeave:Connect(function()
 					thing.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
 				end)
-				frame.MouseEnter:connect(function()
+				frame.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 						local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -4677,12 +4689,12 @@ if shared.VapeExecuted then
 					end
 				end)
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-					frame.MouseMoved:connect(function(x, y)
+					frame.MouseMoved:Connect(function(x, y)
 						hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 						hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 					end)
 				end
-				frame.MouseLeave:connect(function()
+				frame.MouseLeave:Connect(function()
 					hoverbox.Visible = false
 					if buttonapi["Enabled"] == false then
 						pcall(function()
@@ -4724,7 +4736,7 @@ if shared.VapeExecuted then
 						drop2.BorderSizePixel = 0
 						drop2.Name = listobj
 						drop2.Parent = dropframe
-						drop2.MouseButton1Click:connect(function()
+						drop2.MouseButton1Click:Connect(function()
 							dropapi["Value"] = listobj
 							drop1.Text = "   "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"]).." - "..listobj
 							dropframe.Visible = false
@@ -4832,13 +4844,13 @@ if shared.VapeExecuted then
 				sliderexpand.Position = UDim2.new(0, game:GetService("TextService"):GetTextSize(text1.Text, text1.TextSize, text1.Font, Vector2.new(10000, 100000)).X + 3, 0, 6)
 				sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow3.png")
 				sliderexpand.Parent = frame
-				sliderexpand.MouseEnter:connect(function()
+				sliderexpand.MouseEnter:Connect(function()
 					sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow4.png")
 				end)
-				sliderexpand.MouseLeave:connect(function()
+				sliderexpand.MouseLeave:Connect(function()
 					sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow3.png")
 				end)
-				sliderexpand.MouseButton1Click:connect(function()
+				sliderexpand.MouseButton1Click:Connect(function()
 					local val = not slidersat.Visible
 					slidersat.Visible = val
 					sliderval.Visible = val
@@ -4847,6 +4859,7 @@ if shared.VapeExecuted then
 				sliderapi["Hue"] = (argstable["Default"] or 0.44)
 				sliderapi["Sat"] = 1
 				sliderapi["Value"] = 1
+				sliderapi["Object"] = frame
 				sliderapi["RainbowValue"] = false
 				sliderapi["SetValue"] = function(hue, sat, val)
 					hue = (hue or sliderapi["Hue"])
@@ -4927,7 +4940,7 @@ if shared.VapeExecuted then
 					slidercode(sliderval.Slider, "Value")
 				end)
 				
-				frame.MouseEnter:connect(function()
+				frame.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 						local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -4936,12 +4949,12 @@ if shared.VapeExecuted then
 					end
 				end)
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-					frame.MouseMoved:connect(function(x, y)
+					frame.MouseMoved:Connect(function(x, y)
 						hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 						hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 					end)
 				end
-				frame.MouseLeave:connect(function()
+				frame.MouseLeave:Connect(function()
 					hoverbox.Visible = false
 					if buttonapi["Enabled"] == false then
 						pcall(function()
@@ -5067,26 +5080,26 @@ if shared.VapeExecuted then
 						end
 					end)
 				end)
-				text2.MouseEnter:connect(function()
+				text2.MouseEnter:Connect(function()
 					textdown.Visible = true
 				end)
-				text2.MouseLeave:connect(function()
+				text2.MouseLeave:Connect(function()
 					textdown.Visible = false
 				end)
-				text2.MouseButton1Click:connect(function()
+				text2.MouseButton1Click:Connect(function()
 					text3.Visible = true
 					text2.Visible = false
 					text3:CaptureFocus()
 					text3.Text = text2.Text
 				end)
-				text3.FocusLost:connect(function(enter)
+				text3.FocusLost:Connect(function(enter)
 					text3.Visible = false
 					text2.Visible = true
 					if enter then
 						sliderapi["SetValue"](tonumber(text3.Text))
 					end
 				end)
-				frame.MouseEnter:connect(function()
+				frame.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 						local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -5095,12 +5108,12 @@ if shared.VapeExecuted then
 					end
 				end)
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-					frame.MouseMoved:connect(function(x, y)
+					frame.MouseMoved:Connect(function(x, y)
 						hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 						hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 					end)
 				end
-				frame.MouseLeave:connect(function()
+				frame.MouseLeave:Connect(function()
 					hoverbox.Visible = false
 				end)
 				api["ObjectsThatCanBeSaved"][argstablemain["Name"]..argstable["Name"].."Slider"] = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
@@ -5179,11 +5192,11 @@ if shared.VapeExecuted then
 				slider4.Rotation = 180
 				slider4.Name = "ButtonSlider2"
 				slider4.Parent = slider1
-				slider3:GetPropertyChangedSignal("Position"):connect(function()
+				slider3:GetPropertyChangedSignal("Position"):Connect(function()
 					slider2.Size = UDim2.new(0, slider4.AbsolutePosition.X - slider3.AbsolutePosition.X, 1, 0)
 					slider2.Position = UDim2.new(slider3.Position.X.Scale, 0, 0, 0)
 				end)
-				slider4:GetPropertyChangedSignal("Position"):connect(function()
+				slider4:GetPropertyChangedSignal("Position"):Connect(function()
 					slider2.Size = UDim2.new(0, slider4.AbsolutePosition.X - slider3.AbsolutePosition.X, 1, 0)
 					slider2.Position = UDim2.new(slider3.Position.X.Scale, 0, 0, 0)
 				end)
@@ -5336,8 +5349,8 @@ if shared.VapeExecuted then
 				if argstable["Default"] then
 					buttonapi["ToggleButton"](argstable["Default"], true)
 				end
-				buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
-				buttontext.MouseEnter:connect(function()
+				buttontext.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+				buttontext.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 						local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -5349,12 +5362,12 @@ if shared.VapeExecuted then
 					end
 				end)
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-					buttontext.MouseMoved:connect(function(x, y)
+					buttontext.MouseMoved:Connect(function(x, y)
 						hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 						hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 					end)
 				end
-				buttontext.MouseLeave:connect(function()
+				buttontext.MouseLeave:Connect(function()
 					hoverbox.Visible = false
 					if buttonapi["Enabled"] == false then
 						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -5368,17 +5381,17 @@ if shared.VapeExecuted then
 			if argstablemain["Default"] then
 				buttonapi["ToggleButton"](false, true)
 			end
-			button.MouseButton1Click:connect(function() 
+			button.MouseButton1Click:Connect(function() 
 				buttonapi["ToggleButton"](true) 
 			end)
-			button.MouseEnter:connect(function() 
+			button.MouseEnter:Connect(function() 
 				bindbkg.Visible = true
 				if not buttonapi["Enabled"] then
 					currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)})
 					currenttween:Play()
 				end
 			end)
-			button.MouseLeave:connect(function() 
+			button.MouseLeave:Connect(function() 
 				hoverbox.Visible = false
 				if buttonapi["Keybind"] == "" then
 					bindbkg.Visible = false 
@@ -5388,7 +5401,7 @@ if shared.VapeExecuted then
 					currenttween:Play()
 				end
 			end)
-			bindbkg2.MouseButton1Click:connect(function()
+			bindbkg2.MouseButton1Click:Connect(function()
 				api["PressedKeybindKey"] = buttonapi["Keybind"]
 				if buttonapi["Keybind"] == "" then
 					api["KeybindCaptured"] = false
@@ -5396,7 +5409,7 @@ if shared.VapeExecuted then
 				end
 				bindbkg2.Visible = false
 			end)
-			bindbkg.MouseButton1Click:connect(function()
+			bindbkg.MouseButton1Click:Connect(function()
 				if api["KeybindCaptured"] == false then
 					api["KeybindCaptured"] = true
 					spawn(function()
@@ -5419,14 +5432,14 @@ if shared.VapeExecuted then
 					end)
 				end
 			end)
-			bindbkg.MouseEnter:connect(function() 
+			bindbkg.MouseEnter:Connect(function() 
 				bindimg.Image = getcustomassetfunc("vape/assets/PencilIcon.png") 
 				bindimg.Visible = true
 				bindtext.Visible = false
 				bindbkg.Size = UDim2.new(0, 20, 0, 21)
 				bindbkg.Position = UDim2.new(1, -56, 0, 9)
 			end)
-			bindbkg.MouseLeave:connect(function() 
+			bindbkg.MouseLeave:Connect(function() 
 				bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
 				if buttonapi["Keybind"] ~= "" then
 					bindimg.Visible = false
@@ -5435,8 +5448,8 @@ if shared.VapeExecuted then
 					bindbkg.Position = UDim2.new(1, -(36 + newsize.X.Offset), 0, 9)
 				end
 			end)
-			button.MouseButton2Click:connect(buttonapi["ExpandToggle"])
-			button2.MouseButton1Click:connect(buttonapi["ExpandToggle"])
+			button.MouseButton2Click:Connect(buttonapi["ExpandToggle"])
+			button2.MouseButton1Click:Connect(buttonapi["ExpandToggle"])
 			api["ObjectsThatCanBeSaved"][argstablemain["Name"].."OptionsButton"] = {["Type"] = "OptionsButton", ["Object"] = button, ["ChildrenObject"] = children2, ["Api"] = buttonapi, ["SortOrder"] = 0}
 
 			local sorttable1 = {}
@@ -5560,7 +5573,7 @@ if shared.VapeExecuted then
 		local uilistlayout2 = Instance.new("UIListLayout")
 		uilistlayout2.SortOrder = Enum.SortOrder.LayoutOrder
 		uilistlayout2.Parent = children2
-		uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+		uilistlayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			if children.Visible then
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 				--560
@@ -5588,12 +5601,12 @@ if shared.VapeExecuted then
 			end
 		end
 
-		uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+		uilistlayout2:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			if children2.Visible then
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout2.AbsoluteContentSize.Y)
 			end
 		end)
-		settingsbutton.MouseButton1Click:connect(function()
+		settingsbutton.MouseButton1Click:Connect(function()
 			if children.Visible then
 				children.Visible = false
 				children2.Visible = true
@@ -5604,9 +5617,9 @@ if shared.VapeExecuted then
 				windowtitle.Size = UDim2.new(0, 220, 0, 45 + uilistlayout.AbsoluteContentSize.Y)
 			end
 		end)
-		windowtitle.MouseButton2Click:connect(windowapi["ExpandToggle"])
-		expandbutton.MouseButton1Click:connect(windowapi["ExpandToggle"])
-		expandbutton.MouseButton2Click:connect(windowapi["ExpandToggle"])
+		windowtitle.MouseButton2Click:Connect(windowapi["ExpandToggle"])
+		expandbutton.MouseButton1Click:Connect(windowapi["ExpandToggle"])
+		expandbutton.MouseButton2Click:Connect(windowapi["ExpandToggle"])
 
 		windowapi["CreateColorSlider"] = function(argstable)
 			local min, max = 0, 1
@@ -5686,13 +5699,13 @@ if shared.VapeExecuted then
 			sliderexpand.Position = UDim2.new(0, game:GetService("TextService"):GetTextSize(text1.Text, text1.TextSize, text1.Font, Vector2.new(10000, 100000)).X + 3, 0, 6)
 			sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow.png")
 			sliderexpand.Parent = frame
-			sliderexpand.MouseEnter:connect(function()
+			sliderexpand.MouseEnter:Connect(function()
 				sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow2.png")
 			end)
-			sliderexpand.MouseLeave:connect(function()
+			sliderexpand.MouseLeave:Connect(function()
 				sliderexpand.Image = getcustomassetfunc("vape/assets/HoverArrow.png")
 			end)
-			sliderexpand.MouseButton1Click:connect(function()
+			sliderexpand.MouseButton1Click:Connect(function()
 				local val = not slidersat.Visible
 				slidersat.Visible = val
 				sliderval.Visible = val
@@ -5701,6 +5714,7 @@ if shared.VapeExecuted then
 			sliderapi["Hue"] = 0.44
 			sliderapi["Sat"] = 1
 			sliderapi["Value"] = 1
+			sliderapi["Object"] = frame
 			sliderapi["RainbowValue"] = false
 			sliderapi["SetValue"] = function(hue, sat, val)
 				hue = (hue or sliderapi["Hue"])
@@ -5781,7 +5795,7 @@ if shared.VapeExecuted then
 				slidercode(sliderval.Slider, "Value")
 			end)
 			
-			frame.MouseEnter:connect(function()
+			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -5790,12 +5804,12 @@ if shared.VapeExecuted then
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-				frame.MouseMoved:connect(function(x, y)
+				frame.MouseMoved:Connect(function(x, y)
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 				end)
 			end
-			frame.MouseLeave:connect(function()
+			frame.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 				if buttonapi and buttonapi["Enabled"] == false then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -5879,8 +5893,8 @@ if shared.VapeExecuted then
 			if argstable["Default"] then
 				buttonapi["ToggleButton"](argstable["Default"], true)
 			end
-			buttontext.MouseButton1Click:connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
-			buttontext.MouseEnter:connect(function()
+			buttontext.MouseButton1Click:Connect(function() buttonapi["ToggleButton"](not buttonapi["Enabled"], false) end)
+			buttontext.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
@@ -5892,12 +5906,12 @@ if shared.VapeExecuted then
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
-				buttontext.MouseMoved:connect(function(x, y)
+				buttontext.MouseMoved:Connect(function(x, y)
 					hoverbox.Visible = (api["ToggleTooltips"] and hoverbox.TextSize ~= 1)
 					hoverbox.Position = UDim2.new(0, (x + 16) * (1 / api["MainRescale"].Scale), 0,	(y - (hoverbox.Size.Y.Offset / 2) - 26) * (1 / api["MainRescale"].Scale))
 				end)
 			end
-			buttontext.MouseLeave:connect(function()
+			buttontext.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 				if buttonapi["Enabled"] == false then
 					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -5969,7 +5983,7 @@ if shared.VapeExecuted then
 			local uilistlayout3 = Instance.new("UIListLayout")
 			uilistlayout3.Padding = UDim.new(0, 3)
 			uilistlayout3.Parent = scrollframe
-			uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+			uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 				scrollframe.CanvasSize = UDim2.new(0, 0, 0, uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 				scrollframe.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 1, 105))
 				scrollframebkg.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 1, 105))
@@ -6013,7 +6027,7 @@ if shared.VapeExecuted then
 					deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
 					deletebutton.Position = UDim2.new(1, -16, 0, 14)
 					deletebutton.Parent = itemframe
-					deletebutton.MouseButton1Click:connect(function()
+					deletebutton.MouseButton1Click:Connect(function()
 						table.remove(textapi["ObjectList"], i)
 						textapi["RefreshValues"](textapi["ObjectList"])
 						if argstable["RemoveFunction"] then
@@ -6028,7 +6042,7 @@ if shared.VapeExecuted then
 			if not argstable["NoSave"] then
 				api["ObjectsThatCanBeSaved"][argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textapi}
 			end
-			addbutton.MouseButton1Click:connect(function() 
+			addbutton.MouseButton1Click:Connect(function() 
 				table.insert(textapi["ObjectList"], textbox.Text)
 				textapi["RefreshValues"](textapi["ObjectList"])
 				if argstable["AddFunction"] then
@@ -6098,7 +6112,7 @@ if shared.VapeExecuted then
 			local uilistlayout3 = Instance.new("UIListLayout")
 			uilistlayout3.Padding = UDim.new(0, 3)
 			uilistlayout3.Parent = scrollframe
-			uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):connect(function()
+			uilistlayout3:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 				scrollframe.CanvasSize = UDim2.new(0, 0, 0, uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale))
 				scrollframe.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 1, 105))
 				scrollframebkg.Size = UDim2.new(0, 220, 0, math.clamp(uilistlayout3.AbsoluteContentSize.Y * (1 / api["MainRescale"].Scale), 1, 105) + 3)
@@ -6156,22 +6170,22 @@ if shared.VapeExecuted then
 					friendcircle2.Position = UDim2.new(0, 1, 0, 1)
 					friendcircle2.Visible = not objenabled
 					friendcircle2.Parent = friendcircle	
-					itemframe:GetPropertyChangedSignal("BackgroundColor3"):connect(function()
+					itemframe:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 						friendcircle2.BackgroundColor3 = itemframe.BackgroundColor3
 					end)
-					itemframe.MouseEnter:connect(function()
+					itemframe.MouseEnter:Connect(function()
 						itemframe.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 						hoveredover[i] = true
 					end)
-					itemframe.MouseLeave:connect(function()
+					itemframe.MouseLeave:Connect(function()
 						itemframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 						hoveredover[i] = nil
 					end)
-					itemframe.MouseButton1Click:connect(function()
+					itemframe.MouseButton1Click:Connect(function()
 						textapi["ObjectListEnabled"][i] = not textapi["ObjectListEnabled"][i]
 						textapi["RefreshValues"](textapi["ObjectList"])
 					end)
-					itemframe.MouseButton2Click:connect(function()
+					itemframe.MouseButton2Click:Connect(function()
 						textapi["ObjectListEnabled"][i] = not textapi["ObjectListEnabled"][i]
 						textapi["RefreshValues"](textapi["ObjectList"])
 					end)
@@ -6183,7 +6197,7 @@ if shared.VapeExecuted then
 					deletebutton.Image = getcustomassetfunc("vape/assets/AddRemoveIcon1.png")
 					deletebutton.Position = UDim2.new(1, -16, 0, 14)
 					deletebutton.Parent = itemframe
-					deletebutton.MouseButton1Click:connect(function()
+					deletebutton.MouseButton1Click:Connect(function()
 						table.remove(textapi["ObjectList"], i)
 						textapi["ObjectListEnabled"][i] = nil
 						textapi["RefreshValues"](textapi["ObjectList"])
@@ -6195,7 +6209,7 @@ if shared.VapeExecuted then
 			end
 
 			api["ObjectsThatCanBeSaved"][argstable["Name"].."TextCircleList"] = {["Type"] = "TextCircleList", ["Api"] = textapi}
-			addbutton.MouseButton1Click:connect(function() 
+			addbutton.MouseButton1Click:Connect(function() 
 				local num = #textapi["ObjectList"] + 1
 				textapi["ObjectList"][num] = textbox.Text
 				textapi["ObjectListEnabled"][num] = true
@@ -6217,7 +6231,7 @@ if shared.VapeExecuted then
 			frame.Visible = false
 			frame.Position = obj.Position
 			frame.Parent = api["MainGui"]
-			frame:GetPropertyChangedSignal("Position"):connect(function()
+			frame:GetPropertyChangedSignal("Position"):Connect(function()
 				obj.Position = UDim2.new(obj.Position.X.Scale, obj.Position.X.Offset, frame.Position.Y.Scale, frame.Position.Y.Offset)
 			end)
 			pcall(function()
@@ -6235,7 +6249,7 @@ if shared.VapeExecuted then
 			frame.Visible = false
 			frame.Position = obj.Position
 			frame.Parent = api["MainGui"]
-			frame:GetPropertyChangedSignal("Position"):connect(function()
+			frame:GetPropertyChangedSignal("Position"):Connect(function()
 				obj.Position = UDim2.new(frame.Position.X.Scale, frame.Position.X.Offset, obj.Position.Y.Scale, obj.Position.Y.Offset)
 			end)
 			pcall(function()
@@ -6247,7 +6261,7 @@ if shared.VapeExecuted then
 		end)
 	end
 
-	notificationwindow.ChildRemoved:connect(function()
+	notificationwindow.ChildRemoved:Connect(function()
 		for i,v in pairs(notificationwindow:GetChildren()) do
 			bettertween(v, UDim2.new(1, v.Position.X.Offset, 1, -(150 + 80 * (i - 1))), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
 		end
@@ -6279,7 +6293,7 @@ if shared.VapeExecuted then
 		local frame2 = Instance.new("ImageLabel")
 		frame2.BackgroundColor3 = Color3.new(1, 1, 1)
 		frame2.Name = "Frame"
-		frame2:GetPropertyChangedSignal("BackgroundColor3"):connect(function()
+		frame2:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 			frame2.ImageColor3 = frame2.BackgroundColor3
 		end)
 		frame2.BackgroundTransparency = 1
@@ -6350,7 +6364,8 @@ if shared.VapeExecuted then
 		end
 	end
 
-	local holdingcontrol = false
+	local holdingalt = false
+	local uninjected = false
 
 	local function bettergetfocus()
 		if KRNL_LOADED then 
@@ -6360,7 +6375,7 @@ if shared.VapeExecuted then
 		end
 	end
 
-	api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:connect(function(input1)
+	api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:Connect(function(input1)
 		if bettergetfocus() == nil then
 			if input1.KeyCode == Enum.KeyCode[api["GUIKeybind"]] and api["KeybindCaptured"] == false then
 				clickgui.Visible = not clickgui.Visible
@@ -6370,8 +6385,12 @@ if shared.VapeExecuted then
 					OnlineProfilesBigFrame.Visible = false
 				end
 			end
-			if input1.KeyCode == Enum.KeyCode.LeftShift then
-				holdingshift = true
+			if input1.KeyCode == Enum.KeyCode.RightAlt then 
+				holdingalt = true
+			end
+			if input1.KeyCode == Enum.KeyCode.Home and holdingalt and (not uninjected) then 
+				api["SelfDestruct"]()
+				uninjected = true
 			end
 			if api["KeybindCaptured"] and input1.KeyCode ~= Enum.KeyCode.LeftShift then
 				local hah = string.gsub(tostring(input1.KeyCode), "Enum.KeyCode.", "")
@@ -6397,13 +6416,13 @@ if shared.VapeExecuted then
 		end
 	end)
 
-	api["KeyInputHandler2"] = game:GetService("UserInputService").InputEnded:connect(function(input1)
-		if input1.KeyCode == Enum.KeyCode.LeftShift then
-			holdingshift = false
+	api["KeyInputHandler2"] = game:GetService("UserInputService").InputEnded:Connect(function(input1)
+		if input1.KeyCode == Enum.KeyCode.RightAlt then
+			holdingalt = false
 		end
 	end)
 
-	searchbar:GetPropertyChangedSignal("Text"):connect(function()
+	searchbar:GetPropertyChangedSignal("Text"):Connect(function()
 		searchbarchildren:ClearAllChildren()
 		if searchbar.Text == "" then
 			searchbarmain.Size = UDim2.new(0, 220, 0, 45)
@@ -6423,7 +6442,7 @@ if shared.VapeExecuted then
 					button.Text = ""
 					button.LayoutOrder = amount
 					button.Parent = searchbarchildren
-					v["Object"]:GetPropertyChangedSignal("BackgroundColor3"):connect(function()
+					v["Object"]:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 						button.BackgroundColor3 = v["Object"].BackgroundColor3
 					end)
 					local buttonactiveborder = Instance.new("Frame")
@@ -6443,7 +6462,7 @@ if shared.VapeExecuted then
 					button2.ZIndex = 10
 					button2.Image = v["Object"].OptionsButton.Image
 					button2.Parent = button
-					v["Object"].OptionsButton:GetPropertyChangedSignal("Image"):connect(function()
+					v["Object"].OptionsButton:GetPropertyChangedSignal("Image"):Connect(function()
 						button2.Image = v["Object"].OptionsButton.Image
 					end)
 					local buttontext = Instance.new("TextLabel")
@@ -6454,7 +6473,7 @@ if shared.VapeExecuted then
 					buttontext.Active = false
 					buttontext.ZIndex = 10
 					buttontext.TextColor3 = v["Object"].ButtonText.TextColor3
-					v["Object"].ButtonText:GetPropertyChangedSignal("TextColor3"):connect(function()
+					v["Object"].ButtonText:GetPropertyChangedSignal("TextColor3"):Connect(function()
 						buttontext.TextColor3 = v["Object"].ButtonText.TextColor3
 					end)
 					buttontext.TextSize = 17
@@ -6462,7 +6481,7 @@ if shared.VapeExecuted then
 					buttontext.TextXAlignment = Enum.TextXAlignment.Left
 					buttontext.Position = UDim2.new(0, 12, 0, 0)
 					buttontext.Parent = button
-					button.MouseButton1Click:connect(function()
+					button.MouseButton1Click:Connect(function()
 						v["Api"]["ToggleButton"](false)
 					end)
 					table.insert(optionbuttons, v)
@@ -6471,10 +6490,7 @@ if shared.VapeExecuted then
 			searchbarmain.Size = UDim2.new(0, 220, 0, 49 + (40 * #optionbuttons))
 		end
 	end)
-	searchbar.FocusLost:connect(function()
-		
-	end)
-	api["MainRescale"]:GetPropertyChangedSignal("Scale"):connect(function()
+	api["MainRescale"]:GetPropertyChangedSignal("Scale"):Connect(function()
 		searchbarmain.Position = UDim2.new(0.5 / api["MainRescale"].Scale, -110, 0, -23)
 	end)
 

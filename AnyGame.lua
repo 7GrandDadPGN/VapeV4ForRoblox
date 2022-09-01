@@ -6,16 +6,16 @@
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService("Players")
 local textservice = game:GetService("TextService")
+local repstorage = game:GetService("ReplicatedStorage")
 local lplr = players.LocalPlayer
 local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
-workspace:GetPropertyChangedSignal("CurrentCamera"):connect(function()
-	cam = (workspace.CurrentCamera or workspace:FindFirstChild("Camera") or Instance.new("Camera"))
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+	cam = (workspace.CurrentCamera or workspace:FindFirstChildWhichIsA("Camera") or Instance.new("Camera"))
 end)
 local targetinfo = shared.VapeTargetInfo
 local uis = game:GetService("UserInputService")
-local localmouse = lplr:GetMouse()
 local v3check = syn and syn.toast_notification and "V3" or ""
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
@@ -23,13 +23,11 @@ local betterisfile = function(file)
 end
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
-		if not betterisfile("vape/"..scripturl) then
-			error("File not found : vape/"..scripturl)
-		end
+		assert(betterisfile("vape/"..scripturl), "File not found : vape/"..scripturl)
 		return readfile("vape/"..scripturl)
 	else
 		local res = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
-		assert(res ~= "404: Not Found", "File not found")
+		assert(res ~= "404: Not Found", "File not found : vape/"..scripturl)
 		return res
 	end
 end
@@ -40,13 +38,12 @@ local requestfunc = syn and syn.request or http and http.request or http_request
 			Headers = {},
 			StatusCode = 200
 		}
-	else
-		return {
-			Body = "bad exploit",
-			Headers = {},
-			StatusCode = 404
-		}
 	end
+	return {
+		Body = "bad exploit",
+		Headers = {},
+		StatusCode = 404
+	}
 end 
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
 local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
@@ -57,7 +54,7 @@ local RunLoops = {RenderStepTable = {}, StepTable = {}, HeartTable = {}}
 do
 	function RunLoops:BindToRenderStep(name, num, func)
 		if RunLoops.RenderStepTable[name] == nil then
-			RunLoops.RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
+			RunLoops.RenderStepTable[name] = game:GetService("RunService").RenderStepped:Connect(func)
 		end
 	end
 
@@ -70,7 +67,7 @@ do
 
 	function RunLoops:BindToStepped(name, num, func)
 		if RunLoops.StepTable[name] == nil then
-			RunLoops.StepTable[name] = game:GetService("RunService").Stepped:connect(func)
+			RunLoops.StepTable[name] = game:GetService("RunService").Stepped:Connect(func)
 		end
 	end
 
@@ -83,7 +80,7 @@ do
 
 	function RunLoops:BindToHeartbeat(name, num, func)
 		if RunLoops.HeartTable[name] == nil then
-			RunLoops.HeartTable[name] = game:GetService("RunService").Heartbeat:connect(func)
+			RunLoops.HeartTable[name] = game:GetService("RunService").Heartbeat:Connect(func)
 		end
 	end
 
@@ -95,12 +92,81 @@ do
 	end
 end
 
-local function createwarning(title, text, delay)
-	pcall(function()
-		local frame = GuiLibrary["CreateNotification"](title, text, delay, "assets/WarningNotification.png")
-		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
-		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
+local WhitelistFunctions = {StoredHashes = {}, PriorityList = {
+	["VAPE OWNER"] = 3,
+	["VAPE PRIVATE"] = 2,
+	["DEFAULT"] = 1
+}, WhitelistTable = {}, Loaded = true}
+do
+	local shalib
+	WhitelistFunctions.WhitelistTable = {
+		players = {},
+		owners = {},
+		chattags = {}
+	}
+	task.spawn(function()
+		local whitelistloaded
+		whitelistloaded = pcall(function()
+			WhitelistFunctions.WhitelistTable = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
+		end)
+		shalib = loadstring(GetURL("Libraries/sha.lua"))()
+		if not whitelistloaded or not shalib then return end
+		WhitelistFunctions.Loaded = true
 	end)
+
+	function WhitelistFunctions:FindWhitelistTable(tab, obj)
+		for i,v in pairs(tab) do
+			if v == obj or type(v) == "table" and v.hash == obj then
+				return v
+			end
+		end
+		return nil
+	end
+
+	function WhitelistFunctions:Hash(str)
+		if WhitelistFunctions.StoredHashes[tostring(str)] == nil and shalib then
+			WhitelistFunctions.StoredHashes[tostring(str)] = shalib.sha512(tostring(str).."SelfReport")
+		end
+		return WhitelistFunctions.StoredHashes[tostring(str)] or ""
+	end
+
+	function WhitelistFunctions:CheckPlayerType(plr)
+		local plrstr = WhitelistFunctions:Hash(plr.Name..plr.UserId)
+		local playertype, playerattackable = "DEFAULT", true
+		local private = WhitelistFunctions:FindWhitelistTable(WhitelistFunctions.WhitelistTable.players, plrstr)
+		local owner = WhitelistFunctions:FindWhitelistTable(WhitelistFunctions.WhitelistTable.owners, plrstr)
+		local tab = owner or private
+		playertype = owner and "VAPE OWNER" or private and "VAPE PRIVATE" or "DEFAULT"
+		playerattackable = (not tab) or (not (type(tab) == "table" and tab.invulnerable or true))
+		return playertype, playerattackable
+	end
+
+	function WhitelistFunctions:CheckWhitelisted(plr)
+		local playertype = WhitelistFunctions:CheckPlayerType(plr)
+		if playertype ~= "DEFAULT" then 
+			return true
+		end
+		return false
+	end
+
+	function WhitelistFunctions:IsSpecialIngame()
+		for i,v in pairs(players:GetChildren()) do 
+			if WhitelistFunctions:CheckWhitelisted(v) then 
+				return true
+			end
+		end
+		return false
+	end
+end
+shared.vapewhitelist = WhitelistFunctions
+
+local function createwarning(title, text, delay)
+	local suc, res = pcall(function()
+		local frame = GuiLibrary["CreateNotification"](title, text, delay, "assets/WarningNotification.png")
+		frame.Frame.Frame.ImageColor3 = Color3.fromRGB(236, 129, 44)
+		return frame
+	end)
+	return (suc and res)
 end
 
 local function friendCheck(plr, recolor)
@@ -151,10 +217,10 @@ local function targetCheck(plr)
 end
 
 do
-	GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendRefresh.Event:connect(function()
+	GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendRefresh.Event:Connect(function()
 		entity.fullEntityRefresh()
 	end)
-	GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"].Refresh.Event:connect(function()
+	GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"].Refresh.Event:Connect(function()
 		entity.fullEntityRefresh()
 	end)
 	entity.isPlayerTargetable = function(plr)
@@ -231,6 +297,14 @@ local function GetNearestHumanoidToPosition(player, distance, checktab)
 	return returnedplayer
 end
 
+local function worldtoscreenpoint(pos)
+	if v3check == "V3" then 
+		local scr = worldtoscreen({pos})
+		return scr[1], scr[1].Z > 0
+	end
+	return cam.WorldToScreenPoint(cam, pos)
+end
+
 local function GetNearestHumanoidToMouse(player, distance, checktab)
     local closest, returnedplayer = distance, nil
 	checktab = checktab or {}
@@ -239,7 +313,7 @@ local function GetNearestHumanoidToMouse(player, distance, checktab)
 		for i, v in pairs(entity.entityList) do -- loop through players
 			if not v.Targetable then continue end
             if targetCheck(v) then -- checks
-				local vec, vis = cam.WorldToScreenPoint(cam, v.Character[checktab.AimPart].Position)
+				local vec, vis = worldtoscreenpoint(v.Character[checktab.AimPart].Position)
 				local mag = (mousepos - Vector2.new(vec.X, vec.Y)).magnitude
                 if vis and mag <= closest then -- mag check
 					if checktab.WallCheck then
@@ -254,23 +328,11 @@ local function GetNearestHumanoidToMouse(player, distance, checktab)
     return returnedplayer
 end
 
-local function CalculateObjectPosition(pos)
-	local newpos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(cam.CFrame:pointToObjectSpace(pos)))
-	return Vector2.new(newpos.X, newpos.Y)
-end
-
-local function CalculateLine(startVector, endVector, obj)
-	local Distance = (startVector - endVector).Magnitude
-	obj.Size = UDim2.new(0, Distance, 0, 2)
-	obj.Position = UDim2.new(0, (startVector.X + endVector.X) / 2, 0, ((startVector.Y + endVector.Y) / 2) - 36)
-	obj.Rotation = math.atan2(endVector.Y - startVector.Y, endVector.X - startVector.X) * (180 / math.pi)
-end
-
 local function findTouchInterest(tool)
 	return tool and tool:FindFirstChildWhichIsA("TouchTransmitter", true)
 end
 
-GuiLibrary["SelfDestructEvent"].Event:connect(function()
+GuiLibrary["SelfDestructEvent"].Event:Connect(function()
 	entity.selfDestruct()
 end)
 
@@ -325,10 +387,10 @@ local RadarMainFrame = Instance.new("Frame")
 RadarMainFrame.BackgroundTransparency = 1
 RadarMainFrame.Size = UDim2.new(0, 250, 0, 250)
 RadarMainFrame.Parent = RadarFrame
-Radar.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):connect(function()
+Radar.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):Connect(function()
 	RadarFrame.Position = UDim2.new(0, 0, 0, (Radar.GetCustomChildren().Parent.Size.Y.Offset == 0 and 45 or 0))
 end)
-players.PlayerRemoving:connect(function(plr)
+players.PlayerRemoving:Connect(function(plr)
 	if RadarMainFrame:FindFirstChild(plr.Name) then
 		RadarMainFrame[plr.Name]:Remove()
 	end
@@ -451,6 +513,7 @@ runcode(function()
 	local aimsmartignore = {["Enabled"] = false}
 	local aimsmartab = {}
 	local aimfovframecolor = {["Value"] = 0.44}
+	local aimfovfilled = {["Enabled"] = false}
 	local aimheadshotchance = {["Value"] = 1}
 	local aimassisttarget
 	local aimhitchance = {["Value"] = 1}
@@ -482,11 +545,12 @@ runcode(function()
 		end
 		return true
 	end
-
+	local haha = RaycastParams.new()
+	haha.FilterType = Enum.RaycastFilterType.Whitelist
 	local silentaimfunctions = {
 		FindPartOnRayWithIgnoreList = function(Args)
 			local origin = Args[1].Origin
-			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or aimautofire["Enabled"] and "Head" or "HumanoidRootPart"
+			local tar = ((math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] or aimautofire["Enabled"]) and "Head" or "HumanoidRootPart"
 			local plr
 			if aimmode["Value"] == "Legit" then
 				plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
@@ -519,7 +583,7 @@ runcode(function()
 		Raycast = function(Args)
 			local origin = Args[1]
 			local ignoreobject = Args[3]
-			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or aimautofire["Enabled"] and "Head" or "HumanoidRootPart"
+			local tar = ((math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] or aimautofire["Enabled"]) and "Head" or "HumanoidRootPart"
 			local plr
 			if aimmode["Value"] == "Legit" then
 				plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
@@ -545,8 +609,6 @@ runcode(function()
 			local direction = CFrame.lookAt(origin, tar.Position)
 			Args[2] = direction.lookVector * Args[2].Magnitude
 			if aimwallbang["Enabled"] then
-				local haha = RaycastParams.new()
-				haha.FilterType = Enum.RaycastFilterType.Whitelist
 				haha.FilterDescendantsInstances = {tar}
 				Args[3] = haha
 			end
@@ -554,7 +616,7 @@ runcode(function()
 		end,
 		ScreenPointToRay = function(Args)
 			local origin = cam.CFrame.p
-			local tar = (math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] and "Head" or aimautofire["Enabled"] and "Head" or "HumanoidRootPart"
+			local tar = ((math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= aimheadshotchance["Value"] or aimautofire["Enabled"]) and "Head" or "HumanoidRootPart"
 			local plr
 			if aimmode["Value"] == "Legit" then
 				plr = GetNearestHumanoidToMouse(aimassisttarget["Players"]["Enabled"], aimfov["Value"], {
@@ -578,7 +640,7 @@ runcode(function()
 			recentlyshotplr = plr
 			recentlyshottick = tick() + 1
 			local direction = CFrame.lookAt(origin, tar.Position)
-			return {Ray.new(direction.p, direction.lookVector)}
+			return {Ray.new(direction.p + (Args[3] and direction.lookVector * Args[3] or Vector3.zero), direction.lookVector)}
 		end
 	}
 	silentaimfunctions.FindPartOnRayWithWhitelist = silentaimfunctions.FindPartOnRayWithIgnoreList
@@ -663,8 +725,8 @@ runcode(function()
 							if plr then
 								targettable[plr.Player.Name] = {
 									["UserId"] = plr.Player.UserId,
-									["Health"] = plr.Character.Humanoid.Health,
-									["MaxHealth"] = plr.Character.Humanoid.MaxHealth
+									["Health"] = plr.Humanoid.Health,
+									["MaxHealth"] = plr.Humanoid.MaxHealth
 								}
 								targetsize = targetsize + 1
 							end
@@ -715,21 +777,13 @@ runcode(function()
 			end
 		end
 	})
-	aimfovframecolor = AimAssist.CreateColorSlider({
-		["Name"] = "Circle Color",
-		["Function"] = function(hue, sat, val)
-			if aimfovframe then
-				aimfovframe.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-			end
-		end
-	})
 	aimfov = AimAssist.CreateSlider({
 		["Name"] = "FOV", 
 		["Min"] = 1, 
 		["Max"] = 1000, 
 		["Function"] = function(val) 
 			if aimfovframe then
-				aimfovframe.Size = UDim2.new(0, val, 0, val)
+				aimfovframe.Radius = val
 			end
 		end,
 		["Default"] = 80
@@ -748,29 +802,57 @@ runcode(function()
 		["Function"] = function(val) end,
 		["Default"] = 25
 	})
+	local aimfovconnection
 	aimfovshow = AimAssist.CreateToggle({
 		["Name"] = "FOV Circle",
 		["Function"] = function(callback) 
+			if aimfovframecolor["Object"] then 
+				aimfovframecolor["Object"].Visible = callback
+			end
+			if aimfovfilled["Object"] then 
+				aimfovfilled["Object"].Visible = callback
+			end
 			if callback then
-				aimfovframe = Instance.new("Frame")
-				aimfovframe.BackgroundTransparency = 0.8
-				aimfovframe.ZIndex = -1
+				aimfovframe = Drawing.new("Circle")
+				aimfovframe.Transparency = 0.5
+				aimfovframe.NumSides = 100
+				aimfovframe.Filled = aimfovfilled["Enabled"]
 				aimfovframe.Visible =  AimAssist["Enabled"] and aimmode["Value"] == "Legit"
-				aimfovframe.BackgroundColor3 = Color3.fromHSV(aimfovframecolor["Hue"], aimfovframecolor["Sat"], aimfovframecolor["Value"])
-				aimfovframe.Size = UDim2.new(0, aimfov["Value"], 0, aimfov["Value"])
-				aimfovframe.AnchorPoint = Vector2.new(0.5, 0.5)
-				aimfovframe.Position = UDim2.new(0.5, 0, 0.5, -18)
-				aimfovframe.Parent = GuiLibrary["MainGui"]
-				local corner = Instance.new("UICorner")
-				corner.CornerRadius = UDim.new(0, 2048)
-				corner.Parent = aimfovframe
+				aimfovframe.Color = Color3.fromHSV(aimfovframecolor["Hue"], aimfovframecolor["Sat"], aimfovframecolor["Value"])
+				aimfovframe.Radius = aimfov["Value"]
+				aimfovframe.Position = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2)
+				aimfovconnection = cam:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+					aimfovframe.Position = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2)
+				end)
 			else
 				if aimfovframe then
 					aimfovframe:Remove()
 				end
+				if aimfovconnection then 
+					aimfovconnection:Disconnect()
+				end
 			end
 		end,
 	})
+	aimfovframecolor = AimAssist.CreateColorSlider({
+		["Name"] = "Circle Color",
+		["Function"] = function(hue, sat, val)
+			if aimfovframe then
+				aimfovframe.Color = Color3.fromHSV(hue, sat, val)
+			end
+		end
+	})
+	aimfovframecolor["Object"].Visible = false
+	aimfovfilled = AimAssist.CreateToggle({
+		["Name"] = "Filled Circle",
+		["Function"] = function(callback)
+			if aimfovframe then
+				aimfovframe.Filled = callback
+			end
+		end,
+		["Default"] = true
+	})
+	aimfovfilled["Object"].Visible = false
 	aimvischeck = AimAssist.CreateToggle({
 		["Name"] = "Wall Check",
 		["Function"] = function() end,
@@ -985,43 +1067,6 @@ autoclickercps = autoclicker.CreateTwoSlider({
 })
 
 runcode(function()
-	local reachrange = {["Value"] = 1}
-	local Reach = {["Enabled"] = false}
-	Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "Reach", 
-		["Function"] = function(callback)
-			if callback then
-				task.spawn(function()
-					repeat
-						task.wait()
-						local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
-						if tool and entity.isAlive then
-							local touch = findTouchInterest(tool)
-							if touch then
-								touch = touch.Parent
-								local parts = workspace:GetPartBoundsInBox(touch.CFrame, touch.Size + Vector3.new(reachrange["Value"], 0, reachrange["Value"]))
-								for i,v in pairs(parts) do 
-									if not v:IsDescendantOf(lplr.Character) then 
-										firetouchinterest(touch, v, 1)
-										firetouchinterest(touch, v, 0)
-									end
-								end
-							end
-						end
-					until (not Reach["Enabled"])
-				end)
-			end
-		end
-	})
-	reachrange = Reach.CreateSlider({
-		["Name"] = "Range", 
-		["Min"] = 1,
-		["Max"] = 20, 
-		["Function"] = function(val) end,
-	})
-end)
-
-runcode(function()
 	local BlinkIncoming = {["Enabled"] = false}
 	local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Blink", 
@@ -1071,28 +1116,37 @@ runcode(function()
 					end
 				end)
 				if entity.isAlive then 
-					if ClickTPMethod["Value"] == "Normal" then
-						entity.character.HumanoidRootPart.CFrame = CFrame.new(localmouse.Hit.p)
-						ClickTP["ToggleButton"](false)
-					else
-						spawn(function()
-							local selectedpos = localmouse.Hit.p
-							repeat
-								if entity.isAlive then 
-									local newpos = (selectedpos - entity.character.HumanoidRootPart.CFrame.p).Unit
-									newpos = newpos == newpos and newpos * (math.clamp((entity.character.HumanoidRootPart.CFrame.p - selectedpos).magnitude, 0, ClickTPAmount["Value"])) or Vector3.new()
-									entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + Vector3.new(newpos.X, (ClickTPVertical["Enabled"] and newpos.Y or 0), newpos.Z)
-									entity.character.HumanoidRootPart.Velocity = Vector3.new()
-									if (entity.character.HumanoidRootPart.CFrame.p - selectedpos).magnitude <= 5 then 
-										break
+					local rayparams = RaycastParams.new()
+					rayparams.FilterDescendantsInstances = {lplr.Character, cam}
+					rayparams.FilterType = Enum.RaycastFilterType.Blacklist
+					local ray = workspace:Raycast(cam.CFrame.p, lplr:GetMouse().UnitRay.Direction * 10000, rayparams)
+					local selectedpos = ray and ray.Position + Vector3.new(0, 2, 0)
+					if selectedpos then 
+						if ClickTPMethod["Value"] == "Normal" then
+							entity.character.HumanoidRootPart.CFrame = CFrame.new(selectedpos)
+							ClickTP["ToggleButton"](false)
+						else
+							spawn(function()
+								repeat
+									if entity.isAlive then 
+										local newpos = (selectedpos - entity.character.HumanoidRootPart.CFrame.p).Unit
+										newpos = newpos == newpos and newpos * (math.clamp((entity.character.HumanoidRootPart.CFrame.p - selectedpos).magnitude, 0, ClickTPAmount["Value"])) or Vector3.new()
+										entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + Vector3.new(newpos.X, (ClickTPVertical["Enabled"] and newpos.Y or 0), newpos.Z)
+										entity.character.HumanoidRootPart.Velocity = Vector3.new()
+										if (entity.character.HumanoidRootPart.CFrame.p - selectedpos).magnitude <= 5 then 
+											break
+										end
 									end
+									task.wait(ClickTPDelay["Value"] / 100)
+								until entity.isAlive and (entity.character.HumanoidRootPart.CFrame.p - selectedpos).magnitude <= 5 or (not ClickTP["Enabled"])
+								if ClickTP["Enabled"] then 
+									ClickTP["ToggleButton"](false)
 								end
-								task.wait(ClickTPDelay["Value"] / 100)
-							until entity.isAlive and (entity.character.HumanoidRootPart.CFrame.p - selectedpos).magnitude <= 5 or (not ClickTP["Enabled"])
-							if ClickTP["Enabled"] then 
-								ClickTP["ToggleButton"](false)
-							end
-						end)
+							end)
+						end
+					else
+						ClickTP["ToggleButton"](false)
+						createwarning("ClickTP", "No position found.", 1)
 					end
 				else
 					if ClickTP["Enabled"] then 
@@ -1153,6 +1207,8 @@ end)
 runcode(function()
 	local flyspeed = {["Value"] = 1}
 	local flyverticalspeed = {["Value"] = 1}
+	local flytpoff = {["Value"] = 10}
+	local flytpon = {["Value"] = 10}
 	local flywall = {["Enabled"] = false}
 	local flyupanddown = {["Enabled"] = false}
 	local flymethod = {["Value"] = "Normal"}
@@ -1174,6 +1230,7 @@ runcode(function()
 	local s = 0
 	local a = 0
 	local d = 0
+	local alternatelist = {"Normal", "AntiCheat A", "AntiCheat B", "AntiCheat C"}
 	local fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Fly", 
 		["Function"] = function(callback)
@@ -1187,7 +1244,7 @@ runcode(function()
 				s = uis:IsKeyDown(Enum.KeyCode.S) and 1 or 0
 				a = uis:IsKeyDown(Enum.KeyCode.A) and -1 or 0
 				d = uis:IsKeyDown(Enum.KeyCode.D) and 1 or 0
-				flypress = uis.InputBegan:connect(function(input1)
+				flypress = uis.InputBegan:Connect(function(input1)
 					if uis:GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.W then
 							w = -1
@@ -1212,7 +1269,7 @@ runcode(function()
 						end
 					end
 				end)
-				flyendpress = uis.InputEnded:connect(function(input1)
+				flyendpress = uis.InputEnded:Connect(function(input1)
 					local divided = flykeys["Value"]:split("/")
 					if input1.KeyCode == Enum.KeyCode.W then
 						w = 0
@@ -1236,6 +1293,9 @@ runcode(function()
 				if flymethod["Value"] == "Jump" and entity.isAlive then
 					entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
+				local flytog = false
+				local flytogtick = tick()
+				local oldflypos
 				RunLoops:BindToHeartbeat("Fly", 1, function(delta) 
 					if entity.isAlive then
 						entity.character.Humanoid.PlatformStand = flyplatformstanding["Enabled"]
@@ -1270,16 +1330,38 @@ runcode(function()
 								local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, flypos, raycastparameters)
 								if ray then flypos = (ray.Position - entity.character.HumanoidRootPart.Position) flyposy = entity.character.HumanoidRootPart.CFrame.p.Y end
 							end
-							if flymethod["Value"] ~= "Jump" then
+							local origvelo = entity.character.HumanoidRootPart.Velocity
+							if flymethod["Value"] == "CFrame" then
 								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos
 								if flyplatformstanding["Enabled"] then
 									entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, entity.character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
 								end
-							else
+							elseif flymethod["Value"] == "Jump" then
 								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + Vector3.new(flypos.X, 0, flypos.Z)
 								if entity.character.HumanoidRootPart.Velocity.Y < -(entity.character.Humanoid.JumpPower - ((flyup and flyverticalspeed["Value"] or 0) - (flydown and flyverticalspeed["Value"] or 0))) then
 									flyjumpcf = entity.character.HumanoidRootPart.CFrame * CFrame.new(0, -entity.character.Humanoid.HipHeight, 0)
 									entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+								end
+							else
+								if flytogtick <= tick() then 
+									flytog = not flytog
+									if flytog then
+										if oldflypos then
+											flyposy = oldflypos
+										end
+									else
+										oldflypos = flyposy
+										local raycastparameters = RaycastParams.new()
+										raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
+										raycastparameters.FilterDescendantsInstances = {lplr.Character, cam}
+										local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -10000, 0), raycastparameters)
+										if ray then flyposy = ray.Position.Y + 3 end
+									end
+									flytogtick = tick() + ((flytog and flytpon["Value"] or flytpoff["Value"]) / 10)
+								end
+								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos
+								if flyplatformstanding["Enabled"] then
+									entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, entity.character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
 								end
 							end
 						end
@@ -1310,14 +1392,28 @@ runcode(function()
 				end
 			end
 		end,
-		["ExtraText"] = function() return flymethod["Value"] end
+		["ExtraText"] = function() 
+			if GuiLibrary["ObjectsThatCanBeSaved"]["Text GUIAlternate TextToggle"]["Api"]["Enabled"] then 
+				return alternatelist[table.find(flymethod["List"], flymethod["Value"])]
+			end
+			return flymethod["Value"] 
+		end
 	})
 	flymethod = fly.CreateDropdown({
 		["Name"] = "Mode", 
-		["List"] = {"Normal", "CFrame", "Jump"},
+		["List"] = {"Normal", "CFrame", "Jump", "TP"},
 		["Function"] = function(val)
 			if entity.isAlive then
 				flyposy = entity.character.HumanoidRootPart.CFrame.p.Y
+			end
+			if flytpon["Object"] then 
+				flytpon["Object"].Visible = val == "TP"
+			end
+			if flytpoff["Object"] then 
+				flytpoff["Object"].Visible = val == "TP"
+			end
+			if flywall["Object"] then 
+				flywall["Object"].Visible = val == "CFrame" or val == "Jump"
 			end
 		end
 	})
@@ -1350,11 +1446,30 @@ runcode(function()
 		["Max"] = 150, 
 		["Function"] = function(val) end
 	})
+	flytpon = fly.CreateSlider({
+		["Name"] = "TP Time Ground",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Default"] = 50,
+		["Function"] = function() end,
+		["Double"] = 10
+	})
+	flytpon["Object"].Visible = false
+	flytpoff = fly.CreateSlider({
+		["Name"] = "TP Time Air",
+		["Min"] = 1,
+		["Max"] = 30,
+		["Default"] = 5,
+		["Function"] = function() end,
+		["Double"] = 10
+	})
+	flytpoff["Object"].Visible = false
 	flywall = fly.CreateToggle({
 		["Name"] = "Wall Check",
 		["Function"] = function() end,
 		["Default"] = true
 	})
+	flywall["Object"].Visible = false
 	flyplatformtoggle = fly.CreateToggle({
 		["Name"] = "FloorPlatform", 
 		["Function"] = function(callback)
@@ -1435,6 +1550,45 @@ hitboxoption = Hitbox.CreateDropdown({
 
 local killauranear = false
 runcode(function()
+	local ignorelist = OverlapParams.new()
+	ignorelist.FilterType = Enum.RaycastFilterType.Whitelist
+
+	local reachrange = {["Value"] = 1}
+	local Reach = {["Enabled"] = false}
+	Reach = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Reach", 
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					repeat
+						task.wait()
+						local tool = lplr and lplr.Character and lplr.Character:FindFirstChildWhichIsA("Tool")
+						if tool and entity.isAlive then
+							local touch = findTouchInterest(tool)
+							if touch then
+								touch = touch.Parent
+								local chars = {}
+								for i,v in pairs(entity.entityList) do table.insert(chars, v.Character) end
+								ignorelist.FilterDescendantsInstances = chars
+								local parts = workspace:GetPartBoundsInBox(touch.CFrame, touch.Size + Vector3.new(reachrange["Value"], 0, reachrange["Value"]), ignorelist)
+								for i,v in pairs(parts) do 
+									firetouchinterest(touch, v, 1)
+									firetouchinterest(touch, v, 0)
+								end
+							end
+						end
+					until (not Reach["Enabled"])
+				end)
+			end
+		end
+	})
+	reachrange = Reach.CreateSlider({
+		["Name"] = "Range", 
+		["Min"] = 1,
+		["Max"] = 20, 
+		["Function"] = function(val) end,
+	})
+
 	local killauraboxes = {}
 	local killauraaps = {["GetRandomValue"] = function() return 1 end}
 	local killauramethod = {["Value"] = "Normal"}
@@ -1450,6 +1604,18 @@ runcode(function()
 	local killauracframe = {["Enabled"] = false}
 	local Killaura = {["Enabled"] = false}
 	local killauratick = tick()
+
+	local function getclosestpart(v, tool)
+		if entity.isAlive then
+			local closest, closestmag = nil, 10000000
+			for i,v2 in pairs(v.Character:GetChildren()) do 
+				if v2:IsA("BasePart") then
+					local mag = (v2.Position - tool.Position)
+				end
+			end
+		end
+	end
+
 	Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Killaura", 
 		["Function"] = function(callback)
@@ -1500,71 +1666,83 @@ runcode(function()
 						end
 					end
 				end)
-				RunLoops:BindToRenderStep("Killaura", 1, function()
-					local targettable = {}
-					local targetsize = 0
-					local attackedplayers = {}
-					if entity.isAlive then
-						local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
-						if #plrs > 0 then
-                            local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
-                            local touch = findTouchInterest(tool)
-                            if tool and touch then
-                                if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
-                                    for i,v in pairs(plrs) do
-                                        local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
-                                        local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
-                                        local angle = math.acos(localfacing:Dot(vec))
-                                        if angle <= math.rad(killauraangle["Value"]) then
-                                            if killauratick <= tick() then
-                                                tool:Activate()
-                                                killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
-                                            end
-                                            killauranear = true
-                                            targettable[v.Player.Name] = {
-                                                ["UserId"] = v.Player.UserId,
-                                                ["Health"] = v.Character.Humanoid.Health,
-                                                ["MaxHealth"] = v.Character.Humanoid.MaxHealth
-                                            }
-                                            targetsize = targetsize + 1
-                                            if killauratarget["Enabled"] then
-                                                table.insert(attackedplayers, v)
-                                            end
-                                            if targetsize == 1 then 
-                                                targetedplayer = v
-                                            end
-                                            if killauramethod["Value"] == "Bypass" then
-                                                local parts = workspace:GetPartBoundsInBox(v.RootPart.CFrame, v.Character:GetExtentsSize())
-                                                for i,v2 in pairs(parts) do 
-                                                    if not v2:IsDescendantOf(lplr.Character) then 
-                                                        firetouchinterest(touch.Parent, v2, 1)
-                                                        firetouchinterest(touch.Parent, v2, 0)
-                                                    end
-                                                end
-                                            else
-                                                firetouchinterest(touch.Parent, v.RootPart, 1)
-                                                firetouchinterest(touch.Parent, v.RootPart, 0)
-                                            end
-                                        end
-                                    end
-                                end
+				task.spawn(function()
+					repeat
+						task.wait()
+						local targettable = {}
+						local targetsize = 0
+						local attackedplayers = {}
+						if entity.isAlive then
+							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
+							if #plrs > 0 then
+								local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+								local touch = findTouchInterest(tool)
+								if tool and touch then
+									if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
+										for i,v in pairs(plrs) do
+											local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
+											local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
+											local angle = math.acos(localfacing:Dot(vec))
+											if angle <= math.rad(killauraangle["Value"]) then
+												if killauratick <= tick() then
+													tool:Activate()
+													killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
+												end
+												killauranear = true
+												targettable[v.Player.Name] = {
+													["UserId"] = v.Player.UserId,
+													["Health"] = v.Character.Humanoid.Health,
+													["MaxHealth"] = v.Character.Humanoid.MaxHealth
+												}
+												targetsize = targetsize + 1
+												if killauratarget["Enabled"] then
+													table.insert(attackedplayers, v)
+												end
+												if targetsize == 1 then 
+													targetedplayer = v
+												end
+												local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(v.Player)
+												if not playerattackable then
+													continue
+												end
+												if killauramethod["Value"] == "Bypass" then 
+													ignorelist.FilterDescendantsInstances = {v.Character}
+													local parts = workspace:GetPartBoundsInBox(v.RootPart.CFrame, v.Character:GetExtentsSize(), ignorelist)
+													for i,v2 in pairs(parts) do 
+														firetouchinterest(touch.Parent, v2, 1)
+														firetouchinterest(touch.Parent, v2, 0)
+													end
+												elseif killauramethod["Value"] == "Normal" then
+													for i,v2 in pairs(v.Character:GetChildren()) do 
+														if v2:IsA("BasePart") then
+															firetouchinterest(touch.Parent, v2, 1)
+															firetouchinterest(touch.Parent, v2, 0)
+														end
+													end
+												else
+													firetouchinterest(touch.Parent, v.RootPart, 1)
+													firetouchinterest(touch.Parent, v.RootPart, 0)
+												end
+											end
+										end
+									end
+								end
+							end
+							for i,v in pairs(killauraboxes) do 
+								local attacked = attackedplayers[i]
+								v.Adornee = attacked and ((not killauratargethighlight["Enabled"]) and attacked.RootPart or (not GuiLibrary["ObjectsThatCanBeSaved"]["ChamsOptionsButton"]["Api"]["Enabled"]) and attacked.Character or nil)
+							end
+							if (#plrs <= 0) then
+								lastplr = nil
+								targetedplayer = nil
+								killauranear = false
 							end
 						end
-						for i,v in pairs(killauraboxes) do 
-							local attacked = attackedplayers[i]
-							v.Adornee = attacked and ((not killauratargethighlight["Enabled"]) and attacked.RootPart or (not GuiLibrary["ObjectsThatCanBeSaved"]["ChamsOptionsButton"]["Api"]["Enabled"]) and attacked.Character or nil)
-						end
-						if (#plrs <= 0) then
-							lastplr = nil
-							targetedplayer = nil
-							killauranear = false
-						end
-					end
-					targetinfo.UpdateInfo(targettable, targetsize)
+						targetinfo.UpdateInfo(targettable, targetsize)
+					until (not Killaura["Enabled"])
 				end)
 			else
 				RunLoops:UnbindFromHeartbeat("Killaura") 
-				RunLoops:UnbindFromRenderStep("Killaura")
                 killauranear = false
 				for i,v in pairs(killauraboxes) do 
 					v.Adornee = nil
@@ -1579,7 +1757,7 @@ runcode(function()
 	killauratargetframe = Killaura.CreateTargetWindow({})
 	killauramethod = Killaura.CreateDropdown({
 		["Name"] = "Mode",
-		["List"] = {"Normal", "Bypass"},
+		["List"] = {"Normal", "Bypass", "Root Only"},
 		["Function"] = function() end
 	})
 	killauraaps = Killaura.CreateTwoSlider({
@@ -1962,6 +2140,7 @@ runcode(function()
 	local speeddelayval = tick()
 
 	local speed = {["Enabled"] = false}
+	local alternatelist = {"Normal", "AntiCheat A", "AntiCheat B", "AntiCheat C"}
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Speed", 
 		["Function"] = function(callback)
@@ -1970,7 +2149,7 @@ runcode(function()
 				s = uis:IsKeyDown(Enum.KeyCode.S) and 1 or 0
 				a = uis:IsKeyDown(Enum.KeyCode.A) and -1 or 0
 				d = uis:IsKeyDown(Enum.KeyCode.D) and 1 or 0
-				speeddown = uis.InputBegan:connect(function(input1)
+				speeddown = uis.InputBegan:Connect(function(input1)
 					if uis:GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.W then
 							w = -1
@@ -1986,7 +2165,7 @@ runcode(function()
 						end
 					end
 				end)
-				speedup = uis.InputEnded:connect(function(input1)
+				speedup = uis.InputEnded:Connect(function(input1)
 					if input1.KeyCode == Enum.KeyCode.W then
 						w = 0
 					end
@@ -2072,7 +2251,12 @@ runcode(function()
 				RunLoops:UnbindFromHeartbeat("Speed")
 			end
 		end,
-		["ExtraText"] = function() return speedmethod["Value"] end
+		["ExtraText"] = function() 
+			if GuiLibrary["ObjectsThatCanBeSaved"]["Text GUIAlternate TextToggle"]["Api"]["Enabled"] then 
+				return alternatelist[table.find(speedmethod["List"], speedmethod["Value"])]
+			end
+			return speedmethod["Value"] 
+		end
 	})
 	speedmethod = speed.CreateDropdown({
 		["Name"] = "Mode", 
@@ -2259,7 +2443,7 @@ end
 local ArrowsFolder = Instance.new("Folder")
 ArrowsFolder.Name = "ArrowsFolder"
 ArrowsFolder.Parent = GuiLibrary["MainGui"]
-players.PlayerRemoving:connect(function(plr)
+players.PlayerRemoving:Connect(function(plr)
 	if ArrowsFolder:FindFirstChild(plr.Name) then
 		ArrowsFolder[plr.Name]:Remove()
 	end
@@ -2338,8 +2522,9 @@ runcode(function()
 						desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"]))
 					end)
 					task.wait(1)
-				until suc
+				until suc or (not Disguise["Enabled"])
 			end
+			if (not Disguise["Enabled"]) then return end
 			desc.HeightScale = hum:WaitForChild("HumanoidDescription").HeightScale
 			char.Archivable = true
 			local disguiseclone = char:Clone()
@@ -2356,7 +2541,7 @@ runcode(function()
 					v.Parent = game
 				end
 			end
-			char.ChildAdded:connect(function(v)
+			char.ChildAdded:Connect(function(v)
 				if ((v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors")) and v:GetAttribute("Disguise") == nil then 
 					repeat task.wait() v.Parent = game until v.Parent == game
 				end
@@ -2398,7 +2583,7 @@ runcode(function()
 		["Name"] = "Disguise",
 		["Function"] = function(callback)
 			if callback then 
-				disguiseconnection = lplr.CharacterAdded:connect(disguisechar)
+				disguiseconnection = lplr.CharacterAdded:Connect(disguisechar)
 				disguisechar(lplr.Character)
 			else
 				if disguiseconnection then 
@@ -2411,7 +2596,10 @@ runcode(function()
 		["Name"] = "Disguise",
 		["TempText"] = "Disguise User Id",
 		["FocusLost"] = function(enter) 
-			task.spawn(function() desc = players:GetHumanoidDescriptionFromUserId(DisguiseId["Value"] == "" and 239702688 or tonumber(DisguiseId["Value"])) end)
+			if Disguise["Enabled"] then 
+				Disguise["ToggleButton"](false)
+				Disguise["ToggleButton"](false)
+			end
 		end
 	})
 end)
@@ -2436,6 +2624,12 @@ runcode(function()
 	local addedconnection
 	local removedconnection
 	local updatedconnection
+	local colorconnection
+
+	local function CalculateObjectPosition(pos)
+		local newpos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(cam.CFrame:pointToObjectSpace(pos)))
+		return Vector2.new(newpos.X, newpos.Y)
+	end
 
 	local espfuncs1 = {
 		Drawing2D = function(plr)
@@ -2546,8 +2740,8 @@ runcode(function()
 			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
 		end,
 		DrawingSkeletonV3 = function(plr)
-			if ESPTeammates["Enabled"] and plr.Targetable then return end
-			thing = {Main = {}, entity = plr}
+			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			local thing = {Main = {}, entity = plr}
 			local rigcheck = plr.Humanoid.RigType == Enum.HumanoidRigType.R6
 			local head = PointInstance.new(plr.Head)
 			head.RotationType = CFrameRotationType.TargetRelative
@@ -2583,7 +2777,7 @@ runcode(function()
 			thing.Main.LeftLeg = LineDynamic.new(bottomlefttorso, leftleg)
 			thing.Main.RightLeg = LineDynamic.new(bottomrighttorso, rightleg)
 			local color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
-			for i,v in pairs(thing) do v.Thickness = 2 v.Color = color end
+			for i,v in pairs(thing.Main) do v.Thickness = 2 v.Color = color end
 			espfolderdrawing[plr.Player] = thing
 		end,
 		Drawing3D = function(plr)
@@ -2607,7 +2801,7 @@ runcode(function()
 		end,
 		Drawing3DV3 = function(plr)
 			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
-			thing = {}
+			local thing = {}
 			local point1 = PointInstance.new(plr.RootPart, CFrame.new(1.5, 3, 1.5))
 			point1.RotationType = CFrameRotationType.Ignore
 			local point2 = PointInstance.new(plr.RootPart, CFrame.new(1.5, -3, 1.5))
@@ -2938,7 +3132,7 @@ runcode(function()
 			if callback then
 				methodused = "Drawing"..ESPMethod["Value"]..v3check
 				if espfuncs2[methodused] then
-					removedconnection = entity.entityRemovedEvent:connect(espfuncs2[methodused])
+					removedconnection = entity.entityRemovedEvent:Connect(espfuncs2[methodused])
 				end
 				if espfuncs1[methodused] then
 					local addfunc = espfuncs1[methodused]
@@ -2946,16 +3140,21 @@ runcode(function()
 						if espfolderdrawing[v.Player] then espfuncs2[methodused](v.Player) end
 						addfunc(v)
 					end
-					addedconnection = entity.entityAddedEvent:connect(function(ent)
+					addedconnection = entity.entityAddedEvent:Connect(function(ent)
 						if espfolderdrawing[ent.Player] then espfuncs2[methodused](ent.Player) end
 						addfunc(ent)
 					end)
 				end
 				if espupdatefuncs[methodused] then
-					updatedconnection = entity.entityUpdatedEvent:connect(espupdatefuncs[methodused])
+					updatedconnection = entity.entityUpdatedEvent:Connect(espupdatefuncs[methodused])
 					for i,v in pairs(entity.entityList) do 
 						espupdatefuncs[methodused](v)
 					end
+				end
+				if espcolorfuncs[methodused] then 
+					colorconnection = GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendColorRefresh.Event:Connect(function()
+						espcolorfuncs[methodused](ESPColor.Hue, ESPColor.Sat, ESPColor.Value)
+					end)
 				end
 				if esploop[methodused] then 
 					RunLoops:BindToRenderStep("ESP", 1, esploop[methodused])
@@ -2970,6 +3169,9 @@ runcode(function()
 				end
 				if removedconnection then 
 					removedconnection:Disconnect()
+				end
+				if colorconnection then 
+					colorconnection:Disconnect()
 				end
 				if espfuncs2[methodused] then
 					for i,v in pairs(entity.entityList) do 
@@ -3024,7 +3226,7 @@ runcode(function()
 	local ChamsFolder = Instance.new("Folder")
 	ChamsFolder.Name = "ChamsFolder"
 	ChamsFolder.Parent = GuiLibrary["MainGui"]
-	players.PlayerRemoving:connect(function(plr)
+	players.PlayerRemoving:Connect(function(plr)
 		if ChamsFolder:FindFirstChild(plr.Name) then
 			ChamsFolder[plr.Name]:Remove()
 		end
@@ -3131,7 +3333,7 @@ GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 			lighting.GlobalShadows = false
 			lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
 			lightingchanged = true
-			lightingconnection = lighting.Changed:connect(function()
+			lightingconnection = lighting.Changed:Connect(function()
 				if not lightingchanged then
 					lightingsettings["Brightness"] = lighting.Brightness
 					lightingsettings["ClockTime"] = lighting.ClockTime
@@ -3199,7 +3401,7 @@ runcode(function()
 	NameTagsFolder.Name = "NameTagsFolder"
 	NameTagsFolder.Parent = GuiLibrary["MainGui"]
 	local nametagsfolderdrawing = {}
-	players.PlayerRemoving:connect(function(plr)
+	players.PlayerRemoving:Connect(function(plr)
 		if NameTagsFolder:FindFirstChild(plr.Name) then
 			NameTagsFolder[plr.Name]:Remove()
 		end
@@ -3437,7 +3639,7 @@ searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 	["Function"] = function(callback) 
 		if callback then
 			searchRefresh()
-			searchAdd = workspace.DescendantAdded:connect(function(v)
+			searchAdd = workspace.DescendantAdded:Connect(function(v)
 				if (v:IsA("BasePart") or v:IsA("Model")) and table.find(SearchTextList["ObjectList"], v.Name) and searchFindBoxHandle(v) == nil then
 					local highlight = Instance.new("Highlight")
 					highlight.Name = v.Name
@@ -3447,7 +3649,7 @@ searchModule = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].Create
 					highlight.Parent = searchFolder
 				end
 			end)
-			searchRemove = workspace.DescendantRemoving:connect(function(v)
+			searchRemove = workspace.DescendantRemoving:Connect(function(v)
 				if v:IsA("BasePart") or v:IsA("Model") then
 					local boxhandle = searchFindBoxHandle(v)
 					if boxhandle then
@@ -3490,7 +3692,7 @@ local Xray = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOpt
 	["Name"] = "Xray", 
 	["Function"] = function(callback) 
 		if callback then
-			XrayAdd = workspace.DescendantAdded:connect(function(v)
+			XrayAdd = workspace.DescendantAdded:Connect(function(v)
 				if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
 					v.LocalTransparencyModifier = 0.5
 				end
@@ -3592,18 +3794,23 @@ runcode(function()
 			if callback then
 				methodused = "Drawing"..v3check
 				if tracersfuncs2[methodused] then
-					removedconnection = entity.entityRemovedEvent:connect(tracersfuncs2[methodused])
+					removedconnection = entity.entityRemovedEvent:Connect(tracersfuncs2[methodused])
 				end
 				if tracersfuncs1[methodused] then
 					local addfunc = tracersfuncs1[methodused]
 					for i,v in pairs(entity.entityList) do 
 						addfunc(v)
 					end
-					addedconnection = entity.entityAddedEvent:connect(function(ent)
+					addedconnection = entity.entityAddedEvent:Connect(function(ent)
 						if tracersfolderdrawing[ent] then 
 							tracersfuncs2[methodused](ent)
 						end
 						addfunc(ent)
+					end)
+				end
+				if tracerscolorfuncs[methodused] then 
+					colorconnection = GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendColorRefresh.Event:Connect(function()
+						tracerscolorfuncs[methodused](TracersColor.Hue, TracersColor.Sat, TracersColor.Value)
 					end)
 				end
 				if tracersloop[methodused] then 
@@ -3619,6 +3826,9 @@ runcode(function()
 				end
 				if removedconnection then 
 					removedconnection:Disconnect()
+				end
+				if colorconnection then 
+					colorconnection:Disconnect()
 				end
 				for i,v in pairs(entity.entityList) do 
 					if tracersfuncs2[methodused] and tracersfolderdrawing[v.Player] then
@@ -3666,164 +3876,6 @@ runcode(function()
 		["Default"] = true
 	})
 end)
-
---[[runcode(function()
-	local TracersFolder = Instance.new("Folder")
-	TracersFolder.Name = "TracersFolder"
-	TracersFolder.Parent = GuiLibrary["MainGui"]
-	local TracersDrawing
-	local tracersdrawingtab = {}
-	players.PlayerRemoving:connect(function(plr)
-		if TracersFolder:FindFirstChild(plr.Name) then
-			TracersFolder[plr.Name]:Remove()
-		end
-		if tracersdrawingtab[plr.Name] then 
-			pcall(function()
-				tracersdrawingtab[plr.Name]:Remove()
-				tracersdrawingtab[plr.Name] = nil
-			end)
-		end
-	end)
-	local TracersColor = {["Value"] = 0.44}
-	local TracersTransparency = {["Value"] = 1}
-	local TracersStartPosition = {["Value"] = "Middle"}
-	local TracersEndPosition = {["Value"] = "Head"}
-	local TracersTeammates = {["Enabled"] = true}
-	local TracersAlive = {["Enabled"] = false}
-	local Tracers = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "Tracers", 
-		["Function"] = function(callback) 
-			if callback then
-				RunLoops:BindToRenderStep("Tracers", 500, function()
-					for i,plr in pairs(players:GetChildren()) do
-							local thing
-							if TracersDrawing["Enabled"] then
-								if tracersdrawingtab[plr.Name] then 
-									thing = tracersdrawingtab[plr.Name]
-									thing.Visible = false
-								else
-									thing = Drawing.new("Line")
-									thing.Thickness = 1
-									thing.Visible = false
-									tracersdrawingtab[plr.Name] = thing
-								end
-
-								local aliveplr = isAlive(plr, TracersAlive["Enabled"])
-								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or aliveplr.Targetable) then
-									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.RootPart).Position)
-									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.RootPart).Position)
-									if rootScrPos.Z < 0 then
-										tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
-									end
-									local tracerPos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
-									local screensize = cam.ViewportSize
-									local startVector = Vector2.new(screensize.X / 2, (TracersStartPosition["Value"] == "Middle" and screensize.Y / 2 or screensize.Y))
-									local endVector = Vector2.new(tracerPos.X, tracerPos.Y)
-									local Distance = (startVector - endVector).Magnitude
-									startVector = startVector
-									endVector = endVector
-									thing.Visible = true
-									thing.Transparency = 1 - TracersTransparency["Value"] / 100
-									thing.Color = getPlayerColor(plr) or Color3.fromHSV(TracersColor["Hue"], TracersColor["Sat"], TracersColor["Value"])
-									thing.From = startVector
-									thing.To = endVector
-								end
-							else
-								if TracersFolder:FindFirstChild(plr.Name) then
-									thing = TracersFolder[plr.Name]
-									if thing.Visible then
-										thing.Visible = false
-									end
-								else
-									thing = Instance.new("Frame")
-									thing.BackgroundTransparency = 0
-									thing.AnchorPoint = Vector2.new(0.5, 0.5)
-									thing.BackgroundColor3 = Color3.new(0, 0, 0)
-									thing.BorderSizePixel = 0
-									thing.Visible = false
-									thing.Name = plr.Name
-									thing.Parent = TracersFolder
-								end
-								
-								local aliveplr = isAlive(plr)
-								if aliveplr and plr ~= lplr and (TracersTeammates["Enabled"] or aliveplr.Targetable) then
-									local rootScrPos = cam:WorldToViewportPoint((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.RootPart).Position)
-									local tempPos = cam.CFrame:pointToObjectSpace((TracersEndPosition["Value"] == "Head" and aliveplr.Head or aliveplr.RootPart).Position)
-									if rootScrPos.Z < 0 then
-										tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))));
-									end
-									local tracerPos = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
-									local screensize = cam.ViewportSize
-									local startVector = Vector2.new(screensize.X / 2, (TracersStartPosition["Value"] == "Middle" and screensize.Y / 2 or screensize.Y))
-									local endVector = Vector2.new(tracerPos.X, tracerPos.Y)
-									local Distance = (startVector - endVector).Magnitude
-									startVector = startVector
-									endVector = endVector
-									thing.Visible = true
-									thing.BackgroundTransparency = TracersTransparency["Value"] / 100
-									thing.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(TracersColor["Hue"], TracersColor["Sat"], TracersColor["Value"])
-									thing.Size = UDim2.new(0, Distance, 0, 2)
-									thing.Position = UDim2.new(0, (startVector.X + endVector.X) / 2, 0, ((startVector.Y + endVector.Y) / 2) - 36)
-									thing.Rotation = math.atan2(endVector.Y - startVector.Y, endVector.X - startVector.X) * (180 / math.pi)
-								end
-							end
-						end
-				end)
-			else
-				RunLoops:UnbindFromRenderStep("Tracers") 
-				TracersFolder:ClearAllChildren()
-				for i,v in pairs(tracersdrawingtab) do 
-					pcall(function()
-						v:Remove()
-						tracersdrawingtab[i] = nil
-					end)
-				end
-			end
-		end
-	})
-	TracersStartPosition = Tracers.CreateDropdown({
-		["Name"] = "Start Position",
-		["List"] = {"Middle", "Bottom"},
-		["Function"] = function() end
-	})
-	TracersEndPosition = Tracers.CreateDropdown({
-		["Name"] = "End Position",
-		["List"] = {"Head", "Torso"},
-		["Function"] = function() end
-	})
-	TracersColor = Tracers.CreateColorSlider({
-		["Name"] = "Player Color", 
-		["Function"] = function(val) end
-	})
-	TracersTransparency = Tracers.CreateSlider({
-		["Name"] = "Transparency", 
-		["Min"] = 1,
-		["Max"] = 100, 
-		["Function"] = function(val) end,
-		["Default"] = 0
-	})
-	TracersTeammates = Tracers.CreateToggle({
-		["Name"] = "Teammates",
-		["Function"] = function() end,
-		["Default"] = true
-	})
-	TracersDrawing = Tracers.CreateToggle({
-		["Name"] = "Drawing",
-		["Function"] = function() 
-			TracersFolder:ClearAllChildren()
-			for i,v in pairs(tracersdrawingtab) do 
-				pcall(function()
-					v:Remove()
-					tracersdrawingtab[i] = nil
-				end)
-			end
-		end
-	})
-	TracersAlive = Tracers.CreateToggle({
-		["Name"] = "Alive Check",
-		["Function"] = function() end
-	})
-end)]]
 
 Spring = {} do
 	Spring.__index = Spring
@@ -4222,7 +4274,7 @@ runcode(function()
 		["Name"] = "Cape",
 		["Function"] = function(callback)
 			if callback then
-				vapecapeconnection = lplr.CharacterAdded:connect(function(char)
+				vapecapeconnection = lplr.CharacterAdded:Connect(function(char)
 					spawn(function()
 						pcall(function() 
 							Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
@@ -4394,59 +4446,192 @@ runcode(function()
 	})
 end)
 
---[[runcode(function()
-	local femboyconnection
-	GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "FemboyMode",
-		["Function"] = function(callback)
-			if callback then
-				local desc = Instance.new("HumanoidDescription")
-				local info = '{"SwimAnimation":1018554245,"JumpAnimation":754637084,"WalkAnimation":619512767,"RightLegColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"WidthScale":0.8799999952316284,"Face":236399287,"BodyTypeScale":0.6100000143051148,"RunAnimation":1018548665,"RightArmColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"ClimbAnimation":1018554668,"LeftArmColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"HeadColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"GraphicTShirt":0,"Torso":86499666,"HairAccessory":"8022084941","Head":86498113,"Shirt":0,"RightArm":86499698,"ProportionScale":0.12999999523162843,"RightLeg":27112068,"Pants":6474866173,"LeftLegColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"FallAnimation":754636589,"IdleAnimation":1018553897,"TorsoColor":{"R":0.917647123336792,"B":0.572549045085907,"G":0.7215686440467835},"DepthScale":0.9399999976158142,"LeftArm":86499716,"HeadScale":1,"HeightScale":1,"LeftLeg":27112056}'
-				local info2 = '[{"IsLayered":true,"Order":1,"AssetId":9367213925,"AccessoryType":{"Parent":"AccessoryType","EnumVal":"Shirt"}},{"IsLayered":true,"Order":1,"AssetId":9342333632,"AccessoryType":{"Parent":"AccessoryType","EnumVal":"DressSkirt"}},{"IsLayered":true,"Order":1,"AssetId":9239535402,"AccessoryType":{"Parent":"AccessoryType","EnumVal":"Pants"}},{"AssetId":8022084941,"AccessoryType":{"Parent":"AccessoryType","EnumVal":"Hair"},"IsLayered":false}]'
-				for i,v in pairs(game:GetService("HttpService"):JSONDecode(info)) do 
-					desc[i] = type(v) == "table" and Color3.new(v.R, v.G, v.B) or v
-				end
-				local newdesc = {}
-				for i,v in pairs(game:GetService("HttpService"):JSONDecode(info2)) do 
-					local newtab = {}
-					for i2,v2 in pairs(v) do 
-						newtab[i2] = type(v2) == "table" and Enum[v2.Parent][v2.EnumVal] or v2
-					end
-					newdesc[i] = newtab
-				end
-				desc:SetAccessories(newdesc, true)
-				if entity.isAlive then
-					for i,v in pairs(lplr.Character:GetChildren()) do 
-						if v:IsA("Shirt") or v:IsA("Pants") then 
-							v:Remove()
+runcode(function()
+	local AutoReport = {["Enabled"] = false}
+	local reporttable = {
+		["gay"] = "Bullying",
+		["gae"] = "Bullying",
+		["gey"] = "Bullying",
+		["hack"] = "Scamming",
+		["exploit"] = "Scamming",
+		["cheat"] = "Scamming",
+		["hecker"] = "Scamming",
+		["hacer"] = "Scamming",
+		["report"] = "Bullying",
+		["fat"] = "Bullying",
+		["black"] = "Bullying",
+		["getalife"] = "Bullying",
+		["fatherless"] = "Bullying",
+		["report"] = "Bullying",
+		["fatherless"] = "Bullying",
+		["disco"] = "Offsite Links",
+		["yt"] = "Offsite Links",
+		["dizcourde"] = "Offsite Links",
+		["retard"] = "Swearing",
+		["bad"] = "Bullying",
+		["trash"] = "Bullying",
+		["nolife"] = "Bullying",
+		["nolife"] = "Bullying",
+		["loser"] = "Bullying",
+		["killyour"] = "Bullying",
+		["kys"] = "Bullying",
+		["hacktowin"] = "Bullying",
+		["bozo"] = "Bullying",
+		["kid"] = "Bullying",
+		["adopted"] = "Bullying",
+		["linlife"] = "Bullying",
+		["commitnotalive"] = "Bullying",
+		["vape"] = "Offsite Links",
+		["futureclient"] = "Offsite Links",
+		["download"] = "Offsite Links",
+		["youtube"] = "Offsite Links",
+		["die"] = "Bullying",
+		["lobby"] = "Bullying",
+		["ban"] = "Bullying",
+		["wizard"] = "Bullying",
+		["wisard"] = "Bullying",
+		["witch"] = "Bullying",
+		["magic"] = "Bullying",
+	}
+
+	local function removerepeat(str)
+		local newstr = ""
+		local lastlet = ""
+		for i,v in pairs(str:split("")) do 
+			if v ~= lastlet then
+				newstr = newstr..v 
+				lastlet = v
+			end
+		end
+		return newstr
+	end
+
+	local reporttableexact = {
+		["L"] = "Bullying",
+	}
+
+	local alreadyreported = {}
+	local AutoReportList = {["ObjectList"] = {}}
+
+	local function findreport(msg)
+		local checkstr = removerepeat(msg:gsub("%W+", ""):lower())
+		for i,v in pairs(reporttable) do 
+			if checkstr:find(i) then 
+				return v, i
+			end
+		end
+		for i,v in pairs(reporttableexact) do 
+			if checkstr == i then 
+				return v, i
+			end
+		end
+		for i,v in pairs(AutoReportList["ObjectList"]) do 
+			if checkstr:find(v) then 
+				return "Bullying", v
+			end
+		end
+		return nil
+	end
+
+	local AutoReportNotify = {["Enabled"] = false}
+	local chatconnection
+	AutoReport = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoReport",
+		["Function"] = function(callback) 
+			if callback then 
+				if repstorage:FindFirstChild("DefaultChatSystemChatEvents") then
+					chatconnection = repstorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab, channel)
+						local plr = players:FindFirstChild(tab["FromSpeaker"])
+						local args = tab.Message:split(" ")
+						if AutoReport["Enabled"] and plr and plr ~= lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
+							local reportreason, reportedmatch = findreport(tab.Message)
+							if reportreason then 
+								if alreadyreported[plr] == nil then
+									task.spawn(function()
+										if syn == nil then
+											players:ReportAbuse(plr, reportreason, "he said a bad word")
+										end
+									end)
+									if AutoReportNotify["Enabled"] then 
+										local warning = createwarning("AutoReport", "Reported "..plr.Name.." for\n"..reportreason..' ('..reportedmatch..')', 15)
+										pcall(function()
+											warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+										end)
+									end
+									alreadyreported[plr] = true
+								end
+							end
 						end
-					end
-					entity.character.Humanoid:ApplyDescriptionClientServer(desc)
+					end)
+				else
+					createwarning("AutoReport", "Default chat not found.", 5)
+					AutoReport["ToggleButton"](false)
 				end
-				femboyconnection = lplr.CharacterAdded:connect(function(char)
-					local hum = char:WaitForChild("Humanoid")
-					for i,v in pairs(char:GetChildren()) do 
-						if v:IsA("Shirt") or v:IsA("Pants") then 
-							v:Remove()
-						end
-					end
-					char.Humanoid:ApplyDescriptionClientServer(desc)
-				end)
 			else
-				if femboyconnection then
-					femboyconnection:Disconnect()
-				end
-				if entity.isAlive then
-					for i,v in pairs(lplr.Character:GetChildren()) do 
-						if v:IsA("Shirt") or v:IsA("Pants") then 
-							v:Remove()
-						end
-					end
-					local lplrdesc = players:GetHumanoidDescriptionFromUserId(lplr.UserId)
-					entity.character.Humanoid:ApplyDescriptionClientServer(lplrdesc)
+				if chatconnection then 
+					chatconnection:Disconnect()
 				end
 			end
-		end,
-		["HoverText"] = "femboy mode, will flag on all anticheats :troll: and remove most parts for everyone because fat roblox function"
+		end
 	})
-end)]]
+	AutoReportNotify = AutoReport.CreateToggle({
+		["Name"] = "Notify",
+		["Function"] = function() end
+	})
+	AutoReportList = AutoReport.CreateTextList({
+		["Name"] = "Report Words",
+		["TempText"] = "phrase (to report)"
+	})
+end)
+
+runcode(function()
+	local Disabler = {["Enabled"] = false}
+	local DisablerAntiKick = {["Enabled"] = false}
+	local disablerhooked = false
+
+	local hookmethods = {
+		Kick = function(self)
+			if (not DisablerAntiKick["Enabled"]) then return end
+			if type(self) == "userdata" and self == lplr then 
+				return true
+			end
+		end
+	}
+	hookmethods.kick = hookmethods.Kick
+
+	Disabler = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Disabler",
+		["Function"] = function(callback)
+			if callback then 
+				if not disablerhooked then 
+					disablerhooked = true
+					local oldnamecall
+					oldnamecall = hookmetamethod(game, "__namecall", function(self, ...)
+						if (not Disabler["Enabled"]) then
+							return oldnamecall(self, ...)
+						end
+						local method = getnamecallmethod()
+						for i,v in pairs(hookmethods) do 
+							if i == method and v(self, ...) then 
+								return
+							end
+						end
+						return oldnamecall(self, ...)
+					end)
+					local antikick
+					antikick = hookfunction(lplr.Kick, function(self, ...)
+						if (not DisablerAntiKick["Enabled"]) then return antikick(self, ...) end
+						if type(self) == "userdata" and self == lplr then 
+							return
+						end
+						return antikick(self, ...)
+					end)
+				end
+			end
+		end
+	})
+	DisablerAntiKick = Disabler.CreateToggle({
+		["Name"] = "Anti Kick",
+		["Function"] = function(callback) end
+	})
+end)

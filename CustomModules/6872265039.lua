@@ -31,6 +31,7 @@ local bettergetfocus = function()
 	end
 end
 local entity = shared.vapeentity
+local WhitelistFunctions = shared.vapewhitelist
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
 local teleportfunc
 local betterisfile = function(file)
@@ -80,19 +81,6 @@ local function addvectortocframe2(cframe, newylevel)
 	return CFrame.new(x, newylevel, z, R00, R01, R02, R10, R11, R12, R20, R21, R22)
 end
 
-local shalib = loadstring(GetURL("Libraries/sha.lua"))()
-local whitelisted = {
-	players = {},
-	owners = {},
-	chattags = {}
-}
-local whitelistsuc = nil
-task.spawn(function()
-	whitelistsuc = pcall(function()
-		whitelisted = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
-	end)
-end)
-
 local function getSpeedMultiplier(reduce)
 	local speed = 1
 	if lplr.Character then 
@@ -114,7 +102,7 @@ local RunLoops = {RenderStepTable = {}, StepTable = {}, HeartTable = {}}
 do
 	function RunLoops:BindToRenderStep(name, num, func)
 		if RunLoops.RenderStepTable[name] == nil then
-			RunLoops.RenderStepTable[name] = game:GetService("RunService").RenderStepped:connect(func)
+			RunLoops.RenderStepTable[name] = game:GetService("RunService").RenderStepped:Connect(func)
 		end
 	end
 
@@ -127,7 +115,7 @@ do
 
 	function RunLoops:BindToStepped(name, num, func)
 		if RunLoops.StepTable[name] == nil then
-			RunLoops.StepTable[name] = game:GetService("RunService").Stepped:connect(func)
+			RunLoops.StepTable[name] = game:GetService("RunService").Stepped:Connect(func)
 		end
 	end
 
@@ -140,7 +128,7 @@ do
 
 	function RunLoops:BindToHeartbeat(name, num, func)
 		if RunLoops.HeartTable[name] == nil then
-			RunLoops.HeartTable[name] = game:GetService("RunService").Heartbeat:connect(func)
+			RunLoops.HeartTable[name] = game:GetService("RunService").Heartbeat:Connect(func)
 		end
 	end
 
@@ -242,28 +230,6 @@ runcode(function()
             ["sprintTable"] = KnitClient.Controllers.SprintController,
 			["WeldTable"] = require(repstorage.TS.util["weld-util"]).WeldUtil,
 			["QueueMeta"] = require(repstorage.TS.game["queue-meta"]).QueueMeta,
-			["CheckWhitelisted"] = function(plr, ownercheck)
-				local plrstr = bedwars["HashFunction"](plr.Name..plr.UserId)
-				local localstr = bedwars["HashFunction"](lplr.Name..lplr.UserId)
-				return ((ownercheck == nil and (betterfind(whitelisted.players, plrstr) or betterfind(whitelisted.owners, plrstr)) or ownercheck and betterfind(whitelisted.owners, plrstr))) and betterfind(whitelisted.players, localstr) == nil and betterfind(whitelisted.owners, localstr) == nil and true or false
-			end,
-			["CheckPlayerType"] = function(plr)
-				local plrstr = bedwars["HashFunction"](plr.Name..plr.UserId)
-				local playertype = "DEFAULT"
-				if betterfind(whitelisted.players, plrstr) then
-					playertype = "VAPE PRIVATE"
-				end
-				if betterfind(whitelisted.owners, plrstr) then
-					playertype = "VAPE OWNER"
-				end
-				return playertype
-			end,
-			["HashFunction"] = function(str)
-				if storedshahashes[tostring(str)] == nil then
-					storedshahashes[tostring(str)] = shalib.sha512(tostring(str).."SelfReport")
-				end
-				return storedshahashes[tostring(str)]
-			end,
 			["getEntityTable"] = require(repstorage.TS.entity["entity-util"]).EntityUtil,
         }
 		if not shared.vapebypassed then
@@ -322,8 +288,8 @@ runcode(function()
 				})
 				writefile("vape/Profiles/bedwarssettings.json", jsondata)
 			end
-			repeat task.wait() until whitelistsuc
-			for i3,v3 in pairs(whitelisted.chattags) do
+			repeat task.wait() until WhitelistFunctions.Loaded
+			for i3,v3 in pairs(WhitelistFunctions.WhitelistTable.chattags) do
 				if v3.NameColor then
 					v3.NameColor = Color3.fromRGB(v3.NameColor.r, v3.NameColor.g, v3.NameColor.b)
 				end
@@ -351,8 +317,8 @@ runcode(function()
 							end
 							tab.AddMessageToChannel = function(Self2, MessageData)
 								if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
-									local plrtype = bedwars["CheckPlayerType"](players[MessageData.FromSpeaker])
-									local hash = bedwars["HashFunction"](players[MessageData.FromSpeaker].Name..players[MessageData.FromSpeaker].UserId)
+									local plrtype = WhitelistFunctions:CheckPlayerType(players[MessageData.FromSpeaker])
+									local hash = WhitelistFunctions:Hash(players[MessageData.FromSpeaker].Name..players[MessageData.FromSpeaker].UserId)
 									if plrtype == "VAPE PRIVATE" then
 										MessageData.ExtraData = {
 											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
@@ -377,8 +343,8 @@ runcode(function()
 											}
 										}
 									end
-									if whitelisted.chattags[hash] then
-										MessageData.ExtraData = whitelisted.chattags[hash]
+									if WhitelistFunctions.WhitelistTable.chattags[hash] then
+										MessageData.ExtraData = WhitelistFunctions.WhitelistTable.chattags[hash]
 									end
 								end
 								return addmessage(Self2, MessageData)
@@ -398,7 +364,7 @@ runcode(function()
 end)
 getfunctions()
 
-GuiLibrary["SelfDestructEvent"].Event:connect(function()
+GuiLibrary["SelfDestructEvent"].Event:Connect(function()
 	if chatconnection then
 		chatconnection:Disconnect()
 	end
@@ -415,14 +381,14 @@ end)
 
 local function getNametagString(plr)
 	local nametag = ""
-	if bedwars["CheckPlayerType"](plr) == "VAPE PRIVATE" then
+	if WhitelistFunctions:CheckPlayerType(plr) == "VAPE PRIVATE" then
 		nametag = '<font color="rgb(127, 0, 255)">[VAPE PRIVATE] '..(plr.DisplayName or plr.Name)..'</font>'
 	end
-	if bedwars["CheckPlayerType"](plr) == "VAPE OWNER" then
+	if WhitelistFunctions:CheckPlayerType(plr) == "VAPE OWNER" then
 		nametag = '<font color="rgb(255, 80, 80)">[VAPE OWNER] '..(plr.DisplayName or plr.Name)..'</font>'
 	end
-	if whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
-		local data = whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)]
+	if WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)] then
+		local data = WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)]
 		local newnametag = ""
 		if data.Tags then
 			for i2,v2 in pairs(data.Tags) do
@@ -512,7 +478,7 @@ local function friendCheck(plr, recolor)
 end
 
 local function renderNametag(plr)
-	if bedwars["CheckPlayerType"](plr) ~= "DEFAULT" or whitelisted.chattags[bedwars["HashFunction"](plr.Name..plr.UserId)] then
+	if WhitelistFunctions:CheckPlayerType(plr) ~= "DEFAULT" or WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)] then
 		local playerlist = game:GetService("CoreGui"):FindFirstChild("PlayerList")
 		if playerlist then
 			pcall(function()
@@ -524,7 +490,7 @@ local function renderNametag(plr)
 			end)
 		end
 		local nametag = getNametagString(plr)
-		plr.CharacterAdded:connect(function(char)
+		plr.CharacterAdded:Connect(function(char)
 			if char ~= oldchar then
 				spawn(function()
 					pcall(function() 
@@ -548,9 +514,9 @@ local function renderNametag(plr)
 end
 
 task.spawn(function()
-	repeat task.wait() until whitelistsuc
+	repeat task.wait() until WhitelistFunctions.Loaded
 	for i,v in pairs(players:GetChildren()) do renderNametag(v) end
-	players.PlayerAdded:connect(renderNametag)
+	players.PlayerAdded:Connect(renderNametag)
 end)
 
 GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
@@ -617,7 +583,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				--buyballoons()
-				flypress = uis.InputBegan:connect(function(input1)
+				flypress = uis.InputBegan:Connect(function(input1)
 					if flyupanddown["Enabled"] and bettergetfocus() == nil then
 						if input1.KeyCode == Enum.KeyCode.Space then
 							flyup = true
@@ -627,7 +593,7 @@ runcode(function()
 						end
 					end
 				end)
-				flyendpress = uis.InputEnded:connect(function(input1)
+				flyendpress = uis.InputEnded:Connect(function(input1)
 					if input1.KeyCode == Enum.KeyCode.Space then
 						flyup = false
 					end
@@ -1188,7 +1154,7 @@ runcode(function()
 			until (not AnticheatBypass["Enabled"])
 		end)
 		if anticheatconnection2 then anticheatconnection2:Disconnect() end
-		anticheatconnection2 = lplr:GetAttributeChangedSignal("LastTeleported"):connect(function()
+		anticheatconnection2 = lplr:GetAttributeChangedSignal("LastTeleported"):Connect(function()
 			if not AnticheatBypass["Enabled"] then if anticheatconnection2 then anticheatconnection2:Disconnect() end end
 			if not (clone and oldcloneroot) then return end
 			clone.CFrame = oldcloneroot.CFrame
@@ -1332,7 +1298,7 @@ runcode(function()
 				createwarning("AnticheatBypass", "ur root / head no load L", 30)
 			end
 		end)
-		anticheatconnection = lplr.CharacterAdded:connect(function(char)
+		anticheatconnection = lplr.CharacterAdded:Connect(function(char)
 			task.spawn(function()
 				if spawncoro then return end
 				spawncoro = true
@@ -1700,7 +1666,7 @@ spawn(function()
 		sound.SoundId = "rbxassetid://6732495464"
 		sound.Parent = workspace
 		sound:Remove()
-		notifyframereal.MouseButton1Click:connect(function()
+		notifyframereal.MouseButton1Click:Connect(function()
 			local sound = Instance.new("Sound")
 			sound.PlayOnRemove = true
 			sound.SoundId = "rbxassetid://6732690176"
