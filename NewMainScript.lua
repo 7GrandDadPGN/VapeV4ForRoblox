@@ -243,42 +243,26 @@ GUI.CreateButton({
 	["Name"] = "Profiles", 
 	["Function"] = function(callback) Profiles.SetVisible(callback) end, 
 })
-local FriendsTextList = {["RefreshValues"] = function() end}
+local FriendsTextList = {["RefreshValues"] = function() end, ["ObjectListEnabled"] = {}}
 local FriendsColor = {["Value"] = 0.44}
-FriendsTextList = Friends.CreateCircleTextList({
+local friendscreatetab = {
 	["Name"] = "FriendsList", 
 	["TempText"] = "Username / Alias", 
-	["Color"] = Color3.fromRGB(5, 133, 104),	
-	["CustomFunction"] = function(obj)
-		obj.ItemText.TextColor3 = Color3.new(1, 1, 1)
-		local friendcircle = Instance.new("Frame")
-		friendcircle.Size = UDim2.new(0, 10, 0, 10)
-		friendcircle.Name = "FriendCircle"
-		friendcircle.BackgroundColor3 = Color3.fromHSV(FriendsColor["Value"], 0.7, 0.9)
-		friendcircle.BorderSizePixel = 0
-		friendcircle.Position = UDim2.new(0, 10, 0, 13)
-		friendcircle.Parent = obj
-		local friendcorner = Instance.new("UICorner")
-		friendcorner.CornerRadius = UDim.new(0, 8)
-		friendcorner.Parent = friendcircle
-		obj.ItemText.Position = UDim2.new(0, 36, 0, 0)
-		obj.ItemText.Size = UDim2.new(0, 157, 0, 33)
-	end
-})
+	["Color"] = Color3.fromRGB(5, 133, 104)
+}
+FriendsTextList = Friends.CreateCircleTextList(friendscreatetab)
 FriendsTextList.FriendRefresh = Instance.new("BindableEvent")
-spawn(function()
-	local currentval = #FriendsTextList["ObjectList"]
-	repeat
-		task.wait(0.1)
-		if currentval ~= #FriendsTextList["ObjectList"] then
-			FriendsTextList.FriendRefresh:Fire()
-		end
-		currentval = #FriendsTextList["ObjectList"]
-	until (not shared.VapeExecuted)
-end)
+FriendsTextList.FriendColorRefresh = Instance.new("BindableEvent")
+local oldfriendref = FriendsTextList["RefreshValues"]
+FriendsTextList["RefreshValues"] = function(...)
+	FriendsTextList.FriendRefresh:Fire()
+	return oldfriendref(...)
+end
 Friends.CreateToggle({
 	["Name"] = "Use Friends",
-	["Function"] = function(callback) end,
+	["Function"] = function(callback) 
+		FriendsTextList.FriendRefresh:Fire()
+	end,
 	["Default"] = true
 })
 Friends.CreateToggle({
@@ -290,15 +274,30 @@ Friends.CreateToggle({
 	["Name"] = "Spoof alias",
 	["Function"] = function(callback) end,
 })
-Friends.CreateToggle({
+local friendrecolor = Friends.CreateToggle({
 	["Name"] = "Recolor visuals",
-	["Function"] = function(callback) end,
+	["Function"] = function(callback) FriendsTextList.FriendColorRefresh:Fire() end,
 	["Default"] = true
 })
 FriendsColor = Friends.CreateColorSlider({
 	["Name"] = "Friends Color", 
-	["Function"] = function(val) 
-
+	["Function"] = function(h, s, v) 
+		local col = Color3.fromHSV(h, s, v)
+		local addcirc = FriendsTextList["Object"]:FindFirstChild("AddButton", true)
+		if addcirc then 
+			addcirc.ImageColor3 = col
+		end
+		for i,v in pairs(FriendsTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do 
+			local friendcirc = v:FindFirstChild("FriendCircle")
+			local itemtext = v:FindFirstChild("ItemText")
+			if friendcirc and itemtext then 
+				friendcirc.BackgroundColor3 = itemtext.TextColor3 == Color3.fromRGB(160, 160, 160) and col or friendcirc.BackgroundColor3
+			end
+		end
+		friendscreatetab["Color"] = col
+		if friendrecolor.Enabled then
+			FriendsTextList.FriendColorRefresh:Fire()
+		end
 	end
 })
 local ProfilesTextList = {["RefreshValues"] = function() end}
@@ -329,7 +328,7 @@ ProfilesTextList = Profiles.CreateTextList({
 		if GuiLibrary["Profiles"][profilename] == nil then
 			GuiLibrary["Profiles"][profilename] = {["Keybind"] = ""}
 		end
-		obj.MouseButton1Click:connect(function()
+		obj.MouseButton1Click:Connect(function()
 			GuiLibrary["SwitchProfile"](profilename)
 		end)
 		local newsize = UDim2.new(0, 20, 0, 21)
@@ -374,7 +373,7 @@ ProfilesTextList = Profiles.CreateTextList({
 		local bindround = Instance.new("UICorner")
 		bindround.CornerRadius = UDim.new(0, 4)
 		bindround.Parent = bindbkg
-		bindbkg.MouseButton1Click:connect(function()
+		bindbkg.MouseButton1Click:Connect(function()
 			if GuiLibrary["KeybindCaptured"] == false then
 				GuiLibrary["KeybindCaptured"] = true
 				spawn(function()
@@ -407,14 +406,14 @@ ProfilesTextList = Profiles.CreateTextList({
 				end)
 			end
 		end)
-		bindbkg.MouseEnter:connect(function() 
+		bindbkg.MouseEnter:Connect(function() 
 			bindimg.Image = getcustomassetfunc("vape/assets/PencilIcon.png") 
 			bindimg.Visible = true
 			bindtext.Visible = false
 			bindbkg.Size = UDim2.new(0, 20, 0, 21)
 			bindbkg.Position = UDim2.new(1, -50, 0, 6)
 		end)
-		bindbkg.MouseLeave:connect(function() 
+		bindbkg.MouseLeave:Connect(function() 
 			bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
 			if GuiLibrary["Profiles"][profilename]["Keybind"] ~= "" then
 				bindimg.Visible = false
@@ -423,10 +422,10 @@ ProfilesTextList = Profiles.CreateTextList({
 				bindbkg.Position = UDim2.new(1, -(30 + newsize.X.Offset), 0, 6)
 			end
 		end)
-		obj.MouseEnter:connect(function()
+		obj.MouseEnter:Connect(function()
 			bindbkg.Visible = true
 		end)
-		obj.MouseLeave:connect(function()
+		obj.MouseLeave:Connect(function()
 			bindbkg.Visible = GuiLibrary["Profiles"][profilename] and GuiLibrary["Profiles"][profilename]["Keybind"] ~= ""
 		end)
 		if GuiLibrary["Profiles"][profilename]["Keybind"] ~= "" then
@@ -498,10 +497,10 @@ OnlineProfilesExitButton.Parent = OnlineProfilesFrame
 local OnlineProfilesExitButtonround = Instance.new("UICorner")
 OnlineProfilesExitButtonround.CornerRadius = UDim.new(0, 16)
 OnlineProfilesExitButtonround.Parent = OnlineProfilesExitButton
-OnlineProfilesExitButton.MouseEnter:connect(function()
+OnlineProfilesExitButton.MouseEnter:Connect(function()
 	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 end)
-OnlineProfilesExitButton.MouseLeave:connect(function()
+OnlineProfilesExitButton.MouseLeave:Connect(function()
 	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 end)
 local OnlineProfilesFrameShadow = Instance.new("ImageLabel")
@@ -581,7 +580,7 @@ OnlineProfilesListGrid.Parent = OnlineProfilesList
 local OnlineProfilesFrameCorner = Instance.new("UICorner")
 OnlineProfilesFrameCorner.CornerRadius = UDim.new(0, 4)
 OnlineProfilesFrameCorner.Parent = OnlineProfilesFrame
-OnlineProfilesButton.MouseButton1Click:connect(function()
+OnlineProfilesButton.MouseButton1Click:Connect(function()
 	GuiLibrary["MainGui"].ScaledGui.OnlineProfiles.Visible = true
 	GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = false
 	if profilesloaded == false then
@@ -625,23 +624,23 @@ OnlineProfilesButton.MouseButton1Click:connect(function()
 				profiledownloadbkg.ZIndex = 1
 				profiledownloadbkg.Visible = false
 				profiledownloadbkg.Parent = profilebox
-				profilebox.MouseEnter:connect(function()
+				profilebox.MouseEnter:Connect(function()
 					profiletext.TextColor3 = Color3.fromRGB(200, 200, 200)
 					profiledownload.Visible = true 
 					profiledownloadbkg.Visible = true
 				end)
-				profilebox.MouseLeave:connect(function()
+				profilebox.MouseLeave:Connect(function()
 					profiletext.TextColor3 = Color3.fromRGB(137, 136, 137)
 					profiledownload.Visible = false
 					profiledownloadbkg.Visible = false
 				end)
-				profiledownload.MouseEnter:connect(function()
+				profiledownload.MouseEnter:Connect(function()
 					profiledownload.BackgroundColor3 = Color3.fromRGB(5, 134, 105)
 				end)
-				profiledownload.MouseLeave:connect(function()
+				profiledownload.MouseLeave:Connect(function()
 					profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 				end)
-				profiledownload.MouseButton1Click:connect(function()
+				profiledownload.MouseButton1Click:Connect(function()
 					writefile(customdir.."Profiles/"..v2["ProfileName"]..tostring(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles/"..v2["OnlineProfileName"], true)))
 					GuiLibrary["Profiles"][v2["ProfileName"]] = {["Keybind"] = "", ["Selected"] = false}
 					local profiles = {}
@@ -665,7 +664,7 @@ OnlineProfilesButton.MouseButton1Click:connect(function()
 		profilesloaded = true
 	end
 end)
-OnlineProfilesExitButton.MouseButton1Click:connect(function()
+OnlineProfilesExitButton.MouseButton1Click:Connect(function()
 	GuiLibrary["MainGui"].ScaledGui.OnlineProfiles.Visible = false
 	GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = true
 end)
@@ -692,11 +691,15 @@ local rainbowval2 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromH
 local rainbowval3 = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0, 0, 1))})
 local guicolorslider = {["RainbowValue"] = false}
 local textguiscaleslider = {["Value"] = 10}
+local textguimode = {["Value"] = "Normal"}
 local fontitems = {"SourceSans"}
 local fontitems2 = {"GothamBold"}
-
+local textguiframe = Instance.new("Frame")
+textguiframe.BackgroundTransparency = 1
+textguiframe.Size = UDim2.new(1, 0, 1, 0)
+textguiframe.Parent = TextGui.GetCustomChildren()
 local onething = Instance.new("ImageLabel")
-onething.Parent = TextGui.GetCustomChildren()
+onething.Parent = textguiframe
 onething.Name = "Logo"
 onething.Size = UDim2.new(0, 100, 0, 27)
 onething.Position = UDim2.new(1, -140, 0, 3)
@@ -731,7 +734,7 @@ local onethinggrad2 = Instance.new("UIGradient")
 onethinggrad2.Rotation = 90
 onethinggrad2.Parent = onething2
 local onetext = Instance.new("TextLabel")
-onetext.Parent = TextGui.GetCustomChildren()
+onetext.Parent = textguiframe
 onetext.Size = UDim2.new(1, 0, 1, 0)
 onetext.Position = UDim2.new(1, -154, 0, 35)
 onetext.TextColor3 = Color3.new(1, 1, 1)
@@ -769,7 +772,7 @@ onecustomtext.Position = UDim2.new(0, 0, 0, 35)
 onecustomtext.TextXAlignment = Enum.TextXAlignment.Left
 onecustomtext.TextYAlignment = Enum.TextYAlignment.Top
 onecustomtext.Text = ""
-onecustomtext.Parent = TextGui.GetCustomChildren()
+onecustomtext.Parent = textguiframe
 local onecustomtext2 = onecustomtext:Clone()
 onecustomtext2.ZIndex = -1
 onecustomtext2.Size = UDim2.new(1, 0, 1, 0)
@@ -777,7 +780,7 @@ onecustomtext2.TextTransparency = 0.5
 onecustomtext2.TextColor3 = Color3.new(0, 0, 0)
 onecustomtext2.Position = UDim2.new(0, 1, 0, 1)
 onecustomtext2.Parent = onecustomtext
-onecustomtext:GetPropertyChangedSignal("TextXAlignment"):connect(function()
+onecustomtext:GetPropertyChangedSignal("TextXAlignment"):Connect(function()
 	onecustomtext2.TextXAlignment = onecustomtext.TextXAlignment
 end)
 local onebackground = Instance.new("Frame")
@@ -786,7 +789,7 @@ onebackground.BorderSizePixel = 0
 onebackground.BackgroundColor3 = Color3.new(0, 0, 0)
 onebackground.Size = UDim2.new(1, 0, 1, 0)
 onebackground.Visible = false 
-onebackground.Parent = TextGui.GetCustomChildren()
+onebackground.Parent = textguiframe
 onebackground.ZIndex = 0
 local onebackgroundsort = Instance.new("UIListLayout")
 onebackgroundsort.FillDirection = Enum.FillDirection.Vertical
@@ -794,8 +797,10 @@ onebackgroundsort.SortOrder = Enum.SortOrder.LayoutOrder
 onebackgroundsort.Padding = UDim.new(0, 0)
 onebackgroundsort.Parent = onebackground
 local onescale = Instance.new("UIScale")
-onescale.Parent = TextGui.GetCustomChildren()
+onescale.Parent = textguiframe
 local textguirenderbkg = {["Enabled"] = false}
+local textguimodeconnections = {}
+local textguimodeobjects = {Logo = {}, Labels = {}, ShadowLabels = {}, Backgrounds = {}}
 local function refreshbars(textlists)
 	for i,v in pairs(onebackground:GetChildren()) do
 		if v:IsA("Frame") then
@@ -907,19 +912,48 @@ local function UpdateHud()
 				onebackground.Position = onetext.Position + UDim2.new(0, -1, 0, 2)
 			end
 		end
+		if textguimode["Value"] == "Drawing" then 
+			for i,v in pairs(textguimodeobjects.Labels) do 
+				v.Visible = false
+				v:Remove()
+				textguimodeobjects.Labels[i] = nil
+			end
+			for i,v in pairs(textguimodeobjects.ShadowLabels) do 
+				v.Visible = false
+				v:Remove()
+				textguimodeobjects.ShadowLabels[i] = nil
+			end
+			for i,v in pairs(textlists) do 
+				local textdraw = Drawing.new("Text")
+				textdraw.Text = v:gsub(":", " ")
+				textdraw.Size = 23 * onescale.Scale
+				textdraw.ZIndex = 2
+				textdraw.Position = onetext.AbsolutePosition + Vector2.new(onetext.TextXAlignment == Enum.TextXAlignment.Right and (onetext.AbsoluteSize.X - textdraw.TextBounds.X), ((textdraw.Size - 3) * i) + 6)
+				textdraw.Visible = true
+				local textdraw2 = Drawing.new("Text")
+				textdraw2.Text = textdraw.Text
+				textdraw2.Size = 23 * onescale.Scale
+				textdraw2.Position = textdraw.Position + Vector2.new(1, 1)
+				textdraw2.Color = Color3.new(0, 0, 0)
+				textdraw2.Transparency = 0.5
+				textdraw2.Visible = onetext2.Visible
+				table.insert(textguimodeobjects.Labels, textdraw)
+				table.insert(textguimodeobjects.ShadowLabels, textdraw2)
+			end
+		end
 		refreshbars(textlists)
 		GuiLibrary["UpdateUI"]()
 	end
 end
 
-TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):connect(UpdateHud)
-onescale:GetPropertyChangedSignal("Scale"):connect(function()
+TextGui.GetCustomChildren().Parent:GetPropertyChangedSignal("Position"):Connect(UpdateHud)
+onescale:GetPropertyChangedSignal("Scale"):Connect(function()
 	local childrenobj = TextGui.GetCustomChildren()
 	local check = (childrenobj.Parent.Position.X.Offset + childrenobj.Parent.Size.X.Offset / 2) >= (cam.ViewportSize.X / 2)
 	childrenobj.Position = UDim2.new((check and -(onescale.Scale - 1) or 0), (check and 0 or -6 * (onescale.Scale - 1)), 1, -6 * (onescale.Scale - 1))
 	UpdateHud()
 end)
-GuiLibrary["UpdateHudEvent"].Event:connect(UpdateHud)
+GuiLibrary["UpdateHudEvent"].Event:Connect(UpdateHud)
 for i,v in pairs(Enum.Font:GetEnumItems()) do 
 	if v ~= "SourceSans" then
 		table.insert(fontitems, v.Name)
@@ -928,6 +962,132 @@ for i,v in pairs(Enum.Font:GetEnumItems()) do
 		table.insert(fontitems2, v.Name)
 	end
 end
+textguimode = TextGui.CreateDropdown({
+	["Name"] = "Mode",
+	["List"] = {"Normal", "Drawing"},
+	["Function"] = function(val)
+		textguiframe.Visible = val == "Normal"
+		for i,v in pairs(textguimodeconnections) do 
+			v:Disconnect()
+		end
+		for i,v in pairs(textguimodeobjects) do 
+			for i2,v2 in pairs(v) do 
+				v2.Visible = false
+				v2:Remove()
+				v[i2] = nil
+			end
+		end
+		if val == "Drawing" then
+			local onethingdrawing = Drawing.new("Image")
+			onethingdrawing.Data = readfile(translatedlogo and "vape/translations/"..GuiLibrary["Language"].."/VapeLogo3.png" or "vape/assets/VapeLogo3.png")
+			onethingdrawing.Size = onething.AbsoluteSize
+			onethingdrawing.Position = onething.AbsolutePosition + Vector2.new(0, 36)
+			onethingdrawing.ZIndex = 2
+			onethingdrawing.Visible = true
+			local onething2drawing = Drawing.new("Image")
+			onething2drawing.Data = readfile("vape/assets/VapeLogo4.png")
+			onething2drawing.Size = onething2.AbsoluteSize
+			onething2drawing.Position = onething2.AbsolutePosition + Vector2.new(0, 36)
+			onething2drawing.ZIndex = 2
+			onething2drawing.Visible = true
+			local onething3drawing = Drawing.new("Image")
+			onething3drawing.Data = readfile(translatedlogo and "vape/translations/"..GuiLibrary["Language"].."/VapeLogo3.png" or "vape/assets/VapeLogo3.png")
+			onething3drawing.Size = onething.AbsoluteSize
+			onething3drawing.Position = onething.AbsolutePosition + Vector2.new(1, 37)
+			onething3drawing.Transparency = 0.5
+			onething3drawing.Visible = onething3.Visible
+			local onething4drawing = Drawing.new("Image")
+			onething4drawing.Data = readfile("vape/assets/VapeLogo4.png")
+			onething4drawing.Size = onething2.AbsoluteSize
+			onething4drawing.Position = onething2.AbsolutePosition + Vector2.new(1, 37)
+			onething4drawing.Transparency = 0.5
+			onething4drawing.Visible = onething3.Visible
+			local onecustomdrawtext = Drawing.new("Text")
+			onecustomdrawtext.Size = 30
+			onecustomdrawtext.Text = onecustomtext.Text
+			onecustomdrawtext.Color = onecustomtext.TextColor3
+			onecustomdrawtext.ZIndex = 2
+			onecustomdrawtext.Position = onecustomtext.AbsolutePosition + Vector2.new(onetext.TextXAlignment == Enum.TextXAlignment.Right and (onecustomtext.AbsoluteSize.X - onecustomdrawtext.TextBounds.X), 32)
+			onecustomdrawtext.Visible = onecustomtext.Visible
+			local onecustomdrawtext2 = Drawing.new("Text")
+			onecustomdrawtext2.Size = 30
+			onecustomdrawtext2.Text = onecustomtext.Text
+			onecustomdrawtext2.Transparency = 0.5
+			onecustomdrawtext2.Color = Color3.new(0, 0, 0)
+			onecustomdrawtext2.Position = onecustomdrawtext.Position + Vector2.new(1, 1)
+			onecustomdrawtext2.Visible = onecustomtext.Visible and onetext2.Visible
+			pcall(function()
+				onething3drawing.Color = Color3.new(0, 0, 0)
+				onething4drawing.Color = Color3.new(0, 0, 0)
+				onethingdrawing.Color = onethinggrad.Color.Keypoints[1].Value
+			end)
+			table.insert(textguimodeobjects.Logo, onethingdrawing)
+			table.insert(textguimodeobjects.Logo, onething2drawing)
+			table.insert(textguimodeobjects.Logo, onething3drawing)
+			table.insert(textguimodeobjects.Logo, onething4drawing)
+			table.insert(textguimodeobjects.Logo, onecustomdrawtext)
+			table.insert(textguimodeobjects.Logo, onecustomdrawtext2)
+			table.insert(textguimodeconnections, onething:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
+				onethingdrawing.Position = onething.AbsolutePosition + Vector2.new(0, 36)
+				onething3drawing.Position = onething.AbsolutePosition + Vector2.new(1, 37)
+			end))
+			table.insert(textguimodeconnections, onething:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+				onethingdrawing.Size = onething.AbsoluteSize
+				onething3drawing.Size = onething.AbsoluteSize
+				onecustomdrawtext.Size = 30 * onescale.Scale
+				onecustomdrawtext2.Size = 30 * onescale.Scale
+			end))
+			table.insert(textguimodeconnections, onething2:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
+				onething2drawing.Position = onething2.AbsolutePosition + Vector2.new(0, 36)
+				onething4drawing.Position = onething2.AbsolutePosition + Vector2.new(1, 37)
+			end))
+			table.insert(textguimodeconnections, onething2:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+				onething2drawing.Size = onething2.AbsoluteSize
+				onething4drawing.Size = onething2.AbsoluteSize
+			end))
+			table.insert(textguimodeconnections, onecustomtext:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
+				onecustomdrawtext.Position = onecustomtext.AbsolutePosition + Vector2.new(onetext.TextXAlignment == Enum.TextXAlignment.Right and (onecustomtext.AbsoluteSize.X - onecustomdrawtext.TextBounds.X), 32)
+				onecustomdrawtext2.Position = onecustomdrawtext.Position + Vector2.new(1, 1)
+			end))
+			table.insert(textguimodeconnections, onething3:GetPropertyChangedSignal("Visible"):Connect(function()
+				onething3drawing.Visible = onething3.Visible
+				onething4drawing.Visible = onething3.Visible
+			end))
+			table.insert(textguimodeconnections, onetext2:GetPropertyChangedSignal("Visible"):Connect(function()
+				for i,textdraw in pairs(textguimodeobjects.ShadowLabels) do 
+					textdraw.Visible = onetext2.Visible
+				end
+				onecustomdrawtext2.Visible = onecustomtext.Visible and onetext2.Visible
+			end))
+			table.insert(textguimodeconnections, onecustomtext:GetPropertyChangedSignal("Visible"):Connect(function()
+				onecustomdrawtext.Visible = onecustomtext.Visible
+				onecustomdrawtext2.Visible = onecustomtext.Visible and onetext2.Visible
+			end))
+			table.insert(textguimodeconnections, onecustomtext:GetPropertyChangedSignal("Text"):Connect(function()
+				onecustomdrawtext.Text = onecustomtext.Text
+				onecustomdrawtext2.Text = onecustomtext.Text
+				onecustomdrawtext.Position = onecustomtext.AbsolutePosition + Vector2.new(onetext.TextXAlignment == Enum.TextXAlignment.Right and (onecustomtext.AbsoluteSize.X - onecustomdrawtext.TextBounds.X), 32)
+				onecustomdrawtext2.Position = onecustomdrawtext.Position + Vector2.new(1, 1)
+			end))
+			table.insert(textguimodeconnections, onecustomtext:GetPropertyChangedSignal("TextColor3"):Connect(function()
+				onecustomdrawtext.Color = onecustomtext.TextColor3
+			end))
+			table.insert(textguimodeconnections, onetext:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
+				for i,textdraw in pairs(textguimodeobjects.Labels) do 
+					textdraw.Position = onetext.AbsolutePosition + Vector2.new(onetext.TextXAlignment == Enum.TextXAlignment.Right and (onetext.AbsoluteSize.X - textdraw.TextBounds.X), ((textdraw.Size - 3) * i) + 6)
+				end
+				for i,textdraw in pairs(textguimodeobjects.ShadowLabels) do 
+					textdraw.Position = Vector2.new(1, 1) + (onetext.AbsolutePosition + Vector2.new(onetext.TextXAlignment == Enum.TextXAlignment.Right and (onetext.AbsoluteSize.X - textdraw.TextBounds.X), ((textdraw.Size - 3) * i) + 6))
+				end
+			end))
+			table.insert(textguimodeconnections, onethinggrad:GetPropertyChangedSignal("Color"):Connect(function()
+				pcall(function()
+					onethingdrawing.Color = onethinggrad.Color.Keypoints[1].Value
+				end)
+			end))
+		end
+	end
+})
 TextGui.CreateDropdown({
 	["Name"] = "Sort",
 	["List"] = {"Alphabetical", "Length"},
@@ -982,7 +1142,15 @@ TextGui.CreateToggle({
 })
 local textguigradient = TextGui.CreateToggle({
 	["Name"] = "Gradient Logo",
-	["Function"] = function() end
+	["Function"] = function() 
+		UpdateHud()
+	end
+})
+TextGui.CreateToggle({
+	["Name"] = "Alternate Text",
+	["Function"] = function() 
+		UpdateHud()
+	end
 })
 textguirenderbkg = TextGui.CreateToggle({
 	["Name"] = "Render background", 
@@ -1003,7 +1171,7 @@ TextGuiCircleObject = TextGui.CreateCircleWindow({
 	["Name"] = "Blacklist",
 	["Type"] = "Blacklist",
 	["UpdateFunction"] = function()
-		GuiLibrary["UpdateHudEvent"]:Fire()
+		UpdateHud()
 	end
 })
 TextGuiCircleObject["Object"].Visible = false
@@ -1015,7 +1183,7 @@ TextGui.CreateToggle({
 		if CustomText["Object"] then 
 			CustomText["Object"].Visible = callback
 		end
-		UpdateHud()
+		GuiLibrary["UpdateHudEvent"]:Fire()
 	end,
 	["HoverText"] = "Renders a custom label"
 })
@@ -1095,7 +1263,7 @@ targetnameclone.TextTransparency = 0.5
 targetnameclone.TextColor3 = Color3.new()
 targetnameclone.ZIndex = 1
 targetnameclone.Position = UDim2.new(0, 1, 0, 1)
-targetname:GetPropertyChangedSignal("Text"):connect(function()
+targetname:GetPropertyChangedSignal("Text"):Connect(function()
 	targetnameclone.Text = targetname.Text
 end)
 targetnameclone.Parent = targetname
@@ -1164,7 +1332,7 @@ TargetInfoBackground = TargetInfo.CreateToggle({
 local oldhealth = 100
 local allowedtween = true
 local healthtween
-TargetInfo.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):connect(function()
+TargetInfo.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):Connect(function()
 	if TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.new(0, 220, 0, 0) then
 		targetinfobkg3.Position = UDim2.new(0, 0, 0, -5)
 	else
@@ -1211,16 +1379,36 @@ ModuleSettings.CreateToggle({
 	["Name"] = "MiddleClick friends", 
 	["Function"] = function(callback) 
 		if callback then
-			MiddleClickInput = game:GetService("UserInputService").InputBegan:connect(function(input1)
+			MiddleClickInput = game:GetService("UserInputService").InputBegan:Connect(function(input1)
 				if input1.UserInputType == Enum.UserInputType.MouseButton3 then
-					if mouse.Target.Parent:FindFirstChild("HumanoidRootPart") or mouse.Target.Parent:IsA("Accessory") and mouse.Target.Parent.Parent:FindFirstChild("HumanoidRootPart") then
-						local user = (mouse.Target.Parent:IsA("Accessory") and mouse.Target.Parent.Parent.Name or mouse.Target.Parent.Name)
-						if table.find(FriendsTextList["ObjectList"], user) == nil then
-							table.insert(FriendsTextList["ObjectList"], user)
-							FriendsTextList["RefreshValues"](FriendsTextList["ObjectList"])
-						else
-							table.remove(FriendsTextList["ObjectList"], table.find(FriendsTextList["ObjectList"], user)) 
-							FriendsTextList["RefreshValues"](FriendsTextList["ObjectList"])
+					local ent = shared.vapeentity
+					if ent then 
+						local rayparams = RaycastParams.new()
+						rayparams.FilterType = Enum.RaycastFilterType.Whitelist
+						local chars = {}
+						for i,v in pairs(ent.entityList) do 
+							table.insert(chars, v.Character)
+						end
+						rayparams.FilterDescendantsInstances = chars
+						local mouseunit = game:GetService("Players").LocalPlayer:GetMouse().UnitRay
+						local ray = workspace:Raycast(mouseunit.Origin, mouseunit.Direction * 10000, rayparams)
+						if ray then 
+							for i,v in pairs(ent.entityList) do 
+								if ray.Instance:IsDescendantOf(v.Character) then 
+									local found = table.find(FriendsTextList["ObjectList"], v.Player.Name)
+									if not found then
+										local num = #FriendsTextList["ObjectList"] + 1
+										FriendsTextList["ObjectList"][num] = v.Player.Name
+										FriendsTextList["ObjectListEnabled"][num] = true
+										FriendsTextList["RefreshValues"](FriendsTextList["ObjectList"])
+									else
+										table.remove(FriendsTextList["ObjectList"], found)
+										FriendsTextList["ObjectListEnabled"][found] = nil
+										FriendsTextList["RefreshValues"](FriendsTextList["ObjectList"])
+									end
+									break
+								end
+							end
 						end
 					end
 				end
@@ -1321,6 +1509,13 @@ GuiLibrary["UpdateUI"] = function()
 			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..splittext[1]..'</font><font color="rgb(170, 170, 170)">'..splittext[2]..'</font>'
 			newfirst = true
 			colorforindex[i2] = newcolor
+		end
+		if textguimode["Value"] == "Drawing" then 
+			for i,v in pairs(textguimodeobjects.Labels) do 
+				if colorforindex[i] then 
+					v.Color = colorforindex[i]
+				end
+			end
 		end
 		if onebackground then
 			for i3,v3 in pairs(onebackground:GetChildren()) do
@@ -1442,7 +1637,7 @@ local rescale = GUISettings.CreateToggle({
 	end,
 	["Default"] = true
 })
-cam:GetPropertyChangedSignal("ViewportSize"):connect(function()
+cam:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 	if rescale["Enabled"] then
 		GuiLibrary["MainRescale"].Scale = math.clamp(cam.ViewportSize.X / 1920, 0.5, 1)
 	end
@@ -1505,6 +1700,16 @@ GuiLibrary["SelfDestruct"] = function()
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 		if (v["Type"] == "Button" or v["Type"] == "OptionsButton") and v["Api"]["Enabled"] then
 			v["Api"]["ToggleButton"](false)
+		end
+	end
+	for i,v in pairs(textguimodeconnections) do 
+		v:Disconnect()
+	end
+	for i,v in pairs(textguimodeobjects) do 
+		for i2,v2 in pairs(v) do 
+			v2.Visible = false
+			v2:Remove()
+			v[i2] = nil
 		end
 	end
 	GuiLibrary["SelfDestructEvent"]:Fire()
