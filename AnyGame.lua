@@ -817,6 +817,7 @@ runcode(function()
 				aimfovframe.Transparency = 0.5
 				aimfovframe.NumSides = 100
 				aimfovframe.Filled = aimfovfilled["Enabled"]
+				aimfovframe.Thickness = 1
 				aimfovframe.Visible =  AimAssist["Enabled"] and aimmode["Value"] == "Legit"
 				aimfovframe.Color = Color3.fromHSV(aimfovframecolor["Hue"], aimfovframecolor["Sat"], aimfovframecolor["Value"])
 				aimfovframe.Radius = aimfov["Value"]

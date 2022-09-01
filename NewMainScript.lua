@@ -1049,6 +1049,10 @@ textguimode = TextGui.CreateDropdown({
 				onecustomdrawtext.Position = onecustomtext.AbsolutePosition + Vector2.new(onetext.TextXAlignment == Enum.TextXAlignment.Right and (onecustomtext.AbsoluteSize.X - onecustomdrawtext.TextBounds.X), 32)
 				onecustomdrawtext2.Position = onecustomdrawtext.Position + Vector2.new(1, 1)
 			end))
+			table.insert(textguimodeconnections, onething:GetPropertyChangedSignal("Visible"):Connect(function()
+				onethingdrawing.Visible = onething.Visible
+				onething2drawing.Visible = onething.Visible
+			end))
 			table.insert(textguimodeconnections, onething3:GetPropertyChangedSignal("Visible"):Connect(function()
 				onething3drawing.Visible = onething3.Visible
 				onething4drawing.Visible = onething3.Visible
