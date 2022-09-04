@@ -1,17 +1,7 @@
 {
-    "Blatant BedWars\nNormal": {
-        "ProfileName": "blatantnormal",
+    "Zyla Config": {
+        "ProfileName": "zyla",
         "ProfileGame": 6872274481,
         "OnlineProfileName": "BlatantBedWarsNormal.vapeprofile"
-    },
-    "Blatant BedWars\nCFrame\nBypass LongJump": {
-        "ProfileName": "blatantcframe1",
-        "ProfileGame": 6872274481,
-        "OnlineProfileName": "BlatantBedWarsCFrame1.vapeprofile"
-    },
-    "Blatant BedWars\nCFrame\nNormal LongJump": {
-        "ProfileName": "blatantcframe2",
-        "ProfileGame": 6872274481,
-        "OnlineProfileName": "BlatantBedWarsCFrame2.vapeprofile"
     }
 }
