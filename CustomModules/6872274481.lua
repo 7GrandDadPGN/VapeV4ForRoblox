@@ -9718,21 +9718,36 @@ end)
 GuiLibrary["RemoveObject"]("CapeOptionsButton")
 runcode(function()
 	local vapecapeconnection
-	GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	local capebox = {["Value"] = ""}
+	local Cape = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Cape",
 		["Function"] = function(callback)
 			if callback then
+				local customlink = capebox["Value"]:split("/")
+				local successfulcustom = false
+				if #customlink > 0 and capebox["Value"]:len() > 3 and capebox["Value"]:sub(capebox["Value"]:len() - 3, capebox["Value"]:len()):lower() == ".png" then
+					if (not betterisfile("vape/assets/"..customlink[#customlink])) then 
+						local suc, res = pcall(function() writefile("vape/assets/"..customlink[#customlink], game:HttpGet(capebox["Value"], true)) end)
+						if not suc then 
+							local warning = createwarning("Cape", "file failed to download\n"..res, 5)
+							pcall(function()
+								warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+							end)
+						end
+					end
+					successfulcustom = true
+				end
 				vapecapeconnection = lplr.CharacterAdded:Connect(function(char)
 					task.spawn(function()
 						pcall(function() 
-							Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
+							Cape(char, getcustomassetfunc("vape/assets/"..(successfulcustom and customlink[#customlink] or "VapeCape.png")))
 						end)
 					end)
 				end)
 				if lplr.Character then
 					task.spawn(function()
 						pcall(function() 
-							Cape(lplr.Character, getcustomassetfunc("vape/assets/VapeCape.png"))
+							Cape(lplr.Character, getcustomassetfunc("vape/assets/"..(successfulcustom and customlink[#customlink] or "VapeCape.png")))
 						end)
 					end)
 				end
@@ -9746,6 +9761,18 @@ runcode(function()
 							v:Remove()
 						end
 					end
+				end
+			end
+		end
+	})
+	capebox = Cape.CreateTextBox({
+		["Name"] = "File",
+		["TempText"] = "File (link)",
+		["FocusLost"] = function(enter) 
+			if enter then 
+				if Cape["Enabled"] then 
+					Cape["ToggleButton"](false)
+					Cape["ToggleButton"](false)
 				end
 			end
 		end
