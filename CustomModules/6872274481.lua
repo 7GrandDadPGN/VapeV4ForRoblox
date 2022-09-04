@@ -916,7 +916,6 @@ runcode(function()
             ["BlockEngineClientEvents"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client["block-engine-client-events"]).BlockEngineClientEvents,
 			["BlockPlacementController"] = KnitClient.Controllers.BlockPlacementController,
             ["BedwarsKits"] = require(repstorage.TS.games.bedwars.kit["bedwars-kit-shop"]).BedwarsKitShop,
-			["BedTable"] = {},
             ["BlockBreaker"] = KnitClient.Controllers.BlockBreakController.blockBreaker,
             ["BowTable"] = KnitClient.Controllers.ProjectileController,
 			["BowConstantsTable"] = debug.getupvalue(KnitClient.Controllers.ProjectileController.enableBeam, 5),
@@ -1037,11 +1036,6 @@ runcode(function()
 				connectionstodisconnect[#connectionstodisconnect + 1] = collectionservice:GetInstanceRemovedSignal("block"):Connect(function(v) local found = table.find(bedwarsblocks, v) if found then table.remove(bedwarsblocks, found) end blockraycast.FilterDescendantsInstances = bedwarsblocks end)
 				blockraycast.FilterDescendantsInstances = bedwarsblocks
 				local lowestypos = 99999
-				for i,v in pairs(bedwarsblocks) do 
-					if v.Name == "bed" then 
-						table.insert(bedwars["BedTable"], v)
-					end
-				end
 				for i,v in pairs(bedwarsblocks) do 
 					local newray = workspace:Raycast(v.Position + vec3(0, 800, 0), vec3(0, -1000, 0), blockraycast)
 					if i % 200 == 0 then 
@@ -1405,7 +1399,7 @@ local function getSpeedMultiplier(reduce)
 			speed = speed + 1
 		end
 	end
-	return reduce and speed ~= 1 and speed * (0.9 - (0.15 * math.floor(speed))) or speed
+	return reduce and speed ~= 1 and speed * (0.85 - (0.15 * math.floor(speed))) or speed
 end
 
 runcode(function()
@@ -2971,12 +2965,14 @@ runcode(function()
 					if lplr.Character then 
 						lplr.Character:SetAttribute("SpeedBoost", 3)
 						local allowed = true
-						dinoconnection = bedwars["ClientHandler"]:Get(bedwars["DinoRemote"]):Connect(function()
-							if lplr.Character then 
-								lplr.Character:SetAttribute("SpeedBoost", nil)
+						dinoconnection = bedwars["ClientHandler"]:Get(bedwars["DinoRemote"]):Connect(function(tab)
+							if tab.player == lplr then 
+								if lplr.Character then 
+									lplr.Character:SetAttribute("SpeedBoost", nil)
+								end
+								allowed = false
+								dinoconnection:Disconnect()
 							end
-							allowed = false
-							dinoconnection:Disconnect()
 						end)
 						task.delay(10, function()
 							if lplr.Character and allowed then 
@@ -3144,7 +3140,7 @@ runcode(function()
 		["Function"] = function(callback)
             if callback then
                 task.spawn(function()
-                    for i, obj in pairs(bedwars["BedTable"]) do
+                    for i, obj in pairs(collectionservice:GetTagged("bed")) do
                         if entity.isAlive and obj:GetAttribute("Team"..lplr:GetAttribute("Team").."NoBreak") and obj.Parent ~= nil then
                             if (entity.character.HumanoidRootPart.Position - obj.Position).magnitude <= bedprotectorrange["Value"] then
                                 local firstlayerplaced = placelayer(bedprotector1stlayer, obj, {"obsidian", "stone_brick", "plank_oak", getwool()})
@@ -3239,7 +3235,7 @@ runcode(function()
                     repeat
                         task.wait()
                         if nukerbeds["Enabled"] and (nukernofly["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] == false) then
-                            for i, obj in pairs(bedwars["BedTable"]) do
+                            for i, obj in pairs(collectionservice:GetTagged("bed")) do
                                 if entity.isAlive then
                                     if obj and bedwars["BlockController"]:isBlockBreakable({blockPosition = obj.Position / 3}, lplr) and obj.Parent ~= nil then
                                         if ((oldcloneroot and oldcloneroot.Position or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] then
@@ -4335,13 +4331,11 @@ runcode(function()
 							for i,v in pairs(positions.blocks) do
 								local newerpos = (newpos + vec3(v.X, v.Y, v.Z))
 								if entity.isAlive and (entity.character.HumanoidRootPart.Position - newerpos).magnitude <= 30 and isNearBlock(newerpos) and bedwars["BlockController"]:isAllowedPlacement(lplr, getwool(), newerpos / 3, 0) then
-									task.spawn(function()
-										schemplaceblock(newerpos, (v["blockType"] == "wool_white" and getwool() or v["blockType"]), function()
-											table.remove(positions.blocks, i)
-											if gethighlightboxatpos(newerpos) then
-												gethighlightboxatpos(newerpos):Remove()
-											end
-										end)
+									schemplaceblock(newerpos, (v["blockType"] == "wool_white" and getwool() or v["blockType"]), function()
+										table.remove(positions.blocks, i)
+										if gethighlightboxatpos(newerpos) then
+											gethighlightboxatpos(newerpos):Remove()
+										end
 									end)
 								end
 							end
@@ -4923,6 +4917,68 @@ runcode(function()
 		["Default"] = 20
 	})
 end)
+
+runcode(function()
+	local funnyfly = {["Enabled"] = false}
+	local flyacprogressbar
+	local flyacprogressbarframe
+	local flyacprogressbarframe2
+	local flyacprogressbartext
+	local bodyvelo
+	funnyfly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "FunnyFly",
+		["Function"] = function(callback)
+			if callback then 
+				local starty
+				local starttick = tick()
+				task.spawn(function()
+					local timesdone = 0
+					if GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["Value"] == "CFrame" then
+						repeat
+							timesdone = timesdone + 1
+							if entity.isAlive then
+								local root = entity.character.HumanoidRootPart
+								if starty == nil then 
+									starty = root.Position.Y
+								end
+								if not bodyvelo then 
+									bodyvelo = Instance.new("BodyVelocity")
+									bodyvelo.MaxForce = Vector3.new(0, 1000000, 0)
+									bodyvelo.Parent = root
+								else
+									bodyvelo.Parent = root
+								end
+								for i = 1, 15 do 
+									task.wait(0.01)
+									if (not funnyfly["Enabled"]) then break end
+									bodyvelo.Velocity = Vector3.new(0, i * 0.7, 0)
+								end
+								if (not isnetworkowner(root)) then
+									local timecalc = math.floor((tick() - starttick) * 10) / 10
+									createwarning("FunnyFly", "lasted "..timecalc.."s", 5)
+									break 
+								end
+							else
+								break
+							end
+						until (not funnyfly["Enabled"])
+					else
+						createwarning("FunnyFly", "funny fly only works with cframe", 5)
+					end
+					if funnyfly["Enabled"] then 
+						funnyfly["ToggleButton"](false)
+					end
+				end)
+			else
+				if bodyvelo then 
+					bodyvelo:Destroy()
+					bodyvelo = nil
+				end
+			end
+		end
+	})
+end)
+
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 
@@ -5092,21 +5148,21 @@ runcode(function()
 		if not entity.isAlive then
 			return nil
 		end
-		local equipped = getEquipped()
-		if killaurahandcheck["Enabled"] and (equipped["Type"] ~= "sword" or bedwars["KatanaController"].chargingMaid) then
+		local root = plr.RootPart
+		if not root then 
 			return nil
 		end
-		if killauratargetframe["Walls"]["Enabled"] and bedwars["SwordController"]:canSee({["instance"] = plr.Character, ["player"] = plr.Player, ["getInstance"] = function() return plr.Character end}) == false then
-			return nil
-		end
-		if killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) == false then
+		if killauramouse["Enabled"] and (not uis:IsMouseButtonPressed(0)) then
 			return nil
 		end
 		if killauragui["Enabled"] and (not (#bedwars["AppController"]:getOpenApps() <= 1 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false)) then
 			return nil
 		end
-		local root = plr.RootPart
-		if not root then 
+		local equipped = getEquipped()
+		if killaurahandcheck["Enabled"] and (equipped["Type"] ~= "sword" or bedwars["KatanaController"].chargingMaid) then
+			return nil
+		end
+		if killauratargetframe["Walls"]["Enabled"] and bedwars["SwordController"]:canSee({["player"] = plr.Player, ["getInstance"] = function() return plr.Character end}) == false then
 			return nil
 		end
 		local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
@@ -5121,7 +5177,7 @@ runcode(function()
 			killauranear = true
 			firstplayercodedone.done = true
 			if animationdelay <= tick() then
-				animationdelay = tick() + 0.17
+				animationdelay = tick() + 0.11
 				if not killauraswing["Enabled"] then 
 					bedwars["SwordController"]:playSwordEffect(swordmeta)
 				end
@@ -5133,14 +5189,14 @@ runcode(function()
 		if not (sword and sword["tool"]) then
 			return nil
 		end
+		if (workspace:GetServerTimeNow() - bedwars["SwordController"].lastAttack) < bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed then 
+			return nil
+		end
 		local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
 		if not playerattackable then
 			return nil
 		end
 		if killauranovape["Enabled"] and clients.ClientUsers[plr.Player.Name] then
-			return nil
-		end
-		if (workspace:GetServerTimeNow() - bedwars["SwordController"].lastAttack) < bedwars["ItemTable"][sword["tool"].Name].sword.attackSpeed then 
 			return nil
 		end
 		if oldcloneroot then 
@@ -6898,6 +6954,7 @@ GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 runcode(function()
 	local speedmode = {["Value"] = "Normal"}
 	local speedval = {["Value"] = 1}
+	local speednotification = {["Enabled"] = false}
 	local speedjump = {["Enabled"] = false}
 	local speedjumpheight = {["Value"] = 20}
 	local speedvelonum = {["Value"] = 3}
@@ -6951,14 +7008,17 @@ runcode(function()
 				speedcheck = lplr:GetAttributeChangedSignal("LastTeleported"):Connect(function()
 					if math.abs(lplr:GetAttribute("SpawnTime") - lplr:GetAttribute("LastTeleported")) > 1 and matchstatetick <= tick() and matchState ~= 0 then
 						slowdowntick = tick() + 3
-						local warning = createwarning("Speed", "Teleport Detected\nSlowing down speed for 3s.", 3)
-						pcall(function()
-							warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
-						end)
+						if speednotification["Enabled"] then
+							local warning = createwarning("Speed", "Teleport Detected\nSlowing down speed for 3s.", 3)
+							pcall(function()
+								warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+							end)
+						end
 					end
 				end)
 				local lastnear = false
 				local velonum = 0
+				local olddir
 				RunLoops:BindToHeartbeat("Speed", 1, function(delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						if speedanimation["Enabled"] then
@@ -6980,6 +7040,13 @@ runcode(function()
 									newpos = entity.character.Humanoid.MoveDirection * ((speedval["Value"] * getSpeedMultiplier(true)) - 20) * delta
 								end
 							end
+							if olddir then 
+								local olddirmag = (entity.character.Humanoid.MoveDirection - olddir).Magnitude
+								if olddirmag > 0.9 and slowdowntick <= tick() then 
+									slowdowntick = tick() + 0.3
+								end
+							end
+							olddir = entity.character.Humanoid.MoveDirection
 							local movevec = entity.character.Humanoid.MoveDirection.Unit * allowedvelo
 							movevec = movevec == movevec and movevec or Vector3.zero
 							local velocheck = not (longjump["Enabled"] and newlongjumpvelo == Vector3.zero)
@@ -7088,6 +7155,11 @@ runcode(function()
 		["Default"] = 25,
 		["Function"] = function() end
 	})
+	speednotification = speed.CreateToggle({
+		["Name"] = "Notification",
+		["Function"] = function() end,
+		["Default"] = true
+	})
 	speedjump = speed.CreateToggle({
 		["Name"] = "AutoJump", 
 		["Function"] = function(callback)
@@ -7142,6 +7214,136 @@ runcode(function()
 			["Function"] = function(val) SpeedNumbers.DecreaseVelo = val / 100 end
 		})
 	end
+end)
+
+runcode(function()
+	local function getaccessories()
+		local count = 0
+		if isAlive() then 
+			for i,v in pairs(lplr.Character:GetChildren()) do 
+				if v:IsA("Accessory") then 
+					count = count + 1
+				end
+			end
+		end
+		return count
+	end
+
+	local AntiCrash = {["Enabled"] = false}
+	AntiCrash = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AntiCrash",
+		["Function"] = function(callback)
+			if callback then 
+				local cached = {}
+				game:GetService("CollectionService"):GetInstanceAddedSignal("inventory-entity"):connect(function(inv)
+					spawn(function()
+						local invitem = inv:WaitForChild("HandInvItem")
+						local funny
+						task.wait(0.2)
+						for i,v in pairs(getconnections(invitem.Changed)) do 
+							funny = v.Function
+							v:Disable()
+						end
+						if funny then
+							invitem.Changed:connect(function(item)
+								if cached[inv] == nil then cached[inv] = 0 end
+								if cached[inv] >= 6 then return end
+								cached[inv] = cached[inv] + 1
+								task.delay(1, function() cached[inv] = cached[inv] - 1 end)
+								funny(item)
+							end)
+						end
+					end)
+				end)
+				for i2,inv in pairs(game:GetService("CollectionService"):GetTagged("inventory-entity")) do 
+					spawn(function()
+						local invitem = inv:WaitForChild("HandInvItem")
+						local funny
+						task.wait(0.2)
+						for i,v in pairs(getconnections(invitem.Changed)) do 
+							funny = v.Function
+							v:Disable()
+						end
+						if funny then
+							invitem.Changed:connect(function(item)
+								if cached[inv] == nil then cached[inv] = 0 end
+								if cached[inv] >= 6 then return end
+								cached[inv] = cached[inv] + 1
+								task.delay(1, function() cached[inv] = cached[inv] - 1 end)
+								funny(item)
+							end)
+						end
+					end)
+				end
+			end
+		end
+	})
+
+	local Crasher = {["Enabled"] = false}
+	local CrasherAutoEnable = {["Enabled"] = false}
+	local oldcrash
+	local oldplay
+	Crasher = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "ClientCrasher",
+		["Function"] = function(callback)
+			if callback then
+				oldcrash = bedwars["GameAnimationUtil"].playAnimation
+				oldplay = bedwars["SoundManager"].playSound
+				bedwars["GameAnimationUtil"].playAnimation = function(lplr, anim, ...)
+					if anim == bedwars["AnimationType"].EQUIP_1 then 
+						return
+					end
+					return oldcrash(lplr, anim, ...)
+				end
+				bedwars["SoundManager"].playSound = function(self, num, ...)
+					if num == bedwars["SoundList"].EQUIP_DEFAULT or num == bedwars["SoundList"].EQUIP_SWORD or num == bedwars["SoundList"].EQUIP_BOW then 
+						return
+					end
+					return oldplay(self, num, ...)
+				end
+				local remote = bedwars["ClientHandler"]:Get(bedwars["EquipItemRemote"])["instance"]
+				local slowmode = false
+				local suc 
+				task.spawn(function()
+					repeat
+						task.wait(slowmode and 2 or 15)
+						slowmode = not slowmode
+					until (not Crasher["Enabled"])
+				end)
+				task.spawn(function()
+					repeat
+						task.wait(0.2)
+						suc = pcall(function()
+							local inv = lplr.Character.InventoryFolder.Value:GetChildren()
+							local item = inv[1]
+							local item2 = inv[2]
+							if item then
+								task.spawn(function()
+									for i = 1, (slowmode and 0 or 35) do
+										game:GetService("RunService").Heartbeat:Wait()
+										task.spawn(function() 
+											remote:InvokeServer({
+												hand = item
+											})
+										end)
+										task.spawn(function() 
+											remote:InvokeServer({
+												hand = item2 or false
+											})
+										end)
+									end
+								end)
+							end
+						end)
+					until (not Crasher["Enabled"])
+				end)
+			else
+				bedwars["GameAnimationUtil"].playAnimation = oldcrash
+				bedwars["SoundManager"].playSound = oldplay
+				slowmode = false
+			end
+		end
+	})
 end)
 
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
@@ -7281,7 +7483,7 @@ runcode(function()
 								end
 							end
 							if flyacprogressbarframe then 
-								flyacprogressbarframe.TextLabel.Text = (onground and 2.8 or math.floor((groundtime - tick()) * 10) / 10).."s"
+								flyacprogressbarframe.TextLabel.Text = math.max(onground and 2.8 or math.floor((groundtime - tick()) * 10) / 10, 0).."s"
 							end
 							lastonground = onground
 							allowed = 1
@@ -7759,8 +7961,8 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 	["Function"] = function(callback) 
 		if callback then
 			RunLoops:BindToRenderStep("BedESP", 500, function()
-				if bedwars["BedTable"] then
-					for i,plr in pairs(bedwars["BedTable"]) do
+				if collectionservice:GetTagged("bed") then
+					for i,plr in pairs(collectionservice:GetTagged("bed")) do
 						local thing
 						if plr ~= nil and BedESPTable[plr] then
 							thing = BedESPTable[plr]
@@ -8429,9 +8631,9 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				task.spawn(function()
-					repeat task.wait() until #bedwars["BedTable"] > 0
+					repeat task.wait() until #collectionservice:GetTagged("bed") > 0
 					if BedPlates["Enabled"] then
-						for i,v in pairs(bedwars["BedTable"]) do
+						for i,v in pairs(collectionservice:GetTagged("bed")) do
 							local billboard = Instance.new("BillboardGui")
 							billboard.Parent = BedPlatesFolder
 							billboard.Name = "bed"
@@ -10029,12 +10231,22 @@ runcode(function()
 			if entity.isAlive and (not oldcloneroot) and networkownerfunc then 
 				local newnetworkowner = networkownerfunc(entity.character.HumanoidRootPart)
 				if oldnetworkowner ~= nil and oldnetworkowner ~= newnetworkowner and newnetworkowner == false and notlasso() then 
-					local falseflag = didpingspike()
-					if falseflag then 
-						createwarning("AnticheatBypass", "Lagspike Detected : "..falseflag, 10)
+					if not teleported[lplr] then
+						task.delay(1, function()
+							local falseflag = didpingspike()
+							if falseflag then 
+								local warning = createwarning("Vape", "Lagspike Detected\n"..falseflag, 10)
+								pcall(function()
+									warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+								end)
+							else
+								lagbacks = lagbacks + 1
+							end
+						end)
 					else
-						lagbacks = lagbacks + 1
+						createwarning("Vape", "Telepearl False Flag", 10)
 					end
+					teleported[lplr] = nil
 				end
 				oldnetworkowner = newnetworkowner
 			else
