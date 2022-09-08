@@ -7216,136 +7216,6 @@ runcode(function()
 	end
 end)
 
-runcode(function()
-	local function getaccessories()
-		local count = 0
-		if isAlive() then 
-			for i,v in pairs(lplr.Character:GetChildren()) do 
-				if v:IsA("Accessory") then 
-					count = count + 1
-				end
-			end
-		end
-		return count
-	end
-
-	local AntiCrash = {["Enabled"] = false}
-	AntiCrash = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AntiCrash",
-		["Function"] = function(callback)
-			if callback then 
-				local cached = {}
-				game:GetService("CollectionService"):GetInstanceAddedSignal("inventory-entity"):connect(function(inv)
-					spawn(function()
-						local invitem = inv:WaitForChild("HandInvItem")
-						local funny
-						task.wait(0.2)
-						for i,v in pairs(getconnections(invitem.Changed)) do 
-							funny = v.Function
-							v:Disable()
-						end
-						if funny then
-							invitem.Changed:connect(function(item)
-								if cached[inv] == nil then cached[inv] = 0 end
-								if cached[inv] >= 6 then return end
-								cached[inv] = cached[inv] + 1
-								task.delay(1, function() cached[inv] = cached[inv] - 1 end)
-								funny(item)
-							end)
-						end
-					end)
-				end)
-				for i2,inv in pairs(game:GetService("CollectionService"):GetTagged("inventory-entity")) do 
-					spawn(function()
-						local invitem = inv:WaitForChild("HandInvItem")
-						local funny
-						task.wait(0.2)
-						for i,v in pairs(getconnections(invitem.Changed)) do 
-							funny = v.Function
-							v:Disable()
-						end
-						if funny then
-							invitem.Changed:connect(function(item)
-								if cached[inv] == nil then cached[inv] = 0 end
-								if cached[inv] >= 6 then return end
-								cached[inv] = cached[inv] + 1
-								task.delay(1, function() cached[inv] = cached[inv] - 1 end)
-								funny(item)
-							end)
-						end
-					end)
-				end
-			end
-		end
-	})
-
-	local Crasher = {["Enabled"] = false}
-	local CrasherAutoEnable = {["Enabled"] = false}
-	local oldcrash
-	local oldplay
-	Crasher = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "ClientCrasher",
-		["Function"] = function(callback)
-			if callback then
-				oldcrash = bedwars["GameAnimationUtil"].playAnimation
-				oldplay = bedwars["SoundManager"].playSound
-				bedwars["GameAnimationUtil"].playAnimation = function(lplr, anim, ...)
-					if anim == bedwars["AnimationType"].EQUIP_1 then 
-						return
-					end
-					return oldcrash(lplr, anim, ...)
-				end
-				bedwars["SoundManager"].playSound = function(self, num, ...)
-					if num == bedwars["SoundList"].EQUIP_DEFAULT or num == bedwars["SoundList"].EQUIP_SWORD or num == bedwars["SoundList"].EQUIP_BOW then 
-						return
-					end
-					return oldplay(self, num, ...)
-				end
-				local remote = bedwars["ClientHandler"]:Get(bedwars["EquipItemRemote"])["instance"]
-				local slowmode = false
-				local suc 
-				task.spawn(function()
-					repeat
-						task.wait(slowmode and 2 or 15)
-						slowmode = not slowmode
-					until (not Crasher["Enabled"])
-				end)
-				task.spawn(function()
-					repeat
-						task.wait(0.2)
-						suc = pcall(function()
-							local inv = lplr.Character.InventoryFolder.Value:GetChildren()
-							local item = inv[1]
-							local item2 = inv[2]
-							if item then
-								task.spawn(function()
-									for i = 1, (slowmode and 0 or 35) do
-										game:GetService("RunService").Heartbeat:Wait()
-										task.spawn(function() 
-											remote:InvokeServer({
-												hand = item
-											})
-										end)
-										task.spawn(function() 
-											remote:InvokeServer({
-												hand = item2 or false
-											})
-										end)
-									end
-								end)
-							end
-						end)
-					until (not Crasher["Enabled"])
-				end)
-			else
-				bedwars["GameAnimationUtil"].playAnimation = oldcrash
-				bedwars["SoundManager"].playSound = oldplay
-				slowmode = false
-			end
-		end
-	})
-end)
-
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 local flymissile
 runcode(function()
@@ -10653,7 +10523,7 @@ runcode(function()
 						end	
 						local oldweld = bedwars["WeldTable"].weldCharacterAccessories
 						local alreadydone = {}
-						bedwars["WeldTable"].weldCharacterAccessories = function(model, ...)
+						bedwars["WeldTable"].weldCharacterAccessories = function(self, model, ...)
 							for i,v in pairs(model:GetChildren()) do
 								local died = v.Name == "HumanoidRootPart" and v:FindFirstChild("Died")
 								if died then 
@@ -10692,7 +10562,7 @@ runcode(function()
 									end)
 								end
 							end
-							return oldweld(model, ...)
+							return oldweld(self, model, ...)
 						end
 						local damagetab = debug.getupvalue(bedwars["DamageIndicator"], 2)
 						damagetab.strokeThickness = false
