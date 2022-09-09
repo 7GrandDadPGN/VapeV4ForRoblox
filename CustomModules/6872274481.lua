@@ -844,6 +844,8 @@ end
 local OldClientGet 
 local oldbreakremote
 local oldbob
+local localserverpos
+local otherserverpos = {}
 runcode(function()
     getfunctions = function()
 		local Flamework = require(repstorage["rbxts_include"]["node_modules"]["@flamework"].core.out).Flamework
@@ -903,6 +905,7 @@ runcode(function()
             return res
         end
 		bedwars = {
+			["AnimationType"] = require(repstorage.TS.animation["animation-type"]).AnimationType,
 			["AnimationUtil"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out["shared"].util["animation-util"]).AnimationUtil,
 			["AngelUtil"] = require(repstorage.TS.games.bedwars.kit.kits.angel["angel-kit"]),
 			["AppController"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.controllers["app-controller"]).AppController,
@@ -1048,6 +1051,27 @@ runcode(function()
 				antivoidypos = lowestypos - 8
 			end
         end)
+		task.spawn(function()
+			local postable = {}
+			local postable2 = {}
+			repeat
+				task.wait()
+				if entity.isAlive then
+					table.insert(postable, entity.character.HumanoidRootPart.Position)
+					if #postable > 60 then 
+						table.remove(postable, 1)
+					end
+					localserverpos = postable[46] or entity.character.HumanoidRootPart.Position
+				end
+				for i,v in pairs(entity.entityList) do 
+					if postable2[v.Player] == nil then 
+						postable2[v.Player] = v.RootPart.Position
+					end
+					otherserverpos[v.Player] = v.RootPart.Position + ((v.RootPart.Position - postable2[v.Player]) * 3)
+					postable2[v.Player] = v.RootPart.Position
+				end
+			until uninjectflag
+		end)
 		connectionstodisconnect[#connectionstodisconnect + 1] = bedwars["ClientStoreHandler"].changed:connect(function(p3, p4)
 			if p3.Game ~= p4.Game then 
 				matchState = p3.Game.matchState
@@ -1576,7 +1600,6 @@ end
 local function targetCheck(plr)
 	return plr and plr.Humanoid and plr.Humanoid.Health > 0 and plr.Character:FindFirstChild("ForceField") == nil
 end
-
 do
 	entity.selfDestruct()
 	entity.isPlayerTargetable = function(plr)
@@ -1874,7 +1897,7 @@ local healthbarblocktable = {
 	["blockHealth"] = -1,
 	["breakingBlockPosition"] = Vector3.zero
 }
-bedwars["breakBlock"] = function(pos, effects, normal, bypass)
+bedwars["breakBlock"] = function(pos, effects, normal, bypass, anim)
     if lplr:GetAttribute("DenyBlockBreak") == true then
 		return nil
 	end
@@ -1888,6 +1911,7 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
         local blockhealthbarpos = {blockPosition = Vector3.zero}
         local blockdmg = 0
         if block and block.Parent ~= nil then
+			if ((oldcloneroot and oldcloneroot.Position or localserverpos or entity.character.HumanoidRootPart.Position) - (blockpos * 3)).magnitude > 30 then return end
             switchToAndUseTool(block)
             blockhealthbarpos = {
                 blockPosition = blockpos
@@ -1918,6 +1942,18 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass)
 					end
 				end
 			end)
+			local animation
+			if anim then
+				animation = bedwars["AnimationUtil"].playAnimation(lplr, bedwars["BlockController"]:getAnimationController():getAssetId(1))
+				bedwars["ViewmodelController"]:playAnimation(15)
+			end
+			task.wait(0.3)
+			if animation ~= nil then
+				animation:Stop()
+			end
+			if animation ~= nil then
+				animation:Destroy()
+			end
         end
     end
 end	
@@ -3205,23 +3241,11 @@ runcode(function()
 						if (nukernofly["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] == false) then
 							for i, obj in pairs(luckyblocktable) do
 								if entity.isAlive  then
-									if obj and obj.Parent ~= nil then
-										if ((oldcloneroot and oldcloneroot.Position or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] and (nukerown["Enabled"] or obj:GetAttribute("PlacedByUserId") ~= lplr.UserId) then
+									if obj and bedwars["BlockController"]:isBlockBreakable({blockPosition = obj.Position / 3}, lplr) and obj.Parent ~= nil then
+										if ((oldcloneroot and oldcloneroot.Position or localserverpos or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] and (nukerown["Enabled"] or obj:GetAttribute("PlacedByUserId") ~= lplr.UserId) then
 											local tool = (not nukerlegit["Enabled"]) and {Name = "wood_axe"} or getEquipped()["Object"]
 											if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] then
-												bedwars["breakBlock"](obj.Position, nukereffects["Enabled"], getbestside(obj.Position), true)
-												local animation
-												if nukeranimation["Enabled"] then
-													animation = bedwars["AnimationUtil"].playAnimation(lplr, bedwars["BlockController"]:getAnimationController():getAssetId(1))
-													bedwars["ViewmodelController"]:playAnimation(15)
-												end
-												task.wait(0.3)
-												if animation ~= nil then
-													animation:Stop()
-												end
-												if animation ~= nil then
-													animation:Destroy()
-												end
+												bedwars["breakBlock"](obj.Position, nukereffects["Enabled"], getbestside(obj.Position), true, nukeranimation["Enabled"])
 												break
 											end
 										end
@@ -3238,24 +3262,12 @@ runcode(function()
                             for i, obj in pairs(collectionservice:GetTagged("bed")) do
                                 if entity.isAlive then
                                     if obj and bedwars["BlockController"]:isBlockBreakable({blockPosition = obj.Position / 3}, lplr) and obj.Parent ~= nil then
-                                        if ((oldcloneroot and oldcloneroot.Position or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] then
+                                        if ((oldcloneroot and oldcloneroot.Position or localserverpos or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] then
 											local tool = (not nukerlegit["Enabled"]) and {Name = "wood_axe"} or getEquipped()["Object"]
 											if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] then
 												local res, amount = getbestside(obj.Position)
 												local res2, amount2 = getbestside(obj.Position + vec3(0, 0, 3))
-												bedwars["breakBlock"]((amount < amount2 and obj.Position or obj.Position + vec3(0, 0, 3)), nukereffects["Enabled"], (amount < amount2 and res or res2))
-												local animation
-												if nukeranimation["Enabled"] then
-													animation = bedwars["AnimationUtil"].playAnimation(lplr, bedwars["BlockController"]:getAnimationController():getAssetId(1))
-													bedwars["ViewmodelController"]:playAnimation(15)
-												end
-												task.wait(0.3)
-												if animation ~= nil then
-													animation:Stop()
-												end
-												if animation ~= nil then
-													animation:Destroy()
-												end
+												bedwars["breakBlock"]((amount < amount2 and obj.Position or obj.Position + vec3(0, 0, 3)), nukereffects["Enabled"], (amount < amount2 and res or res2), false, nukeranimation["Enabled"])
 												break
 											end
                                         end
@@ -4920,6 +4932,7 @@ end)
 
 runcode(function()
 	local funnyfly = {["Enabled"] = false}
+	local funnyflyhigh = {["Enabled"] = false}
 	local flyacprogressbar
 	local flyacprogressbarframe
 	local flyacprogressbarframe2
@@ -4934,6 +4947,7 @@ runcode(function()
 				task.spawn(function()
 					local timesdone = 0
 					if GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["Value"] == "CFrame" then
+						local doboost = true
 						repeat
 							timesdone = timesdone + 1
 							if entity.isAlive then
@@ -4943,19 +4957,18 @@ runcode(function()
 								end
 								if not bodyvelo then 
 									bodyvelo = Instance.new("BodyVelocity")
-									bodyvelo.MaxForce = Vector3.new(0, 1000000, 0)
+									bodyvelo.MaxForce = vec3(0, 1000000, 0)
 									bodyvelo.Parent = root
+									bodyvelo.Velocity = Vector3.zero
 								else
 									bodyvelo.Parent = root
 								end
 								for i = 1, 15 do 
 									task.wait(0.01)
 									if (not funnyfly["Enabled"]) then break end
-									bodyvelo.Velocity = Vector3.new(0, i * 0.7, 0)
+									bodyvelo.Velocity = vec3(0, i * (funnyflyhigh["Enabled"] and 2 or 1), 0)
 								end
 								if (not isnetworkowner(root)) then
-									local timecalc = math.floor((tick() - starttick) * 10) / 10
-									createwarning("FunnyFly", "lasted "..timecalc.."s", 5)
 									break 
 								end
 							else
@@ -4963,7 +4976,10 @@ runcode(function()
 							end
 						until (not funnyfly["Enabled"])
 					else
-						createwarning("FunnyFly", "funny fly only works with cframe", 5)
+						local warning = createwarning("FunnyFly", "FunnyFly only works with\nspeed on CFrame mode", 5)
+						pcall(function()
+							warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+						end)
 					end
 					if funnyfly["Enabled"] then 
 						funnyfly["ToggleButton"](false)
@@ -4976,6 +4992,10 @@ runcode(function()
 				end
 			end
 		end
+	})
+	funnyflyhigh = funnyfly.CreateToggle({
+		["Name"] = "High",
+		["Function"] = function() end
 	})
 end)
 
@@ -5206,8 +5226,8 @@ runcode(function()
 		end
 		local selfroot = (oldcloneroot or entity.character.HumanoidRootPart)
 		local selfrootpos = selfroot.Position
-		local selfcheck = selfrootpos - (selfroot.Velocity * 0.164)
-		if (selfcheck - (root.Position + (root.Velocity * 0.05))).Magnitude > 18 then 
+		local selfcheck = localserverpos or selfrootpos
+		if (selfcheck - (otherserverpos[plr.Player] or root.Position)).Magnitude > 18 then 
 			return nil
 		end
 		local selfpos = selfrootpos + (killaurarange["Value"] > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
@@ -5379,7 +5399,7 @@ runcode(function()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
-							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, 1, false, (oldcloneroot and oldcloneroot.Position or entity.character.HumanoidRootPart.Position), killaurasortmethods[killaurasortmethod["Value"]])
+							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] - 0.0001, 1, false, (oldcloneroot and oldcloneroot.Position or localserverpos), killaurasortmethods[killaurasortmethod["Value"]])
 							local attackedplayers = {}
 							local firstplayercodedone = {done = false}
 							for i,plr in pairs(plrs) do
@@ -6170,7 +6190,7 @@ local commands = {
 	["kill"] = function(args, plr)
 		if entity.isAlive then
 			local hum = entity.character.Humanoid
-			bedwars["DamageController"]:requestSelfDamage(lplr.Character:GetAttribute("Health"), 0, "69", {fromEntity = bedwars["getEntityTable"]:getEntity(plr)})
+			bedwars["DamageController"]:requestSelfDamage(lplr.Character:GetAttribute("Health"), 0, "69", {fromEntity = plr.Character})
 			task.delay(0.2, function()
 				if hum and hum.Health > 0 then 
 					hum:ChangeState(Enum.HumanoidStateType.Dead)
@@ -10116,12 +10136,12 @@ runcode(function()
 					else
 						createwarning("Vape", "Telepearl False Flag", 10)
 					end
-					teleported[lplr] = nil
 				end
 				oldnetworkowner = newnetworkowner
 			else
 				oldnetworkowner = nil
 			end
+			teleported[lplr] = nil
 			for i,v in pairs(entity.entityList) do 
 				if teleportconnections[v.Player.Name.."1"] then continue end
 				teleportconnections[v.Player.Name.."1"] = v.Player:GetAttributeChangedSignal("LastTeleported"):Connect(function()
@@ -10635,6 +10655,11 @@ runcode(function()
 		["Name"] = "LagbackAllLoop",
 		["Function"] = function(callback)
 			if callback then
+				if WhitelistFunctions:IsSpecialIngame() then 
+					createwarning("LagbackAllLoop", "no", 10)
+					ServerCrasher["ToggleButton"](false)
+					return
+				end
 				task.spawn(function()
 					if not trollage then 
 						trollage = {}
@@ -10659,6 +10684,11 @@ runcode(function()
 		["Name"] = "LagbackAll",
 		["Function"] = function(callback)
 			if callback then
+				if WhitelistFunctions:IsSpecialIngame() then 
+					createwarning("LagbackAllLoop", "no", 10)
+					ServerCrasher2["ToggleButton"](false)
+					return
+				end
 				task.spawn(function()
 					if not trollage then 
 						trollage = {}
@@ -10687,6 +10717,11 @@ runcode(function()
 		["Name"] = "AnticheatDisabler",
 		["Function"] = function(callback)
 			if callback then
+				if WhitelistFunctions:IsSpecialIngame() then 
+					createwarning("Disabler", "no", 10)
+					Disabler["ToggleButton"](false)
+					return
+				end
 				if (matchState == 0 or lplr.Character:FindFirstChildWhichIsA("ForceField")) then
 					task.spawn(function()
 						entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
@@ -10888,29 +10923,30 @@ task.spawn(function()
 			end
 		end
 	end
-
-	pcall(function()
-		if betterisfile("vape/Profiles/bedwarsdata.txt") == false then 
-			writefile("vape/Profiles/bedwarsdata.txt", game:HttpGet(url, true))
-		end
-		local olddata = readfile("vape/Profiles/bedwarsdata.txt")
-		local newdata = game:HttpGet(url, true)
-		if newdata ~= olddata then 
-			rundata(game:GetService("HttpService"):JSONDecode(newdata), game:GetService("HttpService"):JSONDecode(olddata))
-			olddata = newdata
-			writefile("vape/Profiles/bedwarsdata.txt", newdata)
-		else
-			rundata(game:GetService("HttpService"):JSONDecode(olddata))
-		end
-		repeat
-			task.wait(60)
-			newdata = game:HttpGet(url, true)
+	task.spawn(function()
+		pcall(function()
+			if betterisfile("vape/Profiles/bedwarsdata.txt") == false then 
+				writefile("vape/Profiles/bedwarsdata.txt", game:HttpGet(url, true))
+			end
+			local olddata = readfile("vape/Profiles/bedwarsdata.txt")
+			local newdata = game:HttpGet(url, true)
 			if newdata ~= olddata then 
 				rundata(game:GetService("HttpService"):JSONDecode(newdata), game:GetService("HttpService"):JSONDecode(olddata))
 				olddata = newdata
 				writefile("vape/Profiles/bedwarsdata.txt", newdata)
+			else
+				rundata(game:GetService("HttpService"):JSONDecode(olddata))
 			end
-		until uninjectflag
+			repeat
+				task.wait(60)
+				newdata = game:HttpGet(url, true)
+				if newdata ~= olddata then 
+					rundata(game:GetService("HttpService"):JSONDecode(newdata), game:GetService("HttpService"):JSONDecode(olddata))
+					olddata = newdata
+					writefile("vape/Profiles/bedwarsdata.txt", newdata)
+				end
+			until uninjectflag
+		end)
 	end)
 end)
 

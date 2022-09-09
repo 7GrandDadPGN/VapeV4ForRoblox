@@ -983,25 +983,25 @@ textguimode = TextGui.CreateDropdown({
 			onethingdrawing.Size = onething.AbsoluteSize
 			onethingdrawing.Position = onething.AbsolutePosition + Vector2.new(0, 36)
 			onethingdrawing.ZIndex = 2
-			onethingdrawing.Visible = true
+			onethingdrawing.Visible = onething.Visible
 			local onething2drawing = Drawing.new("Image")
 			onething2drawing.Data = readfile("vape/assets/VapeLogo4.png")
 			onething2drawing.Size = onething2.AbsoluteSize
 			onething2drawing.Position = onething2.AbsolutePosition + Vector2.new(0, 36)
 			onething2drawing.ZIndex = 2
-			onething2drawing.Visible = true
+			onething2drawing.Visible = onething.Visible
 			local onething3drawing = Drawing.new("Image")
 			onething3drawing.Data = readfile(translatedlogo and "vape/translations/"..GuiLibrary["Language"].."/VapeLogo3.png" or "vape/assets/VapeLogo3.png")
 			onething3drawing.Size = onething.AbsoluteSize
 			onething3drawing.Position = onething.AbsolutePosition + Vector2.new(1, 37)
 			onething3drawing.Transparency = 0.5
-			onething3drawing.Visible = onething3.Visible
+			onething3drawing.Visible = onething.Visible and onething3.Visible
 			local onething4drawing = Drawing.new("Image")
 			onething4drawing.Data = readfile("vape/assets/VapeLogo4.png")
 			onething4drawing.Size = onething2.AbsoluteSize
 			onething4drawing.Position = onething2.AbsolutePosition + Vector2.new(1, 37)
 			onething4drawing.Transparency = 0.5
-			onething4drawing.Visible = onething3.Visible
+			onething4drawing.Visible = onething.Visible and onething3.Visible
 			local onecustomdrawtext = Drawing.new("Text")
 			onecustomdrawtext.Size = 30
 			onecustomdrawtext.Text = onecustomtext.Text
@@ -1049,10 +1049,6 @@ textguimode = TextGui.CreateDropdown({
 				onecustomdrawtext.Position = onecustomtext.AbsolutePosition + Vector2.new(onetext.TextXAlignment == Enum.TextXAlignment.Right and (onecustomtext.AbsoluteSize.X - onecustomdrawtext.TextBounds.X), 32)
 				onecustomdrawtext2.Position = onecustomdrawtext.Position + Vector2.new(1, 1)
 			end))
-			table.insert(textguimodeconnections, onething:GetPropertyChangedSignal("Visible"):Connect(function()
-				onethingdrawing.Visible = onething.Visible
-				onething2drawing.Visible = onething.Visible
-			end))
 			table.insert(textguimodeconnections, onething3:GetPropertyChangedSignal("Visible"):Connect(function()
 				onething3drawing.Visible = onething3.Visible
 				onething4drawing.Visible = onething3.Visible
@@ -1062,6 +1058,12 @@ textguimode = TextGui.CreateDropdown({
 					textdraw.Visible = onetext2.Visible
 				end
 				onecustomdrawtext2.Visible = onecustomtext.Visible and onetext2.Visible
+			end))
+			table.insert(textguimodeconnections, onething:GetPropertyChangedSignal("Visible"):Connect(function()
+				onethingdrawing.Visible = onething.Visible
+				onething2drawing.Visible = onething.Visible
+				onething3drawing.Visible = onething.Visible and onetext2.Visible
+				onething4drawing.Visible = onething.Visible and onetext2.Visible
 			end))
 			table.insert(textguimodeconnections, onecustomtext:GetPropertyChangedSignal("Visible"):Connect(function()
 				onecustomdrawtext.Visible = onecustomtext.Visible
@@ -1401,13 +1403,12 @@ ModuleSettings.CreateToggle({
 								if ray.Instance:IsDescendantOf(v.Character) then 
 									local found = table.find(FriendsTextList["ObjectList"], v.Player.Name)
 									if not found then
-										local num = #FriendsTextList["ObjectList"] + 1
-										FriendsTextList["ObjectList"][num] = v.Player.Name
-										FriendsTextList["ObjectListEnabled"][num] = true
+										table.insert(FriendsTextList["ObjectList"], v.Player.Name)
+										table.insert(FriendsTextList["ObjectListEnabled"], true)
 										FriendsTextList["RefreshValues"](FriendsTextList["ObjectList"])
 									else
 										table.remove(FriendsTextList["ObjectList"], found)
-										FriendsTextList["ObjectListEnabled"][found] = nil
+										table.remove(FriendsTextList["ObjectListEnabled"], found)
 										FriendsTextList["RefreshValues"](FriendsTextList["ObjectList"])
 									end
 									break
