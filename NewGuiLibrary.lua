@@ -477,7 +477,6 @@ if shared.VapeExecuted then
 						end
 					end
 					if v["Type"] == "DropdownMain" then 
-						print("set val", i)
 						obj["Api"]["SetValue"](v["Value"])
 					end
 					if v["Type"] == "ColorSliderMain" then

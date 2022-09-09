@@ -1670,6 +1670,7 @@ runcode(function()
 				task.spawn(function()
 					repeat
 						task.wait()
+						if (not Killaura["Enabled"]) then break end
 						local targettable = {}
 						local targetsize = 0
 						local attackedplayers = {}
@@ -1685,10 +1686,6 @@ runcode(function()
 											local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
 											local angle = math.acos(localfacing:Dot(vec))
 											if angle <= math.rad(killauraangle["Value"]) then
-												if killauratick <= tick() then
-													tool:Activate()
-													killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
-												end
 												killauranear = true
 												targettable[v.Player.Name] = {
 													["UserId"] = v.Player.UserId,
@@ -1705,6 +1702,10 @@ runcode(function()
 												local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(v.Player)
 												if not playerattackable then
 													continue
+												end
+												if killauratick <= tick() then
+													tool:Activate()
+													killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
 												end
 												if killauramethod["Value"] == "Bypass" then 
 													ignorelist.FilterDescendantsInstances = {v.Character}
@@ -2566,7 +2567,7 @@ runcode(function()
 					v.Parent = char
 				elseif v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then  
 					v.Parent = char
-				elseif v.Name == "Head" then 
+				elseif v.Name == "Head" and char.Head:IsA("MeshPart") then 
 					char.Head.MeshId = v.MeshId
 				end
 			end
