@@ -6593,7 +6593,7 @@ runcode(function()
 				for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
 					if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
 						newbubble.Parent.Parent.Visible = false
-						repeat task.wait() until newbubble.Parent.Parent.Parent == nil or newbubble.Parent.Parent.Parent.Parent == nil
+						repeat task.wait() until newbubble:IsDescendantOf(nil)
 						if connection then
 							connection:Disconnect()
 						end
@@ -6602,7 +6602,7 @@ runcode(function()
 				connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:Connect(function(newbubble)
 					if newbubble:IsA("TextLabel") and newbubble.Text:find(clients.ChatStrings2[client]) then
 						newbubble.Parent.Parent.Visible = false
-						repeat task.wait() until newbubble.Parent.Parent.Parent == nil or  newbubble.Parent.Parent.Parent.Parent == nil
+						repeat task.wait() until newbubble:IsDescendantOf(nil)
 						if connection then
 							connection:Disconnect()
 						end
@@ -7861,7 +7861,7 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 							end
 						end
 						
-						if plr ~= nil and plr.Parent ~= nil and plr:FindFirstChild("Covers") and plr.Covers.BrickColor ~= lplr.Team.TeamColor then
+						if plr ~= nil and plr.Parent ~= nil and plr:FindFirstChild("Covers") and lplr.Team and plr.Covers.BrickColor ~= lplr.Team.TeamColor then
 							if BedESPFolder:FindFirstChild(plr.Name..tostring(plr.Covers.BrickColor)) == nil then
 								local Bedfolder = Instance.new("Folder")
 								Bedfolder.Name = plr.Name..tostring(plr.Covers.BrickColor)
