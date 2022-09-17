@@ -10753,7 +10753,7 @@ runcode(function()
 	end
 
 	NoNameTag = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AnticheatDisabler",
+		["Name"] = "NoNameTag",
 		["Function"] = function(callback)
 			if callback then
 				newchar(lplr.Character)
