@@ -54,7 +54,7 @@ end
 
 local function createwarning(title, text, delay)
 	pcall(function()
-		local frame = GuiLibrary["CreateNotification"](title, text, delay, "vape/assets/WarningNotification.png")
+		local frame = GuiLibrary["CreateNotification"](title, text, delay, "assets/WarningNotification.png")
 		frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
 		frame.Frame.Frame.BackgroundColor3 = Color3.fromRGB(236, 129, 44)
 	end)
@@ -401,7 +401,7 @@ getfunctions = function()
 		wait(1)
 		getfunctions()
 	else
-		print("loaded")
+
 	end
 end
 getfunctions()
@@ -481,7 +481,6 @@ oldindex = hookmetamethod(game, "__index", function(self, index, ...)
 					if AimAssistMode["Value"] == "Legit" then 
 						if plr ~= oldplr then
 							if shooting >= tick() then
-								print("switching from", oldplr, "to", plr)
 								if oldplr ~= nil then 
 									switchdelay = tick() + 1
 									oldpos = shootpos
@@ -496,7 +495,6 @@ oldindex = hookmetamethod(game, "__index", function(self, index, ...)
 						end
 						if shootinglerp >= tick() and (math.clamp((shootinglerp - tick()) * (100 / (randomval * 1.2)), 0, 1)) < 1 then
 							local shootlerp = Dir:Lerp(OldDir, (math.clamp((shootinglerp - tick()) * (100 / (randomval * 1.2)), 0, 1)))
-							print("shooting to", (OldDir - Dir).magnitude)
 							if (OldDir - Dir).magnitude <= 30 then
 								shootinglerp = tick()
 							end
@@ -505,7 +503,6 @@ oldindex = hookmetamethod(game, "__index", function(self, index, ...)
 						else
 							if switchdelay >= tick() and (math.clamp((switchdelay - tick()) * (100 / randomval), 0, 1)) < 1 then
 								if typeof(oldpos) == "Vector3" then
-									print(switchdelay - tick())
 									if (Dir - OldDir).magnitude <= 30 then
 										switchdelay = tick()
 									end
@@ -572,7 +569,6 @@ local oldhitmarker = phantomforces["Hud"].firehitmarker
 local oldsound = phantomforces["Sound"].PlaySound
 local seeable = {}
 local actuallyseeable = {}
-print("done1")
 runcode(function()
 	local GunTracers = {["Enabled"] = false}
 	local GunTracersColor = {["Hue"] = 0.44, ["Sat"] = 1, ["Value"] = 1}
@@ -810,7 +806,6 @@ phantomforces["Network"].send = function(self, method, ...)
 			end
 		end]]
 		if checkmethod == "newgrenade" then 
-			print(SilentGrenadeMode["Value"])
 			if SilentGrenadeMode["Value"] == "Impact" then 
 				for i,v in pairs(args[2].frames) do
 					if type(phantomforces["Ray"].raycastwhitelist) == "table" then
@@ -824,7 +819,6 @@ phantomforces["Network"].send = function(self, method, ...)
 			elseif SilentGrenadeMode["Value"] == "Sticky" then 
 				local newpos
 				for i,v in pairs(args[2].frames) do
-					print(i)
 					if newpos == nil then
 						if type(phantomforces["Ray"].raycastwhitelist) == "table" then
 							local ray = workspace:FindPartOnRayWithWhitelist(Ray.new(v.p0, v.v0), phantomforces["Ray"].raycastwhitelist)
@@ -833,7 +827,6 @@ phantomforces["Network"].send = function(self, method, ...)
 							end
 						end
 					else
-						print("overwrite", i)
 						v.p0 = newpos
 						v.v0 = Vector3.new(0, 0, 0)
 					end
@@ -1430,7 +1423,6 @@ end]]
 local function findjobid(jobid, compare)
 	if compare then
 		for i,v in pairs(compare:split("/")) do
-			print(i, v)
 			if v == jobid then
 				return false
 			end
@@ -1465,57 +1457,52 @@ spawn(function()
 			end
 		end
 	end)
+
+	local getrandomserver
+	local alreadyjoining = false
+	local placeid = game.PlaceId
+	local maxplayers = tonumber(players.MaxPlayers)
+	getrandomserver = function(pointer)
+		if pointer == nil then 
+			shared.vapekickedfrom = shared.vapekickedfrom and shared.vapekickedfrom..game.JobId..'/' or game.JobId..'/'
+		end
+		alreadyjoining = true
+		local data = requestfunc({
+			Url = "https://games.roblox.com/v1/games/"..placeid.."/servers/Public?sortOrder=Desc&limit=100"..(pointer and "&cursor="..pointer or ""),
+			Method = "GET"
+		}).Body
+		local decodeddata = game:GetService("HttpService"):JSONDecode(data)
+		local chosenServer
+		for i, v in pairs(decodeddata.data) do
+			if (tonumber(v.playing) < maxplayers) and tonumber(v.ping) < 300 and v.id ~= game.JobId and findjobid(v.id, shared.vapekickedfrom) then 
+				chosenServer = v.id
+				break
+			end
+		end
+		if chosenServer then 
+			alreadyjoining = false
+			createwarning("AutoRejoin", "teleporting...", 5)
+			game:GetService("TeleportService"):TeleportToPlaceInstance(placeid, chosenServer, lplr)
+		else
+			if decodeddata.nextPageCursor then
+				getrandomserver(decodeddata.nextPageCursor)
+			else
+				alreadyjoining = false
+			end
+		end
+	end
+
 	local overlay = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
 	onrejoin = overlay.DescendantAdded:Connect(function(obj)
 		if obj.Name == "ErrorMessage" then
 			obj:GetPropertyChangedSignal("Text"):Connect(function()
 				if obj.Text:find("votekicked") and AutoRejoin["Enabled"] then
-					shared.vapekickedfrom = shared.vapekickedfrom and shared.vapekickedfrom..game.JobId..'/' or game.JobId..'/'
-					local PlaceId = game.PlaceId
-					local URL = requestfunc({
-						Url = "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Desc&limit=100",
-						Method = "GET"
-					}).Body
-					local MaxPlayers = tonumber(game.Players.MaxPlayers)
-					local List = {}
-					function tablelength(T)
-						local count = 0
-						for _ in pairs(T) do count = count + 1 end
-						return count
-					end
-					local Query = game:GetService("HttpService"):JSONDecode(URL)
-					print(Query.data)
-					for i=1,tonumber(tablelength(Query.data)) do
-						List[Query.data[i].id] = {
-							PlayerCount = tonumber(Query.data[i].playing),
-							IsSlow = tonumber(Query.data[i].ping)
-						}
-					end
-					local ChosenServer = game.JobId
-					for i,v in pairs(List) do
-						if i ~= game.JobId then
-							local MaxCheck = (v.PlayerCount <= MaxPlayers)
-							local SlowCheck = (v.IsSlow < 500)
-							local GoodPlayers = (v.PlayerCount >= (MaxPlayers - 10 ))
-							
-							if MaxCheck and SlowCheck and GoodPlayers and findjobid(i, shared.vapekickedfrom) then
-								ChosenServer = i
-								break
-							end
-						end
-					end
-					spawn(function()
-						repeat 
-							task.wait(1)
-							game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceId, ChosenServer, game.Players.LocalPlayer)
-						until true == false
-					end)
+					getrandomserver()
 				end
 			end)
 		end
 	end)
 end)
-print("done2")
 runcode(function()
 	AutoRejoin = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoRejoin", 
@@ -1648,7 +1635,6 @@ BindToRenderStep("LegitRender", 500, function()
 end)
 
 GuiLibrary["SelfDestructEvent"].Event:connect(function()
-	print("uninject")
 	UnbindFromRenderStep("LegitRender")
 	phantomforces["Network"].send = oldsend
 	phantomforces["Character"].updatecharacter = oldupdatechar
@@ -1924,9 +1910,6 @@ runcode(function()
 					if phantomforces["Character"].alive then
 						local newpos = (lplr.Character.Humanoid.MoveDirection * speedval["Value"])
 						lplr.Character.HumanoidRootPart.Velocity = Vector3.new(newpos.X, lplr.Character.HumanoidRootPart.Velocity.Y, newpos.Z)
-						if (lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Running or lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.RunningNoPhysics) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
-							lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-						end
 					end
 				end)
 			else
@@ -2115,7 +2098,6 @@ local function checkname()
 	end
 	return true
 end
-print("done3")
 
 runcode(function()
 	local Overlay = GuiLibrary.CreateCustomWindow({
@@ -2248,7 +2230,6 @@ runcode(function()
 		["Name"] = "ESP", 
 		["Function"] = function(callback) 
 			if callback then
-				print("espenabled")
 				BindToRenderStep("ESP", 500, function()
 					for i,plr in pairs(players:GetChildren()) do
 						local thing
@@ -2641,7 +2622,6 @@ runcode(function()
 					end
 				end)
 			else
-				print("espdisabled")
 				UnbindFromRenderStep("ESP") 
 				ESPFolder:ClearAllChildren()
 				for i,v in pairs(espfolderdrawing) do 
@@ -2756,8 +2736,6 @@ runcode(function()
 		end,
 	})
 end)
-
-print("done4")
 
 runcode(function()
 	local TracersFolder = Instance.new("Folder")
@@ -3400,5 +3378,3 @@ runcode(function()
 		["Default"] = 20
 	})
 end)
-
-print("done5")
