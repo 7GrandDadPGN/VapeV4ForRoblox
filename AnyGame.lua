@@ -96,7 +96,7 @@ local WhitelistFunctions = {StoredHashes = {}, PriorityList = {
 	["VAPE OWNER"] = 3,
 	["VAPE PRIVATE"] = 2,
 	["DEFAULT"] = 1
-}, WhitelistTable = {}, Loaded = true}
+}, WhitelistTable = {}, Loaded = true, CustomTags = {}}
 do
 	local shalib
 	WhitelistFunctions.WhitelistTable = {
@@ -111,6 +111,7 @@ do
 		end)
 		shalib = loadstring(GetURL("Libraries/sha.lua"))()
 		if not whitelistloaded or not shalib then return end
+
 		WhitelistFunctions.Loaded = true
 	end)
 
@@ -121,6 +122,26 @@ do
 			end
 		end
 		return nil
+	end
+
+	function WhitelistFunctions:GetTag(plr)
+		local plrstr = WhitelistFunctions:CheckPlayerType(plr)
+		local hash = WhitelistFunctions:Hash(plr.Name..plr.UserId)
+		if plrstr == "VAPE OWNER" then
+			return "[VAPE OWNER] "
+		elseif plrstr == "VAPE PRIVATE" then 
+			return "[VAPE PRIVATE] "
+		elseif WhitelistFunctions.WhitelistTable.chattags[hash] then
+			local data = WhitelistFunctions.WhitelistTable.chattags[hash]
+			local newnametag = ""
+			if data.Tags then
+				for i2,v2 in pairs(data.Tags) do
+					newnametag = newnametag..'['..v2.TagText..'] '
+				end
+			end
+			return newnametag
+		end
+		return WhitelistFunctions.CustomTags[plr] or ""
 	end
 
 	function WhitelistFunctions:Hash(str)
@@ -213,7 +234,7 @@ end
 local function targetCheck(plr)
 	local ForceField = not plr.Character.FindFirstChildWhichIsA(plr.Character, "ForceField")
 	local state = plr.Humanoid.GetState(plr.Humanoid)
-	return state ~= Enum.HumanoidStateType.Dead and state ~= Enum.HumanoidStateType.Physics and ForceField
+	return state ~= Enum.HumanoidStateType.Dead and state ~= Enum.HumanoidStateType.Physics and plr.Humanoid.Health > 0 and ForceField
 end
 
 do
@@ -223,6 +244,17 @@ do
 	GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"].Refresh.Event:Connect(function()
 		entity.fullEntityRefresh()
 	end)
+	local oldeventfunc = entity.getUpdateConnections
+	entity.getUpdateConnections = function(ent)
+		local newtab = {{Connect = function() 
+			ent.Friend = friendCheck(ent.Player)
+			return {Disconnect = function() end}
+		end}}
+		for i,v in pairs(oldeventfunc(ent)) do 
+			table.insert(newtab, v)
+		end
+		return newtab
+	end
 	entity.isPlayerTargetable = function(plr)
 		if (not GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"]) then return true end
 		if friendCheck(plr) then return nil end
@@ -511,6 +543,9 @@ runcode(function()
 	local aimwallbang = {["Enabled"] = false}
 	local aimautofire = {["Enabled"] = false}
 	local aimsmartignore = {["Enabled"] = false}
+	local aimprojectile = {["Enabled"] = false}
+	local aimprojectilespeed = {["Value"] = 1000}
+	local aimprojectilegravity = {["Value"] = 192.6}
 	local aimsmartab = {}
 	local aimfovframecolor = {["Value"] = 0.44}
 	local aimfovfilled = {["Enabled"] = false}
@@ -530,6 +565,68 @@ runcode(function()
 	local filterobj
 	local tar = nil
 	local AimAssist = {["Enabled"] = false}
+
+	--skidded off the devforum because I hate projectile math
+	-- Compute 2D launch angle
+	-- v: launch velocity
+	-- g: gravity (positive) e.g. 196.2
+	-- d: horizontal distance
+	-- h: vertical distance
+	-- higherArc: if true, use the higher arc. If false, use the lower arc.
+	local function LaunchAngle(v: number, g: number, d: number, h: number, higherArc: boolean)
+		local v2 = v * v
+		local v4 = v2 * v2
+		local root = math.sqrt(v4 - g*(g*d*d + 2*h*v2))
+		if not higherArc then root = -root end
+		return math.atan((v2 + root) / (g * d))
+	end
+
+	-- Compute 3D launch direction from
+	-- start: start position
+	-- target: target position
+	-- v: launch velocity
+	-- g: gravity (positive) e.g. 196.2
+	-- higherArc: if true, use the higher arc. If false, use the lower arc.
+	local function LaunchDirection(start, target, v, g, higherArc: boolean)
+		-- get the direction flattened:
+		local horizontal = Vector3.new(target.X - start.X, 0, target.Z - start.Z)
+		
+		local h = target.Y - start.Y
+		local d = horizontal.Magnitude
+		local a = LaunchAngle(v, g, d, h, higherArc)
+		
+		-- NaN ~= NaN, computation couldn't be done (e.g. because it's too far to launch)
+		if a ~= a then return nil end
+		
+		-- speed if we were just launching at a flat angle:
+		local vec = horizontal.Unit * v
+		
+		-- rotate around the axis perpendicular to that direction...
+		local rotAxis = Vector3.new(-horizontal.Z, 0, horizontal.X)
+		
+		-- ...by the angle amount
+		return CFrame.fromAxisAngle(rotAxis, a) * vec
+	end
+
+	local function FindLeadShot(targetPosition: Vector3, targetVelocity: Vector3, projectileSpeed: Number, shooterPosition: Vector3, shooterVelocity: Vector3, gravity: Number)
+		local distance = (targetPosition - shooterPosition).Magnitude
+
+		local p = targetPosition - shooterPosition
+		local v = targetVelocity - shooterVelocity
+		local a = Vector3.zero
+
+		local timeTaken = (distance / projectileSpeed)
+		
+		if gravity > 0 then
+			local timeTaken = projectileSpeed/gravity+math.sqrt(2*distance/gravity+projectileSpeed^2/gravity^2)
+		end
+
+		local goalX = targetPosition.X + v.X*timeTaken + 0.5 * a.X * timeTaken^2
+		local goalY = targetPosition.Y + v.Y*timeTaken + 0.5 * a.Y * timeTaken^2
+		local goalZ = targetPosition.Z + v.Z*timeTaken + 0.5 * a.Z * timeTaken^2
+		
+		return Vector3.new(goalX, goalY, goalZ)
+	end
 
 	local function isNotHoveringOverGui()
 		local mousepos = uis:GetMouseLocation() - Vector2.new(0, 36)
@@ -574,6 +671,12 @@ runcode(function()
 			recentlyshotplr = plr
 			recentlyshottick = tick() + 1
 			local direction = CFrame.lookAt(origin, tar.Position)
+			if aimprojectile["Enabled"] then 
+				local calculated = LaunchDirection(origin, FindLeadShot(tar.Position, tar.Velocity, aimprojectilespeed["Value"], origin, Vector3.zero, aimprojectilegravity["Value"]), aimprojectilespeed["Value"], aimprojectilegravity["Value"], false)
+				if calculated then 
+					direction = CFrame.lookAt(origin, origin + calculated)
+				end
+			end
 			if aimwallbang["Enabled"] then
 				return {tar, tar.Position, direction.lookVector * Args[1].Direction.Magnitude, tar.Material}
 			end
@@ -607,6 +710,12 @@ runcode(function()
 			recentlyshotplr = plr
 			recentlyshottick = tick() + 1
 			local direction = CFrame.lookAt(origin, tar.Position)
+			if aimprojectile["Enabled"] then 
+				local calculated = LaunchDirection(origin, FindLeadShot(tar.Position, tar.Velocity, aimprojectilespeed["Value"], origin, Vector3.zero, aimprojectilegravity["Value"]), aimprojectilespeed["Value"], aimprojectilegravity["Value"], false)
+				if calculated then 
+					direction = CFrame.lookAt(origin, origin + calculated)
+				end
+			end
 			Args[2] = direction.lookVector * Args[2].Magnitude
 			if aimwallbang["Enabled"] then
 				haha.FilterDescendantsInstances = {tar}
@@ -640,6 +749,12 @@ runcode(function()
 			recentlyshotplr = plr
 			recentlyshottick = tick() + 1
 			local direction = CFrame.lookAt(origin, tar.Position)
+			if aimprojectile["Enabled"] then 
+				local calculated = LaunchDirection(origin, FindLeadShot(tar.Position, tar.Velocity, aimprojectilespeed["Value"], origin, Vector3.zero, aimprojectilegravity["Value"]), aimprojectilespeed["Value"], aimprojectilegravity["Value"], false)
+				if calculated then 
+					direction = CFrame.lookAt(origin, origin + calculated)
+				end
+			end
 			return {Ray.new(direction.p + (Args[3] and direction.lookVector * Args[3] or Vector3.zero), direction.lookVector)}
 		end
 	}
@@ -917,6 +1032,33 @@ runcode(function()
 		end,
 		["HoverText"] = "Automatically fires gun",
 	})
+	aimprojectile = AimAssist.CreateToggle({
+		["Name"] = "Projectile",
+		["Function"] = function(callback)
+			if aimprojectilespeed["Object"] then 
+				aimprojectilespeed["Object"].Visible = callback
+			end
+			if aimprojectilegravity["Object"] then 
+				aimprojectilegravity["Object"].Visible = callback
+			end
+		end
+	})
+	aimprojectilespeed = AimAssist.CreateSlider({
+		["Name"] = "Projectile Speed",
+		["Min"] = 1,
+		["Max"] = 1000,
+		["Default"] = 1000,
+		["Function"] = function() end
+	})
+	aimprojectilespeed["Object"].Visible = false
+	aimprojectilegravity = AimAssist.CreateSlider({
+		["Name"] = "Projectile Gravity",
+		["Min"] = 1,
+		["Max"] = 192.6,
+		["Default"] = 192.6,
+		["Function"] = function() end
+	})
+	aimprojectilegravity["Object"].Visible = false
 	local aimsmartconnection
 	aimsmartignore = AimAssist.CreateToggle({
 		["Name"] = "Smart Ignore",
@@ -1210,6 +1352,7 @@ runcode(function()
 	local flyverticalspeed = {["Value"] = 1}
 	local flytpoff = {["Value"] = 10}
 	local flytpon = {["Value"] = 10}
+	local flycframevelocity = {["Enabled"] = false}
 	local flywall = {["Enabled"] = false}
 	local flyupanddown = {["Enabled"] = false}
 	local flymethod = {["Value"] = "Normal"}
@@ -1304,17 +1447,21 @@ runcode(function()
 							flyposy = entity.character.HumanoidRootPart.CFrame.p.Y
 							flyalivecheck = true
 						end
-						local movevec = (flymovemethod["Value"] == "Manual" and cam.CFrame:VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entity.character.Humanoid.MoveDirection).Unit
+						local movevec = (flymovemethod["Value"] == "Manual" and (CFrame.lookAt(cam.CFrame.p, cam.CFrame.p + Vector3.new(cam.CFrame.lookVector.X, 0, cam.CFrame.lookVector.Z))):VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entity.character.Humanoid.MoveDirection).Unit
 						movevec = movevec == movevec and Vector3.new(movevec.X, 0, movevec.Z) or Vector3.new()
 						if flystate["Value"] ~= "None" then 
 							entity.character.Humanoid:ChangeState(Enum.HumanoidStateType[flystate["Value"]])
 						end
-						if flymethod["Value"] == "Normal" then
+						if flymethod["Value"] == "Normal" or flymethod["Value"] == "Bounce" then
 							if flyplatformstanding["Enabled"] then
 								entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, entity.character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
 								entity.character.HumanoidRootPart.RotVelocity = Vector3.new()
 							end
-							entity.character.HumanoidRootPart.Velocity = (movevec * flyspeed["Value"]) + Vector3.new(0, 0.85 + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+							local bounce = 0
+							if flymethod["Value"] == "Bounce" then 
+								bounce = tick() % 0.5 > 0.25 and -10 or 10
+							end
+							entity.character.HumanoidRootPart.Velocity = (movevec * flyspeed["Value"]) + Vector3.new(0, 0.85 + bounce + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
 						else
 							if flyup then
 								flyposy = flyposy + (flyverticalspeed["Value"] * delta)
@@ -1334,6 +1481,9 @@ runcode(function()
 							local origvelo = entity.character.HumanoidRootPart.Velocity
 							if flymethod["Value"] == "CFrame" then
 								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos
+								if flycframevelocity["Enabled"] then 
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(origvelo.X, 0, origvelo.Z)
+								end
 								if flyplatformstanding["Enabled"] then
 									entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, entity.character.HumanoidRootPart.CFrame.p + cam.CFrame.lookVector)
 								end
@@ -1402,7 +1552,7 @@ runcode(function()
 	})
 	flymethod = fly.CreateDropdown({
 		["Name"] = "Mode", 
-		["List"] = {"Normal", "CFrame", "Jump", "TP"},
+		["List"] = {"Normal", "CFrame", "Jump", "TP", "Bounce"},
 		["Function"] = function(val)
 			if entity.isAlive then
 				flyposy = entity.character.HumanoidRootPart.CFrame.p.Y
@@ -1415,6 +1565,9 @@ runcode(function()
 			end
 			if flywall["Object"] then 
 				flywall["Object"].Visible = val == "CFrame" or val == "Jump"
+			end
+			if flycframevelocity["Object"] then 
+				flycframevelocity["Object"].Visible = val == "CFrame"
 			end
 		end
 	})
@@ -1465,12 +1618,6 @@ runcode(function()
 		["Double"] = 10
 	})
 	flytpoff["Object"].Visible = false
-	flywall = fly.CreateToggle({
-		["Name"] = "Wall Check",
-		["Function"] = function() end,
-		["Default"] = true
-	})
-	flywall["Object"].Visible = false
 	flyplatformtoggle = fly.CreateToggle({
 		["Name"] = "FloorPlatform", 
 		["Function"] = function(callback)
@@ -1496,6 +1643,18 @@ runcode(function()
 		["Name"] = "Y Level", 
 		["Function"] = function() end
 	})
+	flywall = fly.CreateToggle({
+		["Name"] = "Wall Check",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+	flywall["Object"].Visible = false
+	flycframevelocity = fly.CreateToggle({
+		["Name"] = "No Velocity",
+		["Function"] = function() end,
+		["Default"] = true
+	})
+	flycframevelocity["Object"].Visible = false
 end)
 
 local hitboxexpand = {["Value"] = 1}
@@ -2190,7 +2349,7 @@ runcode(function()
 				end)
 				RunLoops:BindToHeartbeat("Speed", 1, function(delta)
 					if entity.isAlive then
-						local movevec = (speedmovemethod["Value"] == "Manual" and cam.CFrame:VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entity.character.Humanoid.MoveDirection).Unit
+						local movevec = (speedmovemethod["Value"] == "Manual" and (CFrame.lookAt(cam.CFrame.p, cam.CFrame.p + Vector3.new(cam.CFrame.lookVector.X, 0, cam.CFrame.lookVector.Z))):VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entity.character.Humanoid.MoveDirection).Unit
 						movevec = movevec == movevec and Vector3.new(movevec.X, 0, movevec.Z) or Vector3.new()
 						if speedmethod["Value"] == "Velocity" then
 							local newvelo = movevec * speedval["Value"]
@@ -2635,7 +2794,7 @@ runcode(function()
 
 	local espfuncs1 = {
 		Drawing2D = function(plr)
-			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			if ESPTeammates["Enabled"] and (not plr.Targetable) and (not plr.Friend) then return end
 			local thing = {}
 			thing.Quad1 = Drawing.new("Square")
 			thing.Quad1.Transparency = ESPBoundingBox["Enabled"] and 1 or 0
@@ -2665,14 +2824,14 @@ runcode(function()
 			end
 			if ESPName["Enabled"] then 
 				thing.Text = Drawing.new("Text")
-				thing.Text.Text = plr.Player.DisplayName or plr.Player.Name
+				thing.Text.Text = WhitelistFunctions:GetTag(plr.Player)..(plr.Player.DisplayName or plr.Player.Name)
 				thing.Text.ZIndex = 2
 				thing.Text.Color = thing.Quad1.Color
 				thing.Text.Center = true
 				thing.Text.Size = 20
 				thing.Drop = Drawing.new("Text")
 				thing.Drop.Color = Color3.new()
-				thing.Drop.Text = plr.Player.DisplayName or plr.Player.Name
+				thing.Drop.Text = thing.Text.Text
 				thing.Drop.ZIndex = 1
 				thing.Drop.Center = true
 				thing.Drop.Size = 20
@@ -2680,7 +2839,7 @@ runcode(function()
 			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
 		end,
 		Drawing2DV3 = function(plr)
-			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			if ESPTeammates["Enabled"] and (not plr.Targetable) and (not plr.Friend) then return end
 			local toppoint = PointInstance.new(plr.RootPart, CFrame.new(2, 3, 0))
 			local bottompoint = PointInstance.new(plr.RootPart, CFrame.new(-2, -3.5, 0))
 			local newobj = RectDynamic.new(toppoint)
@@ -2713,12 +2872,12 @@ runcode(function()
 				local nameoffset1 = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(0, 3, 0)), Vector2.new(0, -15))
 				local nameoffset2 = PointOffset.new(nameoffset1, Vector2.new(1, 1))
 				newobj3.Text = TextDynamic.new(nameoffset1)
-				newobj3.Text.Text = plr.Player.DisplayName or plr.Player.Name
+				newobj3.Text.Text = WhitelistFunctions:GetTag(plr.Player)..(plr.Player.DisplayName or plr.Player.Name)
 				newobj3.Text.Color = newobj.Color
 				newobj3.Text.ZIndex = 2
 				newobj3.Text.Size = 20
 				newobj3.Drop = TextDynamic.new(nameoffset2)
-				newobj3.Drop.Text = plr.Player.DisplayName or plr.Player.Name
+				newobj3.Drop.Text = newobj3.Text.Text
 				newobj3.Drop.Color = Color3.new()
 				newobj3.Drop.ZIndex = 1
 				newobj3.Drop.Size = 20
@@ -2726,7 +2885,7 @@ runcode(function()
 			espfolderdrawing[plr.Player] = {entity = plr, Main = newobj, HealthBar = newobj2, Name = newobj3}
 		end,
 		DrawingSkeleton = function(plr)
-			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			if ESPTeammates["Enabled"] and (not plr.Targetable) and (not plr.Friend) then return end
 			local thing = {}
 			thing.Head = Drawing.new("Line")
 			thing.Head2 = Drawing.new("Line")
@@ -2742,7 +2901,7 @@ runcode(function()
 			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
 		end,
 		DrawingSkeletonV3 = function(plr)
-			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			if ESPTeammates["Enabled"] and (not plr.Targetable) and (not plr.Friend) then return end
 			local thing = {Main = {}, entity = plr}
 			local rigcheck = plr.Humanoid.RigType == Enum.HumanoidRigType.R6
 			local head = PointInstance.new(plr.Head)
@@ -2783,7 +2942,7 @@ runcode(function()
 			espfolderdrawing[plr.Player] = thing
 		end,
 		Drawing3D = function(plr)
-			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			if ESPTeammates["Enabled"] and (not plr.Targetable) and (not plr.Friend) then return end
 			local thing = {}
 			thing.Line1 = Drawing.new("Line")
 			thing.Line2 = Drawing.new("Line")
@@ -2802,7 +2961,7 @@ runcode(function()
 			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
 		end,
 		Drawing3DV3 = function(plr)
-			if ESPTeammates["Enabled"] and (not plr.Targetable) then return end
+			if ESPTeammates["Enabled"] and (not plr.Targetable) and (not plr.Friend) then return end
 			local thing = {}
 			local point1 = PointInstance.new(plr.RootPart, CFrame.new(1.5, 3, 1.5))
 			point1.RotationType = CFrameRotationType.Ignore
@@ -2912,6 +3071,10 @@ runcode(function()
 				local color = HealthbarColorTransferFunction(ent.Humanoid.Health / ent.Humanoid.MaxHealth)
 				v.Main.Quad3.Color = color
 			end
+			if v and v.Text then 
+				v.Text.Text = WhitelistFunctions:GetTag(ent.Player)..(ent.Player.DisplayName or ent.Player.Name)
+				v.Drop.Text = v.Text.Text
+			end
 		end,
 		Drawing2DV3 = function(ent)
 			local v = espfolderdrawing[ent.Player]
@@ -2919,6 +3082,10 @@ runcode(function()
 				local health = ent.Humanoid.Health / ent.Humanoid.MaxHealth
 				local color = HealthbarColorTransferFunction(health)
 				v.HealthBar.Line.Color = color
+			end
+			if v and v.Name and v.Name.Text then 
+				v.Name.Text.Text = WhitelistFunctions:GetTag(ent.Player)..(ent.Player.DisplayName or ent.Player.Name)
+				v.Name.Drop.Text = v.Name.Text.Text
 			end
 		end
 	}
@@ -3457,7 +3624,7 @@ runcode(function()
 								local headPos, headVis = cam:WorldToViewportPoint((aliveplr.RootPart:GetRenderCFrame() * CFrame.new(0, aliveplr.Head.Size.Y + aliveplr.RootPart.Size.Y, 0)).Position)
 								
 								if headVis then
-									local displaynamestr = (NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
+									local displaynamestr = WhitelistFunctions:GetTag(plr)..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)
 									local blocksaway = math.floor(((entity.isAlive and entity.character.HumanoidRootPart.Position or Vector3.new(0,0,0)) - aliveplr.RootPart.Position).magnitude / 3)
 									local color = HealthbarColorTransferFunction(aliveplr.Humanoid.Health / aliveplr.Humanoid.MaxHealth)
 									thing.Text.Text = (NameTagsDistance["Enabled"] and entity.isAlive and '['..blocksaway..'] ' or '')..displaynamestr..(NameTagsHealth["Enabled"] and ' '..math.floor(aliveplr.Humanoid.Health).."" or '')
@@ -3510,9 +3677,9 @@ runcode(function()
 								headPos = headPos
 								
 								if headVis then
-									local rawText = (NameTagsDistance["Enabled"] and entity.isAlive and "["..math.floor((entity.character.HumanoidRootPart.Position - aliveplr.RootPart.Position).magnitude).."] " or "")..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(aliveplr.Humanoid.Health) or "")
+									local rawText = (NameTagsDistance["Enabled"] and entity.isAlive and "["..math.floor((entity.character.HumanoidRootPart.Position - aliveplr.RootPart.Position).magnitude).."] " or "")..WhitelistFunctions:GetTag(plr)..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and " "..math.floor(aliveplr.Humanoid.Health) or "")
 									local color = HealthbarColorTransferFunction(aliveplr.Humanoid.Health / aliveplr.Humanoid.MaxHealth)
-									local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((entity.character.HumanoidRootPart.Position - aliveplr.RootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(aliveplr.Humanoid.Health).."</font>" or '')
+									local modifiedText = (NameTagsDistance["Enabled"] and entity.isAlive and '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">'..math.floor((entity.character.HumanoidRootPart.Position - aliveplr.RootPart.Position).magnitude)..'</font><font color="rgb(85, 255, 85)">]</font> ' or '')..WhitelistFunctions:GetTag(plr)..(NameTagsDisplayName["Enabled"] and plr.DisplayName ~= nil and plr.DisplayName or plr.Name)..(NameTagsHealth["Enabled"] and ' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.floor(aliveplr.Humanoid.Health).."</font>" or '')
 									local nametagSize = textservice:GetTextSize(rawText, thing.TextSize, thing.Font, Vector2.new(100000, 100000))
 									thing.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 									thing.Text = modifiedText
@@ -3735,16 +3902,17 @@ runcode(function()
 
 	local tracersfuncs1 = {
 		Drawing = function(plr)
-			if TracersTeammates["Enabled"] and (not plr.Targetable) then return end
+			if TracersTeammates["Enabled"] and (not plr.Targetable) and (not plr.Friend) then return end
 			local newobj = Drawing.new("Line")
 			newobj.Thickness = 1
 			newobj.Transparency = 1 - (TracersTransparency["Value"] / 100)
+			newobj.Color = getPlayerColor(plr.Player) or Color3.fromHSV(TracersColor["Hue"], TracersColor["Sat"], TracersColor["Value"])
 			tracersfolderdrawing[plr.Player] = {entity = plr, Main = newobj}
 		end,
 		DrawingV3 = function(plr)
-			if TracersTeammates["Enabled"] and (not plr.Targetable) then return end
+			if TracersTeammates["Enabled"] and (not plr.Targetable) and (not plr.Friend) then return end
 			local toppoint = PointInstance.new(plr[TracersEndPosition["Value"] == "Torso" and "RootPart" or "Head"])
-			local bottompoint = Point2D.new(UDim2.new(0.5, 0, TracersStartPosition["Value"] == "Middle" and 0.5 or 1, 0))
+			local bottompoint = TracersStartPosition["Value"] == "Mouse" and PointMouse.new() or Point2D.new(UDim2.new(0.5, 0, TracersStartPosition["Value"] == "Middle" and 0.5 or 1, 0))
 			local newobj = LineDynamic.new(toppoint, bottompoint)
 			newobj.Opacity = 1 - (TracersTransparency["Value"] / 100)
 			newobj.Color = getPlayerColor(plr.Player) or Color3.fromHSV(TracersColor["Hue"], TracersColor["Sat"], TracersColor["Value"])
@@ -3775,15 +3943,10 @@ runcode(function()
 			for i,v in pairs(tracersfolderdrawing) do 
 				local rootPart = v.entity[TracersEndPosition["Value"] == "Torso" and "RootPart" or "Head"].Position
 				local rootPos, rootVis = cam:WorldToViewportPoint(rootPart)
-				if rootPos.Z < 0 and TracersStartPosition["Value"] ~= "Bottom" then
-					local tempPos = cam.CFrame:pointToObjectSpace(rootPart)
-					tempPos = CFrame.Angles(0, 0, (math.atan2(tempPos.Y, tempPos.X) + math.pi)):vectorToWorldSpace((CFrame.Angles(0, math.rad(89.9), 0):vectorToWorldSpace(Vector3.new(0, 0, -1))))
-					rootPos, rootVis = cam:WorldToViewportPoint(cam.CFrame:pointToWorldSpace(tempPos))
-				end
 				local screensize = cam.ViewportSize
-				local startVector = Vector2.new(screensize.X / 2, (TracersStartPosition["Value"] == "Middle" and screensize.Y / 2 or screensize.Y))
+				local startVector = TracersStartPosition["Value"] == "Mouse" and uis:GetMouseLocation() or Vector2.new(screensize.X / 2, (TracersStartPosition["Value"] == "Middle" and screensize.Y / 2 or screensize.Y))
 				local endVector = Vector2.new(rootPos.X, rootPos.Y)
-				v.Main.Visible = true
+				v.Main.Visible = rootVis
 				v.Main.From = startVector
 				v.Main.To = endVector
 			end
@@ -3843,7 +4006,7 @@ runcode(function()
 	})
 	TracersStartPosition = Tracers.CreateDropdown({
 		["Name"] = "Start Position",
-		["List"] = {"Middle", "Bottom"},
+		["List"] = {"Middle", "Bottom", "Mouse"},
 		["Function"] = function() if Tracers["Enabled"] then Tracers["ToggleButton"](true) Tracers["ToggleButton"](true) end end
 	})
 	TracersEndPosition = Tracers.CreateDropdown({
@@ -4583,6 +4746,131 @@ runcode(function()
 	AutoReportList = AutoReport.CreateTextList({
 		["Name"] = "Report Words",
 		["TempText"] = "phrase (to report)"
+	})
+end)
+
+runcode(function()
+	local AutoLeave = {["Enabled"] = false}
+	local AutoLeaveMode = {["Value"] = "UnInject"}
+	local AutoLeaveGroupId = {["Value"] = "0"}
+	local AutoLeaveRank = {["Value"] = "1"}
+	local autoleaveconnection
+
+	local function autoleaveplradded(plr)
+		task.spawn(function()
+			pcall(function()
+				if AutoLeaveGroupId["Value"] == "" or AutoLeaveRank["Value"] == "" then return end
+				if plr:GetRankInGroup(tonumber(AutoLeaveGroupId["Value"]) or 0) >= (tonumber(AutoLeaveRank["Value"]) or 1) then
+					WhitelistFunctions.CustomTags[plr] = "[GAME STAFF] "
+					local _, ent = entity.getEntityFromPlayer(plr)
+					if ent then 
+						entity.entityUpdatedEvent:Fire(ent)
+					end
+					if AutoLeaveMode["Value"] == "UnInject" then 
+						task.spawn(function()
+							repeat task.wait() until shared.VapeFullyLoaded
+							task.wait(1)
+							GuiLibrary.SelfDestruct()
+						end)
+						game:GetService("StarterGui"):SetCore("SendNotification", {
+							Title = "AutoLeave",
+							Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
+							Duration = 60,
+						})
+					elseif AutoLeaveMode["Value"] == "Rejoin" then 
+
+					else
+						local warning = createwarning("AutoLeave", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
+						local warningtext = warning:GetChildren()[5]
+						warningtext.TextSize = 12
+						warningtext.TextLabel.TextSize = 12
+						warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+					end
+				end
+			end)
+		end)
+	end
+
+	local function autodetect(roles)
+		local highest = 9e9
+		for i,v in pairs(roles) do 
+			local low = v.Name:lower()
+			if (low:find("admin") or low:find("mod") or low:find("dev") or low:find("manager")) and v.Rank < highest then 
+				highest = v.Rank
+			end
+		end
+		return highest
+	end
+
+	AutoLeave = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoLeave",
+		["Function"] = function(callback)
+			if callback then 
+				autoleaveconnection = players.PlayerAdded:Connect(autoleaveplradded)
+				for i, plr in pairs(players:GetPlayers()) do 
+					autoleaveplradded(plr)
+				end
+				if AutoLeaveGroupId["Value"] == "" or AutoLeaveRank["Value"] == "" then 
+					task.spawn(function()
+						local placeinfo = {Creator = {CreatorTargetId = tonumber(AutoLeaveGroupId["Value"])}}
+						if AutoLeaveGroupId["Value"] == "" then
+							placeinfo = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+							if placeinfo.Creator.CreatorType ~= "Group" then 
+								local desc = placeinfo.Description:split("\n")
+								for i, str in pairs(desc) do 
+									local _, begin = str:find("roblox.com/groups/")
+									if begin then 
+										local endof = str:find("/", begin + 1)
+										placeinfo = {Creator = {CreatorType = "Group", CreatorTargetId = str:sub(begin + 1, endof - 1)}}
+									end
+								end
+							end
+							if placeinfo.Creator.CreatorType ~= "Group" then 
+								local warning = createwarning("AutoLeave", "Automatic Setup Failed\n(no group detected)", 60)
+								local warningtext = warning:GetChildren()[5]
+								warningtext.TextSize = 12
+								warningtext.TextLabel.TextSize = 12
+								warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+								return
+							end
+						end
+						local groupinfo = game:GetService("GroupService"):GetGroupInfoAsync(placeinfo.Creator.CreatorTargetId)
+						AutoLeaveGroupId["SetValue"](placeinfo.Creator.CreatorTargetId)
+						AutoLeaveRank["SetValue"](autodetect(groupinfo.Roles))
+						for i, plr in pairs(players:GetPlayers()) do 
+							autoleaveplradded(plr)
+						end
+					end)
+				end
+			else
+				if autoleaveconnection then autoleaveconnection:Disconnect() end
+				for i,v in pairs(WhitelistFunctions.CustomTags) do 
+					if v == "[GAME STAFF] " then 
+						WhitelistFunctions.CustomTags[i] = nil
+						local _, ent = entity.getEntityFromPlayer(i)
+						if ent then 
+							entity.entityUpdatedEvent:Fire(ent)
+						end
+					end
+				end
+			end
+		end,
+		["HoverText"] = "Leaves if a staff member joins your game."
+	})
+	AutoLeaveMode = AutoLeave.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"UnInject", "Rejoin", "Notify"},
+		["Function"] = function() end
+	})
+	AutoLeaveGroupId = AutoLeave.CreateTextBox({
+		["Name"] = "Group Id",
+		["TempText"] = "0 (group id)",
+		["Function"] = function() end
+	})
+	AutoLeaveRank = AutoLeave.CreateTextBox({
+		["Name"] = "Rank Id",
+		["TempText"] = "1 (rank id)",
+		["Function"] = function() end
 	})
 end)
 
