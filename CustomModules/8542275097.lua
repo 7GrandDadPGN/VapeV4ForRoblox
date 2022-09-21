@@ -494,11 +494,11 @@ runcode(function()
 					else
 						killaurabox.Adornee = nil
 					end
-					if (not killauraswing["Enabled"]) and #plrs > 0 and handcheck then
-						skywars["MeleeController"]:playAnimation()
-					end
 					if killauradelay <= tick() and (killauramouse["Enabled"] and uis:IsMouseButtonPressed(0) or (not killauramouse["Enabled"])) and handcheck then
 						local sword = getSword()
+						if (not killauraswing["Enabled"]) and #plrs > 0 and handcheck then
+							skywars["MeleeController"]:playAnimation(sword)
+						end
 						local olditem, olditemname = getHeldItem()
 						killauranear = #plrs > 0
 						if sword then
