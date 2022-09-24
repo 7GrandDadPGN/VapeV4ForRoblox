@@ -4930,7 +4930,6 @@ end)
 
 runcode(function()
 	local funnyfly = {["Enabled"] = false}
-	local funnyflyhigh = {["Enabled"] = false}
 	local flyacprogressbar
 	local flyacprogressbarframe
 	local flyacprogressbarframe2
@@ -4946,6 +4945,17 @@ runcode(function()
 					local timesdone = 0
 					if GuiLibrary["ObjectsThatCanBeSaved"]["SpeedModeDropdown"]["Api"]["Value"] == "CFrame" then
 						local doboost = true
+						local start = entity.character.HumanoidRootPart.Position
+						flyacprogressbartext = Instance.new("TextLabel")
+						flyacprogressbartext.Text = "Unsafe"
+						flyacprogressbartext.Font = Enum.Font.Gotham
+						flyacprogressbartext.TextStrokeTransparency = 0
+						flyacprogressbartext.TextColor3 =  Color3.new(0.9, 0.9, 0.9)
+						flyacprogressbartext.TextSize = 20
+						flyacprogressbartext.Size = UDim2.new(0, 0, 0, 20)
+						flyacprogressbartext.BackgroundTransparency = 1
+						flyacprogressbartext.Position = UDim2.new(0.5, 0, 0.5, 40)
+						flyacprogressbartext.Parent = GuiLibrary["MainGui"]
 						repeat
 							timesdone = timesdone + 1
 							if entity.isAlive then
@@ -4961,10 +4971,12 @@ runcode(function()
 								else
 									bodyvelo.Parent = root
 								end
-								for i = 1, 15 do 
+								for i = 2, 30, 2 do 
 									task.wait(0.01)
 									if (not funnyfly["Enabled"]) then break end
-									bodyvelo.Velocity = Vector3.new(0, i * (funnyflyhigh["Enabled"] and 2 or 1), 0)
+									local ray = workspace:Raycast(root.Position + (entity.character.Humanoid.MoveDirection * (math.max(math.abs(root.Position.Y - starty) * 0.16, 6))), Vector3.new(0, -2000, 0), blockraycast)
+									flyacprogressbartext.Text = ray and "Safe" or "Unsafe"
+									bodyvelo.Velocity = Vector3.new(0, 25 + i, 0)
 								end
 								if (not isnetworkowner(root)) then
 									break 
@@ -4973,6 +4985,8 @@ runcode(function()
 								break
 							end
 						until (not funnyfly["Enabled"])
+						local calcd = (start - entity.character.HumanoidRootPart.Position)
+						createwarning("FunnyFly", "flew "..math.round((math.abs(calcd.X) + math.abs(calcd.Z)) / 3).." blocks", 10)
 					else
 						local warning = createwarning("FunnyFly", "FunnyFly only works with\nspeed on CFrame mode", 5)
 						pcall(function()
@@ -4988,12 +5002,11 @@ runcode(function()
 					bodyvelo:Destroy()
 					bodyvelo = nil
 				end
+				if flyacprogressbartext then
+					flyacprogressbartext:Destroy()
+				end
 			end
 		end
-	})
-	funnyflyhigh = funnyfly.CreateToggle({
-		["Name"] = "High",
-		["Function"] = function() end
 	})
 end)
 
@@ -7923,9 +7936,11 @@ runcode(function()
 	local removetexturessmooth = {["Enabled"] = false}
 	local fpsboostdamageindicator = {["Enabled"] = false}
 	local fpsboostdamageeffect = {["Enabled"] = false}
+	local wasenabled = false
 
 	local function fpsboosttextures()
 		task.spawn(function()
+			if not wasenabled then return end
 			repeat task.wait() until matchState ~= 0
 			for i,v in pairs(bedwarsblocks) do
 				if v:GetAttribute("PlacedByUserId") == 0 then
@@ -7943,6 +7958,7 @@ runcode(function()
 	FPSBoost = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "FPSBoost",
 		["Function"] = function(callback)
+			wasenabled = true
 			local damagetab = debug.getupvalue(bedwars["DamageIndicator"], 2)
 			if callback then
 				fpsboosttextures()
