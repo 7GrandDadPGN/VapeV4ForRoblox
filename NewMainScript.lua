@@ -594,7 +594,7 @@ OnlineProfilesButton.MouseButton1Click:Connect(function()
 	if profilesloaded == false then
 		local onlineprofiles = {}
 		local saveplaceid = tostring(shared.CustomSaveVape or game.PlaceId)
-		for i,v in pairs(grabdata("https://raw.githubusercontent.com/7GrandDadPGN/VapeProfiles/main/Profiles/"..saveplaceid.."/"..saveplaceid..".vapeprofiles.txt")) do 
+		for i,v in pairs(grabdata("https://raw.githubusercontent.com/7GrandDadPGN/VapeProfiles/main/Profiles/"..saveplaceid.."/profilelist.txt")) do 
 			onlineprofiles[i] = v
 		end
 		for i2,v2 in pairs(onlineprofiles) do
