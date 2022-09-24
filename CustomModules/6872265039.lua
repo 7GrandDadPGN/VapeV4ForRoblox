@@ -529,6 +529,7 @@ GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
+GuiLibrary["RemoveObject"]("DisablerOptionsButton")
 
 teleportfunc = lplr.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then

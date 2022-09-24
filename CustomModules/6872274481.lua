@@ -7927,6 +7927,7 @@ BedESP = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOption
 	["HoverText"] = "Render Beds through walls" 
 })
 
+GuiLibrary["RemoveObject"]("Disabler")
 runcode(function()
 	local old
 	local old2
