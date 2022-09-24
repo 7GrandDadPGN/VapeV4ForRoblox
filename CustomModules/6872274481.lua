@@ -10766,7 +10766,10 @@ runcode(function()
 						createwarning("AnticheatDisabler", "Disabled Anticheat!", 10)
 					end)
 				else
-					createwarning("AnticheatDisabler", "Failed to disable", 10)
+					local warning = createwarning("AnticheatDisabler", "Failed to disable\ndo it on respawn bubble or spawnbox", 10)
+					pcall(function()
+						warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+					end)
 				end
 				Disabler["ToggleButton"](false)
 			end
