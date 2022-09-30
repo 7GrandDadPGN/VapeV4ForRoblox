@@ -992,7 +992,7 @@ runcode(function()
 			["RespawnController"] = KnitClient.Controllers.BedwarsRespawnController,
 			["RespawnTimer"] = require(lplr.PlayerScripts.TS.controllers.games.bedwars.respawn.ui["respawn-timer"]).RespawnTimerWrapper,
 			["ResetRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.ResetController.createBindable, 1))),
-			["Roact"] = require(repstorage["rbxts_include"]["node_modules"]["roact"].src),
+			["Roact"] = require(repstorage["rbxts_include"]["node_modules"]["@rbxts"]["roact"].src),
 			["RuntimeLib"] = require(repstorage["rbxts_include"].RuntimeLib),
             ["Shop"] = require(repstorage.TS.games.bedwars.shop["bedwars-shop"]).BedwarsShop,
 			["ShopItems"] = debug.getupvalue(require(repstorage.TS.games.bedwars.shop["bedwars-shop"]).BedwarsShop.getShopItem, 2),
@@ -10530,7 +10530,7 @@ runcode(function()
 						return game:GetService("TweenService"):Create(obj, ...)
 					end
 				})
-				debug.setconstant(require(lplr.PlayerScripts.TS.controllers.global.hotbar.ui.healthbar["hotbar-healthbar"]).HotbarHealthbar.render, 18, 4653055)
+				debug.setconstant(require(lplr.PlayerScripts.TS.controllers.global.hotbar.ui.healthbar["hotbar-healthbar"]).HotbarHealthbar.render, 16, 4653055)
 			end)
 			task.spawn(function()
 				local snowpart = Instance.new("Part")
@@ -10618,7 +10618,7 @@ runcode(function()
 				colorcorrection.TintColor = Color3.fromRGB(255, 185, 81)
 				colorcorrection.Brightness = 0.05
 				colorcorrection.Parent = lighting
-				debug.setconstant(require(lplr.PlayerScripts.TS.controllers.global.hotbar.ui.healthbar["hotbar-healthbar"]).HotbarHealthbar.render, 18, 16737280)
+				debug.setconstant(require(lplr.PlayerScripts.TS.controllers.global.hotbar.ui.healthbar["hotbar-healthbar"]).HotbarHealthbar.render, 16, 16737280)
 			end)
 		end
 	}
