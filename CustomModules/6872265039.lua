@@ -529,6 +529,7 @@ GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
+GuiLibrary["RemoveObject"]("DisablerOptionsButton")
 
 teleportfunc = lplr.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
@@ -1489,6 +1490,470 @@ runcode(function()
 			["Default"] = AnticheatBypassNumbers.TPLerp * 100,
 		})
 	end
+end)
+
+runcode(function()
+	local transformed = false
+	local OldBedwars = {["Enabled"] = false}
+	local themeselected = {["Value"] = "OldBedwars"}
+
+	local themefunctions = {
+		Old = function()
+			task.spawn(function()
+				local oldbedwarstabofblocks = '{"wool_blue":"rbxassetid://5089281898","wool_pink":"rbxassetid://6856183009","clay_pink":"rbxassetid://6856283410","grass":["rbxassetid://6812582110","rbxassetid://6812616868","rbxassetid://6812616868","rbxassetid://6812616868","rbxassetid://6812616868","rbxassetid://6812616868"],"snow":"rbxassetid://6874651192","wool_cyan":"rbxassetid://6177124865","red_sandstone":"rbxassetid://6708703895","wool_green":"rbxassetid://6177123316","clay_black":"rbxassetid://5890435474","sand":"rbxassetid://6187018940","wool_orange":"rbxassetid://6177122584","hickory_log":"rbxassetid://6879467811","wood_plank_birch":"rbxassetid://6768647328","clay_gray":"rbxassetid://7126965624","wood_plank_spruce":"rbxassetid://6768615964","brick":"rbxassetid://6782607284","clay_dark_brown":"rbxassetid://6874651325","stone_brick":"rbxassetid://6710700118","ceramic":"rbxassetid://6875522401","clay_blue":"rbxassetid://4991097126","wood_plank_maple":"rbxassetid://6768632085","diamond_block":"rbxassetid://6734061546","wood_plank_oak":"rbxassetid://6768575772","ice":"rbxassetid://6874651262","marble":"rbxassetid://6594536339","spruce_log":"rbxassetid://6874161124","oak_log":"rbxassetid://6879467811","clay_light_brown":"rbxassetid://6874651634","clay_dark_green":"rbxassetid://6812653448","marble_pillar":["rbxassetid://6909328433","rbxassetid://6909328433","rbxassetid://6909323822","rbxassetid://6909323822","rbxassetid://6909323822","rbxassetid://6909323822"],"slate_brick":"rbxassetid://6708836267","obsidian":"rbxassetid://6855476765","iron_block":"rbxassetid://6734050333","wool_red":"rbxassetid://5089281973","clay_purple":"rbxassetid://6856099740","clay_orange":"rbxassetid://7017703219","clay_red":"rbxassetid://6856283323","wool_yellow":"rbxassetid://6829151816","tnt":["rbxassetid://6889157997","rbxassetid://6889157997","rbxassetid://6855533421","rbxassetid://6855533421","rbxassetid://6855533421","rbxassetid://6855533421"],"clay_yellow":"rbxassetid://4991097283","clay_white":"rbxassetid://7017705325","wool_purple":"rbxassetid://6177125247","sandstone":"rbxassetid://6708657090","wool_white":"rbxassetid://5089287375","clay_light_green":"rbxassetid://6856099550","birch_log":"rbxassetid://6856088949","emerald_block":"rbxassetid://6856082835","clay":"rbxassetid://6856190168","stone":"rbxassetid://6812635290","slime_block":"rbxassetid://6869286145"}'
+				local oldbedwarsblocktab = game:GetService("HttpService"):JSONDecode(oldbedwarstabofblocks)
+				local oldbedwarstabofimages = '{"clay_orange":"rbxassetid://7017703219","iron":"rbxassetid://6850537969","glass":"rbxassetid://6909521321","log_spruce":"rbxassetid://6874161124","ice":"rbxassetid://6874651262","marble":"rbxassetid://6594536339","zipline_base":"rbxassetid://7051148904","iron_helmet":"rbxassetid://6874272559","marble_pillar":"rbxassetid://6909323822","clay_dark_green":"rbxassetid://6763635916","wood_plank_birch":"rbxassetid://6768647328","watering_can":"rbxassetid://6915423754","emerald_helmet":"rbxassetid://6931675766","pie":"rbxassetid://6985761399","wood_plank_spruce":"rbxassetid://6768615964","diamond_chestplate":"rbxassetid://6874272898","wool_pink":"rbxassetid://6910479863","wool_blue":"rbxassetid://6910480234","wood_plank_oak":"rbxassetid://6910418127","diamond_boots":"rbxassetid://6874272964","clay_yellow":"rbxassetid://4991097283","tnt":"rbxassetid://6856168996","lasso":"rbxassetid://7192710930","clay_purple":"rbxassetid://6856099740","melon_seeds":"rbxassetid://6956387796","apple":"rbxassetid://6985765179","carrot_seeds":"rbxassetid://6956387835","log_oak":"rbxassetid://6763678414","emerald_chestplate":"rbxassetid://6931675868","wool_yellow":"rbxassetid://6910479606","emerald_boots":"rbxassetid://6931675942","clay_light_brown":"rbxassetid://6874651634","balloon":"rbxassetid://7122143895","cannon":"rbxassetid://7121221753","leather_boots":"rbxassetid://6855466456","melon":"rbxassetid://6915428682","wool_white":"rbxassetid://6910387332","log_birch":"rbxassetid://6763678414","clay_pink":"rbxassetid://6856283410","grass":"rbxassetid://6773447725","obsidian":"rbxassetid://6910443317","shield":"rbxassetid://7051149149","red_sandstone":"rbxassetid://6708703895","diamond_helmet":"rbxassetid://6874272793","wool_orange":"rbxassetid://6910479956","log_hickory":"rbxassetid://7017706899","guitar":"rbxassetid://7085044606","wool_purple":"rbxassetid://6910479777","diamond":"rbxassetid://6850538161","iron_chestplate":"rbxassetid://6874272631","slime_block":"rbxassetid://6869284566","stone_brick":"rbxassetid://6910394475","hammer":"rbxassetid://6955848801","ceramic":"rbxassetid://6910426690","wood_plank_maple":"rbxassetid://6768632085","leather_helmet":"rbxassetid://6855466216","stone":"rbxassetid://6763635916","slate_brick":"rbxassetid://6708836267","sandstone":"rbxassetid://6708657090","snow":"rbxassetid://6874651192","wool_red":"rbxassetid://6910479695","leather_chestplate":"rbxassetid://6876833204","clay_red":"rbxassetid://6856283323","wool_green":"rbxassetid://6910480050","clay_white":"rbxassetid://7017705325","wool_cyan":"rbxassetid://6910480152","clay_black":"rbxassetid://5890435474","sand":"rbxassetid://6187018940","clay_light_green":"rbxassetid://6856099550","clay_dark_brown":"rbxassetid://6874651325","carrot":"rbxassetid://3677675280","clay":"rbxassetid://6856190168","iron_boots":"rbxassetid://6874272718","emerald":"rbxassetid://6850538075","zipline":"rbxassetid://7051148904"}'
+				local oldbedwarsicontab = game:GetService("HttpService"):JSONDecode(oldbedwarstabofimages)
+				local oldbedwarssoundtable = {
+					["QUEUE_JOIN"] = "rbxassetid://6691735519",
+					["QUEUE_MATCH_FOUND"] = "rbxassetid://6768247187",
+					["UI_CLICK"] = "rbxassetid://6732690176",
+					["UI_OPEN"] = "rbxassetid://6732607930",
+					["BEDWARS_UPGRADE_SUCCESS"] = "rbxassetid://6760677364",
+					["BEDWARS_PURCHASE_ITEM"] = "rbxassetid://6760677364",
+					["SWORD_SWING_1"] = "rbxassetid://6760544639",
+					["SWORD_SWING_2"] = "rbxassetid://6760544595",
+					["DAMAGE_1"] = "rbxassetid://6765457325",
+					["DAMAGE_2"] = "rbxassetid://6765470975",
+					["DAMAGE_3"] = "rbxassetid://6765470941",
+					["CROP_HARVEST"] = "rbxassetid://4864122196",
+					["CROP_PLANT_1"] = "rbxassetid://5483943277",
+					["CROP_PLANT_2"] = "rbxassetid://5483943479",
+					["CROP_PLANT_3"] = "rbxassetid://5483943723",
+					["ARMOR_EQUIP"] = "rbxassetid://6760627839",
+					["ARMOR_UNEQUIP"] = "rbxassetid://6760625788",
+					["PICKUP_ITEM_DROP"] = "rbxassetid://6768578304",
+					["PARTY_INCOMING_INVITE"] = "rbxassetid://6732495464",
+					["ERROR_NOTIFICATION"] = "rbxassetid://6732495464",
+					["INFO_NOTIFICATION"] = "rbxassetid://6732495464",
+					["END_GAME"] = "rbxassetid://6246476959",
+					["GENERIC_BLOCK_PLACE"] = "rbxassetid://4842910664",
+					["GENERIC_BLOCK_BREAK"] = "rbxassetid://4819966893",
+					["GRASS_BREAK"] = "rbxassetid://5282847153",
+					["WOOD_BREAK"] = "rbxassetid://4819966893",
+					["STONE_BREAK"] = "rbxassetid://6328287211",
+					["WOOL_BREAK"] = "rbxassetid://4842910664",
+					["TNT_EXPLODE_1"] = "rbxassetid://7192313632",
+					["TNT_HISS_1"] = "rbxassetid://7192313423",
+					["FIREBALL_EXPLODE"] = "rbxassetid://6855723746",
+					["SLIME_BLOCK_BOUNCE"] = "rbxassetid://6857999096",
+					["SLIME_BLOCK_BREAK"] = "rbxassetid://6857999170",
+					["SLIME_BLOCK_HIT"] = "rbxassetid://6857999148",
+					["SLIME_BLOCK_PLACE"] = "rbxassetid://6857999119",
+					["BOW_DRAW"] = "rbxassetid://6866062236",
+					["BOW_FIRE"] = "rbxassetid://6866062104",
+					["ARROW_HIT"] = "rbxassetid://6866062188",
+					["ARROW_IMPACT"] = "rbxassetid://6866062148",
+					["TELEPEARL_THROW"] = "rbxassetid://6866223756",
+					["TELEPEARL_LAND"] = "rbxassetid://6866223798",
+					["CROSSBOW_RELOAD"] = "rbxassetid://6869254094",
+					["VOICE_1"] = "rbxassetid://5283866929",
+					["VOICE_2"] = "rbxassetid://5283867710",
+					["VOICE_HONK"] = "rbxassetid://5283872555",
+					["FORTIFY_BLOCK"] = "rbxassetid://6955762535",
+					["EAT_FOOD_1"] = "rbxassetid://4968170636",
+					["KILL"] = "rbxassetid://7013482008",
+					["ZIPLINE_TRAVEL"] = "rbxassetid://7047882304",
+					["ZIPLINE_LATCH"] = "rbxassetid://7047882233",
+					["ZIPLINE_UNLATCH"] = "rbxassetid://7047882265",
+					["SHIELD_BLOCKED"] = "rbxassetid://6955762535",
+					["GUITAR_LOOP"] = "rbxassetid://7084168540",
+					["GUITAR_HEAL_1"] = "rbxassetid://7084168458",
+					["CANNON_MOVE"] = "rbxassetid://7118668472",
+					["CANNON_FIRE"] = "rbxassetid://7121064180",
+					["BALLOON_INFLATE"] = "rbxassetid://7118657911",
+					["BALLOON_POP"] = "rbxassetid://7118657873",
+					["FIREBALL_THROW"] = "rbxassetid://7192289445",
+					["LASSO_HIT"] = "rbxassetid://7192289603",
+					["LASSO_SWING"] = "rbxassetid://7192289504",
+					["LASSO_THROW"] = "rbxassetid://7192289548",
+					["GRIM_REAPER_CONSUME"] = "rbxassetid://7225389554",
+					["GRIM_REAPER_CHANNEL"] = "rbxassetid://7225389512",
+					["TV_STATIC"] = "rbxassetid://7256209920",
+					["TURRET_ON"] = "rbxassetid://7290176291",
+					["TURRET_OFF"] = "rbxassetid://7290176380",
+					["TURRET_ROTATE"] = "rbxassetid://7290176421",
+					["TURRET_SHOOT"] = "rbxassetid://7290187805",
+					["WIZARD_LIGHTNING_CAST"] = "rbxassetid://7262989886",
+					["WIZARD_LIGHTNING_LAND"] = "rbxassetid://7263165647",
+					["WIZARD_LIGHTNING_STRIKE"] = "rbxassetid://7263165347",
+					["WIZARD_ORB_CAST"] = "rbxassetid://7263165448",
+					["WIZARD_ORB_TRAVEL_LOOP"] = "rbxassetid://7263165579",
+					["WIZARD_ORB_CONTACT_LOOP"] = "rbxassetid://7263165647",
+					["BATTLE_PASS_PROGRESS_LEVEL_UP"] = "rbxassetid://7331597283",
+					["BATTLE_PASS_PROGRESS_EXP_GAIN"] = "rbxassetid://7331597220",
+					["FLAMETHROWER_UPGRADE"] = "rbxassetid://7310273053",
+					["FLAMETHROWER_USE"] = "rbxassetid://7310273125",
+					["BRITTLE_HIT"] = "rbxassetid://7310273179",
+					["EXTINGUISH"] = "rbxassetid://7310273015",
+					["RAVEN_SPACE_AMBIENT"] = "rbxassetid://7341443286",
+					["RAVEN_WING_FLAP"] = "rbxassetid://7341443378",
+					["RAVEN_CAW"] = "rbxassetid://7341443447",
+					["JADE_HAMMER_THUD"] = "rbxassetid://7342299402",
+					["STATUE"] = "rbxassetid://7344166851",
+					["CONFETTI"] = "rbxassetid://7344278405",
+					["HEART"] = "rbxassetid://7345120916",
+					["SPRAY"] = "rbxassetid://7361499529",
+					["BEEHIVE_PRODUCE"] = "rbxassetid://7378100183",
+					["DEPOSIT_BEE"] = "rbxassetid://7378100250",
+					["CATCH_BEE"] = "rbxassetid://7378100305",
+					["BEE_NET_SWING"] = "rbxassetid://7378100350",
+					["ASCEND"] = "rbxassetid://7378387334",
+					["BED_ALARM"] = "rbxassetid://7396762708",
+					["BOUNTY_CLAIMED"] = "rbxassetid://7396751941",
+					["BOUNTY_ASSIGNED"] = "rbxassetid://7396752155",
+					["BAGUETTE_HIT"] = "rbxassetid://7396760547",
+					["BAGUETTE_SWING"] = "rbxassetid://7396760496",
+					["TESLA_ZAP"] = "rbxassetid://7497477336",
+					["SPIRIT_TRIGGERED"] = "rbxassetid://7498107251",
+					["SPIRIT_EXPLODE"] = "rbxassetid://7498107327",
+					["ANGEL_LIGHT_ORB_CREATE"] = "rbxassetid://7552134231",
+					["ANGEL_LIGHT_ORB_HEAL"] = "rbxassetid://7552134868",
+					["ANGEL_VOID_ORB_CREATE"] = "rbxassetid://7552135942",
+					["ANGEL_VOID_ORB_HEAL"] = "rbxassetid://7552136927",
+					["DODO_BIRD_JUMP"] = "rbxassetid://7618085391",
+					["DODO_BIRD_DOUBLE_JUMP"] = "rbxassetid://7618085771",
+					["DODO_BIRD_MOUNT"] = "rbxassetid://7618085486",
+					["DODO_BIRD_DISMOUNT"] = "rbxassetid://7618085571",
+					["DODO_BIRD_SQUAWK_1"] = "rbxassetid://7618085870",
+					["DODO_BIRD_SQUAWK_2"] = "rbxassetid://7618085657",
+					["SHIELD_CHARGE_START"] = "rbxassetid://7730842884",
+					["SHIELD_CHARGE_LOOP"] = "rbxassetid://7730843006",
+					["SHIELD_CHARGE_BASH"] = "rbxassetid://7730843142",
+					["ROCKET_LAUNCHER_FIRE"] = "rbxassetid://7681584765",
+					["ROCKET_LAUNCHER_FLYING_LOOP"] = "rbxassetid://7681584906",
+					["SMOKE_GRENADE_POP"] = "rbxassetid://7681276062",
+					["SMOKE_GRENADE_EMIT_LOOP"] = "rbxassetid://7681276135",
+					["GOO_SPIT"] = "rbxassetid://7807271610",
+					["GOO_SPLAT"] = "rbxassetid://7807272724",
+					["GOO_EAT"] = "rbxassetid://7813484049",
+					["LUCKY_BLOCK_BREAK"] = "rbxassetid://7682005357",
+					["AXOLOTL_SWITCH_TARGETS"] = "rbxassetid://7344278405",
+					["HALLOWEEN_MUSIC"] = "rbxassetid://7775602786",
+					["SNAP_TRAP_SETUP"] = "rbxassetid://7796078515",
+					["SNAP_TRAP_CLOSE"] = "rbxassetid://7796078695",
+					["SNAP_TRAP_CONSUME_MARK"] = "rbxassetid://7796078825",
+					["GHOST_VACUUM_SUCKING_LOOP"] = "rbxassetid://7814995865",
+					["GHOST_VACUUM_SHOOT"] = "rbxassetid://7806060367",
+					["GHOST_VACUUM_CATCH"] = "rbxassetid://7815151688",
+					["FISHERMAN_GAME_START"] = "rbxassetid://7806060544",
+					["FISHERMAN_GAME_PULLING_LOOP"] = "rbxassetid://7806060638",
+					["FISHERMAN_GAME_PROGRESS_INCREASE"] = "rbxassetid://7806060745",
+					["FISHERMAN_GAME_FISH_MOVE"] = "rbxassetid://7806060863",
+					["FISHERMAN_GAME_LOOP"] = "rbxassetid://7806061057",
+					["FISHING_ROD_CAST"] = "rbxassetid://7806060976",
+					["FISHING_ROD_SPLASH"] = "rbxassetid://7806061193",
+					["SPEAR_HIT"] = "rbxassetid://7807270398",
+					["SPEAR_THROW"] = "rbxassetid://7813485044",
+				}
+				task.spawn(function()
+					for i,v in pairs(collectionservice:GetTagged("block")) do
+						if oldbedwarsblocktab[v.Name] then
+							if type(oldbedwarsblocktab[v.Name]) == "table" then
+								for i2,v2 in pairs(v:GetDescendants()) do
+									if v2:IsA("Texture") then
+										if v2.Name == "Top" then
+											v2.Texture = oldbedwarsblocktab[v.Name][1]
+											v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+										elseif v2.Name == "Bottom" then
+											v2.Texture = oldbedwarsblocktab[v.Name][2]
+										else
+											v2.Texture = oldbedwarsblocktab[v.Name][3]
+										end
+									end
+								end
+							else
+								for i2,v2 in pairs(v:GetDescendants()) do
+									if v2:IsA("Texture") then
+										v2.Texture = oldbedwarsblocktab[v.Name]
+									end
+								end
+							end
+						end
+					end
+				end)
+				game:GetService("CollectionService"):GetInstanceAddedSignal("block"):Connect(function(v)
+					if oldbedwarsblocktab[v.Name] then
+						if type(oldbedwarsblocktab[v.Name]) == "table" then
+							for i2,v2 in pairs(v:GetDescendants()) do
+								if v2:IsA("Texture") then
+									if v2.Name == "Top" then
+										v2.Texture = oldbedwarsblocktab[v.Name][1]
+										v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+									elseif v2.Name == "Bottom" then
+										v2.Texture = oldbedwarsblocktab[v.Name][2]
+									else
+										v2.Texture = oldbedwarsblocktab[v.Name][3]
+									end
+								end
+							end
+							v.DescendantAdded:Connect(function(v3)
+								if v3:IsA("Texture") then
+									if v3.Name == "Top" then
+										v3.Texture = oldbedwarsblocktab[v.Name][1]
+										v3.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+									elseif v3.Name == "Bottom" then
+										v3.Texture = oldbedwarsblocktab[v.Name][2]
+									else
+										v3.Texture = oldbedwarsblocktab[v.Name][3]
+									end
+								end
+							end)
+						else
+							for i2,v2 in pairs(v:GetDescendants()) do
+								if v2:IsA("Texture") then
+									v2.Texture = oldbedwarsblocktab[v.Name]
+								end
+							end
+							v.DescendantAdded:Connect(function(v3)
+								if v3:IsA("Texture") then
+									v3.Texture = oldbedwarsblocktab[v.Name]
+								end
+							end)
+						end
+					end
+				end)
+				game:GetService("CollectionService"):GetInstanceAddedSignal("tnt"):Connect(function(v)
+					if oldbedwarsblocktab[v.Name] then
+						if type(oldbedwarsblocktab[v.Name]) == "table" then
+							for i2,v2 in pairs(v:GetDescendants()) do
+								if v2:IsA("Texture") then
+									if v2.Name == "Top" then
+										v2.Texture = oldbedwarsblocktab[v.Name][1]
+										v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+									elseif v2.Name == "Bottom" then
+										v2.Texture = oldbedwarsblocktab[v.Name][2]
+									else
+										v2.Texture = oldbedwarsblocktab[v.Name][3]
+									end
+								end
+							end
+							v.DescendantAdded:Connect(function(v3)
+								if v3:IsA("Texture") then
+									if v3.Name == "Top" then
+										v3.Texture = oldbedwarsblocktab[v.Name][1]
+										v3.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+									elseif v3.Name == "Bottom" then
+										v3.Texture = oldbedwarsblocktab[v.Name][2]
+									else
+										v3.Texture = oldbedwarsblocktab[v.Name][3]
+									end
+								end
+							end)
+						else
+							for i2,v2 in pairs(v:GetDescendants()) do
+								if v2:IsA("Texture") then
+									v2.Texture = oldbedwarsblocktab[v.Name]
+								end
+							end
+							v.DescendantAdded:Connect(function(v3)
+								if v3:IsA("Texture") then
+									v3.Texture = oldbedwarsblocktab[v.Name]
+								end
+							end)
+						end
+					end
+				end)
+				for i,v in pairs(bedwars["ItemTable"]) do 
+					if oldbedwarsicontab[i] then 
+						v.image = oldbedwarsicontab[i]
+					end
+				end			
+				for i,v in pairs(oldbedwarssoundtable) do 
+					local item = bedwars["SoundList"][i]
+					if item then
+						bedwars["SoundList"][i] = v
+					end
+				end	
+				local oldweld = bedwars["WeldTable"].weldCharacterAccessories
+				local alreadydone = {}
+				bedwars["WeldTable"].weldCharacterAccessories = function(self, model, ...)
+					for i,v in pairs(model:GetChildren()) do
+						local died = v.Name == "HumanoidRootPart" and v:FindFirstChild("Died")
+						if died then 
+							died.Volume = 0
+						end
+						if oldbedwarsblocktab[v.Name] then
+							task.spawn(function()
+								local hand = v:WaitForChild("Handle", 10)
+								if hand then
+									hand.CastShadow = false
+								end
+								for i2,v2 in pairs(v:GetDescendants()) do
+									if v2:IsA("Texture") then
+										if v2.Name == "Top" then
+											v2.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][1] or oldbedwarsblocktab[v.Name])
+											v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+										elseif v2.Name == "Bottom" then
+											v2.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][2] or oldbedwarsblocktab[v.Name])
+										else
+											v2.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][3] or oldbedwarsblocktab[v.Name])
+										end
+									end
+								end
+								v.DescendantAdded:Connect(function(v3)
+									if v3:IsA("Texture") then
+										if v3.Name == "Top" then
+											v3.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][1] or oldbedwarsblocktab[v.Name])
+											v3.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
+										elseif v3.Name == "Bottom" then
+											v3.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][2] or oldbedwarsblocktab[v.Name])
+										else
+											v3.Texture = (type(oldbedwarsblocktab[v.Name]) == "table" and oldbedwarsblocktab[v.Name][3] or oldbedwarsblocktab[v.Name])
+										end
+									end
+								end)
+							end)
+						end
+					end
+					return oldweld(self, model, ...)
+				end
+				sethiddenproperty(lighting, "Technology", "ShadowMap")
+				lighting.Ambient = Color3.fromRGB(69, 69, 69)
+				lighting.Brightness = 3
+				lighting.EnvironmentDiffuseScale = 1
+				lighting.EnvironmentSpecularScale = 1
+				lighting.OutdoorAmbient = Color3.fromRGB(69, 69, 69)
+				lighting.Atmosphere.Density = 0.1
+				lighting.Atmosphere.Offset = 0.25
+				lighting.Atmosphere.Color = Color3.fromRGB(198, 198, 198)
+				lighting.Atmosphere.Decay = Color3.fromRGB(104, 112, 124)
+				lighting.Atmosphere.Glare = 0
+				lighting.Atmosphere.Haze = 0
+				lighting.ClockTime = 13
+				lighting.GeographicLatitude = 0
+				lighting.GlobalShadows = false
+				lighting.TimeOfDay = "13:00:00"
+				lighting.Sky.SkyboxBk = "rbxassetid://7018684000"
+				lighting.Sky.SkyboxDn = "rbxassetid://6334928194"
+				lighting.Sky.SkyboxFt = "rbxassetid://7018684000"
+				lighting.Sky.SkyboxLf = "rbxassetid://7018684000"
+				lighting.Sky.SkyboxRt = "rbxassetid://7018684000"
+				lighting.Sky.SkyboxUp = "rbxassetid://7018689553"
+			end)
+		end,
+		Winter = function() 
+			task.spawn(function()
+				for i,v in pairs(lighting:GetChildren()) do
+					if v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("PostEffect") then
+						v:Remove()
+					end
+				end
+				local sky = Instance.new("Sky")
+				sky.StarCount = 5000
+				sky.SkyboxUp = "rbxassetid://8139676647"
+				sky.SkyboxLf = "rbxassetid://8139676988"
+				sky.SkyboxFt = "rbxassetid://8139677111"
+				sky.SkyboxBk = "rbxassetid://8139677359"
+				sky.SkyboxDn = "rbxassetid://8139677253"
+				sky.SkyboxRt = "rbxassetid://8139676842"
+				sky.SunTextureId = "rbxassetid://6196665106"
+				sky.SunAngularSize = 11
+				sky.MoonTextureId = "rbxassetid://8139665943"
+				sky.MoonAngularSize = 30
+				sky.Parent = lighting
+				local sunray = Instance.new("SunRaysEffect")
+				sunray.Intensity = 0.03
+				sunray.Parent = lighting
+				local bloom = Instance.new("BloomEffect")
+				bloom.Threshold = 2
+				bloom.Intensity = 1
+				bloom.Size = 2
+				bloom.Parent = lighting
+				local atmosphere = Instance.new("Atmosphere")
+				atmosphere.Density = 0.3
+				atmosphere.Offset = 0.25
+				atmosphere.Color = Color3.fromRGB(198, 198, 198)
+				atmosphere.Decay = Color3.fromRGB(104, 112, 124)
+				atmosphere.Glare = 0
+				atmosphere.Haze = 0
+				atmosphere.Parent = lighting
+			end)
+			task.spawn(function()
+				local snowpart = Instance.new("Part")
+				snowpart.Size = Vector3.new(240, 0.5, 240)
+				snowpart.Name = "SnowParticle"
+				snowpart.Transparency = 1
+				snowpart.CanCollide = false
+				snowpart.Position = Vector3.new(0, 120, 286)
+				snowpart.Anchored = true
+				snowpart.Parent = workspace
+				local snow = Instance.new("ParticleEmitter")
+				snow.RotSpeed = NumberRange.new(300)
+				snow.VelocitySpread = 35
+				snow.Rate = 28
+				snow.Texture = "rbxassetid://8158344433"
+				snow.Rotation = NumberRange.new(110)
+				snow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.16939899325371,0),NumberSequenceKeypoint.new(0.23365999758244,0.62841498851776,0.37158501148224),NumberSequenceKeypoint.new(0.56209099292755,0.38797798752785,0.2771390080452),NumberSequenceKeypoint.new(0.90577298402786,0.51912599802017,0),NumberSequenceKeypoint.new(1,1,0)})
+				snow.Lifetime = NumberRange.new(8,14)
+				snow.Speed = NumberRange.new(8,18)
+				snow.EmissionDirection = Enum.NormalId.Bottom
+				snow.SpreadAngle = Vector2.new(35,35)
+				snow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
+				snow.Parent = snowpart
+				local windsnow = Instance.new("ParticleEmitter")
+				windsnow.Acceleration = Vector3.new(0,0,1)
+				windsnow.RotSpeed = NumberRange.new(100)
+				windsnow.VelocitySpread = 35
+				windsnow.Rate = 28
+				windsnow.Texture = "rbxassetid://8158344433"
+				windsnow.EmissionDirection = Enum.NormalId.Bottom
+				windsnow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.16939899325371,0),NumberSequenceKeypoint.new(0.23365999758244,0.62841498851776,0.37158501148224),NumberSequenceKeypoint.new(0.56209099292755,0.38797798752785,0.2771390080452),NumberSequenceKeypoint.new(0.90577298402786,0.51912599802017,0),NumberSequenceKeypoint.new(1,1,0)})
+				windsnow.Lifetime = NumberRange.new(8,14)
+				windsnow.Speed = NumberRange.new(8,18)
+				windsnow.Rotation = NumberRange.new(110)
+				windsnow.SpreadAngle = Vector2.new(35,35)
+				windsnow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
+				windsnow.Parent = snowpart
+				for i = 1, 30 do
+					for i2 = 1, 30 do
+						local clone = snowpart:Clone()
+						clone.Position = Vector3.new(240 * (i - 1), 400, 240 * (i2 - 1))
+						clone.Parent = workspace
+					end
+				end
+			end)
+		end,
+		Halloween = function()
+			task.spawn(function()
+				for i,v in pairs(lighting:GetChildren()) do
+					if v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("PostEffect") then
+						v:Remove()
+					end
+				end
+				lighting.TimeOfDay = "00:00:00"
+				pcall(function() workspace.Clouds:Destroy() end)
+				local colorcorrection = Instance.new("ColorCorrectionEffect")
+				colorcorrection.TintColor = Color3.fromRGB(255, 185, 81)
+				colorcorrection.Brightness = 0.05
+				colorcorrection.Parent = lighting
+			end)
+		end
+	}
+
+	OldBedwars = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "GameTheme",
+		["Function"] = function(callback) 
+			if callback then 
+				if not transformed then
+					transformed = true
+					themefunctions[themeselected["Value"]]()
+				else
+					OldBedwars["ToggleButton"](false)
+				end
+			else
+				createwarning("GameTheme", "Disabled Next Game", 10)
+			end
+		end,
+		["ExtraText"] = function()
+			return themeselected["Value"]
+		end
+	})
+	themeselected = OldBedwars.CreateDropdown({
+		["Name"] = "Theme",
+		["Function"] = function() end,
+		["List"] = {"Old", "Winter", "Halloween"}
+	})
 end)
 
 runcode(function()

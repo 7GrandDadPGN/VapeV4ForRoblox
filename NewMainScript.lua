@@ -580,86 +580,93 @@ OnlineProfilesListGrid.Parent = OnlineProfilesList
 local OnlineProfilesFrameCorner = Instance.new("UICorner")
 OnlineProfilesFrameCorner.CornerRadius = UDim.new(0, 4)
 OnlineProfilesFrameCorner.Parent = OnlineProfilesFrame
+
+local function grabdata(url)
+	local success, result = pcall(function()
+		return game:GetService("HttpService"):JSONDecode(game:HttpGet(url, true))
+	end)
+	return success and result or {}
+end
+
 OnlineProfilesButton.MouseButton1Click:Connect(function()
 	GuiLibrary["MainGui"].ScaledGui.OnlineProfiles.Visible = true
 	GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible = false
 	if profilesloaded == false then
 		local onlineprofiles = {}
-		local success, result = pcall(function()
-			return game:GetService("HttpService"):JSONDecode((shared.VapeDeveloper and readfile("vape/OnlineProfiles.vapeonline") or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles.vapeonline", true)))
-		end)
-		onlineprofiles = (success and result or {})
+		local saveplaceid = tostring(shared.CustomSaveVape or game.PlaceId)
+		for i,v in pairs(grabdata("https://raw.githubusercontent.com/7GrandDadPGN/VapeProfiles/main/Profiles/"..saveplaceid.."/profilelist.txt")) do 
+			onlineprofiles[i] = v
+		end
 		for i2,v2 in pairs(onlineprofiles) do
-			if tostring(v2["ProfileGame"]) == tostring(shared.CustomSaveVape or game.PlaceId) then
-				local profilebox = Instance.new("Frame")
-				profilebox.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
-				profilebox.Parent = OnlineProfilesList
-				local profiletext = Instance.new("TextLabel")
-				profiletext.TextSize = 15
+			local profileurl = "https://raw.githubusercontent.com/7GrandDadPGN/VapeProfiles/main/Profiles/"..saveplaceid.."/"..v2.OnlineProfileName
+			local profilebox = Instance.new("Frame")
+			profilebox.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+			profilebox.Parent = OnlineProfilesList
+			local profiletext = Instance.new("TextLabel")
+			profiletext.TextSize = 15
+			profiletext.TextColor3 = Color3.fromRGB(137, 136, 137)
+			profiletext.Size = UDim2.new(0, 100, 0, 20)
+			profiletext.Position = UDim2.new(0, 18, 0, 25)
+			profiletext.Font = Enum.Font.SourceSans
+			profiletext.TextXAlignment = Enum.TextXAlignment.Left
+			profiletext.TextYAlignment = Enum.TextYAlignment.Top
+			profiletext.BackgroundTransparency = 1
+			profiletext.Text = i2
+			profiletext.Parent = profilebox
+			local profiledownload = Instance.new("TextButton")
+			profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+			profiledownload.Size = UDim2.new(0, 69, 0, 31)
+			profiledownload.Font = Enum.Font.SourceSans
+			profiledownload.TextColor3 = Color3.fromRGB(200, 200, 200)
+			profiledownload.TextSize = 15
+			profiledownload.AutoButtonColor = false
+			profiledownload.Text = "DOWNLOAD"
+			profiledownload.Position = UDim2.new(0, 14, 0, 96)
+			profiledownload.Visible = false 
+			profiledownload.Parent = profilebox
+			profiledownload.ZIndex = 2
+			local profiledownloadbkg = Instance.new("Frame")
+			profiledownloadbkg.Size = UDim2.new(0, 71, 0, 33)
+			profiledownloadbkg.BackgroundColor3 = Color3.fromRGB(42, 41, 42)
+			profiledownloadbkg.Position = UDim2.new(0, 13, 0, 95)
+			profiledownloadbkg.ZIndex = 1
+			profiledownloadbkg.Visible = false
+			profiledownloadbkg.Parent = profilebox
+			profilebox.MouseEnter:Connect(function()
+				profiletext.TextColor3 = Color3.fromRGB(200, 200, 200)
+				profiledownload.Visible = true 
+				profiledownloadbkg.Visible = true
+			end)
+			profilebox.MouseLeave:Connect(function()
 				profiletext.TextColor3 = Color3.fromRGB(137, 136, 137)
-				profiletext.Size = UDim2.new(0, 100, 0, 20)
-				profiletext.Position = UDim2.new(0, 18, 0, 25)
-				profiletext.Font = Enum.Font.SourceSans
-				profiletext.TextXAlignment = Enum.TextXAlignment.Left
-				profiletext.TextYAlignment = Enum.TextYAlignment.Top
-				profiletext.BackgroundTransparency = 1
-				profiletext.Text = i2
-				profiletext.Parent = profilebox
-				local profiledownload = Instance.new("TextButton")
-				profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
-				profiledownload.Size = UDim2.new(0, 69, 0, 31)
-				profiledownload.Font = Enum.Font.SourceSans
-				profiledownload.TextColor3 = Color3.fromRGB(200, 200, 200)
-				profiledownload.TextSize = 15
-				profiledownload.AutoButtonColor = false
-				profiledownload.Text = "DOWNLOAD"
-				profiledownload.Position = UDim2.new(0, 14, 0, 96)
-				profiledownload.Visible = false 
-				profiledownload.Parent = profilebox
-				profiledownload.ZIndex = 2
-				local profiledownloadbkg = Instance.new("Frame")
-				profiledownloadbkg.Size = UDim2.new(0, 71, 0, 33)
-				profiledownloadbkg.BackgroundColor3 = Color3.fromRGB(42, 41, 42)
-				profiledownloadbkg.Position = UDim2.new(0, 13, 0, 95)
-				profiledownloadbkg.ZIndex = 1
+				profiledownload.Visible = false
 				profiledownloadbkg.Visible = false
-				profiledownloadbkg.Parent = profilebox
-				profilebox.MouseEnter:Connect(function()
-					profiletext.TextColor3 = Color3.fromRGB(200, 200, 200)
-					profiledownload.Visible = true 
-					profiledownloadbkg.Visible = true
-				end)
-				profilebox.MouseLeave:Connect(function()
-					profiletext.TextColor3 = Color3.fromRGB(137, 136, 137)
-					profiledownload.Visible = false
-					profiledownloadbkg.Visible = false
-				end)
-				profiledownload.MouseEnter:Connect(function()
-					profiledownload.BackgroundColor3 = Color3.fromRGB(5, 134, 105)
-				end)
-				profiledownload.MouseLeave:Connect(function()
-					profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
-				end)
-				profiledownload.MouseButton1Click:Connect(function()
-					writefile(customdir.."Profiles/"..v2["ProfileName"]..tostring(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", (shared.VapeDeveloper and readfile("vape/OnlineProfiles/"..v2["OnlineProfileName"]) or game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/OnlineProfiles/"..v2["OnlineProfileName"], true)))
-					GuiLibrary["Profiles"][v2["ProfileName"]] = {["Keybind"] = "", ["Selected"] = false}
-					local profiles = {}
-					for i,v in pairs(GuiLibrary["Profiles"]) do 
-						table.insert(profiles, i)
-					end
-					table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
-					ProfilesTextList["RefreshValues"](profiles)
-				end)
-				local profileround = Instance.new("UICorner")
-				profileround.CornerRadius = UDim.new(0, 4)
-				profileround.Parent = profilebox
-				local profileround2 = Instance.new("UICorner")
-				profileround2.CornerRadius = UDim.new(0, 4)
-				profileround2.Parent = profiledownload
-				local profileround3 = Instance.new("UICorner")
-				profileround3.CornerRadius = UDim.new(0, 4)
-				profileround3.Parent = profiledownloadbkg
-			end
+			end)
+			profiledownload.MouseEnter:Connect(function()
+				profiledownload.BackgroundColor3 = Color3.fromRGB(5, 134, 105)
+			end)
+			profiledownload.MouseLeave:Connect(function()
+				profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+			end)
+			profiledownload.MouseButton1Click:Connect(function()
+				writefile(customdir.."Profiles/"..v2["ProfileName"]..saveplaceid..".vapeprofile.txt", game:HttpGet(profileurl, true))
+				GuiLibrary["Profiles"][v2["ProfileName"]] = {["Keybind"] = "", ["Selected"] = false}
+				local profiles = {}
+				for i,v in pairs(GuiLibrary["Profiles"]) do 
+					table.insert(profiles, i)
+				end
+				table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
+				ProfilesTextList["RefreshValues"](profiles)
+			end)
+			local profileround = Instance.new("UICorner")
+			profileround.CornerRadius = UDim.new(0, 4)
+			profileround.Parent = profilebox
+			local profileround2 = Instance.new("UICorner")
+			profileround2.CornerRadius = UDim.new(0, 4)
+			profileround2.Parent = profiledownload
+			local profileround3 = Instance.new("UICorner")
+			profileround3.CornerRadius = UDim.new(0, 4)
+			profileround3.Parent = profiledownloadbkg
 		end
 		profilesloaded = true
 	end

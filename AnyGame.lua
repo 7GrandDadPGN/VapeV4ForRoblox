@@ -1210,39 +1210,6 @@ autoclickercps = autoclicker.CreateTwoSlider({
 })
 
 runcode(function()
-	local BlinkIncoming = {["Enabled"] = false}
-	local Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "Blink", 
-		["Function"] = function(callback) 
-			if callback then
-				game:GetService("NetworkClient"):SetOutgoingKBPSLimit(1)
-				if BlinkIncoming["Enabled"] then 
-					settings():GetService("NetworkSettings").IncomingReplicationLag = 99999999
-				end
-			else
-				game:GetService("NetworkClient"):SetOutgoingKBPSLimit(math.huge)
-				if BlinkIncoming["Enabled"] then 
-					settings():GetService("NetworkSettings").IncomingReplicationLag = 0
-				end
-			end
-		end, 
-		["HoverText"] = "Chokes all incoming or outgoing packets"
-	})
-	BlinkIncoming = Blink.CreateToggle({
-		["Name"] = "Incoming",
-		["Function"] = function(callback)
-			if callback then
-				if Blink["Enabled"] then 
-					settings():GetService("NetworkSettings").IncomingReplicationLag = 99999999
-				end
-			else
-				if Blink["Enabled"] then 
-					settings():GetService("NetworkSettings").IncomingReplicationLag = 0
-				end
-			end
-		end
-	})
-
 	local ClickTP = {["Enabled"] = false}
 	local ClickTPMethod = {["Value"] = "Normal"}
 	local ClickTPDelay = {["Value"] = 1}
@@ -2799,25 +2766,30 @@ runcode(function()
 			thing.Quad1 = Drawing.new("Square")
 			thing.Quad1.Transparency = ESPBoundingBox["Enabled"] and 1 or 0
 			thing.Quad1.ZIndex = 2
+			thing.Quad1.Filled = false
 			thing.Quad1.Thickness = 1
 			thing.Quad1.Color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor["Hue"], ESPColor["Sat"], ESPColor["Value"])
 			thing.QuadLine2 = Drawing.new("Square")
 			thing.QuadLine2.Transparency = ESPBoundingBox["Enabled"] and 0.5 or 0
 			thing.QuadLine2.ZIndex = 1
 			thing.QuadLine2.Thickness = 1
+			thing.QuadLine2.Filled = false
 			thing.QuadLine2.Color = Color3.new(0, 0, 0)
 			thing.QuadLine3 = Drawing.new("Square")
 			thing.QuadLine3.Transparency = ESPBoundingBox["Enabled"] and 0.5 or 0
 			thing.QuadLine3.ZIndex = 1
 			thing.QuadLine3.Thickness = 1
+			thing.QuadLine3.Filled = false
 			thing.QuadLine3.Color = Color3.new(0, 0, 0)
 			if ESPHealthBar["Enabled"] then 
 				thing.Quad3 = Drawing.new("Line")
 				thing.Quad3.Thickness = 1
 				thing.Quad3.ZIndex = 2
+				thing.Quad3.Filled = false
 				thing.Quad3.Color = Color3.new(0, 1, 0)
 				thing.Quad4 = Drawing.new("Line")
 				thing.Quad4.Thickness = 3
+				thing.Quad4.Filled = false
 				thing.Quad4.Transparency = 0.5
 				thing.Quad4.ZIndex = 1
 				thing.Quad4.Color = Color3.new(0, 0, 0)
@@ -4795,7 +4767,7 @@ runcode(function()
 		local highest = 9e9
 		for i,v in pairs(roles) do 
 			local low = v.Name:lower()
-			if (low:find("admin") or low:find("mod") or low:find("dev") or low:find("manager")) and v.Rank < highest then 
+			if (low:find("admin") or low:find("mod") or low:find("dev")) and v.Rank < highest then 
 				highest = v.Rank
 			end
 		end
