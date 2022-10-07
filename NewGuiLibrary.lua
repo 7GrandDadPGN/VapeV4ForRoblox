@@ -1,5 +1,5 @@
 if shared.VapeExecuted then
-	local VERSION = "4.08"..(shared.VapePrivate and " PRIVATE" or "")
+	local VERSION = "4.09"..(shared.VapePrivate and " PRIVATE" or "")
 	local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
 	local rainbowvalue = 0
 	local cam = game:GetService("Workspace").CurrentCamera
@@ -26,7 +26,7 @@ if shared.VapeExecuted then
 	local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 	local loadedsuccessfully = false
 	local api = {
-		["Settings"] = {["GUIObject"] = {["Type"] = "Custom", ["Color"] = 0.64}, ["SearchObject"] = {["Type"] = "Custom", ["List"] = {}}},
+		["Settings"] = {},
 		["Profiles"] = {
 			["default"] = {["Keybind"] = "", ["Selected"] = true}
 		},
@@ -39,7 +39,7 @@ if shared.VapeExecuted then
 		["ToggleNotifications"] = false,
 		["Notifications"] = false,
 		["ToggleTooltips"] = false,
-		["ObjectsThatCanBeSaved"] = {},
+		["ObjectsThatCanBeSaved"] = {["Gui ColorSliderColor"] = {["Api"] = {["Hue"] = 0.44, ["Sat"] = 1, ["Value"] = 1}}},
 	}
 
 	local function GetURL(scripturl)
@@ -167,15 +167,15 @@ if shared.VapeExecuted then
 	clickgui.Visible = false
 	clickgui.Parent = scaledgui
 	local searchbarmain = Instance.new("Frame")
-	searchbarmain.Size = UDim2.new(0, 220, 0, 45)
+	searchbarmain.Size = UDim2.new(0, 220, 0, 37)
 	searchbarmain.Position = UDim2.new(0.5, -110, 0, -23)
 	searchbarmain.ClipsDescendants = false
 	searchbarmain.ZIndex = 10
 	searchbarmain.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	searchbarmain.Parent = clickgui
 	local searchbarchildren = Instance.new("Frame")
-	searchbarchildren.Size = UDim2.new(1, 0, 1, -45)
-	searchbarchildren.Position = UDim2.new(0, 0, 0, 45)
+	searchbarchildren.Size = UDim2.new(1, 0, 1, -37)
+	searchbarchildren.Position = UDim2.new(0, 0, 0, 37)
 	searchbarchildren.BackgroundTransparency = 1
 	searchbarchildren.ZIndex = 10
 	searchbarchildren.Parent = searchbarmain
@@ -184,14 +184,14 @@ if shared.VapeExecuted then
 	searchbaricon.ZIndex = 10
 	searchbaricon.Image = getcustomassetfunc("vape/assets/SearchBarIcon.png")
 	searchbaricon.Size = UDim2.new(0, 14, 0, 14)
-	searchbaricon.Position = UDim2.new(1, -32, 0, 14)
+	searchbaricon.Position = UDim2.new(1, -32, 0, 10)
 	searchbaricon.Parent = searchbarmain
 	local searchbar = Instance.new("TextBox")
 	searchbar.PlaceholderText = ""
 	searchbar.Text = ""
 	searchbar.ZIndex = 10
 	searchbar.TextColor3 = Color3.fromRGB(121, 121, 121)
-	searchbar.Size = UDim2.new(1, -13, 0, 43)
+	searchbar.Size = UDim2.new(1, -13, 0, 37)
 	searchbar.Font = Enum.Font.Gotham
 	searchbar.TextXAlignment = Enum.TextXAlignment.Left
 	searchbar.TextSize = 15
@@ -354,7 +354,7 @@ if shared.VapeExecuted then
 					WindowTable[i] = {["Type"] = "ButtonMain", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
 				end
 				if v["Type"] == "ColorSliderMain" then
-					WindowTable[i] = {["Type"] = "ColorSliderMain", ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
+					WindowTable[i] = {["Type"] = "ColorSliderMain", ["Hue"] = v["Api"]["Hue"], ["Sat"] = v["Api"]["Sat"], ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
 				end
 				if v["Type"] == "SliderMain" then
 					WindowTable[i] = {["Type"] = "SliderMain", ["Value"] = v["Api"]["Value"]}
@@ -480,7 +480,8 @@ if shared.VapeExecuted then
 						obj["Api"]["SetValue"](v["Value"])
 					end
 					if v["Type"] == "ColorSliderMain" then
-						obj["Api"]["SetValue"](v["Value"])
+						local valcheck = v["Hue"] ~= nil
+						obj["Api"]["SetValue"](valcheck and v["Hue"] or v["Value"] or 0.44, valcheck or v["Sat"] or 1, valcheck and v["Value"] or 1)
 						obj["Api"]["SetRainbow"](v["RainbowValue"])
 					end
 					if v["Type"] == "SliderMain" then
@@ -506,6 +507,7 @@ if shared.VapeExecuted then
 				end
 				local obj = api["ObjectsThatCanBeSaved"][i]
 				if obj then
+					local timetaken = tick()
 					if v["Type"] == "Dropdown" then
 						obj["Api"]["SetValue"](v["Value"])
 					end
@@ -1066,11 +1068,11 @@ if shared.VapeExecuted then
 				toggleicon.Visible = toggle
 				if buttonapi["Enabled"] then
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 					else
-						toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+						toggleframe1.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 					end
-				--	toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				--	toggleframe1.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 					toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 				else
 					if not first then
@@ -1285,9 +1287,9 @@ if shared.VapeExecuted then
 						buttonapi["Enabled"] = toggle
 						if buttonapi["Enabled"] then
 							if not first then
-								game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+								game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 							else
-								toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+								toggleframe1.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 							end
 							toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 						else
@@ -1396,7 +1398,7 @@ if shared.VapeExecuted then
 					slider1.Parent = frame
 					local slider2 = Instance.new("Frame")
 					slider2.Size = UDim2.new(math.clamp(((argstable["Default"] or argstable["Min"]) / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
-					slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					slider2.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 					slider2.Name = "FillSlider"
 					slider2.Parent = slider1
 					local slider3 = Instance.new("ImageButton")
@@ -1750,28 +1752,60 @@ if shared.VapeExecuted then
 			slider3.Position = UDim2.new(0, sldiercolorpos[4] - 3, 0, -5)
 			slider3.Parent = slider1
 			slider3.Name = "ButtonSlider"
-			sliderapi["Value"] = slidercolors[4]:ToHSV()
+			local defaulth, defaults, defaultv = slidercolors[4]:ToHSV()
+			sliderapi["Hue"] = defaulth
+			sliderapi["Sat"] = defaults
+			sliderapi["Value"] = defaultv
 			sliderapi["RainbowValue"] = false
 			sliderapi["Object"] = frame
-			sliderapi["SetValue"] = function(val)
+
+			--[[
+				sliderapi["Hue"] = (argstable["Default"] or 0.44)
+				sliderapi["Sat"] = 1
+				sliderapi["Value"] = 1
+				sliderapi["Object"] = frame
+				sliderapi["RainbowValue"] = false
+				sliderapi["SetValue"] = function(hue, sat, val)
+					hue = (hue or sliderapi["Hue"])
+					sat = (sat or sliderapi["Sat"])
+					val = (val or sliderapi["Value"])
+					text2.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+					pcall(function()
+						slidersat.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, val)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, 1, val))})
+						sliderval.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, 1))})
+					end)
+					sliderapi["Hue"] = hue
+					sliderapi["Sat"] = sat
+					sliderapi["Value"] = val
+					slider3.Position = UDim2.new(math.clamp(hue, 0.02, 0.95), -9, 0, -7)
+					argstable["Function"](hue, sat, val)
+				end
+			]]
+			sliderapi["SetValue"] = function(hue, sat, val)
+				hue = hue or 0.44
+				sat = sat or 0.7
+				val = val or 0.9
 				slider3.Image = (sliderapi["RainbowValue"] and getcustomassetfunc("vape/assets/ColorSlider2.png") or getcustomassetfunc("vape/assets/ColorSlider1.png"))
 				sliderrainbow.Image = (sliderapi["RainbowValue"] and getcustomassetfunc("vape/assets/RainbowIcon2.png") or getcustomassetfunc("vape/assets/RainbowIcon1.png"))
 				if sliderapi["RainbowValue"] then
 					val = math.clamp(val, min, max)
-					text2.BackgroundColor3 = Color3.fromHSV(val, 0.7, 0.9)
+					text2.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
 					slider3.ImageColor3 = Color3.new(1, 1, 1)
+					sliderapi["Hue"] = hue
+					sliderapi["Sat"] = sat
 					sliderapi["Value"] = val
 					slider3.Position = UDim2.new(0, sldiercolorpos[4] - 3, 0, -5)
-					temporaryfunction(val)
+					temporaryfunction(hue, sat, val)
 				else
-					local colornum = getclosestcolor(val)
+					local colornum = getclosestcolor(hue)
 					local h, s, v = slidercolors[colornum]:ToHSV()
-					val = math.clamp(val, min, max)
 					text2.BackgroundColor3 = slidercolors[colornum]
 					slider3.ImageColor3 = slidercolors[colornum]
-					sliderapi["Value"] = h
+					sliderapi["Hue"] = h
+					sliderapi["Sat"] = s
+					sliderapi["Value"] = v
 					slider3.Position = UDim2.new(0, sldiercolorpos[colornum] - 3, 0, -5)
-					temporaryfunction(h)
+					temporaryfunction(h, s, v)
 				end
 				firstmove = false
 			end
@@ -1797,14 +1831,14 @@ if shared.VapeExecuted then
 			end)
 			slider1.MouseButton1Down:Connect(function()
 				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-				sliderapi["SetValue"](min + ((max - min) * xscale))
+				sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 			--	slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
 				local move
 				local kill
 				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
 						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-						sliderapi["SetValue"](min + ((max - min) * xscale))
+						sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 					--	slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
 					end
 				end)
@@ -1826,14 +1860,14 @@ if shared.VapeExecuted then
 					sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				end
 				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-				sliderapi["SetValue"](min + ((max - min) * xscale))
+				sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 				--slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
 				local move
 				local kill
 				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
 						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
-						sliderapi["SetValue"](min + ((max - min) * xscale))
+						sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 					--	slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
 					end
 				end)
@@ -1905,9 +1939,9 @@ if shared.VapeExecuted then
 				buttonapi["Enabled"] = toggle
 				if buttonapi["Enabled"] then
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 					else
-						toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+						toggleframe1.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 					end
 					toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 				else
@@ -2002,10 +2036,10 @@ if shared.VapeExecuted then
 					buttonapi["Enabled"] = not buttonapi["Enabled"]
 					if buttonapi["Enabled"] then
 						button.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
-						buttontext.TextColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+						buttontext.TextColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 						arrow:TweenPosition(UDim2.new(1, -14, 0, 16), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.2, true)
 						if buttonicon then
-							buttonicon.ImageColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+							buttonicon.ImageColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 						end
 					else
 						button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
@@ -2250,7 +2284,7 @@ if shared.VapeExecuted then
 			slider1.Parent = frame
 			local slider2 = Instance.new("Frame")
 			slider2.Size = UDim2.new(math.clamp(((argstable["Default"] or argstable["Min"]) / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
-			slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+			slider2.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 			slider2.Name = "FillSlider"
 			slider2.Parent = slider1
 			local slider3 = Instance.new("ImageButton")
@@ -2759,9 +2793,9 @@ if shared.VapeExecuted then
 					buttontexticon.Visible = toggle
 					if buttonapi["Enabled"] then
 						if not first then
-							game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+							game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 						else
-							buttontext.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+							buttontext.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 						end
 					else
 						if not first then
@@ -3192,9 +3226,9 @@ if shared.VapeExecuted then
 				buttonapi["Enabled"] = toggle
 				if buttonapi["Enabled"] then
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 					else
-						toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+						toggleframe1.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 					end
 					toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 				else
@@ -3544,7 +3578,7 @@ if shared.VapeExecuted then
 			buttonapi["ToggleButton"] = function(clicked, toggle)
 				buttonapi["Enabled"] = (toggle or not buttonapi["Enabled"])
 				if buttonapi["Enabled"] then
-					button.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+					button.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 					currenttween:Cancel()
 					buttonactiveborder.Visible = true
 					button2.Image = getcustomassetfunc("vape/assets/MoreButton2.png")
@@ -3979,9 +4013,9 @@ if shared.VapeExecuted then
 						buttonapi["Enabled"] = toggle
 						if buttonapi["Enabled"] then
 							if not first then
-								game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+								game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 							else
-								toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+								toggleframe1.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 							end
 							toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 						else
@@ -4079,9 +4113,9 @@ if shared.VapeExecuted then
 						buttontexticon.Visible = toggle
 						if buttonapi["Enabled"] then
 							if not first then
-								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 							else
-								buttontext.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+								buttontext.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 							end
 						else
 							if not first then
@@ -4537,9 +4571,9 @@ if shared.VapeExecuted then
 						buttontexticon.Visible = toggle
 						if buttonapi["Enabled"] then
 							if not first then
-								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 							else
-								buttontext.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+								buttontext.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 							end
 						else
 							if not first then
@@ -5029,7 +5063,7 @@ if shared.VapeExecuted then
 				slider1.Parent = frame
 				local slider2 = Instance.new("Frame")
 				slider2.Size = UDim2.new(math.clamp(((argstable["Default"] or argstable["Min"]) / argstable["Max"]), 0.02, 0.97), 0, 1, 0)
-				slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				slider2.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 				slider2.Name = "FillSlider"
 				slider2.Parent = slider1
 				local slider3 = Instance.new("ImageButton")
@@ -5095,7 +5129,7 @@ if shared.VapeExecuted then
 					text3.Visible = false
 					text2.Visible = true
 					if enter then
-						sliderapi["SetValue"](tonumber(text3.Text))
+						sliderapi["SetValue"](tonumber(text3.Text) * (argstable["Double"] or 1))
 					end
 				end)
 				frame.MouseEnter:Connect(function()
@@ -5175,7 +5209,7 @@ if shared.VapeExecuted then
 				local slider2 = Instance.new("Frame")
 				slider2.Size = UDim2.new(1, 0, 1, 0)
 				slider2.BorderSizePixel = 0
-				slider2.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+				slider2.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 				slider2.Name = "FillSlider"
 				slider2.Parent = slider1
 				local slider3 = Instance.new("ImageButton")
@@ -5330,9 +5364,9 @@ if shared.VapeExecuted then
 					buttonapi["Enabled"] = toggle
 					if buttonapi["Enabled"] then
 						if not first then
-							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 						else
-							toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+							toggleframe1.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 						end
 						toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 					else
@@ -5874,9 +5908,9 @@ if shared.VapeExecuted then
 				buttonapi["Enabled"] = toggle
 				if buttonapi["Enabled"] then
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)}):Play()
+						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 					else
-						toggleframe1.BackgroundColor3 = Color3.fromHSV(api["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+						toggleframe1.BackgroundColor3 = Color3.fromHSV(api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], api["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 					end
 					toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 				else
@@ -6424,7 +6458,7 @@ if shared.VapeExecuted then
 	searchbar:GetPropertyChangedSignal("Text"):Connect(function()
 		searchbarchildren:ClearAllChildren()
 		if searchbar.Text == "" then
-			searchbarmain.Size = UDim2.new(0, 220, 0, 45)
+			searchbarmain.Size = UDim2.new(0, 220, 0, 37)
 		else
 			local optionbuttons = {}
 			for i,v in pairs(api["ObjectsThatCanBeSaved"]) do
@@ -6486,7 +6520,7 @@ if shared.VapeExecuted then
 					table.insert(optionbuttons, v)
 				end
 			end
-			searchbarmain.Size = UDim2.new(0, 220, 0, 49 + (40 * #optionbuttons))
+			searchbarmain.Size = UDim2.new(0, 220, 0, 39 + (40 * #optionbuttons))
 		end
 	end)
 	api["MainRescale"]:GetPropertyChangedSignal("Scale"):Connect(function()
