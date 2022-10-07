@@ -1134,7 +1134,7 @@ runcode(function()
 								end
 							end
 						else
-							if pressed and mousefunctions then
+							if (isrbxactive or iswindowactive)() and pressed then
 								mouse1release()
 							end
 							pressed = false
@@ -2011,38 +2011,33 @@ runcode(function()
 end)
 
 local longjumpboost = {["Value"] = 1}
-local longjumpdisabler = {["Enabled"] = false}
-local longjumpfall = false
-local longjumpjump = {["Enabled"] = false}
 local longjump = {["Enabled"] = false}
+local longjumpchange = true
 longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 	["Name"] = "LongJump", 
 	["Function"] = function(callback)
 		if callback then
-			if longjumpjump then
-				if entity.isAlive then
-					entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-				end
+			if entity.isAlive and entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+				entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 			end
-			RunLoops:BindToRenderStep("LongJump", 1, function() 
+			RunLoops:BindToHeartbeat("LongJump", 1, function() 
 				if entity.isAlive then
 					if (entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and entity.character.Humanoid.MoveDirection ~= Vector3.new() then
 						local velo = entity.character.Humanoid.MoveDirection * longjumpboost["Value"]
 						entity.character.HumanoidRootPart.Velocity = Vector3.new(velo.X, entity.character.HumanoidRootPart.Velocity.Y, velo.Z)
 					end
-					if entity.character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
-						longjumpfall = true
-					else
-						if longjumpfall and longjumpdisabler["Enabled"] then
-							longjumpfall = false
+					local check = entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air
+					if longjumpchange ~= check then 
+						if check then 
 							longjump["ToggleButton"](true)
 						end
+						longjumpchange = check
 					end
 				end
 			end)
 		else
-			RunLoops:UnbindFromRenderStep("LongJump")
-			longjumpfall = false
+			RunLoops:UnbindFromHeartbeat("LongJump")
+			longjumpchange = true
 		end
 	end
 })
@@ -2051,18 +2046,6 @@ longjumpboost = longjump.CreateSlider({
 	["Min"] = 1,
 	["Max"] = 150, 
 	["Function"] = function(val) end
-})
-longjumpjump = longjump.CreateToggle({
-	["Name"] = "Jump",
-	["Function"] = function()
-	end,
-	["Default"] = true
-})
-longjumpdisabler = longjump.CreateToggle({
-	["Name"] = "Auto Disable",
-	["Function"] = function()
-	end,
-	["Default"] = true
 })
 
 local HighJumpMethod = {["Value"] = "Toggle"}
@@ -2256,6 +2239,7 @@ runcode(function()
 	local speedwallcheck = {["Enabled"] = true}
 	local speedjump = {["Enabled"] = false}
 	local speedjumpheight = {["Value"] = 20}
+	local speedjumpvanilla = {["Enabled"] = false}
 	local speedjumpalways = {["Enabled"] = false}
 	local speedup
 	local speeddown
@@ -2268,7 +2252,7 @@ runcode(function()
 	local speeddelayval = tick()
 
 	local speed = {["Enabled"] = false}
-	local alternatelist = {"Normal", "AntiCheat A", "AntiCheat B", "AntiCheat C"}
+	local alternatelist = {"Normal", "AntiCheat A", "AntiCheat B", "AntiCheat C", "AntiCheat D"}
 	speed = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Speed", 
 		["Function"] = function(callback)
@@ -2356,7 +2340,11 @@ runcode(function()
 						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] or killauranear) then
 							if (entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entity.character.Humanoid.MoveDirection ~= Vector3.new() then
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
+								if speedjumpvanilla["Enabled"] then 
+									entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+								else
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
+								end
 							end
 						end
 					end
@@ -2439,6 +2427,9 @@ runcode(function()
 				speedjump["Object"].ToggleArrow.Visible = callback
 				speedjumpalways["Object"].Visible = callback
 			end
+			if speedjumpvanilla["Object"] then
+				speedjumpvanilla["Object"].Visible = callback
+			end
 		end,
 		["Default"] = true
 	})
@@ -2452,6 +2443,10 @@ runcode(function()
 	speedjumpheight["Object"].Visible = false
 	speedjumpalways = speed.CreateToggle({
 		["Name"] = "Always Jump",
+		["Function"] = function() end
+	})
+	speedjumpvanilla = speed.CreateToggle({
+		["Name"] = "Real Jump",
 		["Function"] = function() end
 	})
 	speedwallcheck = speed.CreateToggle({
@@ -2785,11 +2780,9 @@ runcode(function()
 				thing.Quad3 = Drawing.new("Line")
 				thing.Quad3.Thickness = 1
 				thing.Quad3.ZIndex = 2
-				thing.Quad3.Filled = false
 				thing.Quad3.Color = Color3.new(0, 1, 0)
 				thing.Quad4 = Drawing.new("Line")
 				thing.Quad4.Thickness = 3
-				thing.Quad4.Filled = false
 				thing.Quad4.Transparency = 0.5
 				thing.Quad4.ZIndex = 1
 				thing.Quad4.Color = Color3.new(0, 0, 0)
@@ -3271,7 +3264,7 @@ runcode(function()
 		["Name"] = "ESP", 
 		["Function"] = function(callback) 
 			if callback then
-				methodused = "Drawing"..ESPMethod["Value"]..v3check
+				methodused = "Drawing"..ESPMethod["Value"]
 				if espfuncs2[methodused] then
 					removedconnection = entity.entityRemovedEvent:Connect(espfuncs2[methodused])
 				end
@@ -4593,6 +4586,7 @@ runcode(function()
 		["exploit"] = "Scamming",
 		["cheat"] = "Scamming",
 		["hecker"] = "Scamming",
+		["haxker"] = "Scamming",
 		["hacer"] = "Scamming",
 		["report"] = "Bullying",
 		["fat"] = "Bullying",
@@ -4843,6 +4837,29 @@ runcode(function()
 		["Name"] = "Rank Id",
 		["TempText"] = "1 (rank id)",
 		["Function"] = function() end
+	})
+end)
+
+runcode(function()
+	local Blink = {["Enabled"] = false}
+	Blink = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Blink",
+		["Function"] = function(callback)
+			if callback then 
+				if sethiddenproperty then
+					RunLoops:BindToHeartbeat("Blink", 1, function()
+						if entity.isAlive then 
+							sethiddenproperty(entity.character.HumanoidRootPart, "NetworkIsSleeping", true)
+						end
+					end)
+				else
+					createwarning("Blink", "missing function", 5)
+					Blink["ToggleButton"](false)
+				end
+			else
+				RunLoops:UnbindFromHeartbeat("Blink")
+			end
+		end
 	})
 end)
 

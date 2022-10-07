@@ -247,7 +247,7 @@ local FriendsTextList = {["RefreshValues"] = function() end, ["ObjectListEnabled
 local FriendsColor = {["Value"] = 0.44}
 local friendscreatetab = {
 	["Name"] = "FriendsList", 
-	["TempText"] = "Username / Alias", 
+	["TempText"] = "Username [Alias]", 
 	["Color"] = Color3.fromRGB(5, 133, 104)
 }
 FriendsTextList = Friends.CreateCircleTextList(friendscreatetab)
@@ -437,8 +437,8 @@ ProfilesTextList = Profiles.CreateTextList({
 			bindbkg.Position = UDim2.new(1, -(30 + newsize.X.Offset), 0, 6)
 		end
 		if profilename == GuiLibrary["CurrentProfile"] then
-			obj.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-			obj.ImageButton.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+			obj.BackgroundColor3 = Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
+			obj.ImageButton.BackgroundColor3 = Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 			obj.ItemText.TextColor3 = Color3.new(1, 1, 1)
 			obj.ItemText.TextStrokeTransparency = 0.75
 			bindbkg.BackgroundTransparency = 0.9
@@ -530,7 +530,7 @@ OnlineProfilesFrameText.Position = UDim2.new(0, 36, 0, 0)
 OnlineProfilesFrameText.TextXAlignment = Enum.TextXAlignment.Left
 OnlineProfilesFrameText.Font = Enum.Font.SourceSans
 OnlineProfilesFrameText.TextSize = 17
-OnlineProfilesFrameText.Text = "Profiles"
+OnlineProfilesFrameText.Text = "Public Profiles"
 OnlineProfilesFrameText.TextColor3 = Color3.fromRGB(201, 201, 201)
 OnlineProfilesFrameText.Parent = OnlineProfilesFrame
 local OnlineProfilesFrameText2 = Instance.new("TextLabel")
@@ -949,7 +949,7 @@ local function UpdateHud()
 			end
 		end
 		refreshbars(textlists)
-		GuiLibrary["UpdateUI"]()
+		GuiLibrary["UpdateUI"](GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 	end
 end
 
@@ -1141,10 +1141,6 @@ TextGui.CreateToggle({
 	["Function"] = function(callback) onetext2.Visible = callback onething3.Visible = callback end,
 	["HoverText"] = "Renders shadowed text."
 })
-local TextGuiUseCategoryColor = TextGui.CreateToggle({
-	["Name"] = "Use Category Color", 
-	["Function"] = function(callback) GuiLibrary["UpdateUI"]() end
-})
 TextGui.CreateToggle({
 	["Name"] = "Watermark", 
 	["Function"] = function(callback) 
@@ -1152,18 +1148,6 @@ TextGui.CreateToggle({
 		UpdateHud()
 	end,
 	["HoverText"] = "Renders a vape watermark"
-})
-local textguigradient = TextGui.CreateToggle({
-	["Name"] = "Gradient Logo",
-	["Function"] = function() 
-		UpdateHud()
-	end
-})
-TextGui.CreateToggle({
-	["Name"] = "Alternate Text",
-	["Function"] = function() 
-		UpdateHud()
-	end
 })
 textguirenderbkg = TextGui.CreateToggle({
 	["Name"] = "Render background", 
@@ -1173,7 +1157,7 @@ textguirenderbkg = TextGui.CreateToggle({
 	end
 })
 TextGui.CreateToggle({
-	["Name"] = "Blacklist",
+	["Name"] = "Hide Modules",
 	["Function"] = function(callback) 
 		if TextGuiCircleObject["Object"] then
 			TextGuiCircleObject["Object"].Visible = callback
@@ -1188,6 +1172,18 @@ TextGuiCircleObject = TextGui.CreateCircleWindow({
 	end
 })
 TextGuiCircleObject["Object"].Visible = false
+local textguigradient = TextGui.CreateToggle({
+	["Name"] = "Gradient Logo",
+	["Function"] = function() 
+		UpdateHud()
+	end
+})
+TextGui.CreateToggle({
+	["Name"] = "Alternate Text",
+	["Function"] = function() 
+		UpdateHud()
+	end
+})
 local CustomText = {["Value"] = "", ["Object"] = nil}
 TextGui.CreateToggle({
 	["Name"] = "Add custom text", 
@@ -1384,7 +1380,7 @@ teamsbycolor = ModuleSettings.CreateToggle({
 	["Name"] = "Teams by color", 
 	["Function"] = function() if teamsbycolor.Refresh then teamsbycolor.Refresh:Fire() end end,
 	["Default"] = true,
-	["HoverText"] = "Ignore players with the selected name color"
+	["HoverText"] = "Ignore players on your team designated by the game"
 })
 teamsbycolor.Refresh = Instance.new("BindableEvent")
 local MiddleClickInput
@@ -1439,7 +1435,9 @@ ModuleSettings.CreateToggle({
 	["Default"] = true,
 	["HoverText"] = "Temporarily disables certain features in server lobbies."
 })
-guicolorslider = GUI.CreateColorSlider("GUI Theme", function(val) GuiLibrary["Settings"]["GUIObject"]["Color"] = val GuiLibrary["UpdateUI"]() end)
+guicolorslider = GUI.CreateColorSlider("GUI Theme", function(h, s, v) 
+	GuiLibrary["UpdateUI"](h, s, v) 
+end)
 local blatantmode = GUI.CreateToggle({
 	["Name"] = "Blatant mode",
 	["Function"] = function() end,
@@ -1463,14 +1461,6 @@ local tabsortorder2 = {
 	[5] = "World"
 }
 
-local tabcategorycolor = {
-	["CombatWindow"] = Color3.fromRGB(214, 27, 6),
-	["BlatantWindow"] = Color3.fromRGB(219, 21, 133),
-	["RenderWindow"] = Color3.fromRGB(135, 14, 165),
-	["UtilityWindow"] = Color3.fromRGB(27, 145, 68),
-	["WorldWindow"] = Color3.fromRGB(70, 73, 16)
-}
-
 local function getSaturation(val)
 	local sat = 0.9
 	if val < 0.03 then 
@@ -1488,36 +1478,33 @@ local function getSaturation(val)
 	return sat
 end
 
-GuiLibrary["UpdateUI"] = function()
+GuiLibrary["UpdateUI"] = function(h, s, val)
 	pcall(function()
-		local maincolor = getSaturation(GuiLibrary["Settings"]["GUIObject"]["Color"])
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
-		--onething.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
-		local rainbowcolor2 = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.05) or 0)
+		local rainbowcheck = GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"]
+		local maincolor = rainbowcheck and getSaturation(h) or s
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
+		local rainbowcolor2 = h + (rainbowcheck and (-0.05) or 0)
 		rainbowcolor2 = rainbowcolor2 % 1
         local gradsat = textguigradient["Enabled"] and getSaturation(rainbowcolor2) or maincolor
 		onethinggrad.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)),
-			ColorSequenceKeypoint.new(1, Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], gradsat, 1))
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or h, maincolor, rainbowcheck and 1 or val))
 		})
 		onethinggrad2.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], (rainbowcolor2 == GuiLibrary["Settings"]["GUIObject"]["Color"] or (not textguigradient["Enabled"])) and 0 or maincolor, 1)),
-			ColorSequenceKeypoint.new(1, Color3.fromHSV(rainbowcolor2, (rainbowcolor2 == GuiLibrary["Settings"]["GUIObject"]["Color"] or (not textguigradient["Enabled"])) and 0 or gradsat, 1))
+			ColorSequenceKeypoint.new(0, Color3.fromHSV(h, textguigradient["Enabled"] and rainbowcheck and maincolor or 0, 1)),
+			ColorSequenceKeypoint.new(1, Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or h, textguigradient["Enabled"] and rainbowcheck and maincolor or 0, 1))
 		})
-		onetext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-		onecustomtext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
+		onetext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or h, maincolor, rainbowcheck and 1 or val)
+		onecustomtext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or h, maincolor, rainbowcheck and 1 or val)
 		local newtext = ""
 		local newfirst = false
 		local colorforindex = {}
 		for i2,v2 in pairs(textwithoutthing:split("\n")) do
-			local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (i2 + (textguigradient["Enabled"] and 2 or 0))) or 0)
+			local rainbowcolor = h + (rainbowcheck and (-0.025 * (i2 + (textguigradient["Enabled"] and 2 or 0))) or 0)
 			rainbowcolor = rainbowcolor % 1
-			local newcolor = Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1)
+			local newcolor = Color3.fromHSV(rainbowcolor, rainbowcheck and getSaturation(rainbowcolor) or maincolor, rainbowcheck and 1 or val)
 			local splittext = v2:split(":")
 			splittext = #splittext > 1 and {splittext[1], " "..splittext[2]} or {v2, ""}
-			if TextGuiUseCategoryColor["Enabled"] and GuiLibrary["ObjectsThatCanBeSaved"][splittext[1].."OptionsButton"] and tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][splittext[1].."OptionsButton"]["Object"].Parent.Parent.Name.."Window"] then
-				newcolor = tabcategorycolor[GuiLibrary["ObjectsThatCanBeSaved"][splittext[1].."OptionsButton"]["Object"].Parent.Parent.Name.."Window"]
-			end
 			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..splittext[1]..'</font><font color="rgb(170, 170, 170)">'..splittext[2]..'</font>'
 			newfirst = true
 			colorforindex[i2] = newcolor
@@ -1541,24 +1528,24 @@ GuiLibrary["UpdateUI"] = function()
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "TargetFrame" then
 				if v["Object2"].Visible then
-					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
 				end
 			end
 			if v["Type"] == "TargetButton" then
 				if v["Api"]["Enabled"] then
-					v["Object"].BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+					v["Object"].BackgroundColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
 				end
 			end
 			if v["Type"] == "CircleListFrame" then
 				if v["Object2"].Visible then
-					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+					v["Object"].TextButton.Frame.BackgroundColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
 				end
 			end
 			if (v["Type"] == "Button" or v["Type"] == "ButtonMain") and v["Api"]["Enabled"] then
 				buttons = buttons + 1
-				local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * tabsortorder[i]) or 0)
+				local rainbowcolor = h + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * tabsortorder[i]) or 0)
 				rainbowcolor = rainbowcolor % 1
-				local newcolor = Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1)
+				local newcolor = Color3.fromHSV(rainbowcolor, rainbowcheck and getSaturation(rainbowcolor) or maincolor, rainbowcheck and 1 or val)
 				v["Object"].ButtonText.TextColor3 = newcolor
 				if v["Object"]:FindFirstChild("ButtonIcon") then
 					v["Object"].ButtonIcon.ImageColor3 = newcolor
@@ -1566,46 +1553,46 @@ GuiLibrary["UpdateUI"] = function()
 			end
 			if v["Type"] == "OptionsButton" then
 				if v["Api"]["Enabled"] then
-					local newcolor = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
-					if not oldrainbow then
+					local newcolor = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
+					if (not oldrainbow) then
 						local rainbowcolor2 = table.find(tabsortorder2, v["Object"].Parent.Parent.Name)
 						rainbowcolor2 = rainbowcolor2 and (rainbowcolor2 - 1) > 0 and GuiLibrary["ObjectsThatCanBeSaved"][tabsortorder2[rainbowcolor2 - 1].."Window"]["SortOrder"] or 0
-						local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (rainbowcolor2 + v["SortOrder"])) or 0)
+						local rainbowcolor = h + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * (rainbowcolor2 + v["SortOrder"])) or 0)
 						rainbowcolor = rainbowcolor % 1
-						newcolor = Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1)
+						newcolor = Color3.fromHSV(rainbowcolor, rainbowcheck and getSaturation(rainbowcolor) or maincolor, rainbowcheck and 1 or val)
 					end
 					v["Object"].BackgroundColor3 = newcolor
 				end
 			end
 			if v["Type"] == "ExtrasButton" then
 				if v["Api"]["Enabled"] then
-					local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
+					local rainbowcolor = h + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
 					rainbowcolor = rainbowcolor % 1
-					local newcolor = Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1)
+					local newcolor = Color3.fromHSV(rainbowcolor, rainbowcheck and getSaturation(rainbowcolor) or maincolor, rainbowcheck and 1 or val)
 					v["Object"].ImageColor3 = newcolor
 				end
 			end
 			if (v["Type"] == "Toggle" or v["Type"] == "ToggleMain") and v["Api"]["Enabled"] then
-					v["Object"].ToggleFrame1.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+					v["Object"].ToggleFrame1.BackgroundColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
 			end
 			if v["Type"] == "Slider" or v["Type"] == "SliderMain" then
-				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
-				v["Object"].Slider.FillSlider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
+				v["Object"].Slider.FillSlider.ButtonSlider.ImageColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
 			end
 			if v["Type"] == "TwoSlider" then
-				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
-				v["Object"].Slider.ButtonSlider.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
-				v["Object"].Slider.ButtonSlider2.ImageColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+				v["Object"].Slider.FillSlider.BackgroundColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
+				v["Object"].Slider.ButtonSlider.ImageColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
+				v["Object"].Slider.ButtonSlider2.ImageColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
 			end
 		end
-		local rainbowcolor = GuiLibrary["Settings"]["GUIObject"]["Color"] + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
+		local rainbowcolor = h + (GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"] and (-0.025 * buttons) or 0)
 		rainbowcolor = rainbowcolor % 1
 		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Children.Extras.MainButton.ImageColor3 = (GUI["GetVisibleIcons"]() > 0 and Color3.fromHSV(rainbowcolor, getSaturation(rainbowcolor), 1) or Color3.fromRGB(199, 199, 199))
 		for i3, v3 in pairs(ProfilesTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do
 		--	pcall(function()
 				if v3:IsA("TextButton") and v3.ItemText.Text == GuiLibrary["CurrentProfile"] then
-					v3.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
-					v3.ImageButton.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], maincolor, 1)
+					v3.BackgroundColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
+					v3.ImageButton.BackgroundColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
 					v3.ItemText.TextColor3 = Color3.new(1, 1, 1)
 					v3.ItemText.TextStrokeTransparency = 0.75
 				end
@@ -1643,9 +1630,11 @@ GUISettings.CreateToggle({
 local rescale = GUISettings.CreateToggle({
 	["Name"] = "Rescale", 
 	["Function"] = function(callback) 
-		GuiLibrary["MainRescale"].Scale = (callback and math.clamp(cam.ViewportSize.X / 1920, 0.5, 1) or 0.99)
-		task.wait(0.01)
-		GuiLibrary["MainRescale"].Scale = (callback and math.clamp(cam.ViewportSize.X / 1920, 0.5, 1) or 1)
+		task.spawn(function()
+			GuiLibrary["MainRescale"].Scale = (callback and math.clamp(cam.ViewportSize.X / 1920, 0.5, 1) or 0.99)
+			task.wait(0.01)
+			GuiLibrary["MainRescale"].Scale = (callback and math.clamp(cam.ViewportSize.X / 1920, 0.5, 1) or 1)
+		end)
 	end,
 	["Default"] = true
 })
@@ -1702,12 +1691,16 @@ local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(f
     end
 end)
 
+local savecheck = true
 GuiLibrary["SelfDestruct"] = function()
 	spawn(function()
 		coroutine.close(selfdestructsave)
 	end)
 	injected = false
-	GuiLibrary["SaveSettings"]()
+	if savecheck then 
+		GuiLibrary["SaveSettings"]()
+	end
+	savecheck = false
 	game:GetService("UserInputService").OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.None
 	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 		if (v["Type"] == "Button" or v["Type"] == "OptionsButton") and v["Api"]["Enabled"] then
@@ -1828,7 +1821,7 @@ if shared.VapeIndependent then
 			ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
 		end
 		GUIbind["Reload"]()
-		GuiLibrary["UpdateUI"]()
+		GuiLibrary["UpdateUI"](GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 		UpdateHud()
 		if not shared.VapeSwitchServers then
 			if blatantmode["Enabled"] then
@@ -1874,7 +1867,7 @@ else
 	table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
 	ProfilesTextList["RefreshValues"](profiles)
 	GUIbind["Reload"]()
-	GuiLibrary["UpdateUI"]()
+	GuiLibrary["UpdateUI"](GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
 	UpdateHud()
 	if not shared.VapeSwitchServers then
 		if blatantmode["Enabled"] then
