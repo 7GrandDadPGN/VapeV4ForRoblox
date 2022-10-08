@@ -1980,9 +1980,9 @@ runcode(function()
 	overlayframe3.BorderSizePixel = 0
 	overlayframe3.Parent = overlayframe2
 	local oldguiupdate = GuiLibrary["UpdateUI"]
-	GuiLibrary["UpdateUI"] = function(...)
-		overlayframe2.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-		return oldguiupdate(...)
+	GuiLibrary["UpdateUI"] = function(h, s, v, ...)
+		overlayframe2.BackgroundColor3 = Color3.fromHSV(h, s, v)
+		return oldguiupdate(h, s, v, ...)
 	end
 	local framecorner1 = Instance.new("UICorner")
 	framecorner1.CornerRadius = UDim.new(0, 5)
