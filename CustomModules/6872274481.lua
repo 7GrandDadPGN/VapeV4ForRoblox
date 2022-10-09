@@ -1280,7 +1280,7 @@ end)
 
 connectionstodisconnect[#connectionstodisconnect + 1] = lplr.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
-		local clientstorestate = bedwars["ClientStoreHandler"]:getState()
+		local clientstorestate = bedwars["ClientStoreHandler"] and bedwars["ClientStoreHandler"]:getState() or {Party = {members = 0}}
 		local queuedstring = ''
 		if clientstorestate.Party and clientstorestate.Party.members and #clientstorestate.Party.members > 0 then
         	queuedstring = queuedstring..'shared.vapeteammembers = '..#clientstorestate.Party.members..'\n'
@@ -5037,7 +5037,7 @@ runcode(function()
 								flyacprogressbartext.Text = ray and "Safe" or "Unsafe"
 								bodyvelo.Velocity = Vector3.new(0, 25 + i, 0)
 							end
-							if (not isnetworkowner(root)) then
+							if (not networkownerfunc(root)) then
 								break 
 							end
 						else
