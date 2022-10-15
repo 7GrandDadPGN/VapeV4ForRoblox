@@ -907,6 +907,7 @@ runcode(function()
 			["BatteryRemote"] = getremote(debug.getconstants(debug.getproto(debug.getproto(KnitClient.Controllers.BatteryController.KnitStart, 1), 1))),
 			["BatteryEffectController"] = KnitClient.Controllers.BatteryEffectsController,
             ["BalloonController"] = KnitClient.Controllers.BalloonController,
+			["BlockCPSConstants"] = require(repstorage.TS["shared-constants"]).CpsConstants,
             ["BlockController"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out).BlockEngine,
             ["BlockController2"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client.placement["block-placer"]).BlockPlacer,
             ["BlockEngine"] = require(lplr.PlayerScripts.TS.lib["block-engine"]["client-block-engine"]).ClientBlockEngine,
@@ -1005,7 +1006,7 @@ runcode(function()
             ["SwingSword"] = getmetatable(KnitClient.Controllers.SwordController).swingSwordAtMouse,
             ["SwingSwordRegion"] = getmetatable(KnitClient.Controllers.SwordController).swingSwordInRegion,
             ["SwordController"] = KnitClient.Controllers.SwordController,
-            ["TreeRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.BigmanController.KnitStart)[2])[1])),
+            ["TreeRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.BigmanController.KnitStart)[3])[1])),
 			["TrinityRemote"] = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.AngelController).onKitEnabled, 1))),
             ["VictoryScreen"] = require(lplr.PlayerScripts.TS.controllers["game"].match.ui["victory-section"]).VictorySection,
             ["ViewmodelController"] = KnitClient.Controllers.ViewmodelController,
@@ -2999,61 +3000,6 @@ runcode(function()
 	})
 end)
 
-
-runcode(function()
-	local DinoExploit = {["Enabled"] = false}
-	local dinoconnection
-	DinoExploit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "DinoExploit",
-		["Function"] = function(callback)
-			if callback then 
-				game:GetService("ReplicatedStorage"):FindFirstChild("events-@easy-games/game-core:shared/game-core-networking@getEvents.Events").useAbility:FireServer("dino_charge")
-				task.spawn(function()
-					if GuiLibrary["MainGui"]:FindFirstChild("bar") then return end
-					if lplr.Character then 
-						lplr.Character:SetAttribute("SpeedBoost", 3)
-						local allowed = true
-						dinoconnection = bedwars["ClientHandler"]:Get(bedwars["DinoRemote"]):Connect(function(tab)
-							if tab.player == lplr then 
-								if lplr.Character then 
-									lplr.Character:SetAttribute("SpeedBoost", nil)
-								end
-								allowed = false
-								dinoconnection:Disconnect()
-							end
-						end)
-						task.delay(10, function()
-							if lplr.Character and allowed then 
-								lplr.Character:SetAttribute("SpeedBoost", nil)
-							end
-							if dinoconnection then dinoconnection:Disconnect() end
-						end)
-					end
-					local bar = Instance.new("Frame")
-					bar.Size = UDim2.new(0.3, 0, 0, 10)
-					bar.AnchorPoint = Vector2.new(0.5, 0.5)
-					bar.BorderSizePixel = 0
-					bar.BackgroundTransparency = 0.5
-					bar.BackgroundColor3 = Color3.new()
-					bar.Position = UDim2.new(0.5, 0, 0.75, 0)
-					bar.Name = "bar"
-					bar.Parent = GuiLibrary["MainGui"]
-					local bar2 = bar:Clone()
-					bar2.Size = UDim2.new(1, 0, 1, 0)
-					bar2.AnchorPoint = Vector2.new(0, 0)
-					bar2.Position = UDim2.new(0, 0, 0, 0)
-					bar2.BackgroundTransparency = 0
-					bar2.BackgroundColor3 = Color3.new(1, 1, 1)
-					bar2.Parent = bar
-					bar2:TweenSize(UDim2.new(0, 0, 1, 0), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 60)
-					task.wait(60)
-					bar:Destroy()
-				end)
-				DinoExploit["ToggleButton"](false)
-			end
-		end
-	})
-end)
 
 runcode(function()
 	local oldenable2
@@ -5737,243 +5683,6 @@ runcode(function()
 	end
 end)
 
-
-runcode(function()
-	local BowExploit = {["Enabled"] = false}
-	local BowExploitTarget = {["Value"] = "Mouse"}
-	local BowExploitCamera = {["Enabled"] = false}
-	local BowExploitAutoShoot = {["Enabled"] = false}
-	local BowExploitAutoShootFOV = {["Value"] = 1000}
-	local oldrealremote
-	local noveloproj = {
-		"fireball",
-		"telepearl"
-	}
-
-	local function getriches(plr)
-		local richval = 0
-		for i,v in pairs(inventories[plr]["items"]) do 
-			if v.itemType == "emerald" then
-				richval = richval + v.amount * 2
-			elseif v.itemType == "diamond" then
-				richval = richval +  v.amount * 1.5
-			elseif v.itemType == "iron" then
-				richval = richval +  v.amount
-			end
-		end
-		return richval
-	end
-
-	local function getriches2(plr)
-		local richval = 0
-		for i,v in pairs(inventories[plr]["armor"]) do 
-			if v ~= "empty" then 
-				richval = richval + bedwars["ItemTable"][v.itemType].armor.damageReductionMultiplier
-			end
-		end
-		return richval
-	end
-
-	local function getRich()
-		local closest, returnedplayer = 0, nil
-		if entity.isAlive then
-			for i, v in pairs(entity.entityList) do -- loop through players
-				if (v.Targetable or targetcheck) and targetCheck(v) then
-					local mag = getriches(v.Player)
-					if mag >= closest then
-						closest = mag
-						returnedplayer = v
-					end
-				end
-			end
-		end
-		return returnedplayer
-	end
-
-	local function getArmorRich(richcheck)
-		local closest, returnedplayer = (richcheck and 0 or 99999), nil
-		if entity.isAlive then
-			for i, v in pairs(entity.entityList) do -- loop through players
-				if (v.Targetable or targetcheck) and targetCheck(v) then
-					local mag = getriches2(v.Player)
-					if (richcheck and mag >= closest or (not richcheck) and mag <= closest) then
-						closest = mag
-						returnedplayer = v
-					end
-				end
-			end
-		end
-		return returnedplayer
-	end
-
-	BowExploit = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "ProjectileExploit",
-		["Function"] = function(callback)
-			if callback then 
-				oldrealremote = debug.getupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10)
-				debug.setupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10, {
-					Client = {
-						WaitFor = function(self6, remote)
-							local res = bedwars["ClientHandler"]:Get(remote)
-							return {
-								andThen = function(self5, func) 
-									return func({
-										CallServerAsync = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
-											local plr
-											if BowExploitTarget["Value"] == "Mouse" then 
-												plr = GetNearestHumanoidToMouse(true, 10000, false)
-											elseif BowExploitTarget["Value"] == "Range" then
-												plr = GetNearestHumanoidToPosition(true, BowExploitAutoShootFOV["Value"])
-											elseif BowExploitTarget["Value"] == "Rich" then
-												plr = getRich()
-											else
-												plr = getArmorRich(BowExploitTarget["Value"]:find("Rich") and true or false)
-											end
-											if plr then 
-												local plrtype, plrattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
-												plr = plrattackable and plr
-											end
-											if plr then
-												local newlaunchpos = (plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, plr.Character.Humanoid.MoveDirection ~= Vector3.zero and 0.5 or 1, 0)).p
-												local newlaunchvelo = plr.Character.Humanoid.MoveDirection ~= Vector3.zero and table.find(noveloproj, proj2) == nil and CFrame.lookAt(newlaunchpos, plr.Character.HumanoidRootPart.CFrame.p + plr.Character.Humanoid.MoveDirection).lookVector.Unit * bedwars["ProjectileMeta"][proj2].launchVelocity or Vector3.new(0, -bedwars["ProjectileMeta"][proj].launchVelocity, 0)
-												launchvelo = newlaunchvelo
-												launchpos1 = newlaunchpos
-												tab1.drawDurationSeconds = 10
-											end
-											launchpos2 = shared.VapeRealCharacter and shared.VapeRealCharacter.HumanoidRootPart.Position or lplr.Character.HumanoidRootPart.Position
-											local called = res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
-											if plr then 
-												spawn(function()
-													task.wait(0.4)
-													for i = 1, 3 do 
-														bedwars["ClientHandler"]:Get(bedwars["ProjectileHitRemote"]):SendToServer(tag, plr.Character)
-													end
-												end)
-											end
-											return called
-										end
-									})
-								end
-							}
-						end
-					}
-				})
-			else
-				if entity.isAlive then
-					cam.CameraSubject = lplr.Character.Humanoid
-				end
-				debug.setupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10, {
-					Client = bedwars["ClientHandler"]
-				})
-				oldrealremote = nil
-			end
-		end
-	})
-	BowExploitTarget = BowExploit.CreateDropdown({
-		["Name"] = "Mode",
-		["List"] = {"Mouse", "Range", "Rich", "Armor Rich", "Armor Poor"},
-		["Function"] = function() end
-	})
-
-	local function shootproj(bow)
-		debug.getupvalue(debug.getupvalue(bedwars["BowTable"].launchProjectileWithValues, 2), 10).Client:WaitFor(bedwars["ProjectileRemote"]):andThen(function(rem)
-			local pos = shared.VapeRealCharacter and shared.VapeRealCharacter.HumanoidRootPart.Position or lplr.Character.HumanoidRootPart.Position
-			local tag = game:GetService("HttpService"):GenerateGUID(true)
-			local tab = bedwars["ItemTable"][bow.Name].projectileSource
-			local ammo = tab.projectileType("arrow")	
-			rem:CallServerAsync(bow, "arrow", ammo, pos, pos, Vector3.new(0, -1, 0), tag, {
-				drawDurationSeconds = 10
-			}, workspace:GetServerTimeNow())
-		end)
-	end
-
-	BowExploitCamera = BowExploit.CreateToggle({
-		["Name"] = "Camera View",
-		["Function"] = function(callback) 
-			if not callback then 
-				if entity.isAlive then
-					cam.CameraSubject = lplr.Character.Humanoid
-				end
-			end
-		end
-	})
-	BowExploitAutoShoot = BowExploit.CreateToggle({
-		["Name"] = "AutoShoot",
-		["Function"] = function(callback) 
-			if callback then 
-				spawn(function()
-					repeat
-						task.wait()
-						if BowExploit["Enabled"] then 
-							local bow = getItem("wood_crossbow") or getItem("tactical_crossbow") or getItem("wood_bow")
-							if getItem("arrow") then 
-								local plr
-								if BowExploitTarget["Value"] == "Mouse" then 
-									plr = GetNearestHumanoidToMouse(true, 10000, false)
-								elseif BowExploitTarget["Value"] == "Range" then
-									plr = GetNearestHumanoidToPosition(true, BowExploitAutoShootFOV["Value"])
-								elseif BowExploitTarget["Value"] == "Rich" then
-									plr = getRich()
-								else
-									plr = getArmorRich(BowExploitTarget["Value"]:find("Rich") and true or false)
-								end
-								if plr then
-									if BowExploitCamera["Enabled"] and isAlive() then 
-										cam.CameraSubject = plr.Character.Humanoid
-									end
-									if bow then 
-										shootproj(bow.tool)
-										task.wait(bedwars["ItemTable"][bow.itemType].fireDelaySec)
-									end
-								else
-									if BowExploitCamera["Enabled"] and isAlive() then 
-										cam.CameraSubject = lplr.Character.Humanoid
-									end
-								end
-							end
-						end
-					until (not BowExploitAutoShoot["Enabled"])
-				end)
-			end
-		end 
-	})
-	BowExploitAutoShootFOV = BowExploit.CreateSlider({
-		["Name"] = "AutoShoot FOV",
-		["Function"] = function() end,
-		["Min"] = 1,
-		["Max"] = 1000,
-		["Default"] = 1000
-	})
-end)
-
-runcode(function()
-	local Multiaura = {["Enabled"] = false}
-    Multiaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-        ["Name"] = "MultiAura",
-        ["Function"] = function(callback)
-            if callback then
-                task.spawn(function()
-					repeat
-						task.wait(0.03)
-						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Multiaura["Enabled"] then
-							local plrs = GetAllNearestHumanoidToPosition(true, 18.8, 1, false)
-							for i,plr in pairs(plrs) do
-								local plrtype, plrattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
-								if plrattackable then 
-									local selfpos = entity.character.HumanoidRootPart.Position
-									local newpos = plr.RootPart.Position
-									bedwars["ClientHandler"]:Get(bedwars["PaintRemote"]):SendToServer(selfpos, CFrame.lookAt(selfpos, newpos).lookVector)
-								end
-							end
-						end
-					until Multiaura["Enabled"] == false
-				end)
-            end
-        end,
-        ["HoverText"] = "Attack players around you\nwithout aiming at them."
-    })
-end)
-
 runcode(function()
 	local BowAura = {["Enabled"] = false}
 	local BowAuraRange = {["Value"] = 40}
@@ -7685,7 +7394,8 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				scaffoldtext.Visible = ScaffoldBlockCount["Enabled"]
-				oldspeed = GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["Value"]
+				oldspeed = bedwars["BlockCPSConstants"].BLOCK_PLACE_CPS
+				bedwars["BlockCPSConstants"].BLOCK_PLACE_CPS = 9999
 				task.spawn(function()
 					repeat
 						task.wait()
@@ -7740,6 +7450,7 @@ runcode(function()
 					until (not Scaffold["Enabled"])
 				end)
 			else
+				bedwars["BlockCPSConstants"].BLOCK_PLACE_CPS = oldspeed
 				scaffoldtext.Visible = false
 				oldpos = Vector3.zero
 				oldpos2 = Vector3.zero
@@ -9125,7 +8836,7 @@ runcode(function()
 				if oldroot then
 					local cloneroot = clone
 					if cloneroot then
-						if oldroot.Parent ~= nil and ((networkownerfunc and (not networkownerfunc(oldroot)) or networkownerfunc == nil and gethiddenproperty(oldroot, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual)) then
+						if oldroot.Parent ~= nil and (not networkownerfunc(oldroot)) then
 							if amountoftimes ~= 0 then
 								amountoftimes = 0
 							end
@@ -10882,104 +10593,6 @@ runcode(function()
 	AutoRelicCustom = AutoRelic.CreateTextList({
 		["Name"] = "Custom",
 		["TempText"] = "custom (relic id)"
-	})
-end)
-
-runcode(function()
-	local trollage
-	local remote = bedwars["ClientHandler"]:Get(bedwars["PickupRemote"])
-	local ServerCrasher = {["Enabled"] = false}
-	ServerCrasher = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "LagbackAllLoop",
-		["Function"] = function(callback)
-			if callback then
-				if WhitelistFunctions:IsSpecialIngame() and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then 
-					createwarning("LagbackAllLoop", "no", 10)
-					ServerCrasher["ToggleButton"](false)
-					return
-				end
-				task.spawn(function()
-					if not trollage then 
-						trollage = {}
-						local lasttbl
-						for i = 1,150000 do
-							trollage[#trollage+1] = (lasttbl or {})
-							lasttbl = trollage[#trollage]
-						end
-					end
-					repeat
-						task.wait(0.3)
-						task.spawn(function() 
-							pcall(function() remote:CallServer(trollage) end)
-						end)
-					until (not ServerCrasher["Enabled"])
-				end)
-			end
-		end
-	})
-	local ServerCrasher2 = {["Enabled"] = false}
-	ServerCrasher2 = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "LagbackAll",
-		["Function"] = function(callback)
-			if callback then
-				if WhitelistFunctions:IsSpecialIngame() and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then 
-					createwarning("LagbackAllLoop", "no", 10)
-					ServerCrasher2["ToggleButton"](false)
-					return
-				end
-				task.spawn(function()
-					if not trollage then 
-						trollage = {}
-						local lasttbl
-						for i = 1,150000 do
-							trollage[#trollage+1] = (lasttbl or {})
-							lasttbl = trollage[#trollage]
-						end
-					end
-					for i = 1, 15 do 
-						task.wait(0.3)
-						task.spawn(function() 
-							pcall(function() remote:CallServer(trollage) end)
-						end)
-					end
-				end)
-				ServerCrasher2["ToggleButton"](false)
-			end
-		end
-	})
-end)
-
-runcode(function()
-	local Disabler = {["Enabled"] = false}
-	Disabler = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AnticheatDisabler",
-		["Function"] = function(callback)
-			if callback then
-				if WhitelistFunctions:IsSpecialIngame() and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then 
-					createwarning("Disabler", "no", 10)
-					Disabler["ToggleButton"](false)
-					return
-				end
-				if (matchState == 0 or lplr.Character:FindFirstChildWhichIsA("ForceField")) then
-					task.spawn(function()
-						entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-						entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-						repeat task.wait() until entity.character.Humanoid.MoveDirection ~= Vector3.zero
-						task.wait(0.2)
-						entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-						entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Running)
-						workspace.Gravity = 192.6
-						createwarning("AnticheatDisabler", "Disabled Anticheat!", 10)
-					end)
-				else
-					local warning = createwarning("AnticheatDisabler", "Failed to disable\ndo it during respawn\nor in pregame / spawn box", 10)
-					pcall(function()
-						warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 32)
-					end)
-				end
-				Disabler["ToggleButton"](false)
-			end
-		end
 	})
 end)
 
