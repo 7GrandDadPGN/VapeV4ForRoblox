@@ -2291,7 +2291,7 @@ GuiLibrary["RemoveObject"]("AutoReportOptionsButton")
 GuiLibrary["RemoveObject"]("AutoLeaveOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
-GuiLibrary["RemoveObject"]("DisablerOptionsButton")
+GuiLibrary["RemoveObject"]("ClientKickDisablerOptionsButton")
 GuiLibrary["RemoveObject"]("NameTagsOptionsButton")
 GuiLibrary["RemoveObject"]("CapeOptionsButton")
 GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
@@ -2523,7 +2523,6 @@ local longjumpticktimer = tick()
 runcode(function()
 	local nocheck = false
 	local oldnocheck = false
-	local phaseconnection
 	local phasedelay = tick()
 	local phasedelay2 = tick()
 	local phase = {["Enabled"] = false}
@@ -2574,7 +2573,7 @@ runcode(function()
 						end
 					end
 				end)
-				phaseconnection = game:GetService("RunService").Stepped:Connect(function()
+				RunLoops:BindToStepped("Phase", 1, function()
 					if entity.isAlive and (nocheck ~= oldnocheck or nocheck) then
 						oldnocheck = nocheck
 						for i,v in pairs(lplr.Character:GetDescendants()) do
@@ -2588,9 +2587,7 @@ runcode(function()
 				end)
 			else
 				RunLoops:UnbindFromHeartbeat("Phase")
-				if phaseconnection then
-					phaseconnection:Disconnect()
-				end
+				RunLoops:UnbindFromStepped("Phase")
                 slowdownspeed = false
 			end
 		end,
@@ -5961,7 +5958,7 @@ local function findplayers(arg, plr)
 	if arg == "default" and continuechecking and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then table.insert(temp, lplr) continuechecking = false end
 	if arg == "teamdefault" and continuechecking and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" and plr and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") then table.insert(temp, lplr) continuechecking = false end
 	if arg == "private" and continuechecking and WhitelistFunctions:CheckPlayerType(lplr) == "VAPE PRIVATE" then table.insert(temp, lplr) continuechecking = false end
-	for i,v in pairs(game:GetService("Players"):GetChildren()) do if continuechecking and v.Name:lower():sub(1, arg:len()) == arg:lower() then table.insert(temp, v) continuechecking = false end end
+	for i,v in pairs(players:GetChildren()) do if continuechecking and v.Name:lower():sub(1, arg:len()) == arg:lower() then table.insert(temp, v) continuechecking = false end end
 
 	return temp
 end
@@ -6423,8 +6420,12 @@ runcode(function()
 				if alreadyreported[plr] == nil then
 					task.spawn(function()
 						reported = reported + 1
-						if syn == nil then
-							players:ReportAbuse(plr, reportreason, "he said a bad word")
+						if syn == nil or reportplayer then
+							if reportplayer then
+								reportplayer(plr, reportreason, "he said a bad word")
+							else
+								players:ReportAbuse(plr, reportreason, "he said a bad word")
+							end
 						end
 					end)
 					if AutoReportNotify["Enabled"] then 
@@ -6501,8 +6502,10 @@ runcode(function()
 				if plr:GetRankInGroup(5774246) >= 100 and (plr.UserId ~= 87365146 or shared.VapePrivate) then
 					if AutoLeaveStaff["Enabled"] then
 						coroutine.resume(coroutine.create(function()
-							repeat task.wait() until shared.VapeFullyLoaded
-							task.wait(1)
+							if not shared.VapeFullyLoaded then
+								repeat task.wait() until shared.VapeFullyLoaded
+								task.wait(1)
+							end
 							GuiLibrary.SelfDestruct()
 						end))
 						game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -6911,16 +6914,16 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 25,
+		["Max"] = 23,
 		["Function"] = function(val) end,
-		["Default"] = 25
+		["Default"] = 23
 	})
 	speedvalbig = speed.CreateSlider({
 		["Name"] = "Big Mode Speed",
 		["Min"] = 1,
-		["Max"] = 25,
+		["Max"] = 23,
 		["Function"] = function(val) end,
-		["Default"] = 25
+		["Default"] = 23
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -7071,10 +7074,10 @@ runcode(function()
 						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
 						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						local realflyspeed = flyspeed["Value"]
-						mass = mass + (allowed > 0 and 10 or 2.3) * (flytog and -1 or 1)
+						mass = mass + (allowed > 0 and 10 or 0) * (flytog and -1 or 1)
 						if flytogtick <= tick() then
 							flytog = not flytog
-							flytogtick = tick() + (allowed > 0 and 0.2 or 0.06)
+							flytogtick = tick() + (allowed > 0 and 0.2 or 0.2)
 						end
 						if flyacprogressbarframe then
 							flyacprogressbarframe.Visible = allowed <= 0
@@ -7089,7 +7092,7 @@ runcode(function()
 							end
 							if lastonground ~= onground then 
 								if (not onground) then 
-									groundtime = tick() + 5
+									groundtime = tick() + 2.5
 									if flyacprogressbarframe then 
 										flyacprogressbarframe.Frame:TweenSize(UDim2.new(0, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, groundtime - tick(), true)
 									end
@@ -7105,7 +7108,7 @@ runcode(function()
 								end
 							end
 							if flyacprogressbarframe then 
-								flyacprogressbarframe.TextLabel.Text = math.max(onground and 5 or math.floor((groundtime - tick()) * 10) / 10, 0).."s"
+								flyacprogressbarframe.TextLabel.Text = math.max(onground and 2.5 or math.floor((groundtime - tick()) * 10) / 10, 0).."s"
 							end
 							lastonground = onground
 							allowed = 1
@@ -7126,9 +7129,7 @@ runcode(function()
 							entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos2
 						end
 						flyvelo = flypos + Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
-						if slowdowntick <= tick() + 0.8 then 
-							slowdowntick = tick() + 0.75
-						end
+						
 					end
 				end)
 			else
@@ -7169,9 +7170,9 @@ runcode(function()
 	flyspeed = fly.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 25,
+		["Max"] = 23,
 		["Function"] = function(val) end, 
-		["Default"] = 25
+		["Default"] = 23
 	})
 	flyverticalspeed = fly.CreateSlider({
 		["Name"] = "Vertical Speed",
@@ -7210,7 +7211,7 @@ runcode(function()
 							end
 						end
 					until camcontrol
-					local caminput = require(game:GetService("Players").LocalPlayer.PlayerScripts.PlayerModule.CameraModule.CameraInput)
+					local caminput = require(lplr.PlayerScripts.PlayerModule.CameraModule.CameraInput)
 					local num = Instance.new("IntValue")
 					local numanim
 					shared.damageanim = function()
@@ -10108,7 +10109,7 @@ runcode(function()
 						end
 					end
 				end)
-				game:GetService("CollectionService"):GetInstanceAddedSignal("block"):Connect(function(v)
+				collectionservice:GetInstanceAddedSignal("block"):Connect(function(v)
 					if oldbedwarsblocktab[v.Name] then
 						if type(oldbedwarsblocktab[v.Name]) == "table" then
 							for i2,v2 in pairs(v:GetDescendants()) do
@@ -10149,7 +10150,7 @@ runcode(function()
 						end
 					end
 				end)
-				game:GetService("CollectionService"):GetInstanceAddedSignal("tnt"):Connect(function(v)
+				collectionservice:GetInstanceAddedSignal("tnt"):Connect(function(v)
 					if oldbedwarsblocktab[v.Name] then
 						if type(oldbedwarsblocktab[v.Name]) == "table" then
 							for i2,v2 in pairs(v:GetDescendants()) do
@@ -10478,7 +10479,7 @@ runcode(function()
 						end
 					end
 				end)
-				game:GetService("CollectionService"):GetInstanceAddedSignal("block"):Connect(function(v)
+				collectionservice:GetInstanceAddedSignal("block"):Connect(function(v)
 					if bedwarsblocktab[v.Name] then
 						if type(bedwarsblocktab[v.Name]) == "table" then
 							for i2,v2 in pairs(v:GetDescendants()) do
