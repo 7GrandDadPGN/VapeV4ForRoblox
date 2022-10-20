@@ -17,6 +17,14 @@ end)
 local targetinfo = shared.VapeTargetInfo
 local uis = game:GetService("UserInputService")
 local v3check = syn and syn.toast_notification and "V3" or ""
+local networkownertick = tick()
+local networkownerfunc = isnetworkowner or function(part)
+	if gethiddenproperty(part, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then 
+		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
+		networkownertick = tick() + 8
+	end
+	return networkownertick <= tick()
+end
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -4288,11 +4296,11 @@ runcode(function()
 				if chatspammerfirstexecute then
 					lplr.PlayerGui:WaitForChild("Chat", 10)
 				end
-				if lplr.PlayerGui:FindFirstChild("Chat") and lplr.PlayerGui.Chat:FindFirstChild("Frame") and lplr.PlayerGui.Chat.Frame:FindFirstChild("ChatChannelParentFrame") and game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents") then
+				if lplr.PlayerGui:FindFirstChild("Chat") and lplr.PlayerGui.Chat:FindFirstChild("Frame") and lplr.PlayerGui.Chat.Frame:FindFirstChild("ChatChannelParentFrame") and repstorage:FindFirstChild("DefaultChatSystemChatEvents") then
 					if chatspammerhook == false then
 						spawn(function()
 							chatspammerhook = true
-							for i,v in pairs(getconnections(game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+							for i,v in pairs(getconnections(repstorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
 								if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
 									oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
 									oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
@@ -4322,7 +4330,7 @@ runcode(function()
 						repeat
 							if ChatSpammer["Enabled"] then
 								pcall(function()
-									game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages["ObjectList"] > 0 and ChatSpammerMessages["ObjectList"][math.random(1, #ChatSpammerMessages["ObjectList"])] or "vxpe on top"), "All")
+									repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages["ObjectList"] > 0 and ChatSpammerMessages["ObjectList"][math.random(1, #ChatSpammerMessages["ObjectList"])] or "vxpe on top"), "All")
 								end)
 							end
 							if waitnum ~= 0 then
@@ -4679,8 +4687,12 @@ runcode(function()
 							if reportreason then 
 								if alreadyreported[plr] == nil then
 									task.spawn(function()
-										if syn == nil then
-											players:ReportAbuse(plr, reportreason, "he said a bad word")
+										if syn == nil or reportplayer then
+											if reportplayer then
+												reportplayer(plr, reportreason, "he said a bad word")
+											else
+												players:ReportAbuse(plr, reportreason, "he said a bad word")
+											end
 										end
 									end)
 									if AutoReportNotify["Enabled"] then 
@@ -4722,6 +4734,34 @@ runcode(function()
 	local AutoLeaveRank = {["Value"] = "1"}
 	local autoleaveconnection
 
+	local getrandomserver
+	local alreadyjoining = false
+	getrandomserver = function(pointer)
+		alreadyjoining = true
+		local data = requestfunc({
+			Url = "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Desc&limit=100"..(pointer and "&cursor="..pointer or ""),
+			Method = "GET"
+		}).Body
+		local decodeddata = game:GetService("HttpService"):JSONDecode(data)
+		local chosenServer
+		for i, v in pairs(decodeddata.data) do
+			if (tonumber(v.playing) < tonumber(players.MaxPlayers)) and tonumber(v.ping) < 300 and v.id ~= game.JobId then 
+				chosenServer = v.id
+				break
+			end
+		end
+		if chosenServer then 
+			alreadyjoining = false
+			game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, chosenServer, lplr)
+		else
+			if decodeddata.nextPageCursor then
+				getrandomserver(decodeddata.nextPageCursor)
+			else
+				alreadyjoining = false
+			end
+		end
+	end
+
 	local function autoleaveplradded(plr)
 		task.spawn(function()
 			pcall(function()
@@ -4734,8 +4774,10 @@ runcode(function()
 					end
 					if AutoLeaveMode["Value"] == "UnInject" then 
 						task.spawn(function()
-							repeat task.wait() until shared.VapeFullyLoaded
-							task.wait(1)
+							if not shared.VapeFullyLoaded then
+								repeat task.wait() until shared.VapeFullyLoaded
+								task.wait(1)
+							end
 							GuiLibrary.SelfDestruct()
 						end)
 						game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -4744,7 +4786,7 @@ runcode(function()
 							Duration = 60,
 						})
 					elseif AutoLeaveMode["Value"] == "Rejoin" then 
-
+						getrandomserver()
 					else
 						local warning = createwarning("AutoLeave", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
 						local warningtext = warning:GetChildren()[5]
@@ -4870,7 +4912,7 @@ runcode(function()
 
 	local hookmethods = {
 		Kick = function(self)
-			if (not DisablerAntiKick["Enabled"]) then return end
+			if (not Disabler["Enabled"]) then return end
 			if type(self) == "userdata" and self == lplr then 
 				return true
 			end
@@ -4879,7 +4921,7 @@ runcode(function()
 	hookmethods.kick = hookmethods.Kick
 
 	Disabler = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "Disabler",
+		["Name"] = "ClientKickDisabler",
 		["Function"] = function(callback)
 			if callback then 
 				if not disablerhooked then 
@@ -4899,7 +4941,7 @@ runcode(function()
 					end)
 					local antikick
 					antikick = hookfunction(lplr.Kick, function(self, ...)
-						if (not DisablerAntiKick["Enabled"]) then return antikick(self, ...) end
+						if (not Disabler["Enabled"]) then return antikick(self, ...) end
 						if type(self) == "userdata" and self == lplr then 
 							return
 						end
@@ -4908,9 +4950,5 @@ runcode(function()
 				end
 			end
 		end
-	})
-	DisablerAntiKick = Disabler.CreateToggle({
-		["Name"] = "Anti Kick",
-		["Function"] = function(callback) end
 	})
 end)
