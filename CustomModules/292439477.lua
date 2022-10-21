@@ -3128,24 +3128,26 @@ runcode(function()
 		["Name"] = "AutoSpot",
 		["Function"] = function(callback)
 			if callback then 
-				repeat 
-					task.wait(0.5)
-					if phantomforces["SpotRemote"] then 
-						for i,plr in pairs(players:GetChildren()) do
-							if lplr ~= plr and shared.vapeteamcheck(plr) then 
-								if (not actuallyseeable[plr.Name]) and type(phantomforces["Ray"].raycastwhitelist) == "table" then
-									local char = phantomforces["GetCharacter"](plr)
-									if char then
-										local ray = workspace:FindPartOnRayWithWhitelist(Ray.new(phantomforces["Camera"].cframe.p, CFrame.lookAt(phantomforces["Camera"].cframe.p, char.Head.Position + vec3(0, 0.5, 0)).LookVector * 1000), {table.unpack(phantomforces["Ray"].raycastwhitelist), char})
-										if ray and ray.Parent == char then
-											phantomforces["Network"]:send(phantomforces["SpotRemote"], plr, true, phantomforces["GameClock"].getTime())
+				task.spawn(function()
+					repeat 
+						task.wait(0.5)
+						if phantomforces["SpotRemote"] then 
+							for i,plr in pairs(players:GetChildren()) do
+								if lplr ~= plr and shared.vapeteamcheck(plr) then 
+									if (not actuallyseeable[plr.Name]) and type(phantomforces["Ray"].raycastwhitelist) == "table" then
+										local char = phantomforces["GetCharacter"](plr)
+										if char then
+											local ray = workspace:FindPartOnRayWithWhitelist(Ray.new(phantomforces["Camera"].cframe.p, CFrame.lookAt(phantomforces["Camera"].cframe.p, char.Head.Position + vec3(0, 0.5, 0)).LookVector * 1000), {table.unpack(phantomforces["Ray"].raycastwhitelist), char})
+											if ray and ray.Parent == char then
+												phantomforces["Network"]:send(phantomforces["SpotRemote"], plr, true, phantomforces["GameClock"].getTime())
+											end
 										end
 									end
 								end
 							end
 						end
-					end
-				until (not AutoSpot["Enabled"])
+					until (not AutoSpot["Enabled"])
+				end)
 			end
 		end,
 	})
