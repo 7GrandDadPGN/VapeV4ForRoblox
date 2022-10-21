@@ -14,8 +14,7 @@ local robloxfriends = {}
 local bedwars = {}
 local getfunctions
 local origC0 = nil
-local vec3 = Vector3.new
-local cfnew = CFrame.new
+local collectionservice = game:GetService("CollectionService")
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		return readfile("vape/"..scripturl)
@@ -529,7 +528,7 @@ GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
-GuiLibrary["RemoveObject"]("DisablerOptionsButton")
+GuiLibrary["RemoveObject"]("ClientKickDisablerOptionsButton")
 
 teleportfunc = lplr.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Started then
@@ -1063,7 +1062,7 @@ runcode(function()
 		end
 		hip = lplr.Character.Humanoid.HipHeight
 		local bodyvelo = Instance.new("BodyVelocity")
-		bodyvelo.MaxForce = vec3(0, 100000, 0)
+		bodyvelo.MaxForce = Vector3.new(0, 100000, 0)
 		bodyvelo.Velocity = Vector3.zero
 		bodyvelo.Parent = oldcloneroot
 		pcall(function()
@@ -1084,8 +1083,8 @@ runcode(function()
 					local targetvelo = (clone.AssemblyLinearVelocity)
 					local speed = (sit and targetvelo.Magnitude or 20 * getSpeedMultiplier())
 					targetvelo = (targetvelo.Unit == targetvelo.Unit and targetvelo.Unit or Vector3.zero) * speed
-					bodyvelo.Velocity = vec3(0, clone.Velocity.Y, 0)
-					oldcloneroot.Velocity = vec3(math.clamp(targetvelo.X, -speed, speed), clone.Velocity.Y, math.clamp(targetvelo.Z, -speed, speed))
+					bodyvelo.Velocity = Vector3.new(0, clone.Velocity.Y, 0)
+					oldcloneroot.Velocity = Vector3.new(math.clamp(targetvelo.X, -speed, speed), clone.Velocity.Y, math.clamp(targetvelo.Z, -speed, speed))
 				end
 			end
 		end)
@@ -1230,7 +1229,7 @@ runcode(function()
 										if oldroot and cloneroot then
 											anticheatfunnyyes = false
 											if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
-												if (vec3(0, oldroot.CFrame.p.Y, 0) - vec3(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 1 then
+												if (Vector3.new(0, oldroot.CFrame.p.Y, 0) - Vector3.new(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 1 then
 													oldroot.CFrame = finishcframe(oldroot.CFrame:lerp(addvectortocframe2(cloneroot.CFrame, oldroot.CFrame.p.Y), framerate))
 												else
 													oldroot.CFrame = finishcframe(oldroot.CFrame:lerp(cloneroot.CFrame, framerate))
@@ -1244,7 +1243,7 @@ runcode(function()
 									check()
 									if oldroot and cloneroot then
 										if (oldroot.CFrame.p - cloneroot.CFrame.p).magnitude >= 0.01 then
-											if (vec3(0, oldroot.CFrame.p.Y, 0) - vec3(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 1 then
+											if (Vector3.new(0, oldroot.CFrame.p.Y, 0) - Vector3.new(0, cloneroot.CFrame.p.Y, 0)).magnitude <= 1 then
 												oldroot.CFrame = finishcframe(addvectortocframe2(cloneroot.CFrame, oldroot.CFrame.p.Y))
 											else
 												oldroot.CFrame = finishcframe(cloneroot.CFrame)
@@ -1980,9 +1979,9 @@ runcode(function()
 	overlayframe3.BorderSizePixel = 0
 	overlayframe3.Parent = overlayframe2
 	local oldguiupdate = GuiLibrary["UpdateUI"]
-	GuiLibrary["UpdateUI"] = function(...)
-		overlayframe2.BackgroundColor3 = Color3.fromHSV(GuiLibrary["Settings"]["GUIObject"]["Color"], 0.7, 0.9)
-		return oldguiupdate(...)
+	GuiLibrary["UpdateUI"] = function(h, s, v, ...)
+		overlayframe2.BackgroundColor3 = Color3.fromHSV(h, s, v)
+		return oldguiupdate(h, s, v, ...)
 	end
 	local framecorner1 = Instance.new("UICorner")
 	framecorner1.CornerRadius = UDim.new(0, 5)
