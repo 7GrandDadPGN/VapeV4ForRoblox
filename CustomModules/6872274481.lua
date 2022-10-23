@@ -9903,6 +9903,41 @@ runcode(function()
 end)
 
 runcode(function()
+	local tppos
+	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p6)
+		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
+			if (p7.knockbackMultiplier == nil or p7.knockbackMultiplier.disabled == nil) and p7.entityInstance == lplr.Character then 
+				if entity.isAlive and tppos then 
+					entity.character.HumanoidRootPart.CFrame = CFrame.new(tppos)
+					tppos = nil
+					local bodyvelo = Instance.new("BodyVelocity")
+					bodyvelo.MaxForce = Vector3.new(9e9, 0, 9e9)
+					bodyvelo.Velocity = Vector3.zero
+					bodyvelo.Parent = entity.character.HumanoidRootPart
+					task.wait(1)
+					bodyvelo:Destroy()
+				end
+			end
+		end)
+	end)
+	local damagetpmod = {["Enabled"] = false}
+	damagetpmod = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "DamageTP",
+		["Function"] = function(callback)
+			if callback then
+				local mousepos = game.Players.LocalPlayer:GetMouse().UnitRay
+				local rayparams = RaycastParams.new()
+				rayparams.FilterDescendantsInstances = {workspace.Map}
+				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
+				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
+				if ray then tppos = ray.Position createwarning("DamageTP", "set pos", 3) end
+				damagetpmod["ToggleButton"](false)
+			end
+		end
+	})
+end)
+
+runcode(function()
 	local CameraFix = {["Enabled"] = false}
 	CameraFix = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "GameFixer",
