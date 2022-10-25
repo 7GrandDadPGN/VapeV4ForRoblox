@@ -4887,10 +4887,7 @@ runcode(function()
 						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
 						if HighJumpMode["Value"] == "Funny" then
 							task.spawn(function()
-								for i = 1, 200 do
-									task.wait(0.01)
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, i * 2.5, entity.character.HumanoidRootPart.Velocity.Z)
-								end
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 500, entity.character.HumanoidRootPart.Velocity.Z)
 							end)
 						else
 							entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
