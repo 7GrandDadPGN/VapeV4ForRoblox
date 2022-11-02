@@ -1402,7 +1402,7 @@ local function getSpeedMultiplier(reduce)
 			speed = speed + 1
 		end
 	end
-	return reduce and speed ~= 1 and speed * (0.85 - (0.15 * math.floor(speed))) or speed
+	return reduce and speed ~= 1 and speed * (0.85 - (0.1 * math.floor(speed))) or speed
 end
 
 runcode(function()
@@ -4872,137 +4872,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local HighJumpMode = {["Value"] = "Normal"}
-	local HighJumpBoost = {["Value"] = 1}
-	local HighJumpDelay = {["Value"] = 20}
-	local HighJumpTick = tick()
-	local highjumpbound = true
-	local HighJump = {["Enabled"] = false}
-	HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "HighJump",
-		["Function"] = function(callback)
-			if callback then
-				if HighJumpTick <= tick() then
-					if entity.isAlive then
-						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-						if HighJumpMode["Value"] == "Funny" then
-							task.spawn(function()
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 500, entity.character.HumanoidRootPart.Velocity.Z)
-							end)
-						else
-							entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-							task.spawn(function()
-								for i = 1, 2 do
-									task.wait(0.1)
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-								end
-							end)
-						end
-					end
-				else
-					createwarning("HighJump", "Wait "..(math.floor((HighJumpTick - tick()) * 10) / 10).." before retoggling.", 1)
-				end
-				HighJump["ToggleButton"](false)
-			end
-		end, 
-		["HoverText"] = "Lets you jump higher (Spamming has a chance to lagback)"
-	})
-	HighJumpMode = HighJump.CreateDropdown({
-		["Name"] = "Mode",
-		["List"] = {"Funny", "Normal"},
-		["Function"] = function() end
-	})
-	HighJumpBoost = HighJump.CreateSlider({
-		["Name"] = "Boost",
-		["Min"] = 1,
-		["Max"] = 70,
-		["Function"] = function(val) end,
-		["Default"] = 70
-	})
-	HighJumpDelay = HighJump.CreateSlider({
-		["Name"] = "Delay",
-		["Min"] = 0,
-		["Max"] = 50,
-		["Function"] = function(val) end, 
-		["Default"] = 20
-	})
-end)
-
-runcode(function()
-	local funnyfly = {["Enabled"] = false}
-	local flyacprogressbar
-	local flyacprogressbarframe
-	local flyacprogressbarframe2
-	local flyacprogressbartext
-	local bodyvelo
-	funnyfly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "FunnyFly",
-		["Function"] = function(callback)
-			if callback then 
-				local starty
-				local starttick = tick()
-				task.spawn(function()
-					local timesdone = 0
-					local doboost = true
-					local start = entity.character.HumanoidRootPart.Position
-					flyacprogressbartext = Instance.new("TextLabel")
-					flyacprogressbartext.Text = "Unsafe"
-					flyacprogressbartext.Font = Enum.Font.Gotham
-					flyacprogressbartext.TextStrokeTransparency = 0
-					flyacprogressbartext.TextColor3 =  Color3.new(0.9, 0.9, 0.9)
-					flyacprogressbartext.TextSize = 20
-					flyacprogressbartext.Size = UDim2.new(0, 0, 0, 20)
-					flyacprogressbartext.BackgroundTransparency = 1
-					flyacprogressbartext.Position = UDim2.new(0.5, 0, 0.5, 40)
-					flyacprogressbartext.Parent = GuiLibrary["MainGui"]
-					repeat
-						timesdone = timesdone + 1
-						if entity.isAlive then
-							local root = entity.character.HumanoidRootPart
-							if starty == nil then 
-								starty = root.Position.Y
-							end
-							if not bodyvelo then 
-								bodyvelo = Instance.new("BodyVelocity")
-								bodyvelo.MaxForce = Vector3.new(0, 1000000, 0)
-								bodyvelo.Parent = root
-								bodyvelo.Velocity = Vector3.zero
-							else
-								bodyvelo.Parent = root
-							end
-							for i = 2, 30, 2 do 
-								task.wait(0.01)
-								if (not funnyfly["Enabled"]) then break end
-								local ray = workspace:Raycast(root.Position + (entity.character.Humanoid.MoveDirection * 50), Vector3.new(0, -2000, 0), blockraycast)
-								flyacprogressbartext.Text = ray and "Safe" or "Unsafe"
-								bodyvelo.Velocity = Vector3.new(0, 25 + i, 0)
-							end
-							if (not networkownerfunc(root)) then
-								break 
-							end
-						else
-							break
-						end
-					until (not funnyfly["Enabled"])
-					if funnyfly["Enabled"] then 
-						funnyfly["ToggleButton"](false)
-					end
-				end)
-			else
-				if bodyvelo then 
-					bodyvelo:Destroy()
-					bodyvelo = nil
-				end
-				if flyacprogressbartext then
-					flyacprogressbartext:Destroy()
-				end
-			end
-		end
-	})
-end)
-
-
-runcode(function()
 	local function roundpos(vec)
 		return Vector3.new(math.round(vec.X / .5) * .65, math.round(vec.Y), math.round(vec.Z / .5) * .65)
 	end
@@ -6448,7 +6317,7 @@ runcode(function()
 				end
 			end
 		end
-		if plr and (AutoToxicTeam["Enabled"] == false and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") or AutoToxicTeam["Enabled"]) and (#AutoToxicPhrases5["ObjectList"] <= 0 and findreport(tab["Message"]) == "Bullying" or toxicfindstr(tab["Message"], AutoToxicPhrases5["ObjectList"])) and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
+		if plr and (lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") or (not AutoToxicTeam["Enabled"])) and (#AutoToxicPhrases5["ObjectList"] <= 0 and findreport(tab["Message"]) or toxicfindstr(tab["Message"], AutoToxicPhrases5["ObjectList"])) and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
 			local custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
 			if custommsg == lastsaid2 then
 				custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
@@ -6837,7 +6706,7 @@ runcode(function()
 							if olddir then 
 								local olddirmag = (entity.character.Humanoid.MoveDirection - olddir).Magnitude
 								if olddirmag > 0.9 and slowdowntick <= tick() then 
-									slowdowntick = tick() + 0.3
+									--slowdowntick = tick() + 0.3
 								end
 							end
 							olddir = entity.character.Humanoid.MoveDirection
@@ -6911,16 +6780,16 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 23,
+		["Max"] = 45,
 		["Function"] = function(val) end,
-		["Default"] = 23
+		["Default"] = 45
 	})
 	speedvalbig = speed.CreateSlider({
 		["Name"] = "Big Mode Speed",
 		["Min"] = 1,
-		["Max"] = 23,
+		["Max"] = 45,
 		["Function"] = function(val) end,
-		["Default"] = 23
+		["Default"] = 45
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -7167,9 +7036,9 @@ runcode(function()
 	flyspeed = fly.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 23,
+		["Max"] = 45,
 		["Function"] = function(val) end, 
-		["Default"] = 23
+		["Default"] = 45
 	})
 	flyverticalspeed = fly.CreateSlider({
 		["Name"] = "Vertical Speed",
@@ -7416,7 +7285,7 @@ runcode(function()
 									scaffoldstopmotionval = true
 									scaffoldstopmotionpos = entity.character.HumanoidRootPart.CFrame.p
 								end
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 50, entity.character.HumanoidRootPart.Velocity.Z)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 30, entity.character.HumanoidRootPart.Velocity.Z)
 								if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
 									entity.character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, entity.character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
 								end
@@ -9911,7 +9780,7 @@ runcode(function()
 					bodyvelo.MaxForce = Vector3.new(9e9, 0, 9e9)
 					bodyvelo.Velocity = Vector3.zero
 					bodyvelo.Parent = entity.character.HumanoidRootPart
-					task.wait(1)
+					task.wait(0.75)
 					bodyvelo:Destroy()
 				end
 			end
@@ -9924,10 +9793,10 @@ runcode(function()
 			if callback then
 				local mousepos = game.Players.LocalPlayer:GetMouse().UnitRay
 				local rayparams = RaycastParams.new()
-				rayparams.FilterDescendantsInstances = {workspace.Map}
+				rayparams.FilterDescendantsInstances = {workspace.Map, workspace:FindFirstChild("SpectatorPlatform")}
 				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
 				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
-				if ray then tppos = ray.Position createwarning("DamageTP", "set pos", 3) end
+				if ray then tppos = ray.Position createwarning("DamageTP", "Set TP Position\nTake damage to teleport.", 3) end
 				damagetpmod["ToggleButton"](false)
 			end
 		end
