@@ -6779,16 +6779,16 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 45,
+		["Max"] = 23,
 		["Function"] = function(val) end,
-		["Default"] = 45
+		["Default"] = 23
 	})
 	speedvalbig = speed.CreateSlider({
 		["Name"] = "Big Mode Speed",
 		["Min"] = 1,
-		["Max"] = 45,
+		["Max"] = 23,
 		["Function"] = function(val) end,
-		["Default"] = 45
+		["Default"] = 23
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -7035,9 +7035,9 @@ runcode(function()
 	flyspeed = fly.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 45,
+		["Max"] = 23,
 		["Function"] = function(val) end, 
-		["Default"] = 45
+		["Default"] = 23
 	})
 	flyverticalspeed = fly.CreateSlider({
 		["Name"] = "Vertical Speed",
@@ -9779,7 +9779,7 @@ runcode(function()
 					bodyvelo.MaxForce = Vector3.new(9e9, 0, 9e9)
 					bodyvelo.Velocity = Vector3.zero
 					bodyvelo.Parent = entity.character.HumanoidRootPart
-					task.wait(0.75)
+					task.wait(1)
 					bodyvelo:Destroy()
 				end
 			end
@@ -9790,13 +9790,51 @@ runcode(function()
 		["Name"] = "DamageTP",
 		["Function"] = function(callback)
 			if callback then
-				local mousepos = game.Players.LocalPlayer:GetMouse().UnitRay
+				local mousepos = lplr:GetMouse().UnitRay
 				local rayparams = RaycastParams.new()
 				rayparams.FilterDescendantsInstances = {workspace.Map, workspace:FindFirstChild("SpectatorPlatform")}
 				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
 				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
-				if ray then tppos = ray.Position createwarning("DamageTP", "Set TP Position\nTake damage to teleport.", 3) end
+				if ray then tppos = ray.Position 
+					local warning = createwarning("DamageTP", "Set TP Position\nTake damage to teleport.", 3)
+					pcall(function()
+						warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+					end)
+				end
 				damagetpmod["ToggleButton"](false)
+			end
+		end
+	})
+	local tppos2
+	local deathtpmod = {["Enabled"] = false}
+	connectionstodisconnect[#connectionstodisconnect + 1] = lplr.CharacterAdded:Connect(function(char)
+		if tppos2 then 
+			task.spawn(function()
+				local root = char:WaitForChild("HumanoidRootPart", 9e9)
+				if root and tppos2 then 
+					root.CFrame = CFrame.new(tppos2)
+					tppos2 = nil
+				end
+			end)
+		end
+	end)
+	deathtpmod = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "DeathTP",
+		["Function"] = function(callback)
+			if callback then
+				local mousepos = lplr:GetMouse().UnitRay
+				local rayparams = RaycastParams.new()
+				rayparams.FilterDescendantsInstances = {workspace.Map, workspace:FindFirstChild("SpectatorPlatform")}
+				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
+				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
+				if ray then 
+					tppos2 = ray.Position 
+					local warning = createwarning("DeathTP", "Set TP Position\nDie to teleport.", 3)
+					pcall(function()
+						warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+					end)
+				end
+				deathtpmod["ToggleButton"](false)
 			end
 		end
 	})
