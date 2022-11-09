@@ -1402,7 +1402,7 @@ local function getSpeedMultiplier(reduce)
 			speed = speed + 1
 		end
 	end
-	return reduce and speed ~= 1 and speed * (0.85 - (0.15 * math.floor(speed))) or speed
+	return reduce and speed ~= 1 and speed * (0.85 - (0.1 * math.floor(speed))) or speed
 end
 
 runcode(function()
@@ -2283,7 +2283,6 @@ GuiLibrary["RemoveObject"]("PhaseOptionsButton")
 GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
 GuiLibrary["RemoveObject"]("SpiderOptionsButton")
 GuiLibrary["RemoveObject"]("LongJumpOptionsButton")
-GuiLibrary["RemoveObject"]("HighJumpOptionsButton")
 GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
@@ -4872,140 +4871,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local HighJumpMode = {["Value"] = "Normal"}
-	local HighJumpBoost = {["Value"] = 1}
-	local HighJumpDelay = {["Value"] = 20}
-	local HighJumpTick = tick()
-	local highjumpbound = true
-	local HighJump = {["Enabled"] = false}
-	HighJump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "HighJump",
-		["Function"] = function(callback)
-			if callback then
-				if HighJumpTick <= tick() then
-					if entity.isAlive then
-						HighJumpTick = tick() + (HighJumpDelay["Value"] / 10)
-						if HighJumpMode["Value"] == "Funny" then
-							task.spawn(function()
-								for i = 1, 200 do
-									task.wait(0.01)
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, i * 2.5, entity.character.HumanoidRootPart.Velocity.Z)
-								end
-							end)
-						else
-							entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-							task.spawn(function()
-								for i = 1, 2 do
-									task.wait(0.1)
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost["Value"], 0)
-								end
-							end)
-						end
-					end
-				else
-					createwarning("HighJump", "Wait "..(math.floor((HighJumpTick - tick()) * 10) / 10).." before retoggling.", 1)
-				end
-				HighJump["ToggleButton"](false)
-			end
-		end, 
-		["HoverText"] = "Lets you jump higher (Spamming has a chance to lagback)"
-	})
-	HighJumpMode = HighJump.CreateDropdown({
-		["Name"] = "Mode",
-		["List"] = {"Funny", "Normal"},
-		["Function"] = function() end
-	})
-	HighJumpBoost = HighJump.CreateSlider({
-		["Name"] = "Boost",
-		["Min"] = 1,
-		["Max"] = 70,
-		["Function"] = function(val) end,
-		["Default"] = 70
-	})
-	HighJumpDelay = HighJump.CreateSlider({
-		["Name"] = "Delay",
-		["Min"] = 0,
-		["Max"] = 50,
-		["Function"] = function(val) end, 
-		["Default"] = 20
-	})
-end)
-
-runcode(function()
-	local funnyfly = {["Enabled"] = false}
-	local flyacprogressbar
-	local flyacprogressbarframe
-	local flyacprogressbarframe2
-	local flyacprogressbartext
-	local bodyvelo
-	funnyfly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "FunnyFly",
-		["Function"] = function(callback)
-			if callback then 
-				local starty
-				local starttick = tick()
-				task.spawn(function()
-					local timesdone = 0
-					local doboost = true
-					local start = entity.character.HumanoidRootPart.Position
-					flyacprogressbartext = Instance.new("TextLabel")
-					flyacprogressbartext.Text = "Unsafe"
-					flyacprogressbartext.Font = Enum.Font.Gotham
-					flyacprogressbartext.TextStrokeTransparency = 0
-					flyacprogressbartext.TextColor3 =  Color3.new(0.9, 0.9, 0.9)
-					flyacprogressbartext.TextSize = 20
-					flyacprogressbartext.Size = UDim2.new(0, 0, 0, 20)
-					flyacprogressbartext.BackgroundTransparency = 1
-					flyacprogressbartext.Position = UDim2.new(0.5, 0, 0.5, 40)
-					flyacprogressbartext.Parent = GuiLibrary["MainGui"]
-					repeat
-						timesdone = timesdone + 1
-						if entity.isAlive then
-							local root = entity.character.HumanoidRootPart
-							if starty == nil then 
-								starty = root.Position.Y
-							end
-							if not bodyvelo then 
-								bodyvelo = Instance.new("BodyVelocity")
-								bodyvelo.MaxForce = Vector3.new(0, 1000000, 0)
-								bodyvelo.Parent = root
-								bodyvelo.Velocity = Vector3.zero
-							else
-								bodyvelo.Parent = root
-							end
-							for i = 2, 30, 2 do 
-								task.wait(0.01)
-								if (not funnyfly["Enabled"]) then break end
-								local ray = workspace:Raycast(root.Position + (entity.character.Humanoid.MoveDirection * 50), Vector3.new(0, -2000, 0), blockraycast)
-								flyacprogressbartext.Text = ray and "Safe" or "Unsafe"
-								bodyvelo.Velocity = Vector3.new(0, 25 + i, 0)
-							end
-							if (not networkownerfunc(root)) then
-								break 
-							end
-						else
-							break
-						end
-					until (not funnyfly["Enabled"])
-					if funnyfly["Enabled"] then 
-						funnyfly["ToggleButton"](false)
-					end
-				end)
-			else
-				if bodyvelo then 
-					bodyvelo:Destroy()
-					bodyvelo = nil
-				end
-				if flyacprogressbartext then
-					flyacprogressbartext:Destroy()
-				end
-			end
-		end
-	})
-end)
-
-
-runcode(function()
 	local function roundpos(vec)
 		return Vector3.new(math.round(vec.X / .5) * .65, math.round(vec.Y), math.round(vec.Z / .5) * .65)
 	end
@@ -6451,7 +6316,7 @@ runcode(function()
 				end
 			end
 		end
-		if plr and (AutoToxicTeam["Enabled"] == false and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") or AutoToxicTeam["Enabled"]) and (#AutoToxicPhrases5["ObjectList"] <= 0 and findreport(tab["Message"]) == "Bullying" or toxicfindstr(tab["Message"], AutoToxicPhrases5["ObjectList"])) and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
+		if plr and (lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") or (not AutoToxicTeam["Enabled"])) and (#AutoToxicPhrases5["ObjectList"] <= 0 and findreport(tab["Message"]) or toxicfindstr(tab["Message"], AutoToxicPhrases5["ObjectList"])) and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
 			local custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
 			if custommsg == lastsaid2 then
 				custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
@@ -6840,7 +6705,7 @@ runcode(function()
 							if olddir then 
 								local olddirmag = (entity.character.Humanoid.MoveDirection - olddir).Magnitude
 								if olddirmag > 0.9 and slowdowntick <= tick() then 
-									slowdowntick = tick() + 0.3
+									--slowdowntick = tick() + 0.3
 								end
 							end
 							olddir = entity.character.Humanoid.MoveDirection
@@ -7419,7 +7284,7 @@ runcode(function()
 									scaffoldstopmotionval = true
 									scaffoldstopmotionpos = entity.character.HumanoidRootPart.CFrame.p
 								end
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 50, entity.character.HumanoidRootPart.Velocity.Z)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 30, entity.character.HumanoidRootPart.Velocity.Z)
 								if ScaffoldStopMotion["Enabled"] and scaffoldstopmotionval then
 									entity.character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(scaffoldstopmotionpos.X, entity.character.HumanoidRootPart.CFrame.p.Y, scaffoldstopmotionpos.Z))
 								end
@@ -9897,6 +9762,79 @@ runcode(function()
 		["Function"] = function(h, s, v) 
 			if chinahattrail then 
 				chinahattrail.Color = Color3.fromHSV(h, s, v)
+			end
+		end
+	})
+end)
+
+runcode(function()
+	local tppos
+	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p6)
+		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
+			if (p7.knockbackMultiplier == nil or p7.knockbackMultiplier.disabled == nil) and p7.entityInstance == lplr.Character then 
+				if entity.isAlive and tppos then 
+					entity.character.HumanoidRootPart.CFrame = CFrame.new(tppos)
+					tppos = nil
+					local bodyvelo = Instance.new("BodyVelocity")
+					bodyvelo.MaxForce = Vector3.new(9e9, 0, 9e9)
+					bodyvelo.Velocity = Vector3.zero
+					bodyvelo.Parent = entity.character.HumanoidRootPart
+					task.wait(1)
+					bodyvelo:Destroy()
+				end
+			end
+		end)
+	end)
+	local damagetpmod = {["Enabled"] = false}
+	damagetpmod = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "DamageTP",
+		["Function"] = function(callback)
+			if callback then
+				local mousepos = lplr:GetMouse().UnitRay
+				local rayparams = RaycastParams.new()
+				rayparams.FilterDescendantsInstances = {workspace.Map, workspace:FindFirstChild("SpectatorPlatform")}
+				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
+				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
+				if ray then tppos = ray.Position 
+					local warning = createwarning("DamageTP", "Set TP Position\nTake damage to teleport.", 3)
+					pcall(function()
+						warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+					end)
+				end
+				damagetpmod["ToggleButton"](false)
+			end
+		end
+	})
+	local tppos2
+	local deathtpmod = {["Enabled"] = false}
+	connectionstodisconnect[#connectionstodisconnect + 1] = lplr.CharacterAdded:Connect(function(char)
+		if tppos2 then 
+			task.spawn(function()
+				local root = char:WaitForChild("HumanoidRootPart", 9e9)
+				if root and tppos2 then 
+					root.CFrame = CFrame.new(tppos2)
+					tppos2 = nil
+				end
+			end)
+		end
+	end)
+	deathtpmod = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "DeathTP",
+		["Function"] = function(callback)
+			if callback then
+				local mousepos = lplr:GetMouse().UnitRay
+				local rayparams = RaycastParams.new()
+				rayparams.FilterDescendantsInstances = {workspace.Map, workspace:FindFirstChild("SpectatorPlatform")}
+				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
+				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
+				if ray then 
+					tppos2 = ray.Position 
+					local warning = createwarning("DeathTP", "Set TP Position\nDie to teleport.", 3)
+					pcall(function()
+						warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
+					end)
+				end
+				deathtpmod["ToggleButton"](false)
 			end
 		end
 	})
