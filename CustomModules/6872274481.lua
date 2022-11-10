@@ -2421,7 +2421,7 @@ runcode(function()
 										end
 									end)
 								end
-								task.wait(math.max((1 / autoclickercps["GetRandomValue"]()), 0.12))
+								task.wait(math.max((1 / autoclickercps["GetRandomValue"]()), 0.084))
 							end
 						end
 					until (not autoclicker["Enabled"])
