@@ -837,6 +837,7 @@ local OldClientGet
 local oldbreakremote
 local oldbob
 local localserverpos
+local globalgroundtouchedtime = tick()
 local otherserverpos = {}
 runcode(function()
     getfunctions = function()
@@ -1038,6 +1039,9 @@ runcode(function()
 						table.remove(postable, 1)
 					end
 					localserverpos = postable[46] or entity.character.HumanoidRootPart.Position
+					if entity.character.Humanoid.FloorMaterial ~= Enum.Material.Air then 
+						globalgroundtouchedtime = tick()
+					end
 				end
 				for i,v in pairs(entity.entityList) do 
 					if postable2[v.Player] == nil then 
@@ -1402,7 +1406,7 @@ local function getSpeedMultiplier(reduce)
 			speed = speed + 1
 		end
 	end
-	return reduce and speed ~= 1 and speed * (0.85 - (0.1 * math.floor(speed))) or speed
+	return reduce and speed ~= 1 and speed * (0.8 - (0.1 * math.floor(speed))) or speed
 end
 
 runcode(function()
@@ -1923,7 +1927,7 @@ bedwars["breakBlock"] = function(pos, effects, normal, bypass, anim)
 			end)
 			local animation
 			if anim then
-				animation = bedwars["AnimationUtil"].playAnimation(lplr, bedwars["BlockController"]:getAnimationController():getAssetId(1))
+				animation = bedwars["AnimationUtil"]:playAnimation(lplr, bedwars["BlockController"]:getAnimationController():getAssetId(1))
 				bedwars["ViewmodelController"]:playAnimation(15)
 			end
 			task.wait(0.3)
@@ -2397,24 +2401,30 @@ runcode(function()
 					return true
 				end
 
-				RunLoops:BindToRenderStep("AutoClicker", 1, function() 
-					if entity.isAlive and autoclickermousedown and autoclickertick <= tick() and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= 1 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-						if getEquipped()["Type"] == "sword" and bedwars["KatanaController"].chargingMaid == nil then
-							autoclickertick = tick() + math.max((1 / autoclickercps["GetRandomValue"]()), GuiLibrary["ObjectsThatCanBeSaved"]["NoClickDelayOptionsButton"]["Api"]["Enabled"] and 0 or 0.12)
-							bedwars["SwordController"]:swingSwordAtMouse()
-						end
-						if getEquipped()["Type"] == "block" and autoclickerblocks["Enabled"] and bedwars["BlockPlacementController"].blockPlacer and firstclick <= tick() then 
-							autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
-							local mouseinfo = bedwars["BlockPlacementController"].blockPlacer.clientManager:getBlockSelector():getMouseInfo(0)
-							if mouseinfo then
+				task.spawn(function()
+					repeat
+						task.wait()
+						if entity.isAlive and autoclickermousedown and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= 1 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+							local equipped = getEquipped()
+							if equipped["Type"] == "sword" and bedwars["KatanaController"].chargingMaid == nil then
 								task.spawn(function()
-									if bedwars["BlockPlacementController"].blockPlacer then
-										bedwars["BlockPlacementController"].blockPlacer:placeBlock(mouseinfo.placementPosition)
-									end
+									bedwars["SwordController"]:swingSwordAtMouse()
 								end)
+								task.wait(math.max((1 / autoclickercps["GetRandomValue"]()), GuiLibrary["ObjectsThatCanBeSaved"]["NoClickDelayOptionsButton"]["Api"]["Enabled"] and 0 or 0.12))
+							end
+							if equipped["Type"] == "block" and autoclickerblocks["Enabled"] and bedwars["BlockPlacementController"].blockPlacer and firstclick <= tick() then 
+								local mouseinfo = bedwars["BlockPlacementController"].blockPlacer.clientManager:getBlockSelector():getMouseInfo(0)
+								if mouseinfo then
+									task.spawn(function()
+										if bedwars["BlockPlacementController"].blockPlacer then
+											bedwars["BlockPlacementController"].blockPlacer:placeBlock(mouseinfo.placementPosition)
+										end
+									end)
+								end
+								task.wait(math.max((1 / autoclickercps["GetRandomValue"]()), 0.12))
 							end
 						end
-					end
+					until (not autoclicker["Enabled"])
 				end)
 			else
 				if autoclickerconnection1 then
@@ -2423,7 +2433,6 @@ runcode(function()
 				if autoclickerconnection2 then
 					autoclickerconnection2:Disconnect()
 				end
-				RunLoops:UnbindFromRenderStep("AutoClicker")
 			end
 		end,
 		["HoverText"] = "Hold attack button to automatically click"
@@ -6847,6 +6856,7 @@ runcode(function()
 	local flyacprogressbar = {["Enabled"] = false}
 	local flydamageanim = {["Enabled"] = false}
 	local flyspeedboost = {["Enabled"] = false}
+	local flyhighjump = {["Enabled"] = false}
 	local flyacprogressbarframe
 	local olddeflate
 	local flyrequests = 0
@@ -6934,12 +6944,13 @@ runcode(function()
 					flyacprogressbarframe.Frame:TweenSize(UDim2.new(1, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0, true)
 				end
 				local firsttoggled = true
+				local funny = true
 				RunLoops:BindToHeartbeat("Fly", 1, function(delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
 						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						local realflyspeed = flyspeed["Value"]
-						mass = mass + (allowed > 0 and 10 or 0) * (flytog and -1 or 1)
+						mass = mass + (allowed > 0 and 10 or 0.03) * (flytog and -1 or 1)
 						if flytogtick <= tick() then
 							flytog = not flytog
 							flytogtick = tick() + (allowed > 0 and 0.2 or 0.2)
@@ -6957,11 +6968,12 @@ runcode(function()
 							end
 							if lastonground ~= onground then 
 								if (not onground) then 
-									groundtime = tick() + 2.5
+									groundtime = tick() + (2.5 + (globalgroundtouchedtime - tick()))
 									if flyacprogressbarframe then 
 										flyacprogressbarframe.Frame:TweenSize(UDim2.new(0, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, groundtime - tick(), true)
 									end
 								else
+									funny = true
 									if flyacprogressbarframe then 
 										flyacprogressbarframe.Frame:TweenSize(UDim2.new(1, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0, true)
 									end
@@ -6972,8 +6984,18 @@ runcode(function()
 									fly["ToggleButton"](false)
 								end
 							end
+							if flyhighjump["Enabled"] then
+								if (not onground) and (math.floor((groundtime - tick()) * 10) / 10) == 1.1 then 
+									local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + Vector3.new(0, -9, 0), entity.character.Humanoid.MoveDirection * ((realflyspeed / 10) * 8))
+									if not ray then ray = workspace:Raycast(entity.character.HumanoidRootPart.Position + Vector3.new(0, -6, 0), entity.character.Humanoid.MoveDirection * ((realflyspeed / 10) * 8)) end
+									if funny and not ray then
+										funny = false
+										entity.character.HumanoidRootPart.Velocity = Vector3.new(0, 520, 0)
+									end
+								end
+							end
 							if flyacprogressbarframe then 
-								flyacprogressbarframe.TextLabel.Text = math.max(onground and 2.5 or math.floor((groundtime - tick()) * 10) / 10, 0).."s"
+								flyacprogressbarframe.TextLabel.Text = math.max(onground and 2.5 or math.floor((groundtime - tick()) * 10) / 10).."s"
 							end
 							lastonground = onground
 							allowed = 1
@@ -6989,7 +7011,11 @@ runcode(function()
 						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, 20 * getSpeedMultiplier()))
 						local flypos2 = (entity.character.Humanoid.MoveDirection * math.max((realflyspeed) - 20, 0)) * delta
 						entity.character.HumanoidRootPart.Transparency = 1
-						entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						if funny then 
+							entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						else
+							entity.character.HumanoidRootPart.Velocity = Vector3.new(flypos.X, entity.character.HumanoidRootPart.Velocity.Y, flypos.Z)
+						end
 						if flymode["Value"] == "CFrame" then
 							entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos2
 						end
@@ -7045,6 +7071,10 @@ runcode(function()
 		["Max"] = 100,
 		["Function"] = function(val) end, 
 		["Default"] = 44
+	})
+	flyhighjump = fly.CreateToggle({
+		["Name"] = "HighJump Boost",
+		["Function"] = function() end
 	})
 	flyupanddown = fly.CreateToggle({
 		["Name"] = "Y Level",
@@ -7262,6 +7292,9 @@ runcode(function()
 				scaffoldtext.Visible = ScaffoldBlockCount["Enabled"]
 				oldspeed = bedwars["BlockCPSConstants"].BLOCK_PLACE_CPS
 				bedwars["BlockCPSConstants"].BLOCK_PLACE_CPS = 9999
+				if entity.isAlive then 
+					scaffoldstopmotionpos = entity.character.HumanoidRootPart.CFrame.p
+				end
 				task.spawn(function()
 					repeat
 						task.wait()
@@ -9771,13 +9804,10 @@ runcode(function()
 	local tppos
 	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p6)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
-			if (p7.knockbackMultiplier == nil or p7.knockbackMultiplier.disabled == nil) and p7.entityInstance == lplr.Character then 
+			if (p7.knockbackMultiplier == nil or p7.knockbackMultiplier.disabled == nil) and p7.damageType ~= 2 and p7.entityInstance == lplr.Character then 
 				if entity.isAlive and tppos then 
-					entity.character.HumanoidRootPart.CFrame = CFrame.new(tppos)
-					tppos = nil
 					local bodyvelo = Instance.new("BodyVelocity")
 					bodyvelo.MaxForce = Vector3.new(9e9, 0, 9e9)
-					bodyvelo.Velocity = Vector3.zero
 					bodyvelo.Parent = entity.character.HumanoidRootPart
 					task.wait(1)
 					bodyvelo:Destroy()
