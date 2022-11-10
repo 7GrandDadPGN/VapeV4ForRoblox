@@ -9801,40 +9801,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local tppos
-	bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p6)
-		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
-			if (p7.knockbackMultiplier == nil or p7.knockbackMultiplier.disabled == nil) and p7.damageType ~= 2 and p7.entityInstance == lplr.Character then 
-				if entity.isAlive and tppos then 
-					local bodyvelo = Instance.new("BodyVelocity")
-					bodyvelo.MaxForce = Vector3.new(9e9, 0, 9e9)
-					bodyvelo.Parent = entity.character.HumanoidRootPart
-					task.wait(1)
-					bodyvelo:Destroy()
-				end
-			end
-		end)
-	end)
-	local damagetpmod = {["Enabled"] = false}
-	damagetpmod = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "DamageTP",
-		["Function"] = function(callback)
-			if callback then
-				local mousepos = lplr:GetMouse().UnitRay
-				local rayparams = RaycastParams.new()
-				rayparams.FilterDescendantsInstances = {workspace.Map, workspace:FindFirstChild("SpectatorPlatform")}
-				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
-				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
-				if ray then tppos = ray.Position 
-					local warning = createwarning("DamageTP", "Set TP Position\nTake damage to teleport.", 3)
-					pcall(function()
-						warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
-					end)
-				end
-				damagetpmod["ToggleButton"](false)
-			end
-		end
-	})
 	local tppos2
 	local deathtpmod = {["Enabled"] = false}
 	connectionstodisconnect[#connectionstodisconnect + 1] = lplr.CharacterAdded:Connect(function(char)
