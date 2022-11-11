@@ -2404,7 +2404,7 @@ runcode(function()
 				task.spawn(function()
 					repeat
 						task.wait()
-						if entity.isAlive and autoclickermousedown and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= 1 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+						if entity.isAlive and autoclickermousedown and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= 2 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 							local equipped = getEquipped()
 							if equipped["Type"] == "sword" and bedwars["KatanaController"].chargingMaid == nil then
 								task.spawn(function()
