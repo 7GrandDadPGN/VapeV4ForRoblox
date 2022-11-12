@@ -5052,7 +5052,7 @@ runcode(function()
 		if killauramouse["Enabled"] and (not uis:IsMouseButtonPressed(0)) then
 			return nil
 		end
-		if killauragui["Enabled"] and (not (#bedwars["AppController"]:getOpenApps() <= 1 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false)) then
+		if killauragui["Enabled"] and (not (#bedwars["AppController"]:getOpenApps() <= 2 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false)) then
 			return nil
 		end
 		local equipped = getEquipped()
