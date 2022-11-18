@@ -2410,7 +2410,7 @@ runcode(function()
 								task.spawn(function()
 									bedwars["SwordController"]:swingSwordAtMouse()
 								end)
-								task.wait(math.max((1 / autoclickercps["GetRandomValue"]()), GuiLibrary["ObjectsThatCanBeSaved"]["NoClickDelayOptionsButton"]["Api"]["Enabled"] and 0 or 0.12))
+								task.wait(math.max((1 / autoclickercps["GetRandomValue"]()), GuiLibrary["ObjectsThatCanBeSaved"]["NoClickDelayOptionsButton"]["Api"]["Enabled"] and 0 or 0.18))
 							end
 							if equipped["Type"] == "block" and autoclickerblocks["Enabled"] and bedwars["BlockPlacementController"].blockPlacer and firstclick <= tick() then 
 								local mouseinfo = bedwars["BlockPlacementController"].blockPlacer.clientManager:getBlockSelector():getMouseInfo(0)
@@ -5108,7 +5108,6 @@ runcode(function()
 			return nil
 		end
 		local selfpos = selfrootpos + (killaurarange["Value"] > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
-		local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
 		bedwars["SwordController"].lastAttack = workspace:GetServerTimeNow() - 0.11
 		killaurarealremote:FireServer({
 			["weapon"] = sword["tool"],
@@ -5272,7 +5271,7 @@ runcode(function()
 				end)
                 task.spawn(function()
 					repeat
-						task.wait(0.03)
+						task.wait()
 						if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) and Killaura["Enabled"] then
 							targettable = {}
 							targetsize = 0
@@ -6724,7 +6723,7 @@ runcode(function()
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
 							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
 							if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
-							if networkownerfunc(entity.character.HumanoidRootPart) then
+							if networkownerfunc(entity.character.HumanoidRootPart) and entity.character.Humanoid:GetState() ~= Enum.HumanoidStateType.Climbing then
 								if slowdowntick <= tick() then
 									entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
 								end
@@ -8407,6 +8406,7 @@ runcode(function()
 	local tiered = {}
 	local nexttier = {}
 	for i,v in pairs(bedwars["ShopItems"]) do
+		if type(v) == "table" then 
 		if v["tiered"] then
 			tiered[v.itemType] = v["tiered"]
 		end
@@ -8414,22 +8414,27 @@ runcode(function()
 			nexttier[v.itemType] = v["nextTier"]
 		end
 	end
+	end
 	local TierBypass = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "ShopTierBypass",
 		["Function"] = function(callback) 
 			if callback then
 				for i,v in pairs(bedwars["ShopItems"]) do
+					if type(v) == "table" then 
 					v["tiered"] = nil
 					v["nextTier"] = nil
+					end
 				end
 			else
 				for i,v in pairs(bedwars["ShopItems"]) do
+					if type(v) == "table" then 
 					if tiered[v.itemType] then
 						v["tiered"] = tiered[v.itemType]
 					end
 					if nexttier[v.itemType] then
 						v["nextTier"] = nexttier[v.itemType]
 					end
+				end
 				end
 			end
 		end,
@@ -10188,10 +10193,10 @@ runcode(function()
 				damagetab.blowUpCompleteDuration = 0
 				damagetab.anchoredDuration = 0
 				debug.setconstant(bedwars["ViewmodelController"].show, 37, "")
-				debug.setconstant(bedwars["DamageIndicator"], 80, Enum.Font.LuckiestGuy)
-				debug.setconstant(bedwars["DamageIndicator"], 99, "Enabled")
-				debug.setconstant(bedwars["DamageIndicator"], 115, 0.3)
-				debug.setconstant(bedwars["DamageIndicator"], 125, 0.5)
+				debug.setconstant(bedwars["DamageIndicator"], 83, Enum.Font.LuckiestGuy)
+				debug.setconstant(bedwars["DamageIndicator"], 102, "Enabled")
+				debug.setconstant(bedwars["DamageIndicator"], 118, 0.3)
+				debug.setconstant(bedwars["DamageIndicator"], 128, 0.5)
 				debug.setupvalue(bedwars["DamageIndicator"], 10, {
 					Create = function(self, obj, ...)
 						task.spawn(function()
@@ -10276,10 +10281,10 @@ runcode(function()
 				damagetab.blowUpSize = 32
 				damagetab.blowUpCompleteDuration = 0
 				damagetab.anchoredDuration = 0
-				debug.setconstant(bedwars["DamageIndicator"], 80, Enum.Font.LuckiestGuy)
-				debug.setconstant(bedwars["DamageIndicator"], 99, "Enabled")
-				debug.setconstant(bedwars["DamageIndicator"], 115, 0.3)
-				debug.setconstant(bedwars["DamageIndicator"], 125, 0.5)
+				debug.setconstant(bedwars["DamageIndicator"], 83, Enum.Font.LuckiestGuy)
+				debug.setconstant(bedwars["DamageIndicator"], 102, "Enabled")
+				debug.setconstant(bedwars["DamageIndicator"], 118, 0.3)
+				debug.setconstant(bedwars["DamageIndicator"], 128, 0.5)
 				debug.setupvalue(bedwars["DamageIndicator"], 10, {
 					Create = function(self, obj, ...)
 						task.spawn(function()
@@ -10360,10 +10365,10 @@ runcode(function()
 				damagetab.blowUpSize = 32
 				damagetab.blowUpCompleteDuration = 0
 				damagetab.anchoredDuration = 0
-				debug.setconstant(bedwars["DamageIndicator"], 80, Enum.Font.LuckiestGuy)
-				debug.setconstant(bedwars["DamageIndicator"], 99, "Enabled")
-				debug.setconstant(bedwars["DamageIndicator"], 115, 0.3)
-				debug.setconstant(bedwars["DamageIndicator"], 125, 0.5)
+				debug.setconstant(bedwars["DamageIndicator"], 83, Enum.Font.LuckiestGuy)
+				debug.setconstant(bedwars["DamageIndicator"], 102, "Enabled")
+				debug.setconstant(bedwars["DamageIndicator"], 118, 0.3)
+				debug.setconstant(bedwars["DamageIndicator"], 128, 0.5)
 				debug.setupvalue(bedwars["DamageIndicator"], 10, {
 					Create = function(self, obj, ...)
 						task.spawn(function()
@@ -10537,7 +10542,10 @@ runcode(function()
 
 	local function newchar(char)
 		task.spawn(function()
-			char:WaitForChild("Head", 9e9):WaitForChild("Nametag", 9e9):Destroy()
+			local nametag = char:WaitForChild("Head", 9e9):WaitForChild("Nametag", 9e9)
+			if nametag then 
+				nametag:Destroy()
+			end
 		end)
 	end
 
