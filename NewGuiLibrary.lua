@@ -6402,7 +6402,10 @@ if shared.VapeExecuted then
 
 	local function bettergetfocus()
 		if KRNL_LOADED then 
-			return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+            if game:GetService("TextChatService").ChatVersion == "TextChatService" then
+                 return (game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused())
+            else
+                return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
 		else
 			return game:GetService("UserInputService"):GetFocusedTextBox()
 		end
