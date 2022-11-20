@@ -989,6 +989,7 @@ runcode(function()
             ["prepareHashing"] = require(repstorage.TS["remote-hash"]["remote-hash-util"]).RemoteHashUtil.prepareHashVector3,
 			["ProjectileRemote"] = getremote(debug.getconstants(debug.getupvalues(getmetatable(KnitClient.Controllers.ProjectileController)["launchProjectileWithValues"])[2])),
 			["ProjectileHitRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.ProjectileController.createLocalProjectile, 1))),
+			["ReportRemote"] = getremote(debug.getconstants(require(lplr.PlayerScripts.TS.controllers.global.report["report-controller"]).default.reportPlayer)),
             ["RavenTable"] = KnitClient.Controllers.RavenController,
 			["RelicController"] = KnitClient.Controllers.RelicVotingController,
 			["RespawnController"] = KnitClient.Controllers.BedwarsRespawnController,
@@ -2394,8 +2395,10 @@ runcode(function()
 						end
 					end
 					for i,v in pairs(game:GetService("CoreGui"):GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
-						if v.Active then
-							return false
+						if v.Parent:IsA("ScreenGui") and v.Parent.Enabled then
+							if v.Active then
+								return false
+							end
 						end
 					end
 					return true
@@ -6341,8 +6344,31 @@ runcode(function()
 	end)
 end)
 
+local AutoReportV2 = {["Enabled"] = false}
 runcode(function()
-	local AutoLeave = {["Enabled"] = false}
+	AutoReportV2 = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoReportV2",
+		["Function"] = function(callback)
+			if callback then 
+				task.spawn(function()
+					repeat
+						task.wait()
+						for i,v in pairs(players:GetPlayers()) do 
+							if v ~= lplr then 
+								task.wait(1)
+								bedwars["ClientHandler"]:Get(bedwars["ReportRemote"]):SendToServer(v.UserId)
+							end
+						end
+					until (not AutoReportV2.Enabled)
+				end)
+			end	
+		end,
+		["HoverText"] = "weta mald"
+	})
+end)
+
+local AutoLeave = {["Enabled"] = false}
+runcode(function()
 	local AutoLeaveDelay = {["Value"] = 1}
 	local AutoPlayAgain = {["Enabled"] = false}
 	local AutoLeaveStaff = {["Enabled"] = true}
@@ -8914,6 +8940,12 @@ runcode(function()
 							if AutoReport["Enabled"] == false then
 								AutoReport["ToggleButton"](false)
 							end
+							if AutoReportV2["Enabled"] == false then
+								AutoReportV2["ToggleButton"](false)
+							end
+							if AutoLeave["Enabled"] == false then
+								AutoLeave["ToggleButton"](false)
+							end
 						end
 					end)
 				--	GuiLibrary["ObjectsThatCanBeSaved"]["SpeedSpeedSlider"]["Api"]["SetValue"](74)
@@ -10542,9 +10574,11 @@ runcode(function()
 
 	local function newchar(char)
 		task.spawn(function()
-			local nametag = char:WaitForChild("Head", 9e9):WaitForChild("Nametag", 9e9)
-			if nametag then 
-				nametag:Destroy()
+			if char then
+				local nametag = char:WaitForChild("Head", 9e9):WaitForChild("Nametag", 9e9)
+				if nametag then 
+					nametag:Destroy()
+				end
 			end
 		end)
 	end
