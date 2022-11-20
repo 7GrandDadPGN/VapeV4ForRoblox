@@ -6344,6 +6344,7 @@ runcode(function()
 	end)
 end)
 
+local alreadyreportedlist = {}
 local AutoReportV2 = {["Enabled"] = false}
 runcode(function()
 	AutoReportV2 = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
@@ -6354,8 +6355,9 @@ runcode(function()
 					repeat
 						task.wait()
 						for i,v in pairs(players:GetPlayers()) do 
-							if v ~= lplr then 
+							if v ~= lplr and alreadyreportedlist[v] == nil then 
 								task.wait(1)
+								alreadyreportedlist[v] = true
 								bedwars["ClientHandler"]:Get(bedwars["ReportRemote"]):SendToServer(v.UserId)
 							end
 						end
