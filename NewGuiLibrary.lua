@@ -2,7 +2,7 @@ if shared.VapeExecuted then
 	local VERSION = "4.09"..(shared.VapePrivate and " PRIVATE" or "")
 	local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
 	local rainbowvalue = 0
-	local cam = game:GetService("Workspace").CurrentCamera
+	local cam = workspace.CurrentCamera
 	local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
 	local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function(tab)
 		if tab.Method == "GET" then
@@ -20,6 +20,7 @@ if shared.VapeExecuted then
 		end
 	end 
 	local betterisfile = function(file)
+	        -- if not readfile then return end -- xylex, make this not description if you need that 
 		local suc, res = pcall(function() return readfile(file) end)
 		return suc and res ~= nil
 	end
@@ -55,8 +56,7 @@ if shared.VapeExecuted then
 		end
 	end
 
-	local translations = {}--loadstring(GetURL("translations/"..api["Language"]..".vapetranslation") or GetURL("translations/en-us.vapetranslation"))()
-	--local translatedlogo, res = pcall(function() return GetURL("translations/"..api["Language"].."/VapeLogo1.png") end)
+	local translations = {}
 	local translatedlogo = false
 
 	local function getprofile()
@@ -6401,11 +6401,15 @@ if shared.VapeExecuted then
 	local uninjected = false
 
 	local function bettergetfocus()
-		if KRNL_LOADED then 
-			return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
-		else
-			return game:GetService("UserInputService"):GetFocusedTextBox()
+		if KRNL_LOADED then
+		-- krnl is so garbage, you literally cannot detect focused textbox with UIS
+            if game:GetService("TextChatService").ChatVersion == "TextChatService" then
+                 return (game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused())
+            elseif game:GetService("TextChatService").ChatVersion == "LegacyChatService" then
+                return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
 		end
+	end
+	   return game:GetService("UserInputService"):GetFocusedTextBox()
 	end
 
 	api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:Connect(function(input1)
