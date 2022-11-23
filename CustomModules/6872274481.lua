@@ -6355,7 +6355,7 @@ runcode(function()
 					repeat
 						task.wait()
 						for i,v in pairs(players:GetPlayers()) do 
-							if v ~= lplr and alreadyreportedlist[v] == nil then 
+							if v ~= lplr and alreadyreportedlist[v] == nil and v:GetAttribute("PlayerConnected") then 
 								task.wait(1)
 								alreadyreportedlist[v] = true
 								bedwars["ClientHandler"]:Get(bedwars["ReportRemote"]):SendToServer(v.UserId)
