@@ -5802,7 +5802,7 @@ task.spawn(function()
 	bedwars["ClientHandler"]:WaitFor("MatchEndEvent"):andThen(function(p6)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(winstuff)
 			local myTeam = bedwars["ClientStoreHandler"]:getState().Game.myTeam
-			if myTeam and myTeam.id == winstuff.winningTeamId and victorysaid == false then
+			if myTeam and (myTeam.id == winstuff.winningTeamId or tostring(lplr.Team) == "Neutral") and victorysaid == false then
 				victorysaid = true
 				if AutoToxic["Enabled"] then
 					if AutoToxicGG["Enabled"] then
@@ -9750,7 +9750,7 @@ runcode(function()
 						task.wait(0.1)
 						if teleported[v.Player] or teleported2[v.Player] or matchstatetick > tick() or math.abs(v.Player:GetAttribute("SpawnTime") - v.Player:GetAttribute("LastTeleported")) < 3 then break end
 					end
-					if v.Player ~= nil and teleported[v.Player] == nil and teleported2[v.Player] == nil and math.abs(v.Player:GetAttribute("SpawnTime") - v.Player:GetAttribute("LastTeleported")) > 3 and matchstatetick <= tick() then 
+					if v.Player ~= nil and tostring(v.Player.Team) ~= "Neutral" and teleported[v.Player] == nil and teleported2[v.Player] == nil and math.abs(v.Player:GetAttribute("SpawnTime") - v.Player:GetAttribute("LastTeleported")) > 3 and matchstatetick <= tick() then 
 						otherlagbacks = otherlagbacks + 1
 						lagbackevent:Fire(v.Player)
 					end
