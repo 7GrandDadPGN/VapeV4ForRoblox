@@ -5802,7 +5802,7 @@ task.spawn(function()
 	bedwars["ClientHandler"]:WaitFor("MatchEndEvent"):andThen(function(p6)
 		connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(winstuff)
 			local myTeam = bedwars["ClientStoreHandler"]:getState().Game.myTeam
-			if myTeam and (myTeam.id == winstuff.winningTeamId or lplr.Neutral) and victorysaid == false then
+			if (myTeam and myTeam.id == winstuff.winningTeamId or lplr.Neutral) and victorysaid == false then
 				victorysaid = true
 				if AutoToxic["Enabled"] then
 					if AutoToxicGG["Enabled"] then
