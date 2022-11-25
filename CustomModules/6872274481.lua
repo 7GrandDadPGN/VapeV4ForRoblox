@@ -1493,7 +1493,7 @@ runcode(function()
 			end
 			if lplr ~= plr and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then
 				task.spawn(function()
-					repeat task.wait() until plr:GetAttribute("PlayerConnected")
+					repeat task.wait() until plr:GetAttribute("LobbyConnected")
 					task.wait(4)
 					repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..clients.ChatStrings2.vape, "All")
 					task.spawn(function()
@@ -6355,7 +6355,7 @@ runcode(function()
 					repeat
 						task.wait()
 						for i,v in pairs(players:GetPlayers()) do 
-							if v ~= lplr and alreadyreportedlist[v] == nil and v:GetAttribute("PlayerConnected") then 
+							if v ~= lplr and alreadyreportedlist[v] == nil and v:GetAttribute("PlayerConnected") and WhitelistFunctions:CheckPlayerType(v) == "DEFAULT" then 
 								task.wait(1)
 								alreadyreportedlist[v] = true
 								bedwars["ClientHandler"]:Get(bedwars["ReportRemote"]):SendToServer(v.UserId)
