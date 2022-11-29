@@ -20,7 +20,6 @@ if shared.VapeExecuted then
 		end
 	end 
 	local betterisfile = function(file)
-	        -- if not readfile then return end -- xylex, make this not description if you need that 
 		local suc, res = pcall(function() return readfile(file) end)
 		return suc and res ~= nil
 	end
@@ -56,7 +55,8 @@ if shared.VapeExecuted then
 		end
 	end
 
-	local translations = {}
+	local translations = {}--loadstring(GetURL("translations/"..api["Language"]..".vapetranslation") or GetURL("translations/en-us.vapetranslation"))()
+	--local translatedlogo, res = pcall(function() return GetURL("translations/"..api["Language"].."/VapeLogo1.png") end)
 	local translatedlogo = false
 
 	local function getprofile()
@@ -101,10 +101,6 @@ if shared.VapeExecuted then
 		return x, y, x/xm, y/ym, x2/xm
 	end
 
-	if not game:IsLoaded() then
-		game.Loaded:Wait()
-	end
-
 	local gui = Instance.new("ScreenGui")
 	gui.Name = randomString()
 	gui.DisplayOrder = 999
@@ -123,7 +119,7 @@ if shared.VapeExecuted then
 	local cachedassets = {}
 	local function getcustomassetfunc(path)
 		if not betterisfile(path) then
-			spawn(function()
+			task.spawn(function()
 				local textlabel = Instance.new("TextLabel")
 				textlabel.Size = UDim2.new(1, 0, 0, 36)
 				textlabel.Text = "Downloading "..path
@@ -134,7 +130,7 @@ if shared.VapeExecuted then
 				textlabel.TextColor3 = Color3.new(1, 1, 1)
 				textlabel.Position = UDim2.new(0, 0, 0, -36)
 				textlabel.Parent = api["MainGui"]
-				repeat wait() until betterisfile(path)
+				repeat task.wait() until betterisfile(path)
 				textlabel:Remove()
 			end)
 			local req = requestfunc({
@@ -296,7 +292,7 @@ if shared.VapeExecuted then
 	end)
 
 	local function dragGUI(gui)
-		spawn(function()
+		task.spawn(function()
 			local dragging
 			local dragInput
 			local dragStart = Vector3.new(0,0,0)
@@ -717,9 +713,9 @@ if shared.VapeExecuted then
 		discordbutton.Position = UDim2.new(1, -52, 0, 13)
 		discordbutton.Parent = windowtitle
 		discordbutton.MouseButton1Click:Connect(function()
-			spawn(function()
+			task.spawn(function()
 				for i = 1, 14 do
-					spawn(function()
+					task.spawn(function()
 						local reqbody = {
 							["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
 							["args"] = {
@@ -741,7 +737,7 @@ if shared.VapeExecuted then
 					end)
 				end
 			end)
-			spawn(function()
+			task.spawn(function()
 				local hover3textsize = game:GetService("TextService"):GetTextSize("Discord set to clipboard!", 16, Enum.Font.SourceSans, Vector2.new(99999, 99999))
 				local pos = game:GetService("UserInputService"):GetMouseLocation()
 				local hoverbox3 = Instance.new("TextLabel")
@@ -760,7 +756,7 @@ if shared.VapeExecuted then
 				hoverround3.CornerRadius = UDim.new(0, 4)
 				hoverround3.Parent = hoverbox3
 				setclipboard("https://discord.com/invite/wjRYjVWkya")
-				wait(1)
+				task.wait(1)
 				hoverbox3:Remove()
 			end)
 		end)
@@ -1611,9 +1607,9 @@ if shared.VapeExecuted then
 			bindbkg.MouseButton1Click:Connect(function()
 				if api["KeybindCaptured"] == false then
 					api["KeybindCaptured"] = true
-					spawn(function()
+					task.spawn(function()
 						bindtext2.Visible = true
-						repeat wait() until api["PressedKeybindKey"] ~= ""
+						repeat task.wait() until api["PressedKeybindKey"] ~= ""
 						local key = api["PressedKeybindKey"]
 						local textsize = game:GetService("TextService"):GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
 						newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
@@ -1815,7 +1811,7 @@ if shared.VapeExecuted then
 					local heh
 					heh = coroutine.resume(coroutine.create(function()
 						repeat
-							wait()
+							task.wait()
 							if sliderapi["RainbowValue"] then
 								sliderapi["SetValue"](rainbowvalue)
 							else
@@ -1851,9 +1847,9 @@ if shared.VapeExecuted then
 				end)
 			end)
 			slider3.MouseButton1Down:Connect(function()
-				spawn(function()
+				task.spawn(function()
 					click = true
-					wait(0.3)
+					task.wait(0.3)
 					click = false
 				end)
 				if click then
@@ -3081,7 +3077,7 @@ if shared.VapeExecuted then
 					local heh
 					heh = coroutine.resume(coroutine.create(function()
 						repeat
-							wait()
+							task.wait()
 							if sliderapi["RainbowValue"] then
 								sliderapi["SetValue"](rainbowvalue)
 							else
@@ -3092,9 +3088,9 @@ if shared.VapeExecuted then
 				end
 			end
 			slider1.MouseButton1Down:Connect(function()
-				spawn(function()
+				task.spawn(function()
 					click = true
-					wait(0.3)
+					task.wait(0.3)
 					click = false
 				end)
 				if click then
@@ -3121,9 +3117,9 @@ if shared.VapeExecuted then
 				end)
 			end)
 			slider3.MouseButton1Down:Connect(function()
-				spawn(function()
+				task.spawn(function()
 					click = true
-					wait(0.3)
+					task.wait(0.3)
 					click = false
 				end)
 				if click then
@@ -4915,7 +4911,7 @@ if shared.VapeExecuted then
 						local heh
 						heh = coroutine.resume(coroutine.create(function()
 							repeat
-								wait()
+								task.wait()
 								if sliderapi["RainbowValue"] then
 									sliderapi["SetValue"](rainbowvalue)
 								else
@@ -4926,9 +4922,9 @@ if shared.VapeExecuted then
 					end
 				end
 				local function slidercode(obj, valtochange)
-					spawn(function()
+					task.spawn(function()
 						click = true
-						wait(0.3)
+						task.wait(0.3)
 						click = false
 					end)
 					if click then
@@ -5445,13 +5441,13 @@ if shared.VapeExecuted then
 			bindbkg.MouseButton1Click:Connect(function()
 				if api["KeybindCaptured"] == false then
 					api["KeybindCaptured"] = true
-					spawn(function()
+					task.spawn(function()
 						bindimg.Visible = false
 						bindbkg2.Visible = true
 						bindtext2.Visible = true
 						bindtext3.Text = "   PRESS A KEY TO BIND"
 						bindtext2.Size = UDim2.new(0, 154, 0, 40)
-						repeat wait() bindtext2.Visible = true until api["PressedKeybindKey"] ~= ""
+						repeat task.wait() bindtext2.Visible = true until api["PressedKeybindKey"] ~= ""
 						if api["KeybindCaptured"] then
 							buttonapi["SetKeybind"]((api["PressedKeybindKey"] == buttonapi["Keybind"] and "" or api["PressedKeybindKey"]))
 						end
@@ -5460,7 +5456,7 @@ if shared.VapeExecuted then
 						bindbkg2.Visible = false
 						bindtext3.Text = (buttonapi["Keybind"] == "" and "   BIND REMOVED" or "   BOUND TO "..buttonapi["Keybind"]:upper())
 						bindtext2.Size = UDim2.new(0, game:GetService("TextService"):GetTextSize(bindtext3.Text, bindtext3.TextSize, bindtext3.Font, Vector2.new(10000, 100000)).X + 20, 0, 40)
-						wait(1)
+						task.wait(1)
 						bindtext2.Visible = false
 					end)
 				end
@@ -5770,7 +5766,7 @@ if shared.VapeExecuted then
 					local heh
 					heh = coroutine.resume(coroutine.create(function()
 						repeat
-							wait()
+							task.wait()
 							if sliderapi["RainbowValue"] then
 								sliderapi["SetValue"](rainbowvalue)
 							else
@@ -5781,9 +5777,9 @@ if shared.VapeExecuted then
 				end
 			end
 			local function slidercode(obj, valtochange)
-				spawn(function()
+				task.spawn(function()
 					click = true
-					wait(0.3)
+					task.wait(0.3)
 					click = false
 				end)
 				if click then
@@ -6259,7 +6255,7 @@ if shared.VapeExecuted then
 	end
 
 	local function bettertween(obj, newpos, dir, style, tim, override)
-		spawn(function()
+		task.spawn(function()
 			local frame = Instance.new("Frame")
 			frame.Visible = false
 			frame.Position = obj.Position
@@ -6277,7 +6273,7 @@ if shared.VapeExecuted then
 	end
 
 	local function bettertween2(obj, newpos, dir, style, tim, override)
-		spawn(function()
+		task.spawn(function()
 			local frame = Instance.new("Frame")
 			frame.Visible = false
 			frame.Position = obj.Position
@@ -6300,10 +6296,16 @@ if shared.VapeExecuted then
 		end
 	end)
 
+	local function removeTags(str)
+        str = str:gsub("<br%s*/>", "\n")
+        return (str:gsub("<[^<>]->", ""))
+    end
+
 	api["CreateNotification"] = function(top, bottom, duration, customicon)
+		local size = math.max( game:GetService("TextService"):GetTextSize(removeTags(bottom), 13, Enum.Font.Gotham, Vector2.new(99999, 99999)).X + 60, 266)
 		local offset = #notificationwindow:GetChildren()
 		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(0, 266, 0, 75)
+		frame.Size = UDim2.new(0, size, 0, 75)
 		frame.Position = UDim2.new(1, 0, 1, -(150 + 80 * offset))
 		frame.BackgroundTransparency = 1
 		frame.BackgroundColor3 = Color3.new(0, 0,0)
@@ -6377,14 +6379,14 @@ if shared.VapeExecuted then
 		textlabel3.TextColor3 = Color3.new(0, 0, 0)
 		textlabel3.ZIndex = -1
 		textlabel3.Parent = textlabel2
-		spawn(function()
+		task.spawn(function()
 			pcall(function()
-				bettertween2(frame, UDim2.new(1, -262, 1, -(150 + 80 * offset)), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
-				wait(0.15)
+				bettertween2(frame, UDim2.new(1, -(size - 4), 1, -(150 + 80 * offset)), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
+				task.wait(0.15)
 				frame2:TweenSize(UDim2.new(0, 0, 0, 2), Enum.EasingDirection.In, Enum.EasingStyle.Linear, duration, true)
-				wait(duration)
+				task.wait(duration)
 				bettertween2(frame, UDim2.new(1, 0, 1, frame.Position.Y.Offset), Enum.EasingDirection.In, Enum.EasingStyle.Sine, 0.15, true)
-				wait(0.15)
+				task.wait(0.15)
 				frame:Remove()
 			end)
 		end)
@@ -6402,14 +6404,14 @@ if shared.VapeExecuted then
 
 	local function bettergetfocus()
 		if KRNL_LOADED then
-		-- krnl is so garbage, you literally cannot detect focused textbox with UIS
-            if game:GetService("TextChatService").ChatVersion == "TextChatService" then
-                 return (game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused())
-            elseif game:GetService("TextChatService").ChatVersion == "LegacyChatService" then
-                return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+			-- krnl is so garbage, you literally cannot detect focused textbox with UIS
+			if game:GetService("TextChatService").ChatVersion == "TextChatService" then
+				return (game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused())
+			elseif game:GetService("TextChatService").ChatVersion == "LegacyChatService" then
+				return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+			end
 		end
-	end
-	   return game:GetService("UserInputService"):GetFocusedTextBox()
+		return game:GetService("UserInputService"):GetFocusedTextBox()
 	end
 
 	api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:Connect(function(input1)

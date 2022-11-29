@@ -23,11 +23,15 @@ local function GetURL(scripturl)
 	end
 end
 local bettergetfocus = function()
-	if KRNL_LOADED then 
-		return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
-	else
-		return game:GetService("UserInputService"):GetFocusedTextBox()
+	if KRNL_LOADED then
+		-- krnl is so garbage, you literally cannot detect focused textbox with UIS
+		if game:GetService("TextChatService").ChatVersion == "TextChatService" then
+			return (game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused())
+		elseif game:GetService("TextChatService").ChatVersion == "LegacyChatService" then
+			return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+		end
 	end
+	return game:GetService("UserInputService"):GetFocusedTextBox()
 end
 local entity = shared.vapeentity
 local WhitelistFunctions = shared.vapewhitelist
@@ -260,10 +264,8 @@ runcode(function()
 			if chatsuc then
 				if chatres.crashed and (not chatres.said) then
 					pcall(function()
-						local notification1 = createwarning("Vape", "either ur poor or its a exploit moment", 10)
-						notification1:GetChildren()[5].TextSize = 15
-						local notification2 = createwarning("Vape", "getconnections crashed, chat hook not loaded.", 10)
-						notification2:GetChildren()[5].TextSize = 13
+						createwarning("Vape", "either ur poor or its a exploit moment", 10)
+						createwarning("Vape", "getconnections crashed, chat hook not loaded.", 10)
 					end)
 					local jsondata = game:GetService("HttpService"):JSONEncode({
 						crashed = true,
@@ -1206,7 +1208,7 @@ runcode(function()
 							end
 							if (tick() - lagbacktime) >= 10 and (not lagbacknotification) then
 								lagbacknotification = true
-								createwarning("AnticheatBypass", "You have been lagbacked for a \nawfully long time", 10)
+								createwarning("AnticheatBypass", "You have been lagbacked for a awfully long time", 10)
 							end
 							cloneroot.Velocity = Vector3.zero
 							oldroot.Velocity = Vector3.zero
