@@ -1,4 +1,4 @@
-repeat task.wait() until game:IsLoaded() == true
+if not game:IsLoaded() then game.Loaded:Wait() end
 local injected = true
 local oldrainbow = false
 local customdir = (shared.VapePrivate and "vapeprivate/" or "vape/")
