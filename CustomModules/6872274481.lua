@@ -2900,7 +2900,7 @@ runcode(function()
 							if (not antivoiding) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) and entity.character.Humanoid.Health > 0 then
 								antivoiding = true
 								local pos = getclosesttop(1000)
-								if pos and AntiVoidMode["Value"] == "Normal" then
+								if pos then
 									RunLoops:BindToHeartbeat("AntiVoid", 1, function(dt)
 										if entity.isAlive and entity.character.Humanoid.Health > 0 and networkownerfunc(entity.character.HumanoidRootPart) and (entity.character.HumanoidRootPart.Position - pos).Magnitude > 1 and AntiVoid["Enabled"] then 
 											local hori1 = Vector3.new(entity.character.HumanoidRootPart.Position.X, 0, entity.character.HumanoidRootPart.Position.Z)
