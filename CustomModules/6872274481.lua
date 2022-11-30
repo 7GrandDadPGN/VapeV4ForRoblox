@@ -6357,7 +6357,7 @@ runcode(function()
 								alreadyreportedlist[v] = true
 								bedwars["ClientHandler"]:Get(bedwars["ReportRemote"]):SendToServer(v.UserId)
 								if AutoReportV2Notify["Enabled"] then 
-									createwarning("AutoReportV2", "Reported "..plr.Name, 15)
+									createwarning("AutoReportV2", "Reported "..v.Name, 15)
 								end
 							end
 						end
