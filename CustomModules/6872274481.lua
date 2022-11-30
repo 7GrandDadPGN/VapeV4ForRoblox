@@ -2391,7 +2391,7 @@ runcode(function()
 				task.spawn(function()
 					repeat
 						task.wait()
-						if entity.isAlive and autoclickermousedown and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= 2 and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+						if entity.isAlive and autoclickermousedown and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= 2 and GuiLibrary["MainGui"].Parent ~= nil and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 							local equipped = getEquipped()
 							if equipped["Type"] == "sword" and bedwars["KatanaController"].chargingMaid == nil then
 								task.spawn(function()
@@ -5550,7 +5550,10 @@ runcode(function()
 
 	local function shoot(item, ammotypething)
 		local plr = GetNearestHumanoidToPosition(true, BowAuraRange["Value"], oldcloneroot and oldcloneroot.Position)
-		if plr and bedwars["SwordController"]:canSee({["instance"] = plr.Character, ["player"] = plr.Player, ["getInstance"] = function() return plr.Character end}) then 
+		if plr then 
+			local rayparams = RaycastParams.new()
+			rayparams.FilterDescendantsInstances = {lplr.Character, plr.Character}
+			if bedwars["QueryUtil"]:raycast(entity.character.HumanoidRootPart.Position, plr.RootPart.Position - entity.character.HumanoidRootPart.Position, rayparams) then return end
 			local plrtype, plrattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
 			if not plrattackable then return end
 			local tab = bedwars["ItemTable"][item.itemType].projectileSource
@@ -5561,12 +5564,14 @@ runcode(function()
 			local launchvelo = (projmetatab.launchVelocity or 100)
 			local gravity = (projmetatab.gravitationalAcceleration or 196.2)
 			local multigrav = gravity
-			local offsetshootpos = shootpos + Vector3.new(0, 2, 0)
+			local offsetshootpos = shootpos
 			local pos = plr.RootPart.Position
 			local velo = Vector3.new(plr.RootPart.Velocity.X, plr.RootPart.Velocity.Y * 0.02, plr.RootPart.Velocity.Z)
 			local calculated = LaunchDirection(offsetshootpos, FindLeadShot(pos, velo, launchvelo, offsetshootpos, Vector3.zero, multigrav), launchvelo, gravity, false)
 			if calculated then 
-				bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(item["tool"], ammotypething, ammo, offsetshootpos, offsetshootpos, calculated, game:GetService("HttpService"):GenerateGUID(), {drawDurationSeconds = 1}, workspace:GetServerTimeNow())
+				local guid = game:GetService("HttpService"):GenerateGUID()
+				bedwars["BowTable"]:createLocalProjectile(tab, ammotypething, ammo, offsetshootpos, guid, calculated, {drawDurationSeconds = 1})
+				bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(item["tool"], ammotypething, ammo, offsetshootpos, offsetshootpos, calculated, guid, {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
 				task.wait(bedwars["ItemTable"][item.itemType].projectileSource.fireDelaySec)
 			end
 		end
@@ -6402,49 +6407,55 @@ runcode(function()
 		end)
 	end)
 
+	local function getRole(plr)
+		local suc, res = pcall(function() return plr:GetRankInGroup(5774246) end)
+		if not suc then 
+			repeat
+				suc, res = pcall(function() return plr:GetRankInGroup(5774246) end)
+				task.wait()
+			until suc
+		end
+		return res
+	end
+
 	local allowedmodules = {"Killaura", "Sprint", "AutoClicker", "AutoReport", "AutoReportV2", "AutoRelic", "AimAssist", "AutoLeave"}
 	local function autoleaveplr(plr)
 		task.spawn(function()
-			pcall(function()
-				if plr:GetRankInGroup(5774246) >= 100 and (plr.UserId ~= 87365146 or shared.VapePrivate) then
-					if AutoLeaveStaff["Enabled"] then
-						if AutoLeaveStaff2["Enabled"] then 
-							createwarning("Vape", "Staff Detected : "..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
-							if GuiLibrary["ObjectsThatCanBeSaved"]["NoNameTagOptionsButton"]["Api"]["Enabled"] and entity.isAlive then
-								bedwars["ClientHandler"]:Get(bedwars["ResetRemote"]):SendToServer()
-							end
-							GuiLibrary["SaveSettings"] = function() end
-							for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do 
-								if v.Type == "OptionsButton" then
-									if table.find(allowedmodules, i:gsub("OptionsButton", "")) == nil and tostring(v.Object.Parent.Parent):find("Render") == nil then
-										if v["Api"]["Enabled"] then
-											v["Api"]["ToggleButton"](false)
-										end
-										v["Api"]["SetKeybind"]("")
-										v["Object"].TextButton.Visible = false
-									end
-								end
-							end
-						else
-							coroutine.resume(coroutine.create(function()
-								if not shared.VapeFullyLoaded then
-									repeat task.wait() until shared.VapeFullyLoaded
-									task.wait(1)
-								end
-								GuiLibrary.SelfDestruct()
-							end))
-							game:GetService("StarterGui"):SetCore("SendNotification", {
-								Title = "Vape",
-								Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
-								Duration = 60,
-							})
+			if not shared.VapeFullyLoaded then
+				repeat task.wait() until shared.VapeFullyLoaded
+			end
+			if getRole(plr) >= 100 and (plr.UserId ~= 87365146 or shared.VapePrivate) then
+				if AutoLeaveStaff["Enabled"] then
+					if AutoLeaveStaff2["Enabled"] then 
+						createwarning("Vape", "Staff Detected : "..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name).." : Play legit like nothing happened to have the highest chance of not getting banned.", 60)
+						if GuiLibrary["ObjectsThatCanBeSaved"]["NoNameTagOptionsButton"]["Api"]["Enabled"] and entity.isAlive then
+							entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p.X, -400, entity.character.HumanoidRootPart.CFrame.p.Z)
 						end
-						return
+						GuiLibrary["SaveSettings"] = function() end
+						for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do 
+							if v.Type == "OptionsButton" then
+								if table.find(allowedmodules, i:gsub("OptionsButton", "")) == nil and tostring(v.Object.Parent.Parent):find("Render") == nil then
+									if v["Api"]["Enabled"] then
+										v["Api"]["ToggleButton"](false)
+									end
+									v["Api"]["SetKeybind"]("")
+									v["Object"].TextButton.Visible = false
+								end
+							end
+						end
 					else
-						createwarning("Vape", "Staff Detected : "..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
+						GuiLibrary.SelfDestruct()
+						game:GetService("StarterGui"):SetCore("SendNotification", {
+							Title = "Vape",
+							Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
+							Duration = 60,
+						})
 					end
+					return
+				else
+					createwarning("Vape", "Staff Detected : "..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
 				end
-			end)
+			end
 		end)
 	end
 
@@ -10391,13 +10402,12 @@ runcode(function()
 				windsnow.SpreadAngle = Vector2.new(35,35)
 				windsnow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0,0,0),NumberSequenceKeypoint.new(0.039760299026966,1.3114800453186,0.32786899805069),NumberSequenceKeypoint.new(0.7554469704628,0.98360699415207,0.44038599729538),NumberSequenceKeypoint.new(1,0,0)})
 				windsnow.Parent = snowpart
-				for i = 1, 30 do
-					for i2 = 1, 30 do
-						local clone = snowpart:Clone()
-						clone.Position = Vector3.new(240 * (i - 1), 120, 240 * (i2 - 1))
-						clone.Parent = workspace
+				repeat
+					task.wait()
+					if entity.isAlive then 
+						snowpart.Position = entity.character.HumanoidRootPart.Position + Vector3.new(0, 100, 0)
 					end
-				end
+				until uninjectflag
 			end)
 		end,
 		Halloween = function()
