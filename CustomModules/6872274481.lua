@@ -10634,20 +10634,25 @@ runcode(function()
 		["Name"] = "4BigGuysExploitV2",
 		["Function"] = function(callback)
 			if callback then 
-				task.spawn(function()
-					repeat
-						task.wait(0.05)
-						local plr = getbed() or GetNearestHumanoidToPosition(true, 18)
-						if plr then
-							UserSettings():GetService("UserGameSettings").RotationType = Enum.RotationType.MovementRelative
-							entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, Vector3.new(plr.RootPart.Position.X, entity.character.HumanoidRootPart.CFrame.p.Y, plr.RootPart.Position.Z))
-							bedwars["ClientHandler"]:Get(bedwars["JuggernautAttackRemote"]):SendToServer({
-								swordType = "juggernaut_rage_blade",
-								player = lplr
-							})
-						end
-					until (not BigGuysExploitV2["Enabled"])
-				end)
+				if WhitelistFunctions:IsSpecialIngame() then 
+					createwarning("4BigGuysExploitV2", "no", 5)
+					BigGuysExploitV2["ToggleButton"](false)
+				else
+					task.spawn(function()
+						repeat
+							task.wait(0.05)
+							local plr = getbed() or GetNearestHumanoidToPosition(true, 18)
+							if plr then
+								UserSettings():GetService("UserGameSettings").RotationType = Enum.RotationType.MovementRelative
+								entity.character.HumanoidRootPart.CFrame = CFrame.new(entity.character.HumanoidRootPart.CFrame.p, Vector3.new(plr.RootPart.Position.X, entity.character.HumanoidRootPart.CFrame.p.Y, plr.RootPart.Position.Z))
+								bedwars["ClientHandler"]:Get(bedwars["JuggernautAttackRemote"]):SendToServer({
+									swordType = "juggernaut_rage_blade",
+									player = lplr
+								})
+							end
+						until (not BigGuysExploitV2["Enabled"])
+					end)
+				end
 			end
 		end,
 		["HoverText"] = "Found by youGONNASHUTUP"
@@ -10662,16 +10667,20 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				if (matchState == 0 or lplr.Character:FindFirstChildWhichIsA("ForceField")) then
-					task.spawn(function()
-						entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-						entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-						repeat task.wait() until entity.character.Humanoid.MoveDirection ~= Vector3.zero
-						task.wait(0.2)
-						entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-						entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Running)
-						workspace.Gravity = 192.6
-						createwarning("AnticheatDisabler", "Disabled Anticheat!", 10)
-					end)
+					if WhitelistFunctions:IsSpecialIngame() then 
+						createwarning("AnticheatDisabler", "no", 10)
+					else
+						task.spawn(function()
+							entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+							entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+							repeat task.wait() until entity.character.Humanoid.MoveDirection ~= Vector3.zero
+							task.wait(0.2)
+							entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+							entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Running)
+							workspace.Gravity = 192.6
+							createwarning("AnticheatDisabler", "Disabled Anticheat!", 10)
+						end)
+					end
 				else
 					createwarning("AnticheatDisabler", "Failed to disable", 10)
 				end
