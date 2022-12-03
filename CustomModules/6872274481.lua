@@ -10654,6 +10654,34 @@ runcode(function()
 	})
 end)
 
+
+runcode(function()
+	local Disabler = {["Enabled"] = false}
+	Disabler = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AnticheatDisabler",
+		["Function"] = function(callback)
+			if callback then
+				if (matchState == 0 or lplr.Character:FindFirstChildWhichIsA("ForceField")) then
+					task.spawn(function()
+						entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+						entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+						repeat task.wait() until entity.character.Humanoid.MoveDirection ~= Vector3.zero
+						task.wait(0.2)
+						entity.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+						entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Running)
+						workspace.Gravity = 192.6
+						createwarning("AnticheatDisabler", "Disabled Anticheat!", 10)
+					end)
+				else
+					createwarning("AnticheatDisabler", "Failed to disable", 10)
+				end
+				Disabler["ToggleButton"](false)
+			end
+		end
+	})
+end)
+
+
 runcode(function()
 	local NoNameTag = {["Enabled"] = false}
 	local connection
