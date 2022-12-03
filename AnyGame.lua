@@ -10,6 +10,7 @@ local repstorage = game:GetService("ReplicatedStorage")
 local lplr = players.LocalPlayer
 local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
+local textchatservice = game:GetService("TextChatService")
 local cam = workspace.CurrentCamera
 workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 	cam = (workspace.CurrentCamera or workspace:FindFirstChildWhichIsA("Camera") or Instance.new("Camera"))
@@ -216,7 +217,7 @@ end
 
 local function getcustomassetfunc(path)
 	if not isfile(path) then
-		spawn(function()
+		task.spawn(function()
 			local textlabel = Instance.new("TextLabel")
 			textlabel.Size = UDim2.new(1, 0, 0, 36)
 			textlabel.Text = "Downloading "..path
@@ -227,7 +228,7 @@ local function getcustomassetfunc(path)
 			textlabel.TextColor3 = Color3.new(1, 1, 1)
 			textlabel.Position = UDim2.new(0, 0, 0, -36)
 			textlabel.Parent = GuiLibrary["MainGui"]
-			repeat wait() until isfile(path)
+			repeat task.wait() until isfile(path)
 			textlabel:Remove()
 		end)
 		local req = requestfunc({
@@ -519,7 +520,7 @@ local function Cape(char, texture)
 	motor.C0 = CFrame.new(0,2,0) * CFrame.Angles(0,math.rad(90),0)
 	motor.C1 = CFrame.new(0,1,0.45) * CFrame.Angles(0,math.rad(90),0)
 	local wave = false
-	repeat wait(1/44)
+	repeat task.wait(1/44)
 		decal.Transparency = torso.Transparency
 		local ang = 0.1
 		local oldmag = torso.Velocity.magnitude
@@ -536,9 +537,9 @@ local function Cape(char, texture)
 		if motor.CurrentAngle < -0.2 and motor.DesiredAngle > -0.2 then
 			motor.MaxVelocity = 0.04
 		end
-		repeat wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) >= (torso.Velocity.magnitude/10) + 1
+		repeat task.wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) >= (torso.Velocity.magnitude/10) + 1
 		if torso.Velocity.magnitude < 0.1 then
-			wait(0.1)
+			task.wait(0.1)
 		end
 	until not p or p.Parent ~= torso.Parent
 end
@@ -838,7 +839,7 @@ runcode(function()
 		["Function"] = function(callback) 
 			if callback then
 				methodused = "Normal"..v3check
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait(0.1)
 						local targettable = {}
@@ -990,7 +991,7 @@ runcode(function()
 		["Name"] = "AutoFire",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait(0.01)
 						if AimAssist["Enabled"] then
@@ -1244,7 +1245,7 @@ runcode(function()
 							entity.character.HumanoidRootPart.CFrame = CFrame.new(selectedpos)
 							ClickTP["ToggleButton"](false)
 						else
-							spawn(function()
+							task.spawn(function()
 								repeat
 									if entity.isAlive then 
 										local newpos = (selectedpos - entity.character.HumanoidRootPart.CFrame.p).Unit
@@ -1819,47 +1820,47 @@ runcode(function()
 											local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
 											local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
 											local angle = math.acos(localfacing:Dot(vec))
-											if angle <= math.rad(killauraangle["Value"]) then
-												killauranear = true
-												targettable[v.Player.Name] = {
-													["UserId"] = v.Player.UserId,
-													["Health"] = v.Character.Humanoid.Health,
-													["MaxHealth"] = v.Character.Humanoid.MaxHealth
-												}
-												targetsize = targetsize + 1
-												if killauratarget["Enabled"] then
-													table.insert(attackedplayers, v)
+											if angle >= (math.rad(killauraangle["Value"]) / 2) then continue end
+											killauranear = true
+											targettable[v.Player.Name] = {
+												["UserId"] = v.Player.UserId,
+												["Health"] = v.Character.Humanoid.Health,
+												["MaxHealth"] = v.Character.Humanoid.MaxHealth
+											}
+											targetsize = targetsize + 1
+											if killauratarget["Enabled"] then
+												table.insert(attackedplayers, v)
+											end
+											if targetsize == 1 then 
+												targetedplayer = v
+											end
+											local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(v.Player)
+											if not playerattackable then
+												continue
+											end
+											if killauratick <= tick() then
+												tool:Activate()
+												killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
+											end
+											if killauramethod["Value"] == "Bypass" then 
+												ignorelist.FilterDescendantsInstances = {v.Character}
+												local parts = workspace:GetPartBoundsInBox(v.RootPart.CFrame, v.Character:GetExtentsSize(), ignorelist)
+												for i,v2 in pairs(parts) do 
+													firetouchinterest(touch.Parent, v2, 1)
+													firetouchinterest(touch.Parent, v2, 0)
 												end
-												if targetsize == 1 then 
-													targetedplayer = v
-												end
-												local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(v.Player)
-												if not playerattackable then
-													continue
-												end
-												if killauratick <= tick() then
-													tool:Activate()
-													killauratick = tick() + (1 / killauraaps["GetRandomValue"]())
-												end
-												if killauramethod["Value"] == "Bypass" then 
-													ignorelist.FilterDescendantsInstances = {v.Character}
-													local parts = workspace:GetPartBoundsInBox(v.RootPart.CFrame, v.Character:GetExtentsSize(), ignorelist)
-													for i,v2 in pairs(parts) do 
+											elseif killauramethod["Value"] == "Normal" then
+												for i,v2 in pairs(v.Character:GetChildren()) do 
+													if v2:IsA("BasePart") then
 														firetouchinterest(touch.Parent, v2, 1)
 														firetouchinterest(touch.Parent, v2, 0)
 													end
-												elseif killauramethod["Value"] == "Normal" then
-													for i,v2 in pairs(v.Character:GetChildren()) do 
-														if v2:IsA("BasePart") then
-															firetouchinterest(touch.Parent, v2, 1)
-															firetouchinterest(touch.Parent, v2, 0)
-														end
-													end
-												else
-													firetouchinterest(touch.Parent, v.RootPart, 1)
-													firetouchinterest(touch.Parent, v.RootPart, 0)
 												end
+											else
+												firetouchinterest(touch.Parent, v.RootPart, 1)
+												firetouchinterest(touch.Parent, v.RootPart, 0)
 											end
+										
 										end
 									end
 								end
@@ -4293,58 +4294,76 @@ runcode(function()
 		["Name"] = "ChatSpammer",
 		["Function"] = function(callback)
 			if callback then
-				if chatspammerfirstexecute then
-					lplr.PlayerGui:WaitForChild("Chat", 10)
-				end
-				if lplr.PlayerGui:FindFirstChild("Chat") and lplr.PlayerGui.Chat:FindFirstChild("Frame") and lplr.PlayerGui.Chat.Frame:FindFirstChild("ChatChannelParentFrame") and repstorage:FindFirstChild("DefaultChatSystemChatEvents") then
-					if chatspammerhook == false then
-						spawn(function()
-							chatspammerhook = true
-							for i,v in pairs(getconnections(repstorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-								if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-									oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
-									oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
-									getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
-										local tab = oldchannelfunc(Self, Name)
-										if tab and tab.AddMessageToChannel then
-											local addmessage = tab.AddMessageToChannel
-											if oldchanneltabs[tab] == nil then
-												oldchanneltabs[tab] = tab.AddMessageToChannel
-											end
-											tab.AddMessageToChannel = function(Self2, MessageData)
-												if MessageData.MessageType == "System" then
-													if MessageData.Message:find("You must wait") and ChatSpammer["Enabled"] then
-														return nil
-													end
-												end
-												return addmessage(Self2, MessageData)
-											end
-										end
-										return tab
-									end
-								end
-							end
-						end)
-					end
-					spawn(function()
+				if textchatservice.ChatVersion == Enum.ChatVersion.TextChatService then 
+					task.spawn(function()
 						repeat
 							if ChatSpammer["Enabled"] then
 								pcall(function()
-									repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages["ObjectList"] > 0 and ChatSpammerMessages["ObjectList"][math.random(1, #ChatSpammerMessages["ObjectList"])] or "vxpe on top"), "All")
+									textchatservice.ChatInputBarConfiguration.TargetTextChannel:SendAsync((#ChatSpammerMessages["ObjectList"] > 0 and ChatSpammerMessages["ObjectList"][math.random(1, #ChatSpammerMessages["ObjectList"])] or "vxpe on top"))
 								end)
 							end
 							if waitnum ~= 0 then
-								wait(waitnum)
+								task.wait(waitnum)
 								waitnum = 0
 							else
-								wait(ChatSpammerDelay["Value"] / 10)
+								task.wait(ChatSpammerDelay["Value"] / 10)
 							end
 						until ChatSpammer["Enabled"] == false
-					end)				
+					end)
 				else
-					createwarning("ChatSpammer", "Default chat not found.", 3)
-					if ChatSpammer["Enabled"] then
-						ChatSpammer["ToggleButton"](false)
+					if chatspammerfirstexecute then
+						lplr.PlayerGui:WaitForChild("Chat", 10)
+					end
+					if lplr.PlayerGui:FindFirstChild("Chat") and lplr.PlayerGui.Chat:FindFirstChild("Frame") and lplr.PlayerGui.Chat.Frame:FindFirstChild("ChatChannelParentFrame") and repstorage:FindFirstChild("DefaultChatSystemChatEvents") then
+						if chatspammerhook == false then
+							task.spawn(function()
+								chatspammerhook = true
+								for i,v in pairs(getconnections(repstorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+									if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+										oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
+										oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
+										getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
+											local tab = oldchannelfunc(Self, Name)
+											if tab and tab.AddMessageToChannel then
+												local addmessage = tab.AddMessageToChannel
+												if oldchanneltabs[tab] == nil then
+													oldchanneltabs[tab] = tab.AddMessageToChannel
+												end
+												tab.AddMessageToChannel = function(Self2, MessageData)
+													if MessageData.MessageType == "System" then
+														if MessageData.Message:find("You must wait") and ChatSpammer["Enabled"] then
+															return nil
+														end
+													end
+													return addmessage(Self2, MessageData)
+												end
+											end
+											return tab
+										end
+									end
+								end
+							end)
+						end
+						task.spawn(function()
+							repeat
+								if ChatSpammer["Enabled"] then
+									pcall(function()
+										repstorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages["ObjectList"] > 0 and ChatSpammerMessages["ObjectList"][math.random(1, #ChatSpammerMessages["ObjectList"])] or "vxpe on top"), "All")
+									end)
+								end
+								if waitnum ~= 0 then
+									task.wait(waitnum)
+									waitnum = 0
+								else
+									task.wait(ChatSpammerDelay["Value"] / 10)
+								end
+							until ChatSpammer["Enabled"] == false
+						end)				
+					else
+						createwarning("ChatSpammer", "Default chat not found.", 3)
+						if ChatSpammer["Enabled"] then
+							ChatSpammer["ToggleButton"](false)
+						end
 					end
 				end
 			else
@@ -4413,14 +4432,14 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				vapecapeconnection = lplr.CharacterAdded:Connect(function(char)
-					spawn(function()
+					task.spawn(function()
 						pcall(function() 
 							Cape(char, getcustomassetfunc("vape/assets/VapeCape.png"))
 						end)
 					end)
 				end)
 				if lplr.Character then
-					spawn(function()
+					task.spawn(function()
 						pcall(function() 
 							Cape(lplr.Character, getcustomassetfunc("vape/assets/VapeCape.png"))
 						end)
@@ -4439,6 +4458,50 @@ runcode(function()
 				end
 			end
 		end
+	})
+end)
+
+runcode(function()
+	local FieldOfViewValue = {["Value"] = 70}
+	local oldfov
+	local FieldOfView = {["Enabled"] = false}
+	local FieldOfViewZoom = {["Enabled"] = false}
+	FieldOfView = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "FOVChanger",
+		["Function"] = function(callback)
+			if callback then
+				oldfov = cam.FieldOfView
+				if FieldOfViewZoom["Enabled"] then
+					task.spawn(function()
+						repeat
+							task.wait()
+						until uis:IsKeyDown(Enum.KeyCode[FieldOfView["Keybind"] ~= "" and FieldOfView["Keybind"] or "C"]) == false
+						if FieldOfView["Enabled"] then
+							FieldOfView["ToggleButton"](false)
+						end
+					end)
+				end
+				task.spawn(function()
+					repeat
+						cam.FieldOfView = FieldOfViewValue["Value"]
+						task.wait()
+					until (not FieldOfView.Enabled)
+				end)
+			else
+				cam.FieldOfView = oldfov
+			end
+		end
+	})
+	FieldOfViewValue = FieldOfView.CreateSlider({
+		["Name"] = "FOV",
+		["Min"] = 30,
+		["Max"] = 120,
+		["Function"] = function(val) end
+	})
+	FieldOfViewZoom = FieldOfView.CreateToggle({
+		["Name"] = "Zoom",
+		["Function"] = function() end,
+		["HoverText"] = "optifine zoom lol"
 	})
 end)
 
@@ -4503,7 +4566,7 @@ runcode(function()
 		["Name"] = "Breadcrumbs",
 		["Function"] = function(callback)
 			if callback then
-				spawn(function()
+				task.spawn(function()
 					repeat
 						task.wait(0.3)
 						if (not Breadcrumbs["Enabled"]) then return end
@@ -4678,12 +4741,12 @@ runcode(function()
 		["Name"] = "AutoReport",
 		["Function"] = function(callback) 
 			if callback then 
-				if repstorage:FindFirstChild("DefaultChatSystemChatEvents") then
-					chatconnection = repstorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab, channel)
-						local plr = players:FindFirstChild(tab["FromSpeaker"])
-						local args = tab.Message:split(" ")
+				if textchatservice.ChatVersion == Enum.ChatVersion.TextChatService then 
+					chatconnection = textchatservice.MessageReceived:Connect(function(tab)
+						local plr = tab.TextSource
+						local args = tab.Text:split(" ")
 						if AutoReport["Enabled"] and plr and plr ~= lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
-							local reportreason, reportedmatch = findreport(tab.Message)
+							local reportreason, reportedmatch = findreport(tab.Text)
 							if reportreason then 
 								if alreadyreported[plr] == nil then
 									task.spawn(function()
@@ -4696,19 +4759,43 @@ runcode(function()
 										end
 									end)
 									if AutoReportNotify["Enabled"] then 
-										local warning = createwarning("AutoReport", "Reported "..plr.Name.." for\n"..reportreason..' ('..reportedmatch..')', 15)
-										pcall(function()
-											warning:GetChildren()[5].Position = UDim2.new(0, 46, 0, 38)
-										end)
+										createwarning("AutoReport", "Reported "..plr.Name.." for\n"..reportreason..' ('..reportedmatch..')', 15)
 									end
 									alreadyreported[plr] = true
 								end
 							end
 						end
 					end)
-				else
-					createwarning("AutoReport", "Default chat not found.", 5)
-					AutoReport["ToggleButton"](false)
+				else 
+					if repstorage:FindFirstChild("DefaultChatSystemChatEvents") then
+						chatconnection = repstorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab, channel)
+							local plr = players:FindFirstChild(tab["FromSpeaker"])
+							local args = tab.Message:split(" ")
+							if AutoReport["Enabled"] and plr and plr ~= lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
+								local reportreason, reportedmatch = findreport(tab.Message)
+								if reportreason then 
+									if alreadyreported[plr] == nil then
+										task.spawn(function()
+											if syn == nil or reportplayer then
+												if reportplayer then
+													reportplayer(plr, reportreason, "he said a bad word")
+												else
+													players:ReportAbuse(plr, reportreason, "he said a bad word")
+												end
+											end
+										end)
+										if AutoReportNotify["Enabled"] then 
+											createwarning("AutoReport", "Reported "..plr.Name.." for\n"..reportreason..' ('..reportedmatch..')', 15)
+										end
+										alreadyreported[plr] = true
+									end
+								end
+							end
+						end)
+					else
+						createwarning("AutoReport", "Default chat not found.", 5)
+						AutoReport["ToggleButton"](false)
+					end
 				end
 			else
 				if chatconnection then 
@@ -4762,11 +4849,22 @@ runcode(function()
 		end
 	end
 
+	local function getRole(plr, id)
+		local suc, res = pcall(function() return plr:GetRankInGroup(id) end)
+		if not suc then 
+			repeat
+				suc, res = pcall(function() return plr:GetRankInGroup(id) end)
+				task.wait()
+			until suc
+		end
+		return res
+	end
+
 	local function autoleaveplradded(plr)
 		task.spawn(function()
 			pcall(function()
 				if AutoLeaveGroupId["Value"] == "" or AutoLeaveRank["Value"] == "" then return end
-				if plr:GetRankInGroup(tonumber(AutoLeaveGroupId["Value"]) or 0) >= (tonumber(AutoLeaveRank["Value"]) or 1) then
+				if getRole(plr, tonumber(AutoLeaveGroupId["Value"]) or 0) >= (tonumber(AutoLeaveRank["Value"]) or 1) then
 					WhitelistFunctions.CustomTags[plr] = "[GAME STAFF] "
 					local _, ent = entity.getEntityFromPlayer(plr)
 					if ent then 
@@ -4776,7 +4874,6 @@ runcode(function()
 						task.spawn(function()
 							if not shared.VapeFullyLoaded then
 								repeat task.wait() until shared.VapeFullyLoaded
-								task.wait(1)
 							end
 							GuiLibrary.SelfDestruct()
 						end)
@@ -4788,11 +4885,7 @@ runcode(function()
 					elseif AutoLeaveMode["Value"] == "Rejoin" then 
 						getrandomserver()
 					else
-						local warning = createwarning("AutoLeave", "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
-						local warningtext = warning:GetChildren()[5]
-						warningtext.TextSize = 12
-						warningtext.TextLabel.TextSize = 12
-						warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+						createwarning("AutoLeave", "Staff Detected : "..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
 					end
 				end
 			end)
@@ -4834,11 +4927,7 @@ runcode(function()
 								end
 							end
 							if placeinfo.Creator.CreatorType ~= "Group" then 
-								local warning = createwarning("AutoLeave", "Automatic Setup Failed\n(no group detected)", 60)
-								local warningtext = warning:GetChildren()[5]
-								warningtext.TextSize = 12
-								warningtext.TextLabel.TextSize = 12
-								warningtext.Position = warningtext.Position - UDim2.new(0, 0, 0, 4)
+								createwarning("AutoLeave", "Automatic Setup Failed (no group detected)", 60)
 								return
 							end
 						end

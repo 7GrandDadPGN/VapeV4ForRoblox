@@ -2449,10 +2449,10 @@ runcode(function()
 					self.lastSwing = tick()
 					return false 
 				end
-				debug.setconstant(bedwars["SwordController"].attackEntity, 23, 0.64)
+				--debug.setconstant(bedwars["SwordController"].attackEntity, 23, 0.64)
 			else
 				bedwars["SwordController"].isClickingTooFast = noclickfunc
-				debug.setconstant(bedwars["SwordController"].attackEntity, 23, 0.8)
+				--debug.setconstant(bedwars["SwordController"].attackEntity, 23, 0.8)
 			end
 		end,
 		["HoverText"] = "Remove the CPS cap"
@@ -2753,6 +2753,7 @@ runcode(function()
 	})
 end)
 
+GuiLibrary["RemoveObject"]("FOVChangerOptionsButton")
 runcode(function()
 	local Sprint = {["Enabled"] = false}
 	local sprintconnection

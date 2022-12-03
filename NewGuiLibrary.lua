@@ -6405,10 +6405,12 @@ if shared.VapeExecuted then
 	local function bettergetfocus()
 		if KRNL_LOADED then
 			-- krnl is so garbage, you literally cannot detect focused textbox with UIS
-			if game:GetService("TextChatService").ChatVersion == "TextChatService" then
-				return (game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused())
-			elseif game:GetService("TextChatService").ChatVersion == "LegacyChatService" then
-				return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+			if game:GetService("StarterGui"):GetCoreGuiEnabled(Enum.CoreGuiType.Chat) then
+				if textchatservice.ChatVersion == Enum.ChatVersion.TextChatService then
+					return ((game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused() or searchbar:IsFocused()) and true or nil)
+				else
+					return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
+				end
 			end
 		end
 		return game:GetService("UserInputService"):GetFocusedTextBox()
