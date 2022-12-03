@@ -10634,7 +10634,7 @@ runcode(function()
 		["Name"] = "4BigGuysExploitV2",
 		["Function"] = function(callback)
 			if callback then 
-				if WhitelistFunctions:IsSpecialIngame() then 
+				if WhitelistFunctions:IsSpecialIngame() and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then 
 					createwarning("4BigGuysExploitV2", "no", 5)
 					BigGuysExploitV2["ToggleButton"](false)
 				else
@@ -10667,7 +10667,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				if (matchState == 0 or lplr.Character:FindFirstChildWhichIsA("ForceField")) then
-					if WhitelistFunctions:IsSpecialIngame() then 
+					if WhitelistFunctions:IsSpecialIngame() and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then 
 						createwarning("AnticheatDisabler", "no", 10)
 					else
 						task.spawn(function()
