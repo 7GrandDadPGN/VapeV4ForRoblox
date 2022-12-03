@@ -4,6 +4,7 @@ if shared.VapeExecuted then
 	local rainbowvalue = 0
 	local cam = workspace.CurrentCamera
 	local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
+	local textchatservice = game:GetService("TextChatService")
 	local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function(tab)
 		if tab.Method == "GET" then
 			return {
@@ -6406,7 +6407,7 @@ if shared.VapeExecuted then
 		if KRNL_LOADED then
 			-- krnl is so garbage, you literally cannot detect focused textbox with UIS
 			if game:GetService("StarterGui"):GetCoreGuiEnabled(Enum.CoreGuiType.Chat) then
-				if textchatservice.ChatVersion == Enum.ChatVersion.TextChatService then
+				if textchatservice and textchatservice.ChatVersion == Enum.ChatVersion.TextChatService then
 					return ((game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused() or searchbar:IsFocused()) and true or nil)
 				else
 					return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
