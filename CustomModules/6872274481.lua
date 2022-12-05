@@ -7018,7 +7018,7 @@ runcode(function()
 				local funny = true
 				RunLoops:BindToHeartbeat("Fly", 1, function(delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-						allowed = 1
+						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
 						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						local realflyspeed = flyspeed["Value"]
 						mass = mass + (allowed > 0 and 10 or 0.03) * (flytog and -1 or 1)
