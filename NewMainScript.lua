@@ -1478,7 +1478,7 @@ local function getSaturation(val)
 	return sat
 end
 
-GuiLibrary["UpdateUI"] = function(h, s, val)
+GuiLibrary["UpdateUI"] = function(h, s, val, bypass)
 	pcall(function()
 		local rainbowcheck = GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"]
 		local maincolor = rainbowcheck and getSaturation(h) or s
@@ -1486,16 +1486,16 @@ GuiLibrary["UpdateUI"] = function(h, s, val)
 		local rainbowcolor2 = h + (rainbowcheck and (-0.05) or 0)
 		rainbowcolor2 = rainbowcolor2 % 1
         local gradsat = textguigradient["Enabled"] and getSaturation(rainbowcolor2) or maincolor
+		onetext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or h, maincolor, rainbowcheck and 1 or val)
 		onethinggrad.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0, Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)),
-			ColorSequenceKeypoint.new(1, Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or h, maincolor, rainbowcheck and 1 or val))
+			ColorSequenceKeypoint.new(1, onetext.TextColor3)
 		})
 		onethinggrad2.Color = ColorSequence.new({
 			ColorSequenceKeypoint.new(0, Color3.fromHSV(h, textguigradient["Enabled"] and rainbowcheck and maincolor or 0, 1)),
 			ColorSequenceKeypoint.new(1, Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or h, textguigradient["Enabled"] and rainbowcheck and maincolor or 0, 1))
 		})
-		onetext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or h, maincolor, rainbowcheck and 1 or val)
-		onecustomtext.TextColor3 = Color3.fromHSV(textguigradient["Enabled"] and rainbowcolor2 or h, maincolor, rainbowcheck and 1 or val)
+		onecustomtext.TextColor3 = onetext.TextColor3
 		local newtext = ""
 		local newfirst = false
 		local colorforindex = {}
@@ -1505,7 +1505,7 @@ GuiLibrary["UpdateUI"] = function(h, s, val)
 			local newcolor = Color3.fromHSV(rainbowcolor, rainbowcheck and getSaturation(rainbowcolor) or maincolor, rainbowcheck and 1 or val)
 			local splittext = v2:split(":")
 			splittext = #splittext > 1 and {splittext[1], " "..splittext[2]} or {v2, ""}
-			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..tostring(math.floor(newcolor.R * 255))..","..tostring(math.floor(newcolor.G * 255))..","..tostring(math.floor(newcolor.B * 255))..')">'..splittext[1]..'</font><font color="rgb(170, 170, 170)">'..splittext[2]..'</font>'
+			newtext = newtext..(newfirst and "\n" or " ")..'<font color="rgb('..math.floor(newcolor.R * 255)..","..math.floor(newcolor.G * 255)..","..math.floor(newcolor.B * 255)..')">'..splittext[1]..'</font><font color="rgb(170, 170, 170)">'..splittext[2]..'</font>'
 			newfirst = true
 			colorforindex[i2] = newcolor
 		end
@@ -1524,7 +1524,7 @@ GuiLibrary["UpdateUI"] = function(h, s, val)
 			end
 		end
 		onetext.Text = newtext
-		if not GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible then return end
+		if (not GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible) and (not bypass) then return end
 		local buttons = 0
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "TargetFrame" then
@@ -1822,7 +1822,7 @@ if shared.VapeIndependent then
 			ProfilesTextList["RefreshValues"](ProfilesTextList["ObjectList"])
 		end
 		GUIbind["Reload"]()
-		GuiLibrary["UpdateUI"](GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
+		GuiLibrary["UpdateUI"](GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"], true)
 		UpdateHud()
 		if not shared.VapeSwitchServers then
 			if blatantmode["Enabled"] then
@@ -1868,7 +1868,7 @@ else
 	table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
 	ProfilesTextList["RefreshValues"](profiles)
 	GUIbind["Reload"]()
-	GuiLibrary["UpdateUI"](GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"])
+	GuiLibrary["UpdateUI"](GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["Value"], true)
 	UpdateHud()
 	if not shared.VapeSwitchServers then
 		if blatantmode["Enabled"] then
