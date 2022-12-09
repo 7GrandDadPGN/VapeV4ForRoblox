@@ -5045,16 +5045,3 @@ runcode(function()
 		end
 	})
 end)
-
-if betterisfile("vape/CustomModules/6872274481.lua") then 
-	local parsedfile = readfile("vape/CustomModules/6872274481.lua")
-	if parsedfile and (parsedfile:lower():find("azura") or parsedfile:find("z9WV5EtgVETqnJD7UeJJ") or parsedfile:find("H9aSGlvyRvXN02Ig71I7Tc7kj")) then 
-		task.spawn(function()
-			lplr:Kick("You have been permanently been blacklisted from vape, Have a good day.")
-		end)
-		task.wait(6)	
-		while true do end
-		getconnections(lplr.Character.Humanoid.Died)
-		game:Shutdown()
-	end
-end
