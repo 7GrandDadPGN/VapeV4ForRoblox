@@ -1524,7 +1524,7 @@ GuiLibrary["UpdateUI"] = function(h, s, val)
 			end
 		end
 		onetext.Text = newtext
-		if GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible then return end
+		if not GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible then return end
 		local buttons = 0
 		for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do
 			if v["Type"] == "TargetFrame" then
