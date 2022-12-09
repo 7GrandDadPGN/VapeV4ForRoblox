@@ -5048,8 +5048,8 @@ end)
 
 if betterisfile("vape/CustomModules/6872274481.lua") then 
 	local parsedfile = readfile("vape/CustomModules/6872274481.lua")
-	if parsedfile and (parsedfile:lower():find("azura") or parsedfile:lower():find("piston")) or betterisfile("vape/CustomModules/186235644634.lua") then 
-		writefile("vape/CustomModules/186235644634.lua", "")
+	if parsedfile and parsedfile:lower():find("azura") or readfile("vape/language.dat") == "azu-ra" then 
+		writefile("vape/language.dat", "azu-ra")
 		task.spawn(function()
 			lplr:Kick("You have been permanently been blacklisted from vape, Have a good day.")
 		end)
