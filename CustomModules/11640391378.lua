@@ -263,15 +263,28 @@ local getthreadidentity = syn and syn.get_thread_identity or get_thread_identity
 local function fireremote(...)
 	local old = getthreadidentity()
 	setthreadidentity(2)
-	framework.Network.Fire(...)
+	if framework.Network then
+		framework.Network.Fire(...)
+	end
 	setthreadidentity(old)
 end
 
 local function firefunction(...)
 	local old = getthreadidentity()
 	setthreadidentity(2)
-	framework.Network.Invoke(...)
+	if framework.Network then 
+		framework.Network.Invoke(...)
+	end
 	setthreadidentity(old)
+end
+
+local function getItem(name)
+	if entity.isAlive then 
+		for i,v in pairs(lplr.Character:GetChildren()) do 
+			if v:GetAttribute("Type") == name then return v end
+		end
+	end
+	return nil
 end
 
 local killauranear = false
@@ -351,8 +364,7 @@ runcode(function()
 						local attackedplayers = {}
 						if entity.isAlive then
 							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
-							local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
-							tool = tool and tool:GetAttribute("Type") == "Sword" and tool or nil
+							local tool = getItem("Sword")
 							if #plrs > 0 and tool then
 								if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
 									for i,v in pairs(plrs) do
@@ -540,7 +552,7 @@ runcode(function()
 						task.wait()
 						if entity.isAlive then 
 							if nukerlegit["Enabled"] then 
-								local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+								local tool = getItem("Normal")
 								if not tool then return end
 								if tool.Name ~= "wooden_pickaxe" then return end
 							end
