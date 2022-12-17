@@ -849,8 +849,14 @@ local otherserverpos = {}
 runcode(function()
     getfunctions = function()
 		local Flamework = require(repstorage["rbxts_include"]["node_modules"]["@flamework"].core.out).Flamework
-		repeat task.wait() until Flamework.isInitialized
-        local KnitClient = debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 6)
+        local KnitGotten, KnitClient
+		repeat
+			task.wait()
+			KnitGotten, KnitClient = pcall(function()
+				return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 6)
+			end)
+		until KnitGotten
+		repeat task.wait() until debug.getupvalue(KnitClient.Start, 1) == true
         local Client = require(repstorage.TS.remotes).default.Client
         local InventoryUtil = require(repstorage.TS.inventory["inventory-util"]).InventoryUtil
         OldClientGet = getmetatable(Client).Get
@@ -1675,28 +1681,10 @@ do
                     end
 					childremoved = char.ChildRemoved:Connect(function(part)
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
+							childremoved:Disconnect()
                             if localcheck then
-								if char == lplr.Character then
-									if part.Name == "HumanoidRootPart" then
-										entity.isAlive = false
-										local root = char:FindFirstChild("HumanoidRootPart")
-										if not root then 
-											for i = 1, 30 do 
-												task.wait(0.1)
-												root = char:FindFirstChild("HumanoidRootPart")
-												if root then break end
-											end
-										end
-										if root then 
-											entity.character.HumanoidRootPart = root
-											entity.isAlive = true
-										end
-									else
-										entity.isAlive = false
-									end
-								end
+								entity.isAlive = false
                             else
-								childremoved:Disconnect()
                                 entity.removeEntity(plr)
                             end
                         end
@@ -8736,7 +8724,7 @@ runcode(function()
 						end
 						oldseat = sit	
 					end
-					local targetvelo = (clone.AssemblyLinearVelocity)
+					local targetvelo = (Vector3.new(clone.Position.X, 0, clone.Position.Z) - Vector3.new(oldcloneroot.Position.X, 0, oldcloneroot.Position.Z))
 					local speed = ((sit or bedwars["HangGliderController"].hangGliderActive) and targetvelo.Magnitude or 20 * getSpeedMultiplier())
 					targetvelo = (targetvelo.Unit == targetvelo.Unit and targetvelo.Unit or Vector3.zero) * speed
 					bodyvelo.Velocity = Vector3.new(0, clone.Velocity.Y, 0)
