@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local wait, spawn = task.wait, task.spawn
 
 local GuiLibrary = shared.GuiLibrary
 local Combat = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api
@@ -428,7 +429,7 @@ KnifeAura = Combat.CreateOptionsButton({
     Function = function(callback)
         if callback then
             spawn(function()
-                repeat task.wait(0.1)
+                repeat wait(0.1)
                     for _, v in pairs(workspace.Ignore.Zombies:GetChildren()) do
                         if v and v:FindFirstChildOfClass("Humanoid") and v:FindFirstChild("HumanoidRootPart") and isNear(v, KARange.Value) then
                             ReplicatedStorage.Framework.Remotes.KnifeHitbox:FireServer(v:FindFirstChildOfClass("Humanoid"))
