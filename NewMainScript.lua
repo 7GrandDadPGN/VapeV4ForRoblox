@@ -19,7 +19,7 @@ local function GetURL(scripturl)
 	end
 end
 local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
-local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
+local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function(tab)
 	if tab.Method == "GET" then
 		return {
@@ -1675,8 +1675,10 @@ GUISettings.CreateSlider({
 
 local GUIbind = GUI.CreateGUIBind()
 
+local teleported = false
 local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
-    if State == Enum.TeleportState.Started and not shared.VapeIndependent then
+    if (not teleported) and (not shared.VapeIndependent) then
+		teleported = true
 		local teleportstr = 'shared.VapeSwitchServers = true if shared.VapeDeveloper then loadstring(readfile("vape/NewMainScript.lua"))() else loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() end'
 		if shared.VapeDeveloper then
 			teleportstr = 'shared.VapeDeveloper = true '..teleportstr
