@@ -9014,7 +9014,7 @@ runcode(function()
 				--	GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](74)
 				--  GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("Heatseeker")
 				end)
-				anticheatbypassenable()
+			--	anticheatbypassenable()
 			else
 				allowspeed = true
 				if anticheatconnection then 
