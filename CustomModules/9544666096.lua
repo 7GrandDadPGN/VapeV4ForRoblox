@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local wait, spawn = task.wait, task.spawn
 
 local GuiLibrary = shared.GuiLibrary
 local Combat = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api
