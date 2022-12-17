@@ -335,6 +335,9 @@ runcode(function()
 			ClientHandler = Client,
 			InventoryHandler = Inventory,
 			LobbyClientEvents = require(game:GetService("ReplicatedStorage")["rbxts_include"]["node_modules"]["@easy-games"].lobby.out.client.events).LobbyClientEvents,
+			GunController = Flamework.resolveDependency("client/controllers/game/items/gun/gun-controller@GunController"),
+			SwordController = Flamework.resolveDependency("client/controllers/game/items/sword/sword-controller@SwordController"),
+			SprintController = Flamework.resolveDependency("client/controllers/global/movement/sprint-controller@SprintController"),
 			getInventory = function()
 				local suc, result = pcall(function() return Inventory.inventoryController:getPlayerInventory() end)
 				return (suc and result:getAllItems() or {})
@@ -435,9 +438,8 @@ end
 local function vischeck(char, part, ignorelist, origin)
 	local rayparams = RaycastParams.new()
 	rayparams.FilterDescendantsInstances = {lplr.Character, char, cam, table.unpack(ignorelist or {})}
-	local ray = workspace.Raycast(workspace, origin or cam.CFrame.p, CFrame.lookAt(origin or cam.CFrame.p, char[part].Position).lookVector.Unit * ((origin or cam.CFrame.p) - char[part].Position).Magnitude, rayparams)
+	local ray = workspace.Raycast(workspace, origin or cam.CFrame.p, CFrame.lookAt(origin or cam.CFrame.p, char[part].Position).lookVector.Unit * (cam.CFrame.p - char[part].Position).Magnitude, rayparams)
 	if ray then 
-		print("found:", ray.Instance:GetFullName())
 	end
 	return not ray
 --	local unpacked = unpack(cam.GetPartsObscuringTarget(cam, {lplr.Character[part].Position, char[part].Position}, {lplr.Character, char, cam, table.unpack(ignorelist or {})}))
@@ -553,6 +555,110 @@ local function HealthbarColorTransferFunction(healthPercent)
 	return Color3.new(result.x, result.y, result.z)
 end
 
+runcode(function()
+	local Sprint = {["Enabled"] = false}
+	Sprint = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "Sprint",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait()
+						if Sprint["Enabled"] == false then break end
+						if prophunt.SprintController.sprinting == false then
+							prophunt.SprintController:startSprinting()
+						end
+					until Sprint["Enabled"] == false
+				end)
+			else
+				prophunt.SprintController:stopSprinting()
+			end
+		end,
+		["HoverText"] = "Sets your sprinting to true."
+	})
+end)
+
+
+GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
+runcode(function()
+	local oldenable
+	local olddisable
+	local blockplacetable = {}
+	local blockplaceenabled = false
+	local autoclickercps = {["GetRandomValue"] = function() return 1 end}
+	local autoclicker = {["Enabled"] = false}
+	local autoclickertick = tick()
+	local autoclickerblocks = {["Enabled"] = false}
+	local autoclickermousedown = false
+	local autoclickerconnection1
+	local autoclickerconnection2
+	local firstclick = false
+	autoclicker = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoClicker",
+		["Function"] = function(callback)
+			if callback then
+				autoclickerconnection1 = uis.InputBegan:connect(function(input, gameProcessed)
+					if gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton1 then
+						autoclickermousedown = true
+						firstclick = true
+					end
+				end)
+				autoclickerconnection2 = uis.InputEnded:connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						autoclickermousedown = false
+					end
+				end)
+
+				local function isNotHoveringOverGui()
+					local mousepos = game:GetService("UserInputService"):GetMouseLocation() - Vector2.new(0, 36)
+					for i,v in pairs(game:GetService("Players").LocalPlayer.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+						if v.Active then
+							return false
+						end
+					end
+					for i,v in pairs(game:GetService("CoreGui"):GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+						if v.Active then
+							return false
+						end
+					end
+					return true
+				end
+
+				BindToRenderStep("AutoClicker", 1, function() 
+					if entity.isAlive and autoclickermousedown and autoclickertick <= tick() and isNotHoveringOverGui() and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and firstclick == false then
+						autoclickertick = tick() + (1 / autoclickercps["GetRandomValue"]())
+						prophunt.SwordController:swingSwordAtMouse()
+					else
+						if firstclick then
+							firstclick = false
+							autoclickertick = tick() + 0.1
+						end
+					end
+				end)
+			else
+				if autoclickerconnection1 then
+					autoclickerconnection1:Disconnect()
+				end
+				if autoclickerconnection2 then
+					autoclickerconnection2:Disconnect()
+				end
+				UnbindFromRenderStep("AutoClicker")
+			end
+		end,
+		["HoverText"] = "Hold attack button to automatically click"
+	})
+	autoclickercps = autoclicker.CreateTwoSlider({
+		["Name"] = "CPS",
+		["Min"] = 1,
+		["Max"] = 20,
+		["Function"] = function(val) end,
+		["Default"] = 8,
+		["Default2"] = 12
+	})
+end)
+
+GuiLibrary["RemoveObject"]("ReachOptionsButton")
+GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 GuiLibrary["RemoveObject"]("ESPOptionsButton")
 runcode(function()
 	local ESPFolder = Instance.new("Folder")
@@ -1595,7 +1701,9 @@ runcode(function()
 							local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, newpos, raycastparameters)
 							if ray then newpos = (ray.Position - lplr.Character.HumanoidRootPart.Position) end
 						end
-						lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+						if lplr.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Climbing then
+							lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame + newpos
+						end
 						if speedjump["Enabled"] and (speedjumpalways["Enabled"] or jumpcheck) then
 							if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) and lplr.Character.Humanoid.MoveDirection ~= Vector3.new(0, 0, 0) then
 								lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, speedjumpheight["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
@@ -1911,13 +2019,9 @@ runcode(function()
 						filter.FilterDescendantsInstances = {lplr.Character, workspace.BalloonRoots}
 						local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.Position, Vector3.new(0, -12, 0), filter)
 						if ray then 
-						--	print("fat")
 							if lplr.Character.HumanoidRootPart.AssemblyLinearVelocity.Y < -100 then
-								workspace.Gravity = 10
-								lplr.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(lplr.Character.HumanoidRootPart.AssemblyLinearVelocity.X, 0, lplr.Character.HumanoidRootPart.AssemblyLinearVelocity.Z)
+								lplr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 							end
-						else
-							workspace.Gravity = 192.6
 						end
 					end
 				end)
@@ -1930,37 +2034,71 @@ end)
 
 GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
 runcode(function()
+	local function isNotHoveringOverGui()
+		local mousepos = game:GetService("UserInputService"):GetMouseLocation() - Vector2.new(0, 36)
+		for i,v in pairs(game:GetService("Players").LocalPlayer.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+			if v.Active then
+				return false
+			end
+		end
+		for i,v in pairs(game:GetService("CoreGui"):GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+			if v.Active then
+				return false
+			end
+		end
+		return true
+	end
+
 	local SilentAim = {["Enabled"] = false}
 	local SilentAimFOV = {["Value"] = 1}
+	local aimautofire = {["Enabled"] = false}
 	local oldshoot
+	local pressed = false
+	local shoottime = tick()
 	SilentAim = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SilentAim",
 		["Function"] = function(callback)
 			if callback then 
-				oldshoot = prophunt.ClientHandler.NetEvents.client.shoot
-				prophunt.ClientHandler.NetEvents.client.shoot = function(origin, direction, shot, randomthing, ...)
+				debug.setupvalue(prophunt.GunController.shootGun, 1, {
+					LocalPlayer = setmetatable({}, {
+						__index = function(self, val)
+							if val == "GetMouse" then 
+								return function() 
+									local real = lplr:GetMouse().UnitRay
+									local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, {workspace.BalloonRoots, workspace.Effects}, real.Origin)
+									return {
+										UnitRay = plr and Ray.new(real.Origin, CFrame.lookAt(real.Origin, plr.Character.HumanoidRootPart.Position).lookVector) or real
+									}
+								end
+							elseif val == "Character" then
+								return lplr.Character
+							elseif val == "IsA" then
+								return function(check)
+									return check == "Player"
+								end
+							end
+						end
+					})
+				})
+				--[[prophunt.ClientHandler.NetEvents.client.shoot = function(origin, direction, shot, randomthing, ...)
 					local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, {workspace.BalloonRoots, workspace.Effects}, origin)
 					if plr then 
 						local rayparams = RaycastParams.new()
 						rayparams.FilterDescendantsInstances = {plr.Character}
 						rayparams.FilterType = Enum.RaycastFilterType.Whitelist
-						local dir = CFrame.lookAt(origin, plr.Character.HumanoidRootPart.Position).lookVector
-						local ray = workspace:Raycast(origin, dir * 10000, rayparams)
-						if ray then
-							print("e", ray.Instance:GetFullName())
-							shot = {
-								instance = ray.Instance,
-								normal = ray.Normal,
-								position = ray.Position
-							}
-							direction = dir
-						end
+						local size = plr.Character:GetExtentsSize()
+						local dir = CFrame.lookAt(origin, plr.Character.HumanoidRootPart.Position + Vector3.new(0, 0, 0)).lookVector
+						shot = {
+							instance = plr.Character.HumanoidRootPart,
+							normal = Vector3.new(1, 0, 0),
+							position = plr.Character.HumanoidRootPart.Position
+						}
+						direction = dir
 					end
 					return oldshoot(origin, direction, shot, randomthing, ...)
-				end
+				end]]
 			else
-				prophunt.ClientHandler.NetEvents.client.shoot = oldshoot
-				oldshoot = nil
+				debug.setupvalue(prophunt.GunController.shootGun, 1, players)
 			end
 		end
 	})
@@ -1969,6 +2107,46 @@ runcode(function()
 		["Min"] = 1,
 		["Max"] = 1000,
 		["Function"] = function() end
+	})
+	aimautofire = SilentAim.CreateToggle({
+		["Name"] = "AutoFire",
+		["Function"] = function(callback)
+			if callback then
+				spawn(function()
+					repeat
+						task.wait(0.01)
+						if SilentAim["Enabled"] then
+							local real = lplr:GetMouse().UnitRay
+							local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], true, {workspace.BalloonRoots, workspace.Effects}, real.Origin)
+							if plr then
+								if mouse1click and (isrbxactive and isrbxactive() or iswindowactive and iswindowactive()) and shoottime <= tick() then
+									if isNotHoveringOverGui() and GuiLibrary["MainGui"]:FindFirstChild("ScaledGui") and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
+										if pressed then
+											mouse1release()
+										else
+											mouse1press()
+										end
+										pressed = not pressed
+										shoottime = tick() + 0.01
+									else
+										if pressed then
+											mouse1release()
+										end
+										pressed = false
+									end
+								end
+							else
+								if pressed then
+									mouse1release()
+								end
+								pressed = false
+							end
+						end
+					until (not aimautofire["Enabled"])
+				end)
+			end
+		end,
+		["HoverText"] = "Automatically fires gun",
 	})
 end)
 
@@ -1990,7 +2168,7 @@ runcode(function()
 						for i, part in pairs(lplr.Character:GetDescendants()) do
 							if part:IsA("BasePart") and part.CanCollide == true then
 								phaseparts[part] = true
-								part.CanCollide = false
+								part.CanCollide = lplr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Climbing
 							end
 						end
 					end

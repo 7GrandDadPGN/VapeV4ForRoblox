@@ -52,7 +52,7 @@ local function friendCheck(plr, recolor)
 end
 
 local function getPlayerColor(plr)
-	return (plr:FindFirstChild("leaderstats") and plr.leaderstats.Time.Value > 500 and Color3.new(1, 0, 0) or Color3.new(0, 1, 0))
+	return (plr:FindFirstChild("leaderstats") and plr.leaderstats:FindFirstChild("Time") and plr.leaderstats.Time.Value > 500 and Color3.new(1, 0, 0) or Color3.new(0, 1, 0))
 end
 
 local function hightime(plr)
@@ -193,7 +193,7 @@ runcode(function()
                 spawn(function()
                     local pos = lplr.Character.HumanoidRootPart.Position
                     repeat
-                        task.wait(0.6)
+                        task.wait(1)
                         lplr.Character.HumanoidRootPart.CFrame = CFrame.new(pos + Vector3.new(0, 10000, 0))
                         task.wait(6)
                         lplr.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
@@ -437,6 +437,11 @@ runcode(function()
 	})
 end)
 
+local function converttostr(seconds)
+	local minutes = seconds > 60 and math.floor(seconds / 60)
+	return "wasted "..(minutes and minutes.." minutes" or seconds.." seconds").." on this trash"
+end
+
 runcode(function()
 	local AutoToxic = {["Enabled"] = false}
 	local autotoxicconnection
@@ -449,7 +454,7 @@ runcode(function()
 						local killer = players[tab[1].Value.Name]
 						local killed = players[tab[2].Parent.Name]
 						if killer == lplr and tab[4] > 500 then
-							game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("L "..killed.Name, "All")
+							game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("L "..killed.Name.." : "..converttostr(tab[4]), "All")
 						end
 					end)
 				end)

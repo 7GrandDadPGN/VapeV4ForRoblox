@@ -265,6 +265,8 @@ local function fireremote(...)
 	setthreadidentity(2)
 	if framework.Network then
 		framework.Network.Fire(...)
+	else
+		createwarning("Vape", "skill issue", 1)
 	end
 	setthreadidentity(old)
 end
@@ -274,6 +276,8 @@ local function firefunction(...)
 	setthreadidentity(2)
 	if framework.Network then 
 		framework.Network.Invoke(...)
+	else
+		createwarning("Vape", "skill issue", 1)
 	end
 	setthreadidentity(old)
 end

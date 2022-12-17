@@ -70,7 +70,7 @@ local requestfunc = syn and syn.request or http and http.request or http_request
 		}
 	end
 end 
-local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
+local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport
 local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
 local storedshahashes = {}
 local blocktable
@@ -1675,10 +1675,28 @@ do
                     end
 					childremoved = char.ChildRemoved:Connect(function(part)
                         if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
-							childremoved:Disconnect()
                             if localcheck then
-								entity.isAlive = false
+								if char == lplr.Character then
+									if part.Name == "HumanoidRootPart" then
+										entity.isAlive = false
+										local root = char:FindFirstChild("HumanoidRootPart")
+										if not root then 
+											for i = 1, 30 do 
+												task.wait(0.1)
+												root = char:FindFirstChild("HumanoidRootPart")
+												if root then break end
+											end
+										end
+										if root then 
+											entity.character.HumanoidRootPart = root
+											entity.isAlive = true
+										end
+									else
+										entity.isAlive = false
+									end
+								end
                             else
+								childremoved:Disconnect()
                                 entity.removeEntity(plr)
                             end
                         end
@@ -5096,9 +5114,9 @@ runcode(function()
 				return nil
 			end
 		end
-		local selfroot = (oldcloneroot or entity.character.HumanoidRootPart)
+		local selfroot = entity.character.HumanoidRootPart
 		local selfrootpos = selfroot.Position
-		local selfcheck = localserverpos or selfrootpos
+		local selfcheck = oldcloneroot and oldcloneroot.Position or localserverpos or selfrootpos
 		if (selfcheck - (otherserverpos[plr.Player] or root.Position)).Magnitude > 18 then 
 			return nil
 		end
@@ -8853,7 +8871,7 @@ runcode(function()
 							lagbackchanged = false
 							lagbacknotification = false
 							if not shared.VapeOverrideAnticheatBypass then
-								if (not disabletpcheck) and entity.character.Humanoid.Sit ~= true then
+								if entity.character.Humanoid.Sit ~= true then
 									anticheatfunnyyes = true 
 									local frameratecheck = getaverageframerate()
 									local framerate = AnticheatBypassNumbers.TPSpeed <= 0.3 and frameratecheck and -0.22 or 0
@@ -8996,6 +9014,7 @@ runcode(function()
 				--	GuiLibrary["ObjectsThatCanBeSaved"]["FlySpeedSlider"]["Api"]["SetValue"](74)
 				--  GuiLibrary["ObjectsThatCanBeSaved"]["FlyModeDropdown"]["Api"]["SetValue"]("Heatseeker")
 				end)
+				anticheatbypassenable()
 			else
 				allowspeed = true
 				if anticheatconnection then 

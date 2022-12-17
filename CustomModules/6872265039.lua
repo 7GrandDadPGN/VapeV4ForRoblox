@@ -532,8 +532,10 @@ GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 GuiLibrary["RemoveObject"]("ClientKickDisablerOptionsButton")
 
+local teleported = false
 teleportfunc = lplr.OnTeleport:Connect(function(State)
-    if State == Enum.TeleportState.Started then
+    if (not teleported) then
+		teleported = true
 		if shared.vapeoverlay then
 			queueteleport('shared.vapeoverlay = "'..shared.vapeoverlay..'"')
 		end
@@ -632,9 +634,9 @@ runcode(function()
 	flyspeed = fly.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 23,
+		["Max"] = 38,
 		["Function"] = function(val) end, 
-		["Default"] = 23
+		["Default"] = 38
 	})
 	flyverticalspeed = fly.CreateSlider({
 		["Name"] = "Vertical Speed",
