@@ -8386,27 +8386,29 @@ runcode(function()
 	nobob = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "NoBob",
 		["Function"] = function(callback) 
-			if callback then
-				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -(nobobdepth["Value"] / 10))
-				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", (nobobhorizontal["Value"] / 10))
-				pcall(function()
-					for i,v in pairs(cam.Viewmodel.Humanoid.Animator:GetPlayingAnimationTracks()) do 
-						v:Stop()
-					end
-				end)
-				bedwars["ViewmodelController"]:playAnimation(11)
-				oldc1 = cam.Viewmodel.RightHand.RightWrist.C1
-				cam.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(rotationx["Value"]), math.rad(rotationy["Value"]), math.rad(rotationz["Value"]))
-			else
-				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
-				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
-				pcall(function()
-					for i,v in pairs(cam.Viewmodel.Humanoid.Animator:GetPlayingAnimationTracks()) do 
-						v:Stop()
-					end
-				end)
-				bedwars["ViewmodelController"]:playAnimation(11)
-				cam.Viewmodel.RightHand.RightWrist.C1 = oldc1
+			if cam:FindFirstChild("Viewmodel") then
+				if callback then
+					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -(nobobdepth["Value"] / 10))
+					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", (nobobhorizontal["Value"] / 10))
+					pcall(function()
+						for i,v in pairs(cam.Viewmodel.Humanoid.Animator:GetPlayingAnimationTracks()) do 
+							v:Stop()
+						end
+					end)
+					bedwars["ViewmodelController"]:playAnimation(11)
+					oldc1 = cam.Viewmodel.RightHand.RightWrist.C1
+					cam.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(rotationx["Value"]), math.rad(rotationy["Value"]), math.rad(rotationz["Value"]))
+				else
+					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
+					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
+					pcall(function()
+						for i,v in pairs(cam.Viewmodel.Humanoid.Animator:GetPlayingAnimationTracks()) do 
+							v:Stop()
+						end
+					end)
+					bedwars["ViewmodelController"]:playAnimation(11)
+					cam.Viewmodel.RightHand.RightWrist.C1 = oldc1
+				end
 			end
 		end,
 		["HoverText"] = "Removes the ugly bobbing when you move and makes sword farther"
