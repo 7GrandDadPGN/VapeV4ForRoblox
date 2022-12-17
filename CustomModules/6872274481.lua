@@ -7005,11 +7005,11 @@ runcode(function()
 				if entity.isAlive and (queueType and (not queueType:find("mega"))) then
 					balloons = buyballoons()
 				end
-				local megacheck = queueType and queueType:find("mega") and true or false
+				local megacheck = (queueType and queueType:find("mega") or queueType == "winter_event") and true or false
 				task.spawn(function()
 					repeat task.wait() until queueType ~= "bedwars_test" or (not fly["Enabled"])
 					if not fly["Enabled"] then return end
-					megacheck = queueType and queueType:find("mega") and true or false
+					megacheck = (queueType and queueType:find("mega") or queueType == "winter_event") and true or false
 				end)
 				local allowed = entity.isAlive and ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
 				if flyac["Enabled"] and allowed <= 0 and shared.damageanim and (not balloons) then 
