@@ -428,7 +428,7 @@ KnifeAura = Combat.CreateOptionsButton({
     Function = function(callback)
         if callback then
             spawn(function()
-                repeat wait(0.1)
+                repeat task.wait(0.1)
                     for _, v in pairs(workspace.Ignore.Zombies:GetChildren()) do
                         if v and v:FindFirstChildOfClass("Humanoid") and v:FindFirstChild("HumanoidRootPart") and isNear(v, KARange.Value) then
                             ReplicatedStorage.Framework.Remotes.KnifeHitbox:FireServer(v:FindFirstChildOfClass("Humanoid"))
