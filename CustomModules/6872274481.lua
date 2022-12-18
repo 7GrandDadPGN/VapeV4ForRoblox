@@ -5560,6 +5560,12 @@ runcode(function()
 
 	local function shoot(item, ammotypething)
 		local plr = GetNearestHumanoidToPosition(true, BowAuraRange["Value"], oldcloneroot and oldcloneroot.Position)
+		if queueType == "winter_event" then 
+			local boss = workspace:FindFirstChild("WinterEventBoss")
+			if boss then 
+				plr = {RootPart = boss.PrimaryPart, Player = {Name = "", UserId = 99999999}, Character = workspace}
+			end
+		end
 		if plr then 
 			local rayparams = RaycastParams.new()
 			rayparams.FilterDescendantsInstances = {lplr.Character, plr.Character}
