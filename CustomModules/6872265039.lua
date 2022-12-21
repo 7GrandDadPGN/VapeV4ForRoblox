@@ -501,7 +501,7 @@ local function renderNametag(plr)
 				end)
 			end
 		end)
-		task.spawn(function()
+		spawn(function()
 			if plr.Character and plr.Character ~= oldchar then
 				spawn(function()
 					pcall(function() 
