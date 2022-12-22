@@ -94,7 +94,7 @@ if isfolder("vape/assets") == false then
 end
 
 local GuiLibrary = loadstring(GetURL("NewGuiLibrary.lua"))()
-local translations = {}--loadstring(GetURL("translations/"..GuiLibrary["Language"]..".vapetranslation"))()
+local translations = shared.VapeTranslation or {}--loadstring(GetURL("translations/"..GuiLibrary["Language"]..".vapetranslation"))()
 local translatedlogo = false--pcall(function() return GetURL("translations/"..GuiLibrary["Language"].."/VapeLogo1.png") end)
 
 local checkpublicreponum = 0
@@ -1729,6 +1729,7 @@ GuiLibrary["SelfDestruct"] = function()
 	shared.VapeIndependent = nil
 	shared.VapeManualLoad = nil
 	shared.CustomSaveVape = nil
+	shared.VapeTranslation = nil
 	GuiLibrary["KeyInputHandler"]:Disconnect()
 	GuiLibrary["KeyInputHandler2"]:Disconnect()
 	if MiddleClickInput then
