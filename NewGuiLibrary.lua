@@ -56,7 +56,7 @@ if shared.VapeExecuted then
 		end
 	end
 
-	local translations = {}--loadstring(GetURL("translations/"..api["Language"]..".vapetranslation") or GetURL("translations/en-us.vapetranslation"))()
+	local translations = shared.VapeTranslation or {}--loadstring(GetURL("translations/"..api["Language"]..".vapetranslation") or GetURL("translations/en-us.vapetranslation"))()
 	--local translatedlogo, res = pcall(function() return GetURL("translations/"..api["Language"].."/VapeLogo1.png") end)
 	local translatedlogo = false
 
