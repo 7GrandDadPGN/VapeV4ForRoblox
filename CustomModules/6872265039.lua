@@ -211,7 +211,7 @@ local function createwarning(title, text, delay)
 	return (suc and res)
 end
 
-local newupdate = lplr.PlayerScripts.TS:WaitForChild("ui", 3) and true or false
+local newupdate = true
 
 runcode(function()
     local flaggedremotes = {"SelfReport"}
