@@ -7502,10 +7502,8 @@ runcode(function()
 				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil and disabledproper then 
 					local oldpos = clone.CFrame
 					local oldvelo = oldcloneroot.Velocity.Y
-					if networkownerfunc(oldcloneroot) then
-						oldcloneroot.Velocity = Vector3.new(0, -1, 0)
-						oldcloneroot.CFrame = oldpos
-					end
+					oldcloneroot.Velocity = Vector3.new(0, -1, 0)
+					oldcloneroot.CFrame = oldpos
 					local part = Instance.new("Part")
 					part.Anchored = true
 					part.CanCollide = false
