@@ -1183,6 +1183,7 @@ if shared.VapeExecuted then
 				local windowbackbutton2 = Instance.new("ImageButton")
 				windowbackbutton2.Size = UDim2.new(0, 16, 0, 16)
 				windowbackbutton2.Position = UDim2.new(0, 11, 0, 13)
+				windowbackbutton2.ImageColor3 = Color3.fromRGB(60, 60, 60)
 				windowbackbutton2.Visible = false
 				windowbackbutton2.ImageTransparency = 0.55
 				windowbackbutton2.BackgroundTransparency = 1
