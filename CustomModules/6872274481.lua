@@ -4716,8 +4716,8 @@ runcode(function()
 	task.spawn(function()
 		bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p6)
 			connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
-				if p7.entityInstance == lplr.Character and p7.damageType == 3 and longjump["Enabled"] then 
-					damagetimer = p7.knockbackMultiplier and p7.knockbackMultiplier.horizontal * sliderval2["Value"] or sliderval2["Value"]
+				if p7.entityInstance == lplr.Character and p7.damageType == 3 and longjump["Enabled"] and p7.knockbackMultiplier then 
+					damagetimer = p7.knockbackMultiplier.horizontal * sliderval2["Value"] or 0
 					damagetimertick = 2.5
 					local newpos = (entity.character.HumanoidRootPart.Position - p7.fromPosition)
 					directionvec = Vector3.new(newpos.X, 0, newpos.Z).Unit
@@ -4836,7 +4836,7 @@ runcode(function()
 									damagetimer = 0.001
 								end
 								if longjumpacprogressbartext then 
-									longjumpacprogressbartext.Text = (math.floor(damagetimertick * 10) / 10).."s"
+									longjumpacprogressbartext.Text = (math.max(math.floor(damagetimertick * 10) / 10, 0)).."s"
 								end
 								if not passed then 
 									passed = getblock(entity.character.HumanoidRootPart.Position - Vector3.new(0, 3, 0)) == nil
