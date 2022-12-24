@@ -691,7 +691,7 @@ runcode(function()
 				end
 			end
 			if aimwallbang["Enabled"] then
-				return {tar, tar.Position, direction.lookVector * Args[1].Direction.Magnitude, tar.Material}
+				return {tar, tar.Position, (tar.Position - origin), tar.Material}
 			end
 			Args[1] = Ray.new(origin, direction.lookVector * Args[1].Direction.Magnitude)
 			return
@@ -845,7 +845,7 @@ runcode(function()
 				methodused = "Normal"..v3check
 				task.spawn(function()
 					repeat
-						task.wait(0.1)
+						task.wait()
 						local targettable = {}
 						local targetsize = 0
 						if recentlyshotplr and recentlyshottick >= tick() then 
@@ -2193,42 +2193,80 @@ phaselimit["Object"].Visible = phasemode["Value"] == "AntiCheat"
 runcode(function()
 	local spiderspeed = {["Value"] = 0}
 	local spiderstate = {["Enabled"] = false}
+	local spidermode = {["Value"] = "Normal"}
+	local spiderpart
+	local function roundpos(dir, pos, size)
+		local suc, res = pcall(function() return Vector3.new(math.clamp(dir.X, pos.X - (size.X / 2), pos.X + (size.X / 2)), math.clamp(dir.Y, pos.Y - (size.Y / 2), pos.Y + (size.Y / 2)), math.clamp(dir.Z, pos.Z - (size.Z / 2), pos.Z + (size.Z / 2))) end)
+		return suc and res or Vector3.zero
+	end
+	local raycastparameters = RaycastParams.new()
+	raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
 	Spider = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Spider",
 		["Function"] = function(callback)
 			if callback then
 				RunLoops:BindToHeartbeat("Spider", 1, function()
 					if entity.isAlive then
-						local chars = {cam}
+						local chars = {cam, spiderpart}
 						for i,v in pairs(players:GetChildren()) do
 							table.insert(chars, v.Character)
 						end
-						local vec = (entity.character.Humanoid.MoveDirection ~= Vector3.new() and entity.character.Humanoid.MoveDirection.Unit * 2 or Vector3.new())
-						local raycastparameters = RaycastParams.new()
 						raycastparameters.FilterDescendantsInstances = chars
-						raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
-						local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec + Vector3.new(0, 0.1, 0), raycastparameters)
-						local newray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0), raycastparameters)
-						if spidergoinup and (not newray) and (not newray2) then
-							entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
-						end
-						spidergoinup = ((newray or newray2) and true or false)
-						holdingshift = uis:IsKeyDown(Enum.KeyCode.LeftShift)
-						if (newray or newray2) and (newray or newray2).Normal.Y == 0 then
-							if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] and holdingshift == false or GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false) then
-								if spiderstate["Enabled"] then 
-									entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Climbing)
+						if spidermode["Value"] == "Normal" then
+							local vec = (entity.character.Humanoid.MoveDirection ~= Vector3.new() and entity.character.Humanoid.MoveDirection.Unit * 2 or Vector3.new())
+							local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec + Vector3.new(0, 0.1, 0), raycastparameters)
+							local newray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0), raycastparameters)
+							if spidergoinup and (not newray) and (not newray2) then
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
+							end
+							spidergoinup = ((newray or newray2) and true or false)
+							holdingshift = uis:IsKeyDown(Enum.KeyCode.LeftShift)
+							if (newray or newray2) and (newray or newray2).Normal.Y == 0 then
+								if (newray or newray2) and (GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] and holdingshift == false or GuiLibrary["ObjectsThatCanBeSaved"]["PhaseOptionsButton"]["Api"]["Enabled"] == false) then
+									if spiderstate["Enabled"] then 
+										entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Climbing)
+									end
+									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X - (entity.character.HumanoidRootPart.CFrame.lookVector.X / 2), spiderspeed["Value"], entity.character.HumanoidRootPart.Velocity.Z - (entity.character.HumanoidRootPart.CFrame.lookVector.Z / 2))
 								end
-								entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X - (entity.character.HumanoidRootPart.CFrame.lookVector.X / 2), spiderspeed["Value"], entity.character.HumanoidRootPart.Velocity.Z - (entity.character.HumanoidRootPart.CFrame.lookVector.Z / 2))
+							end
+						else
+							if not spiderpart then 
+								spiderpart = Instance.new("TrussPart")
+								spiderpart.Size = Vector3.new(2, 2, 2)
+								spiderpart.Transparency = 1
+								spiderpart.Anchored = true
+								spiderpart.Parent = cam
+							end
+							local vec = entity.character.HumanoidRootPart.CFrame.lookVector * 1.5
+							local newray2 = workspace:Raycast(entity.character.HumanoidRootPart.Position, (vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)), raycastparameters)
+							if newray2 and (not newray2.Instance.CanCollide) then newray2 = nil end 
+							if newray2 then 
+								local newray2pos = newray2.Instance.Position
+								local newpos = roundpos(entity.character.HumanoidRootPart.Position, Vector3.new(newray2pos.X, math.min(entity.character.HumanoidRootPart.Position.Y, newray2pos.Y), newray2pos.Z), newray2.Instance.Size - Vector3.new(1.9, 1.9, 1.9))
+								spiderpart.Position = newpos
+							else
+								spiderpart.Position = Vector3.zero
 							end
 						end
 					end
 				end)
 			else
+				if spiderpart then 
+					spiderpart:Remove()
+				end
 				RunLoops:UnbindFromHeartbeat("Spider")
 			end
 		end,
 		["HoverText"] = "Lets you climb up walls"
+	})
+	spidermode = Spider.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Normal", "Classic"},
+		["Function"] = function() 
+			if spiderpart then 
+				spiderpart:Remove()
+			end
+		end
 	})
 	spiderspeed = Spider.CreateSlider({
 		["Name"] = "Speed",
