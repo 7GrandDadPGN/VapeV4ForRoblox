@@ -184,13 +184,13 @@ end)
 task.spawn(function()
 	local image = Instance.new("ImageLabel")
 	image.Image = getcustomassetfunc("vape/assets/CombatIcon.png")
-	image.Position = UDim2.new(0, 0, 0, 0)
+	image.Position = UDim2.new(0, 5, 0, 5)
 	image.BackgroundTransparency = 1
-	image.Size = UDim2.new(0, 0, 0, 0)
+	image.Size = UDim2.new(0, 1, 0, 1)
 	image.ImageTransparency = 0.99
 	image.Parent = GuiLibrary["MainGui"]
 	task.delay(5, function()
-		if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not betterisfile("vape/assets/check.txt")) then 
+		if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not betterisfile("vape/assets/check2.txt")) then 
 			shown = true
 			local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
 			local prompt = ErrorPrompt.new("Default")
@@ -202,7 +202,7 @@ task.spawn(function()
 				Text = "OK",
 				Callback = function() 
 					prompt:_close() 
-					writefile("vape/assets/check.txt", "")
+					writefile("vape/assets/check2.txt", "")
 				end,
 				Primary = true
 			}}, 'Default')
