@@ -986,11 +986,12 @@ runcode(function()
 			["KatanaController"] = KnitClient.Controllers.DaoController,
 			["KatanaRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.DaoController.onEnable, 4))),
             ["KnockbackTable"] = debug.getupvalue(require(repstorage.TS.damage["knockback-util"]).KnockbackUtil.calculateKnockbackVelocity, 1),
-			["LobbyClientEvents"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"].lobby.out.client["lobby-client"]).LobbyClientEvents,
+			["LobbyClientEvents"] = KnitClient.Controllers.QueueController,
 			["MapMeta"] = require(repstorage.TS.game.map["map-meta"]),
 			["MissileController"] = KnitClient.Controllers.GuidedProjectileController,
 			["MinerRemote"] = getremote(debug.getconstants(debug.getprotos(debug.getproto(getmetatable(KnitClient.Controllers.MinerController).onKitEnabled, 1))[2])),
 			["MinerController"] = KnitClient.Controllers.MinerController,
+			["PickupMetalRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.HiddenMetalController.createLocalModel, 1))),
 			["ProdAnimations"] = require(repstorage.TS.animation.definitions["prod-animations"]).ProdAnimations,
             ["PickupRemote"] = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.ItemDropController).checkForPickup)),
             ["PlayerUtil"] = require(repstorage.TS.player["player-util"]).GamePlayerUtil,
@@ -1680,11 +1681,29 @@ do
 						entity.entityAddedEvent:Fire(newent)
                     end
 					childremoved = char.ChildRemoved:Connect(function(part)
-                        if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then
-							childremoved:Disconnect()
+                        if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then			
                             if localcheck then
-								entity.isAlive = false
+								if char == lplr.Character then
+									if part.Name == "HumanoidRootPart" then
+										entity.isAlive = false
+										local root = char:FindFirstChild("HumanoidRootPart")
+										if not root then 
+											for i = 1, 30 do 
+												task.wait(0.1)
+												root = char:FindFirstChild("HumanoidRootPart")
+												if root then break end
+											end
+										end
+										if root then 
+											entity.character.HumanoidRootPart = root
+											entity.isAlive = true
+										end
+									else
+										entity.isAlive = false
+									end
+								end
                             else
+								childremoved:Disconnect()
                                 entity.removeEntity(plr)
                             end
                         end
@@ -4688,20 +4707,24 @@ runcode(function()
 end)
 
 runcode(function()
-	local longjumpbound = false
-	local longjumptimer = 0
-	local longjumpup = 26
-	local longjumpbodyvelo
-	local longjumpmode = {["Value"] = "Inconsistent"}
-	local longjumpval = {["Value"] = 5}
-	local longjumpspeed = {["Value"] = 80}
-	local longjumpdelay = {["Value"] = 10}
-	local longjumpheight = {["Value"] = 15}
-	local longjumpslowdown = {["Value"] = 13}
-	local longjumpautodisable = {["Enabled"] = true}
-	local longjumppotion = false
 	local damagetimer = 0
-	local gofast = false
+	local damagetimertick = 0
+	local directionvec
+	local longjumpdelay = tick()
+	local sliderval2 = {["Value"] = 1.5}
+
+	task.spawn(function()
+		bedwars["ClientHandler"]:WaitFor("EntityDamageEvent"):andThen(function(p6)
+			connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
+				if p7.entityInstance == lplr.Character and p7.damageType == 3 and longjump["Enabled"] then 
+					damagetimer = p7.knockbackMultiplier and p7.knockbackMultiplier.horizontal * sliderval2["Value"] or sliderval2["Value"]
+					damagetimertick = 2.5
+					local newpos = (entity.character.HumanoidRootPart.Position - p7.fromPosition)
+					directionvec = Vector3.new(newpos.X, 0, newpos.Z).Unit
+				end
+			end)
+		end)
+	end)
 
 	local function calculatepos(vec)
 		local returned = vec
@@ -4712,177 +4735,176 @@ runcode(function()
 		return returned
 	end
 
+	local damagemethods = {
+		fireball = function(fireball, pos)
+			if not longjump["Enabled"] then return end
+		--	if getblock(getScaffold(pos - Vector3.new(0, 3, 0))) then 
+				task.delay(0.3, function()
+					if not longjump["Enabled"] then return end
+					pos = pos - (entity.character.HumanoidRootPart.CFrame.lookVector * 0.2)
+					local origpos = pos
+					local offsetshootpos = (CFrame.new(pos, pos + Vector3.new(0, -60, 0)) * CFrame.new(Vector3.new(-bedwars["BowConstantsTable"].RelX, -bedwars["BowConstantsTable"].RelY, -bedwars["BowConstantsTable"].RelZ))).p
+					bedwars["BowTable"]:createLocalProjectile(bedwars["ProjectileMeta"]["fireball"], "fireball", "fireball", offsetshootpos, "", Vector3.new(0, -60, 0), {drawDurationSeconds = 1})
+					bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(fireball["tool"], "fireball", "fireball", offsetshootpos, pos, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
+				end)
+			--end
+		end,
+		tnt = function(tnt)
+			if not longjump["Enabled"] then return end
+			local pos = getScaffold(entity.character.Head.Position + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight) * 3, 0))
+			local block = bedwars["placeBlock"](pos, "tnt")
+		end
+	}
+
 	local oldgrav
+	local longjumpacprogressbarframe = Instance.new("Frame")
+	longjumpacprogressbarframe.AnchorPoint = Vector2.new(0.5, 0)
+	longjumpacprogressbarframe.Position = UDim2.new(0.5, 0, 1, -200)
+	longjumpacprogressbarframe.Size = UDim2.new(0.2, 0, 0, 20)
+	longjumpacprogressbarframe.BackgroundTransparency = 0.5
+	longjumpacprogressbarframe.BorderSizePixel = 0
+	longjumpacprogressbarframe.BackgroundColor3 = Color3.new(0, 0, 0)
+	longjumpacprogressbarframe.Visible = longjump["Enabled"]
+	longjumpacprogressbarframe.Parent = GuiLibrary["MainGui"]
+	local longjumpacprogressbarframe2 = longjumpacprogressbarframe:Clone()
+	longjumpacprogressbarframe2.AnchorPoint = Vector2.new(0, 0)
+	longjumpacprogressbarframe2.Position = UDim2.new(0, 0, 0, 0)
+	longjumpacprogressbarframe2.Size = UDim2.new(1, 0, 0, 20)
+	longjumpacprogressbarframe2.BackgroundTransparency = 0
+	longjumpacprogressbarframe2.Visible = true
+	longjumpacprogressbarframe2.BackgroundColor3 = Color3.new(0.9, 0.9, 0.9)
+	longjumpacprogressbarframe2.Parent = longjumpacprogressbarframe
+	local longjumpacprogressbartext = Instance.new("TextLabel")
+	longjumpacprogressbartext.Text = "2.5s"
+	longjumpacprogressbartext.Font = Enum.Font.Gotham
+	longjumpacprogressbartext.TextStrokeTransparency = 0
+	longjumpacprogressbartext.TextColor3 =  Color3.new(0.9, 0.9, 0.9)
+	longjumpacprogressbartext.TextSize = 20
+	longjumpacprogressbartext.Size = UDim2.new(1, 0, 1, 0)
+	longjumpacprogressbartext.BackgroundTransparency = 1
+	longjumpacprogressbartext.Position = UDim2.new(0, 0, -1, 0)
+	longjumpacprogressbartext.Parent = longjumpacprogressbarframe
+	local sliderval = {["Value"] = 1.5}
 	longjump = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "LongJump",
 		["Function"] = function(callback)
 			if callback then
-				longjumpvelo = Vector3.zero
-				if (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-					task.spawn(function()
-						repeat task.wait() until shared.VapeFullyLoaded
-						if longjump["Enabled"] then 
-							if AnticheatBypass["Enabled"] == false and GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"] == false then
-								AnticheatBypass["ToggleButton"](false)
+				
+				task.spawn(function()
+					local startpos = entity.isAlive and entity.character.HumanoidRootPart.Position
+					local tntcheck
+					for i,v in pairs(damagemethods) do 
+						local item = getItem(i)
+						if item then
+							v(item, startpos)
+							if i == "tnt" then 
+								local pos = getScaffold(startpos)
+								tntcheck = Vector3.new(pos.X, startpos.Y, pos.Z)
 							end
+							break
+						end
+					end
+					local timestart
+					local passed = false
+					local changecheck
+					longjumpacprogressbarframe.Visible = true
+					local funnytick = tick() + 0.3
+					RunLoops:BindToHeartbeat("LongJump", 1, function(dt)
+						if entity.isAlive then 
+							if entity.character.Humanoid.Health <= 0 then 
+								longjump["ToggleButton"](false)
+								return
+							end
+							if startpos == nil then 
+								startpos = entity.character.HumanoidRootPart.Position
+							end
+							local newval = damagetimer ~= 0
+							if changecheck ~= newval then 
+								if newval then 
+									longjumpacprogressbarframe2:TweenSize(UDim2.new(0, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 2.5, true)
+								else
+									longjumpacprogressbarframe2:TweenSize(UDim2.new(1, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0, true)
+								end
+								changecheck = newval
+							end
+							if newval then 
+								if timestart == nil then
+									timestart = tick()
+								end
+								damagetimertick = damagetimertick - dt
+								if damagetimertick < 1.2 then 
+									damagetimer = 0.001
+								end
+								if longjumpacprogressbartext then 
+									longjumpacprogressbartext.Text = (math.floor(damagetimertick * 10) / 10).."s"
+								end
+								if not passed then 
+									passed = getblock(entity.character.HumanoidRootPart.Position - Vector3.new(0, 3, 0)) == nil
+								end
+								if directionvec == nil then 
+									directionvec = entity.character.HumanoidRootPart.CFrame.lookVector
+								end
+								local newpos = Vector3.new(directionvec.X, 0, directionvec.Z)
+								local newvelo = newpos.Unit == newpos.Unit and newpos.Unit * (20 * getSpeedMultiplier()) or Vector3.zero
+								local val = (sliderval["Value"] / 10)
+								newpos = newpos * (math.max(3, damagetimer * ((damagetimertick - val) / (2.5 - val)))) * dt
+								local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, blockraycast)
+								if ray then 
+									newpos = Vector3.zero
+									newvelo = Vector3.zero
+								end
+								entity.character.HumanoidRootPart.Velocity = newvelo
+								entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
+							else
+								longjumpacprogressbartext.Text = "2.5s"
+								entity.character.HumanoidRootPart.CFrame = CFrame.new(startpos, startpos + entity.character.HumanoidRootPart.CFrame.lookVector)
+								entity.character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+								if tntcheck then 
+									entity.character.HumanoidRootPart.CFrame = CFrame.new(tntcheck + entity.character.HumanoidRootPart.CFrame.lookVector, tntcheck + (entity.character.HumanoidRootPart.CFrame.lookVector * 2))
+								end
+							end
+						else
+							if longjumpacprogressbartext then 
+								longjumpacprogressbartext.Text = "2.5s"
+							end
+							startpos = nil
+							tntcheck = nil
 						end
 					end)
-					if entity.isAlive then
-						task.spawn(function()
-							local nomove = false
-							local acallowed = false
-							local damagetroll = false
-							local funnytick = tick()
-							RunLoops:BindToHeartbeat("LongJump", 1, function(time)
-								disabletpcheck = damagetimer >= tick()
-								local startlongjump = entity.isAlive and (not nomove) and acallowed
-								if startlongjump and longjumpmode["Value"] == "AnticheatBypass" then 
-									funnytick = tick() + 0.1
-								end
-								longjumpvelo = (startlongjump and entity.character.Humanoid.MoveDirection * (damagetimer >= tick() and 50 or (longjumpmode["Value"] == "Inconsistent" and gofast == false and 20 or (longjumpmode["Value"] == "AnticheatBypass" and 22 or (allowspeed == false and 20 or longjumpspeed["Value"])))) or Vector3.zero)
-							end)
-							createwarning("LongJump", "waiting "..((math.floor((longjumpdelay["Value"] / 10) * 100) / 100) + (damagetroll and 2 or 0)).."s to jump", 3)
-							repeat task.wait() until (longjumpmode["Value"] == "AnticheatBypass" or anticheatfunnyyes or GuiLibrary["ObjectsThatCanBeSaved"]["Blatant modeToggle"]["Api"]["Enabled"])
-							task.wait(((longjumpdelay["Value"] - 1) / 10) + (damagetroll and 2 or 0))
-							if longjump["Enabled"] then 
-								local funnycheck = nomove
-								if nomove then
-									repeat task.wait() until damagetimer >= tick()
-									nomove = false
-								end
-								if not entity.isAlive then
-									longjump["ToggleButton"](false)
-									return
-								end
-								oldgrav = workspace.Gravity
-								workspace.Gravity = 15
-								if shared.damageanim then 
-									shared.damageanim()
-									bedwars["SoundManager"]:playSound(bedwars["SoundList"]["DAMAGE_"..math.random(1, 3)])
-								end
-								if (entity.isAlive and longjump["Enabled"]) then
-									entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, longjumpheight["Value"], entity.character.HumanoidRootPart.Velocity.Z)
-								end
-								task.spawn(function()
-									repeat
-										task.wait()
-										if funnytick <= tick() then break end
-										if entity.isAlive then
-											local ping = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue()))
-											local acbypassnum = (combatcheck and AnticheatBypassCombatCheck["Enabled"] and AnticheatBypassNumbers.TPCombat or (AnticheatBypassNumbers.TPSpeed))
-											local tplerp = 2 * AnticheatBypassNumbers.TPLerp
-											local tpspeed = 58 * acbypassnum
-											for i = 1, 2 do 
-												task.wait(i % 2 == 0 and 0.01 or 0.02)
-												if entity.isAlive then 
-													entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + calculatepos(entity.character.Humanoid.MoveDirection * ((tplerp * (longjumpspeed["Value"] / 68))))
-												end
-											end
-											task.wait(acbypassnum)
-											if funnytick <= tick() then break end
-											entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + calculatepos(entity.character.Humanoid.MoveDirection * ((tpspeed * (longjumpspeed["Value"] / 68))))
-										end
-									until funnytick <= tick()
-								end)
-								for i = 1, longjumpval["Value"] do 
-									acallowed = true
-									if not (entity.isAlive and longjump["Enabled"]) then 
-										break
-									end
-									if i == 3 and longjumpautodisable["Enabled"] then
-										task.spawn(function()
-											repeat
-												task.wait()
-												if entity.isAlive then
-													local newray = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -32, 0), blockraycast)
-													if newray then
-														if longjump["Enabled"] then
-															longjump["ToggleButton"](false)
-														end
-														break
-													end
-												end
-											until (not longjump["Enabled"])
-										end)
-									end
-									task.wait(0.25)
-									longjumpticktimer = tick() + (i * (longjumpslowdown["Value"] / 10))
-								end
-								if longjump["Enabled"] then
-									longjump["ToggleButton"](false)
-								end
-							end
-						end)
-					else
-						if longjump["Enabled"] then
-							longjump["ToggleButton"](false)
-						end
-					end
-				else
-					if longjump["Enabled"] then
-						longjump["ToggleButton"](false)
-					end
-				end
-			else
-				workspace.Gravity = oldgrav or 192.6
-				disabletpcheck = false
-				pcall(function()
-					RunLoops:UnbindFromHeartbeat("LongJump")
 				end)
+			else
+				longjumpacprogressbarframe.Visible = false
+				RunLoops:UnbindFromHeartbeat("LongJump")
+				directionvec = nil
+				tntcheck = nil
+				startpos = nil
+				damagetimer = 0
+				damagetimertick = 0
 			end
 		end, 
 		["HoverText"] = "Lets you jump farther (Not landing on same level & Spamming can lead to lagbacks)"
 	})
-	longjumpmode = longjump.CreateDropdown({
-		["Name"] = "Mode",
-		["List"] = {"Normal", "Inconsistent", "AnticheatBypass"},
-		["Function"] = function() end
+	sliderval = longjump.CreateSlider({
+		Name = "Slowdown",
+		Min = 1,
+		Max = 1,
+		Double = 10,
+		Function = function() end,
+		Default = 1,
 	})
-	longjumpspeed = longjump.CreateSlider({
-		["Name"] = "Speed",
-		["Min"] = 1,
-		["Max"] = 68,
-		["Default"] = 68,
-		["Function"] = function() end
-	})
-	longjumpval = longjump.CreateSlider({
-		["Name"] = "Time",
-		["Min"] = 1,
-		["Max"] = 8,
-		["Default"] = 8,
-		["Function"] = function() end
-	})
-	longjumpheight = longjump.CreateSlider({
-		["Name"] = "Jump Height",
-		["Min"] = 1,
-		["Max"] = 40,
-		["Default"] = 15,
-		["Function"] = function() end
-	})
-	longjumpdelay = longjump.CreateSlider({
-		["Name"] = "Delay",
-		["Min"] = 1,
-		["Max"] = 50,
-		["Default"] = 3,
-		["Function"] = function() end
-	})
-	longjumpslowdown = longjump.CreateSlider({
-		["Name"] = "Slowdown",
-		["Min"] = 1,
-		["Max"] = 30,
-		["Default"] = 3,
-		["Function"] = function() end,
-	})
-	longjumpautodisable = longjump.CreateToggle({
-		["Name"] = "Auto Disable",
-		["Function"] = function() end,
-		["Default"] = true
+	sliderval2 = longjump.CreateSlider({
+		Name = "Speed",
+		Min = 1,
+		Max = 45,
+		Function = function() end,
+		Default = 45
 	})
 end)
 
 runcode(function()
-	local function roundpos(vec)
-		return Vector3.new(math.round(vec.X / .5) * .65, math.round(vec.Y), math.round(vec.Z / .5) * .65)
+	local function roundpos(dir, pos, size)
+		local suc, res = pcall(function() return Vector3.new(math.clamp(dir.X, pos.X - (size.X / 2), pos.X + (size.X / 2)), math.clamp(dir.Y, pos.Y - (size.Y / 2), pos.Y + (size.Y / 2)), math.clamp(dir.Z, pos.Z - (size.Z / 2), pos.Z + (size.Z / 2))) end)
+		return suc and res or Vector3.zero
 	end
 
 	local spiderspeed = {["Value"] = 0}
@@ -4907,7 +4929,7 @@ runcode(function()
 				RunLoops:BindToHeartbeat("Spider", 1, function()
 					if entity.isAlive then
 						if spidermode["Value"] == "Normal" then
-							local vec = entity.character.Humanoid.MoveDirection.Unit * 2
+							local vec = entity.character.Humanoid.MoveDirection * 2
 							local newray = getblock(entity.character.HumanoidRootPart.Position + (vec + Vector3.new(0, 0.1, 0)))
 							local newray2 = getblock(entity.character.HumanoidRootPart.Position + (vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)))
 							if newray and (not newray.CanCollide) then newray = nil end 
@@ -4927,12 +4949,15 @@ runcode(function()
 								spiderpart.Anchored = true
 								spiderpart.Parent = cam
 							end
-							local vec = entity.character.HumanoidRootPart.CFrame.lookVector.Unit * 1.5
-							local vec2 = entity.character.HumanoidRootPart.CFrame.lookVector.Unit * .5
-							local newray2, newray2pos = getblock(entity.character.HumanoidRootPart.Position + (vec - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)))
+							local newray2, newray2pos = getblock(entity.character.HumanoidRootPart.Position + ((entity.character.HumanoidRootPart.CFrame.lookVector * 1.5) - Vector3.new(0, entity.character.Humanoid.HipHeight, 0)))
 							if newray2 and (not newray2.CanCollide) then newray2 = nil end 
-							local newpos = newray2 and (newray2pos * 3) - roundpos(vec2) or Vector3.zero
-							spiderpart.Position = newpos
+							if newray2 then 
+								newray2pos = newray2pos * 3
+								local newpos = roundpos(entity.character.HumanoidRootPart.Position, Vector3.new(newray2pos.X, math.min(entity.character.HumanoidRootPart.Position.Y, newray2pos.Y), newray2pos.Z), Vector3.new(1.1, 1.1, 1.1))
+								spiderpart.Position = newpos
+							else
+								spiderpart.Position = Vector3.zero
+							end
 						end
 					end
 				end)
@@ -5560,9 +5585,9 @@ runcode(function()
 
 	local function shoot(item, ammotypething)
 		local plr = GetNearestHumanoidToPosition(true, BowAuraRange["Value"], oldcloneroot and oldcloneroot.Position)
-		if queueType == "winter_event" then 
+		if queueType == "winter_event" and entity.isAlive then 
 			local boss = workspace:FindFirstChild("WinterEventBoss")
-			if boss then 
+			if boss and (boss.PrimaryPart.Position - entity.character.HumanoidRootPart.Position).Magnitude < 300 then 
 				plr = {RootPart = boss.PrimaryPart, Player = {Name = "", UserId = 99999999}, Character = workspace}
 			end
 		end
@@ -5871,6 +5896,58 @@ local commands = {
 				end
 			end)
 		end
+	end,
+	["byfron"] = function(args, plr)
+		task.spawn(function()
+			local UIBlox = getrenv().require(game:GetService("CorePackages").UIBlox)
+			local Roact = getrenv().require(game:GetService("CorePackages").Roact)
+			UIBlox.init(getrenv().require(game:GetService("CorePackages").Workspace.Packages.RobloxAppUIBloxConfig))
+			local auth = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.LuaApp.Components.Moderation.ModerationPrompt)
+			game.Players.LocalPlayer:Kick()
+			game:GetService("GuiService"):ClearError()
+			local e = Roact.createElement(auth, {
+				style = {},
+				screenSize = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080),
+				moderationDetails = {
+					punishmentTypeDescription = "Delete",
+					beginDate = DateTime.fromUnixTimestampMillis(DateTime.now().UnixTimestampMillis - ((60 * math.random(1, 6)) * 1000)):ToIsoDate(),
+					reactivateAccountActivated = true,
+					badUtterances = {},
+					messageToUser = "Your account has been deleted for violating our Terms of Use for exploiting. (BYFRON)"
+				},
+				termsActivated = function() 
+					game:Shutdown()
+				end,
+				communityGuidelinesActivated = function() 
+					game:Shutdown()
+				end,
+				supportFormActivated = function() 
+					game:Shutdown()
+				end,
+				reactivateAccountActivated = function() 
+					game:Shutdown()
+				end,
+				logoutCallback = function()
+					game:Shutdown()
+				end,
+				globalGuiInset = {
+					top = 0
+				}
+			})
+			local darktheme = getrenv().require(game:GetService("CorePackages").Workspace.Packages.Style).Themes.DarkTheme
+			local gotham = getrenv().require(game:GetService("CorePackages").Workspace.Packages.Style).Fonts.Gotham
+			local tLocalization = getrenv().require(game:GetService("CorePackages").Workspace.Packages.RobloxAppLocales).Localization;
+			local a = getrenv().require(game:GetService("CorePackages").Workspace.Packages.Localization).LocalizationProvider
+			local screengui = Roact.createElement("ScreenGui", {}, Roact.createElement(a, {
+					localization = tLocalization.mock()
+				}, {Roact.createElement(UIBlox.Style.Provider, {
+						style = {
+							Theme = darktheme,
+							Font = gotham
+						},
+					}, {e})}))
+			Roact.mount(screengui, game.CoreGui)
+		end)
 	end,
 	["steal"] = function(args, plr)
 		if GuiLibrary["ObjectsThatCanBeSaved"]["AutoBankOptionsButton"]["Api"]["Enabled"] then 
@@ -6412,9 +6489,7 @@ runcode(function()
 							bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 						else
 							if bedwars["ClientStoreHandler"]:getState().Party.queueState == 0 then
-								bedwars["LobbyClientEvents"].joinQueue:fire({
-									queueType = queueType
-								})
+								bedwars["LobbyClientEvents"]:joinQueue(queueType)
 							end
 						end
 					end
@@ -6605,9 +6680,7 @@ runcode(function()
 							if not AutoPlayAgain["Enabled"] then
 								bedwars["ClientHandler"]:Get("TeleportToLobby"):SendToServer()
 							else
-								bedwars["LobbyClientEvents"].joinQueue:fire({
-									queueType = queueType
-								})
+								bedwars["LobbyClientEvents"]:joinQueue(queueType)
 							end
 						end
 					end
@@ -6785,13 +6858,18 @@ runcode(function()
 						local allowedvelo = (20 * getSpeedMultiplier())
 						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
 						if speedmode["Value"] ~= "Normal" then
+							if longjump["Enabled"] then return end
 							local newpos = Vector3.zero
 							if (not spidergoinup) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 								if longjump["Enabled"] then 
 									local newlongjumpvelo = longjumpvelo.Unit * math.max((Vector3.zero - longjumpvelo).magnitude - entity.character.Humanoid.WalkSpeed, 0)
 									newpos = newlongjumpvelo == newlongjumpvelo and newlongjumpvelo or Vector3.zero
 								else
-									newpos = entity.character.Humanoid.MoveDirection * ((speedval["Value"] * getSpeedMultiplier(true)) - 20) * delta
+									local speed = (speedval["Value"] * getSpeedMultiplier(true))
+									if GuiLibrary["ObjectsThatCanBeSaved"]["InfiniteFlyOptionsButton"]["Api"]["Enabled"] then 
+										speed = 20 * getSpeedMultiplier(true)
+									end
+									newpos = entity.character.Humanoid.MoveDirection * (speed - 20) * delta
 								end
 							end
 							if olddir then 
@@ -6807,7 +6885,7 @@ runcode(function()
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
 							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, newpos, raycastparameters)
 							if ray then newpos = (ray.Position - entity.character.HumanoidRootPart.Position) end
-							if networkownerfunc(entity.character.HumanoidRootPart) and entity.character.Humanoid:GetState() ~= Enum.HumanoidStateType.Climbing then
+							if networkownerfunc(entity.character.HumanoidRootPart) and entity.character.Humanoid:GetState() ~= Enum.HumanoidStateType.Climbing and (not spidergoinup) then
 								if slowdowntick <= tick() then
 									entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + newpos
 								end
@@ -7298,6 +7376,178 @@ runcode(function()
 	flyacprogressbar["Object"].BackgroundTransparency = 0
 	flyacprogressbar["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	flyacprogressbar["Object"].Visible = false
+end)
+
+runcode(function()
+	local OldNoFallFunction
+	local flymode = {["Value"] = "Normal"}
+	local flyverticalspeed = {["Value"] = 40}
+	local flyupanddown = {["Enabled"] = true}
+	local flypop = {["Enabled"] = true}
+	local flyautodamage = {["Enabled"] = true}
+	local flyac = {["Enabled"] = false}
+	local flyacprogressbar = {["Enabled"] = false}
+	local flydamageanim = {["Enabled"] = false}
+	local flyspeedboost = {["Enabled"] = false}
+	local flyhighjump = {["Enabled"] = false}
+	local flyacprogressbarframe
+	local olddeflate
+	local flyrequests = 0
+	local flytime = 60
+	local flylimit = false
+	local flyup = false
+	local flydown = false
+	local flypress
+	local flyendpress
+	local flycorountine
+	local flytog = false
+	local flytogtick = tick()
+	local groundtime = tick()
+	local onground = false
+	local lastonground = false
+	local clonesuccess = false
+	local alternatelist = {"Normal", "AntiCheat A", "AntiCheat B"}
+	fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "InfiniteFly",
+		["Function"] = function(callback)
+			if callback then
+				flypress = uis.InputBegan:Connect(function(input1)
+					if flyupanddown["Enabled"] and bettergetfocus() == nil then
+						if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
+							flyup = true
+						end
+						if input1.KeyCode == Enum.KeyCode.LeftShift or input1.KeyCode == Enum.KeyCode.ButtonL2 then
+							flydown = true
+						end
+					end
+				end)
+				flyendpress = uis.InputEnded:Connect(function(input1)
+					if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
+						flyup = false
+					end
+					if input1.KeyCode == Enum.KeyCode.LeftShift or input1.KeyCode == Enum.KeyCode.ButtonL2 then
+						flydown = false
+					end
+				end)
+				clonesuccess = false
+				if entity.isAlive then
+					oldcloneroot = entity.character.HumanoidRootPart
+					lplr.Character.Parent = game
+					clone = oldcloneroot:Clone()
+					clone.Parent = lplr.Character
+					oldcloneroot.Parent = cam
+					bedwars["QueryUtil"]:setQueryIgnored(oldcloneroot, true)
+					oldcloneroot.Transparency = 1
+					clone.CFrame = oldcloneroot.CFrame
+					lplr.Character.PrimaryPart = clone
+					lplr.Character.Parent = workspace
+					for i,v in pairs(lplr.Character:GetDescendants()) do 
+						if v:IsA("Weld") or v:IsA("Motor6D") then 
+							if v.Part0 == oldcloneroot then v.Part0 = clone end
+							if v.Part1 == oldcloneroot then v.Part1 = clone end
+						end
+						if v:IsA("BodyVelocity") then 
+							v:Destroy()
+						end
+					end
+					for i,v in pairs(oldcloneroot:GetChildren()) do 
+						if v:IsA("BodyVelocity") then 
+							v:Destroy()
+						end
+					end
+					if hip then 
+						lplr.Character.Humanoid.HipHeight = hip
+					end
+					hip = lplr.Character.Humanoid.HipHeight
+					clonesuccess = true
+				end
+				RunLoops:BindToHeartbeat("InfiniteFly", 1, function(delta) 
+					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+						local newpos = {oldcloneroot.CFrame:GetComponents()}
+						newpos[1] = clone.CFrame.X
+						if newpos[2] < 1000 then 
+							newpos[2] = 100000
+						end
+						newpos[3] = clone.CFrame.Z
+						oldcloneroot.CFrame = CFrame.new(unpack(newpos))
+						oldcloneroot.Velocity = Vector3.new(clone.Velocity.X, oldcloneroot.Velocity.Y, clone.Velocity.Z)
+						allowed = 1
+						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
+						local realflyspeed = flyspeed["Value"]
+						realflyspeed = (flymode["Value"] == "Normal" and allowspeed == false and 20 or realflyspeed) * allowed
+						local flypos = entity.character.Humanoid.MoveDirection * (flymode["Value"] == "Normal" and realflyspeed or math.min(realflyspeed, 20 * getSpeedMultiplier()))
+						local flypos2 = (entity.character.Humanoid.MoveDirection * math.max((realflyspeed) - 20, 0)) * delta
+						entity.character.HumanoidRootPart.Transparency = 1
+						entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
+						flyvelo = flypos + Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
+					end
+				end)
+			else
+				RunLoops:UnbindFromHeartbeat("InfiniteFly")
+				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil then 
+					local oldpos = clone.CFrame
+					local oldvelo = oldcloneroot.Velocity.Y
+					oldcloneroot.Velocity = Vector3.new(0, -1, 0)
+					oldcloneroot.CFrame = oldpos
+					local part = Instance.new("Part")
+					part.Anchored = true
+					part.CanCollide = false
+					part.Size = Vector3.new(1, 1, 1)
+					part.Color = Color3.new(0.5, 0.5, 1)
+					part.Transparency = 0.5
+					part.Parent = workspace.GameSounds
+					part.Position = oldpos.p
+					createwarning("InfiniteFly", "landing delayed to not flag", 3)
+					task.delay(1.2, function()
+						part:Destroy()
+						lplr.Character.Parent = game
+						oldcloneroot.Parent = lplr.Character
+						lplr.Character.PrimaryPart = oldcloneroot
+						lplr.Character.Parent = workspace
+						oldcloneroot.CanCollide = true
+						oldcloneroot.Transparency = 1
+						for i,v in pairs(lplr.Character:GetDescendants()) do 
+							if v:IsA("Weld") or v:IsA("Motor6D") then 
+								if v.Part0 == clone then v.Part0 = oldcloneroot end
+								if v.Part1 == clone then v.Part1 = oldcloneroot end
+							end
+							if v:IsA("BodyVelocity") then 
+								v:Destroy()
+							end
+						end
+						for i,v in pairs(oldcloneroot:GetChildren()) do 
+							if v:IsA("BodyVelocity") then 
+								v:Destroy()
+							end
+						end
+						if clone then 
+							clone:Destroy()
+							clone = nil
+						end
+						lplr.Character.Humanoid.HipHeight = hip or 2
+						oldcloneroot = nil
+					end)
+				end
+				flyup = false
+				flydown = false
+				flypress:Disconnect()
+				flyendpress:Disconnect()
+			end
+		end,
+		["HoverText"] = "Makes you go zoom"
+	})
+	flyverticalspeed = fly.CreateSlider({
+		["Name"] = "Vertical Speed",
+		["Min"] = 1,
+		["Max"] = 100,
+		["Function"] = function(val) end, 
+		["Default"] = 44
+	})
+	flyupanddown = fly.CreateToggle({
+		["Name"] = "Y Level",
+		["Function"] = function() end, 
+		["Default"] = true
+	})
 end)
 
 runcode(function()
@@ -8153,6 +8403,63 @@ runcode(function()
 	NameTagsAlive = NameTags.CreateToggle({
 		["Name"] = "Alive Check",
 		["Function"] = function() end
+	})
+end)
+
+runcode(function()
+	local espadded 
+	local espremoved
+	local espobjs = {}
+	local espfold = Instance.new("Folder")
+	espfold.Parent = GuiLibrary["MainGui"]
+
+	local function espadd(v)
+		espobjs[v] = Instance.new("ImageLabel")
+		espobjs[v].BackgroundTransparency = 0.5
+		espobjs[v].BorderSizePixel = 0
+		espobjs[v].Image = bedwars["getIcon"]({itemType = "iron"}, true)
+		espobjs[v].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		espobjs[v].Size = UDim2.new(0, 32, 0, 32)
+		espobjs[v].AnchorPoint = Vector2.new(0.5, 0.5)
+		espobjs[v].Parent = espfold
+		local uicorner = Instance.new("UICorner")
+		uicorner.CornerRadius = UDim.new(0, 4)
+		uicorner.Parent = espobjs[v]
+	end
+
+	GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "MetalESP",
+		["Function"] = function(callback) 
+			if callback then
+				espadded = collectionservice:GetInstanceAddedSignal("hidden-metal"):Connect(function(v)
+					espadd(v)
+				end)
+				espremoved = collectionservice:GetInstanceRemovedSignal("hidden-metal"):Connect(function(v)
+					if espobjs[v] then
+						table.remove(espobjs, table.find(espobjs, v))
+						espobjs[v]:Destroy()
+					end
+				end)
+				for i,v in pairs(collectionservice:GetTagged("hidden-metal")) do 
+					espadd(v)
+				end
+				RunLoops:BindToRenderStep("MetalESP", 1, function()
+					for i,v in pairs(espobjs) do 
+						if i and i.PrimaryPart then 
+							local headPos, headVis = cam:WorldToScreenPoint(i.PrimaryPart:GetRenderCFrame().p)
+							v.Visible = headVis
+							v.Position = UDim2.new(0, headPos.X, 0, headPos.Y)
+						end
+					end
+				end)
+			else
+				RunLoops:UnbindFromRenderStep("MetalESP")
+				if espadded then espadded:Disconnect() end
+				if espremoved then espremoved:Disconnect() end
+				espfold:ClearAllChildren()
+				espobjs = {}
+			end
+		end
 	})
 end)
 
@@ -9347,6 +9654,20 @@ runcode(function()
 									end
 								until (not AutoKit["Enabled"])
 							end)
+						elseif kit == "metal_detector" then
+							task.spawn(function()
+								repeat
+									task.wait()
+									local itemdrops = collectionservice:GetTagged("hidden-metal")
+									for i,v in pairs(itemdrops) do
+										if entity.isAlive and AutoKit["Enabled"] and v.PrimaryPart and (entity.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 20 then
+											bedwars["ClientHandler"]:Get(bedwars["PickupMetalRemote"]):SendToServer({
+												id = v:GetAttribute("Id")
+											}) 
+										end
+									end
+								until (not AutoKit["Enabled"])
+							end)
 						elseif kit == "battery" then 
 							task.spawn(function()
 								repeat
@@ -9666,7 +9987,7 @@ runcode(function()
 		["IconSize"] = 16
 	})
 	local overlayframe = Instance.new("Frame")
-	overlayframe.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	overlayframe.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
 	overlayframe.Size = UDim2.new(0, 200, 0, 120)
 	overlayframe.Position = UDim2.new(0, 0, 0, 5)
 	overlayframe.Parent = Overlay.GetCustomChildren()
@@ -9675,7 +9996,7 @@ runcode(function()
 	overlayframe2.Position = UDim2.new(0, 0, 0, -5)
 	overlayframe2.Parent = overlayframe
 	local overlayframe3 = Instance.new("Frame")
-	overlayframe3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	overlayframe3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
 	overlayframe3.Size = UDim2.new(1, 0, 0, 6)
 	overlayframe3.Position = UDim2.new(0, 0, 0, 6)
 	overlayframe3.BorderSizePixel = 0
@@ -9697,11 +10018,11 @@ runcode(function()
 	label.TextYAlignment = Enum.TextYAlignment.Top
 	label.Font = Enum.Font.GothamBold
 	label.LineHeight = 1.2
-	label.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	label.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
 	label.TextSize = 16
 	label.Text = ""
 	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.fromRGB(200, 200, 200)
+	label.TextColor3 = Color3.fromRGB(60, 60, 60)
 	label.Position = UDim2.new(0, 7, 0, 5)
 	label.Parent = overlayframe
 	Overlay["Bypass"] = true
@@ -9712,11 +10033,13 @@ runcode(function()
 	local pinglist = {}
 	local fpslist = {}
 	local matchstatechanged = 0
-	local mapname = "to4_Blossom"
+	local mapname = "Unknown"
 
 	task.spawn(function()
+		pcall(function()
 		mapname = workspace:WaitForChild("Map"):WaitForChild("Worlds"):GetChildren()[1].Name
 		mapname = string.gsub(string.split(mapname, "_")[2] or mapname, "-", "") or "Blank"
+		end)
 	end)
 	task.spawn(function()
 		bedwars["ClientHandler"]:OnEvent("ProjectileImpact", function(p3)

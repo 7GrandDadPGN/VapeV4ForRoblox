@@ -1,3 +1,4 @@
+
 repeat task.wait() until game:IsLoaded()
 local injected = true
 local oldrainbow = false
@@ -6,14 +7,33 @@ local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
 end
-local function GetURL(scripturl)
+local shown = false
+local function GetURL(scripturl, a)
 	if shared.VapeDeveloper then
 		if not betterisfile("vape/"..scripturl) then
 			error("File not found : vape/"..scripturl)
 		end
 		return readfile("vape/"..scripturl)
 	else
-		local res = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
+		local res
+		task.delay(5, function()
+			if res == nil and (not shown) then 
+				shown = true
+				local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
+				local prompt = ErrorPrompt.new("Default")
+				prompt._hideErrorCode = true
+				local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+				prompt:setParent(gui)
+				prompt:setErrorTitle("Vape")
+				prompt:updateButtons({{
+					Text = "OK",
+					Callback = function() prompt:_close() end,
+					Primary = true
+				}}, 'Default')
+				prompt:_open("The connection to github is taking a while, Please be patient.")
+			end
+		end)
+		res = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
 		assert(res ~= "404: Not Found", "File not found")
 		return res
 	end
@@ -37,15 +57,8 @@ local requestfunc = syn and syn.request or http and http.request or http_request
 end 
 
 local function checkassetversion()
-	local req = requestfunc({
-		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/assetsversion.dat",
-		Method = "GET"
-	})
-	if req.StatusCode == 200 then
-		return req.Body
-	else
-		return nil
-	end
+	local suc, res = pcall(function() return GetURL("assetsversion.dat", true) end)
+	if suc then return res else return nil end
 end
 
 if not (getasset and requestfunc and queueteleport) then
@@ -78,24 +91,25 @@ end
 if not betterisfile("vape/language.dat") then
 	writefile("vape/language.dat", "en-us")
 end
-local assetver = checkassetversion()
-if assetver and assetver > readfile("vape/assetsversion.dat") then
-	if shared.VapeDeveloper == nil then
-		if isfolder("vape/assets") then
+if isfolder("vape/assets") == false then
+	makefolder("vape/assets")
+end
+task.spawn(function()
+	local assetver = checkassetversion()
+	if assetver and assetver > readfile("vape/assetsversion.dat") then
+		if isfolder("vape/assets") and shared.VapeDeveloper == nil then
 			if delfolder then
 				delfolder("vape/assets")
+				makefolder("vape/assets")
 			end
 		end
 		writefile("vape/assetsversion.dat", assetver)
 	end
-end
-if isfolder("vape/assets") == false then
-	makefolder("vape/assets")
-end
+end)
 
 local GuiLibrary = loadstring(GetURL("NewGuiLibrary.lua"))()
-local translations = shared.VapeTranslation or {}--loadstring(GetURL("translations/"..GuiLibrary["Language"]..".vapetranslation"))()
-local translatedlogo = false--pcall(function() return GetURL("translations/"..GuiLibrary["Language"].."/VapeLogo1.png") end)
+local translations = {}
+local translatedlogo = false
 
 local checkpublicreponum = 0
 local checkpublicrepo
@@ -131,7 +145,7 @@ end
 
 local function getcustomassetfunc(path)
 	if not betterisfile(path) then
-		spawn(function()
+		task.spawn(function()
 			local textlabel = Instance.new("TextLabel")
 			textlabel.Size = UDim2.new(1, 0, 0, 36)
 			textlabel.Text = "Downloading "..path
@@ -166,6 +180,35 @@ local selfdestructsave = coroutine.create(function()
 			break
 		end
 	end
+end)
+task.spawn(function()
+	local image = Instance.new("ImageLabel")
+	image.Image = getcustomassetfunc("vape/assets/CombatIcon.png")
+	image.Position = UDim2.new(0, 0, 0, 0)
+	image.BackgroundTransparency = 1
+	image.Size = UDim2.new(0, 0, 0, 0)
+	image.ImageTransparency = 0.99
+	image.Parent = GuiLibrary["MainGui"]
+	task.delay(5, function()
+		if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not betterisfile("vape/assets/check.txt")) then 
+			shown = true
+			local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
+			local prompt = ErrorPrompt.new("Default")
+			prompt._hideErrorCode = true
+			local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+			prompt:setParent(gui)
+			prompt:setErrorTitle("Vape")
+			prompt:updateButtons({{
+				Text = "OK",
+				Callback = function() 
+					prompt:_close() 
+					writefile("vape/assets/check.txt", "")
+				end,
+				Primary = true
+			}}, 'Default')
+			prompt:_open("Vape has detected that you have a skill issue and cannot load assets, Consider getting a better executor.")
+		end
+	end)
 end)
 local GUI = GuiLibrary.CreateMainWindow()
 local Combat = GuiLibrary.CreateWindow({
@@ -451,7 +494,7 @@ OnlineProfilesButton.Name = "OnlineProfilesButton"
 OnlineProfilesButton.LayoutOrder = 1
 OnlineProfilesButton.AutoButtonColor = false
 OnlineProfilesButton.Size = UDim2.new(0, 45, 0, 29)
-OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
 OnlineProfilesButton.Active = false
 OnlineProfilesButton.Text = ""
 OnlineProfilesButton.ZIndex = 1
@@ -460,7 +503,7 @@ OnlineProfilesButton.TextXAlignment = Enum.TextXAlignment.Left
 OnlineProfilesButton.Position = UDim2.new(0, 166, 0, 6)
 OnlineProfilesButton.Parent = ProfilesTextList["Object"]
 local OnlineProfilesButtonBKG = Instance.new("UIStroke")
-OnlineProfilesButtonBKG.Color = Color3.fromRGB(38, 37, 38)
+OnlineProfilesButtonBKG.Color = Color3.fromRGB(240, 228, 240)
 OnlineProfilesButtonBKG.Thickness = 1
 OnlineProfilesButtonBKG.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 OnlineProfilesButtonBKG.Parent = OnlineProfilesButton
@@ -482,7 +525,7 @@ OnlineProfilesbuttonround2.Parent = OnlineProfilesButtonBKG
 local OnlineProfilesFrame = Instance.new("Frame")
 OnlineProfilesFrame.Size = UDim2.new(0, 660, 0, 445)
 OnlineProfilesFrame.Position = UDim2.new(0.5, -330, 0.5, -223)
-OnlineProfilesFrame.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+OnlineProfilesFrame.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
 OnlineProfilesFrame.Parent = GuiLibrary["MainGui"].ScaledGui.OnlineProfiles
 local OnlineProfilesExitButton = Instance.new("ImageButton")
 OnlineProfilesExitButton.Name = "OnlineProfilesExitButton"
@@ -492,7 +535,7 @@ OnlineProfilesExitButton.AutoButtonColor = false
 OnlineProfilesExitButton.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
 OnlineProfilesExitButton.Visible = true
 OnlineProfilesExitButton.Position = UDim2.new(1, -31, 0, 8)
-OnlineProfilesExitButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+OnlineProfilesExitButton.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
 OnlineProfilesExitButton.Parent = OnlineProfilesFrame
 local OnlineProfilesExitButtonround = Instance.new("UICorner")
 OnlineProfilesExitButtonround.CornerRadius = UDim.new(0, 16)
@@ -501,7 +544,7 @@ OnlineProfilesExitButton.MouseEnter:Connect(function()
 	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 end)
 OnlineProfilesExitButton.MouseLeave:Connect(function()
-	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(220, 218, 220), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 end)
 local OnlineProfilesFrameShadow = Instance.new("ImageLabel")
 OnlineProfilesFrameShadow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -820,7 +863,7 @@ local function refreshbars(textlists)
 		local frame = Instance.new("Frame")
 		frame.BorderSizePixel = 0
 		frame.BackgroundTransparency = 0.62
-		frame.BackgroundColor3 = Color3.new(0,0,0)
+		frame.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
 		frame.Visible = true
 		frame.ZIndex = 0
 		frame.LayoutOrder = i2
@@ -852,7 +895,8 @@ local function getSpaces(str)
 		return math.ceil(strSize.X / 3)
 end
 local function UpdateHud()
-	if GuiLibrary["MainGui"].ScaledGui.Visible then
+	local scaledgui = GuiLibrary["MainGui"]:FindFirstChild("ScaledGui")
+	if scaledgui and scaledgui.Visible then
 		local text = ""
 		local text2 = ""
 		local tableofmodules = {}
@@ -1239,7 +1283,7 @@ local TargetInfoDisplayNames = TargetInfo.CreateToggle({
 })
 local TargetInfoBackground = {["Enabled"] = false}
 local targetinfobkg1 = Instance.new("Frame")
-targetinfobkg1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+targetinfobkg1.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
 targetinfobkg1.BorderSizePixel = 0
 targetinfobkg1.BackgroundTransparency = 1
 targetinfobkg1.Size = UDim2.new(0, 220, 0, 72)
@@ -1482,7 +1526,7 @@ GuiLibrary["UpdateUI"] = function(h, s, val, bypass)
 	pcall(function()
 		local rainbowcheck = GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"]
 		local maincolor = rainbowcheck and getSaturation(h) or s
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(1, 0, 1)
 		local rainbowcolor2 = h + (rainbowcheck and (-0.05) or 0)
 		rainbowcolor2 = rainbowcolor2 % 1
         local gradsat = textguigradient["Enabled"] and getSaturation(rainbowcolor2) or maincolor
@@ -1662,7 +1706,7 @@ ToggleNotifications = GUISettings.CreateToggle({
 })
 ToggleNotifications["Object"].BackgroundTransparency = 0
 ToggleNotifications["Object"].BorderSizePixel = 0
-ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 GUISettings.CreateSlider({
 	["Name"] = "Rainbow Speed",
 	["Function"] = function(val)
@@ -1729,7 +1773,6 @@ GuiLibrary["SelfDestruct"] = function()
 	shared.VapeIndependent = nil
 	shared.VapeManualLoad = nil
 	shared.CustomSaveVape = nil
-	shared.VapeTranslation = nil
 	GuiLibrary["KeyInputHandler"]:Disconnect()
 	GuiLibrary["KeyInputHandler2"]:Disconnect()
 	if MiddleClickInput then
