@@ -4738,20 +4738,18 @@ runcode(function()
 	local damagemethods = {
 		fireball = function(fireball, pos)
 			if not longjump["Enabled"] then return end
-		--	if getblock(getScaffold(pos - Vector3.new(0, 3, 0))) then 
-				task.delay(0.3, function()
-					if not longjump["Enabled"] then return end
-					pos = pos - (entity.character.HumanoidRootPart.CFrame.lookVector * 0.2)
-					local origpos = pos
-					local offsetshootpos = (CFrame.new(pos, pos + Vector3.new(0, -60, 0)) * CFrame.new(Vector3.new(-bedwars["BowConstantsTable"].RelX, -bedwars["BowConstantsTable"].RelY, -bedwars["BowConstantsTable"].RelZ))).p
-					bedwars["BowTable"]:createLocalProjectile(bedwars["ProjectileMeta"]["fireball"], "fireball", "fireball", offsetshootpos, "", Vector3.new(0, -60, 0), {drawDurationSeconds = 1})
-					bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(fireball["tool"], "fireball", "fireball", offsetshootpos, pos, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
-				end)
-			--end
+			task.delay(0.3, function()
+				if not longjump["Enabled"] then return end
+				pos = pos - (entity.character.HumanoidRootPart.CFrame.lookVector * 0.2)
+				local origpos = pos
+				local offsetshootpos = (CFrame.new(pos, pos + Vector3.new(0, -60, 0)) * CFrame.new(Vector3.new(-bedwars["BowConstantsTable"].RelX, -bedwars["BowConstantsTable"].RelY, -bedwars["BowConstantsTable"].RelZ))).p
+				bedwars["BowTable"]:createLocalProjectile(bedwars["ProjectileMeta"]["fireball"], "fireball", "fireball", offsetshootpos, "", Vector3.new(0, -60, 0), {drawDurationSeconds = 1})
+				bedwars["ClientHandler"]:Get(bedwars["ProjectileRemote"]):CallServerAsync(fireball["tool"], "fireball", "fireball", offsetshootpos, pos, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
+			end)
 		end,
-		tnt = function(tnt)
+		tnt = function(tnt, pos2)
 			if not longjump["Enabled"] then return end
-			local pos = getScaffold(entity.character.Head.Position + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight) * 3, 0))
+			local pos = Vector3.new(pos2.X, getScaffold(Vector3.new(0, pos2.Y - math.floor(entity.character.Humanoid.HipHeight, 0))).Y, pos2.Z)
 			local block = bedwars["placeBlock"](pos, "tnt")
 		end
 	}
@@ -4789,17 +4787,18 @@ runcode(function()
 		["Name"] = "LongJump",
 		["Function"] = function(callback)
 			if callback then
-				
 				task.spawn(function()
 					local startpos = entity.isAlive and entity.character.HumanoidRootPart.Position
 					local tntcheck
 					for i,v in pairs(damagemethods) do 
 						local item = getItem(i)
 						if item then
-							v(item, startpos)
 							if i == "tnt" then 
 								local pos = getScaffold(startpos)
 								tntcheck = Vector3.new(pos.X, startpos.Y, pos.Z)
+								v(item, pos)
+							else
+								v(item, startpos)
 							end
 							break
 						end
@@ -5471,7 +5470,7 @@ runcode(function()
 	})
 	killauratargethighlight["Object"].BorderSizePixel = 0
 	killauratargethighlight["Object"].BackgroundTransparency = 0
-	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	killauratargethighlight["Object"].Visible = false
 	killauracolor = Killaura.CreateColorSlider({
 		["Name"] = "Target Color",
@@ -7001,7 +7000,7 @@ runcode(function()
 	})
 	speedjumpalways["Object"].BackgroundTransparency = 0
 	speedjumpalways["Object"].BorderSizePixel = 0
-	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	speedjumpalways["Object"].Visible = speedjump["Enabled"]
 end)
 
@@ -7309,7 +7308,7 @@ runcode(function()
 	})
 	flydamagecamera["Object"].BorderSizePixel = 0
 	flydamagecamera["Object"].BackgroundTransparency = 0
-	flydamagecamera["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	flydamagecamera["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	flydamagecamera["Object"].Visible = false
 	flyac = fly.CreateToggle({
 		["Name"] = "Fly Anyway",
@@ -7332,7 +7331,7 @@ runcode(function()
 	})
 	flyspeedboost["Object"].BorderSizePixel = 0
 	flyspeedboost["Object"].BackgroundTransparency = 0
-	flyspeedboost["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	flyspeedboost["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	flyspeedboost["Object"].Visible = false
 	flyacprogressbar = fly.CreateToggle({
 		["Name"] = "Progress Bar",
@@ -7374,7 +7373,7 @@ runcode(function()
 	})
 	flyacprogressbar["Object"].BorderSizePixel = 0
 	flyacprogressbar["Object"].BackgroundTransparency = 0
-	flyacprogressbar["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	flyacprogressbar["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	flyacprogressbar["Object"].Visible = false
 end)
 
@@ -7406,11 +7405,17 @@ runcode(function()
 	local onground = false
 	local lastonground = false
 	local clonesuccess = false
+	local disabledproper = true
 	local alternatelist = {"Normal", "AntiCheat A", "AntiCheat B"}
 	fly = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "InfiniteFly",
 		["Function"] = function(callback)
 			if callback then
+				if not disabledproper then 
+					createwarning("InfiniteFly", "Wait for the last fly to finish", 3)
+					fly["ToggleButton"](false)
+					return 
+				end
 				flypress = uis.InputBegan:Connect(function(input1)
 					if flyupanddown["Enabled"] and bettergetfocus() == nil then
 						if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
@@ -7461,8 +7466,18 @@ runcode(function()
 					hip = lplr.Character.Humanoid.HipHeight
 					clonesuccess = true
 				end
+				if not clonesuccess then 
+					createwarning("InfiniteFly", "Character missing", 3)
+					fly["ToggleButton"](false)
+					return 
+				end
 				RunLoops:BindToHeartbeat("InfiniteFly", 1, function(delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
+						if not networkownerfunc(oldcloneroot) then 
+							createwarning("InfiniteFly", "Flagged while flying.", 3)
+							fly["ToggleButton"](false)
+							return 
+						end
 						local newpos = {oldcloneroot.CFrame:GetComponents()}
 						newpos[1] = clone.CFrame.X
 						if newpos[2] < 1000 then 
@@ -7484,11 +7499,13 @@ runcode(function()
 				end)
 			else
 				RunLoops:UnbindFromHeartbeat("InfiniteFly")
-				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil then 
+				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil and disabledproper then 
 					local oldpos = clone.CFrame
 					local oldvelo = oldcloneroot.Velocity.Y
-					oldcloneroot.Velocity = Vector3.new(0, -1, 0)
-					oldcloneroot.CFrame = oldpos
+					if networkownerfunc(oldcloneroot) then
+						oldcloneroot.Velocity = Vector3.new(0, -1, 0)
+						oldcloneroot.CFrame = oldpos
+					end
 					local part = Instance.new("Part")
 					part.Anchored = true
 					part.CanCollide = false
@@ -7497,8 +7514,10 @@ runcode(function()
 					part.Transparency = 0.5
 					part.Parent = workspace.GameSounds
 					part.Position = oldpos.p
-					createwarning("InfiniteFly", "landing delayed to not flag", 3)
-					task.delay(1.2, function()
+					createwarning("InfiniteFly", "Waiting 1.25s to not flag", 3)
+					disabledproper = false
+					task.delay(1.25, function()
+						disabledproper = true
 						part:Destroy()
 						lplr.Character.Parent = game
 						oldcloneroot.Parent = lplr.Character
@@ -7530,8 +7549,8 @@ runcode(function()
 				end
 				flyup = false
 				flydown = false
-				flypress:Disconnect()
-				flyendpress:Disconnect()
+				if flypress then flypress:Disconnect() end
+				if flyendpress then flyendpress:Disconnect() end
 			end
 		end,
 		["HoverText"] = "Makes you go zoom"
@@ -9420,7 +9439,7 @@ runcode(function()
 	})
 	AnticheatBypassAutoConfigSpeed["Object"].BorderSizePixel = 0
 	AnticheatBypassAutoConfigSpeed["Object"].BackgroundTransparency = 0
-	AnticheatBypassAutoConfigSpeed["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	AnticheatBypassAutoConfigSpeed["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	AnticheatBypassAutoConfigSpeed["Object"].Visible = false
 	AnticheatBypassAutoConfigSpeed2 = AnticheatBypass.CreateSlider({
 		["Name"] = "Big Mode Speed",
@@ -9431,7 +9450,7 @@ runcode(function()
 	})
 	AnticheatBypassAutoConfigSpeed2["Object"].BorderSizePixel = 0
 	AnticheatBypassAutoConfigSpeed2["Object"].BackgroundTransparency = 0
-	AnticheatBypassAutoConfigSpeed2["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	AnticheatBypassAutoConfigSpeed2["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	AnticheatBypassAutoConfigSpeed2["Object"].Visible = false
 	AnticheatBypassAutoConfigBig = AnticheatBypass.CreateToggle({
 		["Name"] = "Big Mode CFrame",
@@ -9440,7 +9459,7 @@ runcode(function()
 	})
 	AnticheatBypassAutoConfigBig["Object"].BorderSizePixel = 0
 	AnticheatBypassAutoConfigBig["Object"].BackgroundTransparency = 0
-	AnticheatBypassAutoConfigBig["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	AnticheatBypassAutoConfigBig["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	AnticheatBypassAutoConfigBig["Object"].Visible = false
 	AnticheatBypassAlternate = AnticheatBypass.CreateToggle({
 		["Name"] = "Alternate Numbers",

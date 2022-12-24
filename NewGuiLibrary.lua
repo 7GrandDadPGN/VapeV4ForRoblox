@@ -924,6 +924,7 @@ if shared.VapeExecuted then
 		local windowbackbutton = Instance.new("ImageButton")
 		windowbackbutton.Size = UDim2.new(0, 16, 0, 16)
 		windowbackbutton.Position = UDim2.new(0, 11, 0, 13)
+		windowbackbutton.ImageColor3 = Color3.fromRGB(60, 60, 60)
 		windowbackbutton.Visible = false
 		windowbackbutton.ImageTransparency = 0.55
 		windowbackbutton.BackgroundTransparency = 1
@@ -1563,14 +1564,14 @@ if shared.VapeExecuted then
 			bindbkg.Size = UDim2.new(0, 20, 0, 21)
 			bindbkg.Position = UDim2.new(1, -50, 0, 10)
 			bindbkg.BorderSizePixel = 0
-			bindbkg.BackgroundColor3 = Color3.fromRGB(40, 41, 40)
+			bindbkg.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 			bindbkg.BackgroundTransparency = 0
 			bindbkg.Visible = true
 			bindbkg.Parent = frame
 			local bindimg = Instance.new("ImageLabel")
 			bindimg.Image = getcustomassetfunc("vape/assets/KeybindIcon.png")
 			bindimg.BackgroundTransparency = 1
-			bindimg.ImageColor3 = Color3.fromRGB(225, 225, 225)
+			bindimg.ImageColor3 = Color3.fromRGB(60, 60, 60)
 			bindimg.Size = UDim2.new(0, 12, 0, 12)
 			bindimg.Position = UDim2.new(0.5, -6, 0, 5)
 			bindimg.Active = false
