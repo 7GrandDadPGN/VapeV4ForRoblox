@@ -772,9 +772,10 @@ runcode(function()
 				[1] = "Trinity",
 				[2] = "Grim Reaper",
 				[3] = "Eldertree",
-				[4] = "Barbarian",
-				[5] = "Melody",
-				[6] = "Baker"
+				[4] = "Metal Detector",
+				[5] = "Barbarian",
+				[6] = "Melody",
+				[7] = "Baker"
 			}
 			tab2 = {}
 		end
