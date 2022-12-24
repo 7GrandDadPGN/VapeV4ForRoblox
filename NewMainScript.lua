@@ -72,7 +72,7 @@ if shared.VapeExecuted then
 else
 	shared.VapeExecuted = true
 end
-
+local redownload = false
 if isfolder(customdir:gsub("/", "")) == false then
 	makefolder(customdir:gsub("/", ""))
 end
@@ -97,6 +97,7 @@ end
 task.spawn(function()
 	local assetver = checkassetversion()
 	if assetver and assetver > readfile("vape/assetsversion.dat") then
+		redownload = true
 		if isfolder("vape/assets") and shared.VapeDeveloper == nil then
 			if delfolder then
 				delfolder("vape/assets")
@@ -190,7 +191,7 @@ task.spawn(function()
 	image.ImageTransparency = 0.99
 	image.Parent = GuiLibrary["MainGui"]
 	task.delay(5, function()
-		if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not betterisfile("vape/assets/check2.txt")) then 
+		if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not redownload) and (not betterisfile("vape/assets/check2.txt")) then 
 			shown = true
 			local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
 			local prompt = ErrorPrompt.new("Default")
