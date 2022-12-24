@@ -109,7 +109,7 @@ task.spawn(function()
 end)
 
 local GuiLibrary = loadstring(GetURL("NewGuiLibrary.lua"))()
-local translations = {}
+local translations = shared.VapeTranslation or {}
 local translatedlogo = false
 
 local checkpublicreponum = 0
