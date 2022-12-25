@@ -5084,8 +5084,8 @@ runcode(function()
 		if killaurahandcheck["Enabled"] and (equipped["Type"] ~= "sword" or bedwars["KatanaController"].chargingMaid) then
 			return nil
 		end
-		if killauratargetframe["Walls"]["Enabled"] and bedwars["SwordController"]:canSee({["player"] = plr.Player, ["getInstance"] = function() return plr.Character end}) == false then
-			return nil
+		if killauratargetframe["Walls"]["Enabled"] then
+			if not bedwars["SwordController"]:canSee({["player"] = plr.Player, ["getInstance"] = function() return plr.Character end}) then return nil end
 		end
 		local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
 		local vec = (plr.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
@@ -5099,7 +5099,7 @@ runcode(function()
 			killauranear = true
 			firstplayercodedone.done = true
 			if animationdelay <= tick() then
-				animationdelay = tick() + 0.18
+				animationdelay = tick() + 0.19
 				if not killauraswing["Enabled"] then 
 					bedwars["SwordController"]:playSwordEffect(swordmeta)
 				end
@@ -5126,8 +5126,7 @@ runcode(function()
 				return nil
 			end
 		end
-		local selfroot = entity.character.HumanoidRootPart
-		local selfrootpos = selfroot.Position
+		local selfrootpos = entity.character.HumanoidRootPart.Position
 		local selfcheck = oldcloneroot and oldcloneroot.Position or localserverpos or selfrootpos
 		if (selfcheck - (otherserverpos[plr.Player] or root.Position)).Magnitude > 18 then 
 			return nil
@@ -7471,7 +7470,7 @@ runcode(function()
 					fly["ToggleButton"](false)
 					return 
 				end
-				local done = false
+				local goneup = false
 				RunLoops:BindToHeartbeat("InfiniteFly", 1, function(delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						if not networkownerfunc(oldcloneroot) then 
@@ -7481,9 +7480,9 @@ runcode(function()
 						end
 						local newpos = {oldcloneroot.CFrame:GetComponents()}
 						newpos[1] = clone.CFrame.X
-						if not done then 
+						if newpos[2] < 10000 or (not goneup) then 
 							newpos[2] = 100000
-							done = true
+							goneup = true
 						end
 						newpos[3] = clone.CFrame.Z
 						oldcloneroot.CFrame = CFrame.new(unpack(newpos))

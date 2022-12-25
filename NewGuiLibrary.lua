@@ -1849,15 +1849,12 @@ if shared.VapeExecuted then
 					end
 				end)
 			end)
+			local clicktick = tick()
 			slider3.MouseButton1Down:Connect(function()
-				task.spawn(function()
-					click = true
-					task.wait(0.3)
-					click = false
-				end)
-				if click then
+				if clicktick > tick() then
 					sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				end
+				clicktick = tick() + 0.3
 				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
 				sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 				--slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
@@ -2590,7 +2587,7 @@ if shared.VapeExecuted then
 				textbox.TextXAlignment = Enum.TextXAlignment.Left
 				textbox.Name = "AddBox"
 				textbox.BackgroundTransparency = 1
-				textbox.TextColor3 = Color3.new(1, 1, 1)
+				textbox.TextColor3 = Color3.fromRGB(60, 60, 60)
 				textbox.PlaceholderColor3 = Color3.fromRGB(60, 60, 60)
 				textbox.Font = Enum.Font.SourceSans
 				textbox.Text = ""
@@ -3120,15 +3117,12 @@ if shared.VapeExecuted then
 					end
 				end)
 			end)
+			local clicktick = tick()
 			slider3.MouseButton1Down:Connect(function()
-				task.spawn(function()
-					click = true
-					task.wait(0.3)
-					click = false
-				end)
-				if click then
+				if clicktick > tick() then
 					sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				end
+				clicktick = tick() + 0.3
 				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
 				sliderapi["SetValue"](min + ((max - min) * xscale))
 				slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
@@ -3656,7 +3650,7 @@ if shared.VapeExecuted then
 				textbox.TextXAlignment = Enum.TextXAlignment.Left
 				textbox.Name = "AddBox"
 				textbox.BackgroundTransparency = 1
-				textbox.TextColor3 = Color3.new(1, 1, 1)
+				textbox.TextColor3 = Color3.fromRGB(60, 60, 60)
 				textbox.PlaceholderColor3 = Color3.fromRGB(60, 60, 60)
 				textbox.Font = Enum.Font.SourceSans
 				textbox.Text = ""
@@ -3846,7 +3840,7 @@ if shared.VapeExecuted then
 				targettext.ZIndex = 2
 				targettext.TextSize = 17
 				targettext.RichText = true
-				targettext.TextColor3 = Color3.new(205, 205, 205)
+				targettext.TextColor3 = Color3.fromRGB(60, 60, 60)
 				targettext.Text = "  Target : \n "..'<font color="rgb(151, 151, 151)">Ignore none</font>'
 				targettext.Font = Enum.Font.SourceSans
 				targettext.TextXAlignment = Enum.TextXAlignment.Left
@@ -4368,7 +4362,7 @@ if shared.VapeExecuted then
 					textbox.TextXAlignment = Enum.TextXAlignment.Left
 					textbox.Name = "AddBox"
 					textbox.BackgroundTransparency = 1
-					textbox.TextColor3 = Color3.new(1, 1, 1)
+					textbox.TextColor3 = Color3.fromRGB(60, 60, 60)
 					textbox.PlaceholderColor3 = Color3.fromRGB(60, 60, 60)
 					textbox.Font = Enum.Font.SourceSans
 					textbox.Text = ""
@@ -4925,15 +4919,12 @@ if shared.VapeExecuted then
 						end))
 					end
 				end
+				local clicktick = tick()
 				local function slidercode(obj, valtochange)
-					task.spawn(function()
-						click = true
-						task.wait(0.3)
-						click = false
-					end)
-					if click then
+					if clicktick > tick() then
 						sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 					end
+					clicktick = tick() + 0.3
 					local x,y,xscale,yscale,xscale2 = RelativeXY(obj, game:GetService("UserInputService"):GetMouseLocation())
 					sliderapi["SetValue"]((valtochange == "Hue" and (min + ((max - min) * xscale)) or false), (valtochange == "Sat" and (min + ((max - min) * xscale)) or false), (valtochange == "Value" and (min + ((max - min) * xscale)) or false))
 					obj.ButtonSlider.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
@@ -5781,15 +5772,12 @@ if shared.VapeExecuted then
 					end))
 				end
 			end
+			local clicktick = tick()
 			local function slidercode(obj, valtochange)
-				task.spawn(function()
-					click = true
-					task.wait(0.3)
-					click = false
-				end)
-				if click then
+				if clicktick > tick() then
 					sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				end
+				clicktick = tick() + 0.3
 				local x,y,xscale,yscale,xscale2 = RelativeXY(obj, game:GetService("UserInputService"):GetMouseLocation())
 				sliderapi["SetValue"]((valtochange == "Hue" and (min + ((max - min) * xscale)) or false), (valtochange == "Sat" and (min + ((max - min) * xscale)) or false), (valtochange == "Value" and (min + ((max - min) * xscale)) or false))
 				obj.ButtonSlider.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
@@ -5980,7 +5968,7 @@ if shared.VapeExecuted then
 			textbox.TextXAlignment = Enum.TextXAlignment.Left
 			textbox.Name = "AddBox"
 			textbox.BackgroundTransparency = 1
-			textbox.TextColor3 = Color3.new(1, 1, 1)
+			textbox.TextColor3 = Color3.fromRGB(60, 60, 60)
 			textbox.PlaceholderColor3 = Color3.fromRGB(60, 60, 60)
 			textbox.Font = Enum.Font.SourceSans
 			textbox.Text = ""
@@ -6110,7 +6098,7 @@ if shared.VapeExecuted then
 			textbox.TextXAlignment = Enum.TextXAlignment.Left
 			textbox.Name = "AddBox"
 			textbox.BackgroundTransparency = 1
-			textbox.TextColor3 = Color3.new(1, 1, 1)
+			textbox.TextColor3 = Color3.fromRGB(60, 60, 60)
 			textbox.PlaceholderColor3 = Color3.fromRGB(60, 60, 60)
 			textbox.Font = Enum.Font.SourceSans
 			textbox.Text = ""

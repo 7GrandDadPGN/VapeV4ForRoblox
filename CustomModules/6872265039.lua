@@ -974,7 +974,7 @@ runcode(function()
 	})
 	speedjumpalways["Object"].BackgroundTransparency = 0
 	speedjumpalways["Object"].BorderSizePixel = 0
-	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	speedjumpalways["Object"].Visible = speedjump["Enabled"]
 end)
 

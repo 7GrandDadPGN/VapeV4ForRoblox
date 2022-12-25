@@ -259,21 +259,20 @@ do
 	end)
 	local oldeventfunc = entity.getUpdateConnections
 	entity.getUpdateConnections = function(ent)
-		local newtab = {{Connect = function() 
+		local newtab = oldeventfunc(ent)
+		table.insert(newtab, {Connect = function() 
 			ent.Friend = friendCheck(ent.Player)
 			return {Disconnect = function() end}
-		end}}
-		for i,v in pairs(oldeventfunc(ent)) do 
-			table.insert(newtab, v)
-		end
+		end})
 		return newtab
 	end
 	entity.isPlayerTargetable = function(plr)
+		if friendCheck(plr) then return false end
 		if (not GuiLibrary["ObjectsThatCanBeSaved"]["Teams by colorToggle"]["Api"]["Enabled"]) then return true end
-		if friendCheck(plr) then return nil end
 		if (not lplr.Team) then return true end
+		if (not plr.Team) then return true end
 		if plr.Team ~= lplr.Team then return true end
-        return plr.Team and #plr.Team:GetPlayers() == #players:GetPlayers()
+        return #plr.Team:GetPlayers() == #players:GetPlayers()
 	end
 	entity.fullEntityRefresh()
 end
@@ -286,8 +285,9 @@ local function isAlive(plr, alivecheck)
 	return entity.isAlive
 end
 
+local vischeckobj = RaycastParams.new()
 local function vischeck(char, checktable)
-	local rayparams = checktable.IgnoreObject or RaycastParams.new()
+	local rayparams = checktable.IgnoreObject or vischeckobj
 	if not checktable.IgnoreObject then 
 		rayparams.FilterDescendantsInstances = {lplr.Character, char, cam, table.unpack(checktable.IgnoreTable or {})}
 	end
@@ -570,7 +570,6 @@ runcode(function()
 	local aimmethodmode = {["Value"] = "Whitelist"}
 	local aimignoredscripts = {["ObjectList"] = {}}
 	local aimbound
-	local shoottime = tick()
 	local recentlyshotplr
 	local recentlyshottick = tick()
 	local aimfovframe
@@ -869,6 +868,10 @@ runcode(function()
 					silentaimenabled[methodused]()
 				end
 			else
+				if restorefunction then 
+					restorefunction(getrawmetatable(game).__namecall)
+					aimbound = false
+				end
 				tar = nil 
 				if aimfovframe then
 					aimfovframe.Visible = false
@@ -997,7 +1000,7 @@ runcode(function()
 			if callback then
 				task.spawn(function()
 					repeat
-						task.wait(0.01)
+						task.wait()
 						if AimAssist["Enabled"] then
 							local plr
 							if aimmode["Value"] == "Legit" then
@@ -1016,7 +1019,7 @@ runcode(function()
 								})
 							end
 							if plr then
-								if mouse1click and (isrbxactive and isrbxactive() or iswindowactive and iswindowactive()) and shoottime <= tick() then
+								if mouse1click and (isrbxactive and isrbxactive() or iswindowactive and iswindowactive()) then
 									if isNotHoveringOverGui() and GuiLibrary["MainGui"]:FindFirstChild("ScaledGui") and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
 										if pressed then
 											mouse1release()
@@ -1024,7 +1027,6 @@ runcode(function()
 											mouse1press()
 										end
 										pressed = not pressed
-										shoottime = tick() + 0.001
 									else
 										if pressed then
 											mouse1release()
@@ -1449,7 +1451,7 @@ runcode(function()
 							if flydown then
 								flyposy = flyposy - (flyverticalspeed["Value"] * delta)
 							end
-							local flypos = (movevec * (math.clamp(flyspeed["Value"] - entity.character.Humanoid.WalkSpeed, 0, 1000000000000) * delta))
+							local flypos = (movevec * (math.max(flyspeed["Value"] - entity.character.Humanoid.WalkSpeed, 0) * delta))
 							flypos = Vector3.new(flypos.X, (flyposy - entity.character.HumanoidRootPart.CFrame.p.Y), flypos.Z)
 							if flywall["Enabled"] then
 								local raycastparameters = RaycastParams.new()
@@ -1968,7 +1970,7 @@ runcode(function()
 	})
 	killauratargethighlight["Object"].BorderSizePixel = 0
 	killauratargethighlight["Object"].BackgroundTransparency = 0
-	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 	killauratargethighlight["Object"].Visible = false
 	killauracolor = Killaura.CreateColorSlider({
 		["Name"] = "Target Color",
@@ -2357,7 +2359,7 @@ runcode(function()
 							local newvelo = movevec * speedval["Value"]
 							entity.character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, entity.character.HumanoidRootPart.Velocity.Y, newvelo.Z)
 						elseif speedmethod["Value"] == "CFrame" then
-							local newpos = (movevec * (math.clamp(speedval["Value"] - entity.character.Humanoid.WalkSpeed, 0, 1000000000) * delta))
+							local newpos = (movevec * (math.max(speedval["Value"] - entity.character.Humanoid.WalkSpeed, 0) * delta))
 							if speedwallcheck["Enabled"] then
 								local raycastparameters = RaycastParams.new()
 								raycastparameters.FilterType = Enum.RaycastFilterType.Blacklist
@@ -5078,6 +5080,12 @@ runcode(function()
 						end
 						return antikick(self, ...)
 					end)
+				end
+			else
+				if restorefunction then 
+					restorefunction(lplr.Kick)
+					restorefunction(getrawmetatable(game).__namecall)
+					disablerhooked = false
 				end
 			end
 		end
