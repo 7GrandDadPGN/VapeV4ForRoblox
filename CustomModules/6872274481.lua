@@ -7471,6 +7471,7 @@ runcode(function()
 					fly["ToggleButton"](false)
 					return 
 				end
+				local done = false
 				RunLoops:BindToHeartbeat("InfiniteFly", 1, function(delta) 
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
 						if not networkownerfunc(oldcloneroot) then 
@@ -7480,8 +7481,9 @@ runcode(function()
 						end
 						local newpos = {oldcloneroot.CFrame:GetComponents()}
 						newpos[1] = clone.CFrame.X
-						if newpos[2] < 1000 then 
+						if not done then 
 							newpos[2] = 100000
+							done = true
 						end
 						newpos[3] = clone.CFrame.Z
 						oldcloneroot.CFrame = CFrame.new(unpack(newpos))
