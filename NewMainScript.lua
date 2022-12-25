@@ -1,4 +1,3 @@
-
 repeat task.wait() until game:IsLoaded()
 local injected = true
 local oldrainbow = false
@@ -185,10 +184,10 @@ end)
 task.spawn(function()
 	local image = Instance.new("ImageLabel")
 	image.Image = getcustomassetfunc("vape/assets/CombatIcon.png")
-	image.Position = UDim2.new(0, 5, 0, 5)
+	image.Position = UDim2.new(0, 0, 0, 0)
 	image.BackgroundTransparency = 1
 	image.Size = UDim2.new(0, 1, 0, 1)
-	image.ImageTransparency = 0.99
+	image.ImageTransparency = 0.999
 	image.Parent = GuiLibrary["MainGui"]
 	task.delay(5, function()
 		if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not redownload) and (not betterisfile("vape/assets/check2.txt")) then 
@@ -323,6 +322,7 @@ local friendrecolor = Friends.CreateToggle({
 	["Function"] = function(callback) FriendsTextList.FriendColorRefresh:Fire() end,
 	["Default"] = true
 })
+local friendsscrollingframe
 FriendsColor = Friends.CreateColorSlider({
 	["Name"] = "Friends Color", 
 	["Function"] = function(h, s, v) 
@@ -331,11 +331,14 @@ FriendsColor = Friends.CreateColorSlider({
 		if addcirc then 
 			addcirc.ImageColor3 = col
 		end
-		for i,v in pairs(FriendsTextList["ScrollingObject"].ScrollingFrame:GetChildren()) do 
-			local friendcirc = v:FindFirstChild("FriendCircle")
-			local itemtext = v:FindFirstChild("ItemText")
-			if friendcirc and itemtext then 
-				friendcirc.BackgroundColor3 = itemtext.TextColor3 == Color3.fromRGB(160, 160, 160) and col or friendcirc.BackgroundColor3
+		friendsscrollingframe = friendsscrollingframe or FriendsTextList["ScrollingObject"] and FriendsTextList["ScrollingObject"]:FindFirstChild("ScrollingFrame")
+		if friendsscrollingframe then 
+			for i,v in pairs(friendsscrollingframe:GetChildren()) do 
+				local friendcirc = v:FindFirstChild("FriendCircle")
+				local itemtext = v:FindFirstChild("ItemText")
+				if friendcirc and itemtext then 
+					friendcirc.BackgroundColor3 = itemtext.TextColor3 == Color3.fromRGB(160, 160, 160) and col or friendcirc.BackgroundColor3
+				end
 			end
 		end
 		friendscreatetab["Color"] = col
@@ -473,7 +476,6 @@ ProfilesTextList = Profiles.CreateTextList({
 			bindbkg.Visible = GuiLibrary["Profiles"][profilename] and GuiLibrary["Profiles"][profilename]["Keybind"] ~= ""
 		end)
 		if GuiLibrary["Profiles"][profilename]["Keybind"] ~= "" then
-
 			bindtext.Text = GuiLibrary["Profiles"][profilename]["Keybind"]
 			local textsize = game:GetService("TextService"):GetTextSize(GuiLibrary["Profiles"][profilename]["Keybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
 			newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
@@ -721,15 +723,12 @@ OnlineProfilesExitButton.MouseButton1Click:Connect(function()
 end)
 
 GUI.CreateDivider()
----GUI.CreateCustomButton("Favorites", "vape/assets/FavoritesListIcon.png", UDim2.new(0, 17, 0, 14), function() end, function() end)
---GUI.CreateCustomButton("Text GUIVertical", "vape/assets/TextGUIIcon3.png", UDim2.new(1, -56, 0, 15), function() end, function() end)
 local TextGui = GuiLibrary.CreateCustomWindow({
 	["Name"] = "Text GUI", 
 	["Icon"] = "vape/assets/TextGUIIcon1.png", 
 	["IconSize"] = 21
 })
 local TextGuiCircleObject = {["CircleList"] = {}}
---GUI.CreateCustomButton("Text GUI", "vape/assets/TextGUIIcon2.png", UDim2.new(1, -23, 0, 15), function() TextGui.SetVisible(true) end, function() TextGui.SetVisible(false) end, "OptionsButton")
 GUI.CreateCustomToggle({
 	["Name"] = "Text GUI", 
 	["Icon"] = "vape/assets/TextGUIIcon3.png",

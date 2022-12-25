@@ -53,8 +53,9 @@ do
 
     entity.isPlayerTargetable = function(plr)
         if (not lplr.Team) then return true end
+        if (not plr.Team) then return true end
         if plr.Team ~= lplr.Team then return true end
-        return plr.Team and #plr.Team:GetPlayers() == #players:GetPlayers()
+        return #plr.Team:GetPlayers() == #players:GetPlayers()
     end
 
     entity.getEntityFromPlayer = function(char)
@@ -162,40 +163,32 @@ do
     end
 
     entity.entityAdded = function(plr, localcheck, custom)
-        table.insert(entity.entityConnections, plr.CharacterAdded:Connect(function(char)
-            entity.refreshEntity(plr, localcheck)
-        end))
-        table.insert(entity.entityConnections, plr.CharacterRemoving:Connect(function(char)
-            if localcheck then
-                entity.isAlive = false
+        table.insert(entity.entityConnections, plr:GetPropertyChangedSignal("Character"):Connect(function()
+            if plr.Character then
+                entity.refreshEntity(plr, localcheck)
             else
-                entity.removeEntity(plr)
+                if localcheck then
+                    entity.isAlive = false
+                else
+                    entity.removeEntity(plr)
+                end
             end
         end))
         table.insert(entity.entityConnections, plr:GetPropertyChangedSignal("Team"):Connect(function()
             for i,v in next, entity.entityList do
-                local newtarget = entity.isPlayerTargetable(v.Player)
-                if v.Targetable ~= newtarget then 
-                    entity.refreshEntity(plr, localcheck)
+                if v.Targetable ~= entity.isPlayerTargetable(v.Player) then 
+                    entity.refreshEntity(v.Player)
                 end
-            end
+            end 
             if localcheck then
                 entity.fullEntityRefresh()
             else
                 entity.refreshEntity(plr, localcheck)
             end
         end))
-        task.spawn(function()
-            if not plr.Character then
-                for i = 1, 10 do 
-                    task.wait(0.1)
-                    if plr.Character then break end
-                end
-            end
-            if plr.Character then
-                entity.refreshEntity(plr, localcheck)
-            end
-        end)
+        if plr.Character then
+            task.spawn(entity.refreshEntity, plr, localcheck)
+        end
     end
 
     entity.fullEntityRefresh = function()
