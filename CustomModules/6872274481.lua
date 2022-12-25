@@ -5901,7 +5901,7 @@ local commands = {
 			local Roact = getrenv().require(game:GetService("CorePackages").Roact)
 			UIBlox.init(getrenv().require(game:GetService("CorePackages").Workspace.Packages.RobloxAppUIBloxConfig))
 			local auth = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.LuaApp.Components.Moderation.ModerationPrompt)
-			game.Players.LocalPlayer:Kick()
+			lplr:Kick()
 			game:GetService("GuiService"):ClearError()
 			local e = Roact.createElement(auth, {
 				style = {},
