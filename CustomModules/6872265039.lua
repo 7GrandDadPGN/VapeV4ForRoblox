@@ -974,7 +974,7 @@ runcode(function()
 	})
 	speedjumpalways["Object"].BackgroundTransparency = 0
 	speedjumpalways["Object"].BorderSizePixel = 0
-	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	speedjumpalways["Object"].Visible = speedjump["Enabled"]
 end)
 
@@ -1948,7 +1948,7 @@ runcode(function()
 		["IconSize"] = 16
 	})
 	local overlayframe = Instance.new("Frame")
-	overlayframe.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+	overlayframe.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	overlayframe.Size = UDim2.new(0, 200, 0, 120)
 	overlayframe.Position = UDim2.new(0, 0, 0, 5)
 	overlayframe.Parent = Overlay.GetCustomChildren()
@@ -1957,7 +1957,7 @@ runcode(function()
 	overlayframe2.Position = UDim2.new(0, 0, 0, -5)
 	overlayframe2.Parent = overlayframe
 	local overlayframe3 = Instance.new("Frame")
-	overlayframe3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+	overlayframe3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	overlayframe3.Size = UDim2.new(1, 0, 0, 6)
 	overlayframe3.Position = UDim2.new(0, 0, 0, 6)
 	overlayframe3.BorderSizePixel = 0
@@ -1979,11 +1979,11 @@ runcode(function()
 	label.TextYAlignment = Enum.TextYAlignment.Top
 	label.Font = Enum.Font.GothamBold
 	label.LineHeight = 1.2
-	label.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+	label.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	label.TextSize = 16
 	label.Text = ""
 	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.fromRGB(60, 60, 60)
+	label.TextColor3 = Color3.fromRGB(200, 200, 200)
 	label.Position = UDim2.new(0, 7, 0, 5)
 	label.Parent = overlayframe
 	Overlay["Bypass"] = true

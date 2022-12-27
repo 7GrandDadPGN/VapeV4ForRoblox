@@ -1970,7 +1970,7 @@ runcode(function()
 	})
 	killauratargethighlight["Object"].BorderSizePixel = 0
 	killauratargethighlight["Object"].BackgroundTransparency = 0
-	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	killauratargethighlight["Object"].Visible = false
 	killauracolor = Killaura.CreateColorSlider({
 		["Name"] = "Target Color",
