@@ -5469,7 +5469,7 @@ runcode(function()
 	})
 	killauratargethighlight["Object"].BorderSizePixel = 0
 	killauratargethighlight["Object"].BackgroundTransparency = 0
-	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	killauratargethighlight["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	killauratargethighlight["Object"].Visible = false
 	killauracolor = Killaura.CreateColorSlider({
 		["Name"] = "Target Color",
@@ -6999,7 +6999,7 @@ runcode(function()
 	})
 	speedjumpalways["Object"].BackgroundTransparency = 0
 	speedjumpalways["Object"].BorderSizePixel = 0
-	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	speedjumpalways["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	speedjumpalways["Object"].Visible = speedjump["Enabled"]
 end)
 
@@ -7330,7 +7330,7 @@ runcode(function()
 	})
 	flyspeedboost["Object"].BorderSizePixel = 0
 	flyspeedboost["Object"].BackgroundTransparency = 0
-	flyspeedboost["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	flyspeedboost["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	flyspeedboost["Object"].Visible = false
 	flyacprogressbar = fly.CreateToggle({
 		["Name"] = "Progress Bar",
@@ -7372,7 +7372,7 @@ runcode(function()
 	})
 	flyacprogressbar["Object"].BorderSizePixel = 0
 	flyacprogressbar["Object"].BackgroundTransparency = 0
-	flyacprogressbar["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	flyacprogressbar["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	flyacprogressbar["Object"].Visible = false
 end)
 
@@ -9438,7 +9438,7 @@ runcode(function()
 	})
 	AnticheatBypassAutoConfigSpeed["Object"].BorderSizePixel = 0
 	AnticheatBypassAutoConfigSpeed["Object"].BackgroundTransparency = 0
-	AnticheatBypassAutoConfigSpeed["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	AnticheatBypassAutoConfigSpeed["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	AnticheatBypassAutoConfigSpeed["Object"].Visible = false
 	AnticheatBypassAutoConfigSpeed2 = AnticheatBypass.CreateSlider({
 		["Name"] = "Big Mode Speed",
@@ -9449,7 +9449,7 @@ runcode(function()
 	})
 	AnticheatBypassAutoConfigSpeed2["Object"].BorderSizePixel = 0
 	AnticheatBypassAutoConfigSpeed2["Object"].BackgroundTransparency = 0
-	AnticheatBypassAutoConfigSpeed2["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	AnticheatBypassAutoConfigSpeed2["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	AnticheatBypassAutoConfigSpeed2["Object"].Visible = false
 	AnticheatBypassAutoConfigBig = AnticheatBypass.CreateToggle({
 		["Name"] = "Big Mode CFrame",
@@ -9458,7 +9458,7 @@ runcode(function()
 	})
 	AnticheatBypassAutoConfigBig["Object"].BorderSizePixel = 0
 	AnticheatBypassAutoConfigBig["Object"].BackgroundTransparency = 0
-	AnticheatBypassAutoConfigBig["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	AnticheatBypassAutoConfigBig["Object"].BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	AnticheatBypassAutoConfigBig["Object"].Visible = false
 	AnticheatBypassAlternate = AnticheatBypass.CreateToggle({
 		["Name"] = "Alternate Numbers",
@@ -10005,7 +10005,7 @@ runcode(function()
 		["IconSize"] = 16
 	})
 	local overlayframe = Instance.new("Frame")
-	overlayframe.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+	overlayframe.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	overlayframe.Size = UDim2.new(0, 200, 0, 120)
 	overlayframe.Position = UDim2.new(0, 0, 0, 5)
 	overlayframe.Parent = Overlay.GetCustomChildren()
@@ -10014,7 +10014,7 @@ runcode(function()
 	overlayframe2.Position = UDim2.new(0, 0, 0, -5)
 	overlayframe2.Parent = overlayframe
 	local overlayframe3 = Instance.new("Frame")
-	overlayframe3.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+	overlayframe3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	overlayframe3.Size = UDim2.new(1, 0, 0, 6)
 	overlayframe3.Position = UDim2.new(0, 0, 0, 6)
 	overlayframe3.BorderSizePixel = 0
@@ -10036,11 +10036,11 @@ runcode(function()
 	label.TextYAlignment = Enum.TextYAlignment.Top
 	label.Font = Enum.Font.GothamBold
 	label.LineHeight = 1.2
-	label.BackgroundColor3 = Color3.fromRGB(230, 224, 230)
+	label.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	label.TextSize = 16
 	label.Text = ""
 	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.fromRGB(60, 60, 60)
+	label.TextColor3 = Color3.fromRGB(200, 200, 200)
 	label.Position = UDim2.new(0, 7, 0, 5)
 	label.Parent = overlayframe
 	Overlay["Bypass"] = true

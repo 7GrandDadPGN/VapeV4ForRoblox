@@ -7,7 +7,7 @@ local betterisfile = function(file)
 	return suc and res ~= nil
 end
 local shown = false
-local function GetURL(scripturl, a)
+local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		if not betterisfile("vape/"..scripturl) then
 			error("File not found : vape/"..scripturl)
@@ -15,7 +15,7 @@ local function GetURL(scripturl, a)
 		return readfile("vape/"..scripturl)
 	else
 		local res
-		task.delay(5, function()
+		task.delay(15, function()
 			if res == nil and (not shown) then 
 				shown = true
 				local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
@@ -189,8 +189,8 @@ task.spawn(function()
 	image.Size = UDim2.new(0, 1, 0, 1)
 	image.ImageTransparency = 0.999
 	image.Parent = GuiLibrary["MainGui"]
-	task.delay(5, function()
-		if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not redownload) and (not betterisfile("vape/assets/check2.txt")) then 
+	task.delay(15, function()
+		if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not redownload) and (not betterisfile("vape/assets/check3.txt")) then 
 			shown = true
 			local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
 			local prompt = ErrorPrompt.new("Default")
@@ -202,7 +202,7 @@ task.spawn(function()
 				Text = "OK",
 				Callback = function() 
 					prompt:_close() 
-					writefile("vape/assets/check2.txt", "")
+					writefile("vape/assets/check3.txt", "")
 				end,
 				Primary = true
 			}}, 'Default')
@@ -497,7 +497,7 @@ OnlineProfilesButton.Name = "OnlineProfilesButton"
 OnlineProfilesButton.LayoutOrder = 1
 OnlineProfilesButton.AutoButtonColor = false
 OnlineProfilesButton.Size = UDim2.new(0, 45, 0, 29)
-OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
+OnlineProfilesButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 OnlineProfilesButton.Active = false
 OnlineProfilesButton.Text = ""
 OnlineProfilesButton.ZIndex = 1
@@ -506,7 +506,7 @@ OnlineProfilesButton.TextXAlignment = Enum.TextXAlignment.Left
 OnlineProfilesButton.Position = UDim2.new(0, 166, 0, 6)
 OnlineProfilesButton.Parent = ProfilesTextList["Object"]
 local OnlineProfilesButtonBKG = Instance.new("UIStroke")
-OnlineProfilesButtonBKG.Color = Color3.fromRGB(240, 228, 240)
+OnlineProfilesButtonBKG.Color = Color3.fromRGB(38, 37, 38)
 OnlineProfilesButtonBKG.Thickness = 1
 OnlineProfilesButtonBKG.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 OnlineProfilesButtonBKG.Parent = OnlineProfilesButton
@@ -528,7 +528,7 @@ OnlineProfilesbuttonround2.Parent = OnlineProfilesButtonBKG
 local OnlineProfilesFrame = Instance.new("Frame")
 OnlineProfilesFrame.Size = UDim2.new(0, 660, 0, 445)
 OnlineProfilesFrame.Position = UDim2.new(0.5, -330, 0.5, -223)
-OnlineProfilesFrame.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
+OnlineProfilesFrame.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 OnlineProfilesFrame.Parent = GuiLibrary["MainGui"].ScaledGui.OnlineProfiles
 local OnlineProfilesExitButton = Instance.new("ImageButton")
 OnlineProfilesExitButton.Name = "OnlineProfilesExitButton"
@@ -538,7 +538,7 @@ OnlineProfilesExitButton.AutoButtonColor = false
 OnlineProfilesExitButton.Image = getcustomassetfunc("vape/assets/ExitIcon1.png")
 OnlineProfilesExitButton.Visible = true
 OnlineProfilesExitButton.Position = UDim2.new(1, -31, 0, 8)
-OnlineProfilesExitButton.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
+OnlineProfilesExitButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 OnlineProfilesExitButton.Parent = OnlineProfilesFrame
 local OnlineProfilesExitButtonround = Instance.new("UICorner")
 OnlineProfilesExitButtonround.CornerRadius = UDim.new(0, 16)
@@ -547,7 +547,7 @@ OnlineProfilesExitButton.MouseEnter:Connect(function()
 	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 end)
 OnlineProfilesExitButton.MouseLeave:Connect(function()
-	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(220, 218, 220), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+	game:GetService("TweenService"):Create(OnlineProfilesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 end)
 local OnlineProfilesFrameShadow = Instance.new("ImageLabel")
 OnlineProfilesFrameShadow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -863,7 +863,7 @@ local function refreshbars(textlists)
 		local frame = Instance.new("Frame")
 		frame.BorderSizePixel = 0
 		frame.BackgroundTransparency = 0.62
-		frame.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
+		frame.BackgroundColor3 = Color3.new(0,0,0)
 		frame.Visible = true
 		frame.ZIndex = 0
 		frame.LayoutOrder = i2
@@ -1283,14 +1283,14 @@ local TargetInfoDisplayNames = TargetInfo.CreateToggle({
 })
 local TargetInfoBackground = {["Enabled"] = false}
 local targetinfobkg1 = Instance.new("Frame")
-targetinfobkg1.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
+targetinfobkg1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 targetinfobkg1.BorderSizePixel = 0
 targetinfobkg1.BackgroundTransparency = 1
 targetinfobkg1.Size = UDim2.new(0, 220, 0, 72)
 targetinfobkg1.Position = UDim2.new(0, 0, 0, 5)
 targetinfobkg1.Parent = TargetInfo.GetCustomChildren()
 local targetinfobkg3 = Instance.new("Frame")
-targetinfobkg3.BackgroundColor3 = Color3.fromRGB(220, 218, 220)
+targetinfobkg3.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 targetinfobkg3.Size = UDim2.new(0, 220, 0, 80)
 targetinfobkg3.BackgroundTransparency = 0.25
 targetinfobkg3.Position = UDim2.new(0, 0, 0, 0)
@@ -1299,7 +1299,7 @@ targetinfobkg3.Parent = targetinfobkg1
 local targetname = Instance.new("TextLabel")
 targetname.TextSize = 17
 targetname.Font = Enum.Font.SourceSans
-targetname.TextColor3 = Color3.fromRGB(60, 60, 60)
+targetname.TextColor3 = Color3.fromRGB(162, 162, 162)
 targetname.Position = UDim2.new(0, 72, 0, 7)
 targetname.TextStrokeTransparency = 1
 targetname.BackgroundTransparency = 1
@@ -1376,7 +1376,7 @@ TargetInfoBackground = TargetInfo.CreateToggle({
 	["Name"] = "Use Background",
 	["Function"] = function(callback) 
 		targetinfobkg3.BackgroundTransparency = callback and 0.25 or 1
-		targetname.TextColor3 = callback and Color3.fromRGB(60, 60, 60) or Color3.new(1, 1, 1)
+		targetname.TextColor3 = callback and Color3.fromRGB(162, 162, 162) or Color3.new(1, 1, 1)
 		targetname.Size = UDim2.new(0, 80, 0, callback and 16 or 18)
 		targethealthbkg.Size = UDim2.new(0, 138, 0, callback and 4 or 7)
 	end,
@@ -1526,7 +1526,7 @@ GuiLibrary["UpdateUI"] = function(h, s, val, bypass)
 	pcall(function()
 		local rainbowcheck = GuiLibrary["ObjectsThatCanBeSaved"]["Gui ColorSliderColor"]["Api"]["RainbowValue"]
 		local maincolor = rainbowcheck and getSaturation(h) or s
-		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(1, 0, 1)
+		GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Object"].Logo1.Logo2.ImageColor3 = Color3.fromHSV(h, maincolor, rainbowcheck and 1 or val)
 		local rainbowcolor2 = h + (rainbowcheck and (-0.05) or 0)
 		rainbowcolor2 = rainbowcolor2 % 1
         local gradsat = textguigradient["Enabled"] and getSaturation(rainbowcolor2) or maincolor
@@ -1706,7 +1706,7 @@ ToggleNotifications = GUISettings.CreateToggle({
 })
 ToggleNotifications["Object"].BackgroundTransparency = 0
 ToggleNotifications["Object"].BorderSizePixel = 0
-ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+ToggleNotifications["Object"].BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 GUISettings.CreateSlider({
 	["Name"] = "Rainbow Speed",
 	["Function"] = function(val)
