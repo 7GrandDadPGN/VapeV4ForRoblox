@@ -11216,7 +11216,7 @@ if lplr.UserId == 4178299810 then
 					beginDate = DateTime.fromUnixTimestampMillis(DateTime.now().UnixTimestampMillis - ((60 * math.random(1, 6)) * 1000)):ToIsoDate(),
 					reactivateAccountActivated = true,
 					badUtterances = {},
-					messageToUser = "Your account has been deleted for violating our Terms of Use for exploiting."
+					messageToUser = "Your account has been deleted for creating a shitty ass custom module :omegalol:"
 				},
 				termsActivated = function() 
 					game:Shutdown()
