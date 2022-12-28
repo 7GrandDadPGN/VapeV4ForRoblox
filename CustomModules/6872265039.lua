@@ -176,7 +176,7 @@ end
 
 local function getcustomassetfunc(path)
 	if not betterisfile(path) then
-		spawn(function()
+		task.spawn(function()
 			local textlabel = Instance.new("TextLabel")
 			textlabel.Size = UDim2.new(1, 0, 0, 36)
 			textlabel.Text = "Downloading "..path
@@ -938,9 +938,9 @@ runcode(function()
 	speedval = speed.CreateSlider({
 		["Name"] = "Speed",
 		["Min"] = 1,
-		["Max"] = 54,
+		["Max"] = 23,
 		["Function"] = function(val) end,
-		["Default"] = 54
+		["Default"] = 23
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
