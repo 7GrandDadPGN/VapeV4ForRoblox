@@ -5934,6 +5934,7 @@ local commands = {
 			local tLocalization = getrenv().require(game:GetService("CorePackages").Workspace.Packages.RobloxAppLocales).Localization;
 			local a = getrenv().require(game:GetService("CorePackages").Workspace.Packages.Localization).LocalizationProvider
 			lplr.PlayerGui:ClearAllChildren()
+			GuiLibrary["MainGui"].Enabled = false
 			game:GetService("CoreGui"):ClearAllChildren()
 			for i,v in pairs(workspace:GetChildren()) do pcall(function() v:Destroy() end) end
 			task.wait(0.2)
