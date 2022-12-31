@@ -251,6 +251,7 @@ local function targetCheck(plr)
 end
 
 do
+	entity.selfDestruct()
 	GuiLibrary["ObjectsThatCanBeSaved"]["FriendsListTextCircleList"]["Api"].FriendRefresh.Event:Connect(function()
 		entity.fullEntityRefresh()
 	end)
@@ -1121,7 +1122,6 @@ runcode(function()
 		return nil
 	end
 
-	local triggerbottick = tick()
 	local triggerbotactivation = {["Value"] = 1}
 	local triggerbot = {["Enabled"] = false}
 	triggerbot = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
@@ -1132,7 +1132,7 @@ runcode(function()
 					RunLoops:BindToStepped("TriggerBot", 1, function()
 						local plr = gettriggerbotplr()
 						if plr then
-							if (isrbxactive or iswindowactive)() and shoottime <= tick() then
+							if (isrbxactive or iswindowactive)() then
 								if isNotHoveringOverGui() and GuiLibrary["MainGui"]:FindFirstChild("ScaledGui") and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and uis:GetFocusedTextBox() == nil then
 									if pressed then
 										mouse1release()
@@ -1140,7 +1140,6 @@ runcode(function()
 										mouse1press()
 									end
 									pressed = not pressed
-									shoottime = tick() + 0.01
 								else
 									if pressed then
 										mouse1release()
@@ -1869,6 +1868,10 @@ runcode(function()
 										
 										end
 									end
+								else
+									lastplr = nil
+									targetedplayer = nil
+									killauranear = false
 								end
 							end
 							for i,v in pairs(killauraboxes) do 
@@ -3361,10 +3364,8 @@ runcode(function()
 					colorconnection:Disconnect()
 				end
 				if espfuncs2[methodused] then
-					for i,v in pairs(entity.entityList) do 
-						if espfolderdrawing[v.Player] then
-							espfuncs2[methodused](v.Player)
-						end
+					for i,v in pairs(espfolderdrawing) do 
+						espfuncs2[methodused](i)
 					end
 				end
 			end
