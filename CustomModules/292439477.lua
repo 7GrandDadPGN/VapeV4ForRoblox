@@ -7,12 +7,19 @@ local bypassScript = [[
 	-- variables
 	local runService = game:GetService("RunService");
 	local replicatedFirst = game:GetService("ReplicatedFirst");
+	local insertService = game:GetService("InsertService");
+
+	-- detection bypass
+	insertService.DescendantAdded:Connect(function(instance)
+		if instance:IsA("Actor") then
+			instance:Destroy()
+		end
+	end);
 	
 	-- actor bypass
 	replicatedFirst.ChildAdded:Connect(function(instance)
 		if instance:IsA("Actor") then
 			replicatedFirst.ChildAdded:Wait();
-	
 			for _, child in next, instance:GetChildren() do
 				child.Parent = replicatedFirst;
 			end
