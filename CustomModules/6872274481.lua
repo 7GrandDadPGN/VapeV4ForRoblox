@@ -7620,6 +7620,7 @@ runcode(function()
 		["Name"] = "Delay",
 		["Min"] = 1,
 		["Max"] = 125,
+		["Default"] = 125,
 		["Function"] = function() end,
 		["Double"] = 100
 	})
