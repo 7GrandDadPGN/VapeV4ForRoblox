@@ -1610,7 +1610,7 @@ do
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10)
                 local hum = char:WaitForChild("Humanoid", 10)
-                if humrootpart and hum and head then
+                if humrootpart and hum and head and entity.entityIds[plr.Name] == id then
 					local childremoved
                     local newent
                     if localcheck then
@@ -2922,6 +2922,9 @@ runcode(function()
 								if pos then
 									RunLoops:BindToHeartbeat("AntiVoid", 1, function(dt)
 										if entity.isAlive and entity.character.Humanoid.Health > 0 and networkownerfunc(entity.character.HumanoidRootPart) and (entity.character.HumanoidRootPart.Position - pos).Magnitude > 1 and AntiVoid["Enabled"] then 
+											if getblock(pos) then
+												pos = getclosesttop(1000)
+											end
 											local hori1 = Vector3.new(entity.character.HumanoidRootPart.Position.X, 0, entity.character.HumanoidRootPart.Position.Z)
 											local hori2 = Vector3.new(pos.X, 0, pos.Z)
 											local newpos = (hori2 - hori1).Unit
