@@ -105,7 +105,7 @@ local WhitelistFunctions = {StoredHashes = {}, PriorityList = {
 	["VAPE OWNER"] = 3,
 	["VAPE PRIVATE"] = 2,
 	["DEFAULT"] = 1
-}, WhitelistTable = {}, Loaded = true, CustomTags = {}}
+}, WhitelistTable = {}, Loaded = false, CustomTags = {}}
 do
 	local shalib
 	WhitelistFunctions.WhitelistTable = {
