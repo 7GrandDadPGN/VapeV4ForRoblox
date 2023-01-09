@@ -61,7 +61,7 @@ local function checkassetversion()
 end
 
 if not (getasset and requestfunc and queueteleport) then
-	print("Vape not supported with your exploit.")
+	print("Vape is not supported with your exploit.")
 	return
 end
 
@@ -186,27 +186,36 @@ task.spawn(function()
 	image.Image = getcustomassetfunc("vape/assets/CombatIcon.png")
 	image.Position = UDim2.new(0, 0, 0, 0)
 	image.BackgroundTransparency = 1
-	image.Size = UDim2.new(0, 1, 0, 1)
+	image.Size = UDim2.new(0, 100, 0, 100)
 	image.ImageTransparency = 0.999
 	image.Parent = GuiLibrary["MainGui"]
-	task.delay(15, function()
-		if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not redownload) and (not betterisfile("vape/assets/check3.txt")) then 
-			shown = true
-			local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
-			local prompt = ErrorPrompt.new("Default")
-			prompt._hideErrorCode = true
-			local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-			prompt:setParent(gui)
-			prompt:setErrorTitle("Vape")
-			prompt:updateButtons({{
-				Text = "OK",
-				Callback = function() 
-					prompt:_close() 
-					writefile("vape/assets/check3.txt", "")
-				end,
-				Primary = true
-			}}, 'Default')
-			prompt:_open("Vape has detected that you have a skill issue and cannot load assets, Consider getting a better executor.")
+	task.spawn(function()
+		for i = 1, 150 do 
+			task.wait(0.1)
+			if image.ContentImageSize ~= Vector2.new() then
+				image:Destroy()
+				break 
+			end
+		end
+		if image then 
+			if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not redownload) and (not betterisfile("vape/assets/check3.txt")) then 
+				shown = true
+				local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
+				local prompt = ErrorPrompt.new("Default")
+				prompt._hideErrorCode = true
+				local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+				prompt:setParent(gui)
+				prompt:setErrorTitle("Vape")
+				prompt:updateButtons({{
+					Text = "OK",
+					Callback = function() 
+						prompt:_close() 
+						writefile("vape/assets/check3.txt", "")
+					end,
+					Primary = true
+				}}, 'Default')
+				prompt:_open("Vape has detected that you have a skill issue and cannot load assets, Consider getting a better executor.")
+			end
 		end
 	end)
 end)
