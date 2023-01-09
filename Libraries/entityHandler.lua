@@ -80,11 +80,8 @@ do
         entity.characterAdded(plr, plr.Character, localcheck, true)
     end
 
-    entity.getHealth = function(plr) -- Override this function to get health on games that dont use humanoid.health
-        local tableIndex, ent = entity.getEntityFromPlayer(plr)
-        if ent then 
-            return ent.Humanoid.Health
-        end
+    entity.getHealth = function(ent) -- Override this function to get health on games that dont use humanoid.health
+       return ent.Humanoid.Health, ent.Humanoid.MaxHealth
     end
 
     entity.getUpdateConnections = function(ent) -- Override this function to update connections on games that dont use humanoid health
@@ -125,11 +122,13 @@ do
                         }
                         setmetatable(newent, {
                             __tostring = function()
-                                return newent.Player.Name
+                                return newent.Player.Name or "Entity"
                             end,
                             __index = function(t, k) 
                                 if k == 'Health' then 
-                                    return newent.Humanoid and newent.Humanoid.Health or 100
+                                    return ({entity.getHealth(newent)})[1] or 100 -- Return Health
+                                elseif k == 'MaxHealth' then
+                                    return ({entity.getHealth(newent)})[2] or 100 -- Return MaxHealth
                                 end
                                 return rawget(t, k)
                             end
