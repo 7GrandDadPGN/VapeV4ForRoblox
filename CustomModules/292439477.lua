@@ -111,21 +111,21 @@ if shared.RequireTable == nil then
 			queueteleport(bypassScript)
 			game:GetService('TeleportService'):TeleportToPlaceInstance(game.PlaceId, game.JobId, lplr)
 			task.wait(9e9)
+        else
+            local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
+            local prompt = ErrorPrompt.new("Default")
+            prompt._hideErrorCode = true
+            local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+            prompt:setParent(gui)
+            prompt:setErrorTitle("Vape")
+            prompt:updateButtons({{
+                Text = "OK",
+                Callback = function() prompt:_close() end,
+                Primary = true
+            }}, 'Default')
+            prompt:_open("Your exploit is unsupported by Phantom Forces Vape.")
+            task.wait(9e9)
 		end
-	else
-		local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
-		local prompt = ErrorPrompt.new("Default")
-		prompt._hideErrorCode = true
-		local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-		prompt:setParent(gui)
-		prompt:setErrorTitle("Vape")
-		prompt:updateButtons({{
-			Text = "OK",
-			Callback = function() prompt:_close() end,
-			Primary = true
-		}}, 'Default')
-		prompt:_open("Your exploit is unsupported by Phantom Forces Vape.")
-		task.wait(9e9)
 	end
 end
 local pf = {}
@@ -583,6 +583,10 @@ GuiLibrary.RemoveObject("FreecamOptionsButton")
 GuiLibrary.RemoveObject("SafeWalkOptionsButton")
 GuiLibrary.RemoveObject("KillauraOptionsButton")
 GuiLibrary.RemoveObject("HitBoxesOptionsButton")
+GuiLibrary.RemoveObject("SilentAimOptionsButton")
+GuiLibrary.RemoveObject("ReachOptionsButton")
+GuiLibrary.RemoveObject("ESPOptionsButton")
+GuiLibrary.RemoveObject("TracersOptionsButton")
 
 local teleported = false
 local teleportfunc = game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
@@ -787,7 +791,6 @@ hook = hookmetamethod(game, "__index", function(self, ind, val, ...)
 	return realcf
 end)
 
-GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
 runcode(function()
 	local shooting = false
 	SilentAim = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
@@ -896,7 +899,6 @@ runcode(function()
 	})
 end)
 
-GuiLibrary["RemoveObject"]("ReachOptionsButton")
 runcode(function()
 	local aimbound = false
 	local lastTarget
@@ -932,7 +934,6 @@ runcode(function()
 	})
 end)
 
-GuiLibrary["RemoveObject"]("ESPOptionsButton")
 runcode(function()
 	local espfolderdrawing = {}
 	local methodused
@@ -1603,7 +1604,6 @@ runcode(function()
 end)
 
 runcode(function()
-	GuiLibrary.RemoveObject("TracersOptionsButton")
 	local tracersfolderdrawing = {}
 	local methodused
 
