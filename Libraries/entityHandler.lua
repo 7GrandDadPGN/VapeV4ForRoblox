@@ -81,7 +81,10 @@ do
     end
 
     entity.getHealth = function(ent) -- Override this function to get health on games that dont use humanoid.health
-        return ent.Humanoid.Health, ent.Humanoid.MaxHealth
+        local tableIndex, ent = entity.getEntityFromPlayer(plr)
+        if ent then 
+            return ent.Humanoid.Health, ent.Humanoid.MaxHealth
+        end
     end
 
     entity.getUpdateConnections = function(ent) -- Override this function to update connections on games that dont use humanoid health
