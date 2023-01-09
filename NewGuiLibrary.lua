@@ -6393,22 +6393,8 @@ if shared.VapeExecuted then
 	local holdingalt = false
 	local uninjected = false
 
-	local function bettergetfocus()
-		if KRNL_LOADED then
-			-- krnl is so garbage, you literally cannot detect focused textbox with UIS
-			if game:GetService("StarterGui"):GetCoreGuiEnabled(Enum.CoreGuiType.Chat) then
-				if textchatservice and textchatservice.ChatVersion == Enum.ChatVersion.TextChatService then
-					return ((game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused() or searchbar:IsFocused()) and true or nil)
-				else
-					return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
-				end
-			end
-		end
-		return game:GetService("UserInputService"):GetFocusedTextBox()
-	end
-
 	api["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:Connect(function(input1)
-		if bettergetfocus() == nil then
+		if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
 			if input1.KeyCode == Enum.KeyCode[api["GUIKeybind"]] and api["KeybindCaptured"] == false then
 				clickgui.Visible = not clickgui.Visible
 				game:GetService("UserInputService").OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
