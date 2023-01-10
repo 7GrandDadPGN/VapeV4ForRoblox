@@ -590,7 +590,7 @@ runcode(function()
 			if callback then
 				--buyballoons()
 				flypress = uis.InputBegan:Connect(function(input1)
-					if flyupanddown["Enabled"] and bettergetfocus() == nil then
+					if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.Space then
 							flyup = true
 						end
