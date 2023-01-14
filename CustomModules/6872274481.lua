@@ -38,19 +38,6 @@ local lagbackevent = Instance.new("BindableEvent")
 local allowspeed = true
 local antivoiding = false
 local textchatservice = game:GetService("TextChatService")
-local bettergetfocus = function()
-	if KRNL_LOADED then
-		-- krnl is so garbage, you literally cannot detect focused textbox with UIS
-		if game:GetService("StarterGui"):GetCoreGuiEnabled(Enum.CoreGuiType.Chat) then
-			if textchatservice and textchatservice.ChatVersion == Enum.ChatVersion.TextChatService then
-				return ((game:GetService("CoreGui").ExperienceChat.appLayout.chatInputBar.Background.Container.TextContainer.TextBoxContainer.TextBox:IsFocused() or searchbar:IsFocused()) and true or nil)
-			else
-				return ((game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused() or searchbar:IsFocused()) and true or nil) 
-			end
-		end
-	end
-	return game:GetService("UserInputService"):GetFocusedTextBox()
-end
 local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -2782,11 +2769,10 @@ runcode(function()
 			if callback then
 				task.spawn(function()
 					repeat
-						task.wait()
-						if (not Sprint["Enabled"]) then break end
 						if (not bedwars["sprintTable"].sprinting) then
 							bedwars["sprintTable"]:startSprinting()
 						end
+						task.wait()
 					until (not Sprint["Enabled"])
 				end)
 				sprintconnection = lplr.CharacterAdded:Connect(function(char)
@@ -2923,9 +2909,6 @@ runcode(function()
 								if pos then
 									RunLoops:BindToHeartbeat("AntiVoid", 1, function(dt)
 										if entity.isAlive and entity.character.Humanoid.Health > 0 and networkownerfunc(entity.character.HumanoidRootPart) and (entity.character.HumanoidRootPart.Position - pos).Magnitude > 1 and AntiVoid["Enabled"] then 
-											if getblock(pos) then
-												pos = getclosesttop(1000)
-											end
 											local hori1 = Vector3.new(entity.character.HumanoidRootPart.Position.X, 0, entity.character.HumanoidRootPart.Position.Z)
 											local hori2 = Vector3.new(pos.X, 0, pos.Z)
 											local newpos = (hori2 - hori1).Unit
@@ -2933,6 +2916,9 @@ runcode(function()
 											entity.character.HumanoidRootPart.CFrame = CFrame.new(realnewpos.p.X, pos.Y, realnewpos.p.Z)
 											antivoidvelo = newpos == newpos and newpos * 20 or Vector3.zero
 											entity.character.HumanoidRootPart.Velocity = Vector3.new(antivoidvelo.X, entity.character.HumanoidRootPart.Velocity.Y, antivoidvelo.Z)
+											if getblock((entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)) + entity.character.HumanoidRootPart.Velocity.Unit) then
+												pos = pos + Vector3.new(0, 1, 0)
+											end
 										else
 											RunLoops:UnbindFromHeartbeat("AntiVoid")
 											antivoidvelo = nil
@@ -2947,13 +2933,13 @@ runcode(function()
 						end
 					end)
 					repeat
-						task.wait()
 						if entity.isAlive and AntiVoidMode["Value"] == "Normal" then 
 							local ray = workspace:Raycast(entity.character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), blockraycast)
 							if ray or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] then 
 								antivoidpart.Position = entity.character.HumanoidRootPart.Position - Vector3.new(0, 21, 0)
 							end
 						end
+						task.wait()
 					until (not AntiVoid["Enabled"])
 				end)
 			else
@@ -3209,10 +3195,26 @@ runcode(function()
                 end)
                 task.spawn(function()
                     repeat
-                        task.wait()
 						if (nukernofly["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] == false) then
+							if nukerbeds["Enabled"] then
+								for i, obj in pairs(collectionservice:GetTagged("bed")) do
+									if entity.isAlive then
+										if obj and bedwars["BlockController"]:isBlockBreakable({blockPosition = obj.Position / 3}, lplr) and obj.Parent ~= nil then
+											if ((oldcloneroot and oldcloneroot.Position or localserverpos or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] then
+												local tool = (not nukerlegit["Enabled"]) and {Name = "wood_axe"} or getEquipped()["Object"]
+												if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] then
+													local res, amount = getbestside(obj.Position)
+													local res2, amount2 = getbestside(obj.Position + Vector3.new(0, 0, 3))
+													bedwars["breakBlock"]((amount < amount2 and obj.Position or obj.Position + Vector3.new(0, 0, 3)), nukereffects["Enabled"], (amount < amount2 and res or res2), false, nukeranimation["Enabled"])
+													break
+												end
+											end
+										end
+									end
+								end
+							end
 							for i, obj in pairs(luckyblocktable) do
-								if entity.isAlive  then
+								if entity.isAlive then
 									if obj and bedwars["BlockController"]:isBlockBreakable({blockPosition = obj.Position / 3}, lplr) and obj.Parent ~= nil then
 										if ((oldcloneroot and oldcloneroot.Position or localserverpos or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] and (nukerown["Enabled"] or obj:GetAttribute("PlacedByUserId") ~= lplr.UserId) then
 											local tool = (not nukerlegit["Enabled"]) and {Name = "wood_axe"} or getEquipped()["Object"]
@@ -3225,28 +3227,7 @@ runcode(function()
 								end
 							end
 						end
-                    until Nuker["Enabled"] == false
-                end)
-                task.spawn(function()
-                    repeat
-                        task.wait()
-                        if nukerbeds["Enabled"] and (nukernofly["Enabled"] == false or GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"] == false) then
-                            for i, obj in pairs(collectionservice:GetTagged("bed")) do
-                                if entity.isAlive then
-                                    if obj and bedwars["BlockController"]:isBlockBreakable({blockPosition = obj.Position / 3}, lplr) and obj.Parent ~= nil then
-                                        if ((oldcloneroot and oldcloneroot.Position or localserverpos or entity.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange["Value"] then
-											local tool = (not nukerlegit["Enabled"]) and {Name = "wood_axe"} or getEquipped()["Object"]
-											if tool and bedwars["ItemTable"][tool.Name]["breakBlock"] then
-												local res, amount = getbestside(obj.Position)
-												local res2, amount2 = getbestside(obj.Position + Vector3.new(0, 0, 3))
-												bedwars["breakBlock"]((amount < amount2 and obj.Position or obj.Position + Vector3.new(0, 0, 3)), nukereffects["Enabled"], (amount < amount2 and res or res2), false, nukeranimation["Enabled"])
-												break
-											end
-                                        end
-                                    end
-                                end
-                            end
-                        end
+						task.wait()
                     until (not Nuker["Enabled"])
                 end)
             else
@@ -4732,9 +4713,18 @@ runcode(function()
 	local damagemethods = {
 		fireball = function(fireball, pos)
 			if not longjump["Enabled"] then return end
-			task.delay(0.3, function()
+			task.delay(0.4, function()
 				if not longjump["Enabled"] then return end
 				pos = pos - (entity.character.HumanoidRootPart.CFrame.lookVector * 0.2)
+				if not (getblock(pos - Vector3.new(0, 3, 0)) or getblock(pos - Vector3.new(0, 6, 0))) then
+					local sound = Instance.new("Sound")
+					sound.SoundId = "rbxassetid://4809574295"
+					sound.Parent = workspace
+					sound.Ended:Connect(function()
+						sound:Destroy()
+					end)
+					sound:Play()
+				end
 				local origpos = pos
 				local offsetshootpos = (CFrame.new(pos, pos + Vector3.new(0, -60, 0)) * CFrame.new(Vector3.new(-bedwars["BowConstantsTable"].RelX, -bedwars["BowConstantsTable"].RelY, -bedwars["BowConstantsTable"].RelZ))).p
 				bedwars["BowTable"]:createLocalProjectile(bedwars["ProjectileMeta"]["fireball"], "fireball", "fireball", offsetshootpos, "", Vector3.new(0, -60, 0), {drawDurationSeconds = 1})
@@ -4784,6 +4774,7 @@ runcode(function()
 				task.spawn(function()
 					local startpos = entity.isAlive and entity.character.HumanoidRootPart.Position
 					local tntcheck
+					longjumpdelay = tick()
 					for i,v in pairs(damagemethods) do 
 						local item = getItem(i)
 						if item then
@@ -4801,7 +4792,7 @@ runcode(function()
 					local passed = false
 					local changecheck
 					longjumpacprogressbarframe.Visible = true
-					local funnytick = tick() + 0.3
+					local funnytick = tick() + 0.4
 					RunLoops:BindToHeartbeat("LongJump", 1, function(dt)
 						if entity.isAlive then 
 							if entity.character.Humanoid.Health <= 0 then 
@@ -5339,7 +5330,7 @@ runcode(function()
 							end
 							targetinfo.UpdateInfo(targettable, targetsize)
 						end
-					until Killaura["Enabled"] == false
+					until (not Killaura["Enabled"])
 				end)
             else
 				RunLoops:UnbindFromHeartbeat("Killaura") 
@@ -5816,7 +5807,7 @@ runcode(function()
 				task.spawn(function()
 					repeat
 						task.wait()
-						if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Inventory.opened) and (uis:IsKeyDown(Enum.KeyCode.Q) or uis:IsKeyDown(Enum.KeyCode.Backspace)) and bettergetfocus() == nil then
+						if entity.isAlive and (not bedwars["ClientStoreHandler"]:getState().Inventory.opened) and (uis:IsKeyDown(Enum.KeyCode.Q) or uis:IsKeyDown(Enum.KeyCode.Backspace)) and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
 							task.spawn(bedwars["DropItem"])
 						end
 					until (not FastDrop["Enabled"])
@@ -7114,7 +7105,7 @@ runcode(function()
 				olddeflate = bedwars["BalloonController"]["deflateBalloon"]
 				bedwars["BalloonController"]["deflateBalloon"] = function() end
 				flypress = uis.InputBegan:Connect(function(input1)
-					if flyupanddown["Enabled"] and bettergetfocus() == nil then
+					if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
 							flyup = true
 						end
@@ -7227,7 +7218,6 @@ runcode(function()
 							entity.character.HumanoidRootPart.CFrame = entity.character.HumanoidRootPart.CFrame + flypos2
 						end
 						flyvelo = flypos + Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
-						
 					end
 				end)
 			else
@@ -7497,7 +7487,7 @@ runcode(function()
 					return 
 				end
 				flypress = uis.InputBegan:Connect(function(input1)
-					if flyupanddown["Enabled"] and bettergetfocus() == nil then
+					if flyupanddown["Enabled"] and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
 						if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
 							flyup = true
 						end
@@ -7572,7 +7562,7 @@ runcode(function()
 						end
 						allowed = 1
 						local mass = (entity.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
-						local flypos = entity.character.Humanoid.MoveDirection * 16
+						local flypos = entity.character.Humanoid.MoveDirection * 20
 						entity.character.HumanoidRootPart.Transparency = 1
 						entity.character.HumanoidRootPart.Velocity = flypos + (Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0) * allowed)
 						flyvelo = flypos + Vector3.new(0, mass + (flyup and flyverticalspeed["Value"] or 0) + (flydown and -flyverticalspeed["Value"] or 0), 0)
@@ -7621,10 +7611,10 @@ runcode(function()
 		["HoverText"] = "Makes you go zoom"
 	})
 	flydelay = fly.CreateSlider({
-		["Name"] = "Delay",
+		["Name"] = "Land Delay",
 		["Min"] = 1,
-		["Max"] = 125,
-		["Default"] = 125,
+		["Max"] = 150,
+		["Default"] = 150,
 		["Function"] = function() end,
 		["Double"] = 100
 	})
@@ -7736,7 +7726,7 @@ runcode(function()
 							scaffoldtext.Text = (woolamount and tostring(woolamount) or "0")
 							scaffoldtext.TextColor3 = woolamount and (woolamount >= 128 and Color3.fromRGB(9, 255, 198) or woolamount >= 64 and Color3.fromRGB(255, 249, 18)) or Color3.fromRGB(255, 0, 0)
 							if not wool then continue end
-							local towering = ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and bettergetfocus() == nil
+							local towering = ScaffoldTower["Enabled"] and uis:IsKeyDown(Enum.KeyCode.Space) and game:GetService("UserInputService"):GetFocusedTextBox() == nil
 							if towering then
 								if (not scaffoldstopmotionval) and ScaffoldStopMotion["Enabled"] then
 									scaffoldstopmotionval = true
@@ -7750,7 +7740,7 @@ runcode(function()
 								scaffoldstopmotionval = false
 							end
 							for i = 1, ScaffoldExpand["Value"] do
-								local newpos = getScaffold((entity.character.Head.Position + ((scaffoldstopmotionval and Vector3.zero or entity.character.Humanoid.MoveDirection) * (i * 3.5))) + Vector3.new(0, -math.floor(entity.character.Humanoid.HipHeight * (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 5 or 3) * (lplr.Character:GetAttribute("Transparency") and 1.1 or 1)), 0), ScaffoldDiagonal["Enabled"] and (entity.character.HumanoidRootPart.Velocity.Y < 2))
+								local newpos = getScaffold((entity.character.HumanoidRootPart.Position + ((scaffoldstopmotionval and Vector3.zero or entity.character.Humanoid.MoveDirection) * (i * 3.5))) + Vector3.new(0, -((entity.character.HumanoidRootPart.Size.Y / 2) + entity.character.Humanoid.HipHeight + (uis:IsKeyDown(Enum.KeyCode.LeftShift) and ScaffoldDownwards["Enabled"] and 4.5 or 1.5))), 0)
 								newpos = Vector3.new(newpos.X, newpos.Y - (towering and 4 or 0), newpos.Z)
 								if newpos ~= oldpos then
 									if not checkblocks(newpos) then
@@ -9816,23 +9806,6 @@ runcode(function()
 										for i,v in pairs(collectionservice:GetTagged("petrified-player")) do 
 											bedwars["ClientHandler"]:Get(bedwars["MinerRemote"]):SendToServer({
 												petrifyId = v:GetAttribute("PetrifyId")
-											})
-										end
-									end
-								until (not AutoKit["Enabled"])
-							end)
-						elseif kit == "dasher" then
-							task.spawn(function()
-								repeat
-									task.wait(0.1)
-									local dao = getItemNear("dao")
-									if entity.isAlive and lplr.Character:GetAttribute("CanDashNext") and lplr.Character:GetAttribute("CanDashNext") < workspace:GetServerTimeNow() and dao then
-										local plr = GetNearestHumanoidToPosition(true, 50)
-										if plr then
-											bedwars["ClientHandler"]:Get(bedwars["KatanaRemote"]):SendToServer({
-												direction = CFrame.lookAt(entity.character.HumanoidRootPart.Position, plr.Character.HumanoidRootPart.CFrame.p).lookVector,
-												origin = entity.character.HumanoidRootPart.Position,
-												weapon = dao.itemType
 											})
 										end
 									end
