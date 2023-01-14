@@ -292,11 +292,12 @@ local newitems = {}
 for i,v in pairs(items) do 
 	newitems[v.id] = v
 end
+local hooked = {}
 repeat
 	for i,v in pairs(getgc(true)) do 
 		if type(v) == "function" then
-			local scr = getfenv(v).script
-			if scr and scr.Name == "exitButtonComponent" and not scr.Parent then 
+			if debug.getinfo(v).source:find("exitButtonComponent") and not hooked[v] then 
+				hooked[v] = true
 				hookfunction(v, function() return end)
 			end
 		end

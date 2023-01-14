@@ -6888,17 +6888,17 @@ runcode(function()
 				local olddir
 				RunLoops:BindToHeartbeat("Speed", 1, function(delta)
 					if entity.isAlive and (GuiLibrary["ObjectsThatCanBeSaved"]["Lobby CheckToggle"]["Api"]["Enabled"] == false or matchState ~= 0) then
-						if speedanimation["Enabled"] then
-							for i,v in pairs(entity.character.Humanoid:GetPlayingAnimationTracks()) do
-								if v.Name == "WalkAnim" or v.Name == "RunAnim" then
-									v:AdjustSpeed(entity.character.Humanoid.WalkSpeed / 16)
-								end
-							end
-						end
 						local allowedvelo = (20 * getSpeedMultiplier())
 						local jumpcheck = killauranear and Killaura["Enabled"] and (not Scaffold["Enabled"])
 						if speedmode["Value"] ~= "Normal" then
 							if longjump["Enabled"] then return end
+							if speedanimation["Enabled"] then
+								for i,v in pairs(entity.character.Humanoid:GetPlayingAnimationTracks()) do
+									if v.Name == "WalkAnim" or v.Name == "RunAnim" then
+										v:AdjustSpeed(entity.character.Humanoid.WalkSpeed / 16)
+									end
+								end
+							end
 							local newpos = Vector3.zero
 							if (not spidergoinup) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
 								if longjump["Enabled"] then 
