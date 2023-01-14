@@ -318,7 +318,8 @@ repeat
 		end
 	end
 	task.wait(1)
-until remotes ~= nil
+until remotes ~= nil or shared.VapeExecuted == nil
+if remotes == nil then return end
 
 GuiLibrary["SelfDestructEvent"].Event:Connect(function()
 	for i3,v3 in pairs(connectionstodisconnect) do
@@ -326,6 +327,46 @@ GuiLibrary["SelfDestructEvent"].Event:Connect(function()
 		if v3.disconnect then pcall(function() v3:disconnect() end) continue end
 	end
 end)
+
+local function getSword()
+	local best, returned, returned2 = 0, nil, nil
+	for i,v in pairs(clientdata.getHotbar()) do 
+		local data = newitems[v]
+		if data and data.itemStats and data.itemStats.meleeDamage and data.itemStats.meleeDamage > best then 
+			best = data.itemStats.meleeDamage
+			returned = i
+			returned2 = data
+		end
+	end
+	return returned, returned2
+end
+
+
+local function getPickaxe()
+	local best, returned, returned2 = 0, nil, nil
+	for i,v in pairs(clientdata.getHotbar()) do 
+		local data = newitems[v]
+		if data and data.itemStats and data.itemStats.pickaxeStrength and data.itemStats.pickaxeStrength > best then 
+			best = data.itemStats.pickaxeStrength
+			returned = i
+			returned2 = data
+		end
+	end
+	return returned, returned2
+end
+
+local function getAxe()
+	local best, returned, returned2 = 0, nil, nil
+	for i,v in pairs(clientdata.getHotbar()) do 
+		local data = newitems[v]
+		if data and data.itemStats and data.itemStats.axeStrength and data.itemStats.axeStrength > best then 
+			best = data.itemStats.axeStrength
+			returned = i
+			returned2 = data
+		end
+	end
+	return returned, returned2
+end
 
 local killauranear = false
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
@@ -537,52 +578,49 @@ runcode(function()
 						if entity.isAlive then
 							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
 							if #plrs > 0 then
-								local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+								local tool, toolmeta = getSword()
 								if tool then
-									local toolmeta = newitems[tool.toolModel:GetAttribute("itemId")]
-									if toolmeta and table.find(toolmeta.itemType, "Melee Weapon") then
-										if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
-											for i,v in pairs(plrs) do
-												local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
-												local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
-												local angle = math.acos(localfacing:Dot(vec))
-												if angle >= (math.rad(killauraangle["Value"]) / 2) then continue end
-												killauranear = true
-												targettable[v.Player.Name] = {
-													["UserId"] = v.Player.UserId,
-													["Health"] = v.Character.Humanoid.Health,
-													["MaxHealth"] = v.Character.Humanoid.MaxHealth
-												}
-												targetsize = targetsize + 1
-												if killauratarget["Enabled"] then
-													table.insert(attackedplayers, v)
-												end
-												if targetsize == 1 then 
-													targetedplayer = v
-												end
-												local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(v.Player)
-												if not playerattackable then
-													continue
-												end
-												if killauraanimdelay < tick() then
-													killauraanimdelay = tick() + 0.5
-													local anims = itemhandler.getItemAnimations(toolmeta.id, "action")
-													if killauraanimnum >= #anims then killauraanimnum = 0 end
-													killauraanimnum = killauraanimnum + 1
-													local anim = Instance.new("Animation")
-													anim.AnimationId = anims[killauraanimnum]
-													local loaded = entity.character.Humanoid.Animator:LoadAnimation(anim)
-													loaded.Stopped:Connect(function()
-														if anim then anim:Destroy() anim = nil end
-														if loaded then loaded:Destroy() loaded = nil end
-													end)
-													loaded:Play(nil, 1, loaded.Length / 0.5)
-												end
-												local rem = v.Animal and killauraremote2 or killauraremote
-												rem:FireServer(tonumber(tool.Name), v.Animal and v.Character or v.Player)
+									if (not killauramouse["Enabled"]) or uis:IsMouseButtonPressed(0) then 
+										for i,v in pairs(plrs) do
+											local localfacing = entity.character.HumanoidRootPart.CFrame.lookVector
+											local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
+											local angle = math.acos(localfacing:Dot(vec))
+											if angle >= (math.rad(killauraangle["Value"]) / 2) then continue end
+											killauranear = true
+											targettable[v.Player.Name] = {
+												["UserId"] = v.Player.UserId,
+												["Health"] = v.Character.Humanoid.Health,
+												["MaxHealth"] = v.Character.Humanoid.MaxHealth
+											}
+											targetsize = targetsize + 1
+											if killauratarget["Enabled"] then
+												table.insert(attackedplayers, v)
 											end
-											task.wait(0.1)
+											if targetsize == 1 then 
+												targetedplayer = v
+											end
+											local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(v.Player)
+											if not playerattackable then
+												continue
+											end
+											if killauraanimdelay < tick() then
+												killauraanimdelay = tick() + 0.5
+												local anims = itemhandler.getItemAnimations(toolmeta.id, "action")
+												if killauraanimnum >= #anims then killauraanimnum = 0 end
+												killauraanimnum = killauraanimnum + 1
+												local anim = Instance.new("Animation")
+												anim.AnimationId = anims[killauraanimnum]
+												local loaded = entity.character.Humanoid.Animator:LoadAnimation(anim)
+												loaded.Stopped:Connect(function()
+													if anim then anim:Destroy() anim = nil end
+													if loaded then loaded:Destroy() loaded = nil end
+												end)
+												loaded:Play(nil, 1, loaded.Length / 0.5)
+											end
+											local rem = v.Animal and killauraremote2 or killauraremote
+											rem:FireServer(tonumber(tool), v.Animal and v.Character or v.Player)
 										end
+										task.wait(0.1)
 									end
 								else
 									lastplr = nil
@@ -1069,6 +1107,7 @@ runcode(function()
 	local Nuker = {["Enabled"] = false}
 	local structures = {}
 	local resources = {}
+	local recentlyhit = {}
 	for i,obj in pairs(workspace.placedStructures:GetDescendants()) do 
 		if obj:IsA("Model") then 
 			table.insert(structures, obj)
@@ -1107,35 +1146,35 @@ runcode(function()
 					repeat
 						task.wait()
 						if entity.isAlive then 
-							local tool = lplr.Character:FindFirstChildWhichIsA("Tool")
+							local pickaxe = getPickaxe()
+							local axe = getAxe()
+							local sword = getSword()
 							local broke = 0
-							if tool then
-								local toolmeta = newitems[tool.toolModel:GetAttribute("itemId")]
-								if toolmeta then
-									for i,v in pairs(structures) do 
-										if v.PrimaryPart and (v.PrimaryPart.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 then 
-											if (table.find(toolmeta.itemType, "Axe") or table.find(toolmeta.itemType, "Melee Weapon")) and v:GetAttribute("placedBy") ~= lplr.UserId then
-												remotes.hitStructure:FireServer(tonumber(tool.Name), v, v.PrimaryPart.Position)
-												broke += 1
-											end
-										end
-									end
-									for i,v in pairs(resources) do 
-										local primary = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
-										if primary and (primary.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 then 
-											if table.find(toolmeta.itemType, "Pickaxe") then 
-												remotes.mine:FireServer(tonumber(tool.Name), v, primary.Position)
-												broke += 1
-											end
-											if table.find(toolmeta.itemType, "Axe") then
-												remotes.chop:FireServer(tonumber(tool.Name), v, primary.Position)
-												broke += 1
-											end
-										end
+							for i,v in pairs(structures) do 
+								if v.PrimaryPart and (v.PrimaryPart.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+									if sword and v:GetAttribute("placedBy") ~= lplr.UserId then
+										remotes.hitStructure:FireServer(tonumber(sword), v, v.PrimaryPart.Position)
+										recentlyhit[v] = tick() + 0.05
+										broke += 1
 									end
 								end
-								task.wait(broke % 10 / 100)
 							end
+							for i,v in pairs(resources) do 
+								local primary = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
+								if primary and (primary.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+									if pickaxe then 
+										remotes.mine:FireServer(tonumber(pickaxe), v, primary.Position)
+										recentlyhit[v] = tick() + 0.05
+										broke += 1
+									end
+									if axe then
+										remotes.chop:FireServer(tonumber(axe), v, primary.Position)
+										recentlyhit[v] = tick() + 0.05
+										broke += 1
+									end
+								end
+							end
+							task.wait(0.01)
 						end
 					until (not Nuker["Enabled"])
 				end)
@@ -1282,34 +1321,35 @@ end)
 runcode(function()
 	local AutoHeal = {["Enabled"] = false}
 	local eatremote = repstorage:WaitForChild("remoteInterface"):WaitForChild("interactions"):WaitForChild("eat")
+	local eatevent = repstorage:WaitForChild("remoteInterface"):WaitForChild("playerData"):WaitForChild("setHunger")
 	local maxHunger = repstorage:WaitForChild("game"):WaitForChild("maxHunger").Value
+	local connection
 	AutoHeal = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoHeal", 
 		["Function"] = function(callback)
 			if callback then 
-				task.spawn(function()
-					repeat
-						task.wait()
-						local inv = clientdata.getInventory()
-						if inv then 
-							local chosen
-							local smallest = 9e9
-							for i,v in pairs(inv) do 
-								local itemdata = newitems[i]
-								if itemdata and itemdata.itemStats and itemdata.itemStats.food and (itemdata.instantHealth == nil or itemdata.instantHealth > 0) then 
-									if (clientdata.getHunger() + itemdata.itemStats.food) < maxHunger and itemdata.itemStats.food < smallest then 
-										smallest = itemdata.itemStats.food
-										chosen = i
-									end
+				connection = eatevent.OnClientEvent:Connect(function(newval)
+					local inv = clientdata.getInventory()
+					if inv then 
+						local chosen
+						local smallest = 9e9
+						for i,v in pairs(inv) do 
+							local itemdata = newitems[i]
+							if itemdata and itemdata.itemStats and itemdata.itemStats.food and (itemdata.instantHealth == nil or itemdata.instantHealth > 0) then 
+								if (newval + itemdata.itemStats.food) < maxHunger and itemdata.itemStats.food < smallest then 
+									smallest = itemdata.itemStats.food
+									chosen = i
 								end
 							end
-							if chosen then 
-								eatremote:FireServer(chosen)
-								task.wait(0.2)
-							end
 						end
-					until (not AutoHeal["Enabled"])
+						if chosen then 
+							eatremote:FireServer(chosen)
+							task.wait(0.2)
+						end
+					end
 				end)
+			else
+				if connection then connection:Disconnect() end
 			end
 		end
 	})
@@ -1343,16 +1383,21 @@ end)
 
 runcode(function()
 	local InfiniteStamina = {["Enabled"] = false}
+	local connection
+	local statchangedtick = tick()
 	InfiniteStamina = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "InfiniteStamina", 
 		["Function"] = function(callback)
 			if callback then 
-				task.spawn(function()
-					repeat
-						task.wait(0.01)
-						lplr:SetAttribute("stamina", 1)
-					until (not InfiniteStamina["Enabled"])
+				connection = lplr:GetAttributeChangedSignal("stamina"):Connect(function()
+					if statchangedtick > tick() then return end
+					statchangedtick = tick() + 0.1
+					lplr:SetAttribute("stamina", 1)
 				end)
+				statchangedtick = tick() + 0.1
+				lplr:SetAttribute("stamina", 1)
+			else
+				if connection then connection:Disconnect() end
 			end
 		end
 	})
