@@ -295,7 +295,8 @@ end
 repeat
 	for i,v in pairs(getgc(true)) do 
 		if type(v) == "function" then
-			if debug.getinfo(v).source:find("exitButtonComponent") then 
+			local scr = getfenv(v).script
+			if scr and scr.Name == "exitButtonComponent" and not scr.Parent then 
 				hookfunction(v, function() return end)
 			end
 		end
