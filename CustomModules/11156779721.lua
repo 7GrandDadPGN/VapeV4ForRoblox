@@ -1154,7 +1154,7 @@ runcode(function()
 								if v.PrimaryPart and (v.PrimaryPart.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if sword and v:GetAttribute("placedBy") ~= lplr.UserId then
 										remotes.hitStructure:FireServer(tonumber(sword), v, v.PrimaryPart.Position)
-										recentlyhit[v] = tick() + 0.05
+										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
 										broke += 1
 									end
 								end
@@ -1164,12 +1164,12 @@ runcode(function()
 								if primary and (primary.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if pickaxe then 
 										remotes.mine:FireServer(tonumber(pickaxe), v, primary.Position)
-										recentlyhit[v] = tick() + 0.05
+										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
 										broke += 1
 									end
 									if axe then
 										remotes.chop:FireServer(tonumber(axe), v, primary.Position)
-										recentlyhit[v] = tick() + 0.05
+										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
 										broke += 1
 									end
 								end
