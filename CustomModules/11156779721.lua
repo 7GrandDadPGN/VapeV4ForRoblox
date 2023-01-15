@@ -298,12 +298,14 @@ local hooked = {}
 repeat
 	for i,v in pairs(getgc(true)) do 
 		if type(v) == "function" then
-			if debug.getinfo(v).source:find("ClientData") then 
+			local src = debug.getinfo(v).source
+			if src:find("ClientData") or src:find("exitButtonComponent") then 
 				local done = false
 				for i2,v2 in pairs(debug.getconstants(v)) do
 					if v2 == "hitbox modification" then done = true break end
 					if v2 == "PostSimulation" then done = true break end
 					if v2 == "Kick" then done = true break end
+					if v2 == "lastClippedPos" then done = true break end
 				end
 				if done then 
 					hookfunction(v, function() end)
@@ -315,6 +317,9 @@ repeat
 				remotes = v
 			end
 		end
+	end
+	if remotes ~= nil then
+		break
 	end
 	task.wait(1)
 until remotes ~= nil or shared.VapeExecuted == nil
@@ -459,14 +464,8 @@ runcode(function()
 						Origin = p4.Position
 					})
 					if plr then 
-						local dist = (plr.RootPart.Position - p4.Position).Magnitude
-						local t = (projvelo * dist + 196.2 * dist) / projvelo ^ 2
-						local pos = Vector3.new(
-							plr.RootPart.Position.X,
-							plr.RootPart.Position.Y + (((196.2 ^ t) / 2) - (t * 2)),
-							plr.RootPart.Position.Z
-						)
-						local calculated = LaunchDirection(p4.Position, FindLeadShot(pos, plr.RootPart.Velocity, projvelo, p4.Position, Vector3.zero, workspace.Gravity), projvelo, workspace.Gravity, false)
+						local grav = workspace.Gravity * 2
+						local calculated = LaunchDirection(p4.Position, FindLeadShot(plr.RootPart.Position, plr.RootPart.Velocity, projvelo, p4.Position, Vector3.zero, grav), projvelo, grav, false)
 						if calculated then
 							p4 = CFrame.new(p4.Position, p4.Position + calculated)
 						end
@@ -1232,15 +1231,14 @@ runcode(function()
 							doing = false
 							return
 						end
-						createwarning("PlayerTP", "Teleporting, wait.", 10)
+						createwarning("PlayerTP", "Teleporting, wait 3s.", 3)
                         local connection = game:GetService("RunService").Heartbeat:Connect(function()
                             seat.Parent.PrimaryPart.Velocity = Vector3.zero
                             seat.Parent.PrimaryPart.RotVelocity = Vector3.zero
                         end)
 						local pos = target.Character.PrimaryPart.CFrame
                         seat.Parent.PrimaryPart.CFrame = pos
-						lplr:GetAttributeChangedSignal("tpCheckTime"):Wait()
-						task.wait(1)
+						task.wait(3)
                         connection:Disconnect()
                         entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                         doing = false
@@ -1297,14 +1295,13 @@ runcode(function()
 							doing = false
 							return
 						end
-						createwarning("MouseTP", "Teleporting, wait.", 10)
+						createwarning("MouseTP", "Teleporting, wait 3s", 3)
                         local connection = game:GetService("RunService").Heartbeat:Connect(function()
                             seat.Parent.PrimaryPart.Velocity = Vector3.zero
                             seat.Parent.PrimaryPart.RotVelocity = Vector3.zero
                         end)
                         seat.Parent.PrimaryPart.CFrame = CFrame.new(target.Position)
-						lplr:GetAttributeChangedSignal("tpCheckTime"):Wait()
-						task.wait(1)
+						task.wait(3)
                         connection:Disconnect()
                         entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                         doing = false
