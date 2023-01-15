@@ -2916,7 +2916,7 @@ runcode(function()
 											entity.character.HumanoidRootPart.CFrame = CFrame.new(realnewpos.p.X, pos.Y, realnewpos.p.Z)
 											antivoidvelo = newpos == newpos and newpos * 20 or Vector3.zero
 											entity.character.HumanoidRootPart.Velocity = Vector3.new(antivoidvelo.X, entity.character.HumanoidRootPart.Velocity.Y, antivoidvelo.Z)
-											if getblock((entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)) + entity.character.HumanoidRootPart.Velocity.Unit) then
+											if getblock((entity.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)) + entity.character.HumanoidRootPart.Velocity.Unit) or getblock(entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 3)) then
 												pos = pos + Vector3.new(0, 1, 0)
 											end
 										else

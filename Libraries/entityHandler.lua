@@ -195,12 +195,14 @@ do
 
     entity.fullEntityRefresh = function()
         entity.selfDestruct()
+        for i,v in next, entity.entityIds do entity.entityIds[i] = nil end
         for i,v in next, players:GetPlayers() do entity.entityAdded(v, v == lplr) end
         table.insert(entity.entityConnections, players.PlayerAdded:Connect(function(v) entity.entityAdded(v, v == lplr) end))
         table.insert(entity.entityConnections, players.PlayerRemoving:Connect(function(v) entity.removeEntity(v) end))
     end
 
     entity.selfDestruct = function()
+        for i,v in next, entity.entityIds do entity.entityIds[i] = nil end
         for i,v in next, entity.entityConnections do if v.Disconnect then v:Disconnect() end end
         for i,v in next, entity.entityList do 
             entity.removeEntity(v.Player)

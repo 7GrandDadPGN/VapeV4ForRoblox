@@ -290,16 +290,17 @@ local itemhandler = require(repstorage.game.Items)
 local items = debug.getupvalue(itemhandler.getItemData, 1)
 local projectiles = require(repstorage.modules.game.Projectiles)
 local clientdata = require(repstorage.modules.player.ClientData)
+local version = tonumber(({repstorage.version.Value:gsub("%.", "")})[1])
 local newitems = {}
 for i,v in pairs(items) do 
 	newitems[v.id] = v
 end
-local hooked = {}
+local hooked = 0
 repeat
 	for i,v in pairs(getgc(true)) do 
 		if type(v) == "function" then
 			local src = debug.getinfo(v).source
-			if src:find("ClientData") or src:find("exitButtonComponent") then 
+			if version >= 135 and src:find("ClientData") or src:find("exitButtonComponent") then 
 				local done = false
 				for i2,v2 in pairs(debug.getconstants(v)) do
 					if v2 == "hitbox modification" then done = true break end
@@ -308,6 +309,7 @@ repeat
 					if v2 == "lastClippedPos" then done = true break end
 				end
 				if done then 
+					hooked = hooked + 1
 					hookfunction(v, function() end)
 				end
 			end
@@ -318,11 +320,11 @@ repeat
 			end
 		end
 	end
-	if remotes ~= nil then
+	if (remotes ~= nil and (hooked >= 2 or hooked == 0)) then
 		break
 	end
 	task.wait(1)
-until remotes ~= nil or shared.VapeExecuted == nil
+until (remotes ~= nil and (hooked >= 2 or hooked == 0)) or shared.VapeExecuted == nil
 if remotes == nil then return end
 
 GuiLibrary["SelfDestructEvent"].Event:Connect(function()
@@ -372,6 +374,19 @@ local function getAxe()
 	return returned, returned2
 end
 
+local function getBow()
+	local best, returned, returned2 = 0, nil, nil
+	for i,v in pairs(clientdata.getHotbar()) do 
+		local data = newitems[v]
+		if data and data.itemStats and data.itemStats.rangedDamage and data.itemStats.rangedDamage > best then 
+			best = data.itemStats.rangedDamage
+			returned = i
+			returned2 = data
+		end
+	end
+	return returned, returned2
+end
+
 local killauranear = false
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
@@ -384,6 +399,8 @@ GuiLibrary["RemoveObject"]("XrayOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 
+local SilentAimMode = {["Value"] = "Legit"}
+local SilentAimFOV = {["Value"] = 300}
 runcode(function()
 	--skidded off the devforum because I hate projectile math
 	-- Compute 2D launch angle
@@ -448,7 +465,6 @@ runcode(function()
 	end
 
 	local SilentAim = {["Enabled"] = false}
-	local SilentAimFOV = {["Value"] = 300}
 	local old
 	SilentAim = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SilentAim", 
@@ -458,11 +474,20 @@ runcode(function()
 				projectiles.shoot = function(p1, p2, p3, p4, p5, ...)
 					p5 = 1
 					local projvelo = items[p3].projectileVelocity
-					local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
-						AimPart = "HumanoidRootPart",
-						WallCheck = true,
-						Origin = p4.Position
-					})
+					local plr
+					if SilentAimMode["Value"] == "Legit" then
+						plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
+							AimPart = "HumanoidRootPart",
+							WallCheck = true,
+							Origin = p4.Position
+						})
+					else
+						plr = GetNearestHumanoidToPosition(true, SilentAimFOV["Value"], {
+							AimPart = "HumanoidRootPart",
+							WallCheck = true,
+							Origin = p4.Position
+						})
+					end
 					if plr then 
 						local grav = workspace.Gravity * 2
 						local calculated = LaunchDirection(p4.Position, FindLeadShot(plr.RootPart.Position, plr.RootPart.Velocity, projvelo, p4.Position, Vector3.zero, grav), projvelo, grav, false)
@@ -477,12 +502,54 @@ runcode(function()
 			end
 		end
 	})
+	SilentAimMode = SilentAim.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Legit", "Blatant"},
+		["Function"] = function() end
+	})
 	SilentAimFOV = SilentAim.CreateSlider({
 		["Name"] = "FOV", 
 		["Min"] = 1, 
 		["Max"] = 1000, 
 		["Function"] = function(val) end,
 		["Default"] = 80
+	})
+end)
+
+runcode(function()
+	local bowaura = {["Enabled"] = false}
+	bowaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "BowAura", 
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					repeat
+						task.wait()
+						local bow, bowdata = getBow()
+						if bow then
+							local plr
+							if SilentAimMode["Value"] == "Legit" then
+								plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
+									AimPart = "HumanoidRootPart",
+									WallCheck = true,
+									Origin = lplr.Character:GetPivot().Position
+								})
+							else
+								plr = GetNearestHumanoidToPosition(true, SilentAimFOV["Value"], {
+									AimPart = "HumanoidRootPart",
+									WallCheck = true,
+									Origin = lplr.Character:GetPivot().Position
+								})
+							end
+							if plr then 
+								projectiles.shoot(bow, 73, bowdata.id, lplr.Character:GetPivot(), 1)
+								task.wait(bowdata.cooldown or 0.1)
+							end
+						end
+					until (not bowaura["Enabled"])
+				end)
+			end
+		end
 	})
 end)
 
@@ -1108,40 +1175,87 @@ runcode(function()
 	local structures = {}
 	local resources = {}
 	local recentlyhit = {}
+	local guiobjects = {}
 	for i,obj in pairs(workspace.placedStructures:GetDescendants()) do 
 		if obj:IsA("Model") then 
+			guiobjects[obj] = Drawing.new("Text")
+			guiobjects[obj].Size = 20
+			guiobjects[obj].Color = Color3.new(1, 1, 1)
+			guiobjects[obj].Center = true
+			guiobjects[obj].Outline = true
+			guiobjects[obj].Visible = false
 			table.insert(structures, obj)
 		end
 	end
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.placedStructures.DescendantAdded:Connect(function(obj)
 		if obj:IsA("Model") then 
+			guiobjects[obj] = Drawing.new("Text")
+			guiobjects[obj].Size = 20
+			guiobjects[obj].Color = Color3.new(1, 1, 1)
+			guiobjects[obj].Center = true
+			guiobjects[obj].Outline = true
+			guiobjects[obj].Visible = false
 			table.insert(structures, obj)
 		end
 	end)
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.placedStructures.DescendantRemoving:Connect(function(obj)
 		if obj:IsA("Model") then 
 			table.remove(structures, table.find(structures, obj))
+			if guiobjects[obj] then 
+				guiobjects[obj].Visible = false
+				guiobjects[obj] = nil
+			end
 		end
 	end)
 	for i,obj in pairs(workspace.worldResources:GetDescendants()) do 
 		if obj:IsA("Model") then 
+			guiobjects[obj] = Drawing.new("Text")
+			guiobjects[obj].Size = 20
+			guiobjects[obj].Color = Color3.new(1, 1, 1)
+			guiobjects[obj].Center = true
+			guiobjects[obj].Outline = true
+			guiobjects[obj].Visible = false
 			table.insert(resources, obj)
 		end
 	end
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.worldResources.DescendantAdded:Connect(function(obj)
 		if obj:IsA("Model") then 
+			guiobjects[obj] = Drawing.new("Text")
+			guiobjects[obj].Size = 20
+			guiobjects[obj].Color = Color3.new(1, 1, 1)
+			guiobjects[obj].Outline = true
+			guiobjects[obj].Center = true
+			guiobjects[obj].Visible = false
 			table.insert(resources, obj)
 		end
 	end)
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.worldResources.DescendantRemoving:Connect(function(obj)
 		if obj:IsA("Model") then 
 			table.remove(resources, table.find(resources, obj))
+			if guiobjects[obj] then 
+				guiobjects[obj].Visible = false
+				guiobjects[obj] = nil
+			end
 		end
 	end)
 	Nuker = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Nuker", 
 		["Function"] = function(callback)
 			if callback then 
+				RunLoops:BindToRenderStep("Nuker", 1, function()
+					for i,v in pairs(recentlyhit) do 
+						if guiobjects[i] then 
+							local primary = i.PrimaryPart or i:FindFirstChildWhichIsA("BasePart")
+							local pos, vis = cam:WorldToViewportPoint(primary.Position)
+							guiobjects[i].Visible = vis
+							guiobjects[i].Position = Vector2.new(pos.X, pos.Y)
+							if v < (tick() - 0.11) then
+								guiobjects[i].Visible = false
+								recentlyhit[i] = nil
+							end
+						end
+					end
+				end)
 				task.spawn(function()
 					repeat
 						task.wait()
@@ -1151,9 +1265,10 @@ runcode(function()
 							local sword = getSword()
 							local broke = 0
 							for i,v in pairs(structures) do 
-								if v.PrimaryPart and (v.PrimaryPart.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+								if v.PrimaryPart and (v:GetAttribute("health") == nil or v:GetAttribute("health") > 0) and (v.PrimaryPart.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if sword and v:GetAttribute("placedBy") ~= lplr.UserId then
 										remotes.hitStructure:FireServer(tonumber(sword), v, v.PrimaryPart.Position)
+										guiobjects[v].Text = v.Name.."\n"..(v:GetAttribute("health") and math.floor((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100) or 0).."%"
 										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
 										broke += 1
 									end
@@ -1161,14 +1276,16 @@ runcode(function()
 							end
 							for i,v in pairs(resources) do 
 								local primary = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
-								if primary and (primary.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+								if primary and (v:GetAttribute("health") == nil or v:GetAttribute("health") > 0) and (primary.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if pickaxe then 
 										remotes.mine:FireServer(tonumber(pickaxe), v, primary.Position)
+										guiobjects[v].Text = v.Name.."\n"..(v:GetAttribute("health") and math.round((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100) or 0).."%"
 										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
 										broke += 1
 									end
 									if axe then
 										remotes.chop:FireServer(tonumber(axe), v, primary.Position)
+										guiobjects[v].Text = v.Name.."\n"..(v:GetAttribute("health") and math.round((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100) or 0).."%"
 										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
 										broke += 1
 									end
@@ -1178,6 +1295,13 @@ runcode(function()
 						end
 					until (not Nuker["Enabled"])
 				end)
+			else
+				RunLoops:UnbindFromRenderStep("Nuker")
+				for i,v in pairs(recentlyhit) do 
+					if guiobjects[i] then 
+						guiobjects[i].Visible = false
+					end
+				end
 			end
 		end
 	})
@@ -1319,35 +1443,35 @@ end)
 runcode(function()
 	local AutoHeal = {["Enabled"] = false}
 	local eatremote = repstorage:WaitForChild("remoteInterface"):WaitForChild("interactions"):WaitForChild("eat")
-	local eatevent = repstorage:WaitForChild("remoteInterface"):WaitForChild("playerData"):WaitForChild("setHunger")
 	local maxHunger = repstorage:WaitForChild("game"):WaitForChild("maxHunger").Value
 	local connection
 	AutoHeal = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoHeal", 
 		["Function"] = function(callback)
 			if callback then 
-				connection = eatevent.OnClientEvent:Connect(function(newval)
-					local inv = clientdata.getInventory()
-					if inv then 
-						local chosen
-						local smallest = 9e9
-						for i,v in pairs(inv) do 
-							local itemdata = newitems[i]
-							if itemdata and itemdata.itemStats and itemdata.itemStats.food and (itemdata.instantHealth == nil or itemdata.instantHealth > 0) then 
-								if (newval + itemdata.itemStats.food) < maxHunger and itemdata.itemStats.food < smallest then 
-									smallest = itemdata.itemStats.food
-									chosen = i
+				task.spawn(function()
+					repeat
+						task.wait()
+						local inv = clientdata.getInventory()
+						if inv then 
+							local chosen
+							local smallest = 9e9
+							for i,v in pairs(inv) do 
+								local itemdata = newitems[i]
+								if itemdata and itemdata.itemStats and itemdata.itemStats.food and (itemdata.instantHealth == nil or itemdata.instantHealth > 0) then 
+									if (clientdata.getHunger() + itemdata.itemStats.food) < maxHunger and itemdata.itemStats.food < smallest then 
+										smallest = itemdata.itemStats.food
+										chosen = i
+									end
 								end
 							end
+							if chosen then 
+								eatremote:FireServer(chosen)
+								task.wait(0.2)
+							end
 						end
-						if chosen then 
-							eatremote:FireServer(chosen)
-							task.wait(0.2)
-						end
-					end
+					until (not AutoHeal["Enabled"])
 				end)
-			else
-				if connection then connection:Disconnect() end
 			end
 		end
 	})
