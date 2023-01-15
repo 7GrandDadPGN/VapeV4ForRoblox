@@ -472,7 +472,6 @@ runcode(function()
 			if callback then
 				old = projectiles.shoot
 				projectiles.shoot = function(p1, p2, p3, p4, p5, ...)
-					p5 = 1
 					local projvelo = items[p3].projectileVelocity
 					local plr
 					if SilentAimMode["Value"] == "Legit" then
@@ -489,6 +488,11 @@ runcode(function()
 						})
 					end
 					if plr then 
+						local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
+						if not playerattackable then
+							return old(p1, p2, p3, p4, p5, ...)
+						end
+						p5 = 1
 						local grav = workspace.Gravity * 2
 						local calculated = LaunchDirection(p4.Position, FindLeadShot(plr.RootPart.Position, plr.RootPart.Velocity, projvelo, p4.Position, Vector3.zero, grav), projvelo, grav, false)
 						if calculated then
@@ -542,6 +546,10 @@ runcode(function()
 								})
 							end
 							if plr then 
+								local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
+								if not playerattackable then
+									return
+								end
 								projectiles.shoot(bow, 73, bowdata.id, lplr.Character:GetPivot(), 1)
 								task.wait(bowdata.cooldown or 0.1)
 							end
