@@ -173,10 +173,12 @@ local function isAlive(plr, alivecheck)
 end
 
 local vischeckobj = RaycastParams.new()
+vischeckobj.FilterType = Enum.RaycastFilterType.Blacklist
+local snaps = workspace:WaitForChild("snaps")
 local function vischeck(char, checktable)
 	local rayparams = checktable.IgnoreObject or vischeckobj
 	if not checktable.IgnoreObject then 
-		rayparams.FilterDescendantsInstances = {lplr.Character, char, cam, table.unpack(checktable.IgnoreTable or {})}
+		rayparams.FilterDescendantsInstances = {lplr.Character, char, cam, snaps}
 	end
 	local ray = workspace.Raycast(workspace, checktable.Origin, CFrame.lookAt(checktable.Origin, char[checktable.AimPart].Position).lookVector * (checktable.Origin - char[checktable.AimPart].Position).Magnitude, rayparams)
 	return not ray
@@ -296,23 +298,20 @@ local hooked = {}
 repeat
 	for i,v in pairs(getgc(true)) do 
 		if type(v) == "function" then
-			if debug.getinfo(v).source:find("exitButtonComponent") then 
-				local yes = true
-				if syn and syn.toast_notification == nil then
-					for i2,v2 in pairs(debug.getconstants(v)) do
-						if v2 == "warn" then
-							yes = false
-							break
-						end
-					end
+			if debug.getinfo(v).source:find("ClientData") then 
+				local done = false
+				for i2,v2 in pairs(debug.getconstants(v)) do
+					if v2 == "hitbox modification" then done = true break end
+					if v2 == "PostSimulation" then done = true break end
+					if v2 == "Kick" then done = true break end
 				end
-				if yes then
+				if done then 
 					hookfunction(v, function() end)
 				end
 			end
 		end
 		if type(v) == "table" and remotes == nil then
-			if rawget(v, "meleePlayer") and typeof(v.meleePlayer) == "table" then 
+			if rawget(v, "meleePlayer") and typeof(v.meleePlayer) == "table" and not table.find(debug.getconstants(v.meleePlayer.FireServer), 1.1) then 
 				remotes = v
 			end
 		end
@@ -452,10 +451,12 @@ runcode(function()
 			if callback then
 				old = projectiles.shoot
 				projectiles.shoot = function(p1, p2, p3, p4, p5, ...)
+					p5 = 1
 					local projvelo = items[p3].projectileVelocity
 					local plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
 						AimPart = "HumanoidRootPart",
-						WallCheck = true
+						WallCheck = true,
+						Origin = p4.Position
 					})
 					if plr then 
 						local dist = (plr.RootPart.Position - p4.Position).Magnitude
