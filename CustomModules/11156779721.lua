@@ -320,20 +320,11 @@ repeat
 			end
 		end
 	end
-	if (remotes ~= nil and (hooked >= 2 or game.PlaceVersion >= 4392 and hooked == 0)) then
+	if (remotes ~= nil and (hooked >= (version >= 135 and 2 or 4) or game.PlaceVersion >= 4392 and hooked == 0)) then
 		break
 	end
 	task.wait(1)
-until (remotes ~= nil and (hooked >= 2 or game.PlaceVersion >= 4392 and hooked == 0)) or shared.VapeExecuted == nil
-print(game.PlaceVersion, #remotes, hooked)
-task.spawn(function()
-	repeat task.wait() until shared.VapeExecuted
-	for i,v in pairs(GuiLibrary["ObjectsThatCanBeSaved"]) do 
-		if v.Type == "OptionsButton" and v.Api.Enabled then 
-			print(i, "enabled")
-		end
-	end
-end)
+until (remotes ~= nil and (hooked >= (version >= 135 and 2 or 4) or game.PlaceVersion >= 4392 and hooked == 0)) or shared.VapeExecuted == nil
 
 GuiLibrary["SelfDestructEvent"].Event:Connect(function()
 	for i3,v3 in pairs(connectionstodisconnect) do
