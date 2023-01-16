@@ -434,6 +434,7 @@ GuiLibrary["RemoveObject"]("FlyOptionsButton")
 local SilentAimMode = {["Value"] = "Legit"}
 local SilentAimFOV = {["Value"] = 300}
 local oldproj
+local ArrowWallbang = {["Enabled"] = false}
 runcode(function()
 	--skidded off the devforum because I hate projectile math
 	-- Compute 2D launch angle
@@ -509,13 +510,13 @@ runcode(function()
 					if SilentAimMode["Value"] == "Legit" then
 						plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
 							AimPart = "HumanoidRootPart",
-							WallCheck = true,
+							WallCheck = not ArrowWallbang["Enabled"],
 							Origin = p4.Position
 						})
 					else
 						plr = GetNearestHumanoidToPosition(true, SilentAimFOV["Value"], {
 							AimPart = "HumanoidRootPart",
-							WallCheck = true,
+							WallCheck = not ArrowWallbang["Enabled"],
 							Origin = p4.Position
 						})
 					end
@@ -567,13 +568,13 @@ runcode(function()
 							if SilentAimMode["Value"] == "Legit" then
 								plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
 									AimPart = "HumanoidRootPart",
-									WallCheck = true,
+									WallCheck = not ArrowWallbang["Enabled"],
 									Origin = lplr.Character:GetPivot().Position
 								})
 							else
 								plr = GetNearestHumanoidToPosition(true, SilentAimFOV["Value"], {
 									AimPart = "HumanoidRootPart",
-									WallCheck = true,
+									WallCheck = not ArrowWallbang["Enabled"],
 									Origin = lplr.Character:GetPivot().Position
 								})
 							end
@@ -1632,7 +1633,7 @@ runcode(function()
 							if hum and hum.Health > 0 and hit:IsDescendantOf(v.Character) then
 								local sound = Instance.new("Sound")
 								sound.Volume = 0.25
-								sound.SoundId = HitSoundBox["Value"] == "" and "rbxassetid://8837706727" or (tonumber(HitSoundBox["Value"]) ~= nil and "rbxassetid://"..HitSoundBox["Value"] or HitSoundBox["Value"])
+								sound.SoundId = HitSoundBox["Value"] == "" and "rbxassetid://8837706727" or (HitSoundBox["Value"]:find(".mp3") and getasset(HitSoundBox["Value"]) or tonumber(HitSoundBox["Value"]) ~= nil and "rbxassetid://"..HitSoundBox["Value"] or HitSoundBox["Value"])
 								sound.Parent = workspace
 								sound.Ended:Connect(function()
 									sound:Destroy()
@@ -1653,6 +1654,32 @@ runcode(function()
 		["Name"] = "Sound",
 		["TempText"] = "sound (soundid)",
 		["Function"] = function() end
+	})
+end)
+
+runcode(function()
+	local oldnewproj
+	ArrowWallbang = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "ArrowWallbang", 
+		["Function"] = function(callback)
+			local func = oldproj or projectiles.shoot
+			if callback then 
+				oldnewproj = debug.getupvalue(func, 1).new
+				debug.getupvalue(func, 1).new = function(self, hit, ...)
+					local res = oldnewproj(self, hit, ...)
+					res.raycastParams = RaycastParams.new()
+					res.raycastParams.FilterType = Enum.RaycastFilterType.Whitelist
+					local chars = {}
+					for i,v in pairs(players:GetPlayers()) do 
+						if v.Character and v ~= lplr then table.insert(chars, v.Character) end
+					end
+					res.raycastParams.FilterDescendantsInstances = chars
+					return res
+				end
+			else
+				debug.getupvalue(func, 1).new = oldnewproj
+			end
+		end
 	})
 end)
 
