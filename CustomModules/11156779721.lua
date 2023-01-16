@@ -298,6 +298,16 @@ for i,v in pairs(items) do
 	newitems[v.id] = v
 end
 local hooked = 0
+local aclist = {
+	"hitbox modification",
+	"stamina modification",
+	"character movement ",
+	"unexpected boat behavior",
+	"isSuspiciousMovement",
+	"lastClippedPos",
+	"PostSimulation",
+	"Kick"
+}
 repeat
 	for i,v in pairs(getgc(true)) do 
 		if type(v) == "function" then
@@ -305,16 +315,11 @@ repeat
 			if version >= 135 and src:find("ClientData") or src:find("exitButtonComponent") then 
 				local done
 				for i2,v2 in pairs(debug.getconstants(v)) do
-					if v2 == "hitbox modification" then done = v2 break end
-					if v2 == "PostSimulation" then done = v2 break end
-					if v2 == "Kick" then done = v2 break end
-					if v2 == "lastClippedPos" then done = v2 break end
-					if v2 == "isSuspiciousMovement" then done = v2 break end
-					if v2 == "stamina modification" then done = v2 break end
+					if table.find(aclist, v2) then done = v2 break end
 				end
 				if done then 
 					hooked = hooked + 1
-					hookfunction(v, function() end)
+					hookfunction(v, function() return end)
 				end
 			end
 		end
@@ -324,11 +329,11 @@ repeat
 			end
 		end
 	end
-	if (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 4)) then
+	if (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 5)) then
 		break
 	end
 	task.wait(1)
-until (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 4)) or shared.VapeExecuted == nil
+until (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 5)) or shared.VapeExecuted == nil
 local localserverpos
 local otherserverpos = {}
 task.spawn(function()
