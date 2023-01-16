@@ -303,12 +303,14 @@ repeat
 		if type(v) == "function" then
 			local src = debug.getinfo(v).source
 			if version >= 135 and src:find("ClientData") or src:find("exitButtonComponent") then 
-				local done = false
+				local done
 				for i2,v2 in pairs(debug.getconstants(v)) do
-					if v2 == "hitbox modification" then done = true break end
-					if v2 == "PostSimulation" then done = true break end
-					if v2 == "Kick" then done = true break end
-					if v2 == "lastClippedPos" then done = true break end
+					if v2 == "hitbox modification" then done = v2 break end
+					if v2 == "PostSimulation" then done = v2 break end
+					if v2 == "Kick" then done = v2 break end
+					if v2 == "lastClippedPos" then done = v2 break end
+					if v2 == "isSuspiciousMovement" then done = v2 break end
+					if v2 == "stamina modification" then done = v2 break end
 				end
 				if done then 
 					hooked = hooked + 1
