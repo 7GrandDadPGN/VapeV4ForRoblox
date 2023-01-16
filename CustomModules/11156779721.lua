@@ -325,7 +325,7 @@ repeat
 	end
 	task.wait(1)
 until (remotes ~= nil and (hooked >= 2 or game.PlaceVersion >= 4392 and hooked == 0)) or shared.VapeExecuted == nil
-if remotes == nil then return end
+if remotes == nil then error("failed to load") return end
 
 GuiLibrary["SelfDestructEvent"].Event:Connect(function()
 	for i3,v3 in pairs(connectionstodisconnect) do
