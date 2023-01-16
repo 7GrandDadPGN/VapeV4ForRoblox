@@ -1626,18 +1626,20 @@ runcode(function()
 			if callback then 
 				oldsound = debug.getupvalue(func, 1)._hitObject
 				debug.getupvalue(func, 1)._hitObject = function(self, hit, ...)
-					for i,v in pairs(players:GetPlayers()) do 
-						local hum = v.Character and v.Character:FindFirstChild("Humanoid")
-						if hum and hum.Health > 0 and hit:IsDescendantOf(v.Character) then
-							local sound = Instance.new("Sound")
-							sound.Volume = 0.25
-							sound.SoundId = HitSoundBox["Value"] == "" and "rbxassetid://8837706727" or (tonumber(HitSoundBox["Value"]) ~= nil and "rbxassetid://"..HitSoundBox["Value"] or HitSoundBox["Value"])
-							sound.Parent = workspace
-							sound.Ended:Connect(function()
-								sound:Destroy()
-							end)
-							sound:Play()
-							break
+					if self.playerWhoShot == lplr then
+						for i,v in pairs(players:GetPlayers()) do 
+							local hum = v.Character and v.Character:FindFirstChild("Humanoid")
+							if hum and hum.Health > 0 and hit:IsDescendantOf(v.Character) then
+								local sound = Instance.new("Sound")
+								sound.Volume = 0.25
+								sound.SoundId = HitSoundBox["Value"] == "" and "rbxassetid://8837706727" or (tonumber(HitSoundBox["Value"]) ~= nil and "rbxassetid://"..HitSoundBox["Value"] or HitSoundBox["Value"])
+								sound.Parent = workspace
+								sound.Ended:Connect(function()
+									sound:Destroy()
+								end)
+								sound:Play()
+								break
+							end
 						end
 					end
 					return oldsound(self, hit, ...)
