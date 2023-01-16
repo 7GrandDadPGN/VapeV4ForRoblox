@@ -769,7 +769,7 @@ runcode(function()
 		ownedkitsamount = ownedkitsamount + 1
 		ownedkits[bedwars["KitMeta"][v3].name:lower()] = v3
 	end
-	AutoKit = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+	AutoKit = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoKit",
 		["Function"] = function(callback)
 			if callback then
