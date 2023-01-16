@@ -320,11 +320,11 @@ repeat
 			end
 		end
 	end
-	if (remotes ~= nil and (hooked >= 2 or hooked == 0)) then
+	if (remotes ~= nil and (hooked >= 2 or game.PlaceVersion >= 4392 and hooked == 0)) then
 		break
 	end
 	task.wait(1)
-until (remotes ~= nil and (hooked >= 2 or hooked == 0)) or shared.VapeExecuted == nil
+until (remotes ~= nil and (hooked >= 2 or game.PlaceVersion >= 4392 and hooked == 0)) or shared.VapeExecuted == nil
 if remotes == nil then return end
 
 GuiLibrary["SelfDestructEvent"].Event:Connect(function()
