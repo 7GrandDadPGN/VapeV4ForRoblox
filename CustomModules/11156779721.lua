@@ -59,6 +59,7 @@ end
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or fluxus and fluxus.queue_on_teleport or function() end
 local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
 local entity = shared.vapeentity
+local uninjectflag = false
 
 local RunLoops = {RenderStepTable = {}, StepTable = {}, HeartTable = {}}
 do
@@ -290,6 +291,7 @@ local itemhandler = require(repstorage.game.Items)
 local items = debug.getupvalue(itemhandler.getItemData, 1)
 local projectiles = require(repstorage.modules.game.Projectiles)
 local clientdata = require(repstorage.modules.player.ClientData)
+local effects = require(repstorage.game.Effects)
 local version = tonumber(({repstorage.version.Value:gsub("%.", "")})[1])
 local newitems = {}
 for i,v in pairs(items) do 
@@ -320,13 +322,37 @@ repeat
 			end
 		end
 	end
-	if (remotes ~= nil and (hooked >= (version >= 135 and 2 or 4) or game.PlaceVersion >= 4392 and hooked == 0)) then
+	if (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 4)) then
 		break
 	end
 	task.wait(1)
-until (remotes ~= nil and (hooked >= (version >= 135 and 2 or 4) or game.PlaceVersion >= 4392 and hooked == 0)) or shared.VapeExecuted == nil
+until (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 4)) or shared.VapeExecuted == nil
+local localserverpos
+local otherserverpos = {}
+task.spawn(function()
+	local postable = {}
+	local postable2 = {}
+	repeat
+		task.wait()
+		if entity.isAlive then
+			table.insert(postable, entity.character.HumanoidRootPart.Position)
+			if #postable > 60 then 
+				table.remove(postable, 1)
+			end
+			localserverpos = postable[46] or entity.character.HumanoidRootPart.Position
+		end
+		for i,v in pairs(entity.entityList) do 
+			if postable2[v.Player] == nil then 
+				postable2[v.Player] = v.RootPart.Position
+			end
+			otherserverpos[v.Player] = v.RootPart.Position + ((v.RootPart.Position - postable2[v.Player]) * 3)
+			postable2[v.Player] = v.RootPart.Position
+		end
+	until uninjectflag
+end)
 
 GuiLibrary["SelfDestructEvent"].Event:Connect(function()
+	uninjectflag = true
 	for i3,v3 in pairs(connectionstodisconnect) do
 		if v3.Disconnect then pcall(function() v3:Disconnect() end) continue end
 		if v3.disconnect then pcall(function() v3:disconnect() end) continue end
@@ -400,6 +426,7 @@ GuiLibrary["RemoveObject"]("FlyOptionsButton")
 
 local SilentAimMode = {["Value"] = "Legit"}
 local SilentAimFOV = {["Value"] = 300}
+local oldproj
 runcode(function()
 	--skidded off the devforum because I hate projectile math
 	-- Compute 2D launch angle
@@ -464,12 +491,11 @@ runcode(function()
 	end
 
 	local SilentAim = {["Enabled"] = false}
-	local old
 	SilentAim = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "SilentAim", 
 		["Function"] = function(callback)
 			if callback then
-				old = projectiles.shoot
+				oldproj = projectiles.shoot
 				projectiles.shoot = function(p1, p2, p3, p4, p5, ...)
 					local projvelo = items[p3].projectileVelocity
 					local plr
@@ -489,7 +515,7 @@ runcode(function()
 					if plr then 
 						local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
 						if not playerattackable then
-							return old(p1, p2, p3, p4, p5, ...)
+							return oldproj(p1, p2, p3, p4, p5, ...)
 						end
 						p5 = 1
 						local grav = workspace.Gravity * 2
@@ -498,10 +524,10 @@ runcode(function()
 							p4 = CFrame.new(p4.Position, p4.Position + calculated)
 						end
 					end
-					return old(p1, p2, p3, p4, p5, ...)
+					return oldproj(p1, p2, p3, p4, p5, ...)
 				end
 			else
-				projectiles.shoot = old
+				projectiles.shoot = oldproj
 			end
 		end
 	})
@@ -677,6 +703,10 @@ runcode(function()
 											if not playerattackable then
 												continue
 											end
+											local selfcheck = localserverpos or entity.character.HumanoidRootPart.Position
+											if (selfcheck - (otherserverpos[v.Player] or v.RootPart.Position)).Magnitude > 15 then 
+												continue
+											end
 											if killauraanimdelay < tick() then
 												killauraanimdelay = tick() + 0.5
 												local anims = itemhandler.getItemAnimations(toolmeta.id, "action")
@@ -732,7 +762,7 @@ runcode(function()
 	killaurarange = Killaura.CreateSlider({
 		["Name"] = "Attack range",
 		["Min"] = 1,
-		["Max"] = 16, 
+		["Max"] = 18, 
 		["Function"] = function(val) 
 			if killaurarangecirclepart then 
 				killaurarangecirclepart.Size = Vector3.new(val * 0.7, 0.01, val * 0.7)
@@ -1181,6 +1211,7 @@ runcode(function()
 	local Nuker = {["Enabled"] = false}
 	local structures = {}
 	local resources = {}
+	local primaryparts = {}
 	local recentlyhit = {}
 	local guiobjects = {}
 	for i,obj in pairs(workspace.placedStructures:GetDescendants()) do 
@@ -1208,6 +1239,7 @@ runcode(function()
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.placedStructures.DescendantRemoving:Connect(function(obj)
 		if obj:IsA("Model") then 
 			table.remove(structures, table.find(structures, obj))
+			primaryparts[obj] = nil
 			if guiobjects[obj] then 
 				guiobjects[obj].Visible = false
 				guiobjects[obj] = nil
@@ -1239,6 +1271,7 @@ runcode(function()
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.worldResources.DescendantRemoving:Connect(function(obj)
 		if obj:IsA("Model") then 
 			table.remove(resources, table.find(resources, obj))
+			primaryparts[obj] = nil
 			if guiobjects[obj] then 
 				guiobjects[obj].Visible = false
 				guiobjects[obj] = nil
@@ -1252,10 +1285,12 @@ runcode(function()
 				RunLoops:BindToRenderStep("Nuker", 1, function()
 					for i,v in pairs(recentlyhit) do 
 						if guiobjects[i] then 
-							local primary = i.PrimaryPart or i:FindFirstChildWhichIsA("BasePart")
-							local pos, vis = cam:WorldToViewportPoint(primary.Position)
-							guiobjects[i].Visible = vis
-							guiobjects[i].Position = Vector2.new(pos.X, pos.Y)
+							local primary = primaryparts[i]
+							if primary then
+								local pos, vis = cam:WorldToViewportPoint(primary.Position)
+								guiobjects[i].Visible = vis
+								guiobjects[i].Position = Vector2.new(pos.X, pos.Y)
+							end
 							if v < (tick() - 0.11) then
 								guiobjects[i].Visible = false
 								recentlyhit[i] = nil
@@ -1272,9 +1307,14 @@ runcode(function()
 							local sword = getSword()
 							local broke = 0
 							for i,v in pairs(structures) do 
-								if v.PrimaryPart and (v:GetAttribute("health") == nil or v:GetAttribute("health") > 0) and (v.PrimaryPart.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+								local primary = primaryparts[v]
+								if not primary then 	
+									primaryparts[v] = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
+									primary = primaryparts[v]
+								end
+								if primary and (v:GetAttribute("health") == nil or v:GetAttribute("health") > 0) and (primary.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if sword and v:GetAttribute("placedBy") ~= lplr.UserId then
-										remotes.hitStructure:FireServer(tonumber(sword), v, v.PrimaryPart.Position)
+										remotes.hitStructure:FireServer(tonumber(sword), v, primary.Position)
 										guiobjects[v].Text = v.Name.."\n"..(v:GetAttribute("health") and math.floor((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100) or 0).."%"
 										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
 										broke += 1
@@ -1282,18 +1322,22 @@ runcode(function()
 								end
 							end
 							for i,v in pairs(resources) do 
-								local primary = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
+								local primary = primaryparts[v]
+								if not primary then 	
+									primaryparts[v] = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
+									primary = primaryparts[v]
+								end
 								if primary and (v:GetAttribute("health") == nil or v:GetAttribute("health") > 0) and (primary.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if pickaxe then 
 										remotes.mine:FireServer(tonumber(pickaxe), v, primary.Position)
 										guiobjects[v].Text = v.Name.."\n"..(v:GetAttribute("health") and math.round((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100) or 0).."%"
-										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
+										recentlyhit[v] = tick() + 0.2
 										broke += 1
 									end
 									if axe then
 										remotes.chop:FireServer(tonumber(axe), v, primary.Position)
 										guiobjects[v].Text = v.Name.."\n"..(v:GetAttribute("health") and math.round((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100) or 0).."%"
-										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
+										recentlyhit[v] = tick() + 0.2
 										broke += 1
 									end
 								end
@@ -1362,15 +1406,23 @@ runcode(function()
 							doing = false
 							return
 						end
-						createwarning("PlayerTP", "Teleporting, wait 3s.", 3)
+						createwarning("PlayerTP", "Teleporting, wait.", 5)
                         local connection = game:GetService("RunService").Heartbeat:Connect(function()
                             seat.Parent.PrimaryPart.Velocity = Vector3.zero
                             seat.Parent.PrimaryPart.RotVelocity = Vector3.zero
                         end)
+						local finished = false
+						local connection2 = lplr.Character:GetAttributeChangedSignal("lastPos"):Connect(function()
+							local check = (seat.Parent.PrimaryPart.Position - lplr.Character:GetAttribute("lastPos"))
+							if Vector3.new(check.X, 0, check.Z).Magnitude < 2 then 
+								finished = true
+							end
+						end)
 						local pos = target.Character.PrimaryPart.CFrame
-                        seat.Parent.PrimaryPart.CFrame = pos
-						task.wait(3)
+						seat.Parent.PrimaryPart.CFrame = pos
+						repeat task.wait() until finished or (tick() - start) > 10
                         connection:Disconnect()
+						connection2:Disconnect()
                         entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                         doing = false
                     else
@@ -1426,14 +1478,22 @@ runcode(function()
 							doing = false
 							return
 						end
-						createwarning("MouseTP", "Teleporting, wait 3s", 3)
+						createwarning("MouseTP", "Teleporting, wait.", 5)
                         local connection = game:GetService("RunService").Heartbeat:Connect(function()
                             seat.Parent.PrimaryPart.Velocity = Vector3.zero
                             seat.Parent.PrimaryPart.RotVelocity = Vector3.zero
                         end)
-                        seat.Parent.PrimaryPart.CFrame = CFrame.new(target.Position)
-						task.wait(3)
+						local finished = false
+						local connection2 = lplr.Character:GetAttributeChangedSignal("lastPos"):Connect(function()
+							local check = (seat.Parent.PrimaryPart.Position - lplr.Character:GetAttribute("lastPos"))
+							if Vector3.new(check.X, 0, check.Z).Magnitude < 2 then 
+								finished = true
+							end
+						end)
+						seat.Parent.PrimaryPart.CFrame = CFrame.new(target.Position)
+						repeat task.wait() until finished or (tick() - start) > 10
                         connection:Disconnect()
+						connection2:Disconnect()
                         entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                         doing = false
                     else
@@ -1445,6 +1505,22 @@ runcode(function()
             end
         end
     })
+end)
+
+runcode(function()
+	local old
+	GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "NoSlowdown",
+		["Function"] = function(callback)
+			if callback then 
+				old = effects.getEffectData("Over_Encumbered").speedFactor
+                effects.getEffectData("Over_Encumbered").speedFactor = 1
+            else
+                effects.getEffectData("Over_Encumbered").speedFactor = speedFactor
+                old = nil
+			end
+		end
+	})
 end)
 
 runcode(function()
@@ -1529,5 +1605,96 @@ runcode(function()
 				if connection then connection:Disconnect() end
 			end
 		end
+	})
+end)
+
+runcode(function()
+	local oldsound
+	local HitSounds = {["Enabled"] = false}
+	local HitSoundBox = {["Value"] = ""}
+	HitSounds = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "HitSounds", 
+		["Function"] = function(callback)
+			local func = oldproj or projectiles.shoot
+			if callback then 
+				oldsound = debug.getupvalue(func, 1)._hitObject
+				debug.getupvalue(func, 1)._hitObject = function(self, hit, ...)
+					for i,v in pairs(players:GetPlayers()) do 
+						local hum = v.Character and v.Character:FindFirstChild("Humanoid")
+						if hum and hum.Health > 0 and hit:IsDescendantOf(v.Character) then
+							local sound = Instance.new("Sound")
+							sound.Volume = 0.25
+							sound.SoundId = HitSoundBox["Value"] == "" and "rbxassetid://8837706727" or (tonumber(HitSoundBox["Value"]) ~= nil and "rbxassetid://"..HitSoundBox["Value"] or HitSoundBox["Value"])
+							sound.Parent = workspace
+							sound.Ended:Connect(function()
+								sound:Destroy()
+							end)
+							sound:Play()
+							break
+						end
+					end
+					return oldsound(self, hit, ...)
+				end
+			else
+				debug.getupvalue(func, 1)._hitObject = oldsound
+			end
+		end
+	})
+	HitSoundBox = HitSounds.CreateTextBox({
+		["Name"] = "Sound",
+		["TempText"] = "sound (soundid)",
+		["Function"] = function() end
+	})
+end)
+
+runcode(function()
+	local KingdomSpamBox = {["Value"] = ""}
+
+	local function used(color)
+		for i,v in pairs(game:GetService("ReplicatedStorage").kingdoms:GetChildren()) do 
+			if v.Value == color and (v.Name == "" or v.Name == KingdomSpamBox["Value"]) then 
+				return v
+			end
+		end
+		return nil
+	end
+
+	local KingdomSpam = {["Enabled"] = false}
+	KingdomSpam = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "KingdomSpam", 
+		["Function"] = function(callback)
+			if callback then 
+				task.spawn(function()
+					repeat
+						local color
+						local kingdom
+						for i,v in pairs(lplr.PlayerGui.Kingdom.kingdom.frame.design.design.tabContent.color:GetChildren()) do 
+							if v:IsA("ImageButton") then 
+								local newkingdom = used(v.fill.BackgroundColor3)
+								if newkingdom then
+									color = v.fill.BackgroundColor3
+									kingdom = newkingdom
+									break
+								end
+							end
+						end
+						if color then 
+							task.spawn(function()
+								repstorage.remoteInterface.kingdoms.leaveKingdom:FireServer(kingdom)
+								repstorage.remoteInterface.kingdoms.createKingdom:InvokeServer(KingdomSpamBox["Value"], color, Color3.new(1, 1, 1), "rbxassetid://11722959055")
+							end)
+						else
+							createwarning("KingdomSpam", "no color", 0.5)
+						end
+						task.wait(0.5)
+					until (not KingdomSpam["Enabled"])
+				end)
+			end
+		end
+	})
+	KingdomSpamBox = KingdomSpam.CreateTextBox({
+		["Name"] = "Kingdom",
+		["TempText"] = "kingdom",
+		["Function"] = function() end
 	})
 end)
