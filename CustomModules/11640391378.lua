@@ -29,16 +29,6 @@ local betterisfile = function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
 end
-local function GetURL(scripturl)
-	if shared.VapeDeveloper then
-		assert(betterisfile("vape/"..scripturl), "File not found : vape/"..scripturl)
-		return readfile("vape/"..scripturl)
-	else
-		local res = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
-		assert(res ~= "404: Not Found", "File not found : vape/"..scripturl)
-		return res
-	end
-end
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function(tab)
 	if tab.Method == "GET" then
 		return {
@@ -124,31 +114,6 @@ end
 
 local function getPlayerColor(plr)
 	return (friendCheck(plr, true) and Color3.fromHSV(GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Hue"], GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Sat"], GuiLibrary["ObjectsThatCanBeSaved"]["Friends ColorSliderColor"]["Api"]["Value"]) or tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color)
-end
-
-local function getcustomassetfunc(path)
-	if not isfile(path) then
-		spawn(function()
-			local textlabel = Instance.new("TextLabel")
-			textlabel.Size = UDim2.new(1, 0, 0, 36)
-			textlabel.Text = "Downloading "..path
-			textlabel.BackgroundTransparency = 1
-			textlabel.TextStrokeTransparency = 0
-			textlabel.TextSize = 30
-			textlabel.Font = Enum.Font.SourceSans
-			textlabel.TextColor3 = Color3.new(1, 1, 1)
-			textlabel.Position = UDim2.new(0, 0, 0, -36)
-			textlabel.Parent = GuiLibrary["MainGui"]
-			repeat wait() until isfile(path)
-			textlabel:Remove()
-		end)
-		local req = requestfunc({
-			Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..path:gsub("vape/assets", "assets"),
-			Method = "GET"
-		})
-		writefile(path, req.Body)
-	end
-	return getasset(path) 
 end
 
 local function targetCheck(plr)
@@ -263,7 +228,7 @@ local getthreadidentity = syn and syn.get_thread_identity or get_thread_identity
 local function fireremote(...)
 	local old = getthreadidentity()
 	setthreadidentity(2)
-	if framework.Network then
+	if framework.Network and framework.Network.Fire then
 		framework.Network.Fire(...)
 	else
 		createwarning("Vape", "skill issue", 1)
@@ -274,7 +239,7 @@ end
 local function firefunction(...)
 	local old = getthreadidentity()
 	setthreadidentity(2)
-	if framework.Network then 
+	if framework.Network and framework.Network.Invoke then 
 		framework.Network.Invoke(...)
 	else
 		createwarning("Vape", "skill issue", 1)
