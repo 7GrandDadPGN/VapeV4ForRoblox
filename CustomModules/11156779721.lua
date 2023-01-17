@@ -198,6 +198,9 @@ workspace.animals.ChildRemoved:Connect(function(obj)
 	table.remove(animals, table.find(animals, obj))
 end)
 
+local localserverpos
+local otherserverpos = {}
+
 local function GetAllNearestHumanoidToPosition(player, distance, amount, checktab)
 	local returnedplayer = {}
 	local currentamount = 0
@@ -206,7 +209,10 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, checkta
 		for i, v in pairs(entity.entityList) do -- loop through players
 			if not v.Targetable then continue end
             if targetCheck(v) and currentamount < amount then -- checks
-				local mag = (entity.character.HumanoidRootPart.Position - v.RootPart.Position).magnitude
+				local mag = (entity.character.HumanoidRootPart.Position - (otherserverpos[v.Player] or v.RootPart.Position)).magnitude
+				if mag > distance then 
+					mag = ((localserverpos or entity.character.HumanoidRootPart.Position) - (otherserverpos[v.Player] or v.RootPart.Position)).magnitude
+				end
                 if mag <= distance then -- mag check
 					if checktab.WallCheck then
 						if not vischeck(v.Character, checktab) then continue end
@@ -219,6 +225,9 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, checkta
 		for i, v in pairs(animals) do 
             if v.PrimaryPart and currentamount < amount then -- checks
 				local mag = (entity.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
+				if mag > distance then 
+					mag = ((localserverpos or entity.character.HumanoidRootPart.Position) - v.PrimaryPart.Position).magnitude
+				end
                 if mag <= distance then -- mag check
                     table.insert(returnedplayer, {Player = {Name = v.Name, UserId = 1}, RootPart = v.PrimaryPart, Animal = true, Character = v})
 					currentamount = currentamount + 1
@@ -228,7 +237,6 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, checkta
 	end
 	return returnedplayer
 end
-
 
 local function GetNearestHumanoidToPosition(player, distance, checktab)
 	local closest, returnedplayer, targetpart = distance, nil, nil
@@ -334,8 +342,6 @@ repeat
 	end
 	task.wait(1)
 until (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 5)) or shared.VapeExecuted == nil
-local localserverpos
-local otherserverpos = {}
 task.spawn(function()
 	local postable = {}
 	local postable2 = {}
@@ -563,7 +569,7 @@ runcode(function()
 					repeat
 						task.wait()
 						local bow, bowdata = getBow()
-						if bow then
+						if bow and entity.isAlive then
 							local plr
 							if SilentAimMode["Value"] == "Legit" then
 								plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
@@ -770,7 +776,7 @@ runcode(function()
 	killaurarange = Killaura.CreateSlider({
 		["Name"] = "Attack range",
 		["Min"] = 1,
-		["Max"] = 18, 
+		["Max"] = 15, 
 		["Function"] = function(val) 
 			if killaurarangecirclepart then 
 				killaurarangecirclepart.Size = Vector3.new(val * 0.7, 0.01, val * 0.7)
@@ -1223,7 +1229,7 @@ runcode(function()
 	local recentlyhit = {}
 	local guiobjects = {}
 	for i,obj in pairs(workspace.placedStructures:GetDescendants()) do 
-		if obj:IsA("Model") then 
+		if obj:GetAttribute("health") then 
 			guiobjects[obj] = Drawing.new("Text")
 			guiobjects[obj].Size = 20
 			guiobjects[obj].Color = Color3.new(1, 1, 1)
@@ -1234,7 +1240,7 @@ runcode(function()
 		end
 	end
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.placedStructures.DescendantAdded:Connect(function(obj)
-		if obj:IsA("Model") then 
+		if obj:GetAttribute("health") then 
 			guiobjects[obj] = Drawing.new("Text")
 			guiobjects[obj].Size = 20
 			guiobjects[obj].Color = Color3.new(1, 1, 1)
@@ -1245,7 +1251,7 @@ runcode(function()
 		end
 	end)
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.placedStructures.DescendantRemoving:Connect(function(obj)
-		if obj:IsA("Model") then 
+		if obj:GetAttribute("health") then 
 			table.remove(structures, table.find(structures, obj))
 			primaryparts[obj] = nil
 			if guiobjects[obj] then 
@@ -1255,7 +1261,7 @@ runcode(function()
 		end
 	end)
 	for i,obj in pairs(workspace.worldResources:GetDescendants()) do 
-		if obj:IsA("Model") then 
+		if obj:GetAttribute("health") then 
 			guiobjects[obj] = Drawing.new("Text")
 			guiobjects[obj].Size = 20
 			guiobjects[obj].Color = Color3.new(1, 1, 1)
@@ -1266,7 +1272,7 @@ runcode(function()
 		end
 	end
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.worldResources.DescendantAdded:Connect(function(obj)
-		if obj:IsA("Model") then 
+		if obj:GetAttribute("health") then 
 			guiobjects[obj] = Drawing.new("Text")
 			guiobjects[obj].Size = 20
 			guiobjects[obj].Color = Color3.new(1, 1, 1)
@@ -1277,7 +1283,7 @@ runcode(function()
 		end
 	end)
 	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.worldResources.DescendantRemoving:Connect(function(obj)
-		if obj:IsA("Model") then 
+		if obj:GetAttribute("health") then 
 			table.remove(resources, table.find(resources, obj))
 			primaryparts[obj] = nil
 			if guiobjects[obj] then 
@@ -1320,10 +1326,10 @@ runcode(function()
 									primaryparts[v] = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
 									primary = primaryparts[v]
 								end
-								if primary and (v:GetAttribute("health") == nil or v:GetAttribute("health") > 0) and (primary.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+								if primary and v:GetAttribute("health") > 0 and (primary.Position - (localserverpos or entity.character.HumanoidRootPart.Position)).Magnitude < 30 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if sword and v:GetAttribute("placedBy") ~= lplr.UserId then
 										remotes.hitStructure:FireServer(tonumber(sword), v, primary.Position)
-										guiobjects[v].Text = v.Name.."\n"..(v:GetAttribute("health") and math.floor((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100) or 0).."%"
+										guiobjects[v].Text = v.Name.."\n"..(math.floor((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100)).."%"
 										recentlyhit[v] = tick() + (broke > 15 and 0.1 or 0.05)
 										broke += 1
 									end
@@ -1335,16 +1341,16 @@ runcode(function()
 									primaryparts[v] = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
 									primary = primaryparts[v]
 								end
-								if primary and (v:GetAttribute("health") == nil or v:GetAttribute("health") > 0) and (primary.Position - entity.character.HumanoidRootPart.Position).Magnitude < 25 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+								if primary and v:GetAttribute("health") > 0 and (primary.Position - (localserverpos or entity.character.HumanoidRootPart.Position)).Magnitude < 30 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if pickaxe then 
 										remotes.mine:FireServer(tonumber(pickaxe), v, primary.Position)
-										guiobjects[v].Text = v.Name.."\n"..(v:GetAttribute("health") and math.round((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100) or 0).."%"
+										guiobjects[v].Text = v.Name.."\n"..(math.round((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100)).."%"
 										recentlyhit[v] = tick() + 0.2
 										broke += 1
 									end
 									if axe then
 										remotes.chop:FireServer(tonumber(axe), v, primary.Position)
-										guiobjects[v].Text = v.Name.."\n"..(v:GetAttribute("health") and math.round((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100) or 0).."%"
+										guiobjects[v].Text = v.Name.."\n"..(math.round((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100)).."%"
 										recentlyhit[v] = tick() + 0.2
 										broke += 1
 									end
@@ -1581,7 +1587,7 @@ runcode(function()
 						task.wait(0.01)
 						if entity.isAlive then 
 							for i,v in pairs(collectionservice:GetTagged("DROPPED_ITEM")) do 
-								if (v.Position - entity.character.HumanoidRootPart.Position).Magnitude < 10 and (pickedup[v] == nil or pickedup[v] <= tick()) then
+								if (v.Position - (localserverpos or entity.character.HumanoidRootPart.Position)).Magnitude < 10 and (pickedup[v] == nil or pickedup[v] <= tick()) then
 									pickedup[v] = tick() + 0.2
 									pickupitem:FireServer(v)
 								end
@@ -1659,7 +1665,7 @@ end)
 
 runcode(function()
 	local oldnewproj
-	ArrowWallbang = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+	ArrowWallbang = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "ArrowWallbang", 
 		["Function"] = function(callback)
 			local func = oldproj or projectiles.shoot
