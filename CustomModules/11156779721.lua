@@ -1664,6 +1664,29 @@ runcode(function()
 end)
 
 runcode(function()
+	local oldfog
+	GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "NoFog", 
+		["Function"] = function(callback)
+			local func
+			for i,v in pairs(getconnections(game:GetService("RunService").RenderStepped)) do 
+				if v.Function and table.find(debug.getconstants(v.Function), "FogStart") then
+					func = v.Function
+					break
+				end
+			end
+			if not func then return end
+			if callback then 
+				debug.setupvalue(func, 4, {})
+				lighting.FogEnd = 100000
+			else
+				debug.setupvalue(func, 4, lighting)
+			end
+		end
+	})
+end)
+
+runcode(function()
 	local oldnewproj
 	ArrowWallbang = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "ArrowWallbang", 
