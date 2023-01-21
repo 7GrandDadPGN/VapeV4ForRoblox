@@ -375,10 +375,10 @@ end
 setreadonly(getrenv().debug, true)
 
 GuiLibrary["SelfDestructEvent"].Event:Connect(function()
+	uninjectflag = true
 	setreadonly(getrenv().debug, false)
 	getrenv().debug.info = olddebuginfo
 	setreadonly(getrenv().debug, true)
-	uninjectflag = true
 	for i3,v3 in pairs(connectionstodisconnect) do
 		if v3.Disconnect then pcall(function() v3:Disconnect() end) continue end
 		if v3.disconnect then pcall(function() v3:disconnect() end) continue end
@@ -438,7 +438,7 @@ local function getBow()
 	return returned, returned2
 end
 
-local killauranear = false
+local killauranear
 GuiLibrary["RemoveObject"]("KillauraOptionsButton")
 GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
 GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
@@ -634,21 +634,11 @@ runcode(function()
 	local killauraanimdelay = tick()
 	local killauraanimnum = 0
 
-	local function getclosestpart(v, tool)
-		if entity.isAlive then
-			local closest, closestmag = nil, 10000000
-			for i,v2 in pairs(v.Character:GetChildren()) do 
-				if v2:IsA("BasePart") then
-					local mag = (v2.Position - tool.Position)
-				end
-			end
-		end
-	end
-
 	Killaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Killaura", 
 		["Function"] = function(callback)
 			if callback then
+				if killaurarangecirclepart then killaurarangecirclepart.Parent = cam end
 				local targetedplayer
 				RunLoops:BindToHeartbeat("Killaura", 1, function()
 					for i,v in pairs(killauraboxes) do 
@@ -659,9 +649,6 @@ runcode(function()
 						end
 					end
 					if entity.isAlive then
-						if killauraaimcirclepart then 
-							killauraaimcirclepart.Position = targetedplayer and closestpos(targetedplayer.RootPart, entity.character.HumanoidRootPart.Position) or Vector3.zero
-						end
 						local Root = entity.character.HumanoidRootPart
 						if Root then
 							if killaurarangecirclepart then 
@@ -713,7 +700,7 @@ runcode(function()
 											local vec = (v.RootPart.Position - entity.character.HumanoidRootPart.Position).unit
 											local angle = math.acos(localfacing:Dot(vec))
 											if angle >= (math.rad(killauraangle["Value"]) / 2) then continue end
-											killauranear = true
+											killauranear = v
 											targettable[v.Player.Name] = {
 												["UserId"] = v.Player.UserId,
 												["Health"] = v.Character.Humanoid.Health,
@@ -756,7 +743,7 @@ runcode(function()
 								else
 									lastplr = nil
 									targetedplayer = nil
-									killauranear = false
+									killauranear = nil
 								end
 							end
 							for i,v in pairs(killauraboxes) do 
@@ -766,7 +753,7 @@ runcode(function()
 							if (#plrs <= 0) then
 								lastplr = nil
 								targetedplayer = nil
-								killauranear = false
+								killauranear = nil
 							end
 						end
 						targetinfo.UpdateInfo(targettable, targetsize)
@@ -774,7 +761,7 @@ runcode(function()
 				end)
 			else
 				RunLoops:UnbindFromHeartbeat("Killaura") 
-                killauranear = false
+                killauranear = nil
 				for i,v in pairs(killauraboxes) do 
 					v.Adornee = nil
 				end
@@ -853,9 +840,6 @@ runcode(function()
 		["Function"] = function(hue, sat, val) 
 			for i,v in pairs(killauraboxes) do 
 				v[(killauratargethighlight["Enabled"] and "FillColor" or "Color3")] = Color3.fromHSV(hue, sat, val)
-			end
-			if killauraaimcirclepart then 
-				killauraaimcirclepart.Color = Color3.fromHSV(hue, sat, val)
 			end
 			if killaurarangecirclepart then 
 				killaurarangecirclepart.Color = Color3.fromHSV(hue, sat, val)
@@ -1305,6 +1289,7 @@ runcode(function()
 			end
 		end
 	end)
+
 	Nuker = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "Nuker", 
 		["Function"] = function(callback)
@@ -1400,14 +1385,16 @@ runcode(function()
                     doing = true
                     if entity.isAlive then 
                         local root = entity.character.HumanoidRootPart
-                        local seat
-                        for i,v in pairs(workspace.boats:GetChildren()) do 
-                            local gotseat = v:FindFirstChildWhichIsA("VehicleSeat", true)
-                            if gotseat and gotseat.Occupant == nil then 
-                                seat = gotseat
-                                break
-                            end
-                        end
+						local seat = entity.character.Humanoid.SeatPart
+                        if not seat then 
+							for i,v in pairs(workspace.boats:GetChildren()) do 
+								local gotseat = v:FindFirstChildWhichIsA("VehicleSeat", true)
+								if gotseat and gotseat.Occupant == nil then 
+									seat = gotseat
+									break
+								end
+							end
+						end
                         if not seat then 
                             createwarning("PlayerTP", "no seat", 5)
                             doing = false
@@ -1425,8 +1412,7 @@ runcode(function()
                             doing = false
                             return 
                         end
-                        firetouchinterest(root, seat, 1)
-                        firetouchinterest(root, seat, 0)
+						seat:Sit(entity.character.Humanoid)
 						local start = tick()
                         repeat task.wait() until entity.character.Humanoid.SeatPart ~= nil or (tick() - start) > 3
 						if entity.character.Humanoid.SeatPart == nil then 
@@ -1434,23 +1420,30 @@ runcode(function()
 							return
 						end
 						createwarning("PlayerTP", "Teleporting, wait.", 5)
-                        local connection = game:GetService("RunService").Heartbeat:Connect(function()
-                            seat.Parent.PrimaryPart.Velocity = Vector3.zero
-                            seat.Parent.PrimaryPart.RotVelocity = Vector3.zero
+						local connection = game:GetService("RunService").Heartbeat:Connect(function()
+							if seat.Parent and  seat.Parent.PrimaryPart then
+                            	seat.Parent.PrimaryPart.Velocity = Vector3.zero
+                            	seat.Parent.PrimaryPart.RotVelocity = Vector3.zero
+							end
                         end)
 						local finished = false
 						local connection2 = lplr.Character:GetAttributeChangedSignal("lastPos"):Connect(function()
-							local check = (seat.Parent.PrimaryPart.Position - lplr.Character:GetAttribute("lastPos"))
-							if Vector3.new(check.X, 0, check.Z).Magnitude < 2 then 
-								finished = true
+							if seat.Parent and seat.Parent.PrimaryPart then
+								local check = (seat.Parent.PrimaryPart.Position - lplr.Character:GetAttribute("lastPos"))
+								if Vector3.new(check.X, 0, check.Z).Magnitude < 75 then 
+									finished = true
+								end
 							end
 						end)
 						local pos = target.Character.PrimaryPart.CFrame
 						seat.Parent.PrimaryPart.CFrame = pos
 						repeat task.wait() until finished or (tick() - start) > 10
+						if finished and entity.character.Humanoid.SeatPart then
+							createwarning("PlayerTP", "Successfully teleported!", 5)
+						end
                         connection:Disconnect()
 						connection2:Disconnect()
-                        entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+						entity.character.Humanoid.Sit = false
                         doing = false
                     else
                         createwarning("PlayerTP", "not alive", 5)
@@ -1462,7 +1455,6 @@ runcode(function()
         end
     })
 end)
-
 
 runcode(function()
     local MouseTP = {["Enabled"] = false}
@@ -1478,14 +1470,16 @@ runcode(function()
                     doing = true
                     if entity.isAlive then 
                         local root = entity.character.HumanoidRootPart
-                        local seat
-                        for i,v in pairs(workspace.boats:GetChildren()) do 
-                            local gotseat = v:FindFirstChildWhichIsA("VehicleSeat", true)
-                            if gotseat and gotseat.Occupant == nil then 
-                                seat = gotseat
-                                break
-                            end
-                        end
+                        local seat = entity.character.Humanoid.SeatPart
+                        if not seat then 
+							for i,v in pairs(workspace.boats:GetChildren()) do 
+								local gotseat = v:FindFirstChildWhichIsA("VehicleSeat", true)
+								if gotseat and gotseat.Occupant == nil then 
+									seat = gotseat
+									break
+								end
+							end
+						end
                         if not seat then 
                             createwarning("MouseTP", "no seat", 5)
                             doing = false
@@ -1497,31 +1491,37 @@ runcode(function()
                             doing = false
                             return 
                         end
-                        firetouchinterest(root, seat, 1)
-                        firetouchinterest(root, seat, 0)
+						seat:Sit(entity.character.Humanoid)
 						local start = tick()
-                        repeat task.wait() until entity.character.Humanoid.SeatPart ~= nil or (tick() - start) > 3
+                        repeat task.wait() until entity.character.Humanoid.SeatPart ~= nil or (tick() - start) > 5
 						if entity.character.Humanoid.SeatPart == nil then 
 							doing = false
 							return
 						end
 						createwarning("MouseTP", "Teleporting, wait.", 5)
                         local connection = game:GetService("RunService").Heartbeat:Connect(function()
-                            seat.Parent.PrimaryPart.Velocity = Vector3.zero
-                            seat.Parent.PrimaryPart.RotVelocity = Vector3.zero
+							if seat.Parent and seat.Parent.PrimaryPart then
+                            	seat.Parent.PrimaryPart.Velocity = Vector3.zero
+                            	seat.Parent.PrimaryPart.RotVelocity = Vector3.zero
+							end
                         end)
 						local finished = false
 						local connection2 = lplr.Character:GetAttributeChangedSignal("lastPos"):Connect(function()
-							local check = (seat.Parent.PrimaryPart.Position - lplr.Character:GetAttribute("lastPos"))
-							if Vector3.new(check.X, 0, check.Z).Magnitude < 2 then 
-								finished = true
+							if seat.Parent and seat.Parent.PrimaryPart then
+								local check = (seat.Parent.PrimaryPart.Position - lplr.Character:GetAttribute("lastPos"))
+								if Vector3.new(check.X, 0, check.Z).Magnitude < 75 then 
+									finished = true
+								end
 							end
 						end)
 						seat.Parent.PrimaryPart.CFrame = CFrame.new(target.Position)
 						repeat task.wait() until finished or (tick() - start) > 10
+						if finished and entity.character.Humanoid.SeatPart then
+							createwarning("MouseTP", "Successfully teleported!", 5)
+						end
                         connection:Disconnect()
 						connection2:Disconnect()
-                        entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        entity.character.Humanoid.Sit = false
                         doing = false
                     else
                         createwarning("MouseTP", "not alive", 5)
@@ -1608,6 +1608,30 @@ runcode(function()
 						end
 					until (not AutoPickup["Enabled"])
 				end)
+			end
+		end
+	})
+end)
+
+runcode(function()
+	GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AntiVoid", 
+		["Function"] = function(callback)
+			if callback then 
+				RunLoops:BindToHeartbeat("AntiVoid", 1, function()
+					if entity.isAlive and entity.character.HumanoidRootPart.Position.Y < (workspace.FallenPartsDestroyHeight + 20) then 
+						local comp = {entity.character.HumanoidRootPart.CFrame:GetComponents()}
+						local ray = workspace:Raycast(entity.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 1000, 0), Vector3.new(0, -1000, 0))
+						comp[2] = 14
+						if ray then
+							comp[2] = ray.Position.Y + (entity.character.Humanoid.HipHeight + (entity.character.HumanoidRootPart.Size.Y / 2))
+						end
+						entity.character.HumanoidRootPart.CFrame = CFrame.new(unpack(comp))
+						entity.character.HumanoidRootPart.Velocity = Vector3.new(entity.character.HumanoidRootPart.Velocity.X, 0, entity.character.HumanoidRootPart.Velocity.Z)
+					end
+				end)
+			else
+				RunLoops:UnbindFromHeartbeat("AntiVoid")
 			end
 		end
 	})
@@ -1720,6 +1744,57 @@ runcode(function()
 				end
 			else
 				debug.getupvalue(func, 1).new = oldnewproj
+			end
+		end
+	})
+end)
+
+runcode(function()
+	local rayparams = RaycastParams.new()
+	rayparams.RespectCanCollide = true
+	rayparams.FilterType = Enum.RaycastFilterType.Blacklist
+	local lastpos
+	GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "TargetStrafe", 
+		["Function"] = function(callback)
+			if callback then 
+				RunLoops:BindToHeartbeat("TargetStrafe", 1, function()
+					if entity.isAlive then 
+						if killauranear then 
+							local chars = {cam, lplr.Character}
+							for i,v in pairs(entity.entityList) do table.insert(chars, v.Character) end
+							rayparams.FilterDescendantsInstances = chars
+							local ray = workspace:Raycast(killauranear.RootPart.CFrame.p, Vector3.new(0, -1000, 0), rayparams)
+							if not killauranear.Humanoid then return end
+							if killauranear.Humanoid.Sit then
+								ray = {Position = killauranear.RootPart.CFrame.p - Vector3.new(0, 3.5, 0)}
+							end
+							local newpos = ray and CFrame.new(ray.Position - Vector3.new(0, 3.5, 0), killauranear.RootPart.CFrame.p) or killauranear.RootPart.CFrame
+							if (lplr.Character:GetAttribute("lastPos") - newpos.p).Magnitude < 75 then
+								lastpos = killauranear.RootPart.CFrame
+								if not entity.character.Humanoid.Sit then 
+									entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Climbing)
+								end
+								entity.character.HumanoidRootPart.CFrame = newpos
+								entity.character.HumanoidRootPart.Velocity = Vector3.zero
+								entity.character.HumanoidRootPart.RotVelocity = Vector3.zero
+							end
+						else
+							if lastpos then 
+								if not entity.character.Humanoid.Sit then 
+									entity.character.Humanoid:ChangeState(Enum.HumanoidStateType.Climbing)
+								end
+								entity.character.HumanoidRootPart.CFrame = lastpos
+								entity.character.HumanoidRootPart.Velocity = Vector3.zero
+								entity.character.HumanoidRootPart.RotVelocity = Vector3.zero
+							end
+							lastpos = nil
+						end
+					end
+				end)
+			else
+				lastpos = nil
+				RunLoops:UnbindFromHeartbeat("TargetStrafe")
 			end
 		end
 	})
