@@ -364,7 +364,20 @@ task.spawn(function()
 	until uninjectflag
 end)
 
+local olddebuginfo = getrenv().debug.info
+setreadonly(getrenv().debug, false)
+getrenv().debug.info = function(level, inf, ...)
+	if level > 6 and level < 10 and inf == "s" and res == nil then 
+		return lplr.PlayerScripts.client.tools.Tool.Collector:GetFullName()
+	end
+	return olddebuginfo(level, inf, ...)
+end
+setreadonly(getrenv().debug, true)
+
 GuiLibrary["SelfDestructEvent"].Event:Connect(function()
+	setreadonly(getrenv().debug, false)
+	getrenv().debug.info = olddebuginfo
+	setreadonly(getrenv().debug, true)
 	uninjectflag = true
 	for i3,v3 in pairs(connectionstodisconnect) do
 		if v3.Disconnect then pcall(function() v3:Disconnect() end) continue end
