@@ -7,36 +7,59 @@ local betterisfile = function(file)
 	return suc and res ~= nil
 end
 local shown = false
+
+local function displayPopup(text, func)
+	local setthreadidentityfunc = syn and syn.set_thread_identity or set_thread_identity or setidentity or setthreadidentity
+	local getthreadidentityfunc = syn and syn.get_thread_identity or get_thread_identity or getidentity or getthreadidentity
+	local oldidentity
+	if setthreadidentityfunc then
+		oldidentity = getthreadidentityfunc()
+		setthreadidentityfunc(8)
+	end
+	local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
+	local prompt = ErrorPrompt.new("Default")
+	prompt._hideErrorCode = true
+	local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+	prompt:setParent(gui)
+	prompt:setErrorTitle("Vape")
+	prompt:updateButtons({{
+		Text = "OK",
+		Callback = function() 
+			prompt:_close() 
+			if func then func() end
+		end,
+		Primary = true
+	}}, 'Default')
+	prompt:_open(text)
+	if oldidentity then
+		setthreadidentityfunc(oldidentity)
+	end
+end
+
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		if not betterisfile("vape/"..scripturl) then
+			displayPopup("File not found : vape/"..scripturl.." : "..res)
 			error("File not found : vape/"..scripturl)
 		end
 		return readfile("vape/"..scripturl)
 	else
-		local res
+		local suc, res
 		task.delay(15, function()
 			if res == nil and (not shown) then 
 				shown = true
-				local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
-				local prompt = ErrorPrompt.new("Default")
-				prompt._hideErrorCode = true
-				local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-				prompt:setParent(gui)
-				prompt:setErrorTitle("Vape")
-				prompt:updateButtons({{
-					Text = "OK",
-					Callback = function() prompt:_close() end,
-					Primary = true
-				}}, 'Default')
-				prompt:_open("The connection to github is taking a while, Please be patient.")
+				displayPopup("The connection to github is taking a while, Please be patient.")
 			end
 		end)
-		res = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true)
-		assert(res ~= "404: Not Found", "File not found")
+		suc, res = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true) end)
+		if not suc then
+			displayPopup("Failed to connect to github : vape/"..scripturl.." : "..res)
+			error(res)
+		end
 		return res
 	end
 end
+
 local getasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
 local queueteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function(tab)
@@ -192,29 +215,17 @@ task.spawn(function()
 	task.spawn(function()
 		for i = 1, 150 do 
 			task.wait(0.1)
-			if image.ContentImageSize ~= Vector2.new() then
+			if image.ContentImageSize ~= Vector2.zero then
 				image:Destroy()
 				break 
 			end
 		end
 		if image then 
-			if image.ContentImageSize == Vector2.new(0, 0) and (not shown) and (not redownload) and (not betterisfile("vape/assets/check3.txt")) then 
+			if image.ContentImageSize == Vector2.zero and (not shown) and (not redownload) and (not betterisfile("vape/assets/check3.txt")) then 
 				shown = true
-				local ErrorPrompt = getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
-				local prompt = ErrorPrompt.new("Default")
-				prompt._hideErrorCode = true
-				local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-				prompt:setParent(gui)
-				prompt:setErrorTitle("Vape")
-				prompt:updateButtons({{
-					Text = "OK",
-					Callback = function() 
-						prompt:_close() 
-						writefile("vape/assets/check3.txt", "")
-					end,
-					Primary = true
-				}}, 'Default')
-				prompt:_open("Vape has detected that you have a skill issue and cannot load assets, Consider getting a better executor.")
+				displayPopup("Vape has detected that you have a skill issue and cannot load assets, Consider getting a better executor.", function()
+					writefile("vape/assets/check3.txt", "")
+				end)
 			end
 		end
 	end)
