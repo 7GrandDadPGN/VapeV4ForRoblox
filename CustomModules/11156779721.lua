@@ -448,6 +448,7 @@ GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
 GuiLibrary["RemoveObject"]("XrayOptionsButton")
 GuiLibrary["RemoveObject"]("SpeedOptionsButton")
+GuiLibrary["RemoveObject"]("HitboxesOptionsButton")
 GuiLibrary["RemoveObject"]("FlyOptionsButton")
 
 local SilentAimMode = {["Value"] = "Legit"}
