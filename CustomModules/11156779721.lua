@@ -367,13 +367,15 @@ end)
 if not shared.vapehooked then
 	shared.vapehooked = true
 	local tab = {31, 14, 1}
-	local bit_lshift
-	bit_lshift = hookfunction(getrenv().bit32.lshift, newcclosure(function(a, b, ...)
+	local bit_lshift = getrenv().bit32.lshift
+	setreadonly(getrenv().bit32, false)
+	getrenv().bit32.lshift = function(a, b, ...)
 		if a == 1 and table.find(tab, b) and debug.info(5, "s"):match("FiOne") then 
 			a = 0    
 		end
 		return bit_lshift(a, b, ...)
-	end))
+	end
+	setreadonly(getrenv().bit32, true)
 end
 
 GuiLibrary["SelfDestructEvent"].Event:Connect(function()
