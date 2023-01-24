@@ -378,7 +378,7 @@ if not shared.vapehooked then
 	setreadonly(getrenv().bit32, true)
 end
 
-GuiLibrary["SelfDestructEvent"].Event:Connect(function()
+GuiLibrary.SelfDestructEvent.Event:Connect(function()
 	uninjectflag = true
 	for i3,v3 in pairs(connectionstodisconnect) do
 		if v3.Disconnect then pcall(function() v3:Disconnect() end) continue end
