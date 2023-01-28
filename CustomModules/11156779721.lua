@@ -306,108 +306,69 @@ local newitems = {}
 for i,v in pairs(items) do 
 	newitems[v.id] = v
 end
-local hooked = 0
-local aclist = {
-	"hitbox modification",
-	"stamina modification",
-	"character movement ",
-	"unexpected boat behavior",
-	"isSuspiciousMovement",
-	"lastClippedPos",
-	"PostSimulation",
-	"Kick"
-}
-local attack
-if game.PlaceVersion >= 4418 then
-	local tabcount = 0
-	repeat
-		remotes = {}
-		tabcount = 0
-		for i,v in next, getgc(true) do 
-			if typeof(v) == 'table' and typeof(rawget(v, "OnClientEvent")) == "RBXScriptSignal" and typeof(rawget(v, "FireServer")) == "function" then 
-				local remotetab = debug.getupvalue(v.FireServer, 4)
-				local rem = remotetab[1].value
-				local keyfunc = remotetab[2].value
-				remotes[rem.Name] = {FireServer = function(self, ...)
-					rem:FireServer(keyfunc(), ...)
-				end}
-			end
-		end
-		for i2,v2 in pairs(remotes) do tabcount = tabcount + 1 end
-		task.wait(1)
-	until tabcount >= 4 or shared.VapeExecuted == nil
-else
-	repeat
-		for i,v in pairs(getgc(true)) do 
-			if type(v) == "function" then
-				local src = debug.getinfo(v).source
-				if version >= 135 and src:find("ClientData") or src:find("exitButtonComponent") then 
-					local done
-					for i2,v2 in pairs(debug.getconstants(v)) do
-						if table.find(aclist, v2) then done = v2 break end
-					end
-					if done then 
-						hooked = hooked + 1
-						hookfunction(v, function() return end)
-					end
+local tabcount = 0
+repeat
+	remotes = {}
+	tabcount = 0
+	for i,v in next, getgc(true) do 
+		if typeof(v) == 'table' then 
+			pcall(function()
+				if typeof(rawget(v, "FireServer")) == "function" then
+					local remotetab = debug.getupvalue(v.FireServer, 4)
+					local rem = remotetab[1].value
+					local keyfunc = remotetab[2].value
+					remotes[rem.Name] = {FireServer = function(self, ...)
+						rem:FireServer(keyfunc(), ...)
+					end}
+				elseif typeof(rawget(v, "InvokeServer")) == "function" then 
+					local remotetab = debug.getupvalue(v.InvokeServer, 4)
+					local rem = remotetab[1].value
+					local keyfunc = remotetab[2].value
+					remotes[rem.Name] = {InvokeServer = function(self, ...)
+						return rem:InvokeServer(keyfunc(), ...)
+					end}
 				end
-			end
-			if type(v) == "table" and remotes == nil then
-				if rawget(v, "meleePlayer") and typeof(v.meleePlayer) == "table" and not table.find(debug.getconstants(v.meleePlayer.FireServer), 1.1) then 
-					remotes = v
-				end
-			end
+			end)
 		end
-		if (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 5)) then
-			break
-		end
-		task.wait(1)
-	until (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 5)) or shared.VapeExecuted == nil
+	end
+	for i2,v2 in pairs(remotes) do tabcount = tabcount + 1 end
+	if tabcount >= 4 or shared.VapeExecuted == nil then break end
+	task.wait(1)
+until tabcount >= 4 or shared.VapeExecuted == nil
+
+local function LaunchAngle(v: number, g: number, d: number, h: number, higherArc: boolean)
+	local v2 = v * v
+	local v4 = v2 * v2
+	local root = math.sqrt(v4 - g*(g*d*d + 2*h*v2))
+	if not higherArc then root = -root end
+	return math.atan((v2 + root) / (g * d))
 end
 
-task.spawn(function()
-	local postable = {}
-	local postable2 = {}
-	repeat
-		task.wait()
-		if entity.isAlive then
-			table.insert(postable, entity.character.HumanoidRootPart.Position)
-			if #postable > 60 then 
-				table.remove(postable, 1)
-			end
-			localserverpos = postable[46] or entity.character.HumanoidRootPart.Position
-		end
-		for i,v in pairs(entity.entityList) do 
-			if postable2[v.Player] == nil then 
-				postable2[v.Player] = v.RootPart.Position
-			end
-			otherserverpos[v.Player] = v.RootPart.Position + ((v.RootPart.Position - postable2[v.Player]) * 3)
-			postable2[v.Player] = v.RootPart.Position
-		end
-	until uninjectflag
-end)
-
-if not shared.vapehooked then
-	shared.vapehooked = true
-	local tab = {31, 14, 1}
-	local bit_lshift = getrenv().bit32.lshift
-	setreadonly(getrenv().bit32, false)
-	getrenv().bit32.lshift = function(a, b, ...)
-		if a == 1 and table.find(tab, b) and debug.info(2, "s"):find("FiOne") then 
-			a = 0    
-		end
-		return bit_lshift(a, b, ...)
-	end
-	setreadonly(getrenv().bit32, true)
+local function LaunchDirection(start, target, v, g, higherArc: boolean)
+	local horizontal = Vector3.new(target.X - start.X, 0, target.Z - start.Z)
+	local h = target.Y - start.Y
+	local d = horizontal.Magnitude
+	local a = LaunchAngle(v, g, d, h, higherArc)
+	if a ~= a then return nil end
+	local vec = horizontal.Unit * v
+	local rotAxis = Vector3.new(-horizontal.Z, 0, horizontal.X)
+	return CFrame.fromAxisAngle(rotAxis, a) * vec
 end
 
-GuiLibrary.SelfDestructEvent.Event:Connect(function()
-	uninjectflag = true
-	for i3,v3 in pairs(connectionstodisconnect) do
-		if v3.Disconnect then pcall(function() v3:Disconnect() end) continue end
-		if v3.disconnect then pcall(function() v3:disconnect() end) continue end
+local function FindLeadShot(targetPosition: Vector3, targetVelocity: Vector3, projectileSpeed: Number, shooterPosition: Vector3, shooterVelocity: Vector3, gravity: Number)
+	local distance = (targetPosition - shooterPosition).Magnitude
+	local p = targetPosition - shooterPosition
+	local v = targetVelocity - shooterVelocity
+	local a = Vector3.zero
+	local timeTaken = (distance / projectileSpeed)
+	if gravity > 0 then
+		local timeTaken = projectileSpeed/gravity+math.sqrt(2*distance/gravity+projectileSpeed^2/gravity^2)
 	end
-end)
+	local goalX = targetPosition.X + v.X*timeTaken + 0.5 * a.X * timeTaken^2
+	local goalY = targetPosition.Y + v.Y*timeTaken + 0.5 * a.Y * timeTaken^2
+	local goalZ = targetPosition.Z + v.Z*timeTaken + 0.5 * a.Z * timeTaken^2
+	return Vector3.new(goalX, goalY, goalZ)
+end
 
 local function getSword()
 	local best, returned, returned2 = 0, nil, nil
@@ -421,7 +382,6 @@ local function getSword()
 	end
 	return returned, returned2
 end
-
 
 local function getPickaxe()
 	local best, returned, returned2 = 0, nil, nil
@@ -462,6 +422,101 @@ local function getBow()
 	return returned, returned2
 end
 
+local SilentAim = {Enabled = false}
+local SilentAimMode = {Value = "Legit"}
+local SilentAimFOV = {Value = 300}
+local ArrowWallbang = {Enabled = false}
+local oldnewproj = projectiles.Projectile.new
+projectiles.Projectile.new = function(self, hit, item, ammo, shootStrength, func, ...)
+	if SilentAim.Enabled then 
+		local projvelo = items[item].projectileVelocity
+		local plr
+		if SilentAimMode.Value == "Legit" then
+			plr = GetNearestHumanoidToMouse(true, SilentAimFOV.Value, {
+				AimPart = "HumanoidRootPart",
+				WallCheck = not ArrowWallbang.Enabled,
+				Origin = hit.Position
+			})
+		else
+			plr = GetNearestHumanoidToPosition(true, SilentAimFOV.Value, {
+				AimPart = "HumanoidRootPart",
+				WallCheck = not ArrowWallbang.Enabled,
+				Origin = hit.Position
+			})
+		end
+		if plr then 
+			local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
+			if playerattackable then
+				local grav = workspace.Gravity * 2
+				local calculated = LaunchDirection(hit.Position, FindLeadShot(plr.RootPart.Position, plr.RootPart.Velocity, projvelo, hit.Position, Vector3.zero, grav), projvelo, grav, false)
+				if calculated then
+					shootStrength = 1
+					hit = CFrame.lookAt(hit.Position, hit.Position + calculated)
+					func = function(...)
+						return remotes.shoot:InvokeServer(getBow() or 3, ammo, hit.Position, hit.LookVector, shootStrength)
+					end
+				end
+			end
+		end
+	end
+	local res = oldnewproj(self, hit, item, ammo, shootStrength, func, ...)
+	if ArrowWallbang.Enabled then 
+		res.raycastParams = RaycastParams.new()
+		res.raycastParams.FilterType = Enum.RaycastFilterType.Whitelist
+		local chars = {}
+		for i,v in pairs(players:GetPlayers()) do 
+			if v.Character and v ~= lplr then table.insert(chars, v.Character) end
+		end
+		res.raycastParams.FilterDescendantsInstances = chars
+	end
+	return res
+end
+
+task.spawn(function()
+	local postable = {}
+	local postable2 = {}
+	repeat
+		task.wait()
+		if entity.isAlive then
+			table.insert(postable, entity.character.HumanoidRootPart.Position)
+			if #postable > 60 then 
+				table.remove(postable, 1)
+			end
+			localserverpos = postable[46] or entity.character.HumanoidRootPart.Position
+		end
+		for i,v in pairs(entity.entityList) do 
+			if postable2[v.Player] == nil then 
+				postable2[v.Player] = v.RootPart.Position
+			end
+			otherserverpos[v.Player] = v.RootPart.Position + ((v.RootPart.Position - postable2[v.Player]) * 3)
+			postable2[v.Player] = v.RootPart.Position
+		end
+	until uninjectflag
+end)
+
+if not shared.vapehooked then
+	shared.vapehooked = true
+	local tab = {31, 14, 1}
+	local bit_lshift = getrenv().bit32.lshift
+	setreadonly(getrenv().bit32, false)
+	getrenv().bit32.lshift = function(a, b, ...)
+		if a == 1 and table.find(tab, b) and debug.info(2, "s"):find("FiOne") then 
+			a = 0    
+		end
+		return bit_lshift(a, b, ...)
+	end
+	setreadonly(getrenv().bit32, true)
+end
+
+GuiLibrary.SelfDestructEvent.Event:Connect(function()
+	uninjectflag = true
+	projectiles.Projectile.new = oldnewproj
+	for i3,v3 in pairs(connectionstodisconnect) do
+		if v3.Disconnect then pcall(function() v3:Disconnect() end) continue end
+		if v3.disconnect then pcall(function() v3:disconnect() end) continue end
+	end
+end)
+
 local killauranear
 GuiLibrary.RemoveObject("KillauraOptionsButton")
 GuiLibrary.RemoveObject("MouseTPOptionsButton")
@@ -473,6 +528,69 @@ GuiLibrary.RemoveObject("SafeWalkOptionsButton")
 GuiLibrary.RemoveObject("XrayOptionsButton")
 GuiLibrary.RemoveObject("SpeedOptionsButton")
 GuiLibrary.RemoveObject("FlyOptionsButton")
+
+runcode(function()
+	SilentAim = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "SilentAim", 
+		["Function"] = function(callback) end
+	})
+	SilentAimMode = SilentAim.CreateDropdown({
+		["Name"] = "Mode",
+		["List"] = {"Legit", "Blatant"},
+		["Function"] = function() end
+	})
+	SilentAimFOV = SilentAim.CreateSlider({
+		["Name"] = "FOV", 
+		["Min"] = 1, 
+		["Max"] = 1000, 
+		["Function"] = function(val) end,
+		["Default"] = 80
+	})
+end)
+
+runcode(function()
+	local bowaura = {["Enabled"] = false}
+	bowaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "BowAura", 
+		["Function"] = function(callback)
+			if callback then
+				task.spawn(function()
+					repeat
+						task.wait()
+						local bow, bowdata = getBow()
+						if bow and entity.isAlive then
+							local plr
+							if SilentAimMode["Value"] == "Legit" then
+								plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
+									AimPart = "HumanoidRootPart",
+									WallCheck = not ArrowWallbang["Enabled"],
+									Origin = lplr.Character:GetPivot().Position
+								})
+							else
+								plr = GetNearestHumanoidToPosition(true, SilentAimFOV["Value"], {
+									AimPart = "HumanoidRootPart",
+									WallCheck = not ArrowWallbang["Enabled"],
+									Origin = lplr.Character:GetPivot().Position
+								})
+							end
+							if plr then 
+								local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
+								if not playerattackable then
+									return
+								end
+								print(bow)
+								projectiles.Projectile.new(lplr, lplr.Character:GetPivot(), bowdata.id, 73, 1, function()
+									return remotes.shoot:InvokeServer(bow, 73, lplr.Character:GetPivot().Position, lplr.Character:GetPivot().LookVector, 1)
+								end)
+								task.wait(bowdata.cooldown or 0.1)
+							end
+						end
+					until (not bowaura["Enabled"])
+				end)
+			end
+		end
+	})
+end)
 
 runcode(function()
 	local ignorelist = OverlapParams.new()
@@ -1580,6 +1698,13 @@ runcode(function()
 				debug.setupvalue(func, 4, lighting)
 			end
 		end
+	})
+end)
+
+runcode(function()
+	ArrowWallbang = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "ArrowWallbang", 
+		["Function"] = function(callback) end
 	})
 end)
 
