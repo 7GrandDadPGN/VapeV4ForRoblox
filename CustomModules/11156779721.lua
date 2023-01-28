@@ -229,7 +229,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, checkta
 					mag = ((localserverpos or entity.character.HumanoidRootPart.Position) - v.PrimaryPart.Position).magnitude
 				end
                 if mag <= distance then -- mag check
-                    table.insert(returnedplayer, {Player = {Name = v.Name, UserId = 1}, RootPart = v.PrimaryPart, Animal = true, Character = v})
+                    table.insert(returnedplayer, {Player = {Name = v.Name, UserId = 1}, RootPart = v.PrimaryPart, Animal = true, Character = v, Humanoid = v.Humanoid})
 					currentamount = currentamount + 1
                 end
             end
@@ -295,6 +295,7 @@ local function findTouchInterest(tool)
 end
 
 local remotes
+local clientEnv = getsenv(lplr.PlayerScripts.client)
 local itemhandler = require(repstorage.game.Items)
 local items = debug.getupvalue(itemhandler.getItemData, 1)
 local projectiles = require(repstorage.modules.game.Projectiles)
@@ -316,32 +317,54 @@ local aclist = {
 	"PostSimulation",
 	"Kick"
 }
-repeat
-	for i,v in pairs(getgc(true)) do 
-		if type(v) == "function" then
-			local src = debug.getinfo(v).source
-			if version >= 135 and src:find("ClientData") or src:find("exitButtonComponent") then 
-				local done
-				for i2,v2 in pairs(debug.getconstants(v)) do
-					if table.find(aclist, v2) then done = v2 break end
+local attack
+if game.PlaceVersion >= 4418 then
+	local tabcount = 0
+	repeat
+		remotes = {}
+		tabcount = 0
+		for i,v in next, getgc(true) do 
+			if typeof(v) == 'table' and typeof(rawget(v, "OnClientEvent")) == "RBXScriptSignal" and typeof(rawget(v, "FireServer")) == "function" then 
+				local remotetab = debug.getupvalue(v.FireServer, 4)
+				local rem = remotetab[1].value
+				local keyfunc = remotetab[2].value
+				remotes[rem.Name] = {FireServer = function(self, ...)
+					rem:FireServer(keyfunc(), ...)
+				end}
+			end
+		end
+		for i2,v2 in pairs(remotes) do tabcount = tabcount + 1 end
+		task.wait(1)
+	until tabcount >= 4 or shared.VapeExecuted == nil
+else
+	repeat
+		for i,v in pairs(getgc(true)) do 
+			if type(v) == "function" then
+				local src = debug.getinfo(v).source
+				if version >= 135 and src:find("ClientData") or src:find("exitButtonComponent") then 
+					local done
+					for i2,v2 in pairs(debug.getconstants(v)) do
+						if table.find(aclist, v2) then done = v2 break end
+					end
+					if done then 
+						hooked = hooked + 1
+						hookfunction(v, function() return end)
+					end
 				end
-				if done then 
-					hooked = hooked + 1
-					hookfunction(v, function() return end)
+			end
+			if type(v) == "table" and remotes == nil then
+				if rawget(v, "meleePlayer") and typeof(v.meleePlayer) == "table" and not table.find(debug.getconstants(v.meleePlayer.FireServer), 1.1) then 
+					remotes = v
 				end
 			end
 		end
-		if type(v) == "table" and remotes == nil then
-			if rawget(v, "meleePlayer") and typeof(v.meleePlayer) == "table" and not table.find(debug.getconstants(v.meleePlayer.FireServer), 1.1) then 
-				remotes = v
-			end
+		if (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 5)) then
+			break
 		end
-	end
-	if (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 5)) then
-		break
-	end
-	task.wait(1)
-until (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 5)) or shared.VapeExecuted == nil
+		task.wait(1)
+	until (remotes ~= nil and (game.PlaceVersion >= 4392 or hooked >= 5)) or shared.VapeExecuted == nil
+end
+
 task.spawn(function()
 	local postable = {}
 	local postable2 = {}
@@ -440,180 +463,16 @@ local function getBow()
 end
 
 local killauranear
-GuiLibrary["RemoveObject"]("KillauraOptionsButton")
-GuiLibrary["RemoveObject"]("MouseTPOptionsButton")
-GuiLibrary["RemoveObject"]("SilentAimOptionsButton")
-GuiLibrary["RemoveObject"]("AutoClickerOptionsButton")
-GuiLibrary["RemoveObject"]("ReachOptionsButton")
-GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
-GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
-GuiLibrary["RemoveObject"]("XrayOptionsButton")
-GuiLibrary["RemoveObject"]("SpeedOptionsButton")
-GuiLibrary["RemoveObject"]("HitBoxesOptionsButton")
-GuiLibrary["RemoveObject"]("FlyOptionsButton")
-
-local SilentAimMode = {["Value"] = "Legit"}
-local SilentAimFOV = {["Value"] = 300}
-local oldproj
-local ArrowWallbang = {["Enabled"] = false}
-runcode(function()
-	--skidded off the devforum because I hate projectile math
-	-- Compute 2D launch angle
-	-- v: launch velocity
-	-- g: gravity (positive) e.g. 196.2
-	-- d: horizontal distance
-	-- h: vertical distance
-	-- higherArc: if true, use the higher arc. If false, use the lower arc.
-	local function LaunchAngle(v: number, g: number, d: number, h: number, higherArc: boolean)
-		local v2 = v * v
-		local v4 = v2 * v2
-		local root = math.sqrt(v4 - g*(g*d*d + 2*h*v2))
-		if not higherArc then root = -root end
-		return math.atan((v2 + root) / (g * d))
-	end
-
-	-- Compute 3D launch direction from
-	-- start: start position
-	-- target: target position
-	-- v: launch velocity
-	-- g: gravity (positive) e.g. 196.2
-	-- higherArc: if true, use the higher arc. If false, use the lower arc.
-	local function LaunchDirection(start, target, v, g, higherArc: boolean)
-		-- get the direction flattened:
-		local horizontal = Vector3.new(target.X - start.X, 0, target.Z - start.Z)
-		
-		local h = target.Y - start.Y
-		local d = horizontal.Magnitude
-		local a = LaunchAngle(v, g, d, h, higherArc)
-		
-		-- NaN ~= NaN, computation couldn't be done (e.g. because it's too far to launch)
-		if a ~= a then return nil end
-		
-		-- speed if we were just launching at a flat angle:
-		local vec = horizontal.Unit * v
-		
-		-- rotate around the axis perpendicular to that direction...
-		local rotAxis = Vector3.new(-horizontal.Z, 0, horizontal.X)
-		
-		-- ...by the angle amount
-		return CFrame.fromAxisAngle(rotAxis, a) * vec
-	end
-
-	local function FindLeadShot(targetPosition: Vector3, targetVelocity: Vector3, projectileSpeed: Number, shooterPosition: Vector3, shooterVelocity: Vector3, gravity: Number)
-		local distance = (targetPosition - shooterPosition).Magnitude
-
-		local p = targetPosition - shooterPosition
-		local v = targetVelocity - shooterVelocity
-		local a = Vector3.zero
-
-		local timeTaken = (distance / projectileSpeed)
-		
-		if gravity > 0 then
-			local timeTaken = projectileSpeed/gravity+math.sqrt(2*distance/gravity+projectileSpeed^2/gravity^2)
-		end
-
-		local goalX = targetPosition.X + v.X*timeTaken + 0.5 * a.X * timeTaken^2
-		local goalY = targetPosition.Y + v.Y*timeTaken + 0.5 * a.Y * timeTaken^2
-		local goalZ = targetPosition.Z + v.Z*timeTaken + 0.5 * a.Z * timeTaken^2
-		
-		return Vector3.new(goalX, goalY, goalZ)
-	end
-
-	local SilentAim = {["Enabled"] = false}
-	SilentAim = GuiLibrary["ObjectsThatCanBeSaved"]["CombatWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "SilentAim", 
-		["Function"] = function(callback)
-			if callback then
-				oldproj = projectiles.shoot
-				projectiles.shoot = function(p1, p2, p3, p4, p5, ...)
-					local projvelo = items[p3].projectileVelocity
-					local plr
-					if SilentAimMode["Value"] == "Legit" then
-						plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
-							AimPart = "HumanoidRootPart",
-							WallCheck = not ArrowWallbang["Enabled"],
-							Origin = p4.Position
-						})
-					else
-						plr = GetNearestHumanoidToPosition(true, SilentAimFOV["Value"], {
-							AimPart = "HumanoidRootPart",
-							WallCheck = not ArrowWallbang["Enabled"],
-							Origin = p4.Position
-						})
-					end
-					if plr then 
-						local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
-						if not playerattackable then
-							return oldproj(p1, p2, p3, p4, p5, ...)
-						end
-						p5 = 1
-						local grav = workspace.Gravity * 2
-						local calculated = LaunchDirection(p4.Position, FindLeadShot(plr.RootPart.Position, plr.RootPart.Velocity, projvelo, p4.Position, Vector3.zero, grav), projvelo, grav, false)
-						if calculated then
-							p4 = CFrame.new(p4.Position, p4.Position + calculated)
-						end
-					end
-					return oldproj(p1, p2, p3, p4, p5, ...)
-				end
-			else
-				projectiles.shoot = oldproj
-			end
-		end
-	})
-	SilentAimMode = SilentAim.CreateDropdown({
-		["Name"] = "Mode",
-		["List"] = {"Legit", "Blatant"},
-		["Function"] = function() end
-	})
-	SilentAimFOV = SilentAim.CreateSlider({
-		["Name"] = "FOV", 
-		["Min"] = 1, 
-		["Max"] = 1000, 
-		["Function"] = function(val) end,
-		["Default"] = 80
-	})
-end)
-
-runcode(function()
-	local bowaura = {["Enabled"] = false}
-	bowaura = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "BowAura", 
-		["Function"] = function(callback)
-			if callback then
-				task.spawn(function()
-					repeat
-						task.wait()
-						local bow, bowdata = getBow()
-						if bow and entity.isAlive then
-							local plr
-							if SilentAimMode["Value"] == "Legit" then
-								plr = GetNearestHumanoidToMouse(true, SilentAimFOV["Value"], {
-									AimPart = "HumanoidRootPart",
-									WallCheck = not ArrowWallbang["Enabled"],
-									Origin = lplr.Character:GetPivot().Position
-								})
-							else
-								plr = GetNearestHumanoidToPosition(true, SilentAimFOV["Value"], {
-									AimPart = "HumanoidRootPart",
-									WallCheck = not ArrowWallbang["Enabled"],
-									Origin = lplr.Character:GetPivot().Position
-								})
-							end
-							if plr then 
-								local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
-								if not playerattackable then
-									return
-								end
-								projectiles.shoot(bow, 73, bowdata.id, lplr.Character:GetPivot(), 1)
-								task.wait(bowdata.cooldown or 0.1)
-							end
-						end
-					until (not bowaura["Enabled"])
-				end)
-			end
-		end
-	})
-end)
+GuiLibrary.RemoveObject("KillauraOptionsButton")
+GuiLibrary.RemoveObject("MouseTPOptionsButton")
+GuiLibrary.RemoveObject("SilentAimOptionsButton")
+GuiLibrary.RemoveObject("AutoClickerOptionsButton")
+GuiLibrary.RemoveObject("ReachOptionsButton")
+GuiLibrary.RemoveObject("TriggerBotOptionsButton")
+GuiLibrary.RemoveObject("SafeWalkOptionsButton")
+GuiLibrary.RemoveObject("XrayOptionsButton")
+GuiLibrary.RemoveObject("SpeedOptionsButton")
+GuiLibrary.RemoveObject("FlyOptionsButton")
 
 runcode(function()
 	local ignorelist = OverlapParams.new()
@@ -1668,10 +1527,9 @@ runcode(function()
 	HitSounds = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "HitSounds", 
 		["Function"] = function(callback)
-			local func = oldproj or projectiles.shoot
 			if callback then 
-				oldsound = debug.getupvalue(func, 1)._hitObject
-				debug.getupvalue(func, 1)._hitObject = function(self, hit, ...)
+				oldsound = projectiles.Projectile._hitObject
+				projectiles.Projectile._hitObject = function(self, hit, ...)
 					if self.playerWhoShot == lplr then
 						for i,v in pairs(players:GetPlayers()) do 
 							local hum = v.Character and v.Character:FindFirstChild("Humanoid")
@@ -1691,7 +1549,7 @@ runcode(function()
 					return oldsound(self, hit, ...)
 				end
 			else
-				debug.getupvalue(func, 1)._hitObject = oldsound
+				projectiles.Projectile._hitObject = oldsound
 			end
 		end
 	})
@@ -1720,32 +1578,6 @@ runcode(function()
 				lighting.FogEnd = 100000
 			else
 				debug.setupvalue(func, 4, lighting)
-			end
-		end
-	})
-end)
-
-runcode(function()
-	local oldnewproj
-	ArrowWallbang = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "ArrowWallbang", 
-		["Function"] = function(callback)
-			local func = oldproj or projectiles.shoot
-			if callback then 
-				oldnewproj = debug.getupvalue(func, 1).new
-				debug.getupvalue(func, 1).new = function(self, hit, ...)
-					local res = oldnewproj(self, hit, ...)
-					res.raycastParams = RaycastParams.new()
-					res.raycastParams.FilterType = Enum.RaycastFilterType.Whitelist
-					local chars = {}
-					for i,v in pairs(players:GetPlayers()) do 
-						if v.Character and v ~= lplr then table.insert(chars, v.Character) end
-					end
-					res.raycastParams.FilterDescendantsInstances = chars
-					return res
-				end
-			else
-				debug.getupvalue(func, 1).new = oldnewproj
 			end
 		end
 	})
