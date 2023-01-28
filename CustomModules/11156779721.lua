@@ -307,6 +307,22 @@ for i,v in pairs(items) do
 	newitems[v.id] = v
 end
 local tabcount = 0
+
+local function findFiOneUpValue(tab, check, checkFunc)
+	for i,v in pairs(tab) do 
+		if type(v) == "table" then 
+			for i2,v2 in pairs(v) do 
+				if type(v2) == "table" then 
+					local value = rawget(v2, "value")
+					if typeof(value) == check and checkFunc(value) then
+						return value
+					end
+				end
+			end
+		end
+	end
+end
+
 repeat
 	remotes = {}
 	tabcount = 0
@@ -314,16 +330,26 @@ repeat
 		if typeof(v) == 'table' then 
 			pcall(function()
 				if typeof(rawget(v, "FireServer")) == "function" then
-					local remotetab = debug.getupvalue(v.FireServer, 4)
-					local rem = remotetab[1].value
-					local keyfunc = remotetab[2].value
+					local remotetab = debug.getupvalues(v.FireServer)
+					local rem = findFiOneUpValue(remotetab, "Instance", function(x)
+						return x:IsA("RemoteEvent")
+					end)
+					local keyfunc = findFiOneUpValue(remotetab, "function", function(x)
+						local upvals = debug.getupvalues(x)
+						return table.find(upvals[1].const, "bit32") ~= nil
+					end)
 					remotes[rem.Name] = {FireServer = function(self, ...)
 						rem:FireServer(keyfunc(), ...)
 					end}
 				elseif typeof(rawget(v, "InvokeServer")) == "function" then 
-					local remotetab = debug.getupvalue(v.InvokeServer, 4)
-					local rem = remotetab[1].value
-					local keyfunc = remotetab[2].value
+					local remotetab = debug.getupvalues(v.InvokeServer)
+					local rem = findFiOneUpValue(remotetab, "Instance", function(x)
+						return x:IsA("RemoteFunction")
+					end)
+					local keyfunc = findFiOneUpValue(remotetab, "function", function(x)
+						local upvals = debug.getupvalues(x)
+						return table.find(upvals[1].const, "bit32") ~= nil
+					end)
 					remotes[rem.Name] = {InvokeServer = function(self, ...)
 						return rem:InvokeServer(keyfunc(), ...)
 					end}
