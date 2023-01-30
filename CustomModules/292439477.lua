@@ -767,8 +767,8 @@ runcode(function()
 				updateScope = pf.HudScopeInterface.updateScope
 				pf.HudScopeInterface.updateScope = function(pos1, pos2, size1, size2)
 					if lastTargetTick > tick() then 
-						pos1 = UDim2.new(0, 960, 0, 540)
-						pos2 = UDim2.new(0, 960, 4.439627332431e-09, 540)
+						pos1 = UDim2.new(0, cam.ViewportSize.X / 2, 0, cam.ViewportSize.Y / 2)
+						pos2 = UDim2.new(0, cam.ViewportSize.X / 2, 4.439627332431e-09, cam.ViewportSize.Y / 2)
 						size1 = UDim2.new(1.12, 0, 1.12, 0)
 						size2 = UDim2.new(0.9, 0, 0.9, 0)
 					end
