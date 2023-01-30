@@ -522,16 +522,29 @@ end)
 
 if not shared.vapehooked then
 	shared.vapehooked = true
-	local tab = {31, 14, 1}
-	local bit_lshift = getrenv().bit32.lshift
-	setreadonly(getrenv().bit32, false)
-	getrenv().bit32.lshift = function(a, b, ...)
-		if a == 1 and table.find(tab, b) and debug.info(2, "s"):find("FiOne") then 
-			a = 0    
-		end
-		return bit_lshift(a, b, ...)
+	local oldJSONEncode
+    local function newJsonEncode(self, tab) 
+        if tab then
+            if rawget(tab, "clientInfo") then 
+                rawset(tab, "clientInfo", "_")
+            end
+        end
+        return oldJSONEncode(self, tab)
+    end
+	--pasted from engo rn
+    oldJSONEncode = hookfunction(httpService.JSONEncode, function(self, ...) 
+        return newJsonEncode(self, ...)
+    end)
+
+    local oldNamecall; oldNamecall = hookmetamethod(game, "__namecall", function(self, ...) 
+			local ncm = getnamecallmethod()
+			if (not checkcaller()) and string.lower(ncm) == "JSONEncode" then 
+				return newJsonEncode(self, ...)
+			end
+
+			return oldNamecall(self, ...)
+		end)
 	end
-	setreadonly(getrenv().bit32, true)
 end
 
 GuiLibrary.SelfDestructEvent.Event:Connect(function()
