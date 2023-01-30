@@ -307,22 +307,6 @@ for i,v in pairs(items) do
 	newitems[v.id] = v
 end
 local tabcount = 0
-
-local function findFiOneUpValue(tab, check, checkFunc)
-	for i,v in pairs(tab) do 
-		if type(v) == "table" then 
-			for i2,v2 in pairs(v) do 
-				if type(v2) == "table" then 
-					local value = rawget(v2, "value")
-					if typeof(value) == check and checkFunc(value) then
-						return value
-					end
-				end
-			end
-		end
-	end
-end
-
 repeat
 	remotes = {}
 	tabcount = 0
@@ -330,32 +314,23 @@ repeat
 		if typeof(v) == 'table' then 
 			pcall(function()
 				if typeof(rawget(v, "FireServer")) == "function" then
-					local remotetab = debug.getupvalues(v.FireServer)
-					local rem = findFiOneUpValue(remotetab, "Instance", function(x)
-						return x:IsA("RemoteEvent")
-					end)
-					local keyfunc = findFiOneUpValue(remotetab, "function", function(x)
-						local upvals = debug.getupvalues(x)
-						return table.find(upvals[1].const, "bit32") ~= nil
-					end)
-					remotes[rem.Name] = {FireServer = function(self, ...)
-						rem:FireServer(keyfunc(), ...)
-					end}
+					local rem = debug.getupvalue(v.FireServer, 4)
+					for i2,v2 in pairs(rem) do 
+						if typeof(v2.value) == "Instance" and (v2.value:IsA("RemoteEvent") or v2.value:IsA("RemoteFunction")) then rem = v2.value break end
+					end
+					remotes[rem.Name] = v
 				elseif typeof(rawget(v, "InvokeServer")) == "function" then 
-					local remotetab = debug.getupvalues(v.InvokeServer)
-					local rem = findFiOneUpValue(remotetab, "Instance", function(x)
-						return x:IsA("RemoteFunction")
-					end)
-					local keyfunc = findFiOneUpValue(remotetab, "function", function(x)
-						local upvals = debug.getupvalues(x)
-						return table.find(upvals[1].const, "bit32") ~= nil
-					end)
-					remotes[rem.Name] = {InvokeServer = function(self, ...)
-						return rem:InvokeServer(keyfunc(), ...)
-					end}
+					local rem = debug.getupvalue(v.InvokeServer, 4)
+					for i2,v2 in pairs(rem) do 
+						if typeof(v2.value) == "Instance" and (v2.value:IsA("RemoteEvent") or v2.value:IsA("RemoteFunction")) then rem = v2.value break end
+					end
+					remotes[rem.Name] = v
 				end
 			end)
 		end
+		if typeof(v) == "function" and debug.info(v, "n") == "on_lua_error" then 
+			hookfunction(v, function() end)
+		end 
 	end
 	for i2,v2 in pairs(remotes) do tabcount = tabcount + 1 end
 	if tabcount >= 4 or shared.VapeExecuted == nil then break end
@@ -522,29 +497,25 @@ end)
 
 if not shared.vapehooked then
 	shared.vapehooked = true
-	local oldJSONEncode
-    local function newJsonEncode(self, tab) 
-        if tab then
-            if rawget(tab, "clientInfo") then 
-                rawset(tab, "clientInfo", "_")
-            end
-        end
-        return oldJSONEncode(self, tab)
-    end
-	--pasted from engo rn
-    oldJSONEncode = hookfunction(httpService.JSONEncode, function(self, ...) 
-        return newJsonEncode(self, ...)
-    end)
-
-    local oldNamecall; oldNamecall = hookmetamethod(game, "__namecall", function(self, ...) 
-			local ncm = getnamecallmethod()
-			if (not checkcaller()) and string.lower(ncm) == "JSONEncode" then 
-				return newJsonEncode(self, ...)
-			end
-
-			return oldNamecall(self, ...)
-		end)
+	local tab = {31, 14, 1}
+	local bit_lshift = getrenv().bit32.lshift
+	setreadonly(getrenv().bit32, false)
+	getrenv().bit32.lshift = function(a, b, ...)
+		if a == 1 and table.find(tab, b) and debug.info(2, "s"):find("FiOne") then 
+			a = 0    
+		end
+		return bit_lshift(a, b, ...)
 	end
+	setreadonly(getrenv().bit32, true)
+	local oldJSONEncode
+	oldJSONEncode = hookfunction(game:GetService("HttpService").JSONEncode, function(self, tab, ...) 
+		if tab then
+			if rawget(tab, "clientInfo") then 
+				rawset(tab, "clientInfo", "_")
+			end
+		end
+		return oldJSONEncode(self, tab, ...)
+	end)
 end
 
 GuiLibrary.SelfDestructEvent.Event:Connect(function()
