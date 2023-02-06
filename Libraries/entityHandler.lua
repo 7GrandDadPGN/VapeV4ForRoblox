@@ -71,7 +71,7 @@ do
         if tableIndex then
             entity.entityRemovedEvent:Fire(obj)
             for i,v in next, (ent.Connections or {}) do if v.Disconnect then v:Disconnect() end end
-            table.remove(entity.entityList, tableIndex)
+            entity.entityList[tableIndex] = nil
         end
     end
 
