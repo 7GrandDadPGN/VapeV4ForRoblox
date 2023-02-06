@@ -1607,7 +1607,7 @@ runcode(function()
 				old = effects.getEffectData("Over_Encumbered").speedFactor
                 effects.getEffectData("Over_Encumbered").speedFactor = 1
             else
-                effects.getEffectData("Over_Encumbered").speedFactor = speedFactor
+                effects.getEffectData("Over_Encumbered").speedFactor = old
                 old = nil
 			end
 		end
