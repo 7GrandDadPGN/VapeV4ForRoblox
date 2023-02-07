@@ -498,6 +498,19 @@ local function getBow()
 	return returned, returned2
 end
 
+local function getSeed()
+	local best, returned, returned2 = 0, nil, nil
+	for i,v in pairs(clientdata.getInventory()) do 
+		local data = newitems[i]
+		if data and data.plantName then 
+			returned = i
+			returned2 = data
+			break
+		end
+	end
+	return returned, returned2
+end
+
 local SilentAim = {Enabled = false}
 local SilentAimMode = {Value = "Legit"}
 local SilentAimFOV = {Value = 300}
@@ -750,9 +763,8 @@ runcode(function()
 					repeat
 						task.wait()
 						if (not Killaura["Enabled"]) then break end
-						local targettable = {}
-						local targetsize = 0
 						local attackedplayers = {}
+						targetinfo.Targets.Killaura = nil
 						if entity.isAlive then
 							local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"], 100)
 							if #plrs > 0 then
@@ -765,12 +777,7 @@ runcode(function()
 											local angle = math.acos(localfacing:Dot(vec))
 											if angle >= (math.rad(killauraangle["Value"]) / 2) then continue end
 											killauranear = v
-											targettable[v.Player.Name] = {
-												["UserId"] = v.Player.UserId,
-												["Health"] = v.Character.Humanoid.Health,
-												["MaxHealth"] = v.Character.Humanoid.MaxHealth
-											}
-											targetsize = targetsize + 1
+											targetinfo.Targets.Killaura = v
 											if killauratarget["Enabled"] then
 												table.insert(attackedplayers, v)
 											end
@@ -820,7 +827,6 @@ runcode(function()
 								killauranear = nil
 							end
 						end
-						targetinfo.UpdateInfo(targettable, targetsize)
 					until (not Killaura["Enabled"])
 				end)
 			else
@@ -1284,6 +1290,7 @@ end)
 
 runcode(function()
 	local Nuker = {["Enabled"] = false}
+	local NukerRange = {["Value"] = 30}
 	local structures = {}
 	local resources = {}
 	local primaryparts = {}
@@ -1388,7 +1395,7 @@ runcode(function()
 									primaryparts[v] = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
 									primary = primaryparts[v]
 								end
-								if primary and v:GetAttribute("health") > 0 and (primary.Position - (localserverpos or entity.character.HumanoidRootPart.Position)).Magnitude < 30 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+								if primary and v:GetAttribute("health") > 0 and (primary.Position - (localserverpos or entity.character.HumanoidRootPart.Position)).Magnitude < NukerRange["Value"] and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if sword and v:GetAttribute("placedBy") ~= lplr.UserId then
 										remotes.hitStructure:FireServer(tonumber(sword), v, primary.Position)
 										guiobjects[v].Text = v.Name.."\n"..(math.floor((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100)).."%"
@@ -1403,7 +1410,7 @@ runcode(function()
 									primaryparts[v] = v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart")
 									primary = primaryparts[v]
 								end
-								if primary and v:GetAttribute("health") > 0 and (primary.Position - (localserverpos or entity.character.HumanoidRootPart.Position)).Magnitude < 30 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+								if primary and v:GetAttribute("health") > 0 and (primary.Position - (localserverpos or entity.character.HumanoidRootPart.Position)).Magnitude < math.min(NukerRange["Value"], 30) and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
 									if pickaxe then 
 										remotes.mine:FireServer(tonumber(pickaxe), v, primary.Position)
 										guiobjects[v].Text = v.Name.."\n"..(math.round((v:GetAttribute("health") / v:GetAttribute("maxHealth")) * 100)).."%"
@@ -1429,6 +1436,64 @@ runcode(function()
 						guiobjects[i].Visible = false
 					end
 				end
+			end
+		end
+	})
+	NukerRange = Nuker.CreateSlider({
+		["Name"] = "Range",
+		["Min"] = 1,
+		["Max"] = 30,
+		["Default"] = 30,
+		["Function"] = function() end
+	})
+end)
+
+
+runcode(function()
+	local AutoPlant = {["Enabled"] = false}
+	local resources = {}
+	local recentlyhit = {}
+	local plantremote = repstorage:WaitForChild("remoteInterface"):WaitForChild("interactions"):WaitForChild("plant")
+	local harvestremote = repstorage:WaitForChild("remoteInterface"):WaitForChild("interactions"):WaitForChild("harvest")
+	for i,obj in pairs(workspace.farmland:GetChildren()) do 
+		table.insert(resources, obj)
+	end
+	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.farmland.ChildAdded:Connect(function(obj)
+		table.insert(resources, obj)
+	end)
+	connectionstodisconnect[#connectionstodisconnect + 1] = workspace.farmland.ChildRemoved:Connect(function(obj)
+		table.remove(resources, table.find(resources, obj))
+	end)
+
+	AutoPlant = GuiLibrary["ObjectsThatCanBeSaved"]["WorldWindow"]["Api"].CreateOptionsButton({
+		["Name"] = "AutoFarm", 
+		["Function"] = function(callback)
+			if callback then 
+				task.spawn(function()
+					repeat
+						task.wait()
+						if entity.isAlive then 
+							local shovel = getShovel()
+							local axe = getAxe()
+							local broke = 0
+							for i,v in pairs(resources) do 
+								if v.PrimaryPart and (v.PrimaryPart.Position - (localserverpos or entity.character.HumanoidRootPart.Position)).Magnitude < 30 and (recentlyhit[v] == nil or recentlyhit[v] < tick()) then 
+									if v:GetAttribute("stage") == nil and shovel then 
+										local seed = getSeed()
+										if seed then
+											plantremote:FireServer(shovel, seed, v)
+											recentlyhit[v] = tick() + 0.2
+										end
+									elseif v:GetAttribute("stage") == 4 and axe then 
+										harvestremote:FireServer(axe, v)
+										recentlyhit[v] = tick() + 0.2
+									end
+								end
+							end
+							task.wait(0.01)
+						end
+					until (not AutoPlant["Enabled"])
+				end)
 			end
 		end
 	})
@@ -1476,7 +1541,8 @@ runcode(function()
                             doing = false
                             return 
                         end
-						seat:Sit(entity.character.Humanoid)
+						firetouchinterest(seat, entity.character.HumanoidRootPart, 1)
+						firetouchinterest(seat, entity.character.HumanoidRootPart, 0)
 						local start = tick()
                         repeat task.wait() until entity.character.Humanoid.SeatPart ~= nil or (tick() - start) > 3
 						if entity.character.Humanoid.SeatPart == nil then 
@@ -1555,7 +1621,8 @@ runcode(function()
                             doing = false
                             return 
                         end
-						seat:Sit(entity.character.Humanoid)
+						firetouchinterest(seat, entity.character.HumanoidRootPart, 1)
+						firetouchinterest(seat, entity.character.HumanoidRootPart, 0)
 						local start = tick()
                         repeat task.wait() until entity.character.Humanoid.SeatPart ~= nil or (tick() - start) > 5
 						if entity.character.Humanoid.SeatPart == nil then 
@@ -1616,38 +1683,58 @@ end)
 
 runcode(function()
 	local AutoHeal = {["Enabled"] = false}
+	local AutoHealHeal = {["Enabled"] = false}
 	local eatremote = repstorage:WaitForChild("remoteInterface"):WaitForChild("interactions"):WaitForChild("eat")
 	local maxHunger = repstorage:WaitForChild("game"):WaitForChild("maxHunger").Value
 	local connection
+	local noeat = tick()
 	AutoHeal = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "AutoHeal", 
+		["Name"] = "AutoEat", 
 		["Function"] = function(callback)
 			if callback then 
 				task.spawn(function()
 					repeat
 						task.wait()
-						local inv = clientdata.getInventory()
-						if inv then 
-							local chosen
-							local smallest = 9e9
-							for i,v in pairs(inv) do 
-								local itemdata = newitems[i]
-								if itemdata and itemdata.itemStats and itemdata.itemStats.food and (itemdata.instantHealth == nil or itemdata.instantHealth > 0) then 
-									if (clientdata.getHunger() + itemdata.itemStats.food) < maxHunger and itemdata.itemStats.food < smallest then 
-										smallest = itemdata.itemStats.food
-										chosen = i
+						if entity.isAlive then
+							local inv = clientdata.getInventory()
+							if inv then 
+								local chosen
+								local smallest = 9e9
+								for i,v in pairs(inv) do 
+									local itemdata = newitems[i]
+									if itemdata and itemdata.itemStats and itemdata.itemStats.food and (itemdata.instantHealth == nil or itemdata.instantHealth > 0) then 
+										if (clientdata.getHunger() + itemdata.itemStats.food) < maxHunger and itemdata.itemStats.food < smallest and (itemdata.effectsOnEat == nil or table.find(itemdata.effectsOnEat, "Food_Poisoning")) then 
+											smallest = itemdata.itemStats.food
+											chosen = i
+										end
+										if entity.character.Humanoid.Health < entity.character.Humanoid.MaxHealth and AutoHealHeal.Enabled then 
+											if itemdata.durationHealth and noeat < tick() then
+												noeat = tick() + (itemdata.durationHealth / itemdata.durationHealthRate)
+												chosen = i
+												break
+											end
+											if itemdata.instantHealth then
+												chosen = i
+												break
+											end
+										end
 									end
 								end
-							end
-							if chosen then 
-								eatremote:FireServer(chosen)
-								task.wait(0.2)
+								if chosen then 
+									eatremote:FireServer(chosen)
+									task.wait(0.2)
+								end
 							end
 						end
 					until (not AutoHeal["Enabled"])
 				end)
 			end
 		end
+	})
+	AutoHealHeal = AutoHeal.CreateToggle({
+		["Name"] = "Eat Healing Items",
+		["Function"] = function() end,
+		["Default"] = true
 	})
 end)
 
