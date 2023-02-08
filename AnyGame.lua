@@ -27,6 +27,7 @@ local isnetworkowner = isnetworkowner or function(part)
 	end
 	return networkownerswitch <= tick()
 end
+--bruh
 local getcustomasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local synapsev3 = syn and syn.toast_notification and "V3" or ""
