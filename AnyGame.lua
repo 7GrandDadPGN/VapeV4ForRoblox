@@ -788,6 +788,7 @@ runFunction(function()
 			end
 		end
 	}
+	--testing
 
 	SilentAim = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
 		Name = "SilentAim", 
