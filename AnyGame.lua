@@ -17,7 +17,7 @@ table.insert(vapeConnections, workspace:GetPropertyChangedSignal("CurrentCamera"
 end))
 local isfile = isfile or function(file)
 	local suc, res = pcall(function() return readfile(file) end)
-	return suc and res ~ = nil
+	return suc and res ~= nil
 end
 local networkownerswitch = tick()
 local isnetworkowner = isnetworkowner or function(part)
@@ -25,7 +25,7 @@ local isnetworkowner = isnetworkowner or function(part)
 		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
 		networkownerswitch = tick() + 8
 	end
-	return networkownerswitch < = tick()
+	return networkownerswitch <= tick()
 end
 local getcustomasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
@@ -120,7 +120,7 @@ local function getPlayerColor(plr)
 	if isFriend(plr, true) then
 		return Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Friends ColorSliderColor"].Api.Hue, GuiLibrary.ObjectsThatCanBeSaved["Friends ColorSliderColor"].Api.Sat, GuiLibrary.ObjectsThatCanBeSaved["Friends ColorSliderColor"].Api.Value)
 	end
-	return tostring(plr.TeamColor) ~ = "White" and plr.TeamColor.Color
+	return tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color
 end
 
 local raycastWallProperties = RaycastParams.new()
@@ -159,7 +159,7 @@ do
 		if (not GuiLibrary.ObjectsThatCanBeSaved["Teams by colorToggle"].Api.Enabled) then return true end
 		if (not lplr.Team) then return true end
 		if (not plr.Team) then return true end
-		if plr.Team ~ = lplr.Team then return true end
+		if plr.Team ~= lplr.Team then return true end
         return #plr.Team:GetPlayers() == #playersService:GetPlayers()
 	end
 	entityLibrary.fullEntityRefresh()
@@ -200,7 +200,7 @@ local function EntityNearPosition(distance, checktab)
 				if checktab.Prediction and mag > distance then
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
 				end
-                if mag < = (v.Target and distance or closest) then -- mag check
+                if mag <= (v.Target and distance or closest) then -- mag check
 					if checktab.WallCheck then
 						if not raycastWallCheck(v, checktab) then continue end
 					end
@@ -229,7 +229,7 @@ local function AllNearPosition(distance, amount, checktab)
 				if checktab.Prediction and mag > distance then
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
 				end
-                if mag < = distance then -- mag check
+                if mag <= distance then -- mag check
 					if checktab.WallCheck then
 						if not raycastWallCheck(v, checktab) then continue end
 					end
@@ -252,7 +252,7 @@ local function EntityNearMouse(distance, checktab)
             if isVulnerable(v) then
 				local vec, vis = worldtoscreenpoint(v[checktab.AimPart].Position)
 				local mag = (mousepos - Vector2.new(vec.X, vec.Y)).magnitude
-                if vis and mag < = (v.Target and distance or closest) then
+                if vis and mag <= (v.Target and distance or closest) then
 					if checktab.WallCheck then
 						if not raycastWallCheck(v, checktab) then continue end
 					end
@@ -341,7 +341,7 @@ do
 
 	function WhitelistFunctions:CheckWhitelisted(plr)
 		local playertype = WhitelistFunctions:CheckPlayerType(plr)
-		if playertype ~ = "DEFAULT" then 
+		if playertype ~= "DEFAULT" then 
 			return true
 		end
 		return false
@@ -577,7 +577,7 @@ runFunction(function()
 		local h = target.Y - start.Y
 		local d = horizontal.Magnitude
 		local a = LaunchAngle(v, g, d, h, higherArc)
-		if a ~ = a then return nil end
+		if a ~= a then return nil end
 		local vec = horizontal.Unit * v
 		local rotAxis = Vector3.new(-horizontal.Z, 0, horizontal.X)
 		return CFrame.fromAxisAngle(rotAxis, a) * vec
@@ -612,7 +612,7 @@ runFunction(function()
 
 	local SilentAimFunctions = {
 		FindPartOnRayWithIgnoreList = function(Args)
-			local targetPart = ((math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) < = SilentAimHeadshotChance.Value or SilentAimAutoFire.Enabled) and "Head" or "RootPart"
+			local targetPart = ((math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= SilentAimHeadshotChance.Value or SilentAimAutoFire.Enabled) and "Head" or "RootPart"
 			local origin = Args[1].Origin
 			local plr
 			if SilentAimMode.Value == "Mouse" then
@@ -652,7 +652,7 @@ runFunction(function()
 			return
 		end,
 		Raycast = function(Args)
-			local targetPart = ((math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) < = SilentAimHeadshotChance.Value or SilentAimAutoFire.Enabled) and "Head" or "RootPart"
+			local targetPart = ((math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= SilentAimHeadshotChance.Value or SilentAimAutoFire.Enabled) and "Head" or "RootPart"
 			local origin = Args[1]
 			local plr
 			if SilentAimMode.Value == "Mouse" then
@@ -693,7 +693,7 @@ runFunction(function()
 			return
 		end,
 		ScreenPointToRay = function(Args)
-			local targetPart = ((math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) < = SilentAimHeadshotChance.Value or SilentAimAutoFire.Enabled) and "Head" or "RootPart"
+			local targetPart = ((math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)) <= SilentAimHeadshotChance.Value or SilentAimAutoFire.Enabled) and "Head" or "RootPart"
 			local origin = gameCamera.CFrame.p
 			local plr
 			if SilentAimMode.Value == "Mouse" then
@@ -741,7 +741,7 @@ runFunction(function()
 				SilentAimHooked = true
 				local oldnamecall
 				oldnamecall = hookmetamethod(game, "__namecall", function(self, ...)
-					if getnamecallmethod() ~ = SilentAimMethod.Value then
+					if getnamecallmethod() ~= SilentAimMethod.Value then
 						return oldnamecall(self, ...)
 					end 
 					if checkcaller() then
@@ -796,7 +796,7 @@ runFunction(function()
 				SilentAimMethodUsed = "Normal"..synapsev3
 				task.spawn(function()
 					repeat
-						vapeTargetInfo.Targets.SilentAim = SlientAimShotTick > = tick() and SilentAimShot or nil
+						vapeTargetInfo.Targets.SilentAim = SlientAimShotTick >= tick() and SilentAimShot or nil
 						task.wait()
 					until not SilentAim.Enabled
 				end)
@@ -1142,12 +1142,12 @@ runFunction(function()
 										local newpos = (selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Unit
 										newpos = newpos == newpos and newpos * math.min((selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Magnitude, ClickTPAmount.Value) or Vector3.zero
 										entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + Vector3.new(newpos.X, (ClickTPVertical.Enabled and newpos.Y or 0), newpos.Z)
-										if (selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Magnitude < = 5 then 
+										if (selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Magnitude <= 5 then 
 											break
 										end
 									end
 									task.wait(ClickTPDelay.Value / 100)
-								until entityLibrary.isAlive and (selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Magnitude < = 5 or not ClickTP.Enabled
+								until entityLibrary.isAlive and (selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Magnitude <= 5 or not ClickTP.Enabled
 								if ClickTP.Enabled then ClickTP.ToggleButton(false) end
 							end)
 						end
@@ -1243,7 +1243,7 @@ runFunction(function()
 				a = inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0
 				d = inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0
 				FlyConnectionStart = inputService.InputBegan:Connect(function(input1)
-					if inputService:GetFocusedTextBox() ~ = nil then return end
+					if inputService:GetFocusedTextBox() ~= nil then return end
 					if input1.KeyCode == Enum.KeyCode.W then
 						w = -1
 					elseif input1.KeyCode == Enum.KeyCode.S then
@@ -1290,7 +1290,7 @@ runFunction(function()
 						if not FlyY then FlyY = entityLibrary.character.HumanoidRootPart.CFrame.p.Y end
 						local movevec = (FlyMoveMethod.Value == "Manual" and (CFrame.lookAt(gameCamera.CFrame.p, gameCamera.CFrame.p + Vector3.new(gameCamera.CFrame.lookVector.X, 0, gameCamera.CFrame.lookVector.Z))):VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entityLibrary.character.Humanoid.MoveDirection).Unit
 						movevec = movevec == movevec and Vector3.new(movevec.X, 0, movevec.Z) or Vector3.zero
-						if FlyState.Value ~ = "None" then 
+						if FlyState.Value ~= "None" then 
 							entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType[FlyState.Value])
 						end
 						if FlyMethod.Value == "Normal" or FlyMethod.Value == "Bounce" then
@@ -1332,7 +1332,7 @@ runFunction(function()
 									entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 								end
 							else
-								if FlyTPTick < = tick() then 
+								if FlyTPTick <= tick() then 
 									FlyTP = not FlyTP
 									if FlyTP then
 										if FlyTPY then FlyY = FlyTPY end
@@ -1354,7 +1354,7 @@ runFunction(function()
 						if FlyPlatform then
 							FlyPlatform.CFrame = (FlyMethod.Value == "Jump" and FlyJumpCFrame or entityLibrary.character.HumanoidRootPart.CFrame * CFrame.new(0, -(entityLibrary.character.Humanoid.HipHeight + (entityLibrary.character.HumanoidRootPart.Size.Y / 2) + 0.53), 0))
 							FlyPlatform.Parent = gameCamera
-							if FlyUp or FlyPlatformTick > = tick() then 
+							if FlyUp or FlyPlatformTick >= tick() then 
 								entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
 							end
 						end
@@ -1407,7 +1407,7 @@ runFunction(function()
 		Function = function(val) end
 	})
 	local states = {"None"}
-	for i,v in pairs(Enum.HumanoidStateType:GetEnumItems()) do if v.Name ~ = "Dead" and v.Name ~ = "None" then table.insert(states, v.Name) end end
+	for i,v in pairs(Enum.HumanoidStateType:GetEnumItems()) do if v.Name ~= "Dead" and v.Name ~= "None" then table.insert(states, v.Name) end end
 	FlyState = Fly.CreateDropdown({
 		Name = "State", 
 		List = states,
@@ -1634,7 +1634,7 @@ runFunction(function()
 								if not OriginalNeckC0 then OriginalNeckC0 = Neck.C0.p end
 								if not OriginalRootC0 then OriginalRootC0 = RootC0.C0.p end
 								if OriginalRootC0 then
-									if targetedplayer ~ = nil then
+									if targetedplayer ~= nil then
 										local targetPos = targetedplayer.RootPart.Position + Vector3.new(0, targetedplayer.Humanoid.HipHeight + (targetedplayer.RootPart.Size.Y / 2), 0)
 										local lookCFrame = (CFrame.new(Vector3.zero, (Root.CFrame):VectorToObjectSpace((Vector3.new(targetPos.X, targetPos.Y, targetPos.Z) - entityLibrary.character.Head.Position).Unit)))
 										Neck.C0 = CFrame.new(OriginalNeckC0) * CFrame.Angles(lookCFrame.LookVector.Unit.y, 0, 0)
@@ -1660,7 +1660,7 @@ runFunction(function()
 								local touch = findTouchInterest(tool)
 								if tool and touch then
 									for i,v in pairs(plrs) do
-										if math.acos(entityLibrary.character.HumanoidRootPart.CFrame.lookVector:Dot((v.RootPart.Position - entityLibrary.character.HumanoidRootPart.Position).Unit)) > = (math.rad(KillauraAngle.Value) / 2) then continue end
+										if math.acos(entityLibrary.character.HumanoidRootPart.CFrame.lookVector:Dot((v.RootPart.Position - entityLibrary.character.HumanoidRootPart.Position).Unit)) >= (math.rad(KillauraAngle.Value) / 2) then continue end
 										KillauraNearTarget = true
 										if KillauraTarget.Enabled then
 											table.insert(attackedplayers, v)
@@ -1676,7 +1676,7 @@ runFunction(function()
 												continue
 											end
 										end
-										if KillauraSwingTick < = tick() then
+										if KillauraSwingTick <= tick() then
 											tool:Activate()
 											KillauraSwingTick = tick() + (1 / KillauraCPS.GetRandomValue())
 										end
@@ -1808,17 +1808,17 @@ runFunction(function()
 		Name = "LongJump", 
 		Function = function(callback)
 			if callback then
-				if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~ = Enum.Material.Air then
+				if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 					entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 				RunLoops:BindToHeartbeat("LongJump", function() 
 					if entityLibrary.isAlive then
-						if (entityLibrary.character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or entityLibrary.character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and entityLibrary.character.Humanoid.MoveDirection ~ = Vector3.zero then
+						if (entityLibrary.character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or entityLibrary.character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and entityLibrary.character.Humanoid.MoveDirection ~= Vector3.zero then
 							local velo = entityLibrary.character.Humanoid.MoveDirection * LongJumpBoost.Value
 							entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(velo.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, velo.Z)
 						end
-						local check = entityLibrary.character.Humanoid.FloorMaterial ~ = Enum.Material.Air
-						if LongJumpChange ~ = check then 
+						local check = entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air
+						if LongJumpChange ~= check then 
 							if check then LongJump.ToggleButton(true) end
 							LongJumpChange = check
 						end
@@ -1853,14 +1853,14 @@ runFunction(function()
 						HighJump.ToggleButton(false)
 						return
 					end
-					if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~ = Enum.Material.Air then
+					if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 						HighJumpTick = tick() + (HighJumpDelay.Value / 10)
 						entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost.Value, 0)
 					end
 					HighJump.ToggleButton(false)
 				else
 					RunLoops:BindToRenderStep("HighJump", function()
-						if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~ = Enum.Material.Air and inputService:IsKeyDown(Enum.KeyCode.Space) then
+						if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air and inputService:IsKeyDown(Enum.KeyCode.Space) then
 							entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost.Value, 0)
 						end
 					end)
@@ -1920,8 +1920,8 @@ runFunction(function()
 							PhaseRaycast.FilterDescendantsInstances = chars
 							local phaseRayCheck = workspace:Raycast(entityLibrary.character.Head.CFrame.p, entityLibrary.character.Humanoid.MoveDirection, raycastparameters)
 							if phaseRayCheck and (not Spider.Enabled or spiderHoldingShift) then
-								local phaseDirection = phaseRayCheck.Normal.Z ~ = 0 and "Z" or "X"
-								if phaseRayCheck.Instance.Size[phaseDirection] < = PhaseStudLimit.Value and phaseRayCheck.Instance.CanCollide then
+								local phaseDirection = phaseRayCheck.Normal.Z ~= 0 and "Z" or "X"
+								if phaseRayCheck.Instance.Size[phaseDirection] <= PhaseStudLimit.Value and phaseRayCheck.Instance.CanCollide then
 									entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (phaseRayCheck.Normal * (-(phaseRayCheck.Instance.Size[phaseDirection]) - 1))
 								end
 							end
@@ -2135,7 +2135,7 @@ runFunction(function()
 							end
 							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + newpos
 						elseif SpeedMethod.Value == "TP" then
-							if SpeedDelayTick < = tick() then
+							if SpeedDelayTick <= tick() then
 								SpeedDelayTick = tick() + (SpeedDelay.Value / 10)
 								local newpos = (movevec * SpeedValue.Value)
 								if SpeedWallCheck.Enabled then
@@ -2155,7 +2155,7 @@ runFunction(function()
 							entityLibrary.character.Humanoid.WalkSpeed = SpeedValue.Value
 						end
 						if SpeedJump.Enabled and (SpeedJumpAlways.Enabled or KillauraNearTarget) then
-							if (entityLibrary.character.Humanoid.FloorMaterial ~ = Enum.Material.Air) and entityLibrary.character.Humanoid.MoveDirection ~ = Vector3.new() then
+							if (entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entityLibrary.character.Humanoid.MoveDirection ~= Vector3.new() then
 								if SpeedJumpVanilla.Enabled then 
 									entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 								else
@@ -3518,7 +3518,7 @@ runFunction(function()
 				if NameTagsDistance.Enabled and entityLibrary.isAlive then
 					local mag = math.floor((entityLibrary.character.HumanoidRootPart.Position - v.entity.RootPart.Position).Magnitude)
 					local stringsize = tostring(mag):len()
-					if nametagsizes[v.entity.Player] ~ = stringsize then 
+					if nametagsizes[v.entity.Player] ~= stringsize then 
 						local nametagSize = textService:GetTextSize(removeTags(string.format(nametagstrs[v.entity.Player], mag)), v.Main.TextSize, v.Main.Font, Vector2.new(100000, 100000))
 						v.Main.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 					end
@@ -3541,7 +3541,7 @@ runFunction(function()
 					local mag = math.floor((entityLibrary.character.HumanoidRootPart.Position - v.entity.RootPart.Position).Magnitude)
 					local stringsize = tostring(mag):len()
 					v.Main.Text.Text = string.format(nametagstrs[v.entity.Player], mag)
-					if nametagsizes[v.entity.Player] ~ = stringsize then 
+					if nametagsizes[v.entity.Player] ~= stringsize then 
 						v.Main.BG.Size = Vector2.new(v.Main.Text.TextBounds.X + 4, v.Main.Text.TextBounds.Y)
 					end
 					nametagsizes[v.entity.Player] = stringsize
@@ -3609,7 +3609,7 @@ runFunction(function()
 		HoverText = "Renders nametags on entities through walls."
 	})
 	for i,v in pairs(Enum.Font:GetEnumItems()) do 
-		if v.Name ~ = "SourceSans" then 
+		if v.Name ~= "SourceSans" then 
 			table.insert(fontitems, v.Name)
 		end
 	end
@@ -4212,7 +4212,7 @@ runFunction(function()
 									textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync((#ChatSpammerMessages.ObjectList > 0 and ChatSpammerMessages.ObjectList[math.random(1, #ChatSpammerMessages.ObjectList)] or "vxpe on top"))
 								end)
 							end
-							if waitnum ~ = 0 then
+							if waitnum ~= 0 then
 								task.wait(waitnum)
 								waitnum = 0
 							else
@@ -4261,7 +4261,7 @@ runFunction(function()
 									pcall(function()
 										replicatedStorageService.DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages.ObjectList > 0 and ChatSpammerMessages.ObjectList[math.random(1, #ChatSpammerMessages.ObjectList)] or "vxpe on top"), "All")
 									end)
-									if waitnum ~ = 0 then
+									if waitnum ~= 0 then
 										task.wait(waitnum)
 										waitnum = 0
 									else
@@ -4388,11 +4388,11 @@ runFunction(function()
 			if motor.CurrentAngle < -0.2 and motor.DesiredAngle > -0.2 then
 				motor.MaxVelocity = 0.04
 			end
-			repeat task.wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) > = (torso.Velocity.magnitude/10) + 1
+			repeat task.wait() until motor.CurrentAngle == motor.DesiredAngle or math.abs(torso.Velocity.magnitude - oldmag) >= (torso.Velocity.magnitude/10) + 1
 			if torso.Velocity.magnitude < 0.1 then
 				task.wait(0.1)
 			end
-		until not p or p.Parent ~ = torso.Parent
+		until not p or p.Parent ~= torso.Parent
 	end
 
 	local capeConnection
@@ -4442,7 +4442,7 @@ runFunction(function()
 					task.spawn(function()
 						repeat
 							task.wait()
-						until inputService:IsKeyDown(Enum.KeyCode[FieldOfView.Keybind ~ = "" and FieldOfView.Keybind or "C"]) == false
+						until inputService:IsKeyDown(Enum.KeyCode[FieldOfView.Keybind ~= "" and FieldOfView.Keybind or "C"]) == false
 						if FieldOfView.Enabled then
 							FieldOfView.ToggleButton(false)
 						end
@@ -4494,7 +4494,7 @@ runFunction(function()
 					entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
 					RunLoops:BindToHeartbeat("Swim", function()
 						local rootvelo = entityLibrary.character.HumanoidRootPart.Velocity
-						local moving = entityLibrary.character.Humanoid.MoveDirection ~ = Vector3.new()
+						local moving = entityLibrary.character.Humanoid.MoveDirection ~= Vector3.new()
 						entityLibrary.character.HumanoidRootPart.Velocity = ((moving or inputService:IsKeyDown(Enum.KeyCode.Space)) and Vector3.new(moving and rootvelo.X or 0, inputService:IsKeyDown(Enum.KeyCode.Space) and SwimVertical.Value or rootvelo.Y, moving and rootvelo.Z or 0) or Vector3.zero)
 					end)
 				end
@@ -4623,7 +4623,7 @@ runFunction(function()
 		local newstr = ""
 		local lastlet = ""
 		for i,v in pairs(str:split("")) do 
-			if v ~ = lastlet then
+			if v ~= lastlet then
 				newstr = newstr..v 
 				lastlet = v
 			end
@@ -4710,7 +4710,7 @@ runFunction(function()
 					chatconnection = textChatService.MessageReceived:Connect(function(tab)
 						local plr = tab.TextSource
 						local args = tab.Text:split(" ")
-						if plr and plr ~ = lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
+						if plr and plr ~= lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
 							local reportreason, reportedmatch = findreport(tab.Text)
 							if reportreason then 
 								if alreadyreported[plr] then return end
@@ -4735,7 +4735,7 @@ runFunction(function()
 						chatconnection = replicatedStorageService.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab, channel)
 							local plr = playersService:FindFirstChild(tab.FromSpeaker)
 							local args = tab.Message:split(" ")
-							if plr and plr ~ = lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
+							if plr and plr ~= lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
 								local reportreason, reportedmatch = findreport(tab.Message)
 								if reportreason then 
 									if alreadyreported[plr] then return end
@@ -4789,7 +4789,7 @@ runFunction(function()
 		local decodeddata = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Desc&limit=100"..(pointer and "&cursor="..pointer or "")))
 		local chosenServer
 		for i, v in pairs(decodeddata.data) do
-			if (tonumber(v.playing) < tonumber(playersService.MaxPlayers)) and tonumber(v.ping) < 300 and v.id ~ = game.JobId then 
+			if (tonumber(v.playing) < tonumber(playersService.MaxPlayers)) and tonumber(v.ping) < 300 and v.id ~= game.JobId then 
 				chosenServer = v.id
 				break
 			end
@@ -4821,7 +4821,7 @@ runFunction(function()
 		task.spawn(function()
 			pcall(function()
 				if AutoLeaveGroupId.Value == "" or AutoLeaveRank.Value == "" then return end
-				if getRole(plr, tonumber(AutoLeaveGroupId.Value) or 0) > = (tonumber(AutoLeaveRank.Value) or 1) then
+				if getRole(plr, tonumber(AutoLeaveGroupId.Value) or 0) >= (tonumber(AutoLeaveRank.Value) or 1) then
 					WhitelistFunctions.CustomTags[plr] = "[GAME STAFF] "
 					local _, ent = entityLibrary.getEntityFromPlayer(plr)
 					if ent then 
@@ -4869,7 +4869,7 @@ runFunction(function()
 						local placeinfo = {Creator = {CreatorTargetId = tonumber(AutoLeaveGroupId.Value)}}
 						if AutoLeaveGroupId.Value == "" then
 							placeinfo = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
-							if placeinfo.Creator.CreatorType ~ = "Group" then 
+							if placeinfo.Creator.CreatorType ~= "Group" then 
 								local desc = placeinfo.Description:split("\n")
 								for i, str in pairs(desc) do 
 									local _, begin = str:find("roblox.com/groups/")
@@ -4879,7 +4879,7 @@ runFunction(function()
 									end
 								end
 							end
-							if placeinfo.Creator.CreatorType ~ = "Group" then 
+							if placeinfo.Creator.CreatorType ~= "Group" then 
 								warningNotification("AutoLeave", "Automatic Setup Failed (no group detected)", 60)
 								return
 							end
@@ -4974,7 +4974,7 @@ runFunction(function()
 					local oldnamecall
 					oldnamecall = hookmetamethod(game, "__namecall", function(self, ...)
 						local method = getnamecallmethod()
-						if method ~ = "Kick" and method ~ = "kick" then return oldnamecall(self, ...) end
+						if method ~= "Kick" and method ~= "kick" then return oldnamecall(self, ...) end
 						if not Disabler.Enabled then
 							return oldnamecall(self, ...)
 						end
