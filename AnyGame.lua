@@ -27,7 +27,6 @@ local isnetworkowner = isnetworkowner or function(part)
 	end
 	return networkownerswitch <= tick()
 end
---ass
 local getcustomasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local synapsev3 = syn and syn.toast_notification and "V3" or ""
@@ -1497,9 +1496,9 @@ runFunction(function()
 						for i,plr in pairs(entityLibrary.entityList) do
 							if plr.Targetable then
 								if HitboxMode.Value == "HumanoidRootPart" then
-									plr.RootPart.Size = Vector3.new(2 * (HitboxExpand / 10), 2 * (HitboxExpand / 10), 1 * (HitboxExpand / 10))
+									plr.RootPart.Size = Vector3.new(2 * (HitboxExpand.Value / 10), 2 * (HitboxExpand.Value / 10), 1 * (HitboxExpand.Value / 10))
 								else
-									plr.Head.Size = Vector3.new((HitboxExpand / 10), (HitboxExpand / 10), (HitboxExpand / 10))
+									plr.Head.Size = Vector3.new((HitboxExpand.Value / 10), (HitboxExpand.Value / 10), (HitboxExpand.Value / 10))
 								end
 							end
 						end
@@ -1517,14 +1516,14 @@ runFunction(function()
 	HitboxMode = Hitboxes.CreateDropdown({
 		Name = "Expand part",
 		List = {"HumanoidRootPart", "Head"},
-		Function = function()
+		Function = function(val)
 			if Hitboxes.Enabled then 
 				for i,plr in pairs(entityLibrary.entityList) do
 					if plr.Targetable then
 						if HitboxMode.Value == "HumanoidRootPart" then
-							plr.RootPart.Size = Vector3.new(2 * (HitboxExpand / 10), 2 * (HitboxExpand / 10), 1 * (HitboxExpand / 10))
+							plr.RootPart.Size = Vector3.new(2 * (HitboxExpand.Value / 10), 2 * (HitboxExpand.Value / 10), 1 * (HitboxExpand.Value / 10))
 						else
-							plr.Head.Size = Vector3.new((HitboxExpand / 10), (HitboxExpand / 10), (HitboxExpand / 10))
+							plr.Head.Size = Vector3.new((HitboxExpand.Value / 10), (HitboxExpand.Value / 10), (HitboxExpand.Value / 10))
 						end
 					end
 				end
