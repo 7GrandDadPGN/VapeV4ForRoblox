@@ -1286,7 +1286,7 @@ runFunction(function()
 				local FlyTPTick = tick()
 				local FlyTPY
 				RunLoops:BindToHeartbeat("Fly", function(delta) 
-					if entityLibrary.isAlive then
+					if entityLibrary.isAlive and isnetworkowner(entityLibrary.character.HumanoidRootPart) then
 						entityLibrary.character.Humanoid.PlatformStand = FlyPlatformStanding.Enabled
 						if not FlyY then FlyY = entityLibrary.character.HumanoidRootPart.CFrame.p.Y end
 						local movevec = (FlyMoveMethod.Value == "Manual" and (CFrame.lookAt(gameCamera.CFrame.p, gameCamera.CFrame.p + Vector3.new(gameCamera.CFrame.lookVector.X, 0, gameCamera.CFrame.lookVector.Z))):VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entityLibrary.character.Humanoid.MoveDirection).Unit
@@ -2114,7 +2114,7 @@ runFunction(function()
 					until (not Speed.Enabled)
 				end)
 				RunLoops:BindToHeartbeat("Speed", function(delta)
-					if entityLibrary.isAlive then
+					if entityLibrary.isAlive and isnetworkowner(entityLibrary.character.HumanoidRootPart) then
 						local movevec = (SpeedMoveMethod.Value == "Manual" and (CFrame.lookAt(gameCamera.CFrame.p, gameCamera.CFrame.p + Vector3.new(gameCamera.CFrame.lookVector.X, 0, gameCamera.CFrame.lookVector.Z))):VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entityLibrary.character.Humanoid.MoveDirection).Unit
 						movevec = movevec == movevec and Vector3.new(movevec.X, 0, movevec.Z) or Vector3.new()
 						SpeedRaycast.FilterDescendantsInstances = {lplr.Character, cam}
@@ -2991,7 +2991,7 @@ runFunction(function()
 		end,
 		Drawing3D = function()
 			for i,v in pairs(espfolderdrawing) do 
-				local rootPos, rootVis = cam:WorldToViewportPoint(v.entity.RootPart.Position)
+				local rootPos, rootVis = worldtoviewportpoint(v.entity.RootPart.Position)
 				if not rootVis then 
 					for i,v in pairs(v.Main) do 
 						v.Visible = false
@@ -3037,7 +3037,7 @@ runFunction(function()
 		end,
 		DrawingSkeleton = function()
 			for i,v in pairs(espfolderdrawing) do 
-				local rootPos, rootVis = cam:WorldToViewportPoint(v.entity.RootPart.Position)
+				local rootPos, rootVis = worldtoviewportpoint(v.entity.RootPart.Position)
 				if not rootVis then 
 					for i,v in pairs(v.Main) do 
 						v.Visible = false
@@ -3831,7 +3831,7 @@ runFunction(function()
 		Drawing = function()
 			for i,v in pairs(tracersfolderdrawing) do 
 				local rootPart = v.entity[TracersEndPosition.Value == "Torso" and "RootPart" or "Head"].Position
-				local rootPos, rootVis = worldtoscreenpoint(rootPart)
+				local rootPos, rootVis = worldtoviewportpoint(rootPart)
 				local screensize = gameCamera.ViewportSize
 				local startVector = TracersStartPosition.Value == "Mouse" and inputService:GetMouseLocation() or Vector2.new(screensize.X / 2, (TracersStartPosition.Value == "Middle" and screensize.Y / 2 or screensize.Y))
 				local endVector = Vector2.new(rootPos.X, rootPos.Y)
