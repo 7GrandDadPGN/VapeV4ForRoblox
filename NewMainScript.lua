@@ -1767,7 +1767,7 @@ local function loadVape()
 			loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
 		else
 			local suc, publicrepo = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..game.PlaceId..".lua") end)
-			if suc and publicrepo then
+			if suc and publicrepo and publicrepo ~= "404: Not Found" then
 				loadstring(publicrepo)()
 			end
 		end
