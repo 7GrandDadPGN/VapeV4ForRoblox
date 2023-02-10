@@ -46,14 +46,14 @@ local worldtoviewportpoint = function(pos)
 end
 
 local function vapeGithubRequest(scripturl)
-	if shared.VapeDeveloper then
-		assert(isfile("vape/"..scripturl), "File not found : vape/"..scripturl)
-		return readfile("vape/"..scripturl)
-	else
+	if not isfile("vape/"..scripturl) then
 		local suc, res = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/"..scripturl, true) end)
 		assert(suc, res)
-		return res
+		assert(res ~= "404: Not Found", res)
+		if res:find(".lua") then res = "--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.\n"..res end
+		writefile("vape/"..scripturl, res)
 	end
+	return readfile("vape/"..scripturl)
 end
 
 local function downloadVapeAsset(path)
