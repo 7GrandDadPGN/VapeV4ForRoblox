@@ -91,7 +91,7 @@ end
 assert(not shared.VapeExecuted, "Vape Already Injected")
 shared.VapeExecuted = true
 
-for i,v in pairs({baseDirectory:gsub("/", ""), "vape", baseDirectory.."CustomModules", baseDirectory.."Libraries", baseDirectory.."Profiles", "vape/assets"}) do 
+for i,v in pairs({baseDirectory:gsub("/", ""), "vape", baseDirectory.."Libraries", baseDirectory.."CustomModules", baseDirectory.."Profiles", "vape/assets"}) do 
 	if not isfolder(v) then makefolder(v) end
 end
 task.spawn(function()
@@ -1573,7 +1573,8 @@ local GUIRescaleToggle = GUISettings.CreateToggle({
 			GuiLibrary.MainRescale.Scale = (callback and math.clamp(gameCamera.ViewportSize.X / 1920, 0.5, 1) or 1)
 		end)
 	end,
-	Default = true
+	Default = true,
+	HoverText = "Rescales the GUI"
 })
 gameCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 	if GUIRescaleToggle.Enabled then
@@ -1617,7 +1618,7 @@ local teleportConnection = playersService.LocalPlayer.OnTeleport:Connect(functio
 			if shared.VapeDeveloper then 
 				loadstring(readfile("vape/NewMainScript.lua"))() 
 			else 
-				loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))() 
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/5a8e3a9e9ffca08983dcf948c8d00c781c34a4d8/NewMainScript.lua", true))() 
 			end
 		]]
 		if shared.VapeDeveloper then
