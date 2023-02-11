@@ -8,11 +8,12 @@ local function vapeGithubRequest(scripturl)
 	return readfile("vape/"..scripturl)
 end
 
+print("executed")
 shared.CustomSaveVape = 6872274481
 if pcall(function() readfile("vape/CustomModules/6872274481.lua") end) then
 	loadstring(readfile("vape/CustomModules/6872274481.lua"))()
 else
-	local publicrepo = vapeGithubRequest("6872274481.lua")
+	local publicrepo = vapeGithubRequest("CustomModules/6872274481.lua")
 	if publicrepo then
 		loadstring(publicrepo)()
 	end
