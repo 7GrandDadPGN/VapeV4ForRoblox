@@ -1,41 +1,18 @@
-local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
-local checkpublicreponum = 0
-local checkpublicrepo
-checkpublicrepo = function(id)
-	local suc, req = pcall(function() return requestfunc({
-		Url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/"..id..".lua",
-		Method = "GET"
-	}) end)
-	if not suc then
-		checkpublicreponum = checkpublicreponum + 1
-		spawn(function()
-			local textlabel = Instance.new("TextLabel")
-			textlabel.Size = UDim2.new(1, 0, 0, 36)
-			textlabel.Text = "Loading CustomModule Failed!, Attempts : "..checkpublicreponum
-			textlabel.BackgroundTransparency = 1
-			textlabel.TextStrokeTransparency = 0
-			textlabel.TextSize = 30
-			textlabel.Font = Enum.Font.SourceSans
-			textlabel.TextColor3 = Color3.new(1, 1, 1)
-			textlabel.Position = UDim2.new(0, 0, 0, -36)
-			textlabel.Parent = GuiLibrary["MainGui"]
-			task.wait(2)
-			textlabel:Remove()
-		end)
-		task.wait(2)
-		return checkpublicrepo(id)
+local function vapeGithubRequest(scripturl)
+	if not isfile("vape/"..scripturl) then
+		local suc, res = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..readfile("vape/commithash.txt").."/"..scripturl, true) end)
+		if not suc or res == "404: Not Found" then return nil end
+		if res:find(".lua") then res = "--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.\n"..res end
+		writefile("vape/"..scripturl, res)
 	end
-	if req.StatusCode == 200 then
-		return req.Body
-	end
-	return nil
+	return readfile("vape/"..scripturl)
 end
 
 shared.CustomSaveVape = 6872274481
 if pcall(function() readfile("vape/CustomModules/6872274481.lua") end) then
 	loadstring(readfile("vape/CustomModules/6872274481.lua"))()
 else
-	local publicrepo = checkpublicrepo("6872274481")
+	local publicrepo = vapeGithubRequest("6872274481")
 	if publicrepo then
 		loadstring(publicrepo)()
 	end
