@@ -1616,7 +1616,7 @@ local teleportConnection = playersService.LocalPlayer.OnTeleport:Connect(functio
 			if shared.VapeDeveloper then 
 				loadstring(readfile("vape/NewMainScript.lua"))() 
 			else 
-				loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/5a8e3a9e9ffca08983dcf948c8d00c781c34a4d8/NewMainScript.lua", true))() 
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/852845f3b90fe80b6ed82663b3f86231ae7f2e6e/NewMainScript.lua", true))() 
 			end
 		]]
 		if shared.VapeDeveloper then
