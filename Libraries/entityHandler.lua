@@ -98,10 +98,10 @@ do
         entity.entityIds[plr.Name] = id
         if char then
             task.spawn(function()
-                local humrootpart = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart")
+                local humrootpart = char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
                 if not humrootpart then
                     for i = 1, 100 do 
-                        humrootpart = char.PrimaryPart or char:FindFirstChild("HumanoidRootPart")
+                        humrootpart = char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
                         if humrootpart then break end
                         task.wait(0.01)
                     end
