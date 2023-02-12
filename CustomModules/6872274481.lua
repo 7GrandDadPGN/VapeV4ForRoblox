@@ -974,7 +974,7 @@ runcode(function()
 			["LobbyClientEvents"] = KnitClient.Controllers.QueueController,
 			["MapMeta"] = require(repstorage.TS.game.map["map-meta"]),
 			["MinerController"] = KnitClient.Controllers.MinerController,
-			["MinerRemote"] = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.MinerController).onKitEnabled, 1))),
+			["MinerRemote"] = "",
 			["MissileController"] = KnitClient.Controllers.GuidedProjectileController,
 			["PaintRemote"] = getremote(debug.getconstants(KnitClient.Controllers.PaintShotgunController.fire)),
 			["PickupMetalRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.MetalDetectorController.KnitStart, 1))),
