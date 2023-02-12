@@ -1,3 +1,4 @@
+print(123)
 if shared.VapeExecuted then
 	local VERSION = "4.09"..(shared.VapePrivate and " PRIVATE" or "")
 	local baseDirectory = (shared.VapePrivate and "vapeprivate/" or "vape/")
@@ -3726,13 +3727,22 @@ if shared.VapeExecuted then
 					end
 				end
 
-				addbutton.MouseButton1Click:Connect(function() 
+                local function AddToList() 
 					table.insert(textGuiLibrary["ObjectList"], textbox.Text)
 					textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
 					if argstable["AddFunction"] then
 						argstable["AddFunction"](textbox.Text) 
 					end
-				end)
+                    textbox.Text = ""
+				end
+
+				addbutton.MouseButton1Click:Connect(AddToList)
+                textbox.FocusLost:Connect(function(enter)
+                    if enter then
+                        AddToList()
+                    end
+                end)
+
 				GuiLibrary.ObjectsThatCanBeSaved[argstablemain["Name"]..argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textGuiLibrary}
 				return textGuiLibrary
 			end
@@ -6051,13 +6061,22 @@ if shared.VapeExecuted then
 			if not argstable["NoSave"] then
 				GuiLibrary.ObjectsThatCanBeSaved[argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textGuiLibrary}
 			end
-			addbutton.MouseButton1Click:Connect(function() 
-				table.insert(textGuiLibrary["ObjectList"], textbox.Text)
-				textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
-				if argstable["AddFunction"] then
-					argstable["AddFunction"](textbox.Text) 
-				end
-			end)
+
+			local function AddToList() 
+                table.insert(textGuiLibrary["ObjectList"], textbox.Text)
+                textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
+                if argstable["AddFunction"] then
+                    argstable["AddFunction"](textbox.Text) 
+                end
+                textbox.Text = ""
+            end
+
+            addbutton.MouseButton1Click:Connect(AddToList)
+            textbox.FocusLost:Connect(function(enter)
+                if enter then
+                    AddToList()
+                end
+            end)
 			return textGuiLibrary
 		end
 
