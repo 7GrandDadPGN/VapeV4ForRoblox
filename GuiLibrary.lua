@@ -1,4 +1,3 @@
-print(123)
 if shared.VapeExecuted then
 	local VERSION = "4.09"..(shared.VapePrivate and " PRIVATE" or "")
 	local baseDirectory = (shared.VapePrivate and "vapeprivate/" or "vape/")
@@ -2713,6 +2712,7 @@ if shared.VapeExecuted then
                 textbox.FocusLost:Connect(function(enter)
                     if enter then
                         AddToList()
+                        textbox:CaptureFocus()
                     end
                 end)
 				return textGuiLibrary
@@ -3740,6 +3740,7 @@ if shared.VapeExecuted then
                 textbox.FocusLost:Connect(function(enter)
                     if enter then
                         AddToList()
+                        textbox:CaptureFocus()
                     end
                 end)
 
@@ -3797,6 +3798,7 @@ if shared.VapeExecuted then
 					end
 				end)
 
+                textbox:CaptureFocus()
 				GuiLibrary.ObjectsThatCanBeSaved[argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBox", ["Api"] = textGuiLibrary, ["Object"] = frame}
 				return textGuiLibrary
 			end
@@ -4504,6 +4506,7 @@ if shared.VapeExecuted then
                     textbox.FocusLost:Connect(function(enter)
                         if enter then
                             AddToList()
+                            textbox:CaptureFocus()
                         end
                     end)
 					return textGuiLibrary
@@ -6075,6 +6078,7 @@ if shared.VapeExecuted then
             textbox.FocusLost:Connect(function(enter)
                 if enter then
                     AddToList()
+                    textbox:CaptureFocus()
                 end
             end)
 			return textGuiLibrary
@@ -6251,6 +6255,7 @@ if shared.VapeExecuted then
             textbox.FocusLost:Connect(function(enter)
                 if enter then
                     AddToList()
+                    textbox:CaptureFocus()
                 end
             end)
 			return textGuiLibrary
