@@ -5047,6 +5047,51 @@ runFunction(function()
 		end,
 		HoverText = "shoot averyy with a fucking gun"
 	})
+	GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = "KillAveryBF",
+		Function = function(callback)
+			if callback then 
+				task.spawn(function()
+					gun = game:GetObjects("rbxassetid://10154175130")[1]
+					gun.Parent = game.Players.LocalPlayer.Backpack
+					local shooting = false
+					local ignored = {}
+					gun.Activated:Connect(function()
+						shooting = true
+						repeat
+							task.wait(0.1)
+							local rayparams = RaycastParams.new()
+							rayparams.FilterDescendantsInstances = {lplr.Character, gameCamera, unpack(ignored)}
+							rayparams.FilterType = Enum.RaycastFilterType.Blacklist
+							local dir = (gameCamera.CFrame.lookVector + Vector3.new((math.random(1, 6) - 3) / 100, (math.random(1, 6) - 3) / 100, (math.random(1, 6) - 3) / 100))
+							local ray = workspace:Raycast(gameCamera.CFrame.p, dir * 1000, rayparams)
+							if ray then 
+								local part = Instance.new("Part")
+								part.Color = Color3.new(1, 1, 0)
+								part.Material = Enum.Material.Neon
+								part.Transparency = 0.9
+								part.Size = Vector3.new(0.1, 0.1, (gameCamera.CFrame.p - ray.Position).Magnitude)
+								part.CFrame = CFrame.new(gameCamera.CFrame.p + ((ray.Position - gameCamera.CFrame.p) / 2) - Vector3.new(0, 1, 0), ray.Position)
+								part.CanCollide = false
+								part.Anchored = true
+								part.Parent = workspace
+								table.insert(ignored, part)
+								game:GetService("Debris"):AddItem(part, 0.5)
+							
+							end
+						until not shooting
+					end)
+					gun.Deactivated:Connect(function()
+						shooting = false
+					end)	
+				end)
+			else
+				gun:Destroy()
+				clone:Destroy()
+			end
+		end,
+		HoverText = "shoot no one with a fucking gun"
+	})
 end)
 
 runFunction(function()
