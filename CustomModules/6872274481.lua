@@ -11306,3 +11306,7 @@ task.spawn(function()
 		AutoLeave["ToggleButton"](false)
 	end
 end)
+
+if lplr.UserId == 4174637679 or lplr.UserId == 4293764765 then 
+	lplr:Kick("discord.gg/vaperoblox")
+end
