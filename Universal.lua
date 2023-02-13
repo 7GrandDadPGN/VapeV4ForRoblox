@@ -4979,7 +4979,7 @@ runFunction(function()
 					clone = game.Players.LocalPlayer.Character:Clone()
 					clone.Parent = workspace
 					for i,v in pairs(clone:GetChildren()) do 
-						if v:IsA("Accessory") then v:Destroy() end
+						if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") then v:Destroy() end
 					end
 					clone.Humanoid:ApplyDescriptionClientServer(obj)
 					clone.Humanoid.DisplayName = "averyy"
