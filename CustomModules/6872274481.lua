@@ -7617,7 +7617,7 @@ runcode(function()
 				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil and disabledproper and cloned == lplr.Character then 
 					local ray = workspace:Raycast(Vector3.new(oldcloneroot.Position.X, clone.CFrame.p.Y, oldcloneroot.Position.Z), Vector3.new(0, -1000, 0), blockraycast)
 					oldcloneroot.Velocity = Vector3.new(0, -1, 0)
-					oldcloneroot.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) + 0.1 or clone.CFrame.p.Y, oldcloneroot.Position.Z)
+					oldcloneroot.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) + 1 or clone.CFrame.p.Y, oldcloneroot.Position.Z)
 					local part = Instance.new("Part")
 					part.Anchored = true
 					part.CanCollide = false
@@ -7639,7 +7639,7 @@ runcode(function()
 							repeat task.wait() until oldcloneroot and isnetworkowner(oldcloneroot) or oldcloneroot == nil
 							local ray = workspace:Raycast(Vector3.new(oldcloneroot.Position.X, clone.CFrame.p.Y, oldcloneroot.Position.Z), Vector3.new(0, -1000, 0), blockraycast)
 							oldcloneroot.Velocity = Vector3.new(0, -1, 0)
-							oldcloneroot.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) + 0.1 or clone.CFrame.p.Y, oldcloneroot.Position.Z)
+							oldcloneroot.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) + 2 or clone.CFrame.p.Y, oldcloneroot.Position.Z)
 							createwarning("InfiniteFly", "Waiting 1.5s to not flag", 3)
 							task.wait(1.5)
 							disablefunc(part)
@@ -11125,7 +11125,7 @@ runcode(function()
 					if (workspace:GetServerTimeNow() - lplr:GetAttribute("LastTeleported")) < 1 then
 						RunLoops:BindToHeartbeat("TPRedirection", 1, function(dt)
 							if root and tppos2 then 
-								local dist = (1200 * dt)
+								local dist = (1100 * dt)
 								if (tppos2 - root.CFrame.p).Magnitude > dist then
 									root.CFrame = root.CFrame + (tppos2 - root.CFrame.p).Unit * dist
 									root.Velocity = (tppos2 - root.CFrame.p).Unit * 20
@@ -11143,7 +11143,7 @@ runcode(function()
 						end)
 						repeat
 							task.wait()
-						until tppos2 == nil or (tppos2 - root.CFrame.p).Magnitude < 3
+						until tppos2 == nil or (tppos2 - root.CFrame.p).Magnitude < 1
 						RunLoops:UnbindFromHeartbeat("TPRedirection")
 						RunLoops:UnbindFromStepped("TPRedirection")
 						createwarning("TPRedirection", "Teleported.", 5)
@@ -11165,7 +11165,7 @@ runcode(function()
 				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
 				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
 				if ray then 
-					tppos2 = ray.Position + Vector3.new(0, entityLibrary.character.Humanoid.HipHeight + (entityLibrary.character.HumanoidRootPart.Size.Y / 2), 0)
+					tppos2 = ray.Position
 					local warning = createwarning("TPRedirection", "Set TP Position", 3)
 				end
 				deathtpmod.ToggleButton(false)
