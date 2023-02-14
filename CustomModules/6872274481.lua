@@ -3511,10 +3511,18 @@ runcode(function()
 	local function nearNPC(range)
 		local npc, npccheck, enchant = nil, false, false
 		if entityLibrary.isAlive then
-			local enchanttab = {unpack(collectionservice:GetTagged("broken-enchant-table")), unpack(collectionservice:GetTagged("enchant-table")), unpack(collectionservice:GetTagged("VoidPortal"))}
+			local enchanttab = {}
+			for i,v in pairs(collectionservice:GetTagged("broken-enchant-table")) do 
+				table.insert(enchanttab, v)
+			end
+			for i,v in pairs(collectionservice:GetTagged("enchant-table")) do 
+				table.insert(enchanttab, v)
+			end
 			for i,v in pairs(enchanttab) do 
-				if (entityLibrary.character.HumanoidRootPart.Position - v.Position).magnitude <= 6 and ((not v:GetAttribute("Team")) or v:GetAttribute("Team") == lplr:GetAttribute("Team")) then
-					npc, npccheck, enchant = true, true, true
+				if (entityLibrary.character.HumanoidRootPart.Position - v.Position).magnitude <= 6 then
+					if ((not v:GetAttribute("Team")) or v:GetAttribute("Team") == lplr:GetAttribute("Team")) then
+						npc, npccheck, enchant = true, true, true
+					end
 				end
 			end
 			for i, v in pairs(bedwarsshopnpcs) do
@@ -7616,8 +7624,10 @@ runcode(function()
 				RunLoops:UnbindFromHeartbeat("InfiniteFly")
 				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil and disabledproper and cloned == lplr.Character then 
 					local ray = workspace:Raycast(Vector3.new(oldcloneroot.Position.X, clone.CFrame.p.Y, oldcloneroot.Position.Z), Vector3.new(0, -1000, 0), blockraycast)
-					oldcloneroot.Velocity = Vector3.new(0, -1, 0)
-					oldcloneroot.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) + 1 or clone.CFrame.p.Y, oldcloneroot.Position.Z)
+					clone.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) or clone.CFrame.p.Y, oldcloneroot.Position.Z)
+					oldcloneroot.Velocity = Vector3.new(oldcloneroot.Velocity.X, -1, oldcloneroot.Velocity.Z)
+					oldcloneroot.CFrame = clone.CFrame
+					entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
 					local part = Instance.new("Part")
 					part.Anchored = true
 					part.CanCollide = false
@@ -7639,7 +7649,8 @@ runcode(function()
 							repeat task.wait() until oldcloneroot and isnetworkowner(oldcloneroot) or oldcloneroot == nil
 							local ray = workspace:Raycast(Vector3.new(oldcloneroot.Position.X, clone.CFrame.p.Y, oldcloneroot.Position.Z), Vector3.new(0, -1000, 0), blockraycast)
 							oldcloneroot.Velocity = Vector3.new(0, -1, 0)
-							oldcloneroot.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) + 2 or clone.CFrame.p.Y, oldcloneroot.Position.Z)
+							oldcloneroot.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) or clone.CFrame.p.Y, oldcloneroot.Position.Z)
+							entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
 							createwarning("InfiniteFly", "Waiting 1.5s to not flag", 3)
 							task.wait(1.5)
 							disablefunc(part)
