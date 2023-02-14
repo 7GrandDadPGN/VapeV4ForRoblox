@@ -123,19 +123,6 @@ local function getPlayerColor(plr)
 	return tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color
 end
 
-local raycastWallProperties = RaycastParams.new()
-local function raycastWallCheck(char, checktable)
-	local rayProperties = checktable.IgnoreObject
-	if not rayProperties then 
-		rayProperties = raycastWallProperties
-		local chartab = {}
-		for i,v in pairs(entityLibrary.entityList) do if v.Targetable then table.insert(chartab, v.Character) end end
-		rayProperties.FilterDescendantsInstances = {lplr.Character, gameCamera, table.unpack(chartab), table.unpack(checktable.IgnoreTable or {})}
-	end
-	local ray = workspace.Raycast(workspace, checktable.Origin, (char[checktable.AimPart].Position - checktable.Origin), rayProperties)
-	return not ray
-end
-
 local entityLibrary = loadstring(vapeGithubRequest("Libraries/entityHandler.lua"))()
 shared.vapeentity = entityLibrary
 do
@@ -188,6 +175,19 @@ do
 			task.wait()
 		until not vapeInjected
 	end)
+end
+
+local raycastWallProperties = RaycastParams.new()
+local function raycastWallCheck(char, checktable)
+	local rayProperties = checktable.IgnoreObject
+	if not rayProperties then 
+		rayProperties = raycastWallProperties
+		local chartab = {}
+		for i,v in pairs(entityLibrary.entityList) do if v.Targetable then table.insert(chartab, v.Character) end end
+		rayProperties.FilterDescendantsInstances = {lplr.Character, gameCamera, table.unpack(chartab), table.unpack(checktable.IgnoreTable or {})}
+	end
+	local ray = workspace.Raycast(workspace, checktable.Origin, (char[checktable.AimPart].Position - checktable.Origin), rayProperties)
+	return not ray
 end
 
 local function EntityNearPosition(distance, checktab)
