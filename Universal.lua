@@ -182,9 +182,16 @@ local function raycastWallCheck(char, checktable)
 	local rayProperties = checktable.IgnoreObject
 	if not rayProperties then 
 		rayProperties = raycastWallProperties
-		local chartab = {}
-		for i,v in pairs(entityLibrary.entityList) do if v.Targetable then table.insert(chartab, v.Character) end end
-		rayProperties.FilterDescendantsInstances = {lplr.Character, gameCamera, table.unpack(chartab), table.unpack(checktable.IgnoreTable or {})}
+		local filter = {lplr.Character, gameCamera}
+		for i,v in pairs(entityLibrary.entityList) do 
+			if v.Targetable then 
+				table.insert(filter, v.Character)
+			end 
+		end
+		for i,v in pairs(checktable.IgnoreTable or {}) do 
+			table.insert(filter, v)
+		end
+		rayProperties.FilterDescendantsInstances = filter
 	end
 	local ray = workspace.Raycast(workspace, checktable.Origin, (char[checktable.AimPart].Position - checktable.Origin), rayProperties)
 	return not ray
@@ -481,7 +488,9 @@ runFunction(function()
 						local v277 = 0 - u90;
 						local v276 = v278 + Vector3.zero;
 						radargameCamera.CFrame = CFrame.new(v276 + Vector3.new(0, 50, 0)) * CFrame.Angles(0, -v277 * (math.pi / 180), 0) * CFrame.Angles(-90 * (math.pi / 180), 0, 0)
+						local done = {}
 						for i, plr in pairs(entityLibrary.entityList) do
+							table.insert(done, plr)
 							local thing
 							if radartable[plr] then
 								thing = radartable[plr]
@@ -507,7 +516,7 @@ runFunction(function()
 							thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
 						end
 						for i, v in pairs(radartable) do 
-							if not table.find(entityLibrary.entityList, i) then 
+							if not table.find(done, i) then 
 								radartable[i] = nil
 								v:Destroy()
 							end
