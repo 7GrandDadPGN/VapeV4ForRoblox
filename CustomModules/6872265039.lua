@@ -534,10 +534,10 @@ GuiLibrary["RemoveObject"]("SafeWalkOptionsButton")
 GuiLibrary["RemoveObject"]("TriggerBotOptionsButton")
 GuiLibrary["RemoveObject"]("ClientKickDisablerOptionsButton")
 
-local teleported = false
+local teleportedServers = false
 teleportfunc = lplr.OnTeleport:Connect(function(State)
-    if (not teleported) then
-		teleported = true
+    if (not teleportedServers) then
+		teleportedServers = true
 		if shared.vapeoverlay then
 			queueteleport('shared.vapeoverlay = "'..shared.vapeoverlay..'"')
 		end
@@ -752,9 +752,9 @@ runcode(function()
 				[1] = "Trinity",
 				[2] = "Grim Reaper",
 				[3] = "Eldertree",
-				[4] = "Metal Detector",
+				[4] = "Miner",
 				[5] = "Barbarian",
-				[6] = "Melody",
+				[6] = "Metal Detector",
 				[7] = "Baker"
 			}
 			tab2 = {}
