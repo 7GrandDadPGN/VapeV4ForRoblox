@@ -55,6 +55,7 @@ local function vapeGithubRequest(scripturl)
 	end
 	return readfile("vape/"..scripturl)
 end
+--test
 
 local function downloadVapeAsset(path)
 	if not isfile(path) then
