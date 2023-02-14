@@ -2317,6 +2317,7 @@ runcode(function()
 			if callback then
 				autoclickerconnection1 = uis.InputBegan:Connect(function(input, gameProcessed)
 					if gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton1 then
+						autoclickermousedown = true
 						firstclick = tick() + 0.1
 					end
 				end)
