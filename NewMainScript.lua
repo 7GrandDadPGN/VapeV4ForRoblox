@@ -85,6 +85,9 @@ if not shared.VapeDeveloper then
 			makefolder("vape")
 			writefile("vape/commithash.txt", commit)
 		end
+	else
+		displayErrorPopup("Commit hash missing\ncontact at discord.gg/vaperoblox")
+		error("Commit hash missing\ncontact at discord.gg/vaperoblox")
 	end
 end
 
