@@ -801,7 +801,7 @@ local function TextGUIUpdate()
 			if v.Type == "OptionsButton" and v.Api.Enabled then
                 local blacklistedCheck = table.find(TextGUICircleObject.CircleList.ObjectList, v.Api.Name)
                 blacklistedCheck = blacklistedCheck and TextGUICircleObject.CircleList.ObjectList[blacklistedCheck]
-                if not blacklisted then
+                if not blacklistedCheck then
 					local extraText = v.Api.GetExtraText()
                     table.insert(moduleList, {Text = v.Api.Name, ExtraText = extraText ~= "" and " "..extraText or ""})
                 end
