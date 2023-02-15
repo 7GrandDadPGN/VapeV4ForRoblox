@@ -881,6 +881,7 @@ runcode(function()
 			AbilityController = Flamework.resolveDependency("@easy-games/game-core:client/controllers/ability/ability-controller@AbilityController"),
 			AttackRemote = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.SwordController)["attackEntity"])),
 			BalloonController = KnitClient.Controllers.BalloonController,
+			BalanceFile = require(repstorage.TS.balance["balance-file"]).BalanceFile,
 			BatteryEffectController = KnitClient.Controllers.BatteryEffectsController,
 			BatteryRemote = getremote(debug.getconstants(debug.getproto(debug.getproto(KnitClient.Controllers.BatteryController.KnitStart, 1), 1))),
 			BlockBreaker = KnitClient.Controllers.BlockBreakController.blockBreaker,
@@ -908,6 +909,8 @@ runcode(function()
 			DefaultKillEffect = require(lplr.PlayerScripts.TS.controllers.game.locker["kill-effect"].effects["default-kill-effect"]),
 			DropItem = getmetatable(KnitClient.Controllers.ItemDropController).dropItemInHand,
 			DropItemRemote = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.ItemDropController).dropItemInHand)),
+			DragonSlayerController = KnitClient.Controllers.DragonSlayerController,
+			DragonRemote = getremote(debug.getconstants(debug.getproto(debug.getproto(KnitClient.Controllers.DragonSlayerController.KnitStart, 2), 1))),
 			EatRemote = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.ConsumeController).onEnable, 1))),
 			EquipItemRemote = getremote(debug.getconstants(debug.getprotos(shared.oldequipitem or require(repstorage.TS.entity.entities["inventory-entity"]).InventoryEntity.equipItem)[3])),
 			FishermanTable = KnitClient.Controllers.FishermanController,
@@ -940,6 +943,9 @@ runcode(function()
 			KnockbackUtil = require(repstorage.TS.damage["knockback-util"]).KnockbackUtil,
 			LobbyClientEvents = KnitClient.Controllers.QueueController,
 			MinerRemote = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.MinerController).onKitEnabled, 1))),
+			MageRemote = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.MageController.registerTomeInteraction, 1))),
+			MageKitUtil = require(repstorage.TS.games.bedwars.kit.kits.mage["mage-kit-util"]).MageKitUtil,
+			MageController = KnitClient.Controllers.MageController,
 			MissileController = KnitClient.Controllers.GuidedProjectileController,
 			PickupMetalRemote = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.MetalDetectorController.KnitStart, 1))),
 			PickupRemote = getremote(debug.getconstants(getmetatable(KnitClient.Controllers.ItemDropController).checkForPickup)),
@@ -9858,6 +9864,58 @@ runcode(function()
 													bedwars["SoundManager"]:playSound(bedwars["SoundList"].CROP_HARVEST)
 												end
 											end)
+										end
+									end
+								until (not AutoKit.Enabled)
+							end)
+						elseif kit == "dragon_slayer" then
+							task.spawn(function()
+								repeat
+									task.wait(0.1)
+									if entityLibrary.isAlive then
+										for i,v in pairs(bedwars.DragonSlayerController.dragonEmblems) do 
+											if v.stackCount >= 3 then 
+												bedwars.DragonSlayerController:deleteEmblem(i)
+												local localPos = lplr.Character:GetPrimaryPartCFrame().Position
+												local punchCFrame = CFrame.new(localPos, (i:GetPrimaryPartCFrame().Position * Vector3.new(1, 0, 1)) + Vector3.new(0, localPos.Y, 0))
+												lplr.Character:SetPrimaryPartCFrame(punchCFrame)
+												bedwars.DragonSlayerController:playPunchAnimation(punchCFrame - punchCFrame.Position)
+												bedwars.ClientHandler:Get(bedwars.DragonRemote):SendToServer({
+													target = i
+												})
+											end
+										end
+									end
+								until (not AutoKit.Enabled)
+							end)
+						elseif kit == "mage" then
+							task.spawn(function()
+								repeat
+									task.wait(0.1)
+									if entityLibrary.isAlive then
+										for i, v in pairs(collectionservice:GetTagged("TomeGuidingBeam")) do 
+											local obj = v.Parent and v.Parent.Parent and v.Parent.Parent.Parent
+											if obj and (entityLibrary.character.HumanoidRootPart.Position - obj.PrimaryPart.Position).Magnitude < 5 and obj:GetAttribute("TomeSecret") then
+												local res = bedwars.ClientHandler:Get(bedwars.MageRemote):CallServer({
+													secret = obj:GetAttribute("TomeSecret")
+												})
+												if res.success and res.element then 
+													bedwars.GameAnimationUtil.playAnimation(lplr, bedwars.AnimationType.PUNCH)
+													bedwars.ViewmodelController:playAnimation(bedwars.AnimationType.FP_USE_ITEM)
+													bedwars.MageController:destroyTomeGuidingBeam()
+													bedwars.MageController:playLearnLightBeamEffect(lplr, obj)
+													local sound = bedwars.MageKitUtil.MageElementVisualizations[res.element].learnSound
+													if sound and sound ~= "" then 
+														bedwars.SoundManager:playSound(sound)
+													end
+													task.delay(bedwars.BalanceFile.LEARN_TOME_DURATION, function()
+														bedwars.MageController:fadeOutTome(obj)
+														if lplr.Character and res.element then
+															bedwars.MageKitUtil.changeMageKitAppearance(lplr, lplr.Character, res.element)	
+														end
+													end)
+												end
+											end
 										end
 									end
 								until (not AutoKit.Enabled)
