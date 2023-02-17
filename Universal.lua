@@ -123,17 +123,6 @@ local function getPlayerColor(plr)
 	return tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color
 end
 
-local raycastWallProperties = RaycastParams.new()
-local function raycastWallCheck(char, checktable)
-	local rayProperties = checktable.IgnoreObject
-	if not rayProperties then 
-		rayProperties = raycastWallProperties
-		rayProperties.FilterDescendantsInstances = {lplr.Character, char.Character, gameCamera, table.unpack(checktable.IgnoreTable or {})}
-	end
-	local ray = workspace.Raycast(workspace, checktable.Origin, (char[checktable.AimPart].Position - checktable.Origin), rayProperties)
-	return not ray
-end
-
 local entityLibrary = loadstring(vapeGithubRequest("Libraries/entityHandler.lua"))()
 shared.vapeentity = entityLibrary
 do
@@ -186,6 +175,26 @@ do
 			task.wait()
 		until not vapeInjected
 	end)
+end
+
+local raycastWallProperties = RaycastParams.new()
+local function raycastWallCheck(char, checktable)
+	local rayProperties = checktable.IgnoreObject
+	if not rayProperties then 
+		rayProperties = raycastWallProperties
+		local filter = {lplr.Character, gameCamera}
+		for i,v in pairs(entityLibrary.entityList) do 
+			if v.Targetable then 
+				table.insert(filter, v.Character)
+			end 
+		end
+		for i,v in pairs(checktable.IgnoreTable or {}) do 
+			table.insert(filter, v)
+		end
+		rayProperties.FilterDescendantsInstances = filter
+	end
+	local ray = workspace.Raycast(workspace, checktable.Origin, (char[checktable.AimPart].Position - checktable.Origin), rayProperties)
+	return not ray
 end
 
 local function EntityNearPosition(distance, checktab)
@@ -408,14 +417,14 @@ GuiLibrary.SelfDestructEvent.Event:Connect(function()
 		if v.disconnect then pcall(function() v:disconnect() end) continue end
 	end
 end)
---[[
+
 runFunction(function()
 	local radargameCamera = Instance.new("Camera")
 	radargameCamera.FieldOfView = 45
 	local Radar = GuiLibrary.CreateCustomWindow({
 		Name = "Radar", 
-		["Icon"] = "vape/assets/RadarIcon1.png",
-		["IconSize"] = 16
+		Icon = "vape/assets/RadarIcon1.png",
+		IconSize = 16
 	})
 	local RadarColor = Radar.CreateColorSlider({
 		Name = "Player Color", 
@@ -461,60 +470,68 @@ runFunction(function()
 	RadarMainFrame.BackgroundTransparency = 1
 	RadarMainFrame.Size = UDim2.new(0, 250, 0, 250)
 	RadarMainFrame.Parent = RadarFrame
-	connectionstodisconnect[#connectionstodisconnect + 1] = Radar.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):Connect(function()
+	local radartable = {}
+	table.insert(vapeConnections, Radar.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):Connect(function()
 		RadarFrame.Position = UDim2.new(0, 0, 0, (Radar.GetCustomChildren().Parent.Size.Y.Offset == 0 and 45 or 0))
-	end)
-	connectionstodisconnect[#connectionstodisconnect + 1] = playersService.PlayerRemoving:Connect(function(plr)
-		if RadarMainFrame:FindFirstChild(plr.Name) then
-			RadarMainFrame[plr.Name]:Remove()
-		end
-	end)
-	GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
+	end))
+	GuiLibrary.ObjectsThatCanBeSaved.GUIWindow.Api.CreateCustomToggle({
 		Name = "Radar", 
-		["Icon"] = "vape/assets/RadarIcon2.png", 
+		Icon = "vape/assets/RadarIcon2.png", 
 		Function = function(callback)
 			Radar.SetVisible(callback) 
 			if callback then
-				RunLoops:BindToRenderStep("Radar", 1, function() 
-					local v278 = (CFrame.new(0, 0, 0):inverse() * gameCamera.CFrame).p * 0.2 * Vector3.new(1, 1, 1);
-					local v279, v280, v281 = gameCamera.CFrame:ToOrientation();
-					local u90 = v280 * 180 / math.pi;
-					local v277 = 0 - u90;
-					local v276 = v278 + Vector3.zero;
-					radargameCamera.CFrame = CFrame.new(v276 + Vector3.new(0, 50, 0)) * CFrame.Angles(0, -v277 * (math.pi / 180), 0) * CFrame.Angles(-90 * (math.pi / 180), 0, 0)
-					for i,plr in pairs(entityLibrary.entityList) do
-						local thing
-						if RadarMainFrame:FindFirstChild(plr.Name) then
-							thing = RadarMainFrame[plr.Name]
-							if thing.Visible then
+				RunLoops:BindToRenderStep("Radar", function() 
+					if entityLibrary.isAlive then
+						local v278 = (CFrame.new(0, 0, 0):inverse() * entityLibrary.character.HumanoidRootPart.CFrame).p * 0.2 * Vector3.new(1, 1, 1);
+						local v279, v280, v281 = gameCamera.CFrame:ToOrientation();
+						local u90 = v280 * 180 / math.pi;
+						local v277 = 0 - u90;
+						local v276 = v278 + Vector3.zero;
+						radargameCamera.CFrame = CFrame.new(v276 + Vector3.new(0, 50, 0)) * CFrame.Angles(0, -v277 * (math.pi / 180), 0) * CFrame.Angles(-90 * (math.pi / 180), 0, 0)
+						local done = {}
+						for i, plr in pairs(entityLibrary.entityList) do
+							table.insert(done, plr)
+							local thing
+							if radartable[plr] then
+								thing = radartable[plr]
+								if thing.Visible then
+									thing.Visible = false
+								end
+							else
+								thing = Instance.new("Frame")
+								thing.BackgroundTransparency = 0
+								thing.Size = UDim2.new(0, 4, 0, 4)
+								thing.BorderSizePixel = 1
+								thing.BorderColor3 = Color3.new()
+								thing.BackgroundColor3 = Color3.new()
 								thing.Visible = false
+								thing.Name = plr.Player.Name
+								thing.Parent = RadarMainFrame
+								radartable[plr] = thing
 							end
-						else
-							thing = Instance.new("Frame")
-							thing.BackgroundTransparency = 0
-							thing.Size = UDim2.new(0, 4, 0, 4)
-							thing.BorderSizePixel = 1
-							thing.BorderColor3 = Color3.new()
-							thing.BackgroundColor3 = Color3.new()
-							thing.Visible = false
-							thing.Name = plr.Name
-							thing.Parent = RadarMainFrame
+							
+							local v238, v239 = radargameCamera:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * plr.RootPart.CFrame).p * 0.2)
+							thing.Visible = true
+							thing.BackgroundColor3 = getPlayerColor(plr.Player) or Color3.fromHSV(RadarColor.Value, 1, 1)
+							thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
 						end
-						
-						local v238, v239 = radargameCamera:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * aliveplr.RootPart.CFrame).p * 0.2)
-						thing.Visible = true
-						thing.BackgroundColor3 = getPlayerColor(plr) or Color3.fromHSV(RadarColor["Hue"], RadarColor["Sat"], RadarColor["Value"])
-						thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
+						for i, v in pairs(radartable) do 
+							if not table.find(done, i) then 
+								radartable[i] = nil
+								v:Destroy()
+							end
+						end
 					end
 				end)
 			else
 				RunLoops:UnbindFromRenderStep("Radar")
 				RadarMainFrame:ClearAllChildren()
+				table.clear(radartable)
 			end
 		end, 
-		["Priority"] = 1
+		Priority = 1
 	})
-end)]]
+end)
 
 runFunction(function()
 	local SilentAimSmartWallTable = {}
@@ -1286,7 +1303,7 @@ runFunction(function()
 				local FlyTPTick = tick()
 				local FlyTPY
 				RunLoops:BindToHeartbeat("Fly", function(delta) 
-					if entityLibrary.isAlive and isnetworkowner(entityLibrary.character.HumanoidRootPart) then
+					if entityLibrary.isAlive and (typeof(entityLibrary.character.HumanoidRootPart) ~= "Instance" or isnetworkowner(entityLibrary.character.HumanoidRootPart)) then
 						entityLibrary.character.Humanoid.PlatformStand = FlyPlatformStanding.Enabled
 						if not FlyY then FlyY = entityLibrary.character.HumanoidRootPart.CFrame.p.Y end
 						local movevec = (FlyMoveMethod.Value == "Manual" and (CFrame.lookAt(gameCamera.CFrame.p, gameCamera.CFrame.p + Vector3.new(gameCamera.CFrame.lookVector.X, 0, gameCamera.CFrame.lookVector.Z))):VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entityLibrary.character.Humanoid.MoveDirection).Unit
@@ -1902,31 +1919,59 @@ runFunction(function()
 	local PhaseRaycast = RaycastParams.new()
 	PhaseRaycast.RespectCanCollide = true
 	PhaseRaycast.FilterType = Enum.RaycastFilterType.Blacklist
+	local PhaseOverlap = OverlapParams.new()
+	PhaseOverlap.MaxParts = 9e9
+	PhaseOverlap.FilterDescendantsInstances = {}
+
+	local PhaseFunctions = {
+		Part = function()
+			local chars = {gameCamera, lplr.Character}
+			for i, v in pairs(entityLibrary.entityList) do table.insert(chars, v.Character) end
+			PhaseOverlap.FilterDescendantsInstances = chars
+			local rootpos = entityLibrary.character.HumanoidRootPart.CFrame.p
+			local parts = workspace:GetPartBoundsInRadius(rootpos, 1.5, PhaseOverlap)
+			for i, v in pairs(parts) do 
+				if v.CanCollide then 
+					PhaseModifiedParts[v] = true
+					v.CanCollide = false
+				end
+			end
+			for i,v in pairs(PhaseModifiedParts) do 
+				if not table.find(parts, i) then
+					PhaseModifiedParts[i] = nil
+					i.CanCollide = true
+				end
+			end
+		end,
+		Character = function()
+			for i, part in pairs(lplr.Character:GetDescendants()) do
+				if part:IsA("BasePart") and part.CanCollide then
+					PhaseModifiedParts[part] = true
+					part.CanCollide = Spider.Enabled and not spiderHoldingShift
+				end
+			end
+		end,
+		TP = function()
+			local chars = {gameCamera, lplr.Character}
+			for i, v in pairs(entityLibrary.entityList) do table.insert(chars, v.Character) end
+			PhaseRaycast.FilterDescendantsInstances = chars
+			local phaseRayCheck = workspace:Raycast(entityLibrary.character.Head.CFrame.p, entityLibrary.character.Humanoid.MoveDirection, raycastparameters)
+			if phaseRayCheck and (not Spider.Enabled or spiderHoldingShift) then
+				local phaseDirection = phaseRayCheck.Normal.Z ~= 0 and "Z" or "X"
+				if phaseRayCheck.Instance.Size[phaseDirection] <= PhaseStudLimit.Value and phaseRayCheck.Instance.CanCollide then
+					entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (phaseRayCheck.Normal * (-(phaseRayCheck.Instance.Size[phaseDirection]) - 1))
+				end
+			end
+		end
+	}
+
 	Phase = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
 		Name = "Phase", 
 		Function = function(callback)
 			if callback then
 				RunLoops:BindToStepped("Phase", function() -- has to be ran on stepped idk why
 					if entityLibrary.isAlive then
-						if PhaseMode.Value == "Normal" then
-							for i, part in pairs(lplr.Character:GetDescendants()) do
-								if part:IsA("BasePart") and part.CanCollide then
-									PhaseModifiedParts[part] = true
-									part.CanCollide = Spider.Enabled and not spiderHoldingShift
-								end
-							end
-						else
-							local chars = {gameCamera, lplr.Character}
-							for i, v in pairs(entityLibrary.entityList) do table.insert(chars, v.Character) end
-							PhaseRaycast.FilterDescendantsInstances = chars
-							local phaseRayCheck = workspace:Raycast(entityLibrary.character.Head.CFrame.p, entityLibrary.character.Humanoid.MoveDirection, raycastparameters)
-							if phaseRayCheck and (not Spider.Enabled or spiderHoldingShift) then
-								local phaseDirection = phaseRayCheck.Normal.Z ~= 0 and "Z" or "X"
-								if phaseRayCheck.Instance.Size[phaseDirection] <= PhaseStudLimit.Value and phaseRayCheck.Instance.CanCollide then
-									entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (phaseRayCheck.Normal * (-(phaseRayCheck.Instance.Size[phaseDirection]) - 1))
-								end
-							end
-						end
+						PhaseFunctions[PhaseMode.Value]()
 					end
 				end)
 			else
@@ -1939,10 +1984,10 @@ runFunction(function()
 	})
 	PhaseMode = Phase.CreateDropdown({
 		Name = "Mode",
-		List = {"Normal", "AntiCheat"},
+		List = {"Part", "Character", "TP"},
 		Function = function(val) 
 			if PhaseStudLimit.Object then
-				PhaseStudLimit.Object.Visible = val == "AntiCheat"
+				PhaseStudLimit.Object.Visible = val == "TP"
 			end
 		end
 	})
@@ -2019,7 +2064,7 @@ runFunction(function()
 		Name = "Mode",
 		List = {"Normal", "Classic"},
 		Function = function(val) 
-			if SpiderPart then SpiderPart:Destroy() end
+			if SpiderPart then SpiderPart:Destroy() SpiderPart = nil end
 			if val == "Classic" then 
 				SpiderPart = Instance.new("TrussPart")
 				SpiderPart.Size = Vector3.new(2, 2, 2)
@@ -2114,7 +2159,7 @@ runFunction(function()
 					until (not Speed.Enabled)
 				end)
 				RunLoops:BindToHeartbeat("Speed", function(delta)
-					if entityLibrary.isAlive and isnetworkowner(entityLibrary.character.HumanoidRootPart) then
+					if entityLibrary.isAlive and (typeof(entityLibrary.character.HumanoidRootPart) ~= "Instance" or isnetworkowner(entityLibrary.character.HumanoidRootPart)) then
 						local movevec = (SpeedMoveMethod.Value == "Manual" and (CFrame.lookAt(gameCamera.CFrame.p, gameCamera.CFrame.p + Vector3.new(gameCamera.CFrame.lookVector.X, 0, gameCamera.CFrame.lookVector.Z))):VectorToWorldSpace(Vector3.new(a + d, 0, w + s)) or entityLibrary.character.Humanoid.MoveDirection).Unit
 						movevec = movevec == movevec and Vector3.new(movevec.X, 0, movevec.Z) or Vector3.new()
 						SpeedRaycast.FilterDescendantsInstances = {lplr.Character, cam}
@@ -4552,9 +4597,16 @@ runFunction(function()
 								breadcrumbtrail.Lifetime = BreadcrumbsLifetime.Value / 10
 								breadcrumbtrail.Enabled = true
 							else
-								breadcrumbattachment.Parent = entityLibrary.character.HumanoidRootPart
-								breadcrumbattachment2.Parent = entityLibrary.character.HumanoidRootPart
-								breadcrumbtrail.Parent = gameCamera
+								local suc = pcall(function()
+									breadcrumbattachment.Parent = entityLibrary.character.HumanoidRootPart
+									breadcrumbattachment2.Parent = entityLibrary.character.HumanoidRootPart
+									breadcrumbtrail.Parent = gameCamera
+								end)
+								if not suc then 
+									if breadcrumbtrail then breadcrumbtrail:Destroy() breadcrumbtrail = nil end
+									if breadcrumbattachment then breadcrumbattachment:Destroy() breadcrumbattachment = nil end
+									if breadcrumbattachment2 then breadcrumbattachment2:Destroy() breadcrumbattachment2 = nil end
+								end
 							end
 						end
 						task.wait(0.3)
@@ -4927,6 +4979,38 @@ runFunction(function()
 		Name = "Rank Id",
 		TempText = "1 (rank id)",
 		Function = function() end
+	})
+end)
+
+runFunction(function()
+	GuiLibrary.ObjectsThatCanBeSaved.WorldWindow.Api.CreateOptionsButton({
+		Name = "AntiVoid", 
+		Function = function(callback)
+			if callback then 
+				local rayparams = RaycastParams.new()
+				rayparams.RespectCanCollide = true
+				local lastray
+				RunLoops:BindToHeartbeat("AntiVoid", function()
+					if entityLibrary.isAlive then
+						rayparams.FilterDescendantsInstances = {gameCamera, lplr.Character} 
+						lastray = entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air and entityLibrary.character.HumanoidRootPart.CFrame or lastray
+						if (entityLibrary.character.HumanoidRootPart.Position.Y + (entityLibrary.character.HumanoidRootPart.Velocity.Y * 0.016)) <= (workspace.FallenPartsDestroyHeight + 5) then
+							local comp = {entityLibrary.character.HumanoidRootPart.CFrame:GetComponents()}
+							comp[2] = (workspace.FallenPartsDestroyHeight + 20)
+							if lastray then
+								comp[1] = lastray.Position.X
+								comp[2] = lastray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (entityLibrary.character.HumanoidRootPart.Size.Y / 2))
+								comp[3] = lastray.Position.Z
+							end
+							entityLibrary.character.HumanoidRootPart.CFrame = CFrame.new(unpack(comp))
+							entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(entityLibrary.character.HumanoidRootPart.Velocity.X, 0, entityLibrary.character.HumanoidRootPart.Velocity.Z)
+						end
+					end
+				end)
+			else
+				RunLoops:UnbindFromHeartbeat("AntiVoid")
+			end
+		end
 	})
 end)
 
