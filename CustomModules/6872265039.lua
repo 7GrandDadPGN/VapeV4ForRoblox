@@ -767,7 +767,7 @@ runcode(function()
 	local ownedkitsamount = 0
 	for i3,v3 in pairs(bedwars["BedwarsKits"].FreeKits) do
 		ownedkitsamount = ownedkitsamount + 1
-		ownedkits[bedwars["KitMeta"][v3].name:lower()] = v3
+		ownedkits[bedwars["KitMeta"][v3.kitType].name:lower()] = v3.kitType
 	end
 	AutoKit = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"].CreateOptionsButton({
 		["Name"] = "AutoKit",
