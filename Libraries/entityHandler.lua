@@ -100,7 +100,7 @@ do
             task.spawn(function()
                 local humrootpart = char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
                 if not humrootpart then
-                    for i = 1, 100 do 
+                    for i = 1, 500 do 
                         humrootpart = char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
                         if humrootpart then break end
                         task.wait(0.01)

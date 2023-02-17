@@ -89,7 +89,7 @@ end
 assert(not shared.VapeExecuted, "Vape Already Injected")
 shared.VapeExecuted = true
 
-for i,v in pairs({baseDirectory:gsub("/", ""), "vape", baseDirectory.."Libraries", baseDirectory.."CustomModules", baseDirectory.."Profiles", "vape/assets"}) do 
+for i,v in pairs({baseDirectory:gsub("/", ""), "vape", "vape/Libraries", "vape/CustomModules", "vape/Profiles", baseDirectory.."/Profiles", "vape/assets"}) do 
 	if not isfolder(v) then makefolder(v) end
 end
 task.spawn(function()
@@ -801,7 +801,7 @@ local function TextGUIUpdate()
 			if v.Type == "OptionsButton" and v.Api.Enabled then
                 local blacklistedCheck = table.find(TextGUICircleObject.CircleList.ObjectList, v.Api.Name)
                 blacklistedCheck = blacklistedCheck and TextGUICircleObject.CircleList.ObjectList[blacklistedCheck]
-                if not blacklisted then
+                if not blacklistedCheck then
 					local extraText = v.Api.GetExtraText()
                     table.insert(moduleList, {Text = v.Api.Name, ExtraText = extraText ~= "" and " "..extraText or ""})
                 end
@@ -1616,7 +1616,7 @@ local teleportConnection = playersService.LocalPlayer.OnTeleport:Connect(functio
 			if shared.VapeDeveloper then 
 				loadstring(readfile("vape/NewMainScript.lua"))() 
 			else 
-				loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/852845f3b90fe80b6ed82663b3f86231ae7f2e6e/NewMainScript.lua", true))() 
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..readfile("vape/commithash.txt").."/NewMainScript.lua", true))() 
 			end
 		]]
 		if shared.VapeDeveloper then
