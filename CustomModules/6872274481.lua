@@ -627,7 +627,7 @@ local function CreateAutoHotbarGUI(children2, argstable)
 	return buttonapi
 end
 
-GuiLibrary["LoadSettingsEvent"].Event:Connect(function(res)
+GuiLibrary.LoadSettingsEvent.Event:Connect(function(res)
 	for i,v in pairs(res) do
 		local obj = GuiLibrary.ObjectsThatCanBeSaved[i]
 		if obj and v["Type"] == "ItemList" and obj.Api then
@@ -913,6 +913,7 @@ runcode(function()
 			DragonRemote = getremote(debug.getconstants(debug.getproto(debug.getproto(KnitClient.Controllers.DragonSlayerController.KnitStart, 2), 1))),
 			EatRemote = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.ConsumeController).onEnable, 1))),
 			EquipItemRemote = getremote(debug.getconstants(debug.getprotos(shared.oldequipitem or require(repstorage.TS.entity.entities["inventory-entity"]).InventoryEntity.equipItem)[3])),
+			EmoteMeta = require(repstorage.TS.locker.emote["emote-meta"]).EmoteMeta,
 			FishermanTable = KnitClient.Controllers.FishermanController,
 			FovController = KnitClient.Controllers.FovController,
 			GameAnimationUtil = require(repstorage.TS.animation["animation-util"]).GameAnimationUtil,
@@ -942,6 +943,7 @@ runcode(function()
 			KatanaController = KnitClient.Controllers.DaoController,
 			KnockbackUtil = require(repstorage.TS.damage["knockback-util"]).KnockbackUtil,
 			LobbyClientEvents = KnitClient.Controllers.QueueController,
+			MapController = KnitClient.Controllers.MapController,
 			MinerRemote = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.MinerController).onKitEnabled, 1))),
 			MageRemote = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.MageController.registerTomeInteraction, 1))),
 			MageKitUtil = require(repstorage.TS.games.bedwars.kit.kits.mage["mage-kit-util"]).MageKitUtil,
@@ -1005,8 +1007,8 @@ runcode(function()
 			until uninjectflag
 		end)
 		bedwarsblocks = collectionservice:GetTagged("block")
-		connectionstodisconnect[#connectionstodisconnect + 1] = collectionservice:GetInstanceAddedSignal("block"):Connect(function(v) table.insert(bedwarsblocks, v) blockraycast.FilterDescendantsInstances = bedwarsblocks end)
-		connectionstodisconnect[#connectionstodisconnect + 1] = collectionservice:GetInstanceRemovedSignal("block"):Connect(function(v) local found = table.find(bedwarsblocks, v) if found then table.remove(bedwarsblocks, found) end blockraycast.FilterDescendantsInstances = bedwarsblocks end)
+		connectionstodisconnect[#connectionstodisconnect + 1] = collectionservice:GetInstanceAddedSignal("block"):Connect(function(v) table.insert(bedwarsblocks, v) blockraycast.FilterDescendantsInstances = {bedwarsblocks} end)
+		connectionstodisconnect[#connectionstodisconnect + 1] = collectionservice:GetInstanceRemovedSignal("block"):Connect(function(v) local found = table.find(bedwarsblocks, v) if found then table.remove(bedwarsblocks, found) end blockraycast.FilterDescendantsInstances = {bedwarsblocks} end)
 		blockraycast.FilterDescendantsInstances = bedwarsblocks
 		connectionstodisconnect[#connectionstodisconnect + 1] = bedwars.ClientStoreHandler.changed:connect(function(p3, p4)
 			if p3.Game ~= p4.Game then 
@@ -2859,8 +2861,9 @@ runcode(function()
 								antivoiding = true
 								local pos = getclosesttop(1000)
 								if pos then
+									local lastTeleport = lplr:GetAttribute("LastTeleported")
 									RunLoops:BindToHeartbeat("AntiVoid", 1, function(dt)
-										if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and isnetworkowner(entityLibrary.character.HumanoidRootPart) and (entityLibrary.character.HumanoidRootPart.Position - pos).Magnitude > 1 and AntiVoid.Enabled then 
+										if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and isnetworkowner(entityLibrary.character.HumanoidRootPart) and (entityLibrary.character.HumanoidRootPart.Position - pos).Magnitude > 1 and AntiVoid.Enabled and lplr:GetAttribute("LastTeleported") == lastTeleport then 
 											local hori1 = Vector3.new(entityLibrary.character.HumanoidRootPart.Position.X, 0, entityLibrary.character.HumanoidRootPart.Position.Z)
 											local hori2 = Vector3.new(pos.X, 0, pos.Z)
 											local newpos = (hori2 - hori1).Unit
@@ -3561,7 +3564,7 @@ runcode(function()
 			shopItem = itemtab
 		}):andThen(function(p11)
 			if p11 then
-				bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+				bedwars.SoundManager:playSound(bedwars.SoundList.BEDWARS_PURCHASE_ITEM)
 				bedwars.ClientStoreHandler:dispatch({
 					type = "BedwarsAddItemPurchased", 
 					itemType = itemtab.itemType
@@ -3575,7 +3578,8 @@ runcode(function()
 	end
 
 	local function buyUpgrade(upgradetype, inv, upgrades)
-		local teamupgrade = bedwars["Shop"].getUpgrade(bedwars["Shop"]["TeamUpgrades"], upgradetype)
+		if not AutoBuyUpgrades.Enabled then return end
+		local teamupgrade = bedwars.Shop.getUpgrade(bedwars.Shop.TeamUpgrades, upgradetype)
 		local teamtier = teamupgrade["tiers"][upgrades[upgradetype] and upgrades[upgradetype] + 2 or 1]
 		if teamtier then 
 			local teamcurrency = getItem(teamtier["currency"], inv.items)
@@ -3585,7 +3589,7 @@ runcode(function()
 					tier = upgrades[upgradetype] and upgrades[upgradetype] + 1 or 0
 				}):andThen(function(suc)
 					if suc then
-						bedwars["SoundManager"]:playSound(bedwars["SoundList"].BEDWARS_PURCHASE_ITEM)
+						bedwars.SoundManager:playSound(bedwars.SoundList.BEDWARS_PURCHASE_ITEM)
 					end
 				end)
 			end
@@ -3691,7 +3695,7 @@ runcode(function()
 						local found, npctype, enchant = nearNPC(AutoBuyRange.Value)
 						if found then
 							local inv = currentinventory.inventory
-							local currentupgrades = bedwars.ClientStoreHandler:getState()["Bedwars"]["teamUpgrades"]
+							local currentupgrades = bedwars.ClientStoreHandler:getState()["Bedwars"].teamUpgrades
 							if kit == "dasher" then 
 								swords = {
 									[1] = "wood_dao",
@@ -5271,9 +5275,9 @@ runcode(function()
 					until Killaura.Enabled == false
 				end)
                 oldplay = bedwars.ViewmodelController.playAnimation
-                oldsound = bedwars["SoundManager"]["playSound"]
-                bedwars["SoundManager"]["playSound"] = function(tab, soundid, ...)
-                    if (soundid == bedwars["SoundList"].SWORD_SWING_1 or soundid == bedwars["SoundList"].SWORD_SWING_2) and Killaura.Enabled and killaurasound.Enabled and killauranear then
+                oldsound = bedwars.SoundManager["playSound"]
+                bedwars.SoundManager["playSound"] = function(tab, soundid, ...)
+                    if (soundid == bedwars.SoundList.SWORD_SWING_1 or soundid == bedwars.SoundList.SWORD_SWING_2) and Killaura.Enabled and killaurasound.Enabled and killauranear then
                         return nil
                     end
                     return oldsound(tab, soundid, ...)
@@ -5392,7 +5396,7 @@ runcode(function()
 					killauraparticlepart.Parent = nil
 				end
                 bedwars.ViewmodelController.playAnimation = oldplay
-                bedwars["SoundManager"]["playSound"] = oldsound
+                bedwars.SoundManager["playSound"] = oldsound
                 oldplay = nil
 				targetinfo.UpdateInfo({}, 0)
                 pcall(function()
@@ -5841,7 +5845,7 @@ runcode(function()
 										itemDrop = v
 									}):andThen(function(suc)
 										if suc then
-											bedwars["SoundManager"]:playSound(bedwars["SoundList"].PICKUP_ITEM_DROP)
+											bedwars.SoundManager:playSound(bedwars.SoundList.PICKUP_ITEM_DROP)
 										end
 									end)
 								end)
@@ -6926,8 +6930,8 @@ runcode(function()
 	task.spawn(function()
 		bedwars.ClientHandler:WaitFor("EntityDamageEvent"):andThen(function(p6)
 			connectionstodisconnect[#connectionstodisconnect + 1] = p6:Connect(function(p7)
-				if p7.entityInstance == lplr.Character and (p7.damageType ~= 0 or p7.extra and p7.extra.chargeRatio ~= nil) and not (p7.knockbackMultiplier and p7.knockbackMultiplier.disabled or p7.knockbackMultiplier and p7.knockbackMultiplier.horizontal == 0) and speedboost.Enabled then 
-					damagetick = tick() + 0.5
+				if p7.entityInstance == lplr.Character and (p7.damageType ~= 0 or p7.extra and p7.extra.chargeRatio ~= nil) and (not (p7.knockbackMultiplier and p7.knockbackMultiplier.disabled or p7.knockbackMultiplier and p7.knockbackMultiplier.horizontal == 0)) and speedboost.Enabled then 
+					damagetick = tick() + 0.4
 				end
 			end)
 		end)
@@ -7200,7 +7204,7 @@ runcode(function()
 				local allowed = entityLibrary.isAlive and ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
 				if flyac.Enabled and allowed <= 0 and shared.damageanim and (not balloons) then 
 					shared.damageanim()
-					bedwars["SoundManager"]:playSound(bedwars["SoundList"]["DAMAGE_"..math.random(1, 3)])
+					bedwars.SoundManager:playSound(bedwars.SoundList["DAMAGE_"..math.random(1, 3)])
 				end
 				if flyacprogressbarframe and allowed <= 0 and (not balloons) then 
 					flyacprogressbarframe.Visible = true
@@ -9861,7 +9865,7 @@ runcode(function()
 											}):andThen(function(suc)
 												if suc then
 													bedwars["GameAnimationUtil"].playAnimation(lplr.Character, 1)
-													bedwars["SoundManager"]:playSound(bedwars["SoundList"].CROP_HARVEST)
+													bedwars.SoundManager:playSound(bedwars.SoundList.CROP_HARVEST)
 												end
 											end)
 										end
@@ -10668,9 +10672,9 @@ runcode(function()
 					end
 				end			
 				for i,v in pairs(oldbedwarssoundtable) do 
-					local item = bedwars["SoundList"][i]
+					local item = bedwars.SoundList[i]
 					if item then
-						bedwars["SoundList"][i] = v
+						bedwars.SoundList[i] = v
 					end
 				end	
 				local oldweld = bedwars["WeldTable"].weldCharacterAccessories
@@ -11192,6 +11196,41 @@ runcode(function()
 end)
 
 runcode(function()
+	local SetEmote = {Enabled = false}
+	local SetEmoteList = {Value = ""}
+	local oldemote
+	local emo2 = {}
+	SetEmote = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = "SetEmote",
+		Function = function(callback)
+			if callback then
+				oldemote = bedwars.ClientStoreHandler:getState().Locker.selectedSpray
+				bedwars.ClientStoreHandler:getState().Locker.selectedSpray = emo2[SetEmoteList.Value]
+			else
+				if oldemote then 
+					bedwars.ClientStoreHandler:getState().Locker.selectedSpray = oldemote
+					oldemote = nil 
+				end
+			end
+		end
+	})
+	local emo = {}
+	for i,v in pairs(bedwars.EmoteMeta) do 
+		table.insert(emo, v.name)
+		emo2[v.name] = i
+	end
+	SetEmoteList = SetEmote.CreateDropdown({
+		Name = "Emote",
+		List = emo,
+		Function = function()
+			if SetEmote.Enabled then 
+				bedwars.ClientStoreHandler:getState().Locker.selectedSpray = emo2[SetEmoteList.Value]
+			end
+		end
+	})
+end)
+
+runcode(function()
 	local tppos2
 	local deathtpmod = {["Enabled"] = false}
 	connectionstodisconnect[#connectionstodisconnect + 1] = lplr:GetAttributeChangedSignal("LastTeleported"):Connect(function(char)
@@ -11246,6 +11285,27 @@ runcode(function()
 					local warning = createwarning("TPRedirection", "Set TP Position", 3)
 				end
 				deathtpmod.ToggleButton(false)
+			end
+		end
+	})
+end)
+
+local denyregions = {}
+runcode(function()
+	local ignoreplaceregions = {Enabled = false}
+	ignoreplaceregions = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = "IgnorePlaceRegions",
+		Function = function(callback)
+			if callback then
+				denyregions = bedwars.MapController.denyRegions
+				task.spawn(function()
+					repeat
+						bedwars.MapController.denyRegions = {}
+						task.wait()
+					until (not ignoreplaceregions.Enabled)
+				end)
+			else 
+				bedwars.MapController.denyRegions = denyregions
 			end
 		end
 	})

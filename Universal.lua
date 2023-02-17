@@ -179,9 +179,8 @@ end
 
 local raycastWallProperties = RaycastParams.new()
 local function raycastWallCheck(char, checktable)
-	local rayProperties = checktable.IgnoreObject
-	if not rayProperties then 
-		rayProperties = raycastWallProperties
+	if not checktable.IgnoreObject then 
+		checktable.IgnoreObject = raycastWallProperties
 		local filter = {lplr.Character, gameCamera}
 		for i,v in pairs(entityLibrary.entityList) do 
 			if v.Targetable then 
@@ -191,9 +190,9 @@ local function raycastWallCheck(char, checktable)
 		for i,v in pairs(checktable.IgnoreTable or {}) do 
 			table.insert(filter, v)
 		end
-		rayProperties.FilterDescendantsInstances = filter
+		raycastWallProperties.FilterDescendantsInstances = filter
 	end
-	local ray = workspace.Raycast(workspace, checktable.Origin, (char[checktable.AimPart].Position - checktable.Origin), rayProperties)
+	local ray = workspace.Raycast(workspace, checktable.Origin, (char[checktable.AimPart].Position - checktable.Origin), checktable.IgnoreObject)
 	return not ray
 end
 
@@ -5034,6 +5033,75 @@ runFunction(function()
 				RunLoops:UnbindFromHeartbeat("Blink")
 			end
 		end
+	})
+end)
+
+runFunction(function()
+	local AnimationPlayer = {Enabled = false}
+	local AnimationPlayerBox = {Value = ""}
+	local AnimationPlayerSpeed = {Speed = 1}
+	local entadded
+	local playedanim
+	AnimationPlayer = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = "AnimationPlayer",
+		Function = function(callback)
+			if callback then 
+				if entityLibrary.isAlive then 
+					if playedanim then playedanim:Stop() playedanim = nil end
+					local anim = Instance.new("Animation")
+					anim.AnimationId = "rbxassetid://"..AnimationPlayerBox.Value
+					local suc, res = pcall(function() playedanim = entityLibrary.character.Humanoid.Animator:LoadAnimation(anim) end)
+					if suc then
+						playedanim.Priority = Enum.AnimationPriority.Action4
+						playedanim.Looped = true
+						playedanim:Play()
+						playedanim:AdjustSpeed(AnimationPlayerSpeed.Value / 10)
+					else
+						warningNotification("AnimationPlayer", "failed to load anim : "..(res or "invalid animation id"), 5)
+					end
+				end
+				entadded = lplr.CharacterAdded:Connect(function()
+					repeat task.wait() until entityLibrary.isAlive or not AnimationPlayer.Enabled
+					task.wait(0.5)
+					if not AnimationPlayer.Enabled then return end
+					if playedanim then playedanim:Stop() playedanim = nil end
+					local anim = Instance.new("Animation")
+					anim.AnimationId = "rbxassetid://"..AnimationPlayerBox.Value
+					local suc, res = pcall(function() playedanim = entityLibrary.character.Humanoid.Animator:LoadAnimation(anim) end)
+					if suc then
+						playedanim.Priority = Enum.AnimationPriority.Action4
+						playedanim.Looped = true
+						playedanim:Play()
+						playedanim:AdjustSpeed(AnimationPlayerSpeed.Value / 10)
+					else
+						warningNotification("AnimationPlayer", "failed to load anim : "..(res or "invalid animation id"), 5)
+					end
+				end)
+			else
+				if entadded then entadded:Disconnect() end
+				if playedanim then playedanim:Stop() playedanim = nil end
+			end
+		end
+	})
+	AnimationPlayerBox = AnimationPlayer.CreateTextBox({
+		Name = "Animation",
+		TempText = "anim (num only)",
+		Function = function(enter) 
+			if enter and AnimationPlayer.Enabled then 
+
+			end
+		end
+	})
+	AnimationPlayerSpeed = AnimationPlayer.CreateSlider({
+		Name = "Speed",
+		Function = function(val)
+			if playedanim then 
+				playedanim:AdjustSpeed(val / 10)
+			end
+		end,
+		Min = 1,
+		Max = 20,
+		Double = 10
 	})
 end)
 
