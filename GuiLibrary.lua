@@ -2708,7 +2708,7 @@ if shared.VapeExecuted then
 				end
 		
 				GuiLibrary.ObjectsThatCanBeSaved[argstablemain["Name"]..argstable["Name"].."TextCircleList"] = {["Type"] = "TextCircleList", ["Api"] = textGuiLibrary}
-				addbutton.MouseButton1Click:Connect(function() 
+				local function AddToList()
 					local num = #textGuiLibrary["ObjectList"] + 1
 					textGuiLibrary["ObjectList"][num] = textbox.Text
 					textGuiLibrary["ObjectListEnabled"][num] = true
@@ -2716,7 +2716,15 @@ if shared.VapeExecuted then
 					if argstable["AddFunction"] then
 						argstable["AddFunction"](textbox.Text) 
 					end
-				end)
+                    textbox.Text = ""
+                end
+                addbutton.MouseButton1Click:Connect(click)
+                textbox.FocusLost:Connect(function(enter)
+                    if enter then
+                        AddToList()
+                        textbox:CaptureFocus()
+                    end
+                end)
 				return textGuiLibrary
 			end
 		
@@ -3729,13 +3737,23 @@ if shared.VapeExecuted then
 					end
 				end
 
-				addbutton.MouseButton1Click:Connect(function() 
+                local function AddToList() 
 					table.insert(textGuiLibrary["ObjectList"], textbox.Text)
 					textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
 					if argstable["AddFunction"] then
 						argstable["AddFunction"](textbox.Text) 
 					end
-				end)
+                    textbox.Text = ""
+				end
+
+				addbutton.MouseButton1Click:Connect(AddToList)
+                textbox.FocusLost:Connect(function(enter)
+                    if enter then
+                        AddToList()
+                        textbox:CaptureFocus()
+                    end
+                end)
+
 				GuiLibrary.ObjectsThatCanBeSaved[argstablemain["Name"]..argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textGuiLibrary}
 				return textGuiLibrary
 			end
@@ -3790,6 +3808,7 @@ if shared.VapeExecuted then
 					end
 				end)
 
+                textbox:CaptureFocus()
 				GuiLibrary.ObjectsThatCanBeSaved[argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBox", ["Api"] = textGuiLibrary, ["Object"] = frame}
 				return textGuiLibrary
 			end
@@ -4483,15 +4502,23 @@ if shared.VapeExecuted then
 					end
 			
 					GuiLibrary.ObjectsThatCanBeSaved[argstablemain["Name"]..argstable["Name"].."TextCircleList"] = {["Type"] = "TextCircleList", ["Api"] = textGuiLibrary}
-					addbutton.MouseButton1Click:Connect(function() 
-						local num = #textGuiLibrary["ObjectList"] + 1
-						textGuiLibrary["ObjectList"][num] = textbox.Text
-						textGuiLibrary["ObjectListEnabled"][num] = true
-						textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
-						if argstable["AddFunction"] then
-							argstable["AddFunction"](textbox.Text) 
-						end
-					end)
+					local function AddToList()
+                        local num = #textGuiLibrary["ObjectList"] + 1
+                        textGuiLibrary["ObjectList"][num] = textbox.Text
+                        textGuiLibrary["ObjectListEnabled"][num] = true
+                        textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
+                        if argstable["AddFunction"] then
+                            argstable["AddFunction"](textbox.Text) 
+                        end
+                        textbox.Text = ""
+                    end
+                    addbutton.MouseButton1Click:Connect(click)
+                    textbox.FocusLost:Connect(function(enter)
+                        if enter then
+                            AddToList()
+                            textbox:CaptureFocus()
+                        end
+                    end)
 					return textGuiLibrary
 				end
 
@@ -6047,13 +6074,23 @@ if shared.VapeExecuted then
 			if not argstable["NoSave"] then
 				GuiLibrary.ObjectsThatCanBeSaved[argstable["Name"].."TextList"] = {["Type"] = "TextList", ["Api"] = textGuiLibrary}
 			end
-			addbutton.MouseButton1Click:Connect(function() 
-				table.insert(textGuiLibrary["ObjectList"], textbox.Text)
-				textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
-				if argstable["AddFunction"] then
-					argstable["AddFunction"](textbox.Text) 
-				end
-			end)
+
+			local function AddToList() 
+                table.insert(textGuiLibrary["ObjectList"], textbox.Text)
+                textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
+                if argstable["AddFunction"] then
+                    argstable["AddFunction"](textbox.Text) 
+                end
+                textbox.Text = ""
+            end
+
+            addbutton.MouseButton1Click:Connect(AddToList)
+            textbox.FocusLost:Connect(function(enter)
+                if enter then
+                    AddToList()
+                    textbox:CaptureFocus()
+                end
+            end)
 			return textGuiLibrary
 		end
 
@@ -6214,15 +6251,23 @@ if shared.VapeExecuted then
 			end
 
 			GuiLibrary.ObjectsThatCanBeSaved[argstable["Name"].."TextCircleList"] = {["Type"] = "TextCircleList", ["Api"] = textGuiLibrary}
-			addbutton.MouseButton1Click:Connect(function() 
-				local num = #textGuiLibrary["ObjectList"] + 1
-				textGuiLibrary["ObjectList"][num] = textbox.Text
-				textGuiLibrary["ObjectListEnabled"][num] = true
-				textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
-				if argstable["AddFunction"] then
-					argstable["AddFunction"](textbox.Text) 
-				end
-			end)
+			local function AddToList()
+                local num = #textGuiLibrary["ObjectList"] + 1
+                textGuiLibrary["ObjectList"][num] = textbox.Text
+                textGuiLibrary["ObjectListEnabled"][num] = true
+                textGuiLibrary["RefreshValues"](textGuiLibrary["ObjectList"])
+                if argstable["AddFunction"] then
+                    argstable["AddFunction"](textbox.Text) 
+                end
+                textbox.Text = ""
+            end
+            addbutton.MouseButton1Click:Connect(click)
+            textbox.FocusLost:Connect(function(enter)
+                if enter then
+                    AddToList()
+                    textbox:CaptureFocus()
+                end
+            end)
 			return textGuiLibrary
 		end
 
