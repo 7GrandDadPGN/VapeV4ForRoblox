@@ -175,8 +175,9 @@ do
             end
         end))
         table.insert(entity.entityConnections, plr:GetPropertyChangedSignal("Team"):Connect(function()
-            for i,v in next, entity.entityList do
-                if v.Targetable ~= entity.isPlayerTargetable(v.Player) then 
+            for i = 1, #entity.entityList do
+                local v = entity.entityList[i]
+                if v and v.Targetable ~= entity.isPlayerTargetable(v.Player) then 
                     entity.refreshEntity(v.Player)
                 end
             end 
