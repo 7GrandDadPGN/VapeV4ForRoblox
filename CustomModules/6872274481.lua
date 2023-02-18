@@ -2354,7 +2354,7 @@ runcode(function()
 
 				task.spawn(function()
 					repeat
-						if entityLibrary.isAlive and autoclickermousedown and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= (kit == "hannah" and 3 or 2) and GuiLibrary["MainGui"].Parent ~= nil and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary.ObjectsThatCanBeSaved["Lobby CheckToggle"]["Api"].Enabled == false or matchState ~= 0) then
+						if entityLibrary.isAlive and autoclickermousedown and isNotHoveringOverGui() and #bedwars["AppController"]:getOpenApps() <= (kit == "hannah" and 4 or 3) and GuiLibrary["MainGui"].Parent ~= nil and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false and (GuiLibrary.ObjectsThatCanBeSaved["Lobby CheckToggle"]["Api"].Enabled == false or matchState ~= 0) then
 							local equipped = getEquipped()
 							if equipped["Type"] == "sword" and bedwars["KatanaController"].chargingMaid == nil then
 								task.spawn(function()
@@ -5118,7 +5118,7 @@ runcode(function()
 		if killauramouse.Enabled and (not uis:IsMouseButtonPressed(0)) then
 			return nil
 		end
-		if killauragui.Enabled and (not (#bedwars["AppController"]:getOpenApps() <= (kit == "hannah" and 3 or 2) and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false)) then
+		if killauragui.Enabled and (not (#bedwars["AppController"]:getOpenApps() <= (kit == "hannah" and 4 or 3) and GuiLibrary["MainGui"].ScaledGui.ClickGui.Visible == false)) then
 			return nil
 		end
 		local equipped = getEquipped()
@@ -11457,7 +11457,7 @@ task.spawn(function()
 				end))
 				game:GetService("StarterGui"):SetCore("SendNotification", {
 					Title = "Vape",
-					Text = "Vape is currently disabled, check the discord for updates discord.gg/vxpe",
+					Text = "Vape is currently disabled, check the discord for updates discord.gg/vaperoblox",
 					Duration = 30,
 				})
 			end
