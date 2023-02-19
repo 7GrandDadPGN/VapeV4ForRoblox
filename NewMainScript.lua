@@ -86,8 +86,8 @@ if not shared.VapeDeveloper then
 			writefile("vape/commithash.txt", commit)
 		end
 	else
-		displayErrorPopup("Commit hash missing\ncontact at discord.gg/vaperoblox")
-		error("Commit hash missing\ncontact at discord.gg/vaperoblox")
+		displayErrorPopup("Failed to connect to github, please try using a VPN.")
+		error("Failed to connect to github, please try using a VPN.")
 	end
 end
 
