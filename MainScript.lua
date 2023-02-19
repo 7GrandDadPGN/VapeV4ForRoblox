@@ -850,7 +850,8 @@ local function TextGUIUpdate()
                 VapeTextExtra.Position = UDim2.fromOffset(5, 1)
                 VapeLogo.Position = UDim2.fromOffset(2, 8)
                 VapeText.Position = UDim2.fromOffset(6, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + (VapeCustomText.Visible and 25 or 0) - 23)
-                VapeCustomText.TextXAlignment = Enum.TextXAlignment.Left
+				VapeCustomText.Position = UDim2.fromOffset(0, VapeLogo.Visible and 35 or 0)
+				VapeCustomText.TextXAlignment = Enum.TextXAlignment.Left
                 VapeBackgroundList.HorizontalAlignment = Enum.HorizontalAlignment.Left
                 VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-1, 2 + 23)
             end
