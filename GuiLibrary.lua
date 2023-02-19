@@ -1,5 +1,5 @@
 if shared.VapeExecuted then
-	local VERSION = "4.09"..(shared.VapePrivate and " PRIVATE" or "")
+	local VERSION = "4.09"..(shared.VapePrivate and " PRIVATE" or "").." "..readfile("vape/commithash.txt"):sub(1, 6)
 	local baseDirectory = (shared.VapePrivate and "vapeprivate/" or "vape/")
 	local universalRainbowValue = 0
 	local getcustomasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
@@ -2718,7 +2718,7 @@ if shared.VapeExecuted then
 					end
                     textbox.Text = ""
                 end
-                addbutton.MouseButton1Click:Connect(click)
+                addbutton.MouseButton1Click:Connect(AddToList)
                 textbox.FocusLost:Connect(function(enter)
                     if enter then
                         AddToList()
@@ -4512,7 +4512,7 @@ if shared.VapeExecuted then
                         end
                         textbox.Text = ""
                     end
-                    addbutton.MouseButton1Click:Connect(click)
+                    addbutton.MouseButton1Click:Connect(AddToList)
                     textbox.FocusLost:Connect(function(enter)
                         if enter then
                             AddToList()
@@ -4702,13 +4702,15 @@ if shared.VapeExecuted then
 				drop2.MouseButton1Click:Connect(function()
 					dropframe.Visible = not dropframe.Visible
 					local num = (dropframe.Visible and 10 or 0) + (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * (dropframe.Visible and 13 or 9) * (GuiLibrary["MainRescale"].Scale) or 0) + (40 * GuiLibrary["MainRescale"].Scale)) * (1 / GuiLibrary["MainRescale"].Scale)
-				--	children.CanvasSize = UDim2.new(0, 0, 0, num)
+					frame.Size = UDim2.new(0, 220, 0, 40)
+					--	children.CanvasSize = UDim2.new(0, 0, 0, num)
 				--	windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 				end)
 				drop1.MouseButton1Click:Connect(function()
 					dropframe.Visible = not dropframe.Visible
-					local num = (dropframe.Visible and 10 or 0) + (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * (dropframe.Visible and 13 or 9) * (GuiLibrary["MainRescale"].Scale) or 0) + (40 * GuiLibrary["MainRescale"].Scale)) * (1 / GuiLibrary["MainRescale"].Scale)
-				--	children.CanvasSize = UDim2.new(0, 0, 0, num)
+					local num = (dropframe.Visible and 40 or 0) + (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * (dropframe.Visible and 13 or 9) * (GuiLibrary["MainRescale"].Scale) or 0) + (40 * GuiLibrary["MainRescale"].Scale)) * (1 / GuiLibrary["MainRescale"].Scale)
+					frame.Size = UDim2.new(0, 220, 0, dropframe.Size.Y.Offset + 10)
+					--	children.CanvasSize = UDim2.new(0, 0, 0, num)
 				--	windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 				end)
 				drop1.MouseEnter:Connect(function()
@@ -4778,6 +4780,7 @@ if shared.VapeExecuted then
 							drop1.Text = "   "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"]).." - "..listobj
 							dropframe.Visible = false
 							local num = (uilistlayout2.AbsoluteContentSize.Y + (dropframe.Visible and #dropframe:GetChildren() * 9 or 0) + (40 * GuiLibrary["MainRescale"].Scale)) * (1 / GuiLibrary["MainRescale"].Scale)
+							frame.Size = UDim2.new(0, 220, 0, 40)
 							--children.CanvasSize = UDim2.new(0, 0, 0, num)
 							--windowtitle.Size = UDim2.new(0, 220, 0, math.clamp(45 + num, 0, 605))
 							argstable["Function"](listobj)
@@ -6261,7 +6264,7 @@ if shared.VapeExecuted then
                 end
                 textbox.Text = ""
             end
-            addbutton.MouseButton1Click:Connect(click)
+            addbutton.MouseButton1Click:Connect(AddToList)
             textbox.FocusLost:Connect(function(enter)
                 if enter then
                     AddToList()
