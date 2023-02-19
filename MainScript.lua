@@ -137,7 +137,7 @@ if not isfile("vape/CustomModules/cachechecked.txt") then
 		displayErrorPopup("Vape has detected uncached files, If you have CustomModules click no, else click yes.", {No = function() end, Yes = function()
 			for i,v in pairs({"vape/Universal.lua", "vape/MainScript.lua", "vape/GuiLibrary.lua"}) do 
 				if isfile(v) and not readfile(v):find("--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.") then
-				delfile(v)
+					delfile(v)
 				end 
 			end
 			for i,v in pairs(listfiles("vape/CustomModules")) do 
@@ -146,7 +146,6 @@ if not isfile("vape/CustomModules/cachechecked.txt") then
 					last = last[#last]
 					local suc, publicrepo = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..readfile("vape/commithash.txt").."/CustomModules/"..last) end)
 					if suc and publicrepo and publicrepo ~= "404: Not Found" then
-						print("written", last)
 						writefile("vape/CustomModules/"..last, "--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.\n"..publicrepo)
 					end
 				end 
