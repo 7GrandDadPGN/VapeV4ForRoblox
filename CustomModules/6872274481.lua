@@ -887,7 +887,6 @@ runcode(function()
 			BlockBreaker = KnitClient.Controllers.BlockBreakController.blockBreaker,
 			BlockController = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out).BlockEngine,
 			BlockPlacer = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client.placement["block-placer"]).BlockPlacer,
-			BlockCPSConstants = require(repstorage.TS["shared-constants"]).CpsConstants,
 			BlockEngine = require(lplr.PlayerScripts.TS.lib["block-engine"]["client-block-engine"]).ClientBlockEngine,
 			BlockEngineClientEvents = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client["block-engine-client-events"]).BlockEngineClientEvents,
 			BlockPlacementController = KnitClient.Controllers.BlockPlacementController,
@@ -2817,6 +2816,7 @@ runcode(function()
 			for i,v in pairs(bedwarsblocks) do 
 				local close = getScaffold(closestpos(v), false)
 				if getblock(close) then continue end
+				if close.Y < entityLibrary.character.HumanoidRootPart.Position.Y then continue end
 				if (close - entityLibrary.character.HumanoidRootPart.Position).magnitude <= newmag * 3 then 
 					table.insert(tops, close)
 				end
@@ -7779,8 +7779,6 @@ runcode(function()
 		Function = function(callback)
 			if callback then
 				scaffoldtext.Visible = ScaffoldBlockCount.Enabled
-				oldspeed = bedwars["BlockCPSConstants"].BLOCK_PLACE_CPS
-				bedwars["BlockCPSConstants"].BLOCK_PLACE_CPS = 9999
 				if entityLibrary.isAlive then 
 					scaffoldstopmotionpos = entityLibrary.character.HumanoidRootPart.CFrame.p
 				end
@@ -7838,7 +7836,6 @@ runcode(function()
 					until (not Scaffold.Enabled)
 				end)
 			else
-				bedwars["BlockCPSConstants"].BLOCK_PLACE_CPS = oldspeed
 				scaffoldtext.Visible = false
 				oldpos = Vector3.zero
 				oldpos2 = Vector3.zero
@@ -11244,7 +11241,7 @@ runcode(function()
 					end
 					RunLoops:BindToHeartbeat("TPRedirection", 1, function(dt)
 						if root and tppos2 then 
-							local dist = (1100 * dt)
+							local dist = (700 * dt)
 							if (tppos2 - root.CFrame.p).Magnitude > dist then
 								root.CFrame = root.CFrame + (tppos2 - root.CFrame.p).Unit * dist
 								root.Velocity = (tppos2 - root.CFrame.p).Unit * 20
