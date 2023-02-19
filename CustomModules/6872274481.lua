@@ -4753,7 +4753,7 @@ runcode(function()
 					origin = entityLibrary.character.HumanoidRootPart.CFrame.p,
 					weapon = tnt.itemType
 				})
-				damagetimer = sliderval2.Value * 1.25
+				damagetimer = sliderval2.Value
 				damagetimertick = tick() + 2.5
 				directionvec = Vector3.new(vec.X, 0, vec.Z).Unit
 			end)
@@ -11236,12 +11236,10 @@ runcode(function()
 				task.wait(0.1)
 				local root = entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and entityLibrary.character.HumanoidRootPart
 				if root and tppos2 then 
-					if (workspace:GetServerTimeNow() - lplr:GetAttribute("LastTeleported")) > 1 then
-						createwarning("TPRedirection", "may lagback "..(workspace:GetServerTimeNow() - lplr:GetAttribute("LastTeleported")), 5)
-					end
+					local check = (lplr:GetAttribute("LastTeleported") - lplr:GetAttribute("SpawnTime")) < 1
 					RunLoops:BindToHeartbeat("TPRedirection", 1, function(dt)
 						if root and tppos2 then 
-							local dist = (700 * dt)
+							local dist = ((check and 700 or 1200) * dt)
 							if (tppos2 - root.CFrame.p).Magnitude > dist then
 								root.CFrame = root.CFrame + (tppos2 - root.CFrame.p).Unit * dist
 								root.Velocity = (tppos2 - root.CFrame.p).Unit * 20
