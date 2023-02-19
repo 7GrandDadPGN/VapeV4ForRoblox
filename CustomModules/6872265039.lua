@@ -226,16 +226,17 @@ runcode(function()
         local OldClientGet = getmetatable(Client).Get
 		local OldClientWaitFor = getmetatable(Client).WaitFor
         bedwars = {
-			["BedwarsKits"] = require(repstorage.TS.games.bedwars.kit["bedwars-kit-shop"]).BedwarsKitShop,
-            ["ClientHandler"] = Client,
-            ["ClientStoreHandler"] = require(lplr.PlayerScripts.TS.ui.store).ClientStore,
-			["QueryUtil"] = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out).GameQueryUtil,
-			["KitMeta"] = require(repstorage.TS.games.bedwars.kit["bedwars-kit-meta"]).BedwarsKitMeta,
-			["LobbyClientEvents"] = KnitClient.Controllers.QueueController,
-            ["sprintTable"] = KnitClient.Controllers.SprintController,
-			["WeldTable"] = require(repstorage.TS.util["weld-util"]).WeldUtil,
-			["QueueMeta"] = require(repstorage.TS.game["queue-meta"]).QueueMeta,
-			["getEntityTable"] = require(repstorage.TS.entity["entity-util"]).EntityUtil,
+			BedwarsKits = require(repstorage.TS.games.bedwars.kit["bedwars-kit-shop"]).BedwarsKitShop,
+            ClientHandler = Client,
+            ClientStoreHandler = require(lplr.PlayerScripts.TS.ui.store).ClientStore,
+			EmoteMeta = require(repstorage.TS.locker.emote["emote-meta"]).EmoteMeta,
+			QueryUtil = require(repstorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out).GameQueryUtil,
+			KitMeta = require(repstorage.TS.games.bedwars.kit["bedwars-kit-meta"]).BedwarsKitMeta,
+			LobbyClientEvents = KnitClient.Controllers.QueueController,
+            sprintTable = KnitClient.Controllers.SprintController,
+			WeldTable = require(repstorage.TS.util["weld-util"]).WeldUtil,
+			QueueMeta = require(repstorage.TS.game["queue-meta"]).QueueMeta,
+			getEntityTable = require(repstorage.TS.entity["entity-util"]).EntityUtil,
         }
 		if not shared.vapebypassed then
 			local realremote = repstorage:WaitForChild("GameAnalyticsError")
@@ -1912,6 +1913,28 @@ runcode(function()
 				colorcorrection.Brightness = 0.05
 				colorcorrection.Parent = lighting
 			end)
+		end,
+		Valentines = function()
+			task.spawn(function()
+				for i,v in pairs(lighting:GetChildren()) do
+					if v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("PostEffect") then
+						v:Remove()
+					end
+				end
+				local sky = Instance.new("Sky")
+				sky.SkyboxBk = "rbxassetid://1546230803"
+				sky.SkyboxDn = "rbxassetid://1546231143"
+				sky.SkyboxFt = "rbxassetid://1546230803"
+				sky.SkyboxLf = "rbxassetid://1546230803"
+				sky.SkyboxRt = "rbxassetid://1546230803"
+				sky.SkyboxUp = "rbxassetid://1546230451"
+				sky.Parent = lighting
+				pcall(function() workspace.Clouds:Destroy() end)
+				local colorcorrection = Instance.new("ColorCorrectionEffect")
+				colorcorrection.TintColor = Color3.fromRGB(255, 199, 220)
+				colorcorrection.Brightness = 0.05
+				colorcorrection.Parent = lighting
+			end)
 		end
 	}
 
@@ -1936,7 +1959,42 @@ runcode(function()
 	themeselected = OldBedwars.CreateDropdown({
 		["Name"] = "Theme",
 		["Function"] = function() end,
-		["List"] = {"Old", "Winter", "Halloween"}
+		["List"] = {"Old", "Winter", "Halloween", "Valentines"}
+	})
+end)
+
+runcode(function()
+	local SetEmote = {Enabled = false}
+	local SetEmoteList = {Value = ""}
+	local oldemote
+	local emo2 = {}
+	SetEmote = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = "SetEmote",
+		Function = function(callback)
+			if callback then
+				oldemote = bedwars.ClientStoreHandler:getState().Locker.selectedSpray
+				bedwars.ClientStoreHandler:getState().Locker.selectedSpray = emo2[SetEmoteList.Value]
+			else
+				if oldemote then 
+					bedwars.ClientStoreHandler:getState().Locker.selectedSpray = oldemote
+					oldemote = nil 
+				end
+			end
+		end
+	})
+	local emo = {}
+	for i,v in pairs(bedwars.EmoteMeta) do 
+		table.insert(emo, v.name)
+		emo2[v.name] = i
+	end
+	SetEmoteList = SetEmote.CreateDropdown({
+		Name = "Emote",
+		List = emo,
+		Function = function()
+			if SetEmote.Enabled then 
+				bedwars.ClientStoreHandler:getState().Locker.selectedSpray = emo2[SetEmoteList.Value]
+			end
+		end
 	})
 end)
 
