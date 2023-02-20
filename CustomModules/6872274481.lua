@@ -806,6 +806,8 @@ end
 local OldClientGet 
 local oldbreakremote
 local oldbob
+local oldzephyr
+local zephyrorbs = 0
 local globalgroundtouchedtime = tick()
 local jumptable = {}
 runcode(function()
@@ -972,8 +974,14 @@ runcode(function()
 			TreeRemote = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.BigmanController.KnitStart)[3])[1])),
 			TrinityRemote = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.AngelController).onKitEnabled, 1))),
 			ViewmodelController = KnitClient.Controllers.ViewmodelController,
-			WeldTable = require(repstorage.TS.util["weld-util"]).WeldUtil
+			WeldTable = require(repstorage.TS.util["weld-util"]).WeldUtil,
+			ZephyrController = KnitClient.Controllers.WindWalkerController
         }
+		oldzephyr = bedwars.ZephyrController.updateJump
+		bedwars.ZephyrController.updateJump = function(self, orb, ...)
+			zephyrorbs = orb
+			return oldzephyr(self, orb, ...)
+		end
 		oldbob = bedwars.ViewmodelController.playAnimation
         bedwars.ViewmodelController.playAnimation = function(Self, id, ...)
             if id == 19 and nobob.Enabled and entityLibrary.isAlive then
@@ -1186,6 +1194,7 @@ GuiLibrary.SelfDestructEvent.Event:Connect(function()
 	if oldbob then bedwars.ViewmodelController.playAnimation = oldbob end
 	if blocktable then blocktable:disable() end
 	if oldchannelfunc and oldchanneltab then oldchanneltab.GetChannel = oldchannelfunc end
+	if oldzephyr then bedwars.ZephyrController.updateJump = oldzephyr end
 	for i2,v2 in pairs(oldchanneltabs) do i2.AddMessageToChannel = v2 end
 	for i3,v3 in pairs(connectionstodisconnect) do
 		if v3.Disconnect then pcall(function() v3:Disconnect() end) continue end
@@ -1355,6 +1364,9 @@ local function getSpeedMultiplier(reduce)
 		local armor = currentinventory.inventory.armor[3]
 		if type(armor) ~= "table" then armor = {itemType = ""} end
 		if armor.itemType == "speed_boots" then 
+			speed = speed + 1
+		end
+		if zephyrorbs ~= 0 then 
 			speed = speed + 1
 		end
 	end
@@ -7517,6 +7529,7 @@ runcode(function()
 	local cloned
 
 	local function disablefunc(part)
+		RunLoops:UnbindFromHeartbeat("InfiniteFlyOff")
 		disabledproper = true
 		part:Destroy()
 		lplr.Character.Parent = game
@@ -7644,7 +7657,12 @@ runcode(function()
 				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil and disabledproper and cloned == lplr.Character then 
 					local ray = workspace:Raycast(Vector3.new(oldcloneroot.Position.X, clone.CFrame.p.Y, oldcloneroot.Position.Z), Vector3.new(0, -1000, 0), blockraycast)
 					clone.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) or clone.CFrame.p.Y, oldcloneroot.Position.Z)
-					oldcloneroot.Velocity = Vector3.new(oldcloneroot.Velocity.X, -1, oldcloneroot.Velocity.Z)
+					oldcloneroot.Velocity = Vector3.new(0, -1, 0)
+					RunLoops:BindToHeartbeat("InfiniteFlyOff", 1, function()
+						if oldcloneroot then 
+							oldcloneroot.Velocity = Vector3.new(0, -1, 0)
+						end
+					end)
 					oldcloneroot.CFrame = clone.CFrame
 					entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
 					local part = Instance.new("Part")
@@ -7659,6 +7677,7 @@ runcode(function()
 					part.Parent = workspace.GameSounds
 					part.Position = oldcloneroot.Position
 					disabledproper = false
+					oldcloneroot.Transparency = 0
 					if isnetworkowner(oldcloneroot) then 
 						createwarning("InfiniteFly", "Waiting "..(flydelay.Value / 100).."s to not flag", 3)
 						task.delay(flydelay.Value / 100, disablefunc, part)
@@ -8773,11 +8792,13 @@ runcode(function()
 								repeat
 									task.wait()
 									local aliveplr = isAlive(plr, true)
-									if aliveplr then
-										projectile.model:SetPrimaryPartCFrame(CFrame.new(aliveplr.RootPart.CFrame.p, aliveplr.RootPart.CFrame.p + cam.CFrame.lookVector))
-									else
-										createwarning("MissileTP", "Player died before it could TP.", 3)
-										break
+									if projectile.model then
+										if aliveplr then
+											projectile.model:SetPrimaryPartCFrame(CFrame.new(aliveplr.RootPart.CFrame.p, aliveplr.RootPart.CFrame.p + cam.CFrame.lookVector))
+										else
+											createwarning("MissileTP", "Player died before it could TP.", 3)
+											break
+										end
 									end
 								until projectile.model.Parent == nil
 							else
