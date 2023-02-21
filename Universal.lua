@@ -5049,7 +5049,11 @@ runFunction(function()
 				if entityLibrary.isAlive then 
 					if playedanim then playedanim:Stop() playedanim = nil end
 					local anim = Instance.new("Animation")
-					anim.AnimationId = "rbxassetid://"..AnimationPlayerBox.Value
+					local suc, id = pcall(function() return string.match(game:GetObjects("rbxassetid://"..AnimationPlayerBox.Value)[1].AnimationId, "%?id=(%d+)") end)
+                    if not suc then
+                        id = AnimationPlayerBox.Value
+                    end
+                    anim.AnimationId = "rbxassetid://"..id
 					local suc, res = pcall(function() playedanim = entityLibrary.character.Humanoid.Animator:LoadAnimation(anim) end)
 					if suc then
 						playedanim.Priority = Enum.AnimationPriority.Action4
@@ -5066,7 +5070,11 @@ runFunction(function()
 					if not AnimationPlayer.Enabled then return end
 					if playedanim then playedanim:Stop() playedanim = nil end
 					local anim = Instance.new("Animation")
-					anim.AnimationId = "rbxassetid://"..AnimationPlayerBox.Value
+					local suc, id = pcall(function() return string.match(game:GetObjects("rbxassetid://"..AnimationPlayerBox.Value)[1].AnimationId, "%?id=(%d+)") end)
+                    if not suc then
+                        id = AnimationPlayerBox.Value
+                    end
+                    anim.AnimationId = "rbxassetid://"..id
 					local suc, res = pcall(function() playedanim = entityLibrary.character.Humanoid.Animator:LoadAnimation(anim) end)
 					if suc then
 						playedanim.Priority = Enum.AnimationPriority.Action4
