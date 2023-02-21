@@ -806,8 +806,6 @@ end
 local OldClientGet 
 local oldbreakremote
 local oldbob
-local oldzephyr
-local zephyrorbs = 0
 local globalgroundtouchedtime = tick()
 local jumptable = {}
 runcode(function()
@@ -974,14 +972,8 @@ runcode(function()
 			TreeRemote = getremote(debug.getconstants(debug.getprotos(debug.getprotos(KnitClient.Controllers.BigmanController.KnitStart)[3])[1])),
 			TrinityRemote = getremote(debug.getconstants(debug.getproto(getmetatable(KnitClient.Controllers.AngelController).onKitEnabled, 1))),
 			ViewmodelController = KnitClient.Controllers.ViewmodelController,
-			WeldTable = require(repstorage.TS.util["weld-util"]).WeldUtil,
-			ZephyrController = KnitClient.Controllers.WindWalkerController
+			WeldTable = require(repstorage.TS.util["weld-util"]).WeldUtil
         }
-		oldzephyr = bedwars.ZephyrController.updateJump
-		bedwars.ZephyrController.updateJump = function(self, orb, ...)
-			zephyrorbs = orb
-			return oldzephyr(self, orb, ...)
-		end
 		oldbob = bedwars.ViewmodelController.playAnimation
         bedwars.ViewmodelController.playAnimation = function(Self, id, ...)
             if id == 19 and nobob.Enabled and entityLibrary.isAlive then
@@ -1194,7 +1186,6 @@ GuiLibrary.SelfDestructEvent.Event:Connect(function()
 	if oldbob then bedwars.ViewmodelController.playAnimation = oldbob end
 	if blocktable then blocktable:disable() end
 	if oldchannelfunc and oldchanneltab then oldchanneltab.GetChannel = oldchannelfunc end
-	if oldzephyr then bedwars.ZephyrController.updateJump = oldzephyr end
 	for i2,v2 in pairs(oldchanneltabs) do i2.AddMessageToChannel = v2 end
 	for i3,v3 in pairs(connectionstodisconnect) do
 		if v3.Disconnect then pcall(function() v3:Disconnect() end) continue end
@@ -1364,9 +1355,6 @@ local function getSpeedMultiplier(reduce)
 		local armor = currentinventory.inventory.armor[3]
 		if type(armor) ~= "table" then armor = {itemType = ""} end
 		if armor.itemType == "speed_boots" then 
-			speed = speed + 1
-		end
-		if zephyrorbs ~= 0 then 
 			speed = speed + 1
 		end
 	end
@@ -6903,7 +6891,6 @@ runcode(function()
 	local speedboost = {Enabled = false}
 	local speedjump = {Enabled = false}
 	local speedjumpheight = {Value = 20}
-	local speedvelonum = {Value = 3}
 	local speedjumpalways = {Enabled = false}
 	local speedjumpsound = {Enabled = false}
 	local speedanimation = {Enabled = false}
@@ -6963,9 +6950,6 @@ runcode(function()
 					end
 				end)
 
-				local lastnear = false
-				local velonum = 0
-				local olddir
 				RunLoops:BindToHeartbeat("Speed", 1, function(delta)
 					if entityLibrary.isAlive and (GuiLibrary.ObjectsThatCanBeSaved["Lobby CheckToggle"]["Api"].Enabled == false or matchState ~= 0) then
 						local allowedvelo = (20 * getSpeedMultiplier())
@@ -6989,13 +6973,6 @@ runcode(function()
 									newpos = entityLibrary.character.Humanoid.MoveDirection * (speed - 20) * delta
 								end
 							end
-							if olddir then 
-								local olddirmag = (entityLibrary.character.Humanoid.MoveDirection - olddir).Magnitude
-								if olddirmag > 0.9 and slowdowntick <= tick() then 
-									--slowdowntick = tick() + 0.3
-								end
-							end
-							olddir = entityLibrary.character.Humanoid.MoveDirection
 							local movevec = entityLibrary.character.Humanoid.MoveDirection.Unit * allowedvelo 
 							movevec = movevec == movevec and movevec or Vector3.zero
 							local velocheck = not (longjump.Enabled and newlongjumpvelo == Vector3.zero)
