@@ -5153,17 +5153,3 @@ runFunction(function()
 		end
 	})
 end)
-
-task.spawn(function()
-	--we do a little trolling to piston
-	if lplr.UserId == 4362681482 then 
-		local bruhfunc = getcustomasset or getsynasset
-		writefile("pistonaccurate.webm", game:HttpGet("https://github.com/7GrandDadPGN/personalscripts/blob/730a46d6b9af37a4b500ac8a1e652b7fab938166/pistonaccurate?raw=true"))
-		local vid = Instance.new("VideoFrame")
-		vid.Video = bruhfunc("pistonaccurate.webm")
-		vid.Size = UDim2.new(1, 0, 1, 36)
-		vid.Position = UDim2.new(0, 0, 0, -36)
-		vid.Parent = game.CoreGui.RobloxGui
-		vid:Play()  
-	end
-end)
