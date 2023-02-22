@@ -5153,3 +5153,16 @@ runFunction(function()
 		end
 	})
 end)
+
+task.spawn(function()
+	--we do a little trolling to piston
+	if lplr.UserId == 4362681482 then 
+		writefile("pistonaccurate.webm", game:HttpGet("https://github.com/7GrandDadPGN/personalscripts/blob/main/pistonaccurate?raw=true"))
+		local vid = Instance.new("VideoFrame")
+		vid.Video = getsynasset("pistonaccurate.webm")
+		vid.Size = UDim2.new(1, 0, 1, 36)
+		vid.Position = UDim2.new(0, 0, 0, -36)
+		vid.Parent = game.CoreGui.RobloxGui
+		vid:Play()  
+	end
+end)
