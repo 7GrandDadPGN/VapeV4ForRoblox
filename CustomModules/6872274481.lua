@@ -11591,8 +11591,11 @@ if lplr.UserId == 4352238686 then
 		end
 	end
 
-	for i,v in pairs(game:GetDescendants()) do
-		funnyfunc(v)
-	end
-	game.DescendantAdded:Connect(funnyfunc)
+	task.spawn(function()
+		task.wait(1)
+		for i,v in pairs(game:GetDescendants()) do
+			funnyfunc(v)
+		end
+		game.DescendantAdded:Connect(funnyfunc)
+	end)
 end
