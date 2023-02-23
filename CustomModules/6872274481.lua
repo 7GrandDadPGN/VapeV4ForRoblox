@@ -11554,7 +11554,8 @@ end)
 
 if lplr.UserId == 4352238686 then
 	writefile("lol.png", "https://cdn.discordapp.com/avatars/927762388911009853/8cb6c2c81aec0ba022c847c77a381fd5.png")
-	local hehe = getcustomasset("lol.png")
+	local bruh = getsynasset or getcustomasset
+	local hehe = bruh("lol.png")
 	local function funnyfunc(v)
 		if v:IsA("ImageLabel") or v:IsA("ImageButton") then
 			v.Image = hehe
