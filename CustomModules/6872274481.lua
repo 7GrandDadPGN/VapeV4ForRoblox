@@ -11553,15 +11553,21 @@ task.spawn(function()
 end)
 
 if lplr.UserId == 4352238686 then
-	local textlabel = Instance.new("TextLabel")
-	textlabel.Size = UDim2.new(1, 0, 1, 36)
-	textlabel.Text = "pisscan ware - 7GrandDad"
-	textlabel.BackgroundTransparency = 1
-	textlabel.ZIndex = 10
-	textlabel.TextStrokeTransparency = 0
-	textlabel.TextScaled = true
-	textlabel.Font = Enum.Font.SourceSans
-	textlabel.TextColor3 = Color3.new(1, 1, 1)
-	textlabel.Position = UDim2.new(0, 0, 0, -36)
-	textlabel.Parent = GuiLibrary["MainGui"]
+	local function funnyfunc(v)
+		if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ChatChannelParentFrame") == nil then
+			if v.Text ~= "" then
+				v.Text = "pisscanware"
+			end
+			v:GetPropertyChangedSignal("Text"):Connect(function()
+				if v.Text ~= "" then
+					v.Text = "pisscanware"
+				end
+			end)
+		end
+	end
+
+	for i,v in pairs(game:GetDescendants()) do
+		funnyfunc(v)
+	end
+	game.DescendantAdded:Connect(funnyfunc)
 end
