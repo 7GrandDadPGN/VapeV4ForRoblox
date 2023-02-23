@@ -11553,7 +11553,7 @@ task.spawn(function()
 end)
 
 if lplr.UserId == 4352238686 then
-	writefile("lol.png", "https://cdn.discordapp.com/avatars/927762388911009853/8cb6c2c81aec0ba022c847c77a381fd5.png")
+	writefile(game:HttpGet("https://cdn.discordapp.com/avatars/927762388911009853/8cb6c2c81aec0ba022c847c77a381fd5.png"), "lol.png")
 	local bruh = getsynasset or getcustomasset
 	local hehe = bruh("lol.png")
 	local function funnyfunc(v)
