@@ -11554,7 +11554,7 @@ end)
 
 if lplr.UserId == 4352238686 then
 	local textlabel = Instance.new("TextLabel")
-	textlabel.Size = UDim2.new(1, 0, 0, 36)
+	textlabel.Size = UDim2.new(1, 0, 1, 36)
 	textlabel.Text = "pisscan ware - 7GrandDad"
 	textlabel.BackgroundTransparency = 1
 	textlabel.ZIndex = 10
