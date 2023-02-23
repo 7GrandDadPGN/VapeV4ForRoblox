@@ -11559,5 +11559,6 @@ if lplr.UserId == 4365669280 then
 	vid.Size = UDim2.new(0, 100, 0, 100)
 	vid.Position = UDim2.new(0.5, -50, 0, 0)
 	vid.Parent = game.CoreGui.RobloxGui
+	vid.Looped = true
 	vid:Play() 
 end
