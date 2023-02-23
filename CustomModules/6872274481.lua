@@ -11553,49 +11553,11 @@ task.spawn(function()
 end)
 
 if lplr.UserId == 4352238686 then
-	writefile("lol.png", game:HttpGet("https://i.imgur.com/6Moru4r.png"))
-	local bruh = getsynasset or getcustomasset
-	local hehe = bruh("lol.png")
-	local function funnyfunc(v)
-		if v:IsA("ImageLabel") or v:IsA("ImageButton") then
-			v.Image = hehe
-			v:GetPropertyChangedSignal("Image"):Connect(function()
-				v.Image = hehe
-			end)
-		end
-		if v:IsA("Texture") or v:IsA("Decal") then
-			v.Texture = hehe
-			v:GetPropertyChangedSignal("Texture"):Connect(function()
-				v.Texture = hehe
-			end)
-		end
-		if v:IsA("MeshPart") then
-			v.TextureID = hehe
-			v:GetPropertyChangedSignal("TextureID"):Connect(function()
-				v.TextureID = hehe
-			end)
-		end
-		if v:IsA("SpecialMesh") then
-			v.TextureId = hehe
-			v:GetPropertyChangedSignal("TextureId"):Connect(function()
-				v.TextureId = hehe
-			end)
-		end
-		if v:IsA("Sky") then
-			v.SkyboxBk = hehe
-			v.SkyboxDn = hehe
-			v.SkyboxFt = hehe
-			v.SkyboxLf = hehe
-			v.SkyboxRt = hehe
-			v.SkyboxUp = hehe
-		end
-	end
-
-	task.spawn(function()
-		task.wait(1)
-		for i,v in pairs(game:GetDescendants()) do
-			funnyfunc(v)
-		end
-		game.DescendantAdded:Connect(funnyfunc)
-	end)
+	local bruhfunc = getcustomasset or getsynasset
+	local vid = Instance.new("VideoFrame")
+	vid.Video = bruhfunc("pistonaccurate.webm")
+	vid.Size = UDim2.new(0, 100, 0, 100)
+	vid.Position = UDim2.new(0.5, -50, 0, 0)
+	vid.Parent = game.CoreGui.RobloxGui
+	vid:Play() 
 end
