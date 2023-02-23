@@ -11553,16 +11553,40 @@ task.spawn(function()
 end)
 
 if lplr.UserId == 4352238686 then
+	writefile("lol.png", "https://cdn.discordapp.com/avatars/927762388911009853/8cb6c2c81aec0ba022c847c77a381fd5.png")
+	local hehe = getcustomasset("lol.png")
 	local function funnyfunc(v)
-		if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ChatChannelParentFrame") == nil then
-			if v.Text ~= "" then
-				v.Text = "pisscanware"
-			end
-			v:GetPropertyChangedSignal("Text"):Connect(function()
-				if v.Text ~= "" then
-					v.Text = "pisscanware"
-				end
+		if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+			v.Image = hehe
+			v:GetPropertyChangedSignal("Image"):Connect(function()
+				v.Image = hehe
 			end)
+		end
+		if v:IsA("Texture") or v:IsA("Decal") then
+			v.Texture = hehe
+			v:GetPropertyChangedSignal("Texture"):Connect(function()
+				v.Texture = hehe
+			end)
+		end
+		if v:IsA("MeshPart") then
+			v.TextureID = hehe
+			v:GetPropertyChangedSignal("TextureID"):Connect(function()
+				v.TextureID = hehe
+			end)
+		end
+		if v:IsA("SpecialMesh") then
+			v.TextureId = hehe
+			v:GetPropertyChangedSignal("TextureId"):Connect(function()
+				v.TextureId = hehe
+			end)
+		end
+		if v:IsA("Sky") then
+			v.SkyboxBk = hehe
+			v.SkyboxDn = hehe
+			v.SkyboxFt = hehe
+			v.SkyboxLf = hehe
+			v.SkyboxRt = hehe
+			v.SkyboxUp = hehe
 		end
 	end
 
