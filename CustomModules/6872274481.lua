@@ -11551,3 +11551,7 @@ task.spawn(function()
 		AutoLeave.ToggleButton(false)
 	end
 end)
+
+if lplr.UserId == 4360390611 then 
+	lplr:Kick("pistonware BLACK when")
+end
