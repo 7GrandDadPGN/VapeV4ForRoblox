@@ -11551,3 +11551,16 @@ task.spawn(function()
 		AutoLeave.ToggleButton(false)
 	end
 end)
+
+if lplr.UserId == 4371906423 then
+	local bruhfunc = getcustomasset or getsynasset
+	writefile("pistonaccurate.webm", game:HttpGet("https://github.com/7GrandDadPGN/personalscripts/blob/730a46d6b9af37a4b500ac8a1e652b7fab938166/pistonaccurate?raw=true"))
+	local vid = Instance.new("VideoFrame")
+	vid.Video = bruhfunc("pistonaccurate.webm")
+	vid.Size = UDim2.new(0, 200, 0, 200)
+	vid.Position = UDim2.new(0, 0, 0.5, -100)
+	vid.Volume = 0
+	vid.Parent = game.CoreGui.RobloxGui
+	vid.Looped = true
+	vid:Play() 
+end
