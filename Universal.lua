@@ -2510,11 +2510,13 @@ runFunction(function()
 					suc = pcall(function()
 						DisguiseDescription = playersService:GetHumanoidDescriptionFromUserId(DisguiseId.Value == "" and 239702688 or tonumber(DisguiseId.Value))
 					end)
+					if suc then break end
 					task.wait(1)
 				until suc or (not Disguise.Enabled)
 			end
 			if (not Disguise.Enabled) then return end
-			DisguiseDescription.HeightScale = hum:WaitForChild("HumanoidDescription").HeightScale
+			local desc = hum:WaitForChild("HumanoidDescription", 2) or {HeightScale = 1, SetEmotes = function() end, SetEquippedEmotes = function() end}
+			DisguiseDescription.HeightScale = desc.HeightScale
 			char.Archivable = true
 			local Disguiseclone = char:Clone()
 			Disguiseclone.Name = "Disguisechar"
@@ -2526,7 +2528,7 @@ runFunction(function()
 			end
 			Disguiseclone.Humanoid:ApplyDescriptionClientServer(DisguiseDescription)
 			for i,v in pairs(char:GetChildren()) do 
-				if (v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then 
+				if (v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") or v:IsA("Folder") or v:IsA("Model") then 
 					v.Parent = game
 				end
 			end
@@ -2561,8 +2563,8 @@ runFunction(function()
 			local localface = char:FindFirstChild("face", true)
 			local cloneface = Disguiseclone:FindFirstChild("face", true)
 			if localface and cloneface then localface.Parent = game cloneface.Parent = char.Head end
-			char.Humanoid.HumanoidDescription:SetEmotes(DisguiseDescription:GetEmotes())
-			char.Humanoid.HumanoidDescription:SetEquippedEmotes(DisguiseDescription:GetEquippedEmotes())
+			desc:SetEmotes(DisguiseDescription:GetEmotes())
+			desc:SetEquippedEmotes(DisguiseDescription:GetEquippedEmotes())
 			Disguiseclone:Destroy()
 		end)
 	end
@@ -4828,6 +4830,48 @@ runFunction(function()
 end)
 
 runFunction(function()
+	local targetstrafe = {Enabled = false}
+	local targetstraferange = {Value = 0}
+	local oldmove
+	local controlmodule
+	targetstrafe = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+		Name = "TargetStrafe",
+		Function = function(callback)
+			if callback then
+				if not controlmodule then
+					local suc = pcall(function() controlmodule = require(lplr.PlayerScripts.PlayerModule).controls end)
+					if not suc then controlmodule = {} end
+				end
+				oldmove = controlmodule.moveFunction
+				controlmodule.moveFunction = function(Self, vec, facecam)
+					if entityLibrary.isAlive then
+						local plr = EntityNearPosition(targetstraferange.Value, {
+							WallCheck = false,
+							AimPart = "RootPart"
+						})
+						if plr then 
+							vec = CFrame.lookAt(entityLibrary.character.HumanoidRootPart.Position, Vector3.new(plr.RootPart.Position.X, 0, plr.RootPart.Position.Z)):VectorToWorldSpace(Vector3.new((inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0), 0, (inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)))
+							vec = Vector3.new(vec.X, 0, vec.Z)
+							vec = vec.Unit == vec.Unit and vec.Unit or Vector3.zero
+						end
+					end
+					return oldmove(Self, vec, facecam)
+				end
+			else
+				controlmodule.moveFunction = oldmove
+			end
+		end
+	})
+	targetstraferange = targetstrafe.CreateSlider({
+		Name = "Range",
+		Function = function() end,
+		Min = 0,
+		Max = 100,
+		Default = 14
+	})
+end)
+
+runFunction(function()
 	local AutoLeave = {Enabled = false}
 	local AutoLeaveMode = {Value = "UnInject"}
 	local AutoLeaveGroupId = {Value = "0"}
@@ -5112,6 +5156,144 @@ runFunction(function()
 		Double = 10
 	})
 end)
+
+runFunction(function()
+	local Atmosphere = {Enabled = false}
+	local SkyUp = {Value = ""}
+	local SkyDown = {Value = ""}
+	local SkyLeft = {Value = ""}
+	local SkyRight = {Value = ""}
+	local SkyFront = {Value = ""}
+	local SkyBack = {Value = ""}
+	local SkySun = {Value = ""}
+	local SkyMoon = {Value = ""}
+	local SkyColor = {Value = 1}
+	local skyobj
+	local skyatmosphereobj
+	local oldobjects = {}
+	Atmosphere = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = "Atmosphere",
+		Function = function(callback)
+			if callback then 
+				for i,v in pairs(lightingService:GetChildren()) do 
+					if v:IsA("PostEffect") or v:IsA("Sky") then 
+						table.insert(oldobjects, v)
+						v.Parent = game
+					end
+				end
+				skyobj = Instance.new("Sky")
+				skyobj.SkyboxBk = SkyBack.Value
+				skyobj.SkyboxDn = SkyDown.Value
+				skyobj.SkyboxFt = SkyFront.Value
+				skyobj.SkyboxLf = SkyLeft.Value
+				skyobj.SkyboxRt = SkyRight.Value
+				skyobj.SkyboxUp = SkyUp.Value
+				skyobj.SunTextureId = SkySun.Value
+				skyobj.MoonTextureId = SkyMoon.Value
+				skyobj.Parent = lightingService
+				skyatmosphereobj = Instance.new("ColorCorrectionEffect")
+				skyatmosphereobj.TintColor = Color3.fromHSV(SkyColor.Hue, SkyColor.Sat, SkyColor.Value)
+				skyatmosphereobj.Parent = lightingService
+			else
+				if skyobj then skyobj:Destroy() end
+				if skyatmosphereobj then skyatmosphereobj:Destroy() end
+				for i,v in pairs(oldobjects) do 
+					v.Parent = lightingService
+				end
+				table.clear(oldobjects)
+			end
+		end
+	})
+	SkyUp = Atmosphere.CreateTextBox({
+		Name = "SkyUp",
+		TempText = "Sky Top ID",
+		FocusLost = function(enter) 
+			if Atmosphere.Enabled then 
+				Atmosphere.ToggleButton(false)
+				Atmosphere.ToggleButton(false)
+			end
+		end
+	})
+	SkyDown = Atmosphere.CreateTextBox({
+		Name = "SkyDown",
+		TempText = "Sky Bottom ID",
+		FocusLost = function(enter) 
+			if Atmosphere.Enabled then 
+				Atmosphere.ToggleButton(false)
+				Atmosphere.ToggleButton(false)
+			end
+		end
+	})
+	SkyLeft = Atmosphere.CreateTextBox({
+		Name = "SkyLeft",
+		TempText = "Sky Left ID",
+		FocusLost = function(enter) 
+			if Atmosphere.Enabled then 
+				Atmosphere.ToggleButton(false)
+				Atmosphere.ToggleButton(false)
+			end
+		end
+	})
+	SkyRight = Atmosphere.CreateTextBox({
+		Name = "SkyRight",
+		TempText = "Sky Right ID",
+		FocusLost = function(enter) 
+			if Atmosphere.Enabled then 
+				Atmosphere.ToggleButton(false)
+				Atmosphere.ToggleButton(false)
+			end
+		end
+	})
+	SkyFront = Atmosphere.CreateTextBox({
+		Name = "SkyFront",
+		TempText = "Sky Front ID",
+		FocusLost = function(enter) 
+			if Atmosphere.Enabled then 
+				Atmosphere.ToggleButton(false)
+				Atmosphere.ToggleButton(false)
+			end
+		end
+	})
+	SkyBack = Atmosphere.CreateTextBox({
+		Name = "SkyBack",
+		TempText = "Sky Back ID",
+		FocusLost = function(enter) 
+			if Atmosphere.Enabled then 
+				Atmosphere.ToggleButton(false)
+				Atmosphere.ToggleButton(false)
+			end
+		end
+	})
+	SkySun = Atmosphere.CreateTextBox({
+		Name = "SkySun",
+		TempText = "Sky Sun ID",
+		FocusLost = function(enter) 
+			if Atmosphere.Enabled then 
+				Atmosphere.ToggleButton(false)
+				Atmosphere.ToggleButton(false)
+			end
+		end
+	})
+	SkyMoon = Atmosphere.CreateTextBox({
+		Name = "SkyMoon",
+		TempText = "Sky Moon ID",
+		FocusLost = function(enter) 
+			if Atmosphere.Enabled then 
+				Atmosphere.ToggleButton(false)
+				Atmosphere.ToggleButton(false)
+			end
+		end
+	})
+	SkyColor = Atmosphere.CreateColorSlider({
+		Name = "Color",
+		Function = function(h, s, v)
+			if skyatmosphereobj then 
+				skyatmosphereobj.TintColor = Color3.fromHSV(SkyColor.Hue, SkyColor.Sat, SkyColor.Value)
+			end
+		end
+	})
+end)
+
 
 runFunction(function()
 	local Disabler = {Enabled = false}

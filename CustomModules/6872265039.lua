@@ -1325,7 +1325,7 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				task.spawn(function()
-					anticheatbypassenable()
+				--	anticheatbypassenable()
 				end)
 			else
 				if anticheatconnection then 

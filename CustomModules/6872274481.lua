@@ -1244,8 +1244,10 @@ task.spawn(function()
 	end)
 end)
 
+local teleportedServers = false
 connectionstodisconnect[#connectionstodisconnect + 1] = lplr.OnTeleport:Connect(function(State)
-    if State == Enum.TeleportState.Started then
+	if (not teleportedServers) then
+		teleportedServers = true
 		local clientstorestate = bedwars.ClientStoreHandler and bedwars.ClientStoreHandler:getState() or {Party = {members = 0}}
 		local queuedstring = ''
 		if clientstorestate.Party and clientstorestate.Party.members and #clientstorestate.Party.members > 0 then
@@ -2568,118 +2570,6 @@ runcode(function()
 		Max = 3,
 		Function = function() end
 	})
-
-	local targetstrafe = {Enabled = false}
-	local targetstrafespeed = {Value = 40}
-	local targetstrafejump = {Value = 40}
-	local targetstrafedistance = {Value = 12}
-	local targetstrafenum = 0
-	local targetstrafepos = Vector3.zero
-	local flip = false
-	local lastreal
-	local old = nil
-	local oldmove2
-	local part
-	local raycastparameters = RaycastParams.new()
-	raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-	targetstrafe = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = "TargetStrafe",
-		Function = function(callback)
-			if callback then
-				local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
-				oldmove2 = controlmodule.moveFunction
-				controlmodule.moveFunction = function(self, movedir, facecam, ...)
-					if targetstrafing and targetstrafepos and entityLibrary.isAlive then 
-						movedir = (targetstrafepos - entityLibrary.character.HumanoidRootPart.Position).Unit
-						facecam = false
-					end
-					return oldmove2(self, movedir, facecam, ...)
-				end
-				task.spawn(function()
-					repeat
-						task.wait(0.1)
-						if (not targetstrafe.Enabled) then break end
-						local plr = GetNearestHumanoidToPosition(true, 18)
-						targetstrafing = false
-						if entityLibrary.isAlive and plr and (not GuiLibrary.ObjectsThatCanBeSaved["ScaffoldOptionsButton"]["Api"].Enabled) and (not GuiLibrary.ObjectsThatCanBeSaved["LongJumpOptionsButton"]["Api"].Enabled) and (not GuiLibrary.ObjectsThatCanBeSaved["FlyOptionsButton"]["Api"].Enabled) and longjumpticktimer <= tick() and (not spidergoinup) then
-							local veryoldpos = entityLibrary.character.HumanoidRootPart.CFrame.p
-							if plr ~= old then
-								old = plr
-								local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, entityLibrary.character.HumanoidRootPart.Position)
-								local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-90)
-								targetstrafenum = math.deg(num)
-							end
-							raycastparameters.FilterDescendantsInstances = {bedwarsblocks, collectionservice:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
-							targetstrafing = false
-							lastreal = plr.Character.HumanoidRootPart.Position
-							local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, entityLibrary.character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
-							local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance.Value
-							local working = true
-							local newray3 = workspace:Raycast(playerpos, CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance.Value, raycastparameters)
-							newpos = newray3 and (playerpos - newray3.Position) * 0.8 or newpos
-							local newray2 = workspace:Raycast(newpos, Vector3.new(0, -15, 0), raycastparameters)
-							if newray2 == nil then 
-								newray2 = workspace:Raycast(playerpos + (playerpos - newpos) * 0.4, Vector3.new(0, -15, 0), raycastparameters)
-								if newray2 then 
-									newpos = playerpos + ((playerpos - newpos) * 0.4)
-								end
-							end
-							if newray2 ~= nil then
-								local newray4 = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, (entityLibrary.character.HumanoidRootPart.Position - newpos), raycastparameters)
-								if newray4 then 
-									flip = not flip
-								else
-									targetstrafepos = newpos
-									targetstrafing = true
-								end
-							else
-								flip = not flip
-							end
-							if working then
-								targetstrafenum = (flip and targetstrafenum - targetstrafespeed.Value or targetstrafenum + targetstrafespeed.Value)
-								if targetstrafenum >= 999999 then
-									targetstrafenum = 0
-								end
-								if targetstrafenum < -999999 then
-									targetstrafenum = 0
-								end
-							end
-						else
-							targetstrafing = false
-							old = nil
-							lastreal = nil
-						end
-					until (not targetstrafe.Enabled)
-				end)
-			else
-				targetstrafing = false
-				local controlmodule = require(lplr.PlayerScripts.PlayerModule).controls
-				controlmodule.moveFunction = oldmove2
-			end
-		end,
-		HoverText = "Automatically moves around attacking players"
-	})
-	targetstrafespeed = targetstrafe.CreateSlider({
-		Name = "Speed",
-		Min = 1,
-		Max = 80,
-		Default = 80,
-		Function = function() end
-	})
-	targetstrafejump = targetstrafe.CreateSlider({
-		Name = "Jump Height",
-		Min = 1,
-		Max = 20,
-		Default = 20,
-		Function = function() end
-	})
-	targetstrafedistance = targetstrafe.CreateSlider({
-		Name = "Distance",
-		Min = 1,
-		Max = 12,
-		Default = 8,
-		Function = function() end
-	})
 end)
 
 runcode(function()
@@ -3136,8 +3026,9 @@ runcode(function()
 	local nukerlegit = {Enabled = false}
 	local nukerown = {Enabled = false}
     local nukerluckyblock = {Enabled = false}
+	local nukerironore = {Enabled = false}
     local nukerbeds = {Enabled = false}
-	local nukercustom = {["RefreshValues"] = function() end, ["ObjectList"] = {}}
+	local nukercustom = {RefreshValues = function() end, ObjectList = {}}
 	local nukerconnection
 	local nukerconnection2
     local luckyblocktable = {}
@@ -3146,23 +3037,24 @@ runcode(function()
 		Function = function(callback)
             if callback then
 				for i,v in pairs(bedwarsblocks) do
-					if table.find(nukercustom["ObjectList"], v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) then
+					if table.find(nukercustom["ObjectList"], v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) or (nukerironore.Enabled and v.Name == "iron_ore") then
 						table.insert(luckyblocktable, v)
 					end
 				end
 				nukerconnection = collectionservice:GetInstanceAddedSignal("block"):Connect(function(v)
-                    if table.find(nukercustom["ObjectList"], v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) then
+                    if table.find(nukercustom["ObjectList"], v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) or (nukerironore.Enabled and v.Name == "iron_ore") then
                         table.insert(luckyblocktable, v)
                     end
                 end)
                 nukerconnection2 = collectionservice:GetInstanceRemovedSignal("block"):Connect(function(v)
-                    if table.find(nukercustom["ObjectList"], v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) then
+                    if table.find(nukercustom["ObjectList"], v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) or (nukerironore.Enabled and v.Name == "iron_ore") then
                         table.remove(luckyblocktable, table.find(luckyblocktable, v))
                     end
                 end)
                 task.spawn(function()
                     repeat
 						if (nukernofly.Enabled == false or GuiLibrary.ObjectsThatCanBeSaved["FlyOptionsButton"]["Api"].Enabled == false) then
+							local broke = false
 							if nukerbeds.Enabled then
 								for i, obj in pairs(collectionservice:GetTagged("bed")) do
 									if entityLibrary.isAlive then
@@ -3172,6 +3064,7 @@ runcode(function()
 												if tool and bedwars.ItemTable[tool.Name]["breakBlock"] then
 													local res, amount = getbestside(obj.Position)
 													local res2, amount2 = getbestside(obj.Position + Vector3.new(0, 0, 3))
+													broke = true
 													bedwars["breakBlock"]((amount < amount2 and obj.Position or obj.Position + Vector3.new(0, 0, 3)), nukereffects.Enabled, (amount < amount2 and res or res2), false, nukeranimation.Enabled)
 													break
 												end
@@ -3181,6 +3074,7 @@ runcode(function()
 								end
 							end
 							for i, obj in pairs(luckyblocktable) do
+								if broke then break end
 								if entityLibrary.isAlive then
 									if obj and bedwars.BlockController:isBlockBreakable({blockPosition = obj.Position / 3}, lplr) and obj.Parent ~= nil then
 										if ((oldcloneroot and oldcloneroot.Position or entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - obj.Position).magnitude <= nukerrange.Value and (nukerown.Enabled or obj:GetAttribute("PlacedByUserId") ~= lplr.UserId) then
@@ -3245,14 +3139,33 @@ runcode(function()
     nukerluckyblock = Nuker.CreateToggle({
 		Name = "Break LuckyBlocks",
 		Function = function(callback) 
-			luckyblocktable = {}
-			for i,v in pairs(bedwarsblocks) do
-				if table.find(nukercustom["ObjectList"], v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) then
-					table.insert(luckyblocktable, v)
+			if callback then 
+				luckyblocktable = {}
+				for i,v in pairs(bedwarsblocks) do
+					if table.find(nukercustom["ObjectList"], v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) or (nukerironore.Enabled and v.Name == "iron_ore") then
+						table.insert(luckyblocktable, v)
+					end
 				end
+			else
+				luckyblocktable = {}
 			end
 		 end,
 		Default = true
+	})
+	nukerironore = Nuker.CreateToggle({
+		Name = "Break IronOre",
+		Function = function(callback) 
+			if callback then 
+				luckyblocktable = {}
+				for i,v in pairs(bedwarsblocks) do
+					if table.find(nukercustom["ObjectList"], v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) or (nukerironore.Enabled and v.Name == "iron_ore") then
+						table.insert(luckyblocktable, v)
+					end
+				end
+			else
+				luckyblocktable = {}
+			end
+		end
 	})
 	nukercustom = Nuker.CreateTextList({
 		Name = "NukerList",
@@ -4798,6 +4711,7 @@ runcode(function()
 			end)
 		end,
 		wood_dao = function(tnt, pos2)
+			switchItem(tnt.tool)
 			task.delay(0.7, function()
 				local vec = entityLibrary.character.HumanoidRootPart.CFrame.lookVector
 				repstorage["events-@easy-games/game-core:shared/game-core-networking@getEvents.Events"].useAbility:FireServer("dash", {
@@ -7165,6 +7079,7 @@ runcode(function()
 	local flydamageanim = {Enabled = false}
 	local flyspeedboost = {Enabled = false}
 	local flyhighjump = {Enabled = false}
+	local flytpdown = {Enabled = false}
 	local flyacprogressbarframe
 	local olddeflate
 	local flyrequests = 0
@@ -7208,6 +7123,7 @@ runcode(function()
 	local onground = false
 	local lastonground = false
 	local alternatelist = {"Normal", "AntiCheat A", "AntiCheat B"}
+	local flycoroutine
 	fly = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
 		Name = "Fly",
 		Function = function(callback)
@@ -7251,8 +7167,35 @@ runcode(function()
 					flyacprogressbarframe.Visible = true
 					flyacprogressbarframe.Frame:TweenSize(UDim2.new(1, 0, 0, 20), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0, true)
 				end
+				flytptick = tick()
 				local firsttoggled = true
 				local funny = true
+				flycoroutine = coroutine.create(function()
+					repeat
+						task.wait(2)
+						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
+						if (not fly.Enabled) then break end
+						local flytppos = -99999
+						if allowed <= 0 and flytpdown.Enabled then 
+							local ray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), blockraycast)
+							if ray then 
+								flytppos = entityLibrary.character.HumanoidRootPart.Position.Y
+								local args = {entityLibrary.character.HumanoidRootPart.CFrame:GetComponents()}
+								args[2] = ray.Position.Y + 2
+								entityLibrary.character.HumanoidRootPart.CFrame = CFrame.new(unpack(args))
+							end
+						end
+						task.wait(0.1)
+						if (not fly.Enabled) then break end
+						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
+						if allowed <= 0 and flytppos ~= -99999 then 
+							local args = {entityLibrary.character.HumanoidRootPart.CFrame:GetComponents()}
+							args[2] = flytppos
+							entityLibrary.character.HumanoidRootPart.CFrame = CFrame.new(unpack(args))
+						end
+					until (not fly.Enabled)
+				end)
+				coroutine.resume(flycoroutine)
 				RunLoops:BindToHeartbeat("Fly", 1, function(delta) 
 					if entityLibrary.isAlive and (GuiLibrary.ObjectsThatCanBeSaved["Lobby CheckToggle"]["Api"].Enabled == false or matchState ~= 0) then
 						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
@@ -7331,6 +7274,7 @@ runcode(function()
 					end
 				end)
 			else
+				pcall(function() coroutine.close(flycoroutine) end)
 				flyup = false
 				flydown = false
 				autobankballoon = false
@@ -7391,7 +7335,6 @@ runcode(function()
 	flypop = fly.CreateToggle({
 		Name = "Pop Balloon",
 		Function = function() end, 
-		Default = true,
 		HoverText = "Pops balloons when fly is disabled."
 	})
 	local oldcamupdate
@@ -7522,6 +7465,11 @@ runcode(function()
 	flyacprogressbar.Object.BackgroundTransparency = 0
 	flyacprogressbar.Object.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 	flyacprogressbar.Object.Visible = false
+	flytpdown = fly.CreateToggle({
+		Name = "TP Down",
+		Function = function() end,
+		Default = true
+	})
 end)
 
 runcode(function()
@@ -8094,10 +8042,12 @@ runcode(function()
 			for i,v in pairs(bedwarsblocks) do
 				if v:GetAttribute("PlacedByUserId") == 0 then
 					v.Material = FPSBoost.Enabled and removetextures.Enabled and Enum.Material.SmoothPlastic or (v.Name:find("glass") and Enum.Material.SmoothPlastic or Enum.Material.Fabric)
-					for i2,v2 in pairs(v:GetChildren()) do
-						if v2:IsA("Texture") then
-							v2.Transparency = FPSBoost.Enabled and removetextures.Enabled and 1 or 0
-						end
+					v.MaterialVariant = FPSBoost.Enabled and removetextures.Enabled and "" or v.MaterialVariant
+					for i2,v2 in pairs(v:GetChildren()) do 
+						pcall(function() 
+							v2.Material = FPSBoost.Enabled and removetextures.Enabled and Enum.Material.SmoothPlastic or (v.Name:find("glass") and Enum.Material.SmoothPlastic or Enum.Material.Fabric)
+							v2.MaterialVariant = FPSBoost.Enabled and removetextures.Enabled and "" or v2.MaterialVariant 
+						end)
 					end
 				end
 			end
@@ -9079,6 +9029,7 @@ runcode(function()
 						antivoidpart.Position = Vector3.new(0, antivoidypos - 50, 0)
 						antivoidconnection = antivoidpart.Touched:Connect(function(touchedpart)
 							if entityLibrary.isAlive and touchedpart:IsDescendantOf(lplr.Character) and balloondebounce == false then
+								autobankballoon = true
 								balloondebounce = true
 								local oldtool = getEquipped().Object
 								for i = 1, 3 do
@@ -9106,6 +9057,7 @@ runcode(function()
 									})
 								end
 								balloondebounce = false
+								autobankballoon = false
 							end
 						end)
 						antivoidpart.Parent = workspace
@@ -10606,112 +10558,23 @@ runcode(function()
 					["SPEAR_HIT"] = "rbxassetid://7807270398",
 					["SPEAR_THROW"] = "rbxassetid://7813485044",
 				}
+				local tarmac = require(repstorage.TS.tarmac)
 				task.spawn(function()
-					for i,v in pairs(collectionservice:GetTagged("block")) do
-						if oldbedwarsblocktab[v.Name] then
-							if type(oldbedwarsblocktab[v.Name]) == "table" then
-								for i2,v2 in pairs(v:GetDescendants()) do
-									if v2:IsA("Texture") then
-										if v2.Name == "Top" then
-											v2.Texture = oldbedwarsblocktab[v.Name][1]
-											v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
-										elseif v2.Name == "Bottom" then
-											v2.Texture = oldbedwarsblocktab[v.Name][2]
-										else
-											v2.Texture = oldbedwarsblocktab[v.Name][3]
-										end
-									end
-								end
-							else
-								for i2,v2 in pairs(v:GetDescendants()) do
-									if v2:IsA("Texture") then
-										v2.Texture = oldbedwarsblocktab[v.Name]
-									end
-								end
-							end
+					local newblocktab = {}
+					for i,v in pairs(tarmac.blocks) do 
+						newblocktab[v.s] = type(oldbedwarsblocktab[i]) == "table" and oldbedwarsblocktab[i][3] or oldbedwarsblocktab[i]
+						if v.td then 
+							newblocktab[v.td] = type(oldbedwarsblocktab[i]) == "table" and oldbedwarsblocktab[i][2] or oldbedwarsblocktab[i]
+						end
+						if v.t then 
+							newblocktab[v.t] = type(oldbedwarsblocktab[i]) == "table" and oldbedwarsblocktab[i][1] or oldbedwarsblocktab[i]
 						end
 					end
-				end)
-				collectionservice:GetInstanceAddedSignal("block"):Connect(function(v)
-					if oldbedwarsblocktab[v.Name] then
-						if type(oldbedwarsblocktab[v.Name]) == "table" then
-							for i2,v2 in pairs(v:GetDescendants()) do
-								if v2:IsA("Texture") then
-									if v2.Name == "Top" then
-										v2.Texture = oldbedwarsblocktab[v.Name][1]
-										v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
-									elseif v2.Name == "Bottom" then
-										v2.Texture = oldbedwarsblocktab[v.Name][2]
-									else
-										v2.Texture = oldbedwarsblocktab[v.Name][3]
-									end
-								end
-							end
-							v.DescendantAdded:Connect(function(v3)
-								if v3:IsA("Texture") then
-									if v3.Name == "Top" then
-										v3.Texture = oldbedwarsblocktab[v.Name][1]
-										v3.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
-									elseif v3.Name == "Bottom" then
-										v3.Texture = oldbedwarsblocktab[v.Name][2]
-									else
-										v3.Texture = oldbedwarsblocktab[v.Name][3]
-									end
-								end
-							end)
-						else
-							for i2,v2 in pairs(v:GetDescendants()) do
-								if v2:IsA("Texture") then
-									v2.Texture = oldbedwarsblocktab[v.Name]
-								end
-							end
-							v.DescendantAdded:Connect(function(v3)
-								if v3:IsA("Texture") then
-									v3.Texture = oldbedwarsblocktab[v.Name]
-								end
-							end)
-						end
-					end
-				end)
-				collectionservice:GetInstanceAddedSignal("tnt"):Connect(function(v)
-					if oldbedwarsblocktab[v.Name] then
-						if type(oldbedwarsblocktab[v.Name]) == "table" then
-							for i2,v2 in pairs(v:GetDescendants()) do
-								if v2:IsA("Texture") then
-									if v2.Name == "Top" then
-										v2.Texture = oldbedwarsblocktab[v.Name][1]
-										v2.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
-									elseif v2.Name == "Bottom" then
-										v2.Texture = oldbedwarsblocktab[v.Name][2]
-									else
-										v2.Texture = oldbedwarsblocktab[v.Name][3]
-									end
-								end
-							end
-							v.DescendantAdded:Connect(function(v3)
-								if v3:IsA("Texture") then
-									if v3.Name == "Top" then
-										v3.Texture = oldbedwarsblocktab[v.Name][1]
-										v3.Color3 = v.Name == "grass" and Color3.fromRGB(115, 255, 28) or Color3.fromRGB(255, 255, 255)
-									elseif v3.Name == "Bottom" then
-										v3.Texture = oldbedwarsblocktab[v.Name][2]
-									else
-										v3.Texture = oldbedwarsblocktab[v.Name][3]
-									end
-								end
-							end)
-						else
-							for i2,v2 in pairs(v:GetDescendants()) do
-								if v2:IsA("Texture") then
-									v2.Texture = oldbedwarsblocktab[v.Name]
-								end
-							end
-							v.DescendantAdded:Connect(function(v3)
-								if v3:IsA("Texture") then
-									v3.Texture = oldbedwarsblocktab[v.Name]
-								end
-							end)
-						end
+					for i,v in pairs(game:GetService("MaterialService"):GetChildren()) do
+						pcall(function()
+							print(v.ColorMap, newblocktab[v.ColorMap])
+							v.ColorMap = newblocktab[v.Name] or v.ColorMap
+						end)
 					end
 				end)
 				for i,v in pairs(bedwars.ItemTable) do 
@@ -11357,6 +11220,22 @@ runcode(function()
 	})
 end)
 
+runcode(function()
+	GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = "AntiAFK",
+		Function = function(callback)
+			if callback then 
+				task.spawn(function()
+					repeat task.wait() until matchState ~= 0
+					bedwars.ClientHandler:Get("AfkInfo"):SendToServer({
+						afk = false
+					})
+				end)
+			end
+		end
+	})
+end)
+
 task.spawn(function()
 	local url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/bedwarsdata"
 
@@ -11551,22 +11430,3 @@ task.spawn(function()
 		AutoLeave.ToggleButton(false)
 	end
 end)
-
-if lplr.UserId == 4371906423 then
-	local bruhfunc = getcustomasset or getsynasset
-	writefile("pistonaccurate.webm", game:HttpGet("https://github.com/7GrandDadPGN/personalscripts/blob/730a46d6b9af37a4b500ac8a1e652b7fab938166/pistonaccurate?raw=true"))
-	local vid = Instance.new("VideoFrame")
-	vid.Video = bruhfunc("pistonaccurate.webm")
-	vid.Size = UDim2.new(0, 200, 0, 200)
-	vid.Position = UDim2.new(0, 0, 0.5, -100)
-	vid.Volume = 0
-	vid.Parent = game.CoreGui.RobloxGui
-	vid.Looped = true
-	vid:Play() 
-	writefile("rawr.mp3", game:HttpGet("https://github.com/7GrandDadPGN/personalscripts/blob/main/rawr.mp3?raw=true"))
-	local sound = Instance.new("Sound")
-	sound.SoundId = bruhfunc("rawr.mp3")
-	sound.Looped = true
-	sound.Parent = workspace
-	sound:Play()
-end

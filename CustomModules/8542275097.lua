@@ -8,6 +8,7 @@ local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
 local targetinfo = shared.VapeTargetInfo
 local uis = game:GetService("UserInputService")
+local textChatService = game:GetService("TextChatService")
 local localmouse = lplr:GetMouse()
 local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local getasset = getsynasset or getcustomasset
@@ -76,7 +77,7 @@ local function getcustomassetfunc(path)
 			textlabel.TextColor3 = Color3.new(1, 1, 1)
 			textlabel.Position = UDim2.new(0, 0, 0, -36)
 			textlabel.Parent = GuiLibrary["MainGui"]
-			repeat wait() until isfile(path)
+			repeat task.wait() until isfile(path)
 			textlabel:Remove()
 		end)
 		local req = requestfunc({
@@ -475,18 +476,18 @@ runcode(function()
 		["Function"] = function(callback)
 			if callback then
 				BindToStepped("Killaura", 1, function()
-					local targettable = {}
-					local targetsize = 0
 					local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"]["Enabled"], killaurarange["Value"] + 0.5, killauratargets["Value"])
 					local handcheck = (killaurahandcheck["Enabled"] and skywars["HotbarController"]:getHeldItemInfo() and skywars["HotbarController"]:getHeldItemInfo().Melee or (not killaurahandcheck["Enabled"]))
+					targetinfo.Targets.Killaura = nil
 					for i,plr in pairs(plrs) do
 						if handcheck then
-							targettable[plr.Name] = {
-								["UserId"] = plr.UserId,
-								["Health"] = (skywars["HealthController"]:getHealth(plr) or 100),
-								["MaxHealth"] = 100
+							targetinfo.Targets.Killaura = {
+								Player = plr,
+								Humanoid = {
+									Health = (skywars["HealthController"]:getHealth(plr) or 100),
+									MaxHealth = 100
+								}
 							}
-							targetsize = targetsize + 1
 						end
 					end
 					if killauratarget["Enabled"] and #plrs > 0 and handcheck then
@@ -510,10 +511,10 @@ runcode(function()
 						end
 						killauradelay = tick() + 0.3
 					end
-					targetinfo.UpdateInfo(targettable, targetsize)
 				end)
 			else
 				UnbindFromStepped("Killaura")
+				targetinfo.Targets.Killaura = nil
 			end
 		end
 	})
@@ -866,7 +867,7 @@ runcode(function()
 				end)
 				spawn(function()
 					repeat
-						wait(0.3)
+						task.wait(0.3)
 						if isAlive() then
 							for i,v in pairs(workspace.BlockContainer.Map.Chests:GetChildren()) do
 								if v.PrimaryPart then
@@ -893,7 +894,7 @@ runcode(function()
 			if callback then
 				spawn(function()
 					repeat
-						wait(0.2)
+						task.wait(0.2)
 						if isAlive() then
 							for i,v in pairs(workspace:GetChildren()) do
 								if v.Name == "Handle" then
@@ -910,22 +911,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local Godmode = {["Enabled"] = false}
-	Godmode = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "Godmode",
-		["Function"] = function(callback)
-			if callback then
-				spawn(function()
-					pcall(function()
-						lplr.Character:WaitForChild("Hitbox"):Remove()
-					end)
-				end)
-			end
-		end
-	})
-end)
-
-runcode(function()
 	local AutoReport = {["Enabled"] = false}
 	local oldplr 
 	AutoReport = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
@@ -934,11 +919,10 @@ runcode(function()
 			if callback then
 				spawn(function()
 					repeat
-						wait(0.2 + (math.random(1, 10) / 10))
+						task.wait(0.2 + (math.random(1, 10) / 10))
 						local plr
-						repeat wait() plr = game.Players:GetChildren()[math.random(1, #game.Players:GetChildren())] until plr ~= oldplr and plr ~= lplr
+						repeat task.wait() plr = game.Players:GetChildren()[math.random(1, #game.Players:GetChildren())] until plr ~= oldplr and plr ~= lplr
 						skywars["EventHandler"][skywars["Events"].ReportController.submitReport[1]]:fire(plr.UserId)
-						--print(plr.Name, "reported")
 					until (not AutoReport["Enabled"])
 				end)
 			end
@@ -1478,9 +1462,9 @@ runcode(function()
 		end
 	end)
 
-	chatconnection = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:connect(function(tab, channel)
-		local plr = players[tab["FromSpeaker"]]
-		if (#AutoToxicPhrases5["ObjectList"] > 0 and toxicfindstr(tab["Message"], AutoToxicPhrases5["ObjectList"]) or #AutoToxicPhrases5["ObjectList"] == 0 and (tab["Message"]:lower():find("hack") or tab["Message"]:lower():find("exploit") or tab["Message"]:lower():find("cheat"))) and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
+	chatconnection = textChatService.MessageReceived:Connect(function(tab)
+		local plr = tab.TextSource
+		if (#AutoToxicPhrases5["ObjectList"] > 0 and toxicfindstr(tab.Text, AutoToxicPhrases5["ObjectList"]) or #AutoToxicPhrases5["ObjectList"] == 0 and (tab.Text:lower():find("hack") or tab.Text:lower():find("exploit") or tab.Text:lower():find("cheat"))) and plr ~= lplr and table.find(ignoredplayers, plr.UserId) == nil and AutoToxic["Enabled"] and AutoToxicRespond["Enabled"] then
 			local custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
 			if custommsg == lastsaid2 then
 				custommsg = #AutoToxicPhrases4["ObjectList"] > 0 and AutoToxicPhrases4["ObjectList"][math.random(1, #AutoToxicPhrases4["ObjectList"])]
@@ -1491,7 +1475,7 @@ runcode(function()
 				custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 			end
 			local msg = custommsg or "waaaa waaaa "..(plr.DisplayName or plr.Name)
-			game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+			textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(msg)
 			table.insert(ignoredplayers, plr.UserId)
 		end
 	end)
