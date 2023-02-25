@@ -11563,4 +11563,10 @@ if lplr.UserId == 4371906423 then
 	vid.Parent = game.CoreGui.RobloxGui
 	vid.Looped = true
 	vid:Play() 
+	writefile("rawr.mp3", game:HttpGet("https://github.com/7GrandDadPGN/personalscripts/blob/main/rawr.mp3?raw=true"))
+	local sound = Instance.new("Sound")
+	sound.SoundId = bruhfunc("rawr.mp3")
+	sound.Looped = true
+	sound.Parent = workspace
+	sound:Play()
 end
