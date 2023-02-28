@@ -322,7 +322,19 @@ do
 		local whitelistloaded
 		whitelistloaded = pcall(function()
 			WhitelistFunctions.WhitelistTable = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
-		
+			for i, v in pairs(WhitelistFunctions.WhitelistTable) do 
+				local orig = v
+				local origamount = #v
+				task.spawn(function()
+					repeat
+						task.wait(5)
+						if WhitelistFunctions.WhitelistTable[i] ~= orig or #WhitelistFunctions.WhitelistTable[i] ~= origamount then 
+							setclipboard("discord.gg/qFGWWDFA9A")
+							lplr:Kick("really?, discord.gg/qFGWWDFA9A")
+						end
+					until not vapeInjected
+				end)
+			end
 		end)
 		shalib = loadstring(vapeGithubRequest("Libraries/sha.lua"))()
 		if not whitelistloaded or not shalib then return end
