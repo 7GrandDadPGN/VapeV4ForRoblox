@@ -4825,6 +4825,15 @@ runcode(function()
 		Function = function(callback)
 			if callback then
 				task.spawn(function()
+					task.spawn(function()
+						repeat
+							task.wait()
+							if longjumpacprogressbarframe then
+								longjumpacprogressbarframe.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Hue, GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Sat, GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Value)
+								longjumpacprogressbarframe.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Hue, GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Sat, GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Value)
+							end
+						until (not longjump.Enabled)
+					end)
 					local startpos = entityLibrary.isAlive and entityLibrary.character.HumanoidRootPart.Position
 					local tntcheck
 					longjumpdelay = tick()
@@ -7236,6 +7245,8 @@ runcode(function()
 						end
 						if flyacprogressbarframe then
 							flyacprogressbarframe.Visible = allowed <= 0
+							flyacprogressbarframe.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Hue, GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Sat, GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Value)
+							flyacprogressbarframe.Frame.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Hue, GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Sat, GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api.Value)
 						end
 						flyboosting = flyac.Enabled and flyspeedboost.Enabled and allowed <= 0 
 						if flyac.Enabled and allowed <= 0 then 
@@ -7470,7 +7481,6 @@ runcode(function()
 				flyacprogressbarframe2.Size = UDim2.new(1, 0, 0, 20)
 				flyacprogressbarframe2.BackgroundTransparency = 0
 				flyacprogressbarframe2.Visible = true
-				flyacprogressbarframe2.BackgroundColor3 = Color3.new(0.9, 0.9, 0.9)
 				flyacprogressbarframe2.Parent = flyacprogressbarframe
 				local flyacprogressbartext = Instance.new("TextLabel")
 				flyacprogressbartext.Text = "2s"
@@ -7601,7 +7611,6 @@ runcode(function()
 					clone.Parent = lplr.Character
 					oldcloneroot.Parent = cam
 					bedwars["QueryUtil"]:setQueryIgnored(oldcloneroot, true)
-					oldcloneroot.Transparency = 1
 					clone.CFrame = oldcloneroot.CFrame
 					lplr.Character.PrimaryPart = clone
 					lplr.Character.Parent = workspace
@@ -7683,7 +7692,6 @@ runcode(function()
 					part.Parent = workspace.GameSounds
 					part.Position = oldcloneroot.Position
 					disabledproper = false
-					oldcloneroot.Transparency = 0
 					if isnetworkowner(oldcloneroot) then 
 						createwarning("InfiniteFly", "Waiting "..(flydelay.Value / 100).."s to not flag", 3)
 						task.delay(flydelay.Value / 100, disablefunc, part)
@@ -10197,8 +10205,8 @@ runcode(function()
 	overlayframe3.Position = UDim2.new(0, 0, 0, 6)
 	overlayframe3.BorderSizePixel = 0
 	overlayframe3.Parent = overlayframe2
-	local oldguiupdate = GuiLibrary["UpdateUI"]
-	GuiLibrary["UpdateUI"] = function(h, s, v, ...)
+	local oldguiupdate = GuiLibrary.UpdateUI
+	GuiLibrary.UpdateUI = function(h, s, v, ...)
 		overlayframe2.BackgroundColor3 = Color3.fromHSV(h, s, v)
 		return oldguiupdate(h, s, v, ...)
 	end
