@@ -154,25 +154,40 @@ do
 	entityLibrary.fullEntityRefresh()
 	entityLibrary.LocalPosition = Vector3.zero
 	entityLibrary.OtherPosition = {}
+	
 	task.spawn(function()
 		local postable = {}
-		local postable2 = {}
 		repeat
+			task.wait()
 			if entityLibrary.isAlive then
-				table.insert(postable, entityLibrary.character.HumanoidRootPart.Position)
+				table.insert(postable, {Time = workspace:GetServerTimeNow(), Position = entityLibrary.character.HumanoidRootPart.Position})
 				if #postable > 60 then 
 					table.remove(postable, 1)
 				end
-				entityLibrary.LocalPosition = postable[46] or entityLibrary.character.HumanoidRootPart.Position
+				local closestmag = 9e9
+				local closestpos = entityLibrary.character.HumanoidRootPart.Position
+				for i, v in pairs(postable) do 
+					local mag = math.abs(workspace:GetServerTimeNow() - (v.Time + 0.182))
+					if mag < closestmag then
+						closestmag = mag
+						closestpos = v.Position
+					end
+				end
+				entityLibrary.LocalPosition = closestpos
 			end
+		until not vapeInjected
+	end)
+	task.spawn(function()
+		local postable2 = {}
+		repeat
+			task.wait(0.016)
 			for i,v in pairs(entityLibrary.entityList) do 
 				if postable2[v.Player] == nil then 
 					postable2[v.Player] = v.RootPart.Position
 				end
-				entityLibrary.OtherPosition[v.Player] = v.RootPart.Position + ((v.RootPart.Position - postable2[v.Player]) * 3)
+				entityLibrary.OtherPosition[v.Player] = v.RootPart.Position + ((v.RootPart.Position - postable2[v.Player]) * 2.5)
 				postable2[v.Player] = v.RootPart.Position
 			end
-			task.wait()
 		until not vapeInjected
 	end)
 end
@@ -200,6 +215,7 @@ local function EntityNearPosition(distance, checktab)
 	local closest, returnedplayer, targetpart = distance, nil, nil
 	checktab = checktab or {}
 	if entityLibrary.isAlive then
+		local sortedentities = {}
 		for i, v in pairs(entityLibrary.entityList) do -- loop through playersService
 			if not v.Targetable then continue end
             if isVulnerable(v) then -- checks
@@ -209,19 +225,54 @@ local function EntityNearPosition(distance, checktab)
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
 				end
                 if mag <= (v.Target and distance or closest) then -- mag check
-					if checktab.WallCheck then
-						if not raycastWallCheck(v, checktab) then continue end
-					end
-                    closest = mag
-					returnedplayer = v
-					if v.Target then 
-						break 
-					end
+					table.insert(sortedentities, {entity = v, Magnitude = mag})
                 end
             end
         end
+		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
+		for i, v in pairs(sortedentities) do 
+			if checktab.WallCheck then
+				if not raycastWallCheck(v.entity, checktab) then continue end
+			end
+			closest = mag
+			returnedplayer = v.entity
+			if v.entity.Target then 
+				break 
+			end
+		end
 	end
 	return returnedplayer
+end
+
+local function EntityNearMouse(distance, checktab)
+    local closest, returnedplayer = distance, nil
+	checktab = checktab or {}
+    if entityLibrary.isAlive then
+		local sortedentities = {}
+		local mousepos = inputService.GetMouseLocation(inputService)
+		for i, v in pairs(entityLibrary.entityList) do
+			if not v.Targetable then continue end
+            if isVulnerable(v) then
+				local vec, vis = worldtoscreenpoint(v[checktab.AimPart].Position)
+				local mag = (mousepos - Vector2.new(vec.X, vec.Y)).magnitude
+                if vis and mag <= (v.Target and distance or closest) then
+					table.insert(sortedentities, {entity = v, Magnitude = mag})
+                end
+            end
+        end
+		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
+		for i, v in pairs(sortedentites) do 
+			if checktab.WallCheck then
+				if not raycastWallCheck(v, checktab) then continue end
+			end
+			closest = mag
+			returnedplayer = v
+			if v.Target then 
+				break 
+			end
+		end
+    end
+    return returnedplayer
 end
 
 local function AllNearPosition(distance, amount, checktab)
@@ -229,6 +280,7 @@ local function AllNearPosition(distance, amount, checktab)
 	local currentamount = 0
 	checktab = checktab or {}
     if entityLibrary.isAlive then
+		local sortedentities = {}
 		for i, v in pairs(entityLibrary.entityList) do -- loop through playersService
 			if not v.Targetable then continue end
             if isVulnerable(v) and currentamount < amount then -- checks
@@ -238,42 +290,20 @@ local function AllNearPosition(distance, amount, checktab)
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
 				end
                 if mag <= distance then -- mag check
-					if checktab.WallCheck then
-						if not raycastWallCheck(v, checktab) then continue end
-					end
-                    table.insert(returnedplayer, v)
-					currentamount = currentamount + 1
+					table.insert(sortedentities, {entity = v, Magnitude = mag})
                 end
             end
         end
+		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
+		for i,v in pairs(sortedentities) do 
+			if checktab.WallCheck then
+				if not raycastWallCheck(v.entity, checktab) then continue end
+			end
+			table.insert(returnedplayer, v.entity)
+			currentamount = currentamount + 1
+		end
 	end
 	return returnedplayer
-end
-
-local function EntityNearMouse(distance, checktab)
-    local closest, returnedplayer = distance, nil
-	checktab = checktab or {}
-    if entityLibrary.isAlive then
-		local mousepos = inputService.GetMouseLocation(inputService)
-		for i, v in pairs(entityLibrary.entityList) do
-			if not v.Targetable then continue end
-            if isVulnerable(v) then
-				local vec, vis = worldtoscreenpoint(v[checktab.AimPart].Position)
-				local mag = (mousepos - Vector2.new(vec.X, vec.Y)).magnitude
-                if vis and mag <= (v.Target and distance or closest) then
-					if checktab.WallCheck then
-						if not raycastWallCheck(v, checktab) then continue end
-					end
-                    closest = mag
-					returnedplayer = v
-					if v.Target then 
-						break 
-					end
-                end
-            end
-        end
-    end
-    return returnedplayer
 end
 
 local WhitelistFunctions = {StoredHashes = {}, PriorityList = {
@@ -292,10 +322,21 @@ do
 		local whitelistloaded
 		whitelistloaded = pcall(function()
 			WhitelistFunctions.WhitelistTable = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
+			for i, v in pairs(WhitelistFunctions.WhitelistTable) do 
+				local orig = v
+				local origamount = #v
+				task.spawn(function()
+					repeat
+						task.wait(5)
+						if WhitelistFunctions.WhitelistTable[i] ~= orig or #WhitelistFunctions.WhitelistTable[i] ~= origamount then 
+							lplr:Kick("really?")
+						end
+					until not vapeInjected
+				end)
+			end
 		end)
 		shalib = loadstring(vapeGithubRequest("Libraries/sha.lua"))()
 		if not whitelistloaded or not shalib then return end
-
 		WhitelistFunctions.Loaded = true
 		entityLibrary.fullEntityRefresh()
 	end)
@@ -1928,9 +1969,9 @@ runFunction(function()
 			for i, v in pairs(entityLibrary.entityList) do table.insert(chars, v.Character) end
 			PhaseOverlap.FilterDescendantsInstances = chars
 			local rootpos = entityLibrary.character.HumanoidRootPart.CFrame.p
-			local parts = workspace:GetPartBoundsInRadius(rootpos, 1.5, PhaseOverlap)
+			local parts = workspace:GetPartBoundsInRadius(rootpos, 2, PhaseOverlap)
 			for i, v in pairs(parts) do 
-				if v.CanCollide then 
+				if v.CanCollide and (v.Position.Y + (v.Size.Y / 2)) > (rootpos.Y - entityLibrary.character.Humanoid.HipHeight) and (not Spider.Enabled or spiderHoldingShift) then 
 					PhaseModifiedParts[v] = true
 					v.CanCollide = false
 				end
@@ -1944,7 +1985,7 @@ runFunction(function()
 		end,
 		Character = function()
 			for i, part in pairs(lplr.Character:GetDescendants()) do
-				if part:IsA("BasePart") and part.CanCollide then
+				if part:IsA("BasePart") and part.CanCollide and (not Spider.Enabled or spiderHoldingShift) then
 					PhaseModifiedParts[part] = true
 					part.CanCollide = Spider.Enabled and not spiderHoldingShift
 				end
@@ -1954,11 +1995,11 @@ runFunction(function()
 			local chars = {gameCamera, lplr.Character}
 			for i, v in pairs(entityLibrary.entityList) do table.insert(chars, v.Character) end
 			PhaseRaycast.FilterDescendantsInstances = chars
-			local phaseRayCheck = workspace:Raycast(entityLibrary.character.Head.CFrame.p, entityLibrary.character.Humanoid.MoveDirection, raycastparameters)
+			local phaseRayCheck = workspace:Raycast(entityLibrary.character.Head.CFrame.p, entityLibrary.character.Humanoid.MoveDirection * 1.1, PhaseRaycast)
 			if phaseRayCheck and (not Spider.Enabled or spiderHoldingShift) then
 				local phaseDirection = phaseRayCheck.Normal.Z ~= 0 and "Z" or "X"
 				if phaseRayCheck.Instance.Size[phaseDirection] <= PhaseStudLimit.Value and phaseRayCheck.Instance.CanCollide then
-					entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (phaseRayCheck.Normal * (-(phaseRayCheck.Instance.Size[phaseDirection]) - 1))
+					entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (phaseRayCheck.Normal * (-(phaseRayCheck.Instance.Size[phaseDirection]) - (entityLibrary.character.HumanoidRootPart.Size.X / 1.5)))
 				end
 			end
 		end
@@ -2019,12 +2060,12 @@ runFunction(function()
 		Function = function(callback)
 			if callback then
 				if SpiderPart then SpiderPart.Parent = gameCamera end
-				RunLoops:BindToHeartbeat("Spider", function()
+				RunLoops:BindToHeartbeat("Spider", function(delta)
 					if entityLibrary.isAlive then
 						local chars = {gameCamera, lplr.Character, SpiderPart}
 						for i, v in pairs(entityLibrary.entityList) do table.insert(chars, v.Character) end
 						SpiderRaycast.FilterDescendantsInstances = chars
-						if SpiderMode.Value == "Normal" then
+						if SpiderMode.Value ~= "Classic" then
 							local vec = entityLibrary.character.Humanoid.MoveDirection * 2
 							local newray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, vec + Vector3.new(0, 0.1, 0), SpiderRaycast)
 							local newray2 = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, vec - Vector3.new(0, entityLibrary.character.Humanoid.HipHeight, 0), SpiderRaycast)
@@ -2036,13 +2077,18 @@ runFunction(function()
 							if SpiderActive and (newray or newray2).Normal.Y == 0 then
 								if not Phase.Enabled or not spiderHoldingShift then
 									if SpiderState.Enabled then entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Climbing) end
-									entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(entityLibrary.character.HumanoidRootPart.Velocity.X - (entityLibrary.character.HumanoidRootPart.CFrame.lookVector.X / 2), SpiderSpeed.Value, entityLibrary.character.HumanoidRootPart.Velocity.Z - (entityLibrary.character.HumanoidRootPart.CFrame.lookVector.Z / 2))
+									if SpiderMode.Value == "CFrame" then 
+										entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + Vector3.new(-(entityLibrary.character.HumanoidRootPart.CFrame.lookVector.X * 18) * delta, SpiderSpeed.Value * delta, -(entityLibrary.character.HumanoidRootPart.CFrame.lookVector.Z * 18) * delta)
+									else
+										entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(entityLibrary.character.HumanoidRootPart.Velocity.X - (entityLibrary.character.HumanoidRootPart.CFrame.lookVector.X / 2), SpiderSpeed.Value, entityLibrary.character.HumanoidRootPart.Velocity.Z - (entityLibrary.character.HumanoidRootPart.CFrame.lookVector.Z / 2))
+									end
 								end
 							end
 						else
 							local vec = entityLibrary.character.HumanoidRootPart.CFrame.lookVector * 1.5
 							local newray2 = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, (vec - Vector3.new(0, entityLibrary.character.Humanoid.HipHeight, 0)), SpiderRaycast)
-							if newray2 then 
+							spiderHoldingShift = inputService:IsKeyDown(Enum.KeyCode.LeftShift)
+							if newray2 and (not Phase.Enabled or not spiderHoldingShift) then 
 								local newray2pos = newray2.Instance.Position
 								local newpos = clampSpiderPosition(entityLibrary.character.HumanoidRootPart.Position, Vector3.new(newray2pos.X, math.min(entityLibrary.character.HumanoidRootPart.Position.Y, newray2pos.Y), newray2pos.Z), newray2.Instance.Size - Vector3.new(1.9, 1.9, 1.9))
 								SpiderPart.Position = newpos
@@ -2061,7 +2107,7 @@ runFunction(function()
 	})
 	SpiderMode = Spider.CreateDropdown({
 		Name = "Mode",
-		List = {"Normal", "Classic"},
+		List = {"Normal", "CFrame", "Classic"},
 		Function = function(val) 
 			if SpiderPart then SpiderPart:Destroy() SpiderPart = nil end
 			if val == "Classic" then 
@@ -4843,19 +4889,20 @@ runFunction(function()
 					if not suc then controlmodule = {} end
 				end
 				oldmove = controlmodule.moveFunction
-				controlmodule.moveFunction = function(Self, vec, facecam)
+				controlmodule.moveFunction = function(Self, vec, facecam, ...)
 					if entityLibrary.isAlive then
 						local plr = EntityNearPosition(targetstraferange.Value, {
 							WallCheck = false,
 							AimPart = "RootPart"
 						})
 						if plr then 
+							facecam = false
 							vec = CFrame.lookAt(entityLibrary.character.HumanoidRootPart.Position, Vector3.new(plr.RootPart.Position.X, 0, plr.RootPart.Position.Z)):VectorToWorldSpace(Vector3.new((inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0), 0, (inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)))
-							vec = Vector3.new(vec.X, 0, vec.Z)
+							vec = vec * Vector3.new(3, 0, 3)
 							vec = vec.Unit == vec.Unit and vec.Unit or Vector3.zero
 						end
 					end
-					return oldmove(Self, vec, facecam)
+					return oldmove(Self, vec, facecam, ...)
 				end
 			else
 				controlmodule.moveFunction = oldmove
@@ -5104,6 +5151,12 @@ runFunction(function()
 						playedanim.Looped = true
 						playedanim:Play()
 						playedanim:AdjustSpeed(AnimationPlayerSpeed.Value / 10)
+						playedanim.Stopped:Connect(function()
+							if AnimationPlayer.Enabled then
+								AnimationPlayer.ToggleButton(false)
+								AnimationPlayer.ToggleButton(false)
+							end
+						end)
 					else
 						warningNotification("AnimationPlayer", "failed to load anim : "..(res or "invalid animation id"), 5)
 					end
@@ -5125,6 +5178,12 @@ runFunction(function()
 						playedanim.Looped = true
 						playedanim:Play()
 						playedanim:AdjustSpeed(AnimationPlayerSpeed.Value / 10)
+						playedanim.Stopped:Connect(function()
+							if AnimationPlayer.Enabled then
+								AnimationPlayer.ToggleButton(false)
+								AnimationPlayer.ToggleButton(false)
+							end
+						end)
 					else
 						warningNotification("AnimationPlayer", "failed to load anim : "..(res or "invalid animation id"), 5)
 					end
