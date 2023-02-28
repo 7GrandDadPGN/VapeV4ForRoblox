@@ -5478,6 +5478,7 @@ runcode(function()
 				if callback then 
 					killaurabox = Instance.new("Highlight")
 					killaurabox.FillTransparency = 0.5
+					killaurabox.FillColor = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor.Value)
 					killaurabox.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 					killaurabox.OutlineTransparency = 1
 					killaurabox.Parent = GuiLibrary["MainGui"]
