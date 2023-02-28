@@ -5268,7 +5268,7 @@ runcode(function()
 								if matchState == 0 then continue end
 							end
 							if killauramouse.Enabled then
-								if uis:IsMouseButtonPressed(0) then continue end
+								if not uis:IsMouseButtonPressed(0) then continue end
 							end
 							if killauragui.Enabled then
 								if #bedwars["AppController"]:getOpenApps() > (kit == "hannah" and 4 or 3) then continue end
