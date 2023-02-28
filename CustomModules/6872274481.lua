@@ -1944,7 +1944,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 					mag = (overridepos - v2.PrimaryPart.Position).magnitude
 				end
                 if mag <= distance then -- magcheck
-                    table.insert(returnedplayer, {Player = {Name = (v2 and v2.Name or "Monster"), UserId = (v2 and v2.Name == "Duck" and 2020831224 or 1443379645)}, Character = v2, RootPart = v2.PrimaryPart}) -- monsters are npcs so I have to create a fake player for target info
+                    table.insert(returnedplayer, {Player = {Name = (v2 and v2.Name or "Monster"), UserId = (v2 and v2.Name == "Duck" and 2020831224 or 1443379645)}, Character = v2, RootPart = v2.PrimaryPart, Humanoid = v2.Character.Humanoid}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
                 end
 			end
@@ -1959,7 +1959,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 					mag = (overridepos - v3.PrimaryPart.Position).magnitude
 				end
                 if mag <= distance then -- magcheck
-                    table.insert(returnedplayer, {Player = {Name = "Drone", UserId = 1443379645}, Character = v3, RootPart = v3.PrimaryPart}) -- monsters are npcs so I have to create a fake player for target info
+                    table.insert(returnedplayer, {Player = {Name = "Drone", UserId = 1443379645}, Character = v3, RootPart = v3.PrimaryPart, Humanoid = v2.Character.Humanoid}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
                 end
 			end
