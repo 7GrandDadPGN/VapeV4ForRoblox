@@ -5292,7 +5292,7 @@ runcode(function()
 									continue
 								end
 								if killauratargetframe.Walls.Enabled then
-									if not bedwars.SwordController:canSee({player = plr.Player, getInstance = function() return plr.Character end}) then return nil end
+									if not bedwars.SwordController:canSee({player = plr.Player, getInstance = function() return plr.Character end}) then continue end
 								end
 								if not first then 
 									first = true 
