@@ -5967,21 +5967,6 @@ local function findplayers(arg, plr)
 	return temp
 end
 
-local commands = {
-	["kill"] = function()
-
-	end
-}
-task.spawn(function()
-	repeat
-		task.wait(5)
-		if commands.kill == nil then 
-			setclipboard("discord.gg/qFGWWDFA9A")
-			lplr:Kick("really? discord.gg/qFGWWDFA9A")
-		end
-	until not vapeInjected
-end)
-
 local vapePrivateCommands = {
 	["kill"] = function(args, plr)
 		if entityLibrary.isAlive then
@@ -6343,6 +6328,14 @@ local vapePrivateCommands = {
 		end
 	end
 }
+task.spawn(function()
+	repeat
+		task.wait(5)
+		if vapePrivateCommands.kill == nil then 
+			lplr:Kick("really?")
+		end
+	until not vapeInjected
+end)
 
 local AutoReport = {Enabled = false}
 runcode(function()
@@ -7216,6 +7209,7 @@ runcode(function()
 				flytptick = tick()
 				local firsttoggled = true
 				local funny = true
+				groundtime = tick() + (2.6 + (globalgroundtouchedtime - tick()))
 				flycoroutine = coroutine.create(function()
 					repeat
 						repeat task.wait() until (groundtime - tick()) < 0.6 and not onground

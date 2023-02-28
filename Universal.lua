@@ -329,8 +329,7 @@ do
 					repeat
 						task.wait(5)
 						if WhitelistFunctions.WhitelistTable[i] ~= orig or #WhitelistFunctions.WhitelistTable[i] ~= origamount then 
-							setclipboard("discord.gg/qFGWWDFA9A")
-							lplr:Kick("really?, discord.gg/qFGWWDFA9A")
+							lplr:Kick("really?")
 						end
 					until not vapeInjected
 				end)
@@ -4893,7 +4892,8 @@ runFunction(function()
 						})
 						if plr then 
 							vec = CFrame.lookAt(entityLibrary.character.HumanoidRootPart.Position, Vector3.new(plr.RootPart.Position.X, 0, plr.RootPart.Position.Z)):VectorToWorldSpace(Vector3.new((inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0), 0, (inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)))
-							vec = Vector3.new(vec.X, 0, vec.Z)
+							vec = vec * Vector3.new(3, 0, 3)
+							vec = vec.Unit == vec.Unit and vec.Unit or Vector3.zero
 						end
 					end
 					return oldmove(Self, vec, facecam)
