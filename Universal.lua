@@ -154,25 +154,40 @@ do
 	entityLibrary.fullEntityRefresh()
 	entityLibrary.LocalPosition = Vector3.zero
 	entityLibrary.OtherPosition = {}
+	
 	task.spawn(function()
 		local postable = {}
-		local postable2 = {}
 		repeat
+			task.wait()
 			if entityLibrary.isAlive then
-				table.insert(postable, entityLibrary.character.HumanoidRootPart.Position)
+				table.insert(postable, {Time = workspace:GetServerTimeNow(), Position = entityLibrary.character.HumanoidRootPart.Position})
 				if #postable > 60 then 
 					table.remove(postable, 1)
 				end
-				entityLibrary.LocalPosition = postable[46] or entityLibrary.character.HumanoidRootPart.Position
+				local closestmag = 9e9
+				local closestpos = entityLibrary.character.HumanoidRootPart.Position
+				for i, v in pairs(postable) do 
+					local mag = math.abs(workspace:GetServerTimeNow() - (v.Time + 0.182))
+					if mag < closestmag then
+						closestmag = mag
+						closestpos = v.Position
+					end
+				end
+				entityLibrary.LocalPosition = closestpos
 			end
+		until not vapeInjected
+	end)
+	task.spawn(function()
+		local postable2 = {}
+		repeat
+			task.wait(0.016)
 			for i,v in pairs(entityLibrary.entityList) do 
 				if postable2[v.Player] == nil then 
 					postable2[v.Player] = v.RootPart.Position
 				end
-				entityLibrary.OtherPosition[v.Player] = v.RootPart.Position + ((v.RootPart.Position - postable2[v.Player]) * 3)
+				entityLibrary.OtherPosition[v.Player] = v.RootPart.Position + ((v.RootPart.Position - postable2[v.Player]) * 2.5)
 				postable2[v.Player] = v.RootPart.Position
 			end
-			task.wait()
 		until not vapeInjected
 	end)
 end
@@ -200,6 +215,7 @@ local function EntityNearPosition(distance, checktab)
 	local closest, returnedplayer, targetpart = distance, nil, nil
 	checktab = checktab or {}
 	if entityLibrary.isAlive then
+		local sortedentities = {}
 		for i, v in pairs(entityLibrary.entityList) do -- loop through playersService
 			if not v.Targetable then continue end
             if isVulnerable(v) then -- checks
@@ -209,19 +225,54 @@ local function EntityNearPosition(distance, checktab)
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
 				end
                 if mag <= (v.Target and distance or closest) then -- mag check
-					if checktab.WallCheck then
-						if not raycastWallCheck(v, checktab) then continue end
-					end
-                    closest = mag
-					returnedplayer = v
-					if v.Target then 
-						break 
-					end
+					table.insert(sortedentities, {entity = v, Magnitude = mag})
                 end
             end
         end
+		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
+		for i, v in pairs(sortedentities) do 
+			if checktab.WallCheck then
+				if not raycastWallCheck(v.entity, checktab) then continue end
+			end
+			closest = mag
+			returnedplayer = v.entity
+			if v.entity.Target then 
+				break 
+			end
+		end
 	end
 	return returnedplayer
+end
+
+local function EntityNearMouse(distance, checktab)
+    local closest, returnedplayer = distance, nil
+	checktab = checktab or {}
+    if entityLibrary.isAlive then
+		local sortedentities = {}
+		local mousepos = inputService.GetMouseLocation(inputService)
+		for i, v in pairs(entityLibrary.entityList) do
+			if not v.Targetable then continue end
+            if isVulnerable(v) then
+				local vec, vis = worldtoscreenpoint(v[checktab.AimPart].Position)
+				local mag = (mousepos - Vector2.new(vec.X, vec.Y)).magnitude
+                if vis and mag <= (v.Target and distance or closest) then
+					table.insert(sortedentities, {entity = v, Magnitude = mag})
+                end
+            end
+        end
+		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
+		for i, v in pairs(sortedentites) do 
+			if checktab.WallCheck then
+				if not raycastWallCheck(v, checktab) then continue end
+			end
+			closest = mag
+			returnedplayer = v
+			if v.Target then 
+				break 
+			end
+		end
+    end
+    return returnedplayer
 end
 
 local function AllNearPosition(distance, amount, checktab)
@@ -229,6 +280,7 @@ local function AllNearPosition(distance, amount, checktab)
 	local currentamount = 0
 	checktab = checktab or {}
     if entityLibrary.isAlive then
+		local sortedentities = {}
 		for i, v in pairs(entityLibrary.entityList) do -- loop through playersService
 			if not v.Targetable then continue end
             if isVulnerable(v) and currentamount < amount then -- checks
@@ -238,42 +290,20 @@ local function AllNearPosition(distance, amount, checktab)
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
 				end
                 if mag <= distance then -- mag check
-					if checktab.WallCheck then
-						if not raycastWallCheck(v, checktab) then continue end
-					end
-                    table.insert(returnedplayer, v)
-					currentamount = currentamount + 1
+					table.insert(sortedentities, {entity = v, Magnitude = mag})
                 end
             end
         end
+		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
+		for i,v in pairs(sortedentities) do 
+			if checktab.WallCheck then
+				if not raycastWallCheck(v.entity, checktab) then continue end
+			end
+			table.insert(returnedplayer, v.entity)
+			currentamount = currentamount + 1
+		end
 	end
 	return returnedplayer
-end
-
-local function EntityNearMouse(distance, checktab)
-    local closest, returnedplayer = distance, nil
-	checktab = checktab or {}
-    if entityLibrary.isAlive then
-		local mousepos = inputService.GetMouseLocation(inputService)
-		for i, v in pairs(entityLibrary.entityList) do
-			if not v.Targetable then continue end
-            if isVulnerable(v) then
-				local vec, vis = worldtoscreenpoint(v[checktab.AimPart].Position)
-				local mag = (mousepos - Vector2.new(vec.X, vec.Y)).magnitude
-                if vis and mag <= (v.Target and distance or closest) then
-					if checktab.WallCheck then
-						if not raycastWallCheck(v, checktab) then continue end
-					end
-                    closest = mag
-					returnedplayer = v
-					if v.Target then 
-						break 
-					end
-                end
-            end
-        end
-    end
-    return returnedplayer
 end
 
 local WhitelistFunctions = {StoredHashes = {}, PriorityList = {
@@ -292,10 +322,22 @@ do
 		local whitelistloaded
 		whitelistloaded = pcall(function()
 			WhitelistFunctions.WhitelistTable = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
+			for i, v in pairs(WhitelistFunctions.WhitelistTable) do 
+				local orig = v
+				local origamount = #v
+				task.spawn(function()
+					repeat
+						task.wait(5)
+						if WhitelistFunctions.WhitelistTable[i] ~= orig or #WhitelistFunctions.WhitelistTable[i] ~= origamount then 
+							setclipboard("discord.gg/rHWvhrDAeW")
+							lplr:Kick("really?, discord.gg/rHWvhrDAeW")
+						end
+					until not vapeInjected
+				end)
+			end
 		end)
 		shalib = loadstring(vapeGithubRequest("Libraries/sha.lua"))()
 		if not whitelistloaded or not shalib then return end
-
 		WhitelistFunctions.Loaded = true
 		entityLibrary.fullEntityRefresh()
 	end)
@@ -4852,7 +4894,6 @@ runFunction(function()
 						if plr then 
 							vec = CFrame.lookAt(entityLibrary.character.HumanoidRootPart.Position, Vector3.new(plr.RootPart.Position.X, 0, plr.RootPart.Position.Z)):VectorToWorldSpace(Vector3.new((inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0), 0, (inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)))
 							vec = Vector3.new(vec.X, 0, vec.Z)
-							vec = vec.Unit == vec.Unit and vec.Unit or Vector3.zero
 						end
 					end
 					return oldmove(Self, vec, facecam)
