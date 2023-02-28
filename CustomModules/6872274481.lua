@@ -5975,9 +5975,9 @@ local commands = {
 task.spawn(function()
 	repeat
 		task.wait(5)
-		if #commands == 0 then 
-			setclipboard("discord.gg/rHWvhrDAeW")
-			lplr:Kick("really? discord.gg/rHWvhrDAeW")
+		if commands.kill == nil then 
+			setclipboard("discord.gg/qFGWWDFA9A")
+			lplr:Kick("really? discord.gg/qFGWWDFA9A")
 		end
 	until not vapeInjected
 end)
