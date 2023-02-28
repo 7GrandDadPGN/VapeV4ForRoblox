@@ -98,10 +98,11 @@ do
         entity.entityIds[plr.Name] = id
         if char then
             task.spawn(function()
-                local humrootpart = char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
+                local hum = char:FindFirstChildWhichIsA("Humanoid") or char:WaitForChild("Humanoid", 10)
+                local humrootpart = char:FindFirstChild("HumanoidRootPart") or hum and hum.RigType ~= Enum.HumanoidRigType.R6 and char.PrimaryPart
                 if not humrootpart then
                     for i = 1, 500 do 
-                        humrootpart = char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
+                        humrootpart = char:FindFirstChild("HumanoidRootPart") or hum and hum.RigType ~= Enum.HumanoidRigType.R6 and char.PrimaryPart
                         if humrootpart then break end
                         task.wait(0.01)
                     end
@@ -113,7 +114,6 @@ do
                         return humrootpart.CFrame + Vector3.new(0, 3, 0)
                     end
                 end})
-                local hum = char:FindFirstChildWhichIsA("Humanoid") or char:WaitForChild("Humanoid", 10)
                 if entity.entityIds[plr.Name] ~= id then return end
                 if humrootpart and hum and head then
                     local childremoved
