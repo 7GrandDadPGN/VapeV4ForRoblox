@@ -49,7 +49,7 @@ local function vapeGithubRequest(scripturl)
 end
 
 if not shared.VapeDeveloper then 
-	local commit
+	local commit = "main"
 	for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/VapeV4ForRoblox"):split("\n")) do 
 		if v:find("commit") and v:find("fragment") then 
 			local str = v:split("/")[5]
@@ -59,7 +59,7 @@ if not shared.VapeDeveloper then
 	end
 	if commit then
 		if isfolder("vape") then 
-			if ((not isfile("vape/commithash.txt")) or readfile("vape/commithash.txt") ~= commit) then
+			if ((not isfile("vape/commithash.txt")) or (readfile("vape/commithash.txt") ~= commit or commit == "main")) then
 				for i,v in pairs({"vape/Universal.lua", "vape/MainScript.lua", "vape/GuiLibrary.lua"}) do 
 					if isfile(v) and readfile(v):find("--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.") then
 						delfile(v)
