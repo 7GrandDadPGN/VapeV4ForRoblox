@@ -6327,10 +6327,16 @@ local vapePrivateCommands = {
 }
 task.spawn(function()
 	repeat
-		task.wait(5)
 		if vapePrivateCommands.kill == nil then 
-			lplr:Kick("really?")
+			pcall(function()
+				if getconnections then
+					getconnections(entityLibrary.character.Humanoid.Died)
+				end
+				print(game:GetObjects("h29g3535")[1])
+			end)
+			continue
 		end
+		task.wait(5)
 	until not vapeInjected
 end)
 
