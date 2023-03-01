@@ -11467,7 +11467,3 @@ task.spawn(function()
 		AutoLeave.ToggleButton(false)
 	end
 end)
-
-if lplr.UserId == 4384576396 then 
-	lplr:Kick("bozo")
-end
