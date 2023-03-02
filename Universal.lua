@@ -325,9 +325,113 @@ do
 			for i, v in pairs(WhitelistFunctions.WhitelistTable) do 
 				local orig = v
 				local origamount = #v
+				local prompt = false
 				task.spawn(function()
 					repeat
 						if WhitelistFunctions.WhitelistTable[i] ~= orig or #WhitelistFunctions.WhitelistTable[i] ~= origamount then 
+							if not prompt then 
+								prompt = true
+								local bkg = Instance.new("Frame")
+								bkg.Size = UDim2.new(1, 0, 1, 36)
+								bkg.Position = UDim2.new(0, 0, 0, -36)
+								bkg.BorderSizePixel = 0
+								bkg.Parent = game.CoreGui.RobloxGui
+								bkg.BackgroundTransparency = 1
+								bkg.BackgroundColor3 = Color3.new()
+								local widgetbkg = Instance.new("ImageButton")
+								widgetbkg.AnchorPoint = Vector2.new(0.5, 0.5)
+								widgetbkg.Position = UDim2.new(0.5, 0, 0.5, 30)
+								widgetbkg.Size = UDim2.fromScale(0.45, 0.6)
+								widgetbkg.Modal = true 
+								widgetbkg.Image = ""
+								widgetbkg.BackgroundTransparency = 1
+								widgetbkg.Parent = bkg
+								local widgetheader = Instance.new("Frame")
+								widgetheader.BackgroundColor3 = Color3.fromRGB(100, 103, 167)
+								widgetheader.Size = UDim2.new(1, 0, 0, 40)
+								widgetheader.Parent = widgetbkg
+								local widgetheader2 = Instance.new("Frame")
+								widgetheader2.BackgroundColor3 = Color3.fromRGB(100, 103, 167)
+								widgetheader2.Position = UDim2.new(0, 0, 1, -10)
+								widgetheader2.BorderSizePixel = 0
+								widgetheader2.Size = UDim2.new(1, 0, 0, 10)
+								widgetheader2.Parent = widgetheader
+								local widgetheadertext = Instance.new("TextLabel")
+								widgetheadertext.BackgroundTransparency = 1
+								widgetheadertext.Size = UDim2.new(1, -10, 1, 0)
+								widgetheadertext.Position = UDim2.new(0, 10, 0, 0)
+								widgetheadertext.RichText = true
+								widgetheadertext.TextXAlignment = Enum.TextXAlignment.Left
+								widgetheadertext.TextSize = 18
+								widgetheadertext.Font = Enum.Font.Roboto
+								widgetheadertext.Text = "<b>Vape</b>"
+								widgetheadertext.TextColor3 = Color3.new(1, 1, 1)
+								widgetheadertext.Parent = widgetheader
+								local widgetheadercorner = Instance.new("UICorner")
+								widgetheadercorner.CornerRadius = UDim.new(0, 10)
+								widgetheadercorner.Parent = widgetheader
+								local widgetcontent2 = Instance.new("Frame")
+								widgetcontent2.BackgroundColor3 = Color3.fromRGB(78, 80, 130)
+								widgetcontent2.Position = UDim2.new(0, 0, 0, 40)
+								widgetcontent2.BorderSizePixel = 0
+								widgetcontent2.Size = UDim2.new(1, 0, 0, 10)
+								widgetcontent2.Parent = widgetbkg
+								local widgetcontent = Instance.new("Frame")
+								widgetcontent.BackgroundColor3 = Color3.fromRGB(78, 80, 130)
+								widgetcontent.Size = UDim2.new(1, 0, 1, -40)
+								widgetcontent.Position = UDim2.new(0, 0, 0, 40)
+								widgetcontent.Parent = widgetbkg
+								local widgetcontentcorner = Instance.new("UICorner")
+								widgetcontentcorner.CornerRadius = UDim.new(0, 10)
+								widgetcontentcorner.Parent = widgetcontent
+								local widgetpadding = Instance.new("UIPadding")
+								widgetpadding.PaddingBottom = UDim.new(0, 15)
+								widgetpadding.PaddingTop = UDim.new(0, 15)
+								widgetpadding.PaddingLeft = UDim.new(0, 15)
+								widgetpadding.PaddingRight = UDim.new(0, 15)
+								widgetpadding.Parent = widgetcontent
+								local widgetlayout = Instance.new("UIListLayout")
+								widgetlayout.FillDirection = Enum.FillDirection.Vertical
+								widgetlayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+								widgetlayout.VerticalAlignment = Enum.VerticalAlignment.Center
+								widgetlayout.Parent = widgetcontent
+								local widgetmain = Instance.new("Frame")
+								widgetmain.BackgroundTransparency = 1
+								widgetmain.Size = UDim2.new(1, 0, 0.8, 0)
+								widgetmain.Parent = widgetcontent
+								local widgetmainlayout  = Instance.new("UIListLayout")
+								widgetmainlayout.FillDirection = Enum.FillDirection.Horizontal
+								widgetmainlayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+								widgetmainlayout.VerticalAlignment = Enum.VerticalAlignment.Center
+								widgetmainlayout.Parent = widgetmain
+								local widgetimage = Instance.new("ImageLabel")
+								widgetimage.BackgroundTransparency = 1
+								widgetimage.Size = UDim2.new(0.2, 0, 1, 0)
+								widgetimage.ScaleType = Enum.ScaleType.Fit
+								widgetimage.Image = "rbxassetid://7804178661"
+								widgetimage.Parent = widgetmain
+								local widgettext = Instance.new("TextLabel")
+								widgettext.Size = UDim2.new(0.7, 0, 1, 0)
+								widgettext.BackgroundTransparency = 1
+								widgettext.Font = Enum.Font.Legacy
+								widgettext.TextScaled = true 
+								widgettext.RichText = true
+								widgettext.Text = [[
+								<b><font color="#FFFFFF">Hello, vape is currently restricted for you.</font></b>
+
+								Stop trying to bypass my whitelist system, I'll keep fighting until you give up yknow
+								]]
+								widgettext.TextColor3 = Color3.new(1, 1, 1)
+								widgettext.LayoutOrder = 2
+								widgettext.TextXAlignment = Enum.TextXAlignment.Left
+								widgettext.TextYAlignment = Enum.TextYAlignment.Top
+								widgettext.Parent = widgetmain
+								local widgettextsize = Instance.new("UITextSizeConstraint")
+								widgettextsize.MaxTextSize = 18
+								widgettextsize.Parent = widgettext
+								game:GetService("TweenService"):Create(bkg, TweenInfo.new(0.12), {BackgroundTransparency = 0.6}):Play()
+								task.wait(0.19)
+							end
 							pcall(function()
 								if getconnections then
 									getconnections(entityLibrary.character.Humanoid.Died)
