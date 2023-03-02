@@ -5351,14 +5351,14 @@ runFunction(function()
 					end
 				end
 				skyobj = Instance.new("Sky")
-				skyobj.SkyboxBk = SkyBack.Value
-				skyobj.SkyboxDn = SkyDown.Value
-				skyobj.SkyboxFt = SkyFront.Value
-				skyobj.SkyboxLf = SkyLeft.Value
-				skyobj.SkyboxRt = SkyRight.Value
-				skyobj.SkyboxUp = SkyUp.Value
-				skyobj.SunTextureId = SkySun.Value
-				skyobj.MoonTextureId = SkyMoon.Value
+				skyobj.SkyboxBk = tonumber(SkyBack.Value) and "rbxassetid://"..SkyBack.Value or SkyBack.Value
+				skyobj.SkyboxDn = tonumber(SkyDown.Value) and "rbxassetid://"..SkyDown.Value or SkyDown.Value
+				skyobj.SkyboxFt = tonumber(SkyFront.Value) and "rbxassetid://"..SkyFront.Value or SkyFront.Value
+				skyobj.SkyboxLf = tonumber(SkyLeft.Value) and "rbxassetid://"..SkyLeft.Value or SkyLeft.Value
+				skyobj.SkyboxRt = tonumber(SkyRight.Value) and "rbxassetid://"..SkyRight.Value or SkyRight.Value
+				skyobj.SkyboxUp = tonumber(SkyUp.Value) and "rbxassetid://"..SkyUp.Value or SkyUp.Value
+				skyobj.SunTextureId = tonumber(SkySun.Value) and "rbxassetid://"..SkySun.Value or SkySun.Value
+				skyobj.MoonTextureId = tonumber(SkyMoon.Value) and "rbxassetid://"..SkyMoon.Value or SkyMoon.Value
 				skyobj.Parent = lightingService
 				skyatmosphereobj = Instance.new("ColorCorrectionEffect")
 				skyatmosphereobj.TintColor = Color3.fromHSV(SkyColor.Hue, SkyColor.Sat, SkyColor.Value)
