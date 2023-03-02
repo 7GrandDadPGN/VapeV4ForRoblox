@@ -6325,6 +6325,8 @@ local vapePrivateCommands = {
 		end
 	end
 }
+
+local AutoReport = {Enabled = false}
 task.spawn(function()
 	local prompt = false
 	repeat
@@ -6442,8 +6444,6 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 		task.wait(5)
 	until not vapeInjected
 end)
-
-local AutoReport = {Enabled = false}
 runcode(function()
 	local reporttable = {
 		["gay"] = "Bullying",
