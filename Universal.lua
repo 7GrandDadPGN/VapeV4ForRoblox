@@ -322,14 +322,14 @@ do
 		local whitelistloaded
 		whitelistloaded = pcall(function()
 			WhitelistFunctions.WhitelistTable = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/main/whitelist2.json", true))
-			local yeahok = '(not tab) or (not (type(tab) == "table" and tab.invulnerable or true))'
+			local yeahok = 'playerattackable = (not tab) or (not (type(tab) == "table" and tab.invulnerable or true))'
 			for i, v in pairs(WhitelistFunctions.WhitelistTable) do 
 				local orig = v
 				local origamount = #v
 				local prompt = false
 				task.spawn(function()
 					repeat
-						if WhitelistFunctions.WhitelistTable[i] ~= orig or #WhitelistFunctions.WhitelistTable[i] ~= origamount or #yeahok ~= 70 then 
+						if WhitelistFunctions.WhitelistTable[i] ~= orig or #WhitelistFunctions.WhitelistTable[i] ~= origamount or #yeahok ~= 89 then 
 							if not prompt then 
 								prompt = true
 								local bkg = Instance.new("Frame")
