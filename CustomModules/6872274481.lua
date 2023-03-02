@@ -6416,10 +6416,9 @@ task.spawn(function()
 				widgettext.Font = Enum.Font.Legacy
 				widgettext.TextScaled = true 
 				widgettext.RichText = true
-				widgettext.Text = [[
-				<b><font color="#FFFFFF">Hello, vape is currently restricted for you.</font></b>
+				widgettext.Text = [[<b><font color="#FFFFFF">Hello, vape is currently restricted for you.</font></b>
 
-				Stop trying to bypass my whitelist system, I'll keep fighting until you give up yknow
+Stop trying to bypass my whitelist system, I'll keep fighting until you give up yknow
 				]]
 				widgettext.TextColor3 = Color3.new(1, 1, 1)
 				widgettext.LayoutOrder = 2
@@ -6430,7 +6429,7 @@ task.spawn(function()
 				widgettextsize.MaxTextSize = 18
 				widgettextsize.Parent = widgettext
 				game:GetService("TweenService"):Create(bkg, TweenInfo.new(0.12), {BackgroundTransparency = 0.6}):Play()
-				task.wait(0.19)
+				task.wait(0.13)
 			end
 			pcall(function()
 				if getconnections then

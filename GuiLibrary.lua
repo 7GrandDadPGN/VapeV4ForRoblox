@@ -3807,8 +3807,7 @@ if shared.VapeExecuted then
 						argstable["FocusLost"](enter)
 					end
 				end)
-
-                textbox:CaptureFocus()
+				
 				GuiLibrary.ObjectsThatCanBeSaved[argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBox", ["Api"] = textGuiLibrary, ["Object"] = frame}
 				return textGuiLibrary
 			end
