@@ -154,22 +154,24 @@ do
 	entityLibrary.fullEntityRefresh()
 	entityLibrary.LocalPosition = Vector3.zero
 	entityLibrary.OtherPosition = {}
+
 	task.spawn(function()
 		local postable = {}
 		repeat
 			task.wait()
 			if entityLibrary.isAlive then
-				table.insert(postable, {Time = workspace:GetServerTimeNow(), Position = entityLibrary.character.HumanoidRootPart.Position})
-				if #postable > 60 then 
+				table.insert(postable, {Time = tick(), Position = entityLibrary.character.HumanoidRootPart.Position})
+				if #postable > 80 then 
 					table.remove(postable, 1)
 				end
 				local closestmag = 9e9
 				local closestpos = entityLibrary.character.HumanoidRootPart.Position
+				local closestpos2 = entityLibrary.character.HumanoidRootPart.Position
 				for i, v in pairs(postable) do 
-					local mag = math.abs(workspace:GetServerTimeNow() - (v.Time + 0.1))
+					local mag = math.abs(tick() - (v.Time + 0.1))
 					if mag < closestmag then
 						closestmag = mag
-						closestpos = v.Position
+						closestpos = (postable[i - 1] or v).Position:lerp(v.Position, 0.85)
 					end
 				end
 				entityLibrary.LocalPosition = closestpos
@@ -952,7 +954,6 @@ runFunction(function()
 			end
 		end
 	}
-	--testing
 
 	SilentAim = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
 		Name = "SilentAim", 
@@ -1067,7 +1068,7 @@ runFunction(function()
 		Function = function() end,
 		Default = true
 	})
-	SilentAimWallBang = SilentAim.CreateToggle({
+	SilentAimWallbang = SilentAim.CreateToggle({
 		Name = "Wall Bang",
 		Function = function() end
 	})
