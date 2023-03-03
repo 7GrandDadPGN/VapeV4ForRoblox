@@ -196,10 +196,12 @@ end
 local function predictGravity(pos, vel, mag, targetPart, Gravity)
 	local newVelocity = vel.Y
 	local rootSize = (targetPart.Humanoid.HipHeight + (targetPart.RootPart.Size.Y / 2))
-	local check = (tick() - targetPart.JumpTick) < 0.4
-	for i = 1, math.floor(mag / 0.016)  do 
+	local check = (tick() - targetPart.JumpTick) < 0.2
+	for i = 1, math.floor(mag / 0.016) do 
 		if check then 
 			newVelocity = newVelocity - (Gravity * 0.016)
+		else
+			newVelocity = 0
 		end
 		local floorDetection = workspace:Raycast(pos, Vector3.new(vel.X * 0.016, (newVelocity * 0.016) - rootSize, vel.Z * 0.016), blockraycast)
 		if floorDetection then 
@@ -1005,9 +1007,9 @@ runcode(function()
 					end
 				end
 				for i,v in pairs(entityLibrary.entityList) do 
-					v.JumpTick = v.Humanoid.FloorMaterial == Enum.Material.Air and tick() or v.JumpTick
-					v.Jumping = (tick() - v.JumpTick) < 0.4 and v.Jumps > 2
-					if (tick() - v.JumpTick) > 0.4 then 
+					v.JumpTick = (v.Humanoid:GetState() ~= Enum.HumanoidStateType.Running) and tick() or v.JumpTick
+					v.Jumping = (tick() - v.JumpTick) < 0.2 and v.Jumps > 2
+					if (tick() - v.JumpTick) > 0.2 then 
 						v.Jumps = 0
 					end
 				end
@@ -1944,7 +1946,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 					mag = (overridepos - v2.PrimaryPart.Position).magnitude
 				end
                 if mag <= distance then -- magcheck
-                    table.insert(returnedplayer, {Player = {Name = (v2 and v2.Name or "Monster"), UserId = (v2 and v2.Name == "Duck" and 2020831224 or 1443379645)}, Character = v2, RootPart = v2.PrimaryPart, Humanoid = v2.Character.Humanoid}) -- monsters are npcs so I have to create a fake player for target info
+                    table.insert(returnedplayer, {Player = {Name = (v2 and v2.Name or "Monster"), UserId = (v2 and v2.Name == "Duck" and 2020831224 or 1443379645)}, Character = v2, RootPart = v2.PrimaryPart, Humanoid = v2.Humanoid}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
                 end
 			end
@@ -1959,7 +1961,7 @@ local function GetAllNearestHumanoidToPosition(player, distance, amount, targetc
 					mag = (overridepos - v3.PrimaryPart.Position).magnitude
 				end
                 if mag <= distance then -- magcheck
-                    table.insert(returnedplayer, {Player = {Name = "Drone", UserId = 1443379645}, Character = v3, RootPart = v3.PrimaryPart, Humanoid = v2.Character.Humanoid}) -- monsters are npcs so I have to create a fake player for target info
+                    table.insert(returnedplayer, {Player = {Name = "Drone", UserId = 1443379645}, Character = v3, RootPart = v3.PrimaryPart, Humanoid = v3.Humanoid}) -- monsters are npcs so I have to create a fake player for target info
 					currentamount = currentamount + 1
                 end
 			end
@@ -3201,7 +3203,7 @@ runcode(function()
 	})
 	nukercustom = Nuker.CreateTextList({
 		Name = "NukerList",
-		["TempText"] = "block (tesla_trap)",
+		TempText = "block (tesla_trap)",
 		["AddFunction"] = function()
 			luckyblocktable = {}
 			for i,v in pairs(bedwarsblocks) do
@@ -3361,6 +3363,7 @@ runcode(function()
 	ChestESPFolder.Name = "ChestESPFolder"
 	ChestESPFolder.Parent = GuiLibrary["MainGui"]
 	local ChestESP = {Enabled = false}
+	local ChestESPBackground = {Enabled = true}
     local chestconnections = {}
 	ChestESP = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
 		Name = "ChestESP",
@@ -3380,7 +3383,7 @@ runcode(function()
 							local frame = Instance.new("Frame")
 							frame.Size = UDim2.new(1, 0, 1, 0)
 							frame.BackgroundColor3 = Color3.new(0, 0, 0)
-							frame.BackgroundTransparency = 0.5
+							frame.BackgroundTransparency = ChestESPBackground.Enabled and 0.5 or 1
 							frame.Parent = billboard
 							local uilistlayout = Instance.new("UIListLayout")
 							uilistlayout.FillDirection = Enum.FillDirection.Horizontal
@@ -3424,19 +3427,29 @@ runcode(function()
 	})
 	ChestESPList = ChestESP.CreateTextList({
 		Name = "ItemList",
-		["TempText"] = "item or part of item",
-		["AddFunction"] = function()
+		TempText = "item or part of item",
+		AddFunction = function()
 			if ChestESP.Enabled then 
 				ChestESP.ToggleButton(false)
 				ChestESP.ToggleButton(false)
 			end
 		end,
-		["RemoveFunction"] = function()
+		RemoveFunction = function()
 			if ChestESP.Enabled then 
 				ChestESP.ToggleButton(false)
 				ChestESP.ToggleButton(false)
 			end
 		end
+	})
+	ChestESPBackground = ChestESP.CreateToggle({
+		Name = "Background",
+		Function = function()
+			if ChestESP.Enabled then 
+				ChestESP.ToggleButton(false)
+				ChestESP.ToggleButton(false)
+			end
+		end,
+		Default = true
 	})
 end)
 
@@ -3849,7 +3862,7 @@ runcode(function()
 	AutoBuyArmory.Object.Visible = AutoBuyUpgrades.Enabled
 	AutoBuyCustom = AutoBuy.CreateTextList({
 		Name = "BuyList",
-		["TempText"] = "item/amount/priority/after",
+		TempText = "item/amount/priority/after",
 		["SortFunction"] = function(a, b)
 			local amount1 = a:split("/")
 			local amount2 = b:split("/")
@@ -4347,7 +4360,7 @@ runcode(function()
 	})
 	SchematicaBox = Schematica.CreateTextBox({
 		Name = "File",
-		["TempText"] = "File (location in workspace)",
+		TempText = "File (location in workspace)",
 		["FocusLost"] = function(enter) 
 			local suc, res = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile(SchematicaBox.Value)) end)
 			if tempgui then
@@ -4707,12 +4720,12 @@ runcode(function()
 		end,
 		tnt = function(tnt, pos2)
 			if not longjump.Enabled then return end
-			local pos = Vector3.new(pos2.X, getScaffold(Vector3.new(0, pos2.Y - math.floor(entityLibrary.character.Humanoid.HipHeight, 0))).Y, pos2.Z)
+			local pos = Vector3.new(pos2.X, getScaffold(Vector3.new(0, pos2.Y - (((entityLibrary.character.HumanoidRootPart.Size.Y / 2) + entityLibrary.character.Humanoid.HipHeight) - 1.5), 0)).Y, pos2.Z)
 			local block = bedwars["placeBlock"](pos, "tnt")
 		end,
 		cannon = function(tnt, pos2)
 			task.spawn(function()
-				local pos = Vector3.new(pos2.X, getScaffold(Vector3.new(0, pos2.Y - math.floor(entityLibrary.character.Humanoid.HipHeight, 0))).Y, pos2.Z)
+				local pos = Vector3.new(pos2.X, getScaffold(Vector3.new(0, pos2.Y - (((entityLibrary.character.HumanoidRootPart.Size.Y / 2) + entityLibrary.character.Humanoid.HipHeight) - 1.5), 0)).Y, pos2.Z)
 				local block = bedwars["placeBlock"](pos, "cannon")
 				task.delay(0.1, function()
 					local block, pos2 = getblock(pos)
@@ -5162,6 +5175,25 @@ runcode(function()
 		return Vector3.new(math.clamp(newpos.X, x, x2), math.clamp(newpos.Y, y, y2), math.clamp(newpos.Z, z, z2))
 	end
 
+	local function getAttackData()
+		if GuiLibrary.ObjectsThatCanBeSaved["Lobby CheckToggle"].Api.Enabled then 
+			if matchState == 0 then return false end
+		end
+		if killauramouse.Enabled then
+			if not uis:IsMouseButtonPressed(0) then return false end
+		end
+		if killauragui.Enabled then
+			if #bedwars["AppController"]:getOpenApps() > (kit == "hannah" and 4 or 3) then return false end
+		end
+		local sword = killaurahandcheck.Enabled and currenthand or (currenthand.tool and (currenthand.tool.Name == "frying_pan" or currenthand.tool.Name == "baguette") and currenthand or getSword())
+		if not sword or not sword.tool then return false end
+		local swordmeta = bedwars.ItemTable[sword.tool.Name]
+		if killaurahandcheck.Enabled then
+			if currenthand.Type ~= "sword" or bedwars.KatanaController.chargingMaid then return false end
+		end
+		return sword, swordmeta
+	end
+
     Killaura = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
         Name = "Killaura",
         Function = function(callback)
@@ -5272,91 +5304,80 @@ runcode(function()
 						targetinfo.Targets.Killaura = nil
 						local plrs = GetAllNearestHumanoidToPosition(killauratargetframe["Players"].Enabled, killaurarange.Value - 0.0001, 1000, false, (oldcloneroot and oldcloneroot.Position or entityLibrary.LocalPosition), killaurasortmethods[killaurasortmethod.Value], killauraprediction.Enabled)
 						local attackedplayers = {}
+						local first
 						if #plrs > 0 then
-							if GuiLibrary.ObjectsThatCanBeSaved["Lobby CheckToggle"].Api.Enabled then 
-								if matchState == 0 then continue end
-							end
-							if killauramouse.Enabled then
-								if not uis:IsMouseButtonPressed(0) then continue end
-							end
-							if killauragui.Enabled then
-								if #bedwars["AppController"]:getOpenApps() > (kit == "hannah" and 4 or 3) then continue end
-							end
-							local sword = killaurahandcheck.Enabled and currenthand or (currenthand.tool and (currenthand.tool.Name == "frying_pan" or currenthand.tool.Name == "baguette") and currenthand or getSword())
-							if not sword or not sword.tool then continue end
-							local swordmeta = bedwars.ItemTable[sword.tool.Name]
-							if killaurahandcheck.Enabled then
-								if currenthand.Type ~= "sword" or bedwars.KatanaController.chargingMaid then continue end
-							end
-							local first
-							for i, plr in pairs(plrs) do
-								local root = plr.RootPart
-								if not root then 
-									continue
-								end
-								local localfacing = entityLibrary.character.HumanoidRootPart.CFrame.lookVector
-								local vec = (plr.RootPart.Position - entityLibrary.character.HumanoidRootPart.Position).unit
-								local angle = math.acos(localfacing:Dot(vec))
-								if angle >= (math.rad(killauraangle.Value) / 2) then
-									continue
-								end
-								if killauratargetframe.Walls.Enabled then
-									if not bedwars.SwordController:canSee({player = plr.Player, getInstance = function() return plr.Character end}) then continue end
-								end
-								if not first then 
-									first = true 
-									killauranear = true
-									targetedplayer = plr
-									targetinfo.Targets.Killaura = {
-										Humanoid = {
-											Health = (plr.Character:GetAttribute("Health") or plr.Humanoid.Health) + getShield(plr.Character),
-											MaxHealth = plr.Character:GetAttribute("MaxHealth") or plr.Humanoid.MaxHealth
-										},
-										Player = plr.Player
-									}
-									if animationdelay <= tick() then
-										animationdelay = tick() + 0.19
-										if not killauraswing.Enabled then 
-											bedwars.SwordController:playSwordEffect(swordmeta)
+							local sword, swordmeta = getAttackData()
+							if sword then
+								for i, plr in pairs(plrs) do
+									local root = plr.RootPart
+									if not root then 
+										continue
+									end
+									local localfacing = entityLibrary.character.HumanoidRootPart.CFrame.lookVector
+									local vec = (plr.RootPart.Position - entityLibrary.character.HumanoidRootPart.Position).unit
+									local angle = math.acos(localfacing:Dot(vec))
+									if angle >= (math.rad(killauraangle.Value) / 2) then
+										continue
+									end
+									local selfrootpos = entityLibrary.character.HumanoidRootPart.Position
+									local selfcheck = oldcloneroot and oldcloneroot.Position or entityLibrary.LocalPosition or selfrootpos
+									if killauratargetframe.Walls.Enabled then
+										if not bedwars.SwordController:canSee({player = plr.Player, getInstance = function() return plr.Character end}) then continue end
+									end
+									local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
+									if not playerattackable then
+										continue
+									end
+									if killauranovape.Enabled and clients.ClientUsers[plr.Player.Name] then
+										continue
+									end
+									if not first then 
+										first = true 
+										killauranear = true
+										targetedplayer = plr
+										targetinfo.Targets.Killaura = {
+											Humanoid = {
+												Health = (plr.Character:GetAttribute("Health") or plr.Humanoid.Health) + getShield(plr.Character),
+												MaxHealth = plr.Character:GetAttribute("MaxHealth") or plr.Humanoid.MaxHealth
+											},
+											Player = plr.Player
+										}
+										if animationdelay <= tick() then
+											animationdelay = tick() + 0.19
+											if not killauraswing.Enabled then 
+												bedwars.SwordController:playSwordEffect(swordmeta)
+											end
 										end
 									end
+									if killauratarget.Enabled then
+										table.insert(attackedplayers, plr)
+									end
+									if (selfcheck - (entityLibrary.OtherPosition[plr.Player] or root.Position)).Magnitude >= 18 then 
+										continue
+									end
+									if (workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack) < swordmeta.sword.attackSpeed then 
+										continue
+									end
+									local selfpos = selfrootpos + (killaurarange.Value > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
+									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow() - 0.11
+									killaurarealremote:FireServer({
+										weapon = sword.tool,
+										chargedAttack = {chargeRatio = swordmeta.sword and swordmeta.sword.chargedAttack and swordmeta.sword.chargedAttack.maxChargeTimeSec or 0},
+										entityInstance = plr.Character,
+										validate = {
+											raycast = {
+												cameraPosition = hashvec(cam.CFrame.p), 
+												cursorDirection = hashvec(Ray.new(cam.CFrame.p, root.Position).Unit.Direction)
+											},
+											targetPosition = hashvec(root.Position),
+											selfPosition = hashvec(selfpos)
+										}
+									})
+									break
 								end
-								if killauratarget.Enabled then
-									table.insert(attackedplayers, plr)
-								end
-								local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
-								if not playerattackable then
-									continue
-								end
-								if killauranovape.Enabled and clients.ClientUsers[plr.Player.Name] then
-									continue
-								end
-								if (workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack) < swordmeta.sword.attackSpeed then 
-									continue
-								end
-								local selfrootpos = entityLibrary.character.HumanoidRootPart.Position
-								local selfcheck = oldcloneroot and oldcloneroot.Position or entityLibrary.LocalPosition or selfrootpos
-								if (selfcheck - (entityLibrary.OtherPosition[plr.Player] or root.Position)).Magnitude > 18 then 
-									continue
-								end
-								local selfpos = selfrootpos + (killaurarange.Value > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
-								bedwars.SwordController.lastAttack = workspace:GetServerTimeNow() - 0.11
-								killaurarealremote:FireServer({
-									weapon = sword.tool,
-									chargedAttack = {chargeRatio = swordmeta.sword and swordmeta.sword.chargedAttack and swordmeta.sword.chargedAttack.maxChargeTimeSec or 0},
-									entityInstance = plr.Character,
-									validate = {
-										raycast = {
-											cameraPosition = hashvec(cam.CFrame.p), 
-											cursorDirection = hashvec(Ray.new(cam.CFrame.p, root.Position).Unit.Direction)
-										},
-										targetPosition = hashvec(root.Position),
-										selfPosition = hashvec(selfpos)
-									}
-								})
-								break
 							end
-						else
+						end
+						if not first then 
 							lastplr = nil
 							targetedplayer = nil
 							killauranear = false
@@ -5842,7 +5863,7 @@ runcode(function()
 				local pickedup = {}
 				task.spawn(function()
 					repeat
-						task.wait(0.01)
+						task.wait()
 						local itemdrops = collectionservice:GetTagged("ItemDrop")
 						for i,v in pairs(itemdrops) do
 							if entityLibrary.isAlive and ((entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - v.Position).magnitude <= FastPickupRange.Value and (pickedup[v] == nil or pickedup[v] <= tick()) and (v:GetAttribute("ClientDropTime") and tick() - v:GetAttribute("ClientDropTime") > 2 or v:GetAttribute("ClientDropTime") == nil) then
@@ -6542,7 +6563,7 @@ runcode(function()
 	})
 	AutoReportList = AutoReport.CreateTextList({
 		Name = "Report Words",
-		["TempText"] = "phrase (to report)"
+		TempText = "phrase (to report)"
 	})
 
 	connectionstodisconnect[#connectionstodisconnect + 1] = repstorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab, channel)
@@ -6583,6 +6604,7 @@ runcode(function()
 				end)
 			end)
 			createwarning("Vape", plr.Name.." is using "..client.."!", 60)
+			WhitelistFunctions.CustomTags[plr] = string.format("[%s] ", client:upper()..' USER')
 			clients.ClientUsers[plr.Name] = client:upper()..' USER'
 			local ind, newent = entityLibrary.getEntityFromPlayer(plr)
 			if newent then entityLibrary.entityUpdatedEvent:Fire(newent) end
@@ -6955,39 +6977,39 @@ runcode(function()
 	})
 	AutoToxicPhrases = AutoToxic.CreateTextList({
 		Name = "ToxicList",
-		["TempText"] = "phrase (win)",
+		TempText = "phrase (win)",
 	})
 	AutoToxicPhrases2 = AutoToxic.CreateTextList({
 		Name = "ToxicList2",
-		["TempText"] = "phrase (kill) <name>",
+		TempText = "phrase (kill) <name>",
 	})
 	AutoToxicPhrases3 = AutoToxic.CreateTextList({
 		Name = "ToxicList3",
-		["TempText"] = "phrase (death) <name>",
+		TempText = "phrase (death) <name>",
 	})
 	AutoToxicPhrases7 = AutoToxic.CreateTextList({
 		Name = "ToxicList7",
-		["TempText"] = "phrase (bed break) <teamname>",
+		TempText = "phrase (bed break) <teamname>",
 	})
 	AutoToxicPhrases7.Object.AddBoxBKG.AddBox.TextSize = 12
 	AutoToxicPhrases6 = AutoToxic.CreateTextList({
 		Name = "ToxicList6",
-		["TempText"] = "phrase (bed destroyed) <name>",
+		TempText = "phrase (bed destroyed) <name>",
 	})
 	AutoToxicPhrases6.Object.AddBoxBKG.AddBox.TextSize = 12
 	AutoToxicPhrases4 = AutoToxic.CreateTextList({
 		Name = "ToxicList4",
-		["TempText"] = "phrase (text to respond with) <name>",
+		TempText = "phrase (text to respond with) <name>",
 	})
 	AutoToxicPhrases4.Object.AddBoxBKG.AddBox.TextSize = 12
 	AutoToxicPhrases5 = AutoToxic.CreateTextList({
 		Name = "ToxicList5",
-		["TempText"] = "phrase (text to respond to)",
+		TempText = "phrase (text to respond to)",
 	})
 	AutoToxicPhrases5.Object.AddBoxBKG.AddBox.TextSize = 12
 	AutoToxicPhrases8 = AutoToxic.CreateTextList({
 		Name = "ToxicList8",
-		["TempText"] = "phrase (lagback) <name>",
+		TempText = "phrase (lagback) <name>",
 	})
 	AutoToxicPhrases8.Object.AddBoxBKG.AddBox.TextSize = 12
 end)
@@ -7319,7 +7341,7 @@ runcode(function()
 				flycoroutine = coroutine.create(function()
 					repeat
 						repeat task.wait() until (groundtime - tick()) < 0.6 and not onground
-						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
+						allowed = ((lplr.Character and lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
 						if (not fly.Enabled) then break end
 						local flytppos = -99999
 						if allowed <= 0 and flytpdown.Enabled and entityLibrary.isAlive then 
@@ -7333,7 +7355,7 @@ runcode(function()
 						end
 						task.wait(0.15)
 						if (not fly.Enabled) then break end
-						allowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
+						allowed = ((lplr.Character and lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or matchState == 2 or megacheck) and 1 or 0
 						if allowed <= 0 and flytppos ~= -99999 and entityLibrary.isAlive then 
 							local args = {entityLibrary.character.HumanoidRootPart.CFrame:GetComponents()}
 							args[2] = flytppos
@@ -8989,6 +9011,7 @@ end)
 runcode(function()
 	local nobobdepth = {Value = 8}
 	local nobobhorizontal = {Value = 8}
+	local nobobvertical = {Value = -2}
 	local rotationx = {Value = 0}
 	local rotationy = {Value = 0}
 	local rotationz = {Value = 0}
@@ -9000,6 +9023,7 @@ runcode(function()
 				if callback then
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -(nobobdepth.Value / 10))
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", (nobobhorizontal.Value / 10))
+					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", (nobobvertical.Value / 10))
 					pcall(function()
 						for i,v in pairs(cam.Viewmodel.Humanoid.Animator:GetPlayingAnimationTracks()) do 
 							v:Stop()
@@ -9011,6 +9035,7 @@ runcode(function()
 				else
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
+					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", 0)
 					pcall(function()
 						for i,v in pairs(cam.Viewmodel.Humanoid.Animator:GetPlayingAnimationTracks()) do 
 							v:Stop()
@@ -9042,6 +9067,17 @@ runcode(function()
 		Function = function(val)
 			if nobob.Enabled then
 				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", (val / 10))
+			end
+		end
+	})
+	nobobvertical= nobob.CreateSlider({
+		Name = "Vertical",
+		Min = 0,
+		Max = 24,
+		Default = -2,
+		Function = function(val)
+			if nobob.Enabled then
+				lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", (val / 10))
 			end
 		end
 	})
@@ -10142,7 +10178,7 @@ runcode(function()
 	})
 	capebox = Cape.CreateTextBox({
 		Name = "File",
-		["TempText"] = "File (link)",
+		TempText = "File (link)",
 		["FocusLost"] = function(enter) 
 			if enter then 
 				if Cape.Enabled then 
@@ -11172,54 +11208,118 @@ runcode(function()
 	})
 	AutoRelicCustom = AutoRelic.CreateTextList({
 		Name = "Custom",
-		["TempText"] = "custom (relic id)"
+		TempText = "custom (relic id)"
 	})
 end)
 
 runcode(function()
 	local oldkilleffect
-	GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+	local KillEffectMode = {Value = "Gravity"}
+	local killeffects = {
+		Gravity = function(p3, p4, p5, p6)
+			p5:BreakJoints()
+			task.spawn(function()
+				local partvelo = {}
+				for i,v in pairs(p5:GetDescendants()) do 
+					if v:IsA("BasePart") then 
+						partvelo[v.Name] = v.Velocity * 3
+					end
+				end
+				p5.Archivable = true
+				local clone = p5:Clone()
+				clone.Humanoid.Health = 100
+				clone.Parent = workspace
+				local nametag = clone:FindFirstChild("Nametag", true)
+				if nametag then nametag:Destroy() end
+				game:GetService("Debris"):AddItem(clone, 30)
+				p5:Destroy()
+				task.wait(0.01)
+				clone.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+				clone:BreakJoints()
+				task.wait(0.01)
+				for i,v in pairs(clone:GetDescendants()) do 
+					if v:IsA("BasePart") then 
+						local bodyforce = Instance.new("BodyForce")
+						bodyforce.Force = Vector3.new(0, (workspace.Gravity - 10) * v:GetMass(), 0)
+						bodyforce.Parent = v
+						v.CanCollide = true
+						v.Velocity = partvelo[v.Name] or Vector3.zero
+					end
+				end
+			end)
+		end,
+		Lightning = function(p3, p4, p5, p6)
+			p5:BreakJoints()
+			local startpos = 1125
+			local startcf = p5.PrimaryPart.CFrame.p - Vector3.new(0, 8, 0)
+			local newpos = Vector3.new((math.random(1, 10) - 5) * 2, startpos, (math.random(1, 10) - 5) * 2)
+			for i = startpos - 75, 0, -75 do 
+				local newpos2 = Vector3.new((math.random(1, 10) - 5) * 2, i, (math.random(1, 10) - 5) * 2)
+				if i == 0 then 
+					newpos2 = Vector3.zero
+				end
+				local part = Instance.new("Part")
+				part.Size = Vector3.new(1.5, 1.5, 77)
+				part.Material = Enum.Material.SmoothPlastic
+				part.Anchored = true
+				part.Material = Enum.Material.Neon
+				part.CanCollide = false
+				part.CFrame = CFrame.new(startcf + newpos + ((newpos2 - newpos) * 0.5), startcf + newpos2)
+				part.Parent = workspace
+				local part2 = part:Clone()
+				part2.Size = Vector3.new(3, 3, 78)
+				part2.Color = Color3.new(0.7, 0.7, 0.7)
+				part2.Transparency = 0.7
+				part2.Material = Enum.Material.SmoothPlastic
+				part2.Parent = workspace
+				game:GetService("Debris"):AddItem(part, 0.5)
+				game:GetService("Debris"):AddItem(part2, 0.5)
+				bedwars["QueryUtil"]:setQueryIgnored(part, true)
+				bedwars["QueryUtil"]:setQueryIgnored(part2, true)
+				if i == 0 then 
+					local soundpart = Instance.new("Part")
+					soundpart.Transparency = 1
+					soundpart.Anchored = true 
+					soundpart.Size = Vector3.zero
+					soundpart.Position = startcf
+					soundpart.Parent = workspace
+					bedwars["QueryUtil"]:setQueryIgnored(soundpart, true)
+					local sound = Instance.new("Sound")
+					sound.SoundId = "rbxassetid://6993372814"
+					sound.Volume = 2
+					sound.Pitch = 0.5 + (math.random(1, 3) / 10)
+					sound.Parent = soundpart
+					sound:Play()
+					sound.Ended:Connect(function()
+						soundpart:Destroy()
+					end)
+				end
+				newpos = newpos2
+			end
+		end
+	}
+	local KillEffect = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
 		Name = "KillEffect",
 		Function = function(callback)
 			if callback then 
 				lplr:SetAttribute("KillEffectType", "none")
 				oldkilleffect = bedwars["DefaultKillEffect"].onKill
 				bedwars["DefaultKillEffect"].onKill = function(p3, p4, p5, p6)
-					p5:BreakJoints()
-					task.spawn(function()
-						local partvelo = {}
-						for i,v in pairs(p5:GetDescendants()) do 
-							if v:IsA("BasePart") then 
-								partvelo[v.Name] = v.Velocity * 3
-							end
-						end
-						p5.Archivable = true
-						local clone = p5:Clone()
-						clone.Humanoid.Health = 100
-						clone.Parent = workspace
-						local nametag = clone:FindFirstChild("Nametag", true)
-						if nametag then nametag:Destroy() end
-						game:GetService("Debris"):AddItem(clone, 30)
-						p5:Destroy()
-						task.wait(0.01)
-						clone.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
-						clone:BreakJoints()
-						task.wait(0.01)
-						for i,v in pairs(clone:GetDescendants()) do 
-							if v:IsA("BasePart") then 
-								local bodyforce = Instance.new("BodyForce")
-								bodyforce.Force = Vector3.new(0, (workspace.Gravity - 10) * v:GetMass(), 0)
-								bodyforce.Parent = v
-								v.CanCollide = true
-								v.Velocity = partvelo[v.Name] or Vector3.zero
-							end
-						end
-					end)
+					killeffects[KillEffectMode.Value](p3, p4, p5, p6)
 				end
 			else
 				bedwars["DefaultKillEffect"].onKill = oldkilleffect
 			end
 		end
+	})
+	local modes = {}
+	for i,v in pairs(killeffects) do 
+		table.insert(modes, i)
+	end
+	KillEffectMode = KillEffect.CreateDropdown({
+		Name = "Mode",
+		Function = function() end,
+		List = modes
 	})
 end)
 
@@ -11333,7 +11433,7 @@ runcode(function()
 				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
 				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
 				if ray then 
-					tppos2 = ray.Position
+					tppos2 = Vector3.new(ray.Position.X, ray.Position.Y + 50, ray.Position.Z)
 					local warning = createwarning("TPRedirection", "Set TP Position", 3)
 				end
 				deathtpmod.ToggleButton(false)

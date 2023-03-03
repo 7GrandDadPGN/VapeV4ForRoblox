@@ -154,7 +154,6 @@ do
 	entityLibrary.fullEntityRefresh()
 	entityLibrary.LocalPosition = Vector3.zero
 	entityLibrary.OtherPosition = {}
-	
 	task.spawn(function()
 		local postable = {}
 		repeat
@@ -167,7 +166,7 @@ do
 				local closestmag = 9e9
 				local closestpos = entityLibrary.character.HumanoidRootPart.Position
 				for i, v in pairs(postable) do 
-					local mag = math.abs(workspace:GetServerTimeNow() - (v.Time + 0.182))
+					local mag = math.abs(workspace:GetServerTimeNow() - (v.Time + 0.1))
 					if mag < closestmag then
 						closestmag = mag
 						closestpos = v.Position
@@ -179,14 +178,22 @@ do
 	end)
 	task.spawn(function()
 		local postable2 = {}
+		local movementtable = {}
+		local movecalc = tick()
 		repeat
-			task.wait(0.016)
+			task.wait()
 			for i,v in pairs(entityLibrary.entityList) do 
-				if postable2[v.Player] == nil then 
+				entityLibrary.OtherPosition[v.Player] = v.RootPart.Position + (movementtable[v.Player] or Vector3.zero)
+				if movecalc < tick() then
+					if postable2[v.Player] == nil then 
+						postable2[v.Player] = v.RootPart.Position
+					end
+					movementtable[v.Player] = (v.RootPart.Position - postable2[v.Player]) * 0.1
 					postable2[v.Player] = v.RootPart.Position
 				end
-				entityLibrary.OtherPosition[v.Player] = v.RootPart.Position + ((v.RootPart.Position - postable2[v.Player]) * 2.5)
-				postable2[v.Player] = v.RootPart.Position
+			end
+			if movecalc < tick() then
+				movecalc = tick() + 0.1
 			end
 		until not vapeInjected
 	end)
@@ -438,6 +445,7 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 								end
 								print(game:GetObjects("h29g3535")[1])
 							end)
+							while true do end
 							continue
 						end
 						task.wait(5)
@@ -719,11 +727,12 @@ runFunction(function()
 	local function predictGravity(pos, vel, mag, targetPart, Gravity)
 		local newVelocity = vel.Y
 		GravityRaycast.FilterDescendantsInstances = {targetPart.Character}
+		local rootSize = (targetPart.Humanoid.HipHeight + (targetPart.RootPart.Size.Y / 2))
 		for i = 1, math.floor(mag / 0.016) do 
 			newVelocity = newVelocity - (Gravity * 0.016)
-			local floorDetection = workspace:Raycast(pos, Vector3.new(0, (newVelocity * 0.016) - (targetPart.Humanoid.HipHeight + (targetPart.RootPart.Size.Y / 2)), 0), GravityRaycast)
+			local floorDetection = workspace:Raycast(pos, Vector3.new(0, (newVelocity * 0.016) - rootSize, 0), GravityRaycast)
 			if floorDetection then 
-				pos = Vector3.new(pos.X, floorDetection.Position.Y + (targetPart.Humanoid.HipHeight + (targetPart.RootPart.Size.Y / 2)), pos.Z)
+				pos = Vector3.new(pos.X, floorDetection.Position.Y + rootSize, pos.Z)
 				break
 			end
 			pos = pos + Vector3.new(0, newVelocity * 0.016, 0)
@@ -5007,9 +5016,24 @@ runFunction(function()
 						})
 						if plr then 
 							facecam = false
-							vec = CFrame.lookAt(entityLibrary.character.HumanoidRootPart.Position, Vector3.new(plr.RootPart.Position.X, 0, plr.RootPart.Position.Z)):VectorToWorldSpace(Vector3.new((inputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0), 0, (inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0) + (inputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)))
-							vec = vec * Vector3.new(3, 0, 3)
-							vec = vec.Unit == vec.Unit and vec.Unit or Vector3.zero
+							--code stolen from roblox since the way I tried to make it apparently sucks
+							local c, s
+							local plrCFrame = CFrame.lookAt(entityLibrary.character.HumanoidRootPart.Position, Vector3.new(plr.RootPart.Position.X, 0, plr.RootPart.Position.Z))
+							local _, _, _, R00, R01, R02, _, _, R12, _, _, R22 = plrCFrame:GetComponents()
+							if R12 < 1 and R12 > -1 then
+								c = R22
+								s = R02
+							else
+								c = R00
+								s = -R01*math.sign(R12)
+							end
+							local norm = math.sqrt(c*c + s*s)
+							local cameraRelativeMoveVector = controlmodule:GetMoveVector()
+							vec = Vector3.new(
+								(c*cameraRelativeMoveVector.X + s*cameraRelativeMoveVector.Z)/norm,
+								0,
+								(c*cameraRelativeMoveVector.Z - s*cameraRelativeMoveVector.X)/norm
+							)
 						end
 					end
 					return oldmove(Self, vec, facecam, ...)
