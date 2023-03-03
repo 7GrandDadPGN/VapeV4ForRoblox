@@ -219,7 +219,6 @@ local function raycastWallCheck(char, checktable)
 end
 
 local function EntityNearPosition(distance, checktab)
-	local closest, returnedplayer, targetpart = distance, nil, nil
 	checktab = checktab or {}
 	if entityLibrary.isAlive then
 		local sortedentities = {}
@@ -231,8 +230,8 @@ local function EntityNearPosition(distance, checktab)
 				if checktab.Prediction and mag > distance then
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
 				end
-                if mag <= (v.Target and distance or closest) then -- mag check
-					table.insert(sortedentities, {entity = v, Magnitude = mag})
+                if mag <= distance then -- mag check
+					table.insert(sortedentities, {entity = v, Magnitude = v.Target and -1 or mag})
                 end
             end
         end
@@ -241,18 +240,12 @@ local function EntityNearPosition(distance, checktab)
 			if checktab.WallCheck then
 				if not raycastWallCheck(v.entity, checktab) then continue end
 			end
-			closest = mag
-			returnedplayer = v.entity
-			if v.entity.Target then 
-				break 
-			end
+			return v.entity
 		end
 	end
-	return returnedplayer
 end
 
 local function EntityNearMouse(distance, checktab)
-    local closest, returnedplayer = distance, nil
 	checktab = checktab or {}
     if entityLibrary.isAlive then
 		local sortedentities = {}
@@ -262,24 +255,19 @@ local function EntityNearMouse(distance, checktab)
             if isVulnerable(v) then
 				local vec, vis = worldtoscreenpoint(v[checktab.AimPart].Position)
 				local mag = (mousepos - Vector2.new(vec.X, vec.Y)).magnitude
-                if vis and mag <= (v.Target and distance or closest) then
-					table.insert(sortedentities, {entity = v, Magnitude = mag})
+                if vis and mag <= distance then
+					table.insert(sortedentities, {entity = v, Magnitude = v.Target and -1 or mag})
                 end
             end
         end
 		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
-		for i, v in pairs(sortedentites) do 
+		for i, v in pairs(sortedentities) do 
 			if checktab.WallCheck then
-				if not raycastWallCheck(v, checktab) then continue end
+				if not raycastWallCheck(v.entity, checktab) then continue end
 			end
-			closest = mag
-			returnedplayer = v
-			if v.Target then 
-				break 
-			end
+			return v.entity
 		end
     end
-    return returnedplayer
 end
 
 local function AllNearPosition(distance, amount, checktab)
