@@ -3535,6 +3535,7 @@ if shared.VapeExecuted then
 			buttonapi["Name"] = argstablemain["Name"]
 			buttonapi["HasExtraText"] = type(argstablemain["ExtraText"]) == "function"
 			buttonapi["GetExtraText"] = (buttonapi["HasExtraText"] and argstablemain["ExtraText"] or function() return "" end)
+			buttonapi.Connections = {}
 			local newsize = UDim2.new(0, 20, 0, 21)
 			
 			buttonapi["SetKeybind"] = function(key)
@@ -3572,6 +3573,11 @@ if shared.VapeExecuted then
 					bindtext.TextColor3 = Color3.fromRGB(45, 45, 45)
 					bindimg.ImageColor3 = Color3.fromRGB(45, 45, 45)
 				else
+					for i, v in pairs(buttonapi.Connections) do
+						if v.Disconnect then pcall(function() v:Disconnect() end) continue end
+						if v.disconnect then pcall(function() v:disconnect() end) continue end
+					end
+					table.clear(buttonapi.Connections)
 					button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					buttonactiveborder.Visible = false
 					button2.Image = downloadVapeAsset("vape/assets/MoreButton1.png")
@@ -3807,7 +3813,7 @@ if shared.VapeExecuted then
 						argstable["FocusLost"](enter)
 					end
 				end)
-				
+
 				GuiLibrary.ObjectsThatCanBeSaved[argstablemain["Name"]..argstable["Name"].."TextBox"] = {["Type"] = "TextBox", ["Api"] = textGuiLibrary, ["Object"] = frame}
 				return textGuiLibrary
 			end
@@ -5364,6 +5370,7 @@ if shared.VapeExecuted then
 				buttonapi["Keybind"] = ""
 				buttonapi["Default"] = argstable["Default"]
 				buttonapi["Object"] = buttontext
+				buttonapi.Connections = {}
 				buttonapi["ToggleButton"] = function(toggle, first)
 					buttonapi["Enabled"] = toggle
 					if buttonapi["Enabled"] then
@@ -5374,6 +5381,11 @@ if shared.VapeExecuted then
 						end
 						toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 					else
+						for i, v in pairs(buttonapi.Connections) do
+							if v.Disconnect then pcall(function() v:Disconnect() end) continue end
+							if v.disconnect then pcall(function() v:disconnect() end) continue end
+						end
+						table.clear(buttonapi.Connections)
 						if not first then
 							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 						else
