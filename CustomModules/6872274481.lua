@@ -3223,7 +3223,7 @@ runFunction(function()
 				local goneup = false
 				RunLoops:BindToHeartbeat("InfiniteFly", function(delta) 
 					if GuiLibrary.ObjectsThatCanBeSaved["Lobby CheckToggle"].Api.Enabled then 
-						if bedwarsState.matchState == 0 then return end
+						if bedwarsStore.matchState == 0 then return end
 					end
 					if entityLibrary.isAlive then
 						if isnetworkowner(oldcloneroot) then 
