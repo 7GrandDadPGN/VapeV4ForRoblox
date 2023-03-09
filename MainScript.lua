@@ -686,7 +686,7 @@ OnlineProfilesButton.MouseButton1Click:Connect(function()
 				profiledownload.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
 			end)
 			profiledownload.MouseButton1Click:Connect(function()
-				writefile(customdir.."Profiles/"..v2.ProfileName..saveplaceid..".vapeprofile.txt", game:HttpGet(profileurl, true))
+				writefile(baseDirectory.."Profiles/"..v2.ProfileName..saveplaceid..".vapeprofile.txt", game:HttpGet(profileurl, true))
 				GuiLibrary.Profiles[v2.ProfileName] = {Keybind = "", Selected = false}
 				local profiles = {}
 				for i,v in pairs(GuiLibrary.Profiles) do 
