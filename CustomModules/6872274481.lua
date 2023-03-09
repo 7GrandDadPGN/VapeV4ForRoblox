@@ -4172,7 +4172,7 @@ runFunction(function()
 						if item then
 							if i == "tnt" then 
 								local pos = getScaffold(LongJumpOrigin)
-								tntcheck = Vector3.new(pos.X, startpos.Y, pos.Z)
+								tntcheck = Vector3.new(pos.X, LongJumpOrigin.Y, pos.Z)
 								v(item, pos)
 							else
 								v(item, LongJumpOrigin)
