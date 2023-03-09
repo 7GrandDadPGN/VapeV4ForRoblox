@@ -3552,11 +3552,11 @@ runFunction(function()
 										local direction2 = (Vector3.new(targetPos.X, Root.Position.Y, targetPos.Z) - Root.Position).Unit
 										local lookCFrame = (CFrame.new(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction)))
 										local lookCFrame2 = (CFrame.new(Vector3.zero, (Root.CFrame):VectorToObjectSpace(direction2)))
-										Neck.C0 = CFrame.new(orig) * CFrame.Angles(lookCFrame.LookVector.Unit.y, 0, 0)
-										RootC0.C0 = lookCFrame2 + orig2
+										Neck.C0 = CFrame.new(originalNeckC0) * CFrame.Angles(lookCFrame.LookVector.Unit.y, 0, 0)
+										RootC0.C0 = lookCFrame2 + originalRootC0
 									else
-										Neck.C0 = CFrame.new(orig)
-										RootC0.C0 = CFrame.new(orig2)
+										Neck.C0 = CFrame.new(originalNeckC0)
+										RootC0.C0 = CFrame.new(originalRootC0)
 									end
 								end
 							end
