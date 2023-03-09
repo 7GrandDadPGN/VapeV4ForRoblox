@@ -486,7 +486,7 @@ if shared.VapeExecuted then
 				end
 				local obj = GuiLibrary.ObjectsThatCanBeSaved[i]
 				if obj then
-					local timetaken = tick()
+					local starttick = tick()
 					if v.Type == "Dropdown" then
 						obj["Api"]["SetValue"](v["Value"])
 					end
@@ -584,7 +584,7 @@ if shared.VapeExecuted then
 		end
 		local vapeprivate = shared.VapePrivate
 		local oldindependent = shared.VapeIndependent
-		GuiLibrary["SelfDestruct"]()
+		GuiLibrary.SelfDestruct()
 		if not oldindependent then
 			shared.VapeSwitchServers = true
 			shared.VapeOpenGui = (clickgui.Visible)
