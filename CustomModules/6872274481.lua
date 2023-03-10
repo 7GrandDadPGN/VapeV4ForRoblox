@@ -1078,10 +1078,11 @@ runFunction(function()
 
 	local KnitGotten, KnitClient
 	repeat
-		task.wait()
 		KnitGotten, KnitClient = pcall(function()
 			return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 6)
 		end)
+		if KnitGotten then break end
+		task.wait()
 	until KnitGotten
 	repeat task.wait() until debug.getupvalue(KnitClient.Start, 1)
 	local Flamework = require(replicatedStorageService["rbxts_include"]["node_modules"]["@flamework"].core.out).Flamework
@@ -1124,10 +1125,17 @@ runFunction(function()
 					local suc, plr = pcall(function() return playersService:GetPlayerFromCharacter(attackTable.entityInstance) end)
 					if suc and plr then
 						local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr)
-						if not playerattackable then return nil end
+						if not playerattackable then 
+							bedwars.SwordController.lastAttack = 0
+							return nil 
+						end
 						if Reach.Enabled then
-							local attackMagnitude = (attackTable.validate.selfPosition.value - attackTable.validate.targetPosition.value).magnitude
-							attackTable.validate.selfPosition = attackValue(attackTable.validate.selfPosition.value + (attackMagnitude > 14.4 and (CFrame.lookAt(tab.validate.selfPosition.value, tab.validate.targetPosition.value).lookVector * 4) or Vector3.zero))
+							local attackMagnitude = ((entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - attackTable.validate.targetPosition.value).magnitude
+							if attackMagnitude > 18 then
+								bedwars.SwordController.lastAttack = 0
+								return nil 
+							end
+							attackTable.validate.selfPosition = attackValue(attackTable.validate.selfPosition.value + (attackMagnitude > 14.4 and (CFrame.lookAt(attackTable.validate.selfPosition.value, attackTable.validate.targetPosition.value).lookVector * 4) or Vector3.zero))
 						end
 					end
 					return originalRemote:SendToServer(attackTable, ...)
@@ -2439,7 +2447,7 @@ runFunction(function()
 													firstClick = tick()
 												end
 											end)
-											task.wait(math.max((1 / autoclickercps.GetRandomValue()), noclickdelay.Enabled and 0 or 0.18))
+											task.wait(math.max((1 / autoclickercps.GetRandomValue()), noclickdelay.Enabled and 0 or (bedwarsStore.zephyrOrb ~= 0 and 0.5 or 0.18)))
 										end
 									elseif bedwarsStore.localHand.Type == "block" then 
 										if autoclickerblocks.Enabled and bedwars.BlockPlacementController.blockPlacer and firstClick <= tick() then
@@ -2502,12 +2510,28 @@ runFunction(function()
 end)
 
 runFunction(function()
+	GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
+		Name = "HitFix",
+		Function = function(callback)
+			if callback then
+				debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 27, "raycast")
+				debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, bedwars.QueryUtil)
+			else
+				debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 27, "Raycast")
+				debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, workspace)
+			end
+		end, 
+		HoverText = "Fixes terrible bedwars code for hitreg"
+	})
+end)
+
+runFunction(function()
 	local ReachValue = {Value = 14}
-	local Reach = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
+	Reach = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
 		Name = "Reach",
 		Function = function(callback)
 			if callback then
-				bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE = ReachValue.Value
+				bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE = ReachValue.Value + 2
 			else
 				bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE = 14.4
 			end
@@ -2520,7 +2544,7 @@ runFunction(function()
 		Max = 18,
 		Function = function(val)
 			if Reach.Enabled then
-				bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE = val
+				bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE = val + 2
 			end
 		end,
 		Default = 18
@@ -4329,6 +4353,7 @@ local spiderActive = false
 local holdingshift = false
 runFunction(function()
 	local activatePhase = false
+	local oldActivatePhase = false
 	local PhaseDelay = tick()
 	local PhaseDelay2 = tick()
 	local Phase = {Enabled = false}
@@ -4337,10 +4362,12 @@ runFunction(function()
 	local raycastparameters = RaycastParams.new()
 	raycastparameters.RespectCanCollide = true
 	raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
+	local overlapparams = OverlapParams.new()
+	overlapparams.RespectCanCollide = true
 
 	local function isPointInMapOccupied(p)
-		local region = Region3.new(p - Vector3.new(0.5, 1, 0.5), p + Vector3.new(0.5, 1, 0.5))
-		local possible = workspace:FindPartsInRegion3WithIgnoreList(region, {lplr.Character, unpack(checktable)})
+		overlapparams.FilterDescendantsInstances = {lplr.Character, gameCamera}
+		local possible = workspace:GetPartBoundsInBox(CFrame.new(p), Vector3.new(1, 2, 1), overlapparams)
 		return (#possible == 0)
 	end
 
@@ -4356,7 +4383,7 @@ runFunction(function()
 							local PhaseRayCheck = workspace:Raycast(entityLibrary.character.Head.CFrame.p, entityLibrary.character.Humanoid.MoveDirection * 1.15, raycastparameters)
 							if PhaseRayCheck then
 								local PhaseDirection = (PhaseRayCheck.Normal.Z ~= 0 or not PhaseRayCheck.Instance:GetAttribute("GreedyBlock")) and "Z" or "X"
-								if PhaseRayCheck.Instance.Size[PhaseDirection] <= PhaseStudLimit.Value * 3 and PhaseRayCheck.Instance.CanCollide then
+								if PhaseRayCheck.Instance.Size[PhaseDirection] <= PhaseStudLimit.Value * 3 and PhaseRayCheck.Instance.CanCollide and PhaseRayCheck.Normal.Y == 0 then
 									local PhaseDestination = entityLibrary.character.HumanoidRootPart.CFrame + (PhaseRayCheck.Normal * (-(PhaseRayCheck.Instance.Size[PhaseDirection]) - (entityLibrary.character.HumanoidRootPart.Size.X / 1.5)))
 									if isPointInMapOccupied(PhaseDestination.p) then
 										PhaseDelay = tick() + 0.075
@@ -4369,7 +4396,6 @@ runFunction(function()
 						end
 					end
 				end)
-				local oldActivatePhase = false
 				RunLoops:BindToStepped("Phase", function()
 					if entityLibrary.isAlive and (activatePhase ~= oldActivatePhase or activatePhase) then
 						oldActivatePhase = activatePhase
