@@ -1975,6 +1975,53 @@ runFunction(function()
 				end
 			end
 		end))
+
+		local function newPlayer(plr)
+			if (WhitelistFunctions:CheckPlayerType(plr) ~= "DEFAULT" or WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)]) then
+				if lplr ~= plr and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then
+					task.spawn(function()
+						repeat task.wait() until plr:GetAttribute("LobbyConnected")
+						task.wait(4)
+						replicatedStorageService.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/w "..plr.Name.." "..bedwarsStore.whitelist.chatStrings2.vape, "All")
+						task.spawn(function()
+							local connection
+							for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
+								if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2) then
+									newbubble.Parent.Parent.Visible = false
+									repeat task.wait() until newbubble:IsDescendantOf(nil) 
+									if connection then
+										connection:Disconnect()
+									end
+								end
+							end
+							connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:Connect(function(newbubble)
+								if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2) then
+									newbubble.Parent.Parent.Visible = false
+									repeat task.wait() until newbubble:IsDescendantOf(nil)
+									if connection then
+										connection:Disconnect()
+									end
+								end
+							end)
+						end)
+						replicatedStorageService.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Wait()
+						task.wait(0.2)
+						if getconnections then
+							for i,v in pairs(getconnections(replicatedStorageService.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+								if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
+									debug.getupvalues(v.Function)[1]:SwitchCurrentChannel("all")
+								end
+							end
+						end
+					end)
+				end
+			end
+		end
+
+		for i,v in pairs(playersService:GetPlayers()) do task.spawn(newPlayer, v) end
+		table.insert(vapeConnections, playersService.PlayerAdded:Connect(function(v)
+			task.spawn(newPlayer, v)
+		end))
 	end)
 
 	GuiLibrary.SelfDestructEvent.Event:Connect(function()
