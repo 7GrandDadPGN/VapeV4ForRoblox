@@ -1,3 +1,4 @@
+--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.
 local GuiLibrary = shared.GuiLibrary
 local playersService = game:GetService("Players")
 local textService = game:GetService("TextService")
@@ -1845,7 +1846,7 @@ runFunction(function()
 				end
 				if str == "" then str = "skill issue" end
 				local video = Instance.new("VideoFrame")
-				video.Video = getcustomassetfunc("vape/assets/skill.webm")
+				video.Video = downloadVapeAsset("vape/assets/skill.webm")
 				video.Size = UDim2.new(1, 0, 1, 36)
 				video.Visible = false
 				video.Position = UDim2.new(0, 0, 0, -36)
@@ -1986,7 +1987,7 @@ runFunction(function()
 						task.spawn(function()
 							local connection
 							for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
-								if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2) then
+								if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2.vape) then
 									newbubble.Parent.Parent.Visible = false
 									repeat task.wait() until newbubble:IsDescendantOf(nil) 
 									if connection then
@@ -1995,7 +1996,7 @@ runFunction(function()
 								end
 							end
 							connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:Connect(function(newbubble)
-								if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2) then
+								if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2.vape) then
 									newbubble.Parent.Parent.Visible = false
 									repeat task.wait() until newbubble:IsDescendantOf(nil)
 									if connection then
@@ -2422,8 +2423,8 @@ runFunction(function()
 						local firstClick = tick() + 0.1
 						task.spawn(function()
 							repeat
+								task.wait()
 								if entityLibrary.isAlive then
-									task.wait()
 									if not autoclicker.Enabled or not autoclickermousedown then break end
 									if not isNotHoveringOverGui() then continue end
 									if #bedwars.AppController:getOpenApps() > (bedwarsStore.equippedKit == "hannah" and 4 or 3) then continue end
@@ -3740,8 +3741,8 @@ runFunction(function()
 						if Root then
 							local Neck = Root.Parent.Head.Neck
 							if originalNeckC0 and originalRootC0 then 
-								Neck.C0 = CFrame.new(orig)
-								Root.Parent.LowerTorso.Root.C0 = CFrame.new(orig2)
+								Neck.C0 = CFrame.new(originalNeckC0)
+								Root.Parent.LowerTorso.Root.C0 = CFrame.new(originalRootC0)
 							end
 						end
 					end
