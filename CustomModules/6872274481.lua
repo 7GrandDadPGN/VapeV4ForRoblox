@@ -2419,30 +2419,30 @@ runFunction(function()
 				table.insert(autoclicker.Connections, inputService.InputBegan:Connect(function(input, gameProcessed)
 					if gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton1 then
 						autoclickermousedown = true
-						local firstPlayerNearclick = tick() + 0.1
+						local firstClick = tick() + 0.1
 						task.spawn(function()
 							repeat
 								if entityLibrary.isAlive then
 									task.wait()
 									if not autoclicker.Enabled or not autoclickermousedown then break end
 									if not isNotHoveringOverGui() then continue end
-									if #bedwars.AppController:getOpenApps() > 3 then continue end
+									if #bedwars.AppController:getOpenApps() > (bedwarsStore.equippedKit == "hannah" and 4 or 3) then continue end
 									if GuiLibrary.ObjectsThatCanBeSaved["Lobby CheckToggle"].Api.Enabled then
 										if bedwarsStore.matchState == 0 then continue end
 									end
 									if bedwarsStore.localHand.Type == "sword" then
 										if bedwars.KatanaController.chargingMaid == nil then
 											task.spawn(function()
-												if firstPlayerNearclick <= tick() then
+												if firstClick <= tick() then
 													bedwars.SwordController:swingSwordAtMouse()
 												else
-													firstPlayerNearclick = tick()
+													firstClick = tick()
 												end
 											end)
 											task.wait(math.max((1 / autoclickercps.GetRandomValue()), noclickdelay.Enabled and 0 or 0.18))
 										end
 									elseif bedwarsStore.localHand.Type == "block" then 
-										if autoclickerblocks.Enabled and bedwars.BlockPlacementController.blockPlacer and firstPlayerNearclick <= tick() then
+										if autoclickerblocks.Enabled and bedwars.BlockPlacementController.blockPlacer and firstClick <= tick() then
 											local mouseinfo = bedwars.BlockPlacementController.blockPlacer.clientManager:getBlockSelector():getMouseInfo(0)
 											if mouseinfo then
 												task.spawn(function()
@@ -3499,7 +3499,7 @@ runFunction(function()
 			if not inputService:IsMouseButtonPressed(0) then return false end
 		end
 		if killauragui.Enabled then
-			if #bedwars.AppController:getOpenApps() > 3 then return false end
+			if #bedwars.AppController:getOpenApps() > (bedwarsStore.equippedKit == "hannah" and 4 or 3) then return false end
 		end
 		local sword = killaurahandcheck.Enabled and bedwarsStore.localHand or getSword()
 		if not sword or not sword.tool then return false end
