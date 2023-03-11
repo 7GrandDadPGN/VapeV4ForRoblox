@@ -2558,7 +2558,6 @@ runFunction(function()
 		Name = "Sprint",
 		Function = function(callback)
 			if callback then
-				bedwars.SprintController:startSprinting()
 				oldSprintFunction = bedwars.SprintController.stopSprinting
 				bedwars.SprintController.stopSprinting = function(...)
 					local originalCall = oldSprintFunction(...)
@@ -2570,6 +2569,9 @@ runFunction(function()
 					task.wait(0.5)
 					bedwars.SprintController:stopSprinting()
 				end))
+				task.spawn(function()
+					bedwars.SprintController:startSprinting()
+				end)
 			else
 				bedwars.SprintController.stopSprinting = oldSprintFunction
 				bedwars.SprintController:stopSprinting()
