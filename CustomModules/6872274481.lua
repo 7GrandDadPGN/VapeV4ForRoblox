@@ -9575,7 +9575,7 @@ runFunction(function()
 												end
 												local newlaunchpos = plr.RootPart.CFrame.p
 												local newlaunchvelo = CFrame.lookAt(newlaunchpos, newlaunchpos + (Vector3.new(plr.RootPart.Velocity.X, -1, plr.RootPart.Velocity.Z) * 0.016)).lookVector * bedwars.ProjectileMeta[proj2].launchVelocity
-												launchvelo = newlaunchvelo
+												launchvelo = table.find(noveloproj, proj2) and Vector3.new(0, -bedwars.ProjectileMeta[proj2].launchVelocity, 0) or newlaunchvelo
 												launchpos1 = newlaunchpos
 												launchpos2 = newlaunchpos
 												tab1.drawDurationSeconds = 1
