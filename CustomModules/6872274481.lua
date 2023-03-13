@@ -9569,6 +9569,10 @@ runFunction(function()
 												plr = EntityNearPosition(BowExploitAutoShootFOV.Value)
 											end
 											if plr then	
+												local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr)
+												if not playerattackable then 
+													return res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
+												end
 												local newlaunchpos = plr.RootPart.CFrame.p
 												local newlaunchvelo = CFrame.lookAt(newlaunchpos, newlaunchpos + (Vector3.new(plr.RootPart.Velocity.X, -1, plr.RootPart.Velocity.Z) * 0.016)).lookVector * bedwars.ProjectileMeta[proj2].launchVelocity
 												launchvelo = newlaunchvelo
