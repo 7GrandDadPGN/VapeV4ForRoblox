@@ -4725,7 +4725,7 @@ runFunction(function()
 							local wool, woolamount = getWool()
 							if bedwarsStore.localHand.Type == "block" then
 								wool = bedwarsStore.localHand.tool.Name
-								woolamount = bedwarsStore.localHand.amount or 0
+								woolamount = getItem(bedwarsStore.localHand.tool.Name).amount or 0
 							elseif (not wool) then 
 								wool, woolamount = getBlock()
 							end
@@ -9539,6 +9539,79 @@ runFunction(function()
 	})
 end)
 
+runFunction(function()
+	local BowExploit = {Enabled = false}
+	local BowExploitTarget = {Value = "Mouse"}
+	local BowExploitAutoShootFOV = {Value = 1000}
+	local oldrealremote
+	local noveloproj = {
+		"fireball",
+		"telepearl"
+	}
+
+	BowExploit = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = "ProjectileExploit",
+		Function = function(callback)
+			if callback then 
+				oldrealremote = debug.getupvalue(debug.getupvalue(bedwars.ProjectileController.launchProjectileWithValues, 2), 10)
+				debug.setupvalue(debug.getupvalue(bedwars.ProjectileController.launchProjectileWithValues, 2), 10, {
+					Client = {
+						WaitFor = function(self6, remote)
+							local res = bedwars.ClientHandler:Get(remote)
+							return {
+								andThen = function(self5, func) 
+									return func({
+										CallServerAsync = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
+											local plr
+											if BowExploitTarget["Value"] == "Mouse" then 
+												plr = EntityNearMouse(10000)
+											else
+												plr = EntityNearPosition(BowExploitAutoShootFOV.Value)
+											end
+											if plr then	
+												local newlaunchpos = plr.RootPart.CFrame.p
+												local newlaunchvelo = CFrame.lookAt(newlaunchpos, newlaunchpos + (Vector3.new(plr.RootPart.Velocity.X, -1, plr.RootPart.Velocity.Z) * 0.016)).lookVector * bedwars.ProjectileMeta[proj2].launchVelocity
+												launchvelo = newlaunchvelo
+												launchpos1 = newlaunchpos
+												launchpos2 = newlaunchpos
+												tab1.drawDurationSeconds = 1
+											end
+											local called = res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...):andThen(function(shoot)
+												if shoot then 
+													warningNotification("ProjectileExploit", "allowed server", 5)
+												else
+													warningNotification("ProjectileExploit", "failed server", 5)
+												end
+											end)
+											return called
+										end
+									})
+								end
+							}
+						end
+					}
+				})
+			else
+				debug.setupvalue(debug.getupvalue(bedwars.ProjectileController.launchProjectileWithValues, 2), 10, {
+					Client = bedwars.ClientHandler
+				})
+				oldrealremote = nil
+			end
+		end
+	})
+	BowExploitTarget = BowExploit.CreateDropdown({
+		Name = "Mode",
+		List = {"Mouse", "Range"},
+		Function = function() end
+	})
+	BowExploitAutoShootFOV = BowExploit.CreateSlider({
+		Name = "FOV",
+		Function = function() end,
+		Min = 1,
+		Max = 1000,
+		Default = 1000
+	})
+end)
 
 runFunction(function()
 	bedwarsStore.TPString = shared.vapeoverlay or nil
