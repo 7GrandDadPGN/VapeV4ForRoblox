@@ -9569,7 +9569,7 @@ runFunction(function()
 												plr = EntityNearPosition(BowExploitAutoShootFOV.Value)
 											end
 											if plr then	
-												local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr)
+												local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
 												if not playerattackable then 
 													return res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
 												end
