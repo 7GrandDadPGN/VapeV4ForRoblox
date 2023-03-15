@@ -9960,7 +9960,7 @@ task.spawn(function()
 				end))
 				game:GetService("StarterGui"):SetCore("SendNotification", {
 					Title = "Vape",
-					Text = "Vape is currently disabled, check the discord for updates discord.gg/vaperoblox",
+					Text = "Vape is currently disabled, please use vape later.",
 					Duration = 30,
 				})
 			end
@@ -9982,7 +9982,7 @@ task.spawn(function()
 				end))
 				game:GetService("StarterGui"):SetCore("SendNotification", {
 					Title = "Vape",
-					Text = "Vape is currently disabled, check the discord for updates discord.gg/vaperoblox",
+					Text = "Vape is currently disabled, please use vape later.",
 					Duration = 30,
 				})
 			end
