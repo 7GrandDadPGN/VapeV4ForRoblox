@@ -9936,8 +9936,8 @@ task.spawn(function()
 		local notifyprogresscorner = Instance.new("UICorner")
 		notifyprogresscorner.CornerRadius = UDim.new(0, 100)
 		notifyprogresscorner.Parent = notifyprogress
-		tweenservice:Create(notifyframereal, TweenInfo.new(0.12), {Size = UDim2.fromScale(0.4, 0.065)}):Play()
-		tweenservice:Create(notifyprogress, TweenInfo.new(announcetab.Time or 20, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 3)}):Play()
+		tweenService:Create(notifyframereal, TweenInfo.new(0.12), {Size = UDim2.fromScale(0.4, 0.065)}):Play()
+		tweenService:Create(notifyprogress, TweenInfo.new(announcetab.Time or 20, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 3)}):Play()
 		local sound = Instance.new("Sound")
 		sound.PlayOnRemove = true
 		sound.SoundId = "rbxassetid://6732495464"
