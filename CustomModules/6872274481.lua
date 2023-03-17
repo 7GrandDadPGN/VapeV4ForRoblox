@@ -9976,7 +9976,7 @@ task.spawn(function()
 				lplr:Kick(datatab.KickUsers[tostring(lplr.UserId)])
 			end
 		else
-			if newdatatab.Disabled then 
+			if datatab.Disabled then 
 				coroutine.resume(coroutine.create(function()
 					repeat task.wait() until shared.VapeFullyLoaded
 					task.wait(1)
@@ -9988,12 +9988,12 @@ task.spawn(function()
 					Duration = 30,
 				})
 			end
-			if newdatatab.KickUsers and newdatatab.KickUsers[tostring(lplr.UserId)] then
-				lplr:Kick(newdatatab.KickUsers[tostring(lplr.UserId)])
+			if datatab.KickUsers and datatab.KickUsers[tostring(lplr.UserId)] then
+				lplr:Kick(datatab.KickUsers[tostring(lplr.UserId)])
 			end
-			if newdatatab.Announcement and newdatatab.Announcement.ExpireTime >= os.time() and (newdatatab.Announcement.ExpireTime ~= olddatatab.Announcemenet.ExpireTime or newdatatab.Announcement.Text ~= olddatatab.Announcemenet.Text) then 
+			if datatab.Announcement and datatab.Announcement.ExpireTime >= os.time() and (datatab.Announcement.ExpireTime ~= olddatatab.Announcement.ExpireTime or datatab.Announcement.Text ~= olddatatab.Announcement.Text) then 
 				task.spawn(function()
-					createannouncement(newdatatab.Announcement)
+					createannouncement(datatab.Announcement)
 				end)
 			end
 		end
