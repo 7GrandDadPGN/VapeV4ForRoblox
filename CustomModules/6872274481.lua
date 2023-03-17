@@ -9847,8 +9847,6 @@ runFunction(function()
 end)
 
 task.spawn(function()
-	local url = "https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/CustomModules/bedwarsdata"
-
 	local function createannouncement(announcetab)
 		local notifyframereal = Instance.new("TextButton")
 		notifyframereal.AnchorPoint = Vector2.new(0.5, 0)
@@ -10021,8 +10019,16 @@ task.spawn(function()
 				rundata(game:GetService("HttpService"):JSONDecode(olddata))
 			end
 			repeat
-				task.wait(30)
-				newdata = game:HttpGet(url, true)
+				task.wait(10)
+				local commit = "main"
+				for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/VapeV4ForRoblox"):split("\n")) do 
+					if v:find("commit") and v:find("fragment") then 
+						local str = v:split("/")[5]
+						commit = str:sub(0, str:find('"') - 1)
+						break
+					end
+				end
+				newdata = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..commit.."/CustomModules/bedwarsdata", true)
 				if newdata ~= olddata then 
 					rundata(game:GetService("HttpService"):JSONDecode(newdata), game:GetService("HttpService"):JSONDecode(olddata))
 					olddata = newdata
