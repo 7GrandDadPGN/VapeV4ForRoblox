@@ -10006,10 +10006,6 @@ task.spawn(function()
 	end
 	task.spawn(function()
 		pcall(function()
-			if betterisfile("vape/Profiles/bedwarsdata.txt") == false then 
-				writefile("vape/Profiles/bedwarsdata.txt", game:HttpGet(url, true))
-			end
-			local olddata = readfile("vape/Profiles/bedwarsdata.txt")
 			local commit = "main"
 			for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/VapeV4ForRoblox"):split("\n")) do 
 				if v:find("commit") and v:find("fragment") then 
@@ -10019,6 +10015,10 @@ task.spawn(function()
 				end
 			end
 			local newdata = game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..commit.."/CustomModules/bedwarsdata", true)
+			if not isfile("vape/Profiles/bedwarsdata.txt") then 
+				writefile("vape/Profiles/bedwarsdata.txt", newdata)
+			end
+			local olddata = readfile("vape/Profiles/bedwarsdata.txt")
 			if newdata ~= olddata then 
 				rundata(game:GetService("HttpService"):JSONDecode(newdata), game:GetService("HttpService"):JSONDecode(olddata))
 				olddata = newdata
