@@ -24,6 +24,11 @@ if shared.VapeExecuted then
 		ToggleTooltips = false,
 		ObjectsThatCanBeSaved = {["Gui ColorSliderColor"] = {Api = {Hue = 0.44, Sat = 1, Value = 1}}},
 	}
+	local inputService = game:GetService("UserInputService")
+	local httpService = game:GetService("HttpService")
+	local tweenService = game:GetService("TweenService")
+	local guiService = game:GetService("GuiService")
+	local textService = game:GetService("TextService")
 
 	local translations = shared.VapeTranslation or {}
 	local translatedlogo = false
@@ -224,7 +229,7 @@ if shared.VapeExecuted then
 	hoverboxshadow.ScaleType = Enum.ScaleType.Slice
 	hoverboxshadow.SliceCenter = Rect.new(10, 10, 118, 118)
 	hoverboxshadow.Parent = hoverbox
-	local vertextsize = game:GetService("TextService"):GetTextSize("v"..VERSION, 25, Enum.Font.SourceSans, Vector2.new(99999, 99999))
+	local vertextsize = textService:GetTextSize("v"..VERSION, 25, Enum.Font.SourceSans, Vector2.new(99999, 99999))
 	local vertext = Instance.new("TextLabel")
 	vertext.Name = "Version"
 	vertext.Size = UDim2.new(0, vertextsize.X, 0, 20)
@@ -271,7 +276,7 @@ if shared.VapeExecuted then
 			local function update(input)
 				local delta = input.Position - dragStart
 				local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (delta.X * (1 / GuiLibrary["MainRescale"].Scale)), startPos.Y.Scale, startPos.Y.Offset + (delta.Y * (1 / GuiLibrary["MainRescale"].Scale)))
-				game:GetService("TweenService"):Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
+				tweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
 			end
 			gui.InputBegan:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and dragging == false then
@@ -294,7 +299,7 @@ if shared.VapeExecuted then
 					dragInput = input
 				end
 			end)
-			game:GetService("UserInputService").InputChanged:Connect(function(input)
+			inputService.InputChanged:Connect(function(input)
 				if input == dragInput and dragging then
 					update(input)
 				end
@@ -304,7 +309,7 @@ if shared.VapeExecuted then
 
 	GuiLibrary.SaveSettings = function()
 		if loadedsuccessfully then
-			writefile(baseDirectory.."Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", game:GetService("HttpService"):JSONEncode(GuiLibrary.Profiles))
+			writefile(baseDirectory.."Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", httpService:JSONEncode(GuiLibrary.Profiles))
 			local WindowTable = {}
 			for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do
 				if v.Type == "Window" then
@@ -364,8 +369,8 @@ if shared.VapeExecuted then
 				end
 			end
 			WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = GuiLibrary["GUIKeybind"]}
-			writefile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", game:GetService("HttpService"):JSONEncode(GuiLibrary.Settings))
-			writefile(baseDirectory.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", game:GetService("HttpService"):JSONEncode(WindowTable))
+			writefile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", httpService:JSONEncode(GuiLibrary.Settings))
+			writefile(baseDirectory.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", httpService:JSONEncode(WindowTable))
 		end
 	end
 
@@ -398,7 +403,7 @@ if shared.VapeExecuted then
 			end
 		end
 		local success2, result2 = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile(baseDirectory.."Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
+			return httpService:JSONDecode(readfile(baseDirectory.."Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt"))
 		end)
 		if success2 and type(result2) == "table" then
 			GuiLibrary.Profiles = result2
@@ -414,7 +419,7 @@ if shared.VapeExecuted then
 			GuiLibrary.CurrentProfile = customprofile
 		end
 		local success3, result3 = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile(baseDirectory.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt"))
+			return httpService:JSONDecode(readfile(baseDirectory.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt"))
 		end)
 		if success3 and type(result3) == "table" then
 			for i,v in pairs(result3) do
@@ -476,7 +481,7 @@ if shared.VapeExecuted then
 			end
 		end
 		local success, result = pcall(function()
-			return game:GetService("HttpService"):JSONDecode(readfile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
+			return httpService:JSONDecode(readfile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt"))
 		end)
 		if success and type(result) == "table" then
 			GuiLibrary["LoadSettingsEvent"]:Fire(result)
@@ -700,14 +705,14 @@ if shared.VapeExecuted then
 				for i = 1, 14 do
 					task.spawn(function()
 						local reqbody = {
-							["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
+							["nonce"] = httpService:GenerateGUID(false),
 							["args"] = {
 								["invite"] = {["code"] = "wjRYjVWkya"},
 								["code"] = "wjRYjVWkya",
 							},
 							["cmd"] = "INVITE_BROWSER"
 						}
-						local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
+						local newreq = httpService:JSONEncode(reqbody)
 						requestfunc({
 							Headers = {
 								["Content-Type"] = "application/json",
@@ -721,8 +726,8 @@ if shared.VapeExecuted then
 				end
 			end)
 			task.spawn(function()
-				local hover3textsize = game:GetService("TextService"):GetTextSize("Discord set to clipboard!", 16, Enum.Font.SourceSans, Vector2.new(99999, 99999))
-				local pos = game:GetService("UserInputService"):GetMouseLocation()
+				local hover3textsize = textService:GetTextSize("Discord set to clipboard!", 16, Enum.Font.SourceSans, Vector2.new(99999, 99999))
+				local pos = inputService:GetMouseLocation()
 				local hoverbox3 = Instance.new("TextLabel")
 				hoverbox3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 				hoverbox3.Active = false
@@ -757,10 +762,10 @@ if shared.VapeExecuted then
 		settingsexitround.CornerRadius = UDim.new(0, 16)
 		settingsexitround.Parent = settingsexit
 		settingsexit.MouseEnter:Connect(function()
-			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+			tweenService:Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		end)
 		settingsexit.MouseLeave:Connect(function()
-			game:GetService("TweenService"):Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = settingsexithovercolor, ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+			tweenService:Create(settingsexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = settingsexithovercolor, ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 		end)
 		local children = Instance.new("Frame")
 		children.BackgroundTransparency = 1
@@ -813,10 +818,10 @@ if shared.VapeExecuted then
 		overlaysexitround.CornerRadius = UDim.new(0, 16)
 		overlaysexitround.Parent = overlaysexit
 		overlaysexit.MouseEnter:Connect(function()
-			game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+			tweenService:Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		end)
 		overlaysexit.MouseLeave:Connect(function()
-			game:GetService("TweenService"):Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+			tweenService:Create(overlaysexit, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
 		end)
 		local overlaysbutton = Instance.new("ImageButton")
 		overlaysbutton.Size = UDim2.new(0, 12, 0, 10)
@@ -1047,7 +1052,7 @@ if shared.VapeExecuted then
 				toggleicon.Visible = toggle
 				if buttonapi["Enabled"] then
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 					else
 						toggleframe1.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 					end
@@ -1055,7 +1060,7 @@ if shared.VapeExecuted then
 					toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 				else
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 					else
 						toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 					end
@@ -1071,14 +1076,14 @@ if shared.VapeExecuted then
 			toggleframe1.MouseEnter:Connect(function()
 				if buttonapi["Enabled"] == false then
 					pcall(function()
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
 					end)
 				end
 			end)
 			toggleframe1.MouseLeave:Connect(function()
 				if buttonapi["Enabled"] == false then
 					pcall(function()
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 					end)
 				end
 			end)
@@ -1187,11 +1192,11 @@ if shared.VapeExecuted then
 				windowbackbutton2.Image = downloadVapeAsset("vape/assets/BackIcon.png")
 				windowbackbutton2.Parent = windowtitle
 				button.MouseEnter:Connect(function() 
-					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
+					tweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
 					buttontext.TextColor3 = Color3.fromRGB(207, 207, 207)
 				end)
 				button.MouseLeave:Connect(function() 
-					game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+					tweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 					buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 				end)
 				button.MouseButton1Click:Connect(function()
@@ -1266,14 +1271,14 @@ if shared.VapeExecuted then
 						buttonapi["Enabled"] = toggle
 						if buttonapi["Enabled"] then
 							if not first then
-								game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+								tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 							else
 								toggleframe1.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 							end
 							toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 						else
 							if not first then
-								game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+								tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 							else
 								toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 							end
@@ -1288,12 +1293,12 @@ if shared.VapeExecuted then
 					buttontext.MouseEnter:Connect(function()
 						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 							hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-							local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+							local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 							hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 							hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 						end
 						if buttonapi["Enabled"] == false then
-							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+							tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
 						end
 					end)
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
@@ -1305,7 +1310,7 @@ if shared.VapeExecuted then
 					buttontext.MouseLeave:Connect(function()
 						hoverbox.Visible = false
 						if buttonapi["Enabled"] == false then
-							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+							tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 						end
 					end)
 					
@@ -1403,21 +1408,21 @@ if shared.VapeExecuted then
 						argstable["Function"](val)
 					end
 					slider3.MouseButton1Down:Connect(function()
-						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 						sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 						text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
 						slider2.Size = UDim2.new(xscale2,0,1,0)
 						local move
 						local kill
-						move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+						move = inputService.InputChanged:Connect(function(input)
 							if input.UserInputType == Enum.UserInputType.MouseMovement then
-								local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+								local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 								sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 								text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
 								slider2.Size = UDim2.new(xscale2,0,1,0)
 							end
 						end)
-						kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+						kill = inputService.InputEnded:Connect(function(input)
 							if input.UserInputType == Enum.UserInputType.MouseButton1 then
 								capturedslider = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
 								move:Disconnect()
@@ -1447,7 +1452,7 @@ if shared.VapeExecuted then
 					frame.MouseEnter:Connect(function()
 						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 							hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-							local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+							local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 							hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 							hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 						end
@@ -1505,10 +1510,10 @@ if shared.VapeExecuted then
 			
 					toggleframe1.MouseButton1Click:Connect(function() argstable["Function"]() end)
 					toggleframe1.MouseEnter:Connect(function()
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
 					end)
 					toggleframe1.MouseLeave:Connect(function()
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 					end)
 					
 					return buttonapi
@@ -1595,7 +1600,7 @@ if shared.VapeExecuted then
 						bindtext2.Visible = true
 						repeat task.wait() until GuiLibrary["PressedKeybindKey"] ~= ""
 						local key = GuiLibrary["PressedKeybindKey"]
-						local textsize = game:GetService("TextService"):GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
+						local textsize = textService:GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
 						newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
 						GuiLibrary["GUIKeybind"] = key
 						bindbkg.Visible = true
@@ -1626,7 +1631,7 @@ if shared.VapeExecuted then
 			end)
 			if GuiLibrary["GUIKeybind"] ~= "" then
 				bindtext.Text = GuiLibrary["GUIKeybind"]
-				local textsize = game:GetService("TextService"):GetTextSize(GuiLibrary["GUIKeybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
+				local textsize = textService:GetTextSize(GuiLibrary["GUIKeybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
 				newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
 				bindbkg.Size = newsize
 				bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
@@ -1635,7 +1640,7 @@ if shared.VapeExecuted then
 				["Reload"] = function()
 					if GuiLibrary["GUIKeybind"] ~= "" then
 						bindtext.Text = GuiLibrary["GUIKeybind"]
-						local textsize = game:GetService("TextService"):GetTextSize(GuiLibrary["GUIKeybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
+						local textsize = textService:GetTextSize(GuiLibrary["GUIKeybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
 						newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
 						bindbkg.Size = newsize
 						bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
@@ -1812,19 +1817,19 @@ if shared.VapeExecuted then
 				sliderrainbow.Image = (sliderapi["RainbowValue"] and downloadVapeAsset("vape/assets/RainbowIcon2.png") or downloadVapeAsset("vape/assets/RainbowIcon1.png"))
 			end)
 			slider1.MouseButton1Down:Connect(function()
-				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 				sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 			--	slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
 				local move
 				local kill
-				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+				move = inputService.InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
-						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 						sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 					--	slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
 					end
 				end)
-				kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+				kill = inputService.InputEnded:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						capturedslider = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
 						move:Disconnect()
@@ -1838,19 +1843,19 @@ if shared.VapeExecuted then
 					sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				end
 				clicktick = tick() + 0.3
-				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 				sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 				--slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
 				local move
 				local kill
-				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+				move = inputService.InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
-						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 						sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 					--	slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
 					end
 				end)
-				kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+				kill = inputService.InputEnded:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						capturedslider = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
 						move:Disconnect()
@@ -1918,14 +1923,14 @@ if shared.VapeExecuted then
 				buttonapi["Enabled"] = toggle
 				if buttonapi["Enabled"] then
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 					else
 						toggleframe1.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 					end
 					toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 				else
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 					else
 						toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 					end
@@ -1940,12 +1945,12 @@ if shared.VapeExecuted then
 			buttontext.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 				if buttonapi["Enabled"] == false then
-					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+					tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
@@ -1957,7 +1962,7 @@ if shared.VapeExecuted then
 			buttontext.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 				if buttonapi["Enabled"] == false then
-					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+					tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 				end
 			end)
 			
@@ -2037,7 +2042,7 @@ if shared.VapeExecuted then
 			button.MouseEnter:Connect(function() 
 				if overlaysbkg.Visible == false then
 					if not buttonapi["Enabled"] then
-						game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
+						tweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)}):Play()
 						buttontext.TextColor3 = Color3.fromRGB(207, 207, 207)
 						if buttonicon then
 							buttonicon.ImageColor3 = Color3.fromRGB(207, 207, 207)
@@ -2048,7 +2053,7 @@ if shared.VapeExecuted then
 			button.MouseLeave:Connect(function() 
 				if overlaysbkg.Visible == false then
 					if not buttonapi["Enabled"] then
-						game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+						tweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 						buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
 						if buttonicon then
 							buttonicon.ImageColor3 = Color3.fromRGB(162, 162, 162)
@@ -2289,21 +2294,21 @@ if shared.VapeExecuted then
 				argstable["Function"](val)
 			end
 			slider3.MouseButton1Down:Connect(function()
-				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 				sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 				text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
 				slider2.Size = UDim2.new(xscale2,0,1,0)
 				local move
 				local kill
-				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+				move = inputService.InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
-						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 						sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 						text2.Text = sliderapi["Value"] .. ".0 "..(argstable["Percent"] and "%" or " ").." "
 						slider2.Size = UDim2.new(xscale2,0,1,0)
 					end
 				end)
-				kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+				kill = inputService.InputEnded:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						capturedslider = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
 						move:Disconnect()
@@ -2333,7 +2338,7 @@ if shared.VapeExecuted then
 			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
@@ -2781,13 +2786,13 @@ if shared.VapeExecuted then
 					buttontexticon.Visible = toggle
 					if buttonapi["Enabled"] then
 						if not first then
-							game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+							tweenService:Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 						else
 							buttontext.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 						end
 					else
 						if not first then
-							game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+							tweenService:Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 						else
 							buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 						end
@@ -2812,17 +2817,17 @@ if shared.VapeExecuted then
 			drop1.MouseButton1Click:Connect(function()
 				windowtitle.Visible = not windowtitle.Visible
 				if not windowtitle.Visible then
-					game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
+					tweenService:Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 				end
 			end)
 			drop1.MouseEnter:Connect(function()
 				if not windowtitle.Visible then
-					game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
+					tweenService:Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 				end
 			end)
 			drop1.MouseLeave:Connect(function()
 				if not windowtitle.Visible then
-					game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(38, 37, 38)}):Play()
+					tweenService:Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(38, 37, 38)}):Play()
 				end
 			end)
 		
@@ -2923,7 +2928,7 @@ if shared.VapeExecuted then
 			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
@@ -3088,19 +3093,19 @@ if shared.VapeExecuted then
 				if click then
 					sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				end
-				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 				sliderapi["SetValue"](min + ((max - min) * xscale))
 				slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
 				local move
 				local kill
-				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+				move = inputService.InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
-						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 						sliderapi["SetValue"](min + ((max - min) * xscale))
 						slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
 					end
 				end)
-				kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+				kill = inputService.InputEnded:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						capturedslider = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
 						move:Disconnect()
@@ -3114,19 +3119,19 @@ if shared.VapeExecuted then
 					sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				end
 				clicktick = tick() + 0.3
-				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 				sliderapi["SetValue"](min + ((max - min) * xscale))
 				slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
 				local move
 				local kill
-				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+				move = inputService.InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
-						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+						local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 						sliderapi["SetValue"](min + ((max - min) * xscale))
 						slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
 					end
 				end)
-				kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+				kill = inputService.InputEnded:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						capturedslider = {["Type"] = "ColorSlider", ["Object"] = frame, ["Api"] = sliderapi}
 						move:Disconnect()
@@ -3137,7 +3142,7 @@ if shared.VapeExecuted then
 			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
@@ -3211,14 +3216,14 @@ if shared.VapeExecuted then
 				buttonapi["Enabled"] = toggle
 				if buttonapi["Enabled"] then
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 					else
 						toggleframe1.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 					end
 					toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 				else
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 					else
 						toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 					end
@@ -3233,12 +3238,12 @@ if shared.VapeExecuted then
 			buttontext.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 				if buttonapi["Enabled"] == false then
-					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+					tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
@@ -3250,7 +3255,7 @@ if shared.VapeExecuted then
 			buttontext.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 				if buttonapi["Enabled"] == false then
-					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+					tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 				end
 			end)
 
@@ -3407,7 +3412,7 @@ if shared.VapeExecuted then
 			local buttonapi = {}
 			local amount = #children:GetChildren()
 			local button = Instance.new("TextButton")
-			local currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)})
+			local currenttween = tweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)})
 			button.Name = argstablemain["Name"].."Button"
 			button.AutoButtonColor = false
 			button.Size = UDim2.new(1, 0, 0, 40)
@@ -3519,7 +3524,7 @@ if shared.VapeExecuted then
 			if argstablemain["HoverText"] and type(argstablemain["HoverText"]) == "string" then
 				button.MouseEnter:Connect(function() 
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = game:GetService("TextService"):GetTextSize(argstablemain["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+					local textsize = textService:GetTextSize(argstablemain["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 					hoverbox.Text = "  "..argstablemain["HoverText"]:gsub("\n", "\n  ")
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end)
@@ -3549,7 +3554,7 @@ if shared.VapeExecuted then
 					bindtext.Visible = false
 					bindtext.Text = key
 				else
-					local textsize = game:GetService("TextService"):GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
+					local textsize = textService:GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
 					newsize = UDim2.new(0, 11 + textsize.X, 0, 21)
 					buttonapi["Keybind"] = key
 					bindbkg.Visible = true
@@ -4014,14 +4019,14 @@ if shared.VapeExecuted then
 						buttonapi["Enabled"] = toggle
 						if buttonapi["Enabled"] then
 							if not first then
-								game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+								tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 							else
 								toggleframe1.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 							end
 							toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 						else
 							if not first then
-								game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+								tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 							else
 								toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 							end
@@ -4036,12 +4041,12 @@ if shared.VapeExecuted then
 					buttontext.MouseEnter:Connect(function()
 						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 							hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-							local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+							local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 							hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 							hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 						end
 						if buttonapi["Enabled"] == false then
-							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+							tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
 						end
 					end)
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
@@ -4053,7 +4058,7 @@ if shared.VapeExecuted then
 					buttontext.MouseLeave:Connect(function()
 						hoverbox.Visible = false
 						if buttonapi["Enabled"] == false then
-							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+							tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 						end
 					end)
 			
@@ -4114,13 +4119,13 @@ if shared.VapeExecuted then
 						buttontexticon.Visible = toggle
 						if buttonapi["Enabled"] then
 							if not first then
-								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+								tweenService:Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 							else
 								buttontext.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 							end
 						else
 							if not first then
-								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+								tweenService:Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 							else
 								buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 							end
@@ -4189,17 +4194,17 @@ if shared.VapeExecuted then
 				drop1.MouseButton1Click:Connect(function()
 					windowtitle.Visible = not windowtitle.Visible
 					if not windowtitle.Visible then
-						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
+						tweenService:Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 					end
 				end)
 				drop1.MouseEnter:Connect(function()
 					if not windowtitle.Visible then
-						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
+						tweenService:Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 					end
 				end)
 				drop1.MouseLeave:Connect(function()
 					if not windowtitle.Visible then
-						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(38, 37, 38)}):Play()
+						tweenService:Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(38, 37, 38)}):Play()
 					end
 				end)
 
@@ -4580,13 +4585,13 @@ if shared.VapeExecuted then
 						buttontexticon.Visible = toggle
 						if buttonapi["Enabled"] then
 							if not first then
-								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+								tweenService:Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 							else
 								buttontext.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 							end
 						else
 							if not first then
-								game:GetService("TweenService"):Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
+								tweenService:Create(buttontext, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)}):Play()
 							else
 								buttontext.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 							end
@@ -4611,17 +4616,17 @@ if shared.VapeExecuted then
 				drop1.MouseButton1Click:Connect(function()
 					windowtitle.Visible = not windowtitle.Visible
 					if not windowtitle.Visible then
-						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
+						tweenService:Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 					end
 				end)
 				drop1.MouseEnter:Connect(function()
 					if not windowtitle.Visible then
-						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
+						tweenService:Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(107, 107, 107)}):Play()
 					end
 				end)
 				drop1.MouseLeave:Connect(function()
 					if not windowtitle.Visible then
-						game:GetService("TweenService"):Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(38, 37, 38)}):Play()
+						tweenService:Create(thing, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(38, 37, 38)}):Play()
 					end
 				end)
 
@@ -4727,7 +4732,7 @@ if shared.VapeExecuted then
 				frame.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-						local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+						local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 						hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 						hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 					end
@@ -4742,7 +4747,7 @@ if shared.VapeExecuted then
 					hoverbox.Visible = false
 					if buttonapi["Enabled"] == false then
 						pcall(function()
-							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+							tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 						end)
 					end
 				end)
@@ -4886,7 +4891,7 @@ if shared.VapeExecuted then
 				sliderexpand.AutoButtonColor = false
 				sliderexpand.Size = UDim2.new(0, 15, 0, 15)
 				sliderexpand.BackgroundTransparency = 1
-				sliderexpand.Position = UDim2.new(0, game:GetService("TextService"):GetTextSize(text1.Text, text1.TextSize, text1.Font, Vector2.new(10000, 100000)).X + 3, 0, 6)
+				sliderexpand.Position = UDim2.new(0, textService:GetTextSize(text1.Text, text1.TextSize, text1.Font, Vector2.new(10000, 100000)).X + 3, 0, 6)
 				sliderexpand.Image = downloadVapeAsset("vape/assets/HoverArrow3.png")
 				sliderexpand.Parent = frame
 				sliderexpand.MouseEnter:Connect(function()
@@ -4943,19 +4948,19 @@ if shared.VapeExecuted then
 						sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 					end
 					clicktick = tick() + 0.3
-					local x,y,xscale,yscale,xscale2 = RelativeXY(obj, game:GetService("UserInputService"):GetMouseLocation())
+					local x,y,xscale,yscale,xscale2 = RelativeXY(obj, inputService:GetMouseLocation())
 					sliderapi["SetValue"]((valtochange == "Hue" and (min + ((max - min) * xscale)) or false), (valtochange == "Sat" and (min + ((max - min) * xscale)) or false), (valtochange == "Value" and (min + ((max - min) * xscale)) or false))
 					obj.ButtonSlider.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
 					local move
 					local kill
-					move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+					move = inputService.InputChanged:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
-							local x,y,xscale,yscale,xscale2 = RelativeXY(obj, game:GetService("UserInputService"):GetMouseLocation())
+							local x,y,xscale,yscale,xscale2 = RelativeXY(obj, inputService:GetMouseLocation())
 							sliderapi["SetValue"]((valtochange == "Hue" and (min + ((max - min) * xscale)) or false), (valtochange == "Sat" and (min + ((max - min) * xscale)) or false), (valtochange == "Value" and (min + ((max - min) * xscale)) or false))
 							obj.ButtonSlider.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
 						end
 					end)
-					kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+					kill = inputService.InputEnded:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseButton1 then
 							capturedslider = {["Type"] = "ColorSlider", ["Object"] = obj.Parent, ["Api"] = sliderapi}
 							move:Disconnect()
@@ -4985,7 +4990,7 @@ if shared.VapeExecuted then
 				frame.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-						local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+						local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 						hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 						hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 					end
@@ -5000,7 +5005,7 @@ if shared.VapeExecuted then
 					hoverbox.Visible = false
 					if buttonapi["Enabled"] == false then
 						pcall(function()
-							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+							tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 						end)
 					end
 				end)
@@ -5099,23 +5104,23 @@ if shared.VapeExecuted then
 					argstable["Function"](val)
 				end
 				slider3.MouseButton1Down:Connect(function()
-					local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+					local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 					sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 					local doublecheck = argstable["Double"] and (sliderapi["Value"] / argstable["Double"]) or sliderapi["Value"]
 					text2.Text = doublecheck .. " "..(argstable["Percent"] and "%  " or " ").." "
 					slider2.Size = UDim2.new(xscale2,0,1,0)
 					local move
 					local kill
-					move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+					move = inputService.InputChanged:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
-							local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+							local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 							sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 							local doublecheck = argstable["Double"] and (sliderapi["Value"] / argstable["Double"]) or sliderapi["Value"]
 							text2.Text = doublecheck .. " "..(argstable["Percent"] and "%  " or " ").." "
 							slider2.Size = UDim2.new(xscale2,0,1,0)
 						end
 					end)
-					kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+					kill = inputService.InputEnded:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseButton1 then
 							capturedslider = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
 							move:Disconnect()
@@ -5145,7 +5150,7 @@ if shared.VapeExecuted then
 				frame.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-						local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+						local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 						hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 						hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 					end
@@ -5272,20 +5277,20 @@ if shared.VapeExecuted then
 					return Random.new().NextNumber(Random.new(), sliderapi["Value"], sliderapi["Value2"])
 				end
 				slider3.MouseButton1Down:Connect(function()
-					local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+					local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 					sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 					slider3.Position = UDim2.new(xscale2, -8, 1, -9)
 					local move
 					local kill
-					move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+					move = inputService.InputChanged:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
-							local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+							local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 							sliderapi["SetValue"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 						--	slider3.Position = UDim2.new(xscale2, -8, 1, -9)
 							slider3:TweenPosition(UDim2.new(xscale2, -8, 1, -9), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
 						end
 					end)
-					kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+					kill = inputService.InputEnded:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseButton1 then
 							capturedslider = {["Type"] = "Slider", ["Object"] = frame, ["Api"] = sliderapi}
 							move:Disconnect()
@@ -5294,20 +5299,20 @@ if shared.VapeExecuted then
 					end)
 				end)
 				slider4.MouseButton1Down:Connect(function()
-					local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+					local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 					sliderapi["SetValue2"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 					slider4.Position = UDim2.new(xscale2, -8, 1, -9)
 					local move
 					local kill
-					move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+					move = inputService.InputChanged:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseMovement then
-							local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, game:GetService("UserInputService"):GetMouseLocation())
+							local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 							sliderapi["SetValue2"](math.floor(argstable["Min"] + ((argstable["Max"] - argstable["Min"]) * xscale)))
 							--slider4.Position = UDim2.new(xscale2, -8, 1, -9)
 							slider4:TweenPosition(UDim2.new(xscale2, -8, 1, -9), Enum.EasingDirection.InOut, Enum.EasingStyle.Quad, 0.05, true)
 						end
 					end)
-					kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+					kill = inputService.InputEnded:Connect(function(input)
 						if input.UserInputType == Enum.UserInputType.MouseButton1 then
 							move:Disconnect()
 							kill:Disconnect()
@@ -5375,7 +5380,7 @@ if shared.VapeExecuted then
 					buttonapi["Enabled"] = toggle
 					if buttonapi["Enabled"] then
 						if not first then
-							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+							tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 						else
 							toggleframe1.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 						end
@@ -5387,7 +5392,7 @@ if shared.VapeExecuted then
 						end
 						table.clear(buttonapi.Connections)
 						if not first then
-							game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+							tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 						else
 							toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 						end
@@ -5402,12 +5407,12 @@ if shared.VapeExecuted then
 				buttontext.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-						local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+						local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 						hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 						hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 					end
 					if buttonapi["Enabled"] == false then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
 					end
 				end)
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
@@ -5419,7 +5424,7 @@ if shared.VapeExecuted then
 				buttontext.MouseLeave:Connect(function()
 					hoverbox.Visible = false
 					if buttonapi["Enabled"] == false then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 					end
 				end)
 		
@@ -5436,7 +5441,7 @@ if shared.VapeExecuted then
 			button.MouseEnter:Connect(function() 
 				bindbkg.Visible = true
 				if not buttonapi["Enabled"] then
-					currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)})
+					currenttween = tweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(31, 30, 31)})
 					currenttween:Play()
 				end
 			end)
@@ -5446,7 +5451,7 @@ if shared.VapeExecuted then
 					bindbkg.Visible = false 
 				end
 				if not buttonapi["Enabled"] then
-					currenttween = game:GetService("TweenService"):Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)})
+					currenttween = tweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26)})
 					currenttween:Play()
 				end
 			end)
@@ -5475,7 +5480,7 @@ if shared.VapeExecuted then
 						GuiLibrary["KeybindCaptured"] = false
 						bindbkg2.Visible = false
 						bindtext3.Text = (buttonapi["Keybind"] == "" and "   BIND REMOVED" or "   BOUND TO "..buttonapi["Keybind"]:upper())
-						bindtext2.Size = UDim2.new(0, game:GetService("TextService"):GetTextSize(bindtext3.Text, bindtext3.TextSize, bindtext3.Font, Vector2.new(10000, 100000)).X + 20, 0, 40)
+						bindtext2.Size = UDim2.new(0, textService:GetTextSize(bindtext3.Text, bindtext3.TextSize, bindtext3.Font, Vector2.new(10000, 100000)).X + 20, 0, 40)
 						task.wait(1)
 						bindtext2.Visible = false
 					end)
@@ -5745,7 +5750,7 @@ if shared.VapeExecuted then
 			sliderexpand.AutoButtonColor = false
 			sliderexpand.Size = UDim2.new(0, 15, 0, 15)
 			sliderexpand.BackgroundTransparency = 1
-			sliderexpand.Position = UDim2.new(0, game:GetService("TextService"):GetTextSize(text1.Text, text1.TextSize, text1.Font, Vector2.new(10000, 100000)).X + 3, 0, 6)
+			sliderexpand.Position = UDim2.new(0, textService:GetTextSize(text1.Text, text1.TextSize, text1.Font, Vector2.new(10000, 100000)).X + 3, 0, 6)
 			sliderexpand.Image = downloadVapeAsset("vape/assets/HoverArrow.png")
 			sliderexpand.Parent = frame
 			sliderexpand.MouseEnter:Connect(function()
@@ -5802,19 +5807,19 @@ if shared.VapeExecuted then
 					sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				end
 				clicktick = tick() + 0.3
-				local x,y,xscale,yscale,xscale2 = RelativeXY(obj, game:GetService("UserInputService"):GetMouseLocation())
+				local x,y,xscale,yscale,xscale2 = RelativeXY(obj, inputService:GetMouseLocation())
 				sliderapi["SetValue"]((valtochange == "Hue" and (min + ((max - min) * xscale)) or false), (valtochange == "Sat" and (min + ((max - min) * xscale)) or false), (valtochange == "Value" and (min + ((max - min) * xscale)) or false))
 				obj.ButtonSlider.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
 				local move
 				local kill
-				move = game:GetService("UserInputService").InputChanged:Connect(function(input)
+				move = inputService.InputChanged:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseMovement then
-						local x,y,xscale,yscale,xscale2 = RelativeXY(obj, game:GetService("UserInputService"):GetMouseLocation())
+						local x,y,xscale,yscale,xscale2 = RelativeXY(obj, inputService:GetMouseLocation())
 						sliderapi["SetValue"]((valtochange == "Hue" and (min + ((max - min) * xscale)) or false), (valtochange == "Sat" and (min + ((max - min) * xscale)) or false), (valtochange == "Value" and (min + ((max - min) * xscale)) or false))
 						obj.ButtonSlider.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
 					end
 				end)
-				kill = game:GetService("UserInputService").InputEnded:Connect(function(input)
+				kill = inputService.InputEnded:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
 						capturedslider = {["Type"] = "ColorSlider", ["Object"] = obj.Parent, ["Api"] = sliderapi}
 						move:Disconnect()
@@ -5844,7 +5849,7 @@ if shared.VapeExecuted then
 			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
@@ -5858,7 +5863,7 @@ if shared.VapeExecuted then
 			frame.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 				if buttonapi and buttonapi["Enabled"] == false then
-					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+					tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 				end
 			end)
 			GuiLibrary.ObjectsThatCanBeSaved[argstable["Name"].."SliderColor"] = {["Type"] = "ColorSlider", ["Object"] = frame, ["Object2"] = slidersat, ["Object3"] = sliderval, ["Api"] = sliderapi}
@@ -5921,14 +5926,14 @@ if shared.VapeExecuted then
 				buttonapi["Enabled"] = toggle
 				if buttonapi["Enabled"] then
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
 					else
 						toggleframe1.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
 					end
 					toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
 				else
 					if not first then
-						game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+						tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 					else
 						toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 					end
@@ -5943,12 +5948,12 @@ if shared.VapeExecuted then
 			buttontext.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = game:GetService("TextService"):GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
 					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 				if buttonapi["Enabled"] == false then
-					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
+					tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}):Play()
 				end
 			end)
 			if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
@@ -5960,7 +5965,7 @@ if shared.VapeExecuted then
 			buttontext.MouseLeave:Connect(function()
 				hoverbox.Visible = false
 				if buttonapi["Enabled"] == false then
-					game:GetService("TweenService"):Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+					tweenService:Create(toggleframe1, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
 				end
 			end)
 
@@ -6337,7 +6342,7 @@ if shared.VapeExecuted then
     end
 
 	GuiLibrary["CreateNotification"] = function(top, bottom, duration, customicon)
-		local size = math.max( game:GetService("TextService"):GetTextSize(removeTags(bottom), 13, Enum.Font.Gotham, Vector2.new(99999, 99999)).X + 60, 266)
+		local size = math.max( textService:GetTextSize(removeTags(bottom), 13, Enum.Font.Gotham, Vector2.new(99999, 99999)).X + 60, 266)
 		local offset = #notificationwindow:GetChildren()
 		local frame = Instance.new("Frame")
 		frame.Size = UDim2.new(0, size, 0, 75)
@@ -6437,12 +6442,12 @@ if shared.VapeExecuted then
 	local holdingalt = false
 	local uninjected = false
 
-	GuiLibrary["KeyInputHandler"] = game:GetService("UserInputService").InputBegan:Connect(function(input1)
-		if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+	GuiLibrary["KeyInputHandler"] = inputService.InputBegan:Connect(function(input1)
+		if inputService:GetFocusedTextBox() == nil then
 			if input1.KeyCode == Enum.KeyCode[GuiLibrary["GUIKeybind"]] and GuiLibrary["KeybindCaptured"] == false then
 				clickgui.Visible = not clickgui.Visible
-				game:GetService("UserInputService").OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
-				game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0)	
+				inputService.OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
+				game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)	
 				if OnlineProfilesBigFrame.Visible then
 					OnlineProfilesBigFrame.Visible = false
 				end
@@ -6478,7 +6483,7 @@ if shared.VapeExecuted then
 		end
 	end)
 
-	GuiLibrary["KeyInputHandler2"] = game:GetService("UserInputService").InputEnded:Connect(function(input1)
+	GuiLibrary["KeyInputHandler2"] = inputService.InputEnded:Connect(function(input1)
 		if input1.KeyCode == Enum.KeyCode.RightAlt then
 			holdingalt = false
 		end
