@@ -515,7 +515,7 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 		playertype = owner and "VAPE OWNER" or private and "VAPE PRIVATE" or "DEFAULT"
 		if tab then 
 			playerattackable = tab.attackable == nil or tab.attackable
-			plrtag = tab.notag == nil or tab.notag
+			plrtag = not tab.notag
 		end
 		return playertype, playerattackable, plrtag
 	end
