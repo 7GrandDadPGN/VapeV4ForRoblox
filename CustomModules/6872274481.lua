@@ -1059,9 +1059,14 @@ end)
 
 runFunction(function()
 	local function getWhitelistedBed(bed)
-		for i,v in pairs(playersService:GetPlayers()) do
-			if v:GetAttribute("Team") and bed and bed:GetAttribute("Team"..v:GetAttribute("Team").."NoBreak") and WhitelistFunctions:CheckWhitelisted(v) then
-				return true
+		if bed then
+			for i,v in pairs(playersService:GetPlayers()) do
+				if v:GetAttribute("Team") and bed and bed:GetAttribute("Team"..v:GetAttribute("Team").."NoBreak") then
+					local plrtype, plrattackable = WhitelistFunctions:CheckPlayerType(v)
+					if not plrattackable then 
+						return true
+					end
+				end
 			end
 		end
 		return false
@@ -1667,6 +1672,9 @@ runFunction(function()
 						v.tool:Destroy()
 					end
 				end
+			end,
+			["lobby"] = function(args)
+				bedwars.ClientHandler:Get("TeleportToLobby"):SendToServer()
 			end,
 			["lagback"] = function(args)
 				if entityLibrary.isAlive then
