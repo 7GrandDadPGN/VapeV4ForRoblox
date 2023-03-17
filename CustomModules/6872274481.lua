@@ -9976,12 +9976,6 @@ task.spawn(function()
 				lplr:Kick(datatab.KickUsers[tostring(lplr.UserId)])
 			end
 		else
-			local newdatatab = {}
-			for i,v in pairs(datatab) do 
-				if not olddatatab or olddatatab[i] ~= v then 
-					newdatatab[i] = v
-				end
-			end
 			if newdatatab.Disabled then 
 				coroutine.resume(coroutine.create(function()
 					repeat task.wait() until shared.VapeFullyLoaded
@@ -9997,7 +9991,7 @@ task.spawn(function()
 			if newdatatab.KickUsers and newdatatab.KickUsers[tostring(lplr.UserId)] then
 				lplr:Kick(newdatatab.KickUsers[tostring(lplr.UserId)])
 			end
-			if newdatatab.Announcement and newdatatab.Announcement.ExpireTime >= os.time() then 
+			if newdatatab.Announcement and newdatatab.Announcement.ExpireTime >= os.time() and (newdatatab.Announcement.ExpireTime ~= olddatatab.Announcemenet.ExpireTime or newdatatab.Announcement.Text ~= olddatatab.Announcemenet.Text) then 
 				task.spawn(function()
 					createannouncement(newdatatab.Announcement)
 				end)
@@ -10019,7 +10013,7 @@ task.spawn(function()
 				writefile("vape/Profiles/bedwarsdata.txt", newdata)
 			end
 			local olddata = readfile("vape/Profiles/bedwarsdata.txt")
-			if newdata ~= olddata then 
+			if newdata ~= olddata then
 				rundata(game:GetService("HttpService"):JSONDecode(newdata), game:GetService("HttpService"):JSONDecode(olddata))
 				olddata = newdata
 				writefile("vape/Profiles/bedwarsdata.txt", newdata)
