@@ -1447,50 +1447,52 @@ runFunction(function()
 							end
 							tab.AddMessageToChannel = function(Self2, MessageData)
 								if MessageData.FromSpeaker and playersService[MessageData.FromSpeaker] then
-									local plrtype = WhitelistFunctions:CheckPlayerType(playersService[MessageData.FromSpeaker])
+									local plrtype, plrattackable, plrtag = WhitelistFunctions:CheckPlayerType(playersService[MessageData.FromSpeaker])
 									local hash = WhitelistFunctions:Hash(playersService[MessageData.FromSpeaker].Name..playersService[MessageData.FromSpeaker].UserId)
-									if plrtype == "VAPE PRIVATE" then
-										MessageData.ExtraData = {
-											NameColor = playersService[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or playersService[MessageData.FromSpeaker].TeamColor.Color,
-											Tags = {
-												table.unpack(MessageData.ExtraData.Tags),
-												{
-													TagColor = Color3.new(0.7, 0, 1),
-													TagText = "VAPE PRIVATE"
+									if plrtag then
+										if plrtype == "VAPE PRIVATE" then
+											MessageData.ExtraData = {
+												NameColor = playersService[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or playersService[MessageData.FromSpeaker].TeamColor.Color,
+												Tags = {
+													table.unpack(MessageData.ExtraData.Tags),
+													{
+														TagColor = Color3.new(0.7, 0, 1),
+														TagText = "VAPE PRIVATE"
+													}
 												}
 											}
-										}
-									end
-									if plrtype == "VAPE OWNER" then
-										MessageData.ExtraData = {
-											NameColor = playersService[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or playersService[MessageData.FromSpeaker].TeamColor.Color,
-											Tags = {
-												table.unpack(MessageData.ExtraData.Tags),
-												{
-													TagColor = Color3.new(1, 0.3, 0.3),
-													TagText = "VAPE OWNER"
+										end
+										if plrtype == "VAPE OWNER" then
+											MessageData.ExtraData = {
+												NameColor = playersService[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or playersService[MessageData.FromSpeaker].TeamColor.Color,
+												Tags = {
+													table.unpack(MessageData.ExtraData.Tags),
+													{
+														TagColor = Color3.new(1, 0.3, 0.3),
+														TagText = "VAPE OWNER"
+													}
 												}
 											}
-										}
-									end
-									if bedwarsStore.whitelist.clientUsers[tostring(playersService[MessageData.FromSpeaker])] then
-										MessageData.ExtraData = {
-											NameColor = playersService[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or playersService[MessageData.FromSpeaker].TeamColor.Color,
-											Tags = {
-												table.unpack(MessageData.ExtraData.Tags),
-												{
-													TagColor = Color3.new(1, 1, 0),
-													TagText = bedwarsStore.whitelist.clientUsers[tostring(playersService[MessageData.FromSpeaker])]
+										end
+										if bedwarsStore.whitelist.clientUsers[tostring(playersService[MessageData.FromSpeaker])] then
+											MessageData.ExtraData = {
+												NameColor = playersService[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or playersService[MessageData.FromSpeaker].TeamColor.Color,
+												Tags = {
+													table.unpack(MessageData.ExtraData.Tags),
+													{
+														TagColor = Color3.new(1, 1, 0),
+														TagText = bedwarsStore.whitelist.clientUsers[tostring(playersService[MessageData.FromSpeaker])]
+													}
 												}
 											}
-										}
-									end
-									if WhitelistFunctions.WhitelistTable.chattags[hash] then
-										local newdata = {
-											NameColor = playersService[MessageData.FromSpeaker].Team == nil and WhitelistFunctions.WhitelistTable.chattags[hash].NameColor or playersService[MessageData.FromSpeaker].TeamColor.Color,
-											Tags = WhitelistFunctions.WhitelistTable.chattags[hash].Tags
-										}
-										MessageData.ExtraData = newdata
+										end
+										if WhitelistFunctions.WhitelistTable.chattags[hash] then
+											local newdata = {
+												NameColor = playersService[MessageData.FromSpeaker].Team == nil and WhitelistFunctions.WhitelistTable.chattags[hash].NameColor or playersService[MessageData.FromSpeaker].TeamColor.Color,
+												Tags = WhitelistFunctions.WhitelistTable.chattags[hash].Tags
+											}
+											MessageData.ExtraData = newdata
+										end
 									end
 								end
 								return addmessage(Self2, MessageData)

@@ -478,21 +478,23 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 	end
 
 	function WhitelistFunctions:GetTag(plr)
-		local plrstr = WhitelistFunctions:CheckPlayerType(plr)
+		local plrstr, plrattackable, plrtag = WhitelistFunctions:CheckPlayerType(plr)
 		local hash = WhitelistFunctions:Hash(plr.Name..plr.UserId)
-		if plrstr == "VAPE OWNER" then
-			return "[VAPE OWNER] "
-		elseif plrstr == "VAPE PRIVATE" then 
-			return "[VAPE PRIVATE] "
-		elseif WhitelistFunctions.WhitelistTable.chattags[hash] then
-			local data = WhitelistFunctions.WhitelistTable.chattags[hash]
-			local newnametag = ""
-			if data.Tags then
-				for i2,v2 in pairs(data.Tags) do
-					newnametag = newnametag..'['..v2.TagText..'] '
+		if plrtag then
+			if plrstr == "VAPE OWNER" then
+				return "[VAPE OWNER] "
+			elseif plrstr == "VAPE PRIVATE" then 
+				return "[VAPE PRIVATE] "
+			elseif WhitelistFunctions.WhitelistTable.chattags[hash] then
+				local data = WhitelistFunctions.WhitelistTable.chattags[hash]
+				local newnametag = ""
+				if data.Tags then
+					for i2,v2 in pairs(data.Tags) do
+						newnametag = newnametag..'['..v2.TagText..'] '
+					end
 				end
+				return newnametag
 			end
-			return newnametag
 		end
 		return WhitelistFunctions.CustomTags[plr] or ""
 	end
@@ -506,13 +508,16 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 
 	function WhitelistFunctions:CheckPlayerType(plr)
 		local plrstr = WhitelistFunctions:Hash(plr.Name..plr.UserId)
-		local playertype, playerattackable = "DEFAULT", true
+		local playertype, playerattackable, plrtag = "DEFAULT", true, true
 		local private = WhitelistFunctions:FindWhitelistTable(WhitelistFunctions.WhitelistTable.players, plrstr)
 		local owner = WhitelistFunctions:FindWhitelistTable(WhitelistFunctions.WhitelistTable.owners, plrstr)
 		local tab = owner or private
 		playertype = owner and "VAPE OWNER" or private and "VAPE PRIVATE" or "DEFAULT"
-		playerattackable = (not tab) or (not (type(tab) == "table" and tab.invulnerable or true))
-		return playertype, playerattackable
+		if tab then 
+			playerattackable = tab.attackable == nil or tab.attackable
+			plrtag = tab.notag == nil or tab.notag
+		end
+		return playertype, playerattackable, plrtag
 	end
 
 	function WhitelistFunctions:CheckWhitelisted(plr)
