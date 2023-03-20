@@ -1266,6 +1266,7 @@ runFunction(function()
 		blockHealth = -1,
 		breakingBlockPosition = Vector3.zero
 	}
+
 	bedwars.breakBlock = function(pos, effects, normal, bypass, anim)
 		if lplr:GetAttribute("DenyBlockBreak") == true then
 			return nil
@@ -2411,6 +2412,7 @@ runFunction(function()
 	local noclickdelay = {Enabled = false}
 	local autoclickercps = {GetRandomValue = function() return 1 end}
 	local autoclickerblocks = {Enabled = false}
+	local autoclickertimed = {Enabled = false}
 	local autoclickermousedown = false
 
 	local function isNotHoveringOverGui()
@@ -2457,14 +2459,14 @@ runFunction(function()
 													firstClick = tick()
 												end
 											end)
-											task.wait(math.max((1 / autoclickercps.GetRandomValue()), noclickdelay.Enabled and 0 or (bedwarsStore.zephyrOrb ~= 0 and 0.5 or 0.18)))
+											task.wait(math.max((1 / autoclickercps.GetRandomValue()), noclickdelay.Enabled and 0 or (bedwarsStore.zephyrOrb ~= 0 and 0.5 or (autoclickertimed.Enabled and 0.38 or 0.18))))
 										end
 									elseif bedwarsStore.localHand.Type == "block" then 
 										if autoclickerblocks.Enabled and bedwars.BlockPlacementController.blockPlacer and firstClick <= tick() then
 											local mouseinfo = bedwars.BlockPlacementController.blockPlacer.clientManager:getBlockSelector():getMouseInfo(0)
 											if mouseinfo then
 												task.spawn(function()
-													if bedwars.BlockPlacementController.blockPlacer then
+													if mouseinfo.placementPosition == mouseinfo.placementPosition then
 														bedwars.BlockPlacementController.blockPlacer:placeBlock(mouseinfo.placementPosition)
 													end
 												end)
@@ -2493,6 +2495,10 @@ runFunction(function()
 		Function = function(val) end,
 		Default = 8,
 		Default2 = 12
+	})
+	autoclickertimed = autoclicker.CreateToggle({
+		Name = "Timed",
+		Function = function() end
 	})
 	autoclickerblocks = autoclicker.CreateToggle({
 		Name = "Place Blocks", 
@@ -2931,7 +2937,7 @@ runFunction(function()
 				local megacheck = bedwarsStore.queueType:find("mega") or bedwarsStore.queueType == "winter_event"
 
 				task.spawn(function()
-					repeat task.wait() until queueType ~= "bedwars_test" or (not Fly.Enabled)
+					repeat task.wait() until bedwarsStore.queueType ~= "bedwars_test" or (not Fly.Enabled)
 					if not Fly.Enabled then return end
 					megacheck = bedwarsStore.queueType:find("mega") or bedwarsStore.queueType == "winter_event"
 				end)
@@ -7947,7 +7953,7 @@ runFunction(function()
 									task.wait()
 									local itemdrops = bedwars.GrimReaperController.soulsByPosition
 									for i,v in pairs(itemdrops) do
-										if entityLibrary.isAlive and v.PrimaryPart and (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 120 and (not lplr.Character:GetAttribute("GrimReaperChannel")) then
+										if entityLibrary.isAlive and lplr.Character:GetAttribute("Health") <= (lplr.Character:GetAttribute("MaxHealth") / 4) and v.PrimaryPart and (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude <= 120 and (not lplr.Character:GetAttribute("GrimReaperChannel")) then
 											bedwars.ClientHandler:Get(bedwars.ConsumeSoulRemote):CallServer({
 												secret = v:GetAttribute("GrimReaperSoulSecret")
 											})
@@ -8152,7 +8158,6 @@ end)
 runFunction(function()
 	local justsaid = ""
 	local leavesaid = false
-	local victorysaid = false
 
 	AutoToxic = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
 		Name = "AutoToxic",
@@ -8207,8 +8212,7 @@ runFunction(function()
 				end))
 				table.insert(AutoToxic.Connections, vapeEvents.MatchEndEvent.Event:Connect(function(winstuff)
 					local myTeam = bedwars.ClientStoreHandler:getState().Game.myTeam
-					if (myTeam and myTeam.id == winstuff.winningTeamId or lplr.Neutral) and victorysaid == false then
-						victorysaid = true
+					if myTeam and myTeam.id == winstuff.winningTeamId or lplr.Neutral then
 						if AutoToxicGG.Enabled then
 							replicatedStorageService.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("gg", "All")
 							if shared.ggfunction then
@@ -9754,7 +9758,7 @@ runFunction(function()
 				local victorysaid = false
 				table.insert(overlayconnections, vapeEvents.MatchEndEvent.Event:Connect(function(winstuff)
 					local myTeam = bedwars.ClientStoreHandler:getState().Game.myTeam
-					if (myTeam and myTeam.id == winstuff.winningTeamId or lplr.Neutral) and (not victorysaid) then
+					if myTeam and myTeam.id == winstuff.winningTeamId or lplr.Neutral then
 						victorysaid = true
 					end
 				end))
