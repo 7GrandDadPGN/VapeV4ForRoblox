@@ -390,7 +390,7 @@ local function getSpeedMultiplier(reduce)
 			speed = speed + 1
 		end
 		if bedwarsStore.zephyrOrb ~= 0 then 
-			speed = speed + 1
+			speed = speed + 1.5
 		end
 	end
 	return reduce and speed ~= 1 and math.max(speed * (0.8 - (0.3 * math.floor(speed))), 1) or speed
@@ -637,7 +637,7 @@ local function AllNearPosition(distance, amount, sortfunction, prediction)
 		for i, v in pairs(entityLibrary.entityList) do
 			if not v.Targetable then continue end
             if isVulnerable(v) then
-				local playerPosition = prediction and entityLibrary.OtherPosition[v.Player] or v.RootPart.Position
+				local playerPosition = v.RootPart.Position
 				local mag = (entityLibrary.character.HumanoidRootPart.Position - playerPosition).magnitude
 				if prediction and mag > distance then
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
@@ -3473,6 +3473,14 @@ runFunction(function()
 		return strength
 	end
 
+	local kitpriolist = {
+		hannah = 5,
+		spirit_assassin = 4,
+		dasher = 3,
+		jade = 2,
+		regent = 1
+	}
+
 	local killaurasortmethods = {
 		Distance = function(a, b)
 			return (a.RootPart.Position - entityLibrary.character.HumanoidRootPart.Position).Magnitude < (b.RootPart.Position - entityLibrary.character.HumanoidRootPart.Position).Magnitude
@@ -3483,6 +3491,9 @@ runFunction(function()
 		Threat = function(a, b) 
 			return getStrength(a) > getStrength(b)
 		end,
+		Kit = function(a, b)
+			return (kitpriolist[a.Player:GetAttribute("PlayingAsKit")] or 0) > (kitpriolist[b.Player:GetAttribute("PlayingAsKit")] or 0)
+		end
 	}
 
 	local originalNeckC0
@@ -3710,14 +3721,14 @@ runFunction(function()
 									if killauratarget.Enabled then
 										table.insert(attackedplayers, plr)
 									end
-									if (selfcheck - (entityLibrary.OtherPosition[plr.Player] or root.Position)).Magnitude >= 18 then 
+									if (selfcheck - root.Position).Magnitude >= 18 then 
 										continue
 									end
 									if (workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack) < swordmeta.sword.attackSpeed then 
 										continue
 									end
 									local selfpos = selfrootpos + (killaurarange.Value > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
-									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow() + (bedwarsStore.zephyrOrb ~= 0 and 0.2 or (killaurasync.Enabled and 0.11 or -0.11))
+									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow() + (bedwarsStore.zephyrOrb ~= 0 and 0.2 or (killaurasync.Enabled and 0.13 or -0.11))
 									if killaurasync.Enabled then 
 										if animationdelay <= tick() then
 											animationdelay = tick() + 0.19
