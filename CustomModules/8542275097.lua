@@ -413,7 +413,7 @@ runcode(function()
 		["Min"] = 1,
 		["Max"] = 150,
 		["Function"] = function(val) end,
-		["Default"] = 50
+		["Default"] = 150
 	})
 	speedjumpheight = speed.CreateSlider({
 		["Name"] = "Jump Height",
@@ -724,127 +724,6 @@ runcode(function()
 		["Name"] = "Whitelist Only",
 		["Function"] = function() end,
 		["HoverText"] = "Only builds with blocks in your hand."
-	})
-end)
-
-runcode(function()
-	local targetstrafe = {["Enabled"] = false}
-	local targetstrafespeed = {["Value"] = 40}
-	local targetstrafejump = {["Value"] = 40}
-	local targetstrafedistance = {["Value"] = 12}
-	local targetstrafenum = 0
-	local flip = false
-	local lastreal
-	local old = nil
-	local part
-	targetstrafe = GuiLibrary["ObjectsThatCanBeSaved"]["BlatantWindow"]["Api"].CreateOptionsButton({
-		["Name"] = "TargetStrafe",
-		["Function"] = function(callback)
-			if callback then
-					BindToStepped("TargetStrafe", 1, function(lol, delta)
-						local plr = GetNearestHumanoidToPosition(true, targetstrafedistance["Value"] + 6)
-						if isAlive() and plr and (not GuiLibrary["ObjectsThatCanBeSaved"]["ScaffoldOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["LongJumpOptionsButton"]["Api"]["Enabled"]) and (not GuiLibrary["ObjectsThatCanBeSaved"]["FlyOptionsButton"]["Api"]["Enabled"]) then
-							if (lplr.Character.HumanoidRootPart.Position.Y - plr.Character.HumanoidRootPart.Position.Y) >= -15 then
-								if plr ~= old then
-									old = plr
-									local otherone2 = CFrame.lookAt(plr.Character.HumanoidRootPart.Position, lplr.Character.HumanoidRootPart.Position)
-									local num = -math.atan2(otherone2.LookVector.Z, otherone2.LookVector.X) + math.rad(-90)
-									targetstrafenum = math.deg(num)
-								end
-								local raycastparameters = RaycastParams.new()
-								raycastparameters.FilterDescendantsInstances = {workspace.BlockContainer}
-								raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
-								local newray = workspace:Raycast(plr.Character.HumanoidRootPart.Position, Vector3.new(0, -1000, 0), raycastparameters)
-								strafing = newray ~= nil
-								if newray ~= nil then
-									if (lplr.Character.Humanoid.FloorMaterial ~= Enum.Material.Air) then
-										lplr.Character.HumanoidRootPart.Velocity = Vector3.new(lplr.Character.HumanoidRootPart.Velocity.X, targetstrafejump["Value"], lplr.Character.HumanoidRootPart.Velocity.Z)
-									end
-									lastreal = plr.Character.HumanoidRootPart.Position
-									local playerpos = Vector3.new(plr.Character.HumanoidRootPart.Position.X, lplr.Character.HumanoidRootPart.Position.Y, plr.Character.HumanoidRootPart.Position.Z)
-									local newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * targetstrafedistance["Value"]
-									local ray = workspace:Raycast(playerpos, (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * (targetstrafedistance["Value"] + 1)), raycastparameters)
-									local times = 1
-									if ray and ray.Position then
-										times = 1 + (((playerpos - ray.Position).Magnitude) / 20)
-										newpos = playerpos + CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * math.clamp(((playerpos - ray.Position).Magnitude - 3), 1, targetstrafedistance["Value"])
-									end
-									local newray2 = workspace:Raycast(newpos, Vector3.new(0, -1000, 0), raycastparameters)
-									if newray2 ~= nil then
-										local newcframe = CFrame.new(newpos, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-										if (lplr.Character.HumanoidRootPart.Position - newpos).Magnitude <= 5 then
-											lplr.Character.HumanoidRootPart.CFrame = newcframe
-										else
-											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe, math.clamp(17 * delta, 0, 1))
-										end
-									else
-										local passed = false
-										local newpos3 = newpos
-										for i = 4, targetstrafedistance["Value"], 4 do
-											local betterpos = playerpos + (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * math.clamp((targetstrafedistance["Value"] - i), 1, targetstrafedistance["Value"]))
-											local newray3 = workspace:Raycast(betterpos, Vector3.new(0, -1000, 0), raycastparameters)
-											if newray3 then
-												newpos3 = betterpos
-												passed = true
-												break
-											end
-										end
-										if not passed then
-											newpos3 = playerpos + (CFrame.Angles(0, math.rad(targetstrafenum), 0).LookVector * 1)
-										end
-										local newcframe2 = CFrame.new(newpos3, Vector3.new(plr.Character:FindFirstChild("HumanoidRootPart").Position.X, lplr.Character.PrimaryPart.Position.Y, plr.Character:FindFirstChild("HumanoidRootPart").Position.Z))
-										if (lplr.Character.HumanoidRootPart.Position - newpos3).Magnitude <= 5 then
-											lplr.Character.HumanoidRootPart.CFrame = newcframe2
-										else
-											lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(newcframe2, math.clamp(17 * delta, 0, 1))
-										end
-									end
-									targetstrafenum = (flip and targetstrafenum - ((targetstrafespeed["Value"] / 10) * times) or targetstrafenum + ((targetstrafespeed["Value"] / 10) * times))
-									if targetstrafenum >= 999999 then
-										targetstrafenum = 0
-									end
-									if targetstrafenum < -999999 then
-										targetstrafenum = 0
-									end
-								else
-									if lastreal then
-										--lplr.Character.HumanoidRootPart.CFrame = lplr.Character.HumanoidRootPart.CFrame:lerp(CFrame.new(lastreal), 15 * delta)
-									end
-								end
-							end
-						else
-							strafing = false
-							old = nil
-							lastreal = nil
-						end
-					end)
-				else
-					UnbindFromStepped("TargetStrafe")
-					strafing = false
-				end
-		end,
-		["HoverText"] = "Automatically moves around attacking players"
-	})
-	targetstrafespeed = targetstrafe.CreateSlider({
-		["Name"] = "Speed",
-		["Min"] = 1,
-		["Max"] = 80,
-		["Default"] = 80,
-		["Function"] = function() end
-	})
-	targetstrafejump = targetstrafe.CreateSlider({
-		["Name"] = "Jump Height",
-		["Min"] = 1,
-		["Max"] = 60,
-		["Default"] = 40,
-		["Function"] = function() end
-	})
-	targetstrafedistance = targetstrafe.CreateSlider({
-		["Name"] = "Distance",
-		["Min"] = 1,
-		["Max"] = 12,
-		["Default"] = 8,
-		["Function"] = function() end
 	})
 end)
 
@@ -1641,6 +1520,8 @@ runcode(function()
 		end
 	})
 end)
+
+GuiLibrary["RemoveObject"]("AntiVoidOptionsButton")
 runcode(function()
 	local antivoidpart
 	local antivoidmethod = {["Value"] = "Dynamic"}
