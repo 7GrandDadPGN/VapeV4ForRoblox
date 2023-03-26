@@ -4463,7 +4463,8 @@ runFunction(function()
 	task.spawn(function()
 		repeat task.wait() until shared.VapeFullyLoaded
 		for i,v in pairs(ChatSpammerMessages.ObjectList) do 
-			if v:find("muni") then 
+			--I am a idiot
+			if v:lower():find("muni") then 
 				local text = Instance.new("TextLabel")
 				text.Size = UDim2.new(1, 0, 0, 50)
 				text.Position = UDim2.new(0, 0, 0.8, -25)
