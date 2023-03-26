@@ -4460,19 +4460,6 @@ runFunction(function()
 		TempText = "message to spam",
 		Function = function() end
 	})
-	task.spawn(function()
-		repeat task.wait() until shared.VapeFullyLoaded
-		for i,v in pairs(ChatSpammerMessages.ObjectList) do 
-			--I am a idiot
-			if v:lower():find("muni") then 
-				local text = Instance.new("TextLabel")
-				text.Size = UDim2.new(1, 0, 0, 50)
-				text.Position = UDim2.new(0, 0, 0.8, -25)
-				text.Text = lplr.Name.." ("..lplr.UserId..") nice user id bro 👺"
-				text.Parent = GuiLibrary.MainGui
-			end
-		end
-	end)
 end)
 
 runFunction(function()
