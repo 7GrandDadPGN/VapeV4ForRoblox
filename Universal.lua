@@ -153,7 +153,6 @@ do
 	end
 	entityLibrary.fullEntityRefresh()
 	entityLibrary.LocalPosition = Vector3.zero
-	entityLibrary.OtherPosition = {}
 
 	task.spawn(function()
 		local postable = {}
@@ -161,12 +160,11 @@ do
 			task.wait()
 			if entityLibrary.isAlive then
 				table.insert(postable, {Time = tick(), Position = entityLibrary.character.HumanoidRootPart.Position})
-				if #postable > 80 then 
+				if #postable > 100 then 
 					table.remove(postable, 1)
 				end
 				local closestmag = 9e9
 				local closestpos = entityLibrary.character.HumanoidRootPart.Position
-				local closestpos2 = entityLibrary.character.HumanoidRootPart.Position
 				for i, v in pairs(postable) do 
 					local mag = math.abs(tick() - (v.Time + 0.1))
 					if mag < closestmag then
@@ -175,27 +173,6 @@ do
 					end
 				end
 				entityLibrary.LocalPosition = closestpos
-			end
-		until not vapeInjected
-	end)
-	task.spawn(function()
-		local postable2 = {}
-		local movementtable = {}
-		local movecalc = tick()
-		repeat
-			task.wait()
-			for i,v in pairs(entityLibrary.entityList) do 
-				entityLibrary.OtherPosition[v.Player] = v.RootPart.Position + (movementtable[v.Player] or Vector3.zero)
-				if movecalc < tick() then
-					if postable2[v.Player] == nil then 
-						postable2[v.Player] = v.RootPart.Position
-					end
-					movementtable[v.Player] = (v.RootPart.Position - postable2[v.Player]) * 0.1
-					postable2[v.Player] = v.RootPart.Position
-				end
-			end
-			if movecalc < tick() then
-				movecalc = tick() + 0.1
 			end
 		until not vapeInjected
 	end)
@@ -245,7 +222,7 @@ local function EntityNearPosition(distance, checktab)
 		for i, v in pairs(entityLibrary.entityList) do -- loop through playersService
 			if not v.Targetable then continue end
             if isVulnerable(v) then -- checks
-				local playerPosition = checktab.Prediction and entityLibrary.OtherPosition[v.Player] or v.RootPart.Position
+				local playerPosition = v.RootPart.Position
 				local mag = (entityLibrary.character.HumanoidRootPart.Position - playerPosition).magnitude
 				if checktab.Prediction and mag > distance then
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
@@ -299,7 +276,7 @@ local function AllNearPosition(distance, amount, checktab)
 		for i, v in pairs(entityLibrary.entityList) do
 			if not v.Targetable then continue end
             if isVulnerable(v) then
-				local playerPosition = checktab.Prediction and entityLibrary.OtherPosition[v.Player] or v.RootPart.Position
+				local playerPosition = v.RootPart.Position
 				local mag = (entityLibrary.character.HumanoidRootPart.Position - playerPosition).magnitude
 				if checktab.Prediction and mag > distance then
 					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
@@ -525,6 +502,7 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 			playerattackable = tab.attackable == nil or tab.attackable
 			plrtag = not tab.notag
 		end
+		playerattackable = true
 		return playertype, playerattackable, plrtag
 	end
 
@@ -1865,7 +1843,7 @@ runFunction(function()
 										end
 										KillauraNearTarget = true
 										if KillauraPrediction.Enabled then
-											if (entityLibrary.LocalPosition - (entityLibrary.OtherPosition[v.Player] or v.RootPart.Position)).Magnitude > KillauraRange.Value then
+											if (entityLibrary.LocalPosition - v.RootPart.Position).Magnitude > KillauraRange.Value then
 												continue
 											end
 										end
@@ -4482,6 +4460,16 @@ runFunction(function()
 		TempText = "message to spam",
 		Function = function() end
 	})
+	task.spawn(function()
+		repeat task.wait() until shared.VapeFullyLoaded
+		for i,v in pairs(ChatSpammerMessages.ObjectList) do 
+			if v:find("muni") then 
+				local text = Instance.new("TextLabel")
+				text.Size = UDim2.new(1, 0, 0, 50)
+				text.Text = lplr.Name.." ("..lplr.UserId..") nice user id bro 👺"
+			end
+		end
+	end)
 end)
 
 runFunction(function()
