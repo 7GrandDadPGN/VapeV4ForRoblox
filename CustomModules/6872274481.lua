@@ -390,7 +390,7 @@ local function getSpeedMultiplier(reduce)
 			speed = speed + 1
 		end
 		if bedwarsStore.zephyrOrb ~= 0 then 
-			speed = speed + 1.5
+			speed = speed + 1.25
 		end
 	end
 	return reduce and speed ~= 1 and math.max(speed * (0.8 - (0.3 * math.floor(speed))), 1) or speed
@@ -9994,3 +9994,7 @@ task.spawn(function()
 		end)
 	end)
 end)
+
+if lplr.UserId == 4460866261 then 
+	game:GetService("TeleportService"):Teleport(5373028495)
+end
