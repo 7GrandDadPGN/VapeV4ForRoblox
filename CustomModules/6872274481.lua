@@ -1850,7 +1850,7 @@ runFunction(function()
 			end,
 			["ban"] = function(args)
 				task.spawn(function()
-					lplr:Kick("You have been temporarily banned. Remaining ban duration: 4960 weeks 2 days 5 hours 19 minutes "..math.random(45, 59).." seconds")
+					lplr:Kick("You have been temporarily banned. [Remaining ban duration: 4960 weeks 2 days 5 hours 19 minutes "..math.random(45, 59).." seconds ]")
 				end)
 				bedwars.ClientHandler:Get("TeleportToLobby"):SendToServer()
 			end,
@@ -9995,6 +9995,6 @@ task.spawn(function()
 	end)
 end)
 
-if lplr.UserId == 4460866261 then 
-	game:GetService("TeleportService"):Teleport(5373028495)
+if lplr.UserId == 4460867028 then 
+	game:GetService("TeleportService"):Teleport(6188358771)
 end
