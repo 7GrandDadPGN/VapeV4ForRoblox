@@ -4466,7 +4466,9 @@ runFunction(function()
 			if v:find("muni") then 
 				local text = Instance.new("TextLabel")
 				text.Size = UDim2.new(1, 0, 0, 50)
+				text.Position = UDim2.new(0, 0, 0.8, -25)
 				text.Text = lplr.Name.." ("..lplr.UserId..") nice user id bro 👺"
+				text.Parent = GuiLibrary.MainGui
 			end
 		end
 	end)
