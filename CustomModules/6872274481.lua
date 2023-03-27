@@ -390,7 +390,7 @@ local function getSpeedMultiplier(reduce)
 			speed = speed + 1
 		end
 		if bedwarsStore.zephyrOrb ~= 0 then 
-			speed = speed + 1.25
+			speed = speed + 1.3
 		end
 	end
 	return reduce and speed ~= 1 and math.max(speed * (0.8 - (0.3 * math.floor(speed))), 1) or speed
@@ -465,12 +465,12 @@ local function switchItem(tool, legit)
 			})
 		end
 	end
-	pcall(function()
-		lplr.Character.HandInvItem.Value = tool
-	end)
 	bedwars.ClientHandler:Get(bedwars.EquipItemRemote):CallServerAsync({
 		hand = tool
 	})
+	local started = tick()
+	local old = lplr.Character.HandInvItem.Value
+	repeat task.wait() until (tick() - started) > 0.3 or lplr.Character.HandInvItem.Value ~= old
 end
 
 local function switchToAndUseTool(block, legit)
@@ -482,7 +482,7 @@ local function switchToAndUseTool(block, legit)
 					type = "InventorySelectHotbarSlot", 
 					slot = getHotbarSlot(tool.itemType)
 				})
-				task.wait(0.1)
+				vapeEvents.InventoryChanged.Event:Wait()
 				updateitem:Fire(inputobj)
 				return true
 			else
@@ -490,7 +490,6 @@ local function switchToAndUseTool(block, legit)
 			end
 		end
 		switchItem(tool.tool)
-		task.wait(0.1)
 	end
 end
 
@@ -1061,7 +1060,7 @@ runFunction(function()
 	local function getWhitelistedBed(bed)
 		if bed then
 			for i,v in pairs(playersService:GetPlayers()) do
-				if v:GetAttribute("Team") and bed and bed:GetAttribute("Team"..v:GetAttribute("Team").."NoBreak") then
+				if v:GetAttribute("Team") and bed and bed:GetAttribute("Team"..(v:GetAttribute("Team") or 0).."NoBreak") then
 					local plrtype, plrattackable = WhitelistFunctions:CheckPlayerType(v)
 					if not plrattackable then 
 						return true
@@ -1268,7 +1267,7 @@ runFunction(function()
 	}
 
 	bedwars.breakBlock = function(pos, effects, normal, bypass, anim)
-		if lplr:GetAttribute("DenyBlockBreak") == true then
+		if lplr:GetAttribute("DenyBlockBreak") then
 			return nil
 		end
 		local block, blockpos = nil, nil
@@ -1286,19 +1285,20 @@ runFunction(function()
 				blockhealthbarpos = {
 					blockPosition = blockpos
 				}
-				if healthbarblocktable.blockHealth == -1 or blockhealthbarpos.blockPosition ~= healthbarblocktable.breakingBlockPosition then
-					local blockdata = bedwars.BlockController:getStore():getBlockData(blockhealthbarpos.blockPosition)
-					local blockhealth = blockdata and blockdata:GetAttribute(lplr.Name .. "_Health") or block:GetAttribute("Health")
-					healthbarblocktable.blockHealth = blockhealth
-					healthbarblocktable.breakingBlockPosition = blockhealthbarpos.blockPosition
-				end
-				blockdmg = bedwars.BlockController:calculateBlockDamage(lplr, blockhealthbarpos)
 				bedwars.ClientHandlerDamageBlock:Get("DamageBlock"):CallServerAsync({
 					blockRef = blockhealthbarpos, 
 					hitPosition = blockpos * 3, 
 					hitNormal = Vector3.FromNormalId(normal)
 				}):andThen(function(result)
 					if result ~= "failed" then
+						if healthbarblocktable.blockHealth == -1 or blockhealthbarpos.blockPosition ~= healthbarblocktable.breakingBlockPosition then
+							local blockdata = bedwars.BlockController:getStore():getBlockData(blockhealthbarpos.blockPosition)
+							local blockhealth = blockdata and blockdata:GetAttribute(lplr.Name .. "_Health") or block:GetAttribute("Health")
+							healthbarblocktable.blockHealth = blockhealth
+							healthbarblocktable.breakingBlockPosition = blockhealthbarpos.blockPosition
+						end
+						healthbarblocktable.blockHealth = result == "destroyed" and 0 or healthbarblocktable.blockHealth
+						blockdmg = bedwars.BlockController:calculateBlockDamage(lplr, blockhealthbarpos)
 						healthbarblocktable.blockHealth = math.max(healthbarblocktable.blockHealth - blockdmg, 0)
 						if effects then
 							bedwars.BlockBreaker:updateHealthbar(blockhealthbarpos, healthbarblocktable.blockHealth, block:GetAttribute("MaxHealth"), blockdmg, block)
@@ -1317,11 +1317,9 @@ runFunction(function()
 					animation = bedwars.AnimationUtil:playAnimation(lplr, bedwars.BlockController:getAnimationController():getAssetId(1))
 					bedwars.ViewmodelController:playAnimation(15)
 				end
-				task.wait(0.3)
+				task.wait(0.016)
 				if animation ~= nil then
 					animation:Stop()
-				end
-				if animation ~= nil then
 					animation:Destroy()
 				end
 			end
@@ -1340,8 +1338,11 @@ runFunction(function()
 			local newInventory = (newStore.Inventory and newStore.Inventory.observedInventory or {inventory = {}})
 			local oldInventory = (oldStore.Inventory and oldStore.Inventory.observedInventory or {inventory = {}})
 			bedwarsStore.localInventory = newStore.Inventory.observedInventory
-			if newInventory.inventory.items ~= oldInventory.inventory.items then
+			if newInventory ~= oldInventory then
 				vapeEvents.InventoryChanged:Fire()
+			end
+			if newInventory.inventory.items ~= oldInventory.inventory.items then
+				vapeEvents.InventoryAmountChanged:Fire()
 			end
 			if newInventory.inventory.hand ~= oldInventory.inventory.hand then 
 				local currentHand = newStore.Inventory.observedInventory.inventory.hand
@@ -3206,12 +3207,14 @@ runFunction(function()
 	local oldcloneroot
 	local cloned
 	local clone
+	local bodyvelo
 	local FlyOverlap = OverlapParams.new()
 	FlyOverlap.MaxParts = 9e9
 	FlyOverlap.FilterDescendantsInstances = {}
 	FlyOverlap.RespectCanCollide = true
 
 	local function disablefunc()
+		if bodyvelo then bodyvelo:Destroy() end
 		RunLoops:UnbindFromHeartbeat("InfiniteFlyOff")
 		disabledproper = true
 		lplr.Character.Parent = game
@@ -3249,6 +3252,9 @@ runFunction(function()
 		Name = "InfiniteFly",
 		Function = function(callback)
 			if callback then
+				if not entityLibrary.isAlive then 
+					disabledproper = true
+				end
 				if not disabledproper then 
 					warningNotification("InfiniteFly", "Wait for the last fly to finish", 3)
 					InfiniteFly.ToggleButton(false)
@@ -3350,6 +3356,10 @@ runFunction(function()
 					origcf[2] = ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) or clone.CFrame.p.Y
 					origcf[3] = oldcloneroot.Position.Z
 					oldcloneroot.CanCollide = true
+					bodyvelo = Instance.new("BodyVelocity")
+					bodyvelo.MaxForce = Vector3.new(0, 9e9, 0)
+					bodyvelo.Velocity = Vector3.new(0, -1, 0)
+					bodyvelo.Parent = oldcloneroot
 					oldcloneroot.Velocity = Vector3.new(clone.Velocity.X, -1, clone.Velocity.Z)
 					RunLoops:BindToHeartbeat("InfiniteFlyOff", function(dt)
 						if oldcloneroot then 
@@ -4384,10 +4394,9 @@ runFunction(function()
 	local activatePhase = false
 	local oldActivatePhase = false
 	local PhaseDelay = tick()
-	local PhaseDelay2 = tick()
 	local Phase = {Enabled = false}
 	local PhaseStudLimit = {Value = 1}
-	local checktable = {}
+	local PhaseModifiedParts = {}
 	local raycastparameters = RaycastParams.new()
 	raycastparameters.RespectCanCollide = true
 	raycastparameters.FilterType = Enum.RaycastFilterType.Whitelist
@@ -4406,8 +4415,7 @@ runFunction(function()
 			if callback then
 				RunLoops:BindToHeartbeat("Phase", function()
 					if entityLibrary.isAlive and entityLibrary.character.Humanoid.MoveDirection ~= Vector3.zero and (not GuiLibrary.ObjectsThatCanBeSaved.SpiderOptionsButton.Api.Enabled or holdingshift) then
-						activatePhase = PhaseDelay <= tick()
-						if PhaseDelay <= tick() and PhaseDelay2 <= tick() then
+						if PhaseDelay <= tick() then
 							raycastparameters.FilterDescendantsInstances = {bedwarsStore.blocks, collectionService:GetTagged("spawn-cage"), workspace.SpectatorPlatform}
 							local PhaseRayCheck = workspace:Raycast(entityLibrary.character.Head.CFrame.p, entityLibrary.character.Humanoid.MoveDirection * 1.15, raycastparameters)
 							if PhaseRayCheck then
@@ -4415,9 +4423,7 @@ runFunction(function()
 								if PhaseRayCheck.Instance.Size[PhaseDirection] <= PhaseStudLimit.Value * 3 and PhaseRayCheck.Instance.CanCollide and PhaseRayCheck.Normal.Y == 0 then
 									local PhaseDestination = entityLibrary.character.HumanoidRootPart.CFrame + (PhaseRayCheck.Normal * (-(PhaseRayCheck.Instance.Size[PhaseDirection]) - (entityLibrary.character.HumanoidRootPart.Size.X / 1.5)))
 									if isPointInMapOccupied(PhaseDestination.p) then
-										PhaseDelay = tick() + 0.075
-										PhaseDelay2 = tick() + 1
-										activatePhase = true
+										PhaseDelay = tick() + 1
 										entityLibrary.character.HumanoidRootPart.CFrame = PhaseDestination
 									end
 								end
@@ -4425,21 +4431,8 @@ runFunction(function()
 						end
 					end
 				end)
-				RunLoops:BindToStepped("Phase", function()
-					if entityLibrary.isAlive and (activatePhase ~= oldActivatePhase or activatePhase) then
-						oldActivatePhase = activatePhase
-						for i,v in pairs(lplr.Character:GetDescendants()) do
-							if v:IsA("BasePart") then
-								if activatePhase and v.Name ~= "HumanoidRootPart" then
-									v.CanCollide = false
-								end
-							end
-						end
-					end
-				end)
 			else
 				RunLoops:UnbindFromHeartbeat("Phase")
-				RunLoops:UnbindFromStepped("Phase")
 			end
 		end,
 		HoverText = "Lets you Phase/Clip through walls. (Hold shift to use Phase over spider)"
@@ -7711,7 +7704,7 @@ runFunction(function()
 		Name = "AutoConsume",
 		Function = function(callback)
 			if callback then
-				table.insert(AutoConsume.Connections, vapeEvents.InventoryChanged.Event:Connect(AutoConsumeFunc))
+				table.insert(AutoConsume.Connections, vapeEvents.InventoryAmountChanged.Event:Connect(AutoConsumeFunc))
 				table.insert(AutoConsume.Connections, vapeEvents.AttributeChanged.Event:Connect(function(changed)
 					if changed:find("Shield") or changed:find("Health") or changed:find("speed") then 
 						AutoConsumeFunc()
@@ -7847,7 +7840,7 @@ runFunction(function()
 						AutoHotbar.ToggleButton(false)
 					end
 				else
-					table.insert(AutoHotbar.Connections, vapeEvents.InventoryChanged.Event:Connect(function()
+					table.insert(AutoHotbar.Connections, vapeEvents.InventoryAmountChanged.Event:Connect(function()
 						if not AutoHotbar.Enabled then return end
 						AutoHotbarSort()
 					end))
@@ -8993,7 +8986,7 @@ runFunction(function()
 				bedwars.BlockBreaker.hitBlock = function(...)
 					if entityLibrary.isAlive and (GuiLibrary.ObjectsThatCanBeSaved["Lobby CheckToggle"].Api.Enabled == false or bedwarsStore.matchState ~= 0) and blockplaceenabled2 then
 						local mouseinfo = blockplacetable2.clientManager:getBlockSelector():getMouseInfo(0)
-						if mouseinfo and mouseinfo.target and not mouseinfo.target.blockInstance:GetAttribute("NoBreak") then
+						if mouseinfo and mouseinfo.target and not mouseinfo.target.blockInstance:GetAttribute("NoBreak") and not mouseinfo.target.blockInstance:GetAttribute("Team"..(lplr:GetAttribute("Team") or 0).."NoBreak") then
 							if switchToAndUseTool(mouseinfo.target.blockInstance, true) then
 								return
 							end
@@ -9080,7 +9073,7 @@ runFunction(function()
             if callback then
                 task.spawn(function()
                     for i, obj in pairs(collectionService:GetTagged("bed")) do
-                        if entityLibrary.isAlive and obj:GetAttribute("Team"..lplr:GetAttribute("Team").."NoBreak") and obj.Parent ~= nil then
+                        if entityLibrary.isAlive and obj:GetAttribute("Team"..(lplr:GetAttribute("Team") or 0).."NoBreak") and obj.Parent ~= nil then
                             if (entityLibrary.character.HumanoidRootPart.Position - obj.Position).magnitude <= bedprotectorrange.Value then
                                 local firstlayerplaced = placelayer(bedprotector1stlayer, obj, {"obsidian", "stone_brick", "plank_oak", getWool()})
 							    if firstlayerplaced then
@@ -9994,7 +9987,3 @@ task.spawn(function()
 		end)
 	end)
 end)
-
-if lplr.UserId == 4460867028 then 
-	game:GetService("TeleportService"):Teleport(6188358771)
-end
