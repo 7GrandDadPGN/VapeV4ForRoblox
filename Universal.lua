@@ -502,7 +502,6 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 			playerattackable = tab.attackable == nil or tab.attackable
 			plrtag = not tab.notag
 		end
-		playerattackable = true
 		return playertype, playerattackable, plrtag
 	end
 
