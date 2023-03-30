@@ -1266,6 +1266,7 @@ runFunction(function()
 		breakingBlockPosition = Vector3.zero
 	}
 
+	local failedBreak = 0
 	bedwars.breakBlock = function(pos, effects, normal, bypass, anim)
 		if lplr:GetAttribute("DenyBlockBreak") then
 			return nil
@@ -1285,43 +1286,49 @@ runFunction(function()
 				blockhealthbarpos = {
 					blockPosition = blockpos
 				}
-				bedwars.ClientHandlerDamageBlock:Get("DamageBlock"):CallServerAsync({
-					blockRef = blockhealthbarpos, 
-					hitPosition = blockpos * 3, 
-					hitNormal = Vector3.FromNormalId(normal)
-				}):andThen(function(result)
-					if result ~= "failed" then
-						if healthbarblocktable.blockHealth == -1 or blockhealthbarpos.blockPosition ~= healthbarblocktable.breakingBlockPosition then
-							local blockdata = bedwars.BlockController:getStore():getBlockData(blockhealthbarpos.blockPosition)
-							local blockhealth = blockdata and blockdata:GetAttribute(lplr.Name .. "_Health") or block:GetAttribute("Health")
-							healthbarblocktable.blockHealth = blockhealth
-							healthbarblocktable.breakingBlockPosition = blockhealthbarpos.blockPosition
-						end
-						healthbarblocktable.blockHealth = result == "destroyed" and 0 or healthbarblocktable.blockHealth
-						blockdmg = bedwars.BlockController:calculateBlockDamage(lplr, blockhealthbarpos)
-						healthbarblocktable.blockHealth = math.max(healthbarblocktable.blockHealth - blockdmg, 0)
-						if effects then
-							bedwars.BlockBreaker:updateHealthbar(blockhealthbarpos, healthbarblocktable.blockHealth, block:GetAttribute("MaxHealth"), blockdmg, block)
-							if healthbarblocktable.blockHealth <= 0 then
-								bedwars.BlockBreaker.breakEffect:playBreak(block.Name, blockhealthbarpos.blockPosition, lplr)
-								bedwars.BlockBreaker.healthbarMaid:DoCleaning()
-								healthbarblocktable.breakingBlockPosition = Vector3.zero
-							else
-								bedwars.BlockBreaker.breakEffect:playHit(block.Name, blockhealthbarpos.blockPosition, lplr)
+				task.spawn(function()
+					bedwars.ClientHandlerDamageBlock:Get("DamageBlock"):CallServerAsync({
+						blockRef = blockhealthbarpos, 
+						hitPosition = blockpos * 3, 
+						hitNormal = Vector3.FromNormalId(normal)
+					}):andThen(function(result)
+						if result ~= "failed" then
+							failedBreak = 0
+							if healthbarblocktable.blockHealth == -1 or blockhealthbarpos.blockPosition ~= healthbarblocktable.breakingBlockPosition then
+								local blockdata = bedwars.BlockController:getStore():getBlockData(blockhealthbarpos.blockPosition)
+								local blockhealth = blockdata and blockdata:GetAttribute(lplr.Name .. "_Health") or block:GetAttribute("Health")
+								healthbarblocktable.blockHealth = blockhealth
+								healthbarblocktable.breakingBlockPosition = blockhealthbarpos.blockPosition
 							end
+							healthbarblocktable.blockHealth = result == "destroyed" and 0 or healthbarblocktable.blockHealth
+							blockdmg = bedwars.BlockController:calculateBlockDamage(lplr, blockhealthbarpos)
+							healthbarblocktable.blockHealth = math.max(healthbarblocktable.blockHealth - blockdmg, 0)
+							if effects then
+								bedwars.BlockBreaker:updateHealthbar(blockhealthbarpos, healthbarblocktable.blockHealth, block:GetAttribute("MaxHealth"), blockdmg, block)
+								if healthbarblocktable.blockHealth <= 0 then
+									bedwars.BlockBreaker.breakEffect:playBreak(block.Name, blockhealthbarpos.blockPosition, lplr)
+									bedwars.BlockBreaker.healthbarMaid:DoCleaning()
+									healthbarblocktable.breakingBlockPosition = Vector3.zero
+								else
+									bedwars.BlockBreaker.breakEffect:playHit(block.Name, blockhealthbarpos.blockPosition, lplr)
+								end
+							end
+							local animation
+							if anim then
+								animation = bedwars.AnimationUtil:playAnimation(lplr, bedwars.BlockController:getAnimationController():getAssetId(1))
+								bedwars.ViewmodelController:playAnimation(15)
+							end
+							task.wait(0.3)
+							if animation ~= nil then
+								animation:Stop()
+								animation:Destroy()
+							end
+						else
+							failedBreak = failedBreak + 1
 						end
-					end
+					end)
 				end)
-				local animation
-				if anim then
-					animation = bedwars.AnimationUtil:playAnimation(lplr, bedwars.BlockController:getAnimationController():getAssetId(1))
-					bedwars.ViewmodelController:playAnimation(15)
-				end
-				task.wait(0.016)
-				if animation ~= nil then
-					animation:Stop()
-					animation:Destroy()
-				end
+				task.wait(failedBreak > 30 and 0.3 or 0.016)
 			end
 		end
 	end	
@@ -9149,7 +9156,7 @@ runFunction(function()
                 end))
                 task.spawn(function()
                     repeat
-						if (nukernofly.Enabled == false or GuiLibrary.ObjectsThatCanBeSaved["FlyOptionsButton"]["Api"].Enabled == false) then
+						if (not nukernofly.Enabled or GuiLibrary.ObjectsThatCanBeSaved["FlyOptionsButton"]["Api"].Enabled == false) then
 							local broke = not entityLibrary.isAlive
 							local tool = (not nukerlegit.Enabled) and {Name = "wood_axe"} or bedwarsStore.localHand.tool
 							if nukerbeds.Enabled then
@@ -9266,9 +9273,9 @@ runFunction(function()
 	nukercustom = Nuker.CreateTextList({
 		Name = "NukerList",
 		TempText = "block (tesla_trap)",
-		["AddFunction"] = function()
+		AddFunction = function()
 			luckyblocktable = {}
-			for i,v in pairs(bedwarsblocks) do
+			for i,v in pairs(bedwarsStore.blocks) do
 				if table.find(nukercustom.ObjectList, v.Name) or (nukerluckyblock.Enabled and v.Name:find("lucky")) then
 					table.insert(luckyblocktable, v)
 				end
