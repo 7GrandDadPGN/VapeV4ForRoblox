@@ -7732,6 +7732,7 @@ end)
 runFunction(function()
 	local AutoHotbarList = {Hotbars = {}, CurrentlySelected = 1}
 	local AutoHotbarMode = {Value = "Toggle"}
+	local AutoHotbarClear = {Enabled = false}
 	local AutoHotbar = {Enabled = false}
 	local AutoHotbarActive = false
 
@@ -7824,6 +7825,17 @@ runFunction(function()
 						slot = tonumber(hotbarslot) - 1
 					})
 					vapeEvents.InventoryChanged.Event:Wait()
+				else
+					if AutoHotbarClear.Enabled then 
+						local newhotbaritemslot, newhotbaritem = findinhotbar(v)
+						if newhotbaritemslot then
+							bedwars.ClientStoreHandler:dispatch({
+								type = "InventoryRemoveFromHotbar", 
+								slot = newhotbaritemslot - 1
+							})
+							vapeEvents.InventoryChanged.Event:Wait()
+						end
+					end
 				end
 			end
 			AutoHotbarActive = false
@@ -7861,6 +7873,10 @@ runFunction(function()
 	})
 	AutoHotbarList = CreateAutoHotbarGUI(AutoHotbar.Children, {
 		Name = "lol"
+	})
+	AutoHotbarClear = AutoHotbar.CreateToggle({
+		Name = "Clear Hotbar",
+		Function = function() end
 	})
 end)
 
