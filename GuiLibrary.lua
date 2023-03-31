@@ -946,7 +946,7 @@ if shared.VapeExecuted then
 			local buttontext = Instance.new("TextLabel")
 			buttontext.BackgroundTransparency = 1
 			buttontext.Name = "ButtonText"
-			buttontext.Text = "            "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"])
+			buttontext.Text = "            "..randomString(9, 10)
 			buttontext.Name = argstable["Name"]
 			buttontext.LayoutOrder = amount
 			buttontext.Size = UDim2.new(1, 0, 0, 40)
@@ -1051,7 +1051,7 @@ if shared.VapeExecuted then
 				dividerlabel.TextColor3 = Color3.fromRGB(85, 84, 85)
 				dividerlabel.TextSize = 14
 				dividerlabel.Font = Enum.Font.SourceSans
-				dividerlabel.Text = "    "..(translations[text] ~= nil and translations[text] or text)
+				dividerlabel.Text = "    "..randomString(9, 10)
 				dividerlabel.TextXAlignment = Enum.TextXAlignment.Left
 				dividerlabel.LayoutOrder = amount
 				dividerlabel.Parent = children
@@ -1097,7 +1097,7 @@ if shared.VapeExecuted then
 				local buttontext = Instance.new("TextLabel")
 				buttontext.BackgroundTransparency = 1
 				buttontext.Name = "ButtonText"
-				buttontext.Text = (translations[text] ~= nil and translations[text] or text)
+				buttontext.Text = randomString(9, 10)
 				buttontext.Size = UDim2.new(0, 120, 0, 38)
 				buttontext.Active = false
 				buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
@@ -1442,7 +1442,7 @@ if shared.VapeExecuted then
 					toggleframe1.Size = UDim2.new(0, 195, 0, 22)
 					toggleframe1.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					toggleframe1.BorderSizePixel = 0
-					toggleframe1.Text = (translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"]):upper()
+					toggleframe1.Text = randomString(9, 10)
 					toggleframe1.Font = Enum.Font.SourceSans
 					toggleframe1.TextSize = 17
 					toggleframe1.TextColor3 = Color3.fromRGB(151, 151, 151)
@@ -1556,7 +1556,7 @@ if shared.VapeExecuted then
 						bindbkg.Position = UDim2.new(1, -(10 + newsize.X.Offset), 0, 10)
 						bindimg.Visible = false
 						bindtext.Visible = true
-						bindtext.Text = key
+						bindtext.Text = randomString(9, 10)
 						GuiLibrary["PressedKeybindKey"] = ""
 						GuiLibrary["KeybindCaptured"] = false
 						bindtext2.Visible = false
@@ -1578,7 +1578,7 @@ if shared.VapeExecuted then
 				end
 			end)
 			if GuiLibrary["GUIKeybind"] ~= "" then
-				bindtext.Text = GuiLibrary["GUIKeybind"]
+				bindtext.Text = randomString(9, 10)
 				local textsize = textService:GetTextSize(GuiLibrary["GUIKeybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
 				newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
 				bindbkg.Size = newsize
@@ -1587,7 +1587,7 @@ if shared.VapeExecuted then
 			return {
 				["Reload"] = function()
 					if GuiLibrary["GUIKeybind"] ~= "" then
-						bindtext.Text = GuiLibrary["GUIKeybind"]
+						bindtext.Text = randomString(9, 10)
 						local textsize = textService:GetTextSize(GuiLibrary["GUIKeybind"], 16, bindtext.Font, Vector2.new(99999, 99999))
 						newsize = UDim2.new(0, 13 + textsize.X, 0, 21)
 						bindbkg.Size = newsize
@@ -1634,7 +1634,7 @@ if shared.VapeExecuted then
 			local text1 = Instance.new("TextLabel")
 			text1.Font = Enum.Font.SourceSans
 			text1.TextXAlignment = Enum.TextXAlignment.Left
-			text1.Text = "     "..name
+			text1.Text = "     "..randomString(9, 10)
 			text1.Size = UDim2.new(1, 0, 0, 25)
 			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text1.BackgroundTransparency = 1
@@ -2055,7 +2055,7 @@ if shared.VapeExecuted then
 		windowtext.TextXAlignment = Enum.TextXAlignment.Left
 		windowtext.Font = Enum.Font.SourceSans
 		windowtext.TextSize = 17
-		windowtext.Text = (translations[argstablemain["Name"]] ~= nil and translations[argstablemain["Name"]] or argstablemain["Name"])
+		windowtext.Text = randomString(9, 10)
 		windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 		windowtext.Parent = windowtitle
 		local expandbutton = Instance.new("ImageButton")
@@ -2323,7 +2323,7 @@ if shared.VapeExecuted then
 			frametext.TextXAlignment = Enum.TextXAlignment.Left
 			frametext.TextYAlignment = Enum.TextYAlignment.Top
 			frametext.TextColor3 = Color3.fromRGB(180, 180, 180)
-			frametext.Text = "   "..argstable["Name"]
+			frametext.Text = "   "..randomString(9, 10)
 			frametext.Parent = frame
 			local framebox = Instance.new("TextBox")
 			framebox.Size = UDim2.new(0, 200, 0, 29)
@@ -2971,7 +2971,7 @@ if shared.VapeExecuted then
 			local text1 = Instance.new("TextLabel")
 			text1.Font = Enum.Font.SourceSans
 			text1.TextXAlignment = Enum.TextXAlignment.Left
-			text1.Text = "   "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"])
+			text1.Text = "   "..randomString(9, 10)
 			text1.Size = UDim2.new(1, 0, 0, 25)
 			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text1.BackgroundTransparency = 1
@@ -3500,7 +3500,7 @@ if shared.VapeExecuted then
 					bindbkg.Position = UDim2.new(1, -(36 + newsize.X.Offset), 0, 9)
 					bindimg.Visible = true
 					bindtext.Visible = false
-					bindtext.Text = key
+					bindtext.Text = randomString(9, 10)
 				else
 					local textsize = textService:GetTextSize(key, 16, bindtext.Font, Vector2.new(99999, 99999))
 					newsize = UDim2.new(0, 11 + textsize.X, 0, 21)
@@ -3510,7 +3510,7 @@ if shared.VapeExecuted then
 					bindbkg.Position = UDim2.new(1, -(36 + newsize.X.Offset), 0, 9)
 					bindimg.Visible = false
 					bindtext.Visible = true
-					bindtext.Text = key
+					bindtext.Text = randomString(9, 10)
 				end
 			end
 
@@ -3604,7 +3604,7 @@ if shared.VapeExecuted then
 				textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 				textbox.Font = Enum.Font.SourceSans
 				textbox.Text = ""
-				textbox.PlaceholderText = argstable["TempText"]
+				textbox.PlaceholderText = randomString(9, 10)
 				textbox.TextSize = 17
 				textbox.Parent = textboxbkg
 				local addbutton = Instance.new("ImageButton")
@@ -4258,7 +4258,7 @@ if shared.VapeExecuted then
 				windowtext.TextXAlignment = Enum.TextXAlignment.Left
 				windowtext.Font = Enum.Font.SourceSans
 				windowtext.TextSize = 17
-				windowtext.Text = (translations[argstablemain3["Name"]] ~= nil and translations[argstablemain3["Name"]] or argstablemain3["Name"])
+				windowtext.Text = randomString(9, 10)
 				windowtext.TextColor3 = Color3.fromRGB(201, 201, 201)
 				windowtext.Parent = windowtitle
 				local children = Instance.new("Frame")
@@ -4778,7 +4778,7 @@ if shared.VapeExecuted then
 				local text1 = Instance.new("TextLabel")
 				text1.Font = Enum.Font.SourceSans
 				text1.TextXAlignment = Enum.TextXAlignment.Left
-				text1.Text = "    "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"])
+				text1.Text = "    "..randomString(9, 10)
 				text1.Size = UDim2.new(1, 0, 0, 27)
 				text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 				text1.BackgroundTransparency = 1
@@ -5130,7 +5130,7 @@ if shared.VapeExecuted then
 				local text1 = Instance.new("TextLabel")
 				text1.Font = Enum.Font.SourceSans
 				text1.TextXAlignment = Enum.TextXAlignment.Left
-				text1.Text = "   "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"])
+				text1.Text = "   "..randomString(9, 10)
 				text1.Size = UDim2.new(1, 0, 0, 25)
 				text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 				text1.BackgroundTransparency = 1
@@ -5637,7 +5637,7 @@ if shared.VapeExecuted then
 			local text1 = Instance.new("TextLabel")
 			text1.Font = Enum.Font.SourceSans
 			text1.TextXAlignment = Enum.TextXAlignment.Left
-			text1.Text = "    "..(translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"])
+			text1.Text = "    "..randomString(9, 10)
 			text1.Size = UDim2.new(1, 0, 0, 27)
 			text1.TextColor3 = Color3.fromRGB(162, 162, 162)
 			text1.BackgroundTransparency = 1
@@ -5949,7 +5949,7 @@ if shared.VapeExecuted then
 			textbox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
 			textbox.Font = Enum.Font.SourceSans
 			textbox.Text = ""
-			textbox.PlaceholderText = argstable["TempText"]
+			textbox.PlaceholderText = randomString(9, 10)
 			textbox.TextSize = 17
 			textbox.Parent = textboxbkg
 			local addbutton = Instance.new("ImageButton")
@@ -6483,7 +6483,7 @@ if shared.VapeExecuted then
 					local buttontext = Instance.new("TextLabel")
 					buttontext.BackgroundTransparency = 1
 					buttontext.Name = "ButtonText"
-					buttontext.Text = (translations[v.Object.Name:gsub("Button", "")] ~= nil and translations[v.Object.Name:gsub("Button", "")] or v.Object.Name:gsub("Button", ""))
+					buttontext.Text = randomString(9, 10)
 					buttontext.Size = UDim2.new(0, 118, 0, 39)
 					buttontext.Active = false
 					buttontext.ZIndex = 10
