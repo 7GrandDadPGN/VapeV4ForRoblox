@@ -1241,7 +1241,7 @@ if shared.VapeExecuted then
 					buttontext.MouseEnter:Connect(function()
 						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 							hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-							local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+							local textsize = Vector2.new(60, 18)
 							hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 							hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 						end
@@ -1400,7 +1400,7 @@ if shared.VapeExecuted then
 					frame.MouseEnter:Connect(function()
 						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 							hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-							local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
+							local textsize = Vector2.new(60, 18)
 							hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
 							hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 						end
@@ -1893,8 +1893,8 @@ if shared.VapeExecuted then
 			buttontext.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+					local textsize = Vector2.new(60, 18)
+					hoverbox.Text = "  "..randomString(9, 10)
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 				if buttonapi["Enabled"] == false then
@@ -2286,8 +2286,8 @@ if shared.VapeExecuted then
 			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+					local textsize = Vector2.new(60, 18)
+					hoverbox.Text = "  "..randomString(9, 10)
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 			end)
@@ -2876,8 +2876,8 @@ if shared.VapeExecuted then
 			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+					local textsize = Vector2.new(60, 18)
+					hoverbox.Text = "  "..randomString(9, 10)
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 			end)
@@ -3090,8 +3090,8 @@ if shared.VapeExecuted then
 			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+					local textsize = Vector2.new(60, 18)
+					hoverbox.Text = "  "..randomString(9, 10)
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 			end)
@@ -3186,8 +3186,8 @@ if shared.VapeExecuted then
 			buttontext.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+					local textsize = Vector2.new(60, 18)
+					hoverbox.Text = "  "..randomString(9, 10)
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 				if buttonapi["Enabled"] == false then
@@ -3472,8 +3472,8 @@ if shared.VapeExecuted then
 			if argstablemain["HoverText"] and type(argstablemain["HoverText"]) == "string" then
 				button.MouseEnter:Connect(function() 
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = textService:GetTextSize(argstablemain["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-					hoverbox.Text = "  "..argstablemain["HoverText"]:gsub("\n", "\n  ")
+					local textsize = Vector2.new(60, 18)
+					hoverbox.Text = "  "..randomString(9, 10)
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end)
 				button.MouseMoved:Connect(function(x, y)
@@ -3989,8 +3989,8 @@ if shared.VapeExecuted then
 					buttontext.MouseEnter:Connect(function()
 						if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 							hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-							local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-							hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+							local textsize = Vector2.new(60, 18)
+							hoverbox.Text = "  "..randomString(9, 10)
 							hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 						end
 						if buttonapi["Enabled"] == false then
@@ -4680,8 +4680,8 @@ if shared.VapeExecuted then
 				frame.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-						local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-						hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+						local textsize = Vector2.new(60, 18)
+						hoverbox.Text = "  "..randomString(9, 10)
 						hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 					end
 				end)
@@ -4938,8 +4938,8 @@ if shared.VapeExecuted then
 				frame.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-						local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-						hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+						local textsize = Vector2.new(60, 18)
+						hoverbox.Text = "  "..randomString(9, 10)
 						hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 					end
 				end)
@@ -5098,8 +5098,8 @@ if shared.VapeExecuted then
 				frame.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-						local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-						hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+						local textsize = Vector2.new(60, 18)
+						hoverbox.Text = "  "..randomString(9, 10)
 						hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 					end
 				end)
@@ -5355,8 +5355,8 @@ if shared.VapeExecuted then
 				buttontext.MouseEnter:Connect(function()
 					if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 						hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-						local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-						hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+						local textsize = Vector2.new(60, 18)
+						hoverbox.Text = "  "..randomString(9, 10)
 						hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 					end
 					if buttonapi["Enabled"] == false then
@@ -5797,8 +5797,8 @@ if shared.VapeExecuted then
 			frame.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+					local textsize = Vector2.new(60, 18)
+					hoverbox.Text = "  "..randomString(9, 10)
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 			end)
@@ -5896,8 +5896,8 @@ if shared.VapeExecuted then
 			buttontext.MouseEnter:Connect(function()
 				if argstable["HoverText"] and type(argstable["HoverText"]) == "string" then
 					hoverbox.Visible = (GuiLibrary["ToggleTooltips"] and hoverbox.TextSize ~= 1)
-					local textsize = textService:GetTextSize(argstable["HoverText"], hoverbox.TextSize, hoverbox.Font, Vector2.new(99999, 99999))
-					hoverbox.Text = "  "..argstable["HoverText"]:gsub("\n", "\n  ")
+					local textsize = Vector2.new(60, 18)
+					hoverbox.Text = "  "..randomString(9, 10)
 					hoverbox.Size = UDim2.new(0, 13 + textsize.X, 0, textsize.Y + 5)
 				end
 				if buttonapi["Enabled"] == false then
