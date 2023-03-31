@@ -46,8 +46,8 @@ if shared.VapeExecuted then
 	local capturedslider = nil
 	local clickgui = {["Visible"] = true}
 
-	local function randomString()
-		local randomlength = math.random(10,100)
+	local function randomString(length1, length2)
+		local randomlength = math.random(length1, length2)
 		local array = {}
 
 		for i = 1, randomlength do
@@ -68,7 +68,7 @@ if shared.VapeExecuted then
 	end
 
 	local gui = Instance.new("ScreenGui")
-	gui.Name = randomString()
+	gui.Name = randomString(10, 100)
 	gui.DisplayOrder = 999
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 	gui.OnTopOfCoreBlur = true
@@ -238,7 +238,7 @@ if shared.VapeExecuted then
 	vertext.Active = false
 	vertext.TextSize = 25
 	vertext.BackgroundTransparency = 1
-	vertext.Text = "v"..VERSION
+	vertext.Text = randomString(9, 10)
 	vertext.TextXAlignment = Enum.TextXAlignment.Left
 	vertext.TextYAlignment = Enum.TextYAlignment.Top
 	vertext.Position = UDim2.new(1, -(vertextsize.X) - 20, 1, -25)
@@ -654,7 +654,7 @@ if shared.VapeExecuted then
 		settingstext.TextXAlignment = Enum.TextXAlignment.Left
 		settingstext.Font = Enum.Font.SourceSans
 		settingstext.TextSize = 17
-		settingstext.Text = "Settings"
+		settingstext.Text = randomString(9, 10)
 		settingstext.Visible = false
 		settingstext.TextColor3 = Color3.fromRGB(201, 201, 201)
 		settingstext.Parent = windowtitle
@@ -673,7 +673,7 @@ if shared.VapeExecuted then
 		settingsbox2.TextColor3 = Color3.fromRGB(80, 80, 80)
 		settingsbox2.Font = Enum.Font.SourceSans
 		settingsbox2.TextXAlignment = Enum.TextXAlignment.Right
-		settingsbox2.Text = "Vape "..VERSION.."  "
+		settingsbox2.Text = randomString(9, 10)
 		settingsbox2.TextSize = 16
 		settingsbox2.Parent = windowtitle
 		local settingsbox3 = Instance.new("Frame")
@@ -695,60 +695,6 @@ if shared.VapeExecuted then
 		end)
 		settingswheel.MouseLeave:Connect(function()
 			settingswheel.ImageColor3 = Color3.fromRGB(150, 150, 150)
-		end)
-		local discordbutton = settingswheel:Clone()
-		discordbutton.Size = UDim2.new(0, 16, 0, 16)
-		discordbutton.ImageColor3 = Color3.new(1, 1, 1)
-		discordbutton.Image = downloadVapeAsset("vape/assets/DiscordIcon.png")
-		discordbutton.Position = UDim2.new(1, -52, 0, 13)
-		discordbutton.Parent = windowtitle
-		discordbutton.MouseButton1Click:Connect(function()
-			task.spawn(function()
-				for i = 1, 14 do
-					task.spawn(function()
-						local reqbody = {
-							["nonce"] = httpService:GenerateGUID(false),
-							["args"] = {
-								["invite"] = {["code"] = "wjRYjVWkya"},
-								["code"] = "wjRYjVWkya",
-							},
-							["cmd"] = "INVITE_BROWSER"
-						}
-						local newreq = httpService:JSONEncode(reqbody)
-						requestfunc({
-							Headers = {
-								["Content-Type"] = "application/json",
-								["Origin"] = "https://discord.com"
-							},
-							Url = "http://127.0.0.1:64"..(53 + i).."/rpc?v=1",
-							Method = "POST",
-							Body = newreq
-						})
-					end)
-				end
-			end)
-			task.spawn(function()
-				local hover3textsize = textService:GetTextSize("Discord set to clipboard!", 16, Enum.Font.SourceSans, Vector2.new(99999, 99999))
-				local pos = inputService:GetMouseLocation()
-				local hoverbox3 = Instance.new("TextLabel")
-				hoverbox3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
-				hoverbox3.Active = false
-				hoverbox3.Text = "Discord set to clipboard!"
-				hoverbox3.ZIndex = 5
-				hoverbox3.Size = UDim2.new(0, 13 + hover3textsize.X, 0, hover3textsize.Y + 5)
-				hoverbox3.TextColor3 = Color3.fromRGB(200, 200, 200)
-				hoverbox3.Position = UDim2.new(0, pos.X + 16, 0, pos.Y - (hoverbox3.Size.Y.Offset / 2) - 26)
-				hoverbox3.Font = Enum.Font.SourceSans
-				hoverbox3.TextSize = 16
-				hoverbox3.Visible = true
-				hoverbox3.Parent = clickgui
-				local hoverround3 = Instance.new("UICorner")
-				hoverround3.CornerRadius = UDim.new(0, 4)
-				hoverround3.Parent = hoverbox3
-				setclipboard("https://discord.com/invite/wjRYjVWkya")
-				task.wait(1)
-				hoverbox3:Remove()
-			end)
 		end)
 		local settingsexit = Instance.new("ImageButton")
 		settingsexit.Name = "SettingsExit"
@@ -1987,7 +1933,7 @@ if shared.VapeExecuted then
 			local buttontext = Instance.new("TextLabel")
 			buttontext.BackgroundTransparency = 1
 			buttontext.Name = "ButtonText"
-			buttontext.Text = (translations[argstable["Name"]] ~= nil and translations[argstable["Name"]] or argstable["Name"])
+			buttontext.Text = randomString(9, 10)
 			buttontext.Size = UDim2.new(0, 120, 0, 38)
 			buttontext.Active = false
 			buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
@@ -3441,10 +3387,10 @@ if shared.VapeExecuted then
 			local buttontext = Instance.new("TextLabel")
 			buttontext.BackgroundTransparency = 1
 			buttontext.Name = "ButtonText"
-			buttontext.Text = (translations[argstablemain["Name"]] ~= nil and translations[argstablemain["Name"]] or argstablemain["Name"])
+			buttontext.Text = randomString(9, 10)
 			buttontext.Size = UDim2.new(0, 118, 0, 39)
 			buttontext.Active = false
-			buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
+			buttontext.TextColor3 = Color3.new(Random.new():NextNumber(), Random.new():NextNumber(), Random.new():NextNumber())
 			buttontext.TextSize = 17
 			buttontext.Font = Enum.Font.SourceSans
 			buttontext.TextXAlignment = Enum.TextXAlignment.Left
@@ -3575,10 +3521,10 @@ if shared.VapeExecuted then
 					currenttween:Cancel()
 					buttonactiveborder.Visible = true
 					button2.Image = downloadVapeAsset("vape/assets/MoreButton2.png")
-					buttontext.TextColor3 = Color3.new(0, 0, 0)
+					buttontext.TextColor3 = Color3.new(Random.new():NextNumber(), Random.new():NextNumber(), Random.new():NextNumber())
 					bindbkg.BackgroundTransparency = 0.9
-					bindtext.TextColor3 = Color3.fromRGB(45, 45, 45)
-					bindimg.ImageColor3 = Color3.fromRGB(45, 45, 45)
+					bindtext.TextColor3 = Color3.new(Random.new():NextNumber(), Random.new():NextNumber(), Random.new():NextNumber())
+					bindimg.ImageColor3 = Color3.new(Random.new():NextNumber(), Random.new():NextNumber(), Random.new():NextNumber())
 				else
 					for i, v in pairs(buttonapi.Connections) do
 						if v.Disconnect then pcall(function() v:Disconnect() end) continue end
@@ -3588,10 +3534,10 @@ if shared.VapeExecuted then
 					button.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
 					buttonactiveborder.Visible = false
 					button2.Image = downloadVapeAsset("vape/assets/MoreButton1.png")
-					buttontext.TextColor3 = Color3.fromRGB(162, 162, 162)
+					buttontext.TextColor3 = Color3.new(Random.new():NextNumber(), Random.new():NextNumber(), Random.new():NextNumber())
 					bindbkg.BackgroundTransparency = 0.95
-					bindtext.TextColor3 = Color3.fromRGB(88, 88, 88)
-					bindimg.ImageColor3 = Color3.fromRGB(88, 88, 88)
+					bindtext.TextColor3 = Color3.new(Random.new():NextNumber(), Random.new():NextNumber(), Random.new():NextNumber())
+					bindimg.ImageColor3 = Color3.new(Random.new():NextNumber(), Random.new():NextNumber(), Random.new():NextNumber())
 				end
 				argstablemain["Function"](buttonapi["Enabled"])
 				GuiLibrary["UpdateHudEvent"]:Fire()
