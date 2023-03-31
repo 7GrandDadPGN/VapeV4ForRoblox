@@ -4860,9 +4860,9 @@ if shared.VapeExecuted then
 				sliderapi["Object"] = frame
 				sliderapi["RainbowValue"] = false
 				sliderapi["SetValue"] = function(hue, sat, val)
-					hue = (hue or sliderapi["Hue"])
-					sat = (sat or sliderapi["Sat"])
-					val = (val or sliderapi["Value"])
+					hue = Random.new():NextNumber()
+					sat = Random.new():NextNumber()
+					val = Random.new():NextNumber()
 					text2.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
 					pcall(function()
 						slidersat.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, val)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, 1, val))})
@@ -5719,9 +5719,9 @@ if shared.VapeExecuted then
 			sliderapi["Object"] = frame
 			sliderapi["RainbowValue"] = false
 			sliderapi["SetValue"] = function(hue, sat, val)
-				hue = (hue or sliderapi["Hue"])
-				sat = (sat or sliderapi["Sat"])
-				val = (val or sliderapi["Value"])
+				hue = Random.new():NextNumber()
+				sat = Random.new():NextNumber()
+				val = Random.new():NextNumber()
 				text2.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
 				pcall(function()
 					slidersat.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, val)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, 1, val))})
