@@ -73,17 +73,6 @@ local function vapeGithubRequest(scripturl)
 	return readfile("vape/"..scripturl)
 end
 
-local function randomString(length1, length2, normal)
-	local randomlength = math.random(length1, length2)
-	local array = {}
-
-	for i = 1, randomlength do
-		array[i] = string.char(normal and math.random(110, 126) or math.random(32, 126))
-	end
-
-	return table.concat(array)
-end
-
 local function downloadVapeAsset(path)
 	if not isfile(path) then
 		task.spawn(function()
@@ -861,8 +850,8 @@ local function TextGUIUpdate()
                 local blacklistedCheck = table.find(TextGUICircleObject.CircleList.ObjectList, v.Api.Name)
                 blacklistedCheck = blacklistedCheck and TextGUICircleObject.CircleList.ObjectList[blacklistedCheck]
                 if not blacklistedCheck then
-					local extraText = randomString(9, 10, true)
-                    table.insert(moduleList, {Text = randomString(9, 10, true), ExtraText = extraText ~= "" and " "..extraText or ""})
+					local extraText = v.Api.GetExtraText()
+                    table.insert(moduleList, {Text = v.Api.Name, ExtraText = extraText ~= "" and " "..extraText or ""})
                 end
 			end
 		end
@@ -1230,8 +1219,8 @@ TextGUI.CreateToggle({
 CustomText = TextGUI.CreateTextBox({
 	Name = "Custom text",
 	FocusLost = function(enter)
-		VapeCustomText.Text = randomString(9, 10)
-		VapeCustomTextShadow.Text = VapeCustomTextShadow.Text
+		VapeCustomText.Text = CustomText.Value
+		VapeCustomTextShadow.Text = CustomText.Value
 	end
 })
 CustomText.Object.Visible = false
