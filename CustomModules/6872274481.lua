@@ -654,7 +654,7 @@ local function AllNearPosition(distance, amount, sortfunction, prediction)
 				end
                 if mag <= distance then
 					if v:GetAttribute("Team") == lplr:GetAttribute("Team") then continue end
-                    table.insert(sortedentities, {Player = {Name = v.Name, UserId = (v.Name == "Duck" and 2020831224 or 1443379645)}, Character = v, RootPart = v.PrimaryPart, Humanoid = v.Humanoid})
+                    table.insert(sortedentities, {Player = {Name = v.Name, UserId = (v.Name == "Duck" and 2020831224 or 1443379645), GetAttribute = function() return "none" end}, Character = v, RootPart = v.PrimaryPart, Humanoid = v.Humanoid})
                 end
 			end
 		end
@@ -668,7 +668,7 @@ local function AllNearPosition(distance, amount, sortfunction, prediction)
 					if tonumber(v:GetAttribute("PlayerUserId")) == lplr.UserId then continue end
 					local droneplr = playersService:GetPlayerByUserId(v:GetAttribute("PlayerUserId"))
 					if droneplr and droneplr.Team == lplr.Team then continue end
-                    table.insert(sortedentities, {Player = {Name = "Drone", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, Humanoid = v.Humanoid})
+                    table.insert(sortedentities, {Player = {Name = "Drone", UserId = 1443379645}, GetAttribute = function() return "none" end, Character = v, RootPart = v.PrimaryPart, Humanoid = v.Humanoid})
                 end
 			end
 		end
@@ -1328,7 +1328,7 @@ runFunction(function()
 						end
 					end)
 				end)
-				task.wait(failedBreak > 30 and 0.3 or 0.016)
+				task.wait(failedBreak > 30 and 0.5 or 0.016)
 			end
 		end
 	end	
