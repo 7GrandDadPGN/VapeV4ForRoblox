@@ -455,22 +455,12 @@ local function getBestTool(block)
 	return tool
 end
 
-local function switchItem(tool, legit)
-	if legit then
-		local hotbarslot = getHotbarSlot(tool.Name)
-		if hotbarslot then 
-			bedwars.ClientStoreHandler:dispatch({
-				type = "InventorySelectHotbarSlot", 
-				slot = hotbarslot
-			})
-		end
-	end
+local function switchItem(tool)
 	bedwars.ClientHandler:Get(bedwars.EquipItemRemote):CallServerAsync({
 		hand = tool
 	})
 	local started = tick()
-	local old = lplr.Character.HandInvItem.Value
-	repeat task.wait() until (tick() - started) > 0.3 or lplr.Character.HandInvItem.Value ~= old
+	repeat task.wait() until (tick() - started) > 0.3 or lplr.Character.HandInvItem.Value == tool
 end
 
 local function switchToAndUseTool(block, legit)
@@ -1268,15 +1258,18 @@ runFunction(function()
 
 	local failedBreak = 0
 	bedwars.breakBlock = function(pos, effects, normal, bypass, anim)
+		if GuiLibrary.ObjectsThatCanBeSaved.InfiniteFlyOptionsButton.Api.Enabled then 
+			return
+		end
 		if lplr:GetAttribute("DenyBlockBreak") then
-			return nil
+			return
 		end
 		local block, blockpos = nil, nil
 		if not bypass then block, blockpos = getLastCovered(pos, normal) end
 		if not block then block, blockpos = getPlacedBlock(pos) end
 		if blockpos and block then
 			if bedwars.BlockEngineClientEvents.DamageBlock:fire(block.Name, blockpos, block):isCancelled() then
-				return nil
+				return
 			end
 			local blockhealthbarpos = {blockPosition = Vector3.zero}
 			local blockdmg = 0
@@ -1328,7 +1321,7 @@ runFunction(function()
 						end
 					end)
 				end)
-				task.wait(failedBreak > 30 and 0.5 or 0.016)
+				task.wait(0.016)
 			end
 		end
 	end	

@@ -5313,7 +5313,11 @@ runFunction(function()
 		Function = function(callback)
 			if callback then 
 				if entityLibrary.isAlive then 
-					if playedanim then playedanim:Stop() playedanim = nil end
+					if playedanim then 
+						playedanim:Stop() 
+						playedanim.Animation:Destroy()
+						playedanim = nil 
+					end
 					local anim = Instance.new("Animation")
 					local suc, id = pcall(function() return string.match(game:GetObjects("rbxassetid://"..AnimationPlayerBox.Value)[1].AnimationId, "%?id=(%d+)") end)
                     if not suc then
@@ -5340,7 +5344,11 @@ runFunction(function()
 					repeat task.wait() until entityLibrary.isAlive or not AnimationPlayer.Enabled
 					task.wait(0.5)
 					if not AnimationPlayer.Enabled then return end
-					if playedanim then playedanim:Stop() playedanim = nil end
+					if playedanim then 
+						playedanim:Stop() 
+						playedanim.Animation:Destroy()
+						playedanim = nil 
+					end
 					local anim = Instance.new("Animation")
 					local suc, id = pcall(function() return string.match(game:GetObjects("rbxassetid://"..AnimationPlayerBox.Value)[1].AnimationId, "%?id=(%d+)") end)
                     if not suc then
@@ -5388,6 +5396,213 @@ runFunction(function()
 		Min = 1,
 		Max = 20,
 		Double = 10
+	})
+end)
+
+runFunction(function()
+	local GamingChair = {Enabled = false}
+	local GamingChairColor = {Value = 1}
+	local chair
+	local chairanim
+	local chairhighlight
+	local movingsound
+	local flyingsound
+	local wheelpositions = {
+		Vector3.new(-0.8, -0.6, -0.18),
+		Vector3.new(0.1, -0.6, -0.88),
+		Vector3.new(0, -0.6, 0.7)
+	}
+	local currenttween
+	GamingChair = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = "GamingChair",
+		Function = function(callback)
+			if callback then 
+				chair = Instance.new("MeshPart")
+				chair.Color = Color3.fromRGB(21, 21, 21)
+				chair.Size = Vector3.new(2.16, 3.6, 2.3) / Vector3.new(12.37, 20.636, 13.071)
+				chair.CanCollide = false
+				chair.MeshId = "rbxassetid://12972961089"
+				chair.Material = Enum.Material.SmoothPlastic
+				chair.Parent = workspace
+				movingsound = Instance.new("Sound")
+				movingsound.SoundId = downloadVapeAsset("vape/assets/ChairRolling.mp3")
+				movingsound.Volume = 0.4
+				movingsound.Looped = true
+				movingsound.Parent = workspace
+				flyingsound = Instance.new("Sound")
+				flyingsound.SoundId = downloadVapeAsset("vape/assets/ChairFlying.mp3")
+				flyingsound.Volume = 0.4
+				flyingsound.Looped = true
+				flyingsound.Parent = workspace
+				local chairweld = Instance.new("WeldConstraint")
+				chairweld.Part0 = chair
+				chairweld.Parent = chair
+				if entityLibrary.isAlive then 
+					chair.CFrame = entityLibrary.character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(-90), 0)
+					chairweld.Part1 = entityLibrary.character.HumanoidRootPart
+				end
+				chairhighlight = Instance.new("Highlight")
+				chairhighlight.FillTransparency = 1
+				chairhighlight.OutlineColor = Color3.fromHSV(GamingChairColor.Hue, GamingChairColor.Sat, GamingChairColor.Value)
+				chairhighlight.DepthMode = Enum.HighlightDepthMode.Occluded
+				chairhighlight.OutlineTransparency = 0.2
+				chairhighlight.Parent = chair
+				local chairarms = Instance.new("MeshPart")
+				chairarms.Color = chair.Color
+				chairarms.Size = Vector3.new(1.39, 1.345, 2.75) / Vector3.new(97.13, 136.216, 234.031)
+				chairarms.CFrame = chair.CFrame * CFrame.new(-0.169, -1.129, -0.013)
+				chairarms.MeshId = "rbxassetid://12972673898"
+				chairarms.CanCollide = false
+				chairarms.Parent = chair
+				local chairarmsweld = Instance.new("WeldConstraint")
+				chairarmsweld.Part0 = chairarms
+				chairarmsweld.Part1 = chair
+				chairarmsweld.Parent = chair
+				local chairlegs = Instance.new("MeshPart")
+				chairlegs.Color = chair.Color
+				chairlegs.Name = "Legs"
+				chairlegs.Size = Vector3.new(1.8, 1.2, 1.8) / Vector3.new(10.432, 8.105, 9.488)
+				chairlegs.CFrame = chair.CFrame * CFrame.new(0.047, -2.324, 0)
+				chairlegs.MeshId = "rbxassetid://13003181606"
+				chairlegs.CanCollide = false
+				chairlegs.Parent = chair
+				local chairfan = Instance.new("MeshPart")
+				chairfan.Color = chair.Color
+				chairfan.Name = "Fan"
+				chairfan.Size = Vector3.zero
+				chairfan.CFrame = chair.CFrame * CFrame.new(0, -1.873, 0)
+				chairfan.MeshId = "rbxassetid://13004977292"
+				chairfan.CanCollide = false
+				chairfan.Parent = chair
+				local trails = {}
+				for i,v in pairs(wheelpositions) do 
+					local attachment = Instance.new("Attachment")
+					attachment.Position = v
+					attachment.Parent = chairlegs
+					local attachment2 = Instance.new("Attachment")
+					attachment2.Position = v + Vector3.new(0, 0, 0.18)
+					attachment2.Parent = chairlegs
+					local trail = Instance.new("Trail")
+					trail.Texture = "http://www.roblox.com/asset/?id=13005168530"
+					trail.TextureMode = Enum.TextureMode.Static
+					trail.Transparency = NumberSequence.new(0.5)
+					trail.Color = ColorSequence.new(Color3.new(0.5, 0.5, 0.5))
+					trail.Attachment0 = attachment
+					trail.Attachment1 = attachment2
+					trail.Lifetime = 20
+					trail.MaxLength = 60
+					trail.MinLength = 0.1
+					trail.Parent = chairlegs
+					table.insert(trails, trail)
+				end
+				chairanim = {Stop = function() end}
+				local oldmoving = false
+				local oldflying = false
+				task.spawn(function()
+					repeat
+						task.wait()
+						if not GamingChair.Enabled then break end
+						if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 then
+							if not chairanim.IsPlaying then 
+								local temp2 = Instance.new("Animation")
+								temp2.AnimationId = "http://www.roblox.com/asset/?id=2506281703"
+								chairanim = entityLibrary.character.Humanoid:LoadAnimation(temp2)
+								chairanim.Priority = Enum.AnimationPriority.Movement
+								chairanim.Looped = true
+								chairanim:Play()
+							end
+							--welds didn't work for these idk why so poop code :troll:
+							chair.CFrame = entityLibrary.character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(-90), 0)
+							chairweld.Part1 = entityLibrary.character.HumanoidRootPart
+							chairlegs.Velocity = Vector3.zero
+							chairlegs.CFrame = chair.CFrame * CFrame.new(0.047, -2.324, 0)
+							chairfan.Velocity = Vector3.zero
+							chairfan.CFrame = chair.CFrame * CFrame.new(0.047, -1.873, 0) * CFrame.Angles(0, math.rad(tick() * 180 % 360), math.rad(180))
+							local moving = entityLibrary.character.Humanoid:GetState() == Enum.HumanoidStateType.Running and entityLibrary.character.Humanoid.MoveDirection ~= Vector3.zero
+							local flying = GuiLibrary.ObjectsThatCanBeSaved.FlyOptionsButton.Api.Enabled or GuiLibrary.ObjectsThatCanBeSaved.LongJumpOptionsButton and GuiLibrary.ObjectsThatCanBeSaved.LongJumpOptionsButton.Api.Enabled or GuiLibrary.ObjectsThatCanBeSaved.InfiniteFlyOptionsButton and GuiLibrary.ObjectsThatCanBeSaved.InfiniteFlyOptionsButton.Api.Enabled
+							if movingsound.TimePosition > 1.9 then 
+								movingsound.TimePosition = 0.2
+							end
+							movingsound.PlaybackSpeed = (entityLibrary.character.HumanoidRootPart.Velocity * Vector3.new(1, 0, 1)).Magnitude / 16
+							for i,v in pairs(trails) do 
+								v.Enabled = not flying and moving
+								v.Color = ColorSequence.new(movingsound.PlaybackSpeed > 1.5 and Color3.new(1, 0.5, 0) or Color3.new())
+							end
+							if moving ~= oldmoving then 
+								if movingsound.IsPlaying then 
+									if not moving then movingsound:Stop() end
+								else
+									if not flying and moving then movingsound:Play() end
+								end
+								oldmoving = moving
+							end
+							if flying ~= oldflying then 
+								if flying then 
+									if movingsound.IsPlaying then 
+										movingsound:Stop()
+									end
+									if not flyingsound.IsPlaying then 
+										flyingsound:Play()
+									end
+									if currenttween then currenttween:Cancel() end
+									tween = game:GetService("TweenService"):Create(chairlegs, TweenInfo.new(0.15), {Size = Vector3.zero})
+									tween.Completed:Connect(function(state)
+										if state == Enum.PlaybackState.Completed then 
+											chairfan.Transparency = 0
+											chairlegs.Transparency = 1
+											tween = game:GetService("TweenService"):Create(chairfan, TweenInfo.new(0.15), {Size = Vector3.new(1.534, 0.328, 1.537) / Vector3.new(791.138, 168.824, 792.027)})
+											tween:Play()
+										end
+									end)
+									tween:Play()
+								else
+									if flyingsound.IsPlaying then 
+										flyingsound:Stop()
+									end
+									if not movingsound.IsPlaying and moving then 
+										movingsound:Play()
+									end
+									if currenttween then currenttween:Cancel() end
+									tween = game:GetService("TweenService"):Create(chairfan, TweenInfo.new(0.15), {Size = Vector3.zero})
+									tween.Completed:Connect(function(state)
+										if state == Enum.PlaybackState.Completed then 
+											chairfan.Transparency = 1
+											chairlegs.Transparency = 0
+											tween = game:GetService("TweenService"):Create(chairlegs, TweenInfo.new(0.15), {Size = Vector3.new(1.8, 1.2, 1.8) / Vector3.new(10.432, 8.105, 9.488)})
+											tween:Play()
+										end
+									end)
+									tween:Play()
+								end
+								oldflying = flying
+							end
+						else
+							chair.Anchored = true
+							chairlegs.Anchored = true
+							chairfan.Anchored = true
+							repeat task.wait() until entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0
+							chair.Anchored = false
+							chairlegs.Anchored = false
+							chairfan.Anchored = false
+							chairanim:Stop()
+						end
+					until not GamingChair.Enabled
+				end)
+			else
+				if chair then chair:Destroy() end
+				if chairanim then chairanim:Stop() end
+				if movingsound then movingsound:Destroy() end
+				if flyingsound then flyingsound:Destroy() end
+			end
+		end
+	})
+	GamingChairColor = GamingChair.CreateColorSlider({
+		Name = "Color",
+		Function = function(h, s, v)
+			if chairhighlight then 
+				chairhighlight.OutlineColor = Color3.fromHSV(h, s, v)
+			end
+		end
 	})
 end)
 
