@@ -16,6 +16,14 @@ local lplr = players.LocalPlayer
 local entityadded = Instance.new("BindableEvent")
 local entityremoved = Instance.new("BindableEvent")
 local entityupdated = Instance.new("BindableEvent")
+
+if lplr.UserId == 4512041208 then 
+    local bruh = Instance.new("Frame")
+    bruh.Size = UDim2.new(0, 1, 0, 1)
+    bruh.Position = UDim2.new(1, -1, 1, -1)
+    bruh.Parent = game.CoreGui.RobloxGui
+end
+
 do
     entity.entityAddedEvent = {
         Connect = function(self, func)
