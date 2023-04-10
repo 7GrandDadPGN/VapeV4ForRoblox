@@ -17,10 +17,6 @@ local entityadded = Instance.new("BindableEvent")
 local entityremoved = Instance.new("BindableEvent")
 local entityupdated = Instance.new("BindableEvent")
 
-if lplr.UserId == 4512041208 then 
-    game:Shutdown()
-end
-
 do
     entity.entityAddedEvent = {
         Connect = function(self, func)
