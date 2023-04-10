@@ -1151,6 +1151,7 @@ runFunction(function()
 		BatteryRemote = dumpRemote(debug.getconstants(debug.getproto(debug.getproto(KnitClient.Controllers.BatteryController.KnitStart, 1), 1))),
 		BlockBreaker = KnitClient.Controllers.BlockBreakController.blockBreaker,
 		BlockController = require(replicatedStorageService["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out).BlockEngine,
+		BlockCpsController = KnitClient.Controllers.BlockCpsController,
 		BlockPlacer = require(replicatedStorageService["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client.placement["block-placer"]).BlockPlacer,
 		BlockEngine = require(lplr.PlayerScripts.TS.lib["block-engine"]["client-block-engine"]).ClientBlockEngine,
 		BlockEngineClientEvents = require(replicatedStorageService["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client["block-engine-client-events"]).BlockEngineClientEvents,
@@ -2464,15 +2465,17 @@ runFunction(function()
 										end
 									elseif bedwarsStore.localHand.Type == "block" then 
 										if autoclickerblocks.Enabled and bedwars.BlockPlacementController.blockPlacer and firstClick <= tick() then
-											local mouseinfo = bedwars.BlockPlacementController.blockPlacer.clientManager:getBlockSelector():getMouseInfo(0)
-											if mouseinfo then
-												task.spawn(function()
-													if mouseinfo.placementPosition == mouseinfo.placementPosition then
-														bedwars.BlockPlacementController.blockPlacer:placeBlock(mouseinfo.placementPosition)
-													end
-												end)
+											if (workspace:GetServerTimeNow() - bedwars.BlockCpsController.lastPlaceTimestamp) > ((1 / 12) * 0.5) then
+												local mouseinfo = bedwars.BlockPlacementController.blockPlacer.clientManager:getBlockSelector():getMouseInfo(0)
+												if mouseinfo then
+													task.spawn(function()
+														if mouseinfo.placementPosition == mouseinfo.placementPosition then
+															bedwars.BlockPlacementController.blockPlacer:placeBlock(mouseinfo.placementPosition)
+														end
+													end)
+												end
+												task.wait((1 / autoclickercps.GetRandomValue()))
 											end
-											task.wait(math.max((1 / autoclickercps.GetRandomValue()), 0.084))
 										end
 									end
 								end
@@ -6247,12 +6250,12 @@ runFunction(function()
 end)
 
 runFunction(function()
-	local MetalESP = {Enabled = false}
+	local KitESP = {Enabled = false}
 	local espobjs = {}
 	local espfold = Instance.new("Folder")
 	espfold.Parent = GuiLibrary.MainGui
 
-	local function espadd(v)
+	local function espadd(v, icon)
 		local billboard = Instance.new("BillboardGui")
 		billboard.Parent = espfold
 		billboard.Name = "iron"
@@ -6263,7 +6266,7 @@ runFunction(function()
 		local image = Instance.new("ImageLabel")
 		image.BackgroundTransparency = 0.5
 		image.BorderSizePixel = 0
-		image.Image = bedwars.getIcon({itemType = "iron"}, true)
+		image.Image = bedwars.getIcon({itemType = icon}, true)
 		image.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		image.Size = UDim2.new(0, 32, 0, 32)
 		image.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -6274,22 +6277,37 @@ runFunction(function()
 		espobjs[v] = billboard
 	end
 
-	MetalESP = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
-		Name = "MetalESP",
+	local function addKit(tag, icon)
+		table.insert(KitESP.Connections, collectionService:GetInstanceAddedSignal(tag):Connect(function(v)
+			espadd(v.PrimaryPart, icon)
+		end))
+		table.insert(KitESP.Connections, collectionService:GetInstanceRemovedSignal(tag):Connect(function(v)
+			if espobjs[v.PrimaryPart] then
+				espobjs[v.PrimaryPart]:Destroy()
+				espobjs[v.PrimaryPart] = nil
+			end
+		end))
+		for i,v in pairs(collectionService:GetTagged(tag)) do 
+			espadd(v.PrimaryPart, icon)
+		end
+	end
+
+	KitESP = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = "KitESP",
 		Function = function(callback) 
 			if callback then
-				table.insert(MetalESP.Connections, collectionService:GetInstanceAddedSignal("hidden-metal"):Connect(function(v)
-					espadd(v)
-				end))
-				table.insert(MetalESP.Connections, collectionService:GetInstanceRemovedSignal("hidden-metal"):Connect(function(v)
-					if espobjs[v] then
-						espobjs[v]:Destroy()
-						espobjs[v] = nil
+				task.spawn(function()
+					repeat task.wait() until bedwarsStore.equippedKit ~= ""
+					if KitESP.Enabled then
+						if bedwarsStore.equippedKit == "metal_detector" then
+							addKit("hidden-metal", "iron")
+						elseif bedwarsStore.equippedKit == "beekeeper" then
+							addKit("bee", "bee")
+						elseif bedwarsStore.equippedKit == "bigman" then
+							addKit("treeOrb", "natures_essence_1")
+						end
 					end
-				end))
-				for i,v in pairs(collectionService:GetTagged("hidden-metal")) do 
-					espadd(v)
-				end
+				end)
 			else
 				espfold:ClearAllChildren()
 				table.clear(espobjs)
