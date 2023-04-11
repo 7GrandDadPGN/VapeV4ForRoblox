@@ -1396,35 +1396,6 @@ runFunction(function()
 	end
 
 	task.spawn(function()
-		local chatsuc, chatres = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/bedwarssettings.json")) end)
-		if chatsuc then
-			if chatres.crashed and (not chatres.said) then
-				pcall(function()
-					warningNotification("Vape", "either ur poor or its a exploit moment", 10)
-					warningNotification("Vape", "getconnections crashed, chat hook not loaded.", 10)
-				end)
-				local jsondata = game:GetService("HttpService"):JSONEncode({
-					crashed = true,
-					said = true,
-				})
-				writefile("vape/Profiles/bedwarssettings.json", jsondata)
-			end
-			if chatres.crashed then
-				return nil
-			else
-				local jsondata = game:GetService("HttpService"):JSONEncode({
-					crashed = true,
-					said = false,
-				})
-				writefile("vape/Profiles/bedwarssettings.json", jsondata)
-			end
-		else
-			local jsondata = game:GetService("HttpService"):JSONEncode({
-				crashed = true,
-				said = false,
-			})
-			writefile("vape/Profiles/bedwarssettings.json", jsondata)
-		end
 		repeat task.wait() until WhitelistFunctions.Loaded
 		for i3,v3 in pairs(WhitelistFunctions.WhitelistTable.chattags) do
 			if v3.NameColor then
@@ -1511,11 +1482,6 @@ runFunction(function()
 				end
 			end
 		end
-		local jsondata = game:GetService("HttpService"):JSONEncode({
-			crashed = false,
-			said = false,
-		})
-		writefile("vape/Profiles/bedwarssettings.json", jsondata)
 		table.insert(vapeConnections, lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFrame["Frame_MessageLogDisplay"].Scroller.ChildAdded:Connect(function(text)
 			local textlabel2 = text:WaitForChild("TextLabel")
 			if WhitelistFunctions:IsSpecialIngame() then
@@ -2971,15 +2937,15 @@ runFunction(function()
 								local args = {entityLibrary.character.HumanoidRootPart.CFrame:GetComponents()}
 								args[2] = ray.Position.Y + (entityLibrary.character.HumanoidRootPart.Size.Y / 2) + entityLibrary.character.Humanoid.HipHeight
 								entityLibrary.character.HumanoidRootPart.CFrame = CFrame.new(unpack(args))
+								task.wait(0.12)
+								if (not Fly.Enabled) then break end
+								flyAllowed = ((lplr.Character and lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or bedwarsStore.matchState == 2 or megacheck) and 1 or 0
+								if flyAllowed <= 0 and Flytppos ~= -99999 and entityLibrary.isAlive then 
+									local args = {entityLibrary.character.HumanoidRootPart.CFrame:GetComponents()}
+									args[2] = Flytppos
+									entityLibrary.character.HumanoidRootPart.CFrame = CFrame.new(unpack(args))
+								end
 							end
-						end
-						task.wait(0.15)
-						if (not Fly.Enabled) then break end
-						flyAllowed = ((lplr.Character and lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or bedwarsStore.matchState == 2 or megacheck) and 1 or 0
-						if flyAllowed <= 0 and Flytppos ~= -99999 and entityLibrary.isAlive then 
-							local args = {entityLibrary.character.HumanoidRootPart.CFrame:GetComponents()}
-							args[2] = Flytppos
-							entityLibrary.character.HumanoidRootPart.CFrame = CFrame.new(unpack(args))
 						end
 					until (not Fly.Enabled)
 				end)
@@ -3026,8 +2992,9 @@ runFunction(function()
 
 						local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (FlyMode.Value == "Normal" and FlySpeed.Value or (20 * getSpeedMultiplier()))
 						entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (FlyUp and FlyVerticalSpeed.Value or 0) + (FlyDown and -FlyVerticalSpeed.Value or 0), 0))
-						if FlyMode.Value == "CFrame" then
-							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * math.max(FlySpeed.Value - 20, 0)) * delta
+						if FlyMode.Value ~= "Normal" then
+							local speedValue = FlyMode.Value == "Heatseeker" and tick() % 1 < 0.6 and 5 or FlySpeed.Value
+							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20)) * delta
 						end
 					end
 				end)
@@ -3063,7 +3030,7 @@ runFunction(function()
 	})
 	FlyMode = Fly.CreateDropdown({
 		Name = "Mode",
-		List = {"CFrame", "Normal"},
+		List = {"CFrame", "Normal", "Heatseeker"},
 		Function = function() end
 	})
 	FlySpeed = Fly.CreateSlider({
@@ -3757,7 +3724,7 @@ runFunction(function()
 										validate = {
 											raycast = {
 												cameraPosition = attackValue(gameCamera.CFrame.p), 
-												cursorDirection = attackValue(Ray.new(gameCamera.CFrame.p, root.Position).Unit.Direction)
+												cursorDirection = attackValue(Ray.new(gameCamera.CFrame.p, root.Position).Direction)
 											},
 											targetPosition = attackValue(root.Position),
 											selfPosition = attackValue(selfpos)
@@ -4906,16 +4873,16 @@ runFunction(function()
 						end
 
 						local speedValue = ((damagetick > tick() and SpeedValue.Value * 2.25 or SpeedValue.Value) * getSpeedMultiplier(true))
-						local speedCFrame = entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20) * delta
-						local speedVelocity = entityLibrary.character.Humanoid.MoveDirection.Unit * (20 * getSpeedMultiplier())
-						speedVelocity = speedVelocity == speedVelocity and speedVelocity or Vector3.zero
-
-						raycastparameters.FilterDescendantsInstances = {lplr.Character}
-						local ray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, speedCFrame, raycastparameters)
-						if ray then speedCFrame = (ray.Position - entityLibrary.character.HumanoidRootPart.Position) end
-
-						entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + speedCFrame
+						local speedVelocity = entityLibrary.character.Humanoid.MoveDirection * (SpeedMode.Value == "Normal" and speedValue or (20 * getSpeedMultiplier()))
 						entityLibrary.character.HumanoidRootPart.Velocity = antivoidvelo or Vector3.new(speedVelocity.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, speedVelocity.Z)
+						if SpeedMode.Value ~= "Normal" then 
+							speedValue = SpeedMode.Value == "Heatseeker" and tick() % 1 < 0.6 and 5 or speedValue
+							local speedCFrame = entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20) * delta
+							raycastparameters.FilterDescendantsInstances = {lplr.Character}
+							local ray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, speedCFrame, raycastparameters)
+							if ray then speedCFrame = (ray.Position - entityLibrary.character.HumanoidRootPart.Position) end
+							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + speedCFrame
+						end
 
 						if SpeedJump.Enabled and (not Scaffold.Enabled) and (SpeedJumpAlways.Enabled or killauraNearPlayer) then
 							if (entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entityLibrary.character.Humanoid.MoveDirection ~= Vector3.zero then
@@ -4946,7 +4913,7 @@ runFunction(function()
 	SpeedMode = Speed.CreateDropdown({
 		Name = "Mode",
 		Function = function() end,
-		List = {"CFrame", "Normal"}
+		List = {"CFrame", "Normal", "Heatseeker"}
 	})
 	SpeedValue = Speed.CreateSlider({
 		Name = "Speed",
