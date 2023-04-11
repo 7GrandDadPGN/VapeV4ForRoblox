@@ -2496,22 +2496,6 @@ runFunction(function()
 end)
 
 runFunction(function()
-	GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
-		Name = "HitFix",
-		Function = function(callback)
-			if callback then
-				debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 27, "raycast")
-				debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, bedwars.QueryUtil)
-			else
-				debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 27, "Raycast")
-				debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, workspace)
-			end
-		end, 
-		HoverText = "Fixes terrible bedwars code for hitreg"
-	})
-end)
-
-runFunction(function()
 	local ReachValue = {Value = 14}
 	Reach = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
 		Name = "Reach",
@@ -5558,10 +5542,15 @@ end)
 
 runFunction(function()
 	local GameFixer = {Enabled = false}
+	local GameFixerHit = {Enabled = false}
 	GameFixer = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
 		Name = "GameFixer",
 		Function = function(callback)
 			if callback then
+				if GameFixerHit.Enabled then 
+					debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 27, "raycast")
+					debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, bedwars.QueryUtil)
+				end
 				task.spawn(function()
 					repeat task.wait() until bedwarsStore.matchState ~= 0
 					if bedwars.ClientStoreHandler:getState().Game.customMatch == nil and GameFixer.Enabled then 
@@ -5570,10 +5559,30 @@ runFunction(function()
 				end)
 				UserSettings():GetService("UserGameSettings").RotationType = ((gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.5 and Enum.RotationType.CameraRelative or Enum.RotationType.MovementRelative)
 			else
-				debug.setconstant(bedwars.QueueCard.render, 9, 0.01)
+				if GameFixerHit.Enabled then 
+					debug.setconstant(bedwars.QueueCard.render, 9, 0.01)
+					debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 27, "Raycast")
+				end
+				debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, workspace)
 			end
 		end,
 		HoverText = "Fixes game bugs"
+	})
+	GameFixerHit = GameFixer.CreateToggle({
+		Name = "Hit Fix",
+		Function = function(callback)
+			if GameFixer.Enabled then
+				if callback then 
+					debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 27, "raycast")
+					debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, bedwars.QueryUtil)
+				else
+					debug.setconstant(bedwars.QueueCard.render, 9, 0.01)
+					debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 27, "Raycast")
+				end
+			end
+		end,
+		HoverText = "Fixes the raycast function used for extra reach",
+		Default = true
 	})
 end)
 
