@@ -846,7 +846,7 @@ runFunction(function()
 				})
 			end
 			if not plr then return end
-			targetPart = plr[tar]
+			targetPart = plr[targetPart]
 			SilentAimShot = plr
 			SlientAimShotTick = tick() + 1
 			local direction = CFrame.lookAt(origin, targetPart.Position)
@@ -862,7 +862,7 @@ runFunction(function()
 			end
 			Args[2] = direction.lookVector * Args[2].Magnitude
 			if SilentAimWallbang.Enabled then
-				SilentAimRaycastWhitelist.FilterDescendantsInstances = {tar}
+				SilentAimRaycastWhitelist.FilterDescendantsInstances = {targetPart}
 				Args[3] = SilentAimRaycastWhitelist
 			end
 			return
@@ -887,7 +887,7 @@ runFunction(function()
 				})
 			end
 			if not plr then return end
-			targetPart = plr[tar]
+			targetPart = plr[targetPart]
 			SilentAimShot = plr
 			SlientAimShotTick = tick() + 1
 			local direction = CFrame.lookAt(origin, targetPart.Position)
@@ -2009,6 +2009,7 @@ runFunction(function()
 
 	local HighJump = {Enabled = false}
 	local HighJumpMethod = {Value = "Toggle"}
+	local HighJumpMode = {Value = "Normal"}
 	local HighJumpBoost = {Value = 1}
 	local HighJumpDelay = {Value = 20}
 	local HighJumpTick = tick()
@@ -2025,13 +2026,37 @@ runFunction(function()
 					end
 					if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 						HighJumpTick = tick() + (HighJumpDelay.Value / 10)
-						entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost.Value, 0)
+						if HighJumpMode.Value == "Normal" then  
+							entityLibrary.character.HumanoidRootPart.Velocity = entityLibrary.character.HumanoidRootPart.Velocity + Vector3.new(0, HighJumpBoost.Value, 0)
+						else
+							task.spawn(function()
+								local start = HighJumpBoost.Value
+								repeat
+									entityLibrary.character.HumanoidRootPart.CFrame += Vector3.new(0, start * 0.016, 0)
+									start = start - (workspace.Gravity * 0.016)
+									task.wait()
+								until start <= 0
+							end)
+						end
 					end
 					HighJump.ToggleButton(false)
 				else
+					local debounce = 0
 					RunLoops:BindToRenderStep("HighJump", function()
-						if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air and inputService:IsKeyDown(Enum.KeyCode.Space) then
-							entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(0, HighJumpBoost.Value, 0)
+						if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air and inputService:IsKeyDown(Enum.KeyCode.Space) and (tick() - debounce) > 0.3 then
+							debounce = tick()
+							if HighJumpMode.Value == "Normal" then  
+								entityLibrary.character.HumanoidRootPart.Velocity = entityLibrary.character.HumanoidRootPart.Velocity + Vector3.new(0, HighJumpBoost.Value, 0)
+							else
+								task.spawn(function()
+									local start = HighJumpBoost.Value
+									repeat
+										entityLibrary.character.HumanoidRootPart.CFrame += Vector3.new(0, start * 0.016, 0)
+										start = start - (workspace.Gravity * 0.016)
+										task.wait()
+									until start <= 0
+								end)
+							end
 						end
 					end)
 				end
@@ -2042,8 +2067,13 @@ runFunction(function()
 		HoverText = "Lets you jump higher"
 	})
 	HighJumpMethod = HighJump.CreateDropdown({
-		Name = "Mode", 
+		Name = "Method", 
 		List = {"Toggle", "Normal"},
+		Function = function(val) end
+	})
+	HighJumpMode = HighJump.CreateDropdown({
+		Name = "Mode", 
+		List = {"Normal", "CFrame"},
 		Function = function(val) end
 	})
 	HighJumpBoost = HighJump.CreateSlider({
