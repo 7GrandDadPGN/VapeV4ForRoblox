@@ -2614,6 +2614,7 @@ runFunction(function()
 	local AutoPlayAgain = {Enabled = false}
 	local AutoLeaveStaff = {Enabled = true}
 	local AutoLeaveStaff2 = {Enabled = true}
+	local AutoLeaveRandom = {Enabled = false}
 	local leaveAttempted = false
 
 	local function getRole(plr)
@@ -2695,7 +2696,15 @@ runFunction(function()
 								if not AutoPlayAgain.Enabled then
 									bedwars.ClientHandler:Get("TeleportToLobby"):SendToServer()
 								else
-									bedwars.LobbyClientEvents:joinQueue(bedwarsStore.queueType)
+									if AutoLeaveRandom.Enabled then 
+										local listofmodes = {}
+										for i,v in pairs(bedwars.QueueMeta) do
+											if not v.disabled then table.insert(listofmodes, i) end
+										end
+										bedwars.LobbyClientEvents:joinQueue(listofmodes[math.random(1, #listofmodes)])
+									else
+										bedwars.LobbyClientEvents:joinQueue(bedwarsStore.queueType)
+									end
 								end
 							end
 						end
@@ -2711,7 +2720,15 @@ runFunction(function()
 							bedwars.ClientHandler:Get("TeleportToLobby"):SendToServer()
 						else
 							if bedwars.ClientStoreHandler:getState().Party.queueState == 0 then
-								bedwars.LobbyClientEvents:joinQueue(bedwarsStore.queueType)
+								if AutoLeaveRandom.Enabled then 
+									local listofmodes = {}
+									for i,v in pairs(bedwars.QueueMeta) do
+										if not v.disabled then table.insert(listofmodes, i) end
+									end
+									bedwars.LobbyClientEvents:joinQueue(listofmodes[math.random(1, #listofmodes)])
+								else
+									bedwars.LobbyClientEvents:joinQueue(bedwarsStore.queueType)
+								end
 							end
 						end
 					end
@@ -2753,6 +2770,11 @@ runFunction(function()
 		Function = function() end,
 		HoverText = "Instead of uninjecting, It will now reconfig vape temporarily to a more legit config.",
 		Default = true
+	})
+	AutoLeaveRandom = AutoLeave.CreateToggle({
+		Name = "Random",
+		Function = function(callback) end,
+		HoverText = "Chooses a random mode"
 	})
 	AutoLeaveStaff2.Object.Visible = false
 end)
