@@ -190,33 +190,37 @@ local function LaunchDirection(start, target, v, g)
 	return CFrame.fromAxisAngle(rotAxis, a) * vec
 end
 
+local physicsUpdate = 1 / 60
+
 local function predictGravity(playerPosition, vel, bulletTime, targetPart, Gravity)
 	local estimatedVelocity = vel.Y
 	local rootSize = (targetPart.Humanoid.HipHeight + (targetPart.RootPart.Size.Y / 2))
 	local velocityCheck = (tick() - targetPart.JumpTick) < 0.2
+	vel = vel * physicsUpdate
 
-	for i = 1, math.floor(bulletTime / 0.016) do 
+	for i = 1, math.round(bulletTime / physicsUpdate) do 
 		if velocityCheck then 
-			estimatedVelocity = estimatedVelocity - (Gravity * 0.016)
+			estimatedVelocity = estimatedVelocity - (Gravity * physicsUpdate)
 		else
 			estimatedVelocity = 0
 			playerPosition = playerPosition + Vector3.new(0, -0.03, 0) -- bw hitreg is so bad that I have to add this LOL
-			rootSize = rootSize -0.03
+			rootSize = rootSize - 0.03
 		end
 
-		local floorDetection = workspace:Raycast(playerPosition, Vector3.new(vel.X * 0.016, (estimatedVelocity * 0.016) - rootSize, vel.Z * 0.016), bedwarsStore.blockRaycast)
+		local floorDetection = workspace:Raycast(playerPosition, Vector3.new(vel.X, (estimatedVelocity * physicsUpdate) - rootSize, vel.Z), bedwarsStore.blockRaycast)
 		if floorDetection then 
 			playerPosition = Vector3.new(playerPosition.X, floorDetection.Position.Y + rootSize, playerPosition.Z)
-			if floorDetection.Instance:FindFirstAncestor("gumdrop_bounce_pad") then 
-				estimatedVelocity = 140 - (Gravity * 0.016)
+			local bouncepad = floorDetection.Instance:FindFirstAncestor("gumdrop_bounce_pad")
+			if bouncepad and bouncepad:GetAttribute("PlacedByUserId") == targetPart.Player.UserId then 
+				estimatedVelocity = 130 - (Gravity * physicsUpdate)
 				velocityCheck = true
 			else
-				estimatedVelocity = targetPart.Humanoid.JumpPower - (Gravity * 0.016)
+				estimatedVelocity = targetPart.Humanoid.JumpPower - (Gravity * physicsUpdate)
 				velocityCheck = targetPart.Jumping
 			end
 		end
 
-		playerPosition = playerPosition + Vector3.new(vel.X * 0.016, velocityCheck and estimatedVelocity * 0.016 or 0, vel.Z * 0.016)
+		playerPosition = playerPosition + Vector3.new(vel.X, velocityCheck and estimatedVelocity * physicsUpdate or 0, vel.Z)
 	end
 
 	return playerPosition, Vector3.new(0, 0, 0)
@@ -1322,7 +1326,7 @@ runFunction(function()
 						end
 					end)
 				end)
-				task.wait(0.016)
+				task.wait(physicsUpdate)
 			end
 		end
 	end	
@@ -3714,7 +3718,7 @@ runFunction(function()
 										continue
 									end
 									local selfpos = selfrootpos + (killaurarange.Value > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
-									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow() + (bedwarsStore.zephyrOrb ~= 0 and 0.2 or (killaurasync.Enabled and 0.13 or -0.11))
+									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow() + (bedwarsStore.zephyrOrb ~= 0 and 0.2 or (killaurasync.Enabled and 0.13 or -0.05))
 									if killaurasync.Enabled then 
 										if animationdelay <= tick() then
 											animationdelay = tick() + 0.19
@@ -9624,7 +9628,7 @@ runFunction(function()
 													return res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
 												end
 												local newlaunchpos = plr.RootPart.CFrame.p
-												local newlaunchvelo = CFrame.lookAt(newlaunchpos, newlaunchpos + (Vector3.new(plr.RootPart.Velocity.X, -1, plr.RootPart.Velocity.Z) * 0.016)).lookVector * bedwars.ProjectileMeta[proj2].launchVelocity
+												local newlaunchvelo = CFrame.lookAt(newlaunchpos, newlaunchpos + (Vector3.new(plr.RootPart.Velocity.X, -1, plr.RootPart.Velocity.Z) * physicsUpdate)).lookVector * bedwars.ProjectileMeta[proj2].launchVelocity
 												launchvelo = table.find(noveloproj, proj2) and Vector3.new(0, -bedwars.ProjectileMeta[proj2].launchVelocity, 0) or newlaunchvelo
 												launchpos1 = newlaunchpos
 												launchpos2 = newlaunchpos
