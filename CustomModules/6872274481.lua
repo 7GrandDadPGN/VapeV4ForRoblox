@@ -3003,7 +3003,10 @@ runFunction(function()
 						local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (FlyMode.Value == "Normal" and FlySpeed.Value or (20 * getSpeedMultiplier()))
 						entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (FlyUp and FlyVerticalSpeed.Value or 0) + (FlyDown and -FlyVerticalSpeed.Value or 0), 0))
 						if FlyMode.Value ~= "Normal" then
-							local speedValue = FlyMode.Value == "Heatseeker" and tick() % 1 < 0.6 and 5 or (20 * getSpeedMultiplier(true)) * 0.4
+							local speedValue = FlySpeed.Value
+							if FlyMode.Value == "Heatseeker" then 
+								speedValue = tick() % 1 < 0.6 and 5 or (20 * getSpeedMultiplier(true)) * 0.4
+							end
 							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20)) * delta
 						end
 					end
@@ -4886,7 +4889,9 @@ runFunction(function()
 						local speedVelocity = entityLibrary.character.Humanoid.MoveDirection * (SpeedMode.Value == "Normal" and speedValue or (20 * getSpeedMultiplier()))
 						entityLibrary.character.HumanoidRootPart.Velocity = antivoidvelo or Vector3.new(speedVelocity.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, speedVelocity.Z)
 						if SpeedMode.Value ~= "Normal" then 
-							speedValue = SpeedMode.Value == "Heatseeker" and tick() % 1 < 0.6 and 5 or (20 * getSpeedMultiplier(true)) * 0.4
+							if SpeedMode.Value == "Heatseeker" then 
+								speedValue = tick() % 1 < 0.6 and 5 or (20 * getSpeedMultiplier(true)) * 0.4
+							end
 							local speedCFrame = entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20) * delta
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
 							local ray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, speedCFrame, raycastparameters)
