@@ -3005,7 +3005,7 @@ runFunction(function()
 						if FlyMode.Value ~= "Normal" then
 							local speedValue = FlySpeed.Value
 							if FlyMode.Value == "Heatseeker" then 
-								speedValue = tick() % 1 < 0.6 and 5 or (20 * getSpeedMultiplier(true)) * 0.4
+								speedValue = tick() % 1 < 0.6 and 5 or (20 * getSpeedMultiplier(true)) / 0.4
 							end
 							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20)) * delta
 						end
@@ -4890,7 +4890,7 @@ runFunction(function()
 						entityLibrary.character.HumanoidRootPart.Velocity = antivoidvelo or Vector3.new(speedVelocity.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, speedVelocity.Z)
 						if SpeedMode.Value ~= "Normal" then 
 							if SpeedMode.Value == "Heatseeker" then 
-								speedValue = tick() % 1 < 0.6 and 5 or (20 * getSpeedMultiplier(true)) * 0.4
+								speedValue = tick() % 1 < 0.6 and 5 or (20 * getSpeedMultiplier(true)) / 0.4
 							end
 							local speedCFrame = entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20) * delta
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
