@@ -3713,6 +3713,9 @@ runFunction(function()
 									if killauratarget.Enabled then
 										table.insert(attackedplayers, plr)
 									end
+									if (workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack) < 0.03 then 
+										continue
+									end
 									local selfpos = selfrootpos + (killaurarange.Value > 14 and (selfrootpos - root.Position).magnitude > 14 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * 4) or Vector3.zero)
 									if killaurasync.Enabled then 
 										if animationdelay <= tick() then
@@ -3722,14 +3725,15 @@ runFunction(function()
 											end
 										end
 									end
+									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
 									killaurarealremote:FireServer({
 										weapon = sword.tool,
 										chargedAttack = {chargeRatio = swordmeta.sword and swordmeta.sword.chargedAttack and swordmeta.sword.chargedAttack.maxChargeTimeSec or 0},
 										entityInstance = plr.Character,
 										validate = {
 											raycast = {
-												cameraPosition = attackValue(gameCamera.CFrame.p), 
-												cursorDirection = attackValue(Ray.new(gameCamera.CFrame.p, root.Position).Direction)
+												cameraPosition = attackValue(root.Position), 
+												cursorDirection = attackValue(Ray.new(root.Position, root.Position).Direction)
 											},
 											targetPosition = attackValue(root.Position),
 											selfPosition = attackValue(selfpos)
@@ -8789,31 +8793,31 @@ runFunction(function()
 						task.spawn(function()
 							local root = entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and entityLibrary.character.HumanoidRootPart
 							if root and tppos2 then 
-								local check = (lplr:GetAttribute("LastTeleported") - lplr:GetAttribute("SpawnTime")) < 1
-								RunLoops:BindToHeartbeat("TPRedirection", function(dt)
-									if root and tppos2 then 
-										local dist = ((check and 700 or 1200) * dt)
-										if (tppos2 - root.CFrame.p).Magnitude > dist then
-											root.CFrame = root.CFrame + (tppos2 - root.CFrame.p).Unit * dist
-											local yes = (tppos2 - root.CFrame.p).Unit * 20
-											root.Velocity = Vector3.new(yes.X, root.Velocity.Y, yes.Z)
-										else
-											root.CFrame = root.CFrame + (tppos2 - root.CFrame.p)
+									local check = (lplr:GetAttribute("LastTeleported") - lplr:GetAttribute("SpawnTime")) < 1
+									RunLoops:BindToHeartbeat("TPRedirection", function(dt)
+										if root and tppos2 then 
+											local dist = ((check and 700 or 1200) * dt)
+											if (tppos2 - root.CFrame.p).Magnitude > dist then
+												root.CFrame = root.CFrame + (tppos2 - root.CFrame.p).Unit * dist
+												local yes = (tppos2 - root.CFrame.p).Unit * 20
+												root.Velocity = Vector3.new(yes.X, root.Velocity.Y, yes.Z)
+											else
+												root.CFrame = root.CFrame + (tppos2 - root.CFrame.p)
+											end
 										end
-									end
-								end)
-								RunLoops:BindToStepped("TPRedirection", function()
-									if entityLibrary.isAlive then 
-										for i,v in pairs(lplr.Character:GetChildren()) do 
-											if v:IsA("BasePart") then v.CanCollide = false end
+									end)
+									RunLoops:BindToStepped("TPRedirection", function()
+										if entityLibrary.isAlive then 
+											for i,v in pairs(lplr.Character:GetChildren()) do 
+												if v:IsA("BasePart") then v.CanCollide = false end
+											end
 										end
-									end
-								end)
-								repeat
-									task.wait()
-								until (tppos2 - root.CFrame.p).Magnitude < 1
-								RunLoops:UnbindFromHeartbeat("TPRedirection")
-								RunLoops:UnbindFromStepped("TPRedirection")
+									end)
+									repeat
+										task.wait()
+									until (tppos2 - root.CFrame.p).Magnitude < 1
+									RunLoops:UnbindFromHeartbeat("TPRedirection")
+									RunLoops:UnbindFromStepped("TPRedirection")
 								warningNotification("TPRedirection", "Teleported.", 5)
 								if TPConnection then 
 									TPConnection:Disconnect() 
