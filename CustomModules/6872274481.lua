@@ -2687,7 +2687,7 @@ runFunction(function()
 									if AutoLeaveRandom.Enabled then 
 										local listofmodes = {}
 										for i,v in pairs(bedwars.QueueMeta) do
-											if not v.disabled then table.insert(listofmodes, i) end
+											if not v.disabled and not v.voiceChatOnly and not v.rankCategory then table.insert(listofmodes, i) end
 										end
 										bedwars.LobbyClientEvents:joinQueue(listofmodes[math.random(1, #listofmodes)])
 									else
@@ -2711,7 +2711,7 @@ runFunction(function()
 								if AutoLeaveRandom.Enabled then 
 									local listofmodes = {}
 									for i,v in pairs(bedwars.QueueMeta) do
-										if not v.disabled then table.insert(listofmodes, i) end
+										if not v.disabled and not v.voiceChatOnly and not v.rankCategory then table.insert(listofmodes, i) end
 									end
 									bedwars.LobbyClientEvents:joinQueue(listofmodes[math.random(1, #listofmodes)])
 								else
@@ -4528,6 +4528,7 @@ runFunction(function()
 		end
 		lastTarget = plr
 		if plr then 
+			if plr.Character:GetAttribute("InfernalShieldRaised") then return end
 			local rayparams = RaycastParams.new()
 			local tab = {lplr.Character}
 			for i,v in pairs(entityLibrary.entityList) do if v.Targetable then table.insert(tab, v.Character) end end
