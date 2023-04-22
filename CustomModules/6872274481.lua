@@ -3433,7 +3433,6 @@ runFunction(function()
 	local killauraaimcircle = {Enabled = false}
 	local killauraaimcirclepart
 	local killauraparticle = {Enabled = false}
-	local killauraprediction = {Enabled = false}
 	local killauraparticlepart
     local Killauranear = false
     local killauraplaying = false
@@ -3662,7 +3661,7 @@ runFunction(function()
 						task.wait()
 						if not Killaura.Enabled then break end
 						vapeTargetInfo.Targets.Killaura = nil
-						local plrs = AllNearPosition(killaurarange.Value, 100, killaurasortmethods[killaurasortmethod.Value], killauraprediction.Enabled)
+						local plrs = AllNearPosition(killaurarange.Value, 100, killaurasortmethods[killaurasortmethod.Value], true)
 						local attackedplayers = {}
 						local firstPlayerNear
 						if #plrs > 0 then
@@ -4016,11 +4015,6 @@ runFunction(function()
         Name = "Synced Animation",
         Function = function() end,
 		HoverText = "Times animation with hit attempt"
-    })
-	killauraprediction = Killaura.CreateToggle({
-        Name = "Prediction",
-        Function = function() end,
-		HoverText = "Experimental Prediction for Player Movement"
     })
 	if WhitelistFunctions:CheckPlayerType(lplr) ~= "DEFAULT" then
 		killauranovape = Killaura.CreateToggle({
@@ -4560,7 +4554,7 @@ runFunction(function()
 			if plr.Character.PrimaryPart:FindFirstChild("rbxassetid://8200754399") then 
 				playergrav = (workspace.Gravity * 0.3)
 			end
-			local shootpos, shootvelo = predictGravity(pos, plr.Character.HumanoidRootPart.Velocity, (pos - offsetStartPos).Magnitude / launchvelo, plr, playergrav)
+			local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / launchvelo, plr, playergrav)
 			if projmeta.projectile == "telepearl" then
 				shootpos = pos
 				shootvelo = Vector3.zero
@@ -9637,21 +9631,39 @@ runFunction(function()
 												if not playerattackable then 
 													return res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
 												end
-												local newlaunchpos = plr.RootPart.CFrame.p
-												local newlaunchvelo = CFrame.lookAt(newlaunchpos, newlaunchpos + (Vector3.new(plr.RootPart.Velocity.X, -1, plr.RootPart.Velocity.Z) * physicsUpdate)).lookVector * bedwars.ProjectileMeta[proj2].launchVelocity
-												launchvelo = table.find(noveloproj, proj2) and Vector3.new(0, -bedwars.ProjectileMeta[proj2].launchVelocity, 0) or newlaunchvelo
-												launchpos1 = newlaunchpos
-												launchpos2 = newlaunchpos
-												tab1.drawDurationSeconds = 1
-											end
-											local called = res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...):andThen(function(shoot)
-												if shoot then 
-													warningNotification("ProjectileExploit", "allowed server", 5)
-												else
-													warningNotification("ProjectileExploit", "failed server", 5)
+
+												local offsetStartPos = plr.RootPart.CFrame.p - plr.RootPart.CFrame.lookVector
+												local pos = plr.RootPart.Position
+												local playergrav = workspace.Gravity
+												local balloons = plr.Character:GetAttribute("InflatedBalloons")
+												if balloons and balloons > 0 then 
+													playergrav = (workspace.Gravity * (1 - ((balloons >= 4 and 1.2 or balloons >= 3 and 1 or 0.975))))
 												end
-											end)
-											return called
+												if plr.Character.PrimaryPart:FindFirstChild("rbxassetid://8200754399") then 
+													playergrav = (workspace.Gravity * 0.3)
+												end
+												local newLaunchVelo = bedwars.ProjectileMeta[proj2].launchVelocity
+												local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / newLaunchVelo, plr, playergrav)
+												if proj2 == "telepearl" then
+													shootpos = pos
+													shootvelo = Vector3.zero
+												end
+												local newlook = CFrame.new(offsetStartPos, shootpos) * CFrame.new(Vector3.new(-bedwars.BowConstantsTable.RelX, -bedwars.BowConstantsTable.RelY, -bedwars.BowConstantsTable.RelZ))
+												shootpos = newlook.p + (newlook.lookVector * (offsetStartPos - shootpos).magnitude)
+												local calculated = LaunchDirection(offsetStartPos, shootpos, newLaunchVelo, workspace.Gravity, false)
+												if calculated then 
+													launchvelo = calculated
+													launchpos1 = offsetStartPos
+													launchpos2 = offsetStartPos
+													tab1.drawDurationSeconds = 1
+													repeat
+														task.wait()
+														if bedwars.RuntimeLib.await(res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, workspace:GetServerTimeNow() - 0.045)) then break end
+													until false
+												end
+											else
+												return res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
+											end
 										end
 									})
 								end
