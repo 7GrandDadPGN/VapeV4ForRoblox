@@ -28,18 +28,21 @@ local function displayErrorPopup(text, funclist)
 	prompt._hideErrorCode = true
 	local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 	prompt:setErrorTitle("Vape")
-	local funcs = {}
-	local num = 0
-	for i,v in pairs(funclist) do 
-		num = num + 1
-		table.insert(funcs, {
-			Text = i,
-			Callback = function() 
-				prompt:_close() 
-				v()
-			end,
-			Primary = num == #funclist
-		})
+	local funcs
+	if funclist then 
+		funcs = {}
+		local num = 0
+		for i,v in pairs(funclist) do 
+			num = num + 1
+			table.insert(funcs, {
+				Text = i,
+				Callback = function() 
+					prompt:_close() 
+					v()
+				end,
+				Primary = num == #funclist
+			})
+		end
 	end
 	prompt:updateButtons(funcs or {{
 		Text = "OK",
