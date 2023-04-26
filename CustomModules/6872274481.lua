@@ -25,6 +25,7 @@ local bedwars = {}
 local bedwarsStore = {
 	blocks = {},
 	blockPlacer = {},
+	blockPlace = tick(),
 	blockRaycast = RaycastParams.new(),
 	equippedKit = "none",
 	inventories = {},
@@ -1209,6 +1210,7 @@ runFunction(function()
 		HangGliderController = KnitClient.Controllers.HangGliderController,
 		HighlightController = KnitClient.Controllers.EntityHighlightController,
 		ItemTable = debug.getupvalue(require(replicatedStorageService.TS.item["item-meta"]).getItemMeta, 1),
+		InfernalShieldController = KnitClient.Controllers.InfernalShieldController,
 		KatanaController = KnitClient.Controllers.DaoController,
 		KillEffectMeta = require(replicatedStorageService.TS.locker["kill-effect"]["kill-effect-meta"]).KillEffectMeta,
 		KillEffectController = KnitClient.Controllers.KillEffectController,
@@ -1280,6 +1282,7 @@ runFunction(function()
 			local blockdmg = 0
 			if block and block.Parent ~= nil then
 				if ((entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - (blockpos * 3)).magnitude > 30 then return end
+				bedwarsStore.blockPlace = tick() + 0.5
 				switchToAndUseTool(block)
 				blockhealthbarpos = {
 					blockPosition = blockpos
@@ -3180,6 +3183,7 @@ end)
 
 runFunction(function()
 	local InfiniteFly = {Enabled = false}
+	local InfiniteFlySpeed = {Value = 23}
 	local InfiniteFlyVerticalSpeed = {Value = 40}
 	local InfiniteFlyVertical = {Enabled = true}
 	local InfiniteFlyUp = false
@@ -3200,6 +3204,7 @@ runFunction(function()
 		if bodyvelo then bodyvelo:Destroy() end
 		RunLoops:UnbindFromHeartbeat("InfiniteFlyOff")
 		disabledproper = true
+		if not oldcloneroot or not oldcloneroot.Parent then return end
 		lplr.Character.Parent = game
 		oldcloneroot.Parent = lplr.Character
 		lplr.Character.PrimaryPart = oldcloneroot
@@ -3305,6 +3310,10 @@ runFunction(function()
 					end
 					if entityLibrary.isAlive then
 						if isnetworkowner(oldcloneroot) then 
+							local playerMass = (entityLibrary.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
+							local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (20 * getSpeedMultiplier())
+							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlySpeed.Value - 20)) * delta
+							entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (InfiniteFlyUp and InfiniteFlyVerticalSpeed.Value or 0) + (InfiniteFlyDown and -InfiniteFlyVerticalSpeed.Value or 0), 0))
 							local speedCFrame = {oldcloneroot.CFrame:GetComponents()}
 							speedCFrame[1] = clone.CFrame.X
 							if speedCFrame[2] < 1000 or (not goneup) then 
@@ -3316,15 +3325,8 @@ runFunction(function()
 							oldcloneroot.CFrame = CFrame.new(unpack(speedCFrame))
 							oldcloneroot.Velocity = Vector3.new(clone.Velocity.X, oldcloneroot.Velocity.Y, clone.Velocity.Z)
 						else
-							local speedCFrame2 = {oldcloneroot.CFrame:GetComponents()}
-							speedCFrame2[2] = clone.CFrame.Y
-							clone.CFrame = CFrame.new(unpack(speedCFrame2))
+							InfiniteFly.ToggleButton(false)
 						end
-
-						local playerMass = (entityLibrary.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
-						local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (20 * getSpeedMultiplier())
-						
-						entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (InfiniteFlyUp and InfiniteFlyVerticalSpeed.Value or 0) + (InfiniteFlyDown and -InfiniteFlyVerticalSpeed.Value or 0), 0))
 					end
 				end)
 			else
@@ -3370,17 +3372,7 @@ runFunction(function()
 						warningNotification("InfiniteFly", "Waiting 1.5s to not flag", 3)
 						task.delay(1.5, disablefunc)
 					else
-						warningNotification("InfiniteFly", "Waiting until not flagged", 10)
-						task.spawn(function()
-							repeat task.wait() until oldcloneroot and isnetworkowner(oldcloneroot) or oldcloneroot == nil
-							local ray = workspace:Raycast(Vector3.new(oldcloneroot.Position.X, clone.CFrame.p.Y, oldcloneroot.Position.Z), Vector3.new(0, -1000, 0), bedwarsStore.blockRaycast)
-							oldcloneroot.Velocity = Vector3.new(0, -1, 0)
-							oldcloneroot.CFrame = CFrame.new(oldcloneroot.Position.X, ray and ray.Position.Y + (entityLibrary.character.Humanoid.HipHeight + (oldcloneroot.Size.Y / 2)) or clone.CFrame.p.Y, oldcloneroot.Position.Z)
-							entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
-							warningNotification("InfiniteFly", "Waiting 1.5s to not flag", 3)
-							task.wait(1.5)
-							disablefunc()
-						end)
+						disablefunc()
 					end
 				end
 				InfiniteFlyUp = false
@@ -3388,6 +3380,13 @@ runFunction(function()
 			end
 		end,
 		HoverText = "Makes you go zoom"
+	})
+	InfiniteFlySpeed = InfiniteFly.CreateSlider({
+		Name = "Speed",
+		Min = 1,
+		Max = 23,
+		Function = function(val) end, 
+		Default = 23
 	})
 	InfiniteFlyVerticalSpeed = InfiniteFly.CreateSlider({
 		Name = "Vertical Speed",
@@ -3415,6 +3414,7 @@ runFunction(function()
     local killaurarange = {Value = 14}
     local killauraangle = {Value = 360}
     local killauratargets = {Value = 10}
+	local killauraautoblock = {Enabled = false}
     local killauramouse = {Enabled = false}
     local killauracframe = {Enabled = false}
     local killauragui = {Enabled = false}
@@ -3555,6 +3555,22 @@ runFunction(function()
 		return sword, swordmeta
 	end
 
+	local function autoBlockLoop()
+		if not killauraautoblock.Enabled or not Killaura.Enabled then return end
+		repeat
+			if bedwarsStore.blockPlace < tick() and entityLibrary.isAlive then
+				local shield = getItem("infernal_shield")
+				if shield then 
+					switchItem(shield.tool)
+					if not lplr.Character:GetAttribute("InfernalShieldRaised") then
+						bedwars.InfernalShieldController:raiseShield()
+					end
+				end
+			end
+			task.wait()
+		until (not Killaura.Enabled) or (not killauraautoblock.Enabled)
+	end
+
     Killaura = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
         Name = "Killaura",
         Function = function(callback)
@@ -3655,13 +3671,15 @@ runFunction(function()
 						end
 					end
 				end)
-
+				if killauraautoblock.Enabled then 
+					task.spawn(autoBlockLoop)
+				end
                 task.spawn(function()
 					repeat
 						task.wait()
 						if not Killaura.Enabled then break end
 						vapeTargetInfo.Targets.Killaura = nil
-						local plrs = AllNearPosition(killaurarange.Value, 100, killaurasortmethods[killaurasortmethod.Value], true)
+						local plrs = AllNearPosition(killaurarange.Value, 1, killaurasortmethods[killaurasortmethod.Value], true)
 						local attackedplayers = {}
 						local firstPlayerNear
 						if #plrs > 0 then
@@ -3832,6 +3850,50 @@ runFunction(function()
         List = {"Normal", "Slow", "New", "Vertical Spin", "Exhibition", "Exhibition Old"},
         Function = function(val) end
     })
+	local oldviewmodel
+	local oldraise
+	local oldeffect
+	killauraautoblock = Killaura.CreateToggle({
+		Name = "AutoBlock",
+		Function = function(callback)
+			if callback then 
+				oldviewmodel = bedwars.ViewmodelController.setHeldItem
+				bedwars.ViewmodelController.setHeldItem = function(self, newItem, ...)
+					if newItem and newItem.Name == "infernal_shield" then 
+						return
+					end
+					return oldviewmodel(self, newItem)
+				end
+				oldraise = bedwars.InfernalShieldController.raiseShield
+				bedwars.InfernalShieldController.raiseShield = function(self)
+					if os.clock() - self.lastShieldRaised < 0.4 then
+						return
+					end
+					self.lastShieldRaised = os.clock()
+					self.infernalShieldState:SendToServer({raised = true})
+					self.raisedMaid:GiveTask(function()
+						self.infernalShieldState:SendToServer({raised = false})
+					end)
+				end
+				oldeffect = bedwars.InfernalShieldController.playEffect
+				bedwars.InfernalShieldController.playEffect = function()
+					return
+				end
+				if bedwars.ViewmodelController.heldItem and bedwars.ViewmodelController.heldItem.Name == "infernal_shield" then 
+					local sword, swordmeta = getSword()
+					if sword then 
+						bedwars.ViewmodelController:setHeldItem(sword.tool)
+					end
+				end
+				task.spawn(autoBlockLoop)
+			else
+				bedwars.ViewmodelController.setHeldItem = oldviewmodel
+				bedwars.InfernalShieldController.raiseShield = oldraise
+				bedwars.InfernalShieldController.playEffect = oldeffect
+			end
+		end,
+		Default = true
+	})
     killauramouse = Killaura.CreateToggle({
         Name = "Require mouse down",
         Function = function() end,
