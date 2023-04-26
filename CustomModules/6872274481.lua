@@ -588,6 +588,28 @@ local function EntityNearPosition(distance, overridepos)
                 end
 			end
 		end
+		for i, v in pairs(collectionService:GetTagged("DiamondGuardian")) do
+			if v.PrimaryPart then
+				local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
+				if overridepos and mag > distance then 
+					mag = (overridepos - v2.PrimaryPart.Position).magnitude
+				end
+                if mag <= closestMagnitude then
+					closestEntity, closestMagnitude = {Player = {Name = "DiamondGuardian", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart}, mag
+                end
+			end
+		end
+		for i, v in pairs(collectionService:GetTagged("GolemBoss")) do
+			if v.PrimaryPart then
+				local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
+				if overridepos and mag > distance then 
+					mag = (overridepos - v2.PrimaryPart.Position).magnitude
+				end
+                if mag <= closestMagnitude then
+					closestEntity, closestMagnitude = {Player = {Name = "GolemBoss", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart}, mag
+                end
+			end
+		end
 		for i, v in pairs(collectionService:GetTagged("Drone")) do
 			if v.PrimaryPart and tonumber(v:GetAttribute("PlayerUserId")) ~= lplr.UserId then
 				local droneplr = playersService:GetPlayerByUserId(v:GetAttribute("PlayerUserId"))
@@ -650,6 +672,28 @@ local function AllNearPosition(distance, amount, sortfunction, prediction)
                 if mag <= distance then
 					if v:GetAttribute("Team") == lplr:GetAttribute("Team") then continue end
                     table.insert(sortedentities, {Player = {Name = v.Name, UserId = (v.Name == "Duck" and 2020831224 or 1443379645), GetAttribute = function() return "none" end}, Character = v, RootPart = v.PrimaryPart, Humanoid = v.Humanoid})
+                end
+			end
+		end
+		for i, v in pairs(collectionService:GetTagged("DiamondGuardian")) do
+			if v.PrimaryPart then
+				local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
+				if prediction and mag > distance then
+					mag = (entityLibrary.LocalPosition - v.PrimaryPart.Position).magnitude
+				end
+                if mag <= distance then
+                    table.insert(sortedentities, {Player = {Name = "DiamondGuardian", UserId = 1443379645, GetAttribute = function() return "none" end}, Character = v, RootPart = v.PrimaryPart, Humanoid = v.Humanoid})
+                end
+			end
+		end
+		for i, v in pairs(collectionService:GetTagged("GolemBoss")) do
+			if v.PrimaryPart then
+				local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
+				if prediction and mag > distance then
+					mag = (entityLibrary.LocalPosition - v.PrimaryPart.Position).magnitude
+				end
+                if mag <= distance then
+                    table.insert(sortedentities, {Player = {Name = "GolemBoss", UserId = 1443379645, GetAttribute = function() return "none" end}, Character = v, RootPart = v.PrimaryPart, Humanoid = v.Humanoid})
                 end
 			end
 		end
@@ -3183,6 +3227,7 @@ end)
 
 runFunction(function()
 	local InfiniteFly = {Enabled = false}
+	local InfiniteFlyMode = {Value = "CFrame"}
 	local InfiniteFlySpeed = {Value = 23}
 	local InfiniteFlyVerticalSpeed = {Value = 40}
 	local InfiniteFlyVertical = {Enabled = true}
@@ -3311,9 +3356,17 @@ runFunction(function()
 					if entityLibrary.isAlive then
 						if isnetworkowner(oldcloneroot) then 
 							local playerMass = (entityLibrary.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
-							local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (20 * getSpeedMultiplier())
-							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlySpeed.Value - 20)) * delta
+							
+							local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlyMode.Value == "Normal" and InfiniteFlySpeed.Value or (20 * getSpeedMultiplier()))
 							entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (InfiniteFlyUp and InfiniteFlyVerticalSpeed.Value or 0) + (InfiniteFlyDown and -InfiniteFlyVerticalSpeed.Value or 0), 0))
+							if InfiniteFlyMode.Value ~= "Normal" then
+								local speedValue = InfiniteFlySpeed.Value
+								if InfiniteFlyMode.Value == "Heatseeker" then 
+									speedValue = tick() % 1 < 0.6 and 5 or (20 * getSpeedMultiplier(true)) / 0.4
+								end
+								entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20)) * delta
+							end
+
 							local speedCFrame = {oldcloneroot.CFrame:GetComponents()}
 							speedCFrame[1] = clone.CFrame.X
 							if speedCFrame[2] < 1000 or (not goneup) then 
@@ -3380,6 +3433,11 @@ runFunction(function()
 			end
 		end,
 		HoverText = "Makes you go zoom"
+	})
+	InfiniteFlyMode = InfiniteFly.CreateDropdown({
+		Name = "Mode",
+		List = {"CFrame", "Normal", "Heatseeker"},
+		Function = function() end
 	})
 	InfiniteFlySpeed = InfiniteFly.CreateSlider({
 		Name = "Speed",
@@ -4582,12 +4640,6 @@ runFunction(function()
 
 	local function shootProjectile(item, ammotypething)
 		local plr = EntityNearPosition(ProjectileAuraRange.Value)
-		if queueType == "winter_event" and entityLibrary.isAlive then 
-			local boss = workspace:FindFirstChild("WinterEventBoss")
-			if boss and (boss.PrimaryPart.Position - entityLibrary.character.HumanoidRootPart.Position).Magnitude < 300 then 
-				plr = {RootPart = boss.PrimaryPart, Player = {Name = "", UserId = 99999999}, Character = workspace}
-			end
-		end
 		lastTarget = plr
 		if plr then 
 			if plr.Character:GetAttribute("InfernalShieldRaised") then return end
