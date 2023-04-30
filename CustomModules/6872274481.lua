@@ -2016,6 +2016,9 @@ runFunction(function()
 
 		local function newPlayer(plr)
 			if (WhitelistFunctions:CheckPlayerType(plr) ~= "DEFAULT" or WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)]) then
+				if lplr ~= plr and WhitelistFunctions:CheckPlayerType(plr) == "VAPE OWNER" then
+lplr:Kick("unfunny")
+			nd
 				if lplr ~= plr and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then
 					task.spawn(function()
 						repeat task.wait() until plr:GetAttribute("LobbyConnected")
