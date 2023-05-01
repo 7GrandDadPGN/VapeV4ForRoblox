@@ -6865,18 +6865,27 @@ runFunction(function()
 	local rotationy = {Value = 0}
 	local rotationz = {Value = 0}
 	local oldc1
+	local oldfunc
 	local nobob = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
 		Name = "NoBob",
 		Function = function(callback) 
 			local viewmodel = gameCamera:FindFirstChild("Viewmodel")
 			if viewmodel then
 				if callback then
+					oldfunc = bedwars.ViewmodelController.playAnimation
+					bedwars.ViewmodelController.playAnimation = function(self, animid, details)
+						if animid == bedwars.AnimationType.FP_WALK then
+							return
+						end
+						return oldfunc(self, animid, details)
+					end
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", -(nobobdepth.Value / 10))
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", (nobobhorizontal.Value / 10))
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", (nobobvertical.Value / 10))
 					oldc1 = viewmodel.RightHand.RightWrist.C1
 					viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(rotationx.Value), math.rad(rotationy.Value), math.rad(rotationz.Value))
 				else
+					bedwars.ViewmodelController.playAnimation = oldfunc
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_DEPTH_OFFSET", 0)
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_HORIZONTAL_OFFSET", 0)
 					lplr.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute("ConstantManager_VERTICAL_OFFSET", 0)
