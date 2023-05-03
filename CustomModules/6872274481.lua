@@ -3411,7 +3411,7 @@ runFunction(function()
 							FlyOverlap.FilterDescendantsInstances = {lplr.Character, gameCamera}
 							local allowed = true
 							for i,v in pairs(workspace:GetPartBoundsInRadius(newcf.p, 2, FlyOverlap)) do 
-								if (v.Position.Y + (v.Size.Y / 2)) > (newcf.p.Y + 0.1) then 
+								if (v.Position.Y + (v.Size.Y / 2)) > (newcf.p.Y + 0.5) then 
 									allowed = false
 									break
 								end
