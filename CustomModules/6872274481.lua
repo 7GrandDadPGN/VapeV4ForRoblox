@@ -9830,6 +9830,7 @@ end)
 runFunction(function()
 	local SongBeats = {Enabled = false}
 	local SongBeatsList = {ObjectList = {}}
+	local SongBeatsIntensity = {Value = 5}
 	local SongTween
 	local SongAudio
 
@@ -9850,7 +9851,7 @@ runFunction(function()
 			repeat task.wait() until SongAudio.IsLoaded or (not SongBeats.Enabled) 
 			if (not SongBeats.Enabled) then break end
 			local newfov = math.min(bedwars.FovController:getFOV() * (bedwars.SprintController.sprinting and 1.1 or 1), 120)
-			gameCamera.FieldOfView = newfov - 5
+			gameCamera.FieldOfView = newfov - SongBeatsIntensity.Value
 			if SongTween then SongTween:Cancel() end
 			SongTween = game:GetService("TweenService"):Create(gameCamera, TweenInfo.new(0.2), {FieldOfView = newfov})
 			SongTween:Play()
@@ -9888,6 +9889,13 @@ runFunction(function()
 	SongBeatsList = SongBeats.CreateTextList({
 		Name = "SongList",
 		TempText = "songpath:bpm"
+	})
+	SongBeatsIntensity = SongBeats.CreateSlider({
+		Name = "Intensity",
+		Function = function() end,
+		Min = 1,
+		Max = 10,
+		Default = 5
 	})
 end)
 
