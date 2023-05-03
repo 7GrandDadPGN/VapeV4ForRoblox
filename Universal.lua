@@ -159,17 +159,17 @@ do
 		repeat
 			task.wait()
 			if entityLibrary.isAlive then
-				table.insert(postable, {Time = tick(), Position = entityLibrary.character.HumanoidRootPart.Position})
+				table.insert(postable, {Time = tick() + 0.1, Position = entityLibrary.character.HumanoidRootPart.Position})
 				if #postable > 100 then 
 					table.remove(postable, 1)
 				end
 				local closestmag = 9e9
 				local closestpos = entityLibrary.character.HumanoidRootPart.Position
 				for i, v in pairs(postable) do 
-					local mag = math.abs(tick() - (v.Time + 0.1))
+					local mag = math.abs(tick() - v.Time)
 					if mag < closestmag then
 						closestmag = mag
-						closestpos = (postable[i - 1] or v).Position:lerp(v.Position, 0.85)
+						closestpos = v.Position
 					end
 				end
 				entityLibrary.LocalPosition = closestpos
@@ -323,14 +323,16 @@ do
 				end
 			end
 			WhitelistFunctions.WhitelistTable = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/"..commit.."/whitelist2.json", true))
-			local yeahok = 'playerattackable = (not tab) or (not (type(tab) == "table" and tab.invulnerable or true)) '
 			for i, v in pairs(WhitelistFunctions.WhitelistTable) do 
 				local orig = v
-				local origamount = #v
+				local origamount = 0
+				for i2, v2 in pairs(v) do origamount = origamount + 1 end
 				local prompt = false
 				task.spawn(function()
 					repeat
-						if WhitelistFunctions.WhitelistTable[i] ~= orig or #WhitelistFunctions.WhitelistTable[i] ~= origamount or #yeahok ~= 90 then 
+						local newamount = 0
+						for i2, v2 in pairs(WhitelistFunctions.WhitelistTable[i]) do newamount = newamount + 1 end
+						if WhitelistFunctions.WhitelistTable[i] ~= orig or newamount ~= origamount then 
 							if not prompt then 
 								prompt = true
 								local bkg = Instance.new("Frame")
@@ -808,7 +810,7 @@ runFunction(function()
 			if not plr then return end
 			targetPart = plr[targetPart]
 			if SilentAimWallbang.Enabled then
-				return {targetPart, targetPart.Position, (targetPart.Position - origin), targetPart.Material}
+				return {targetPart, targetPart.Position, Vector3.zero, targetPart.Material}
 			end
 			SilentAimShot = plr
 			SlientAimShotTick = tick() + 1
@@ -1194,7 +1196,7 @@ runFunction(function()
 			for i,v in pairs(entityLibrary.entityList) do 
 				if v.Targetable and v.Character then
 					if ray.Instance:IsDescendantOf(v.Character) then
-						return targetCheck(v) and v
+						return isVulnerable(v) and v
 					end
 				end
 			end
@@ -5633,6 +5635,71 @@ runFunction(function()
 				chairhighlight.OutlineColor = Color3.fromHSV(h, s, v)
 			end
 		end
+	})
+end)
+
+runFunction(function()
+	local SongBeats = {Enabled = false}
+	local SongBeatsList = {ObjectList = {}}
+	local SongTween
+	local SongAudio
+	local SongFOV
+
+	local function PlaySong(arg)
+		local args = arg:split(":")
+		local song = isfile(args[1]) and getcustomasset(args[1])
+		if not song then 
+			warningNotification("SongBeats", "missing music file "..args[1], 5)
+			SongBeats.ToggleButton(false)
+			return
+		end
+		local bpm = 1 / (args[2] / 60)
+		SongAudio = Instance.new("Sound")
+		SongAudio.SoundId = song
+		SongAudio.Parent = workspace
+		SongAudio:Play()
+		repeat
+			repeat task.wait() until SongAudio.IsLoaded or (not SongBeats.Enabled) 
+			if (not SongBeats.Enabled) then break end
+			gameCamera.FieldOfView = SongFOV - 5
+			if SongTween then SongTween:Cancel() end
+			SongTween = game:GetService("TweenService"):Create(gameCamera, TweenInfo.new(0.2), {FieldOfView = SongFOV})
+			SongTween:Play()
+			task.wait(bpm)
+		until (not SongBeats.Enabled) or SongAudio.IsPaused
+	end
+
+	SongBeats = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
+		Name = "SongBeats",
+		Function = function(callback)
+			if callback then 
+				SongFOV = gameCamera.FieldOfView
+				task.spawn(function()
+					if #SongBeatsList.ObjectList <= 0 then 
+						warningNotification("SongBeats", "no songs", 5)
+						SongBeats.ToggleButton(false)
+						return
+					end
+					local lastChosen
+					repeat
+						local newSong
+						repeat newSong = SongBeatsList.ObjectList[Random.new():NextInteger(1, #SongBeatsList.ObjectList)] task.wait() until newSong ~= lastChosen or #SongBeatsList.ObjectList <= 1
+						lastChosen = newSong
+						PlaySong(newSong)
+						if not SongBeats.Enabled then break end
+						task.wait(2)
+					until (not SongBeats.Enabled)
+				end)
+			else
+				if SongAudio then SongAudio:Destroy() end
+				if SongTween then SongTween:Cancel() end
+				gameCamera.FieldOfView = SongFOV
+			end
+		end
+	})
+	SongBeatsList = SongBeats.CreateTextList({
+		Name = "SongList",
+		TempText = "songpath:bpm"
 	})
 end)
 
