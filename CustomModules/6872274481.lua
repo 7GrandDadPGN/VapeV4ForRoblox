@@ -1210,6 +1210,7 @@ runFunction(function()
 		ChestController = KnitClient.Controllers.ChestController,
 		CannonHandController = KnitClient.Controllers.CannonHandController,
 		CannonAimRemote = dumpRemote(debug.getconstants(debug.getproto(KnitClient.Controllers.CannonController.startAiming, 5))),
+		CannonLaunchRemote = dumpRemote(debug.getconstants(KnitClient.Controllers.CannonHandController.launchSelf)),
 		ClickHold = require(replicatedStorageService["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.ui.lib.util["click-hold"]).ClickHold,
 		ClientHandler = Client,
 		ClientHandlerDamageBlock = require(replicatedStorageService["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.shared.remotes).BlockEngineRemotes.Client,
@@ -2888,6 +2889,7 @@ runFunction(function()
 	})
 end)
 
+local autobankballoon = false
 runFunction(function()
 	local Fly = {Enabled = false}
 	local FlyMode = {Value = "Normal"}
@@ -2954,7 +2956,7 @@ runFunction(function()
 				end))
 				table.insert(Fly.Connections, vapeEvents.AutoBankBalloon.Event:Connect(function()
 					repeat task.wait() until getItem("balloon")
-					buyballoons()
+					inflateBalloon()
 				end))
 
 				local balloons
@@ -4254,13 +4256,17 @@ runFunction(function()
 							end)
 						end
 						task.delay(0.4, function()
-							bedwars.CannonHandController:launchSelf(block)
-							task.delay(0.1, function()
-								damagetimer = LongJumpSpeed.Value * 5
-								damagetimertick = tick() + 2.5
-								directionvec = Vector3.new(vec.X, 0, vec.Z).Unit
-							end)
-							bedwars.breakBlock(block.Position, true, getBestBreakSide(block.Position), true, true)
+							for i = 1, 3 do 
+								local call = bedwars.ClientHandler:Get(bedwars.CannonLaunchRemote):CallServer({cannonBlockPos = bedwars.BlockController:getBlockPosition(block.Position)})
+								if call then
+									bedwars.breakBlock(block.Position, true, getBestBreakSide(block.Position), true, true)
+									damagetimer = LongJumpSpeed.Value * 6
+									damagetimertick = tick() + 2.5
+									directionvec = Vector3.new(vec.X, 0, vec.Z).Unit
+									break
+								end
+								task.wait(0.1)
+							end
 						end)
 					end
 				end)	
@@ -7080,7 +7086,6 @@ runFunction(function()
 end)
 
 local autobankapple = false
-local autobankballoon = false
 runFunction(function()
 	local AutoBuy = {Enabled = false}
 	local AutoBuyArmor = {Enabled = false}
