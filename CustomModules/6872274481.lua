@@ -9849,7 +9849,7 @@ runFunction(function()
 		repeat
 			repeat task.wait() until SongAudio.IsLoaded or (not SongBeats.Enabled) 
 			if (not SongBeats.Enabled) then break end
-			local newfov = bedwars.FovController:getFOV() * (bedwars.SprintController.sprinting and 1.1 or 1)
+			local newfov = math.min(bedwars.FovController:getFOV() * (bedwars.SprintController.sprinting and 1.1 or 1), 120)
 			gameCamera.FieldOfView = newfov - 5
 			if SongTween then SongTween:Cancel() end
 			SongTween = game:GetService("TweenService"):Create(gameCamera, TweenInfo.new(0.2), {FieldOfView = newfov})
