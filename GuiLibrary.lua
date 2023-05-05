@@ -69,7 +69,7 @@ if shared.VapeExecuted then
 		["vape/assets/VapeLogo2.png"] = "rbxassetid://13350876307",
 		["vape/assets/VapeLogo4.png"] = "rbxassetid://13350877564"
 	}
-	local getcustomasset = getsynasset or getcustomasset or function(location) print(location, vapeAssetTable[location], "yes") return vapeAssetTable[location] end
+	local getcustomasset = function(location) print(location, vapeAssetTable[location], "yes") return vapeAssetTable[location] end
 	local requestfunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request or function() end 
 	local isfile = isfile or function(file)
 		local suc, res = pcall(function() return readfile(file) end)
