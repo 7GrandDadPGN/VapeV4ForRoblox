@@ -83,7 +83,7 @@ local vapeAssetTable = {
 	["vape/assets/VapeLogo2.png"] = "rbxassetid://13350876307",
 	["vape/assets/VapeLogo4.png"] = "rbxassetid://13350877564"
 }
-local getcustomasset = getsynasset or getcustomasset or function(location) return vapeAssetTable[location] end
+local getcustomasset = function(location) return vapeAssetTable[location] end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local delfile = delfile or function(file) writefile(file, "") end
 
