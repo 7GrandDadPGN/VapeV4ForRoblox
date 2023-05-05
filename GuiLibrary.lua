@@ -6450,6 +6450,24 @@ if shared.VapeExecuted then
 	local holdingalt = false
 	local uninjected = false
 
+	if inputService.TouchEnabled then 
+		local button = Instance.new("TextButton")
+		button.Position = UDim2.new(1, -20, 0, 0)
+		button.Text = "Vape"
+		button.Size = UDim2.new(0, 20, 0, 20)
+		button.BorderSizePixel = 0
+		button.BackgroundTransparency = 0.5
+		button.Parent = GuiLibrary.MainGui
+		button.MouseButton1Click:Connect(function()
+			clickgui.Visible = not clickgui.Visible
+			inputService.OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
+			game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)	
+			if OnlineProfilesBigFrame.Visible then
+				OnlineProfilesBigFrame.Visible = false
+			end
+		end)
+	end
+
 	GuiLibrary["KeyInputHandler"] = inputService.InputBegan:Connect(function(input1)
 		if inputService:GetFocusedTextBox() == nil then
 			if input1.KeyCode == Enum.KeyCode[GuiLibrary["GUIKeybind"]] and GuiLibrary["KeybindCaptured"] == false then
