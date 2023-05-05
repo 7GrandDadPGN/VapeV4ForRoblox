@@ -100,6 +100,11 @@ if shared.VapeExecuted then
 	local translations = shared.VapeTranslation or {}
 	local translatedlogo = false
 
+	if identifyexecutor and identifyexecutor() == "ScriptWare iOS" then 
+		--until getcustomasset is fixed I have to do this
+		getcustomasset = function(location) return vapeAssetTable[location] or "" end
+	end
+
 	coroutine.resume(coroutine.create(function()
 		repeat
 			task.wait(0.01)
