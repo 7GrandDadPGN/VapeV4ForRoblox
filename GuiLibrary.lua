@@ -100,9 +100,8 @@ if shared.VapeExecuted then
 	local translations = shared.VapeTranslation or {}
 	local translatedlogo = false
 
-	if identifyexecutor and identifyexecutor() == "ScriptWare iOS" then 
+	if identifyexecutor and identifyexecutor():find("iOS") then 
 		--until getcustomasset is fixed I have to do this
-		print("bro")
 		getcustomasset = function(location) return vapeAssetTable[location] or "" end
 	end
 
