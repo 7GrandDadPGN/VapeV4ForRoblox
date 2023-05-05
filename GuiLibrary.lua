@@ -102,6 +102,7 @@ if shared.VapeExecuted then
 
 	if identifyexecutor and identifyexecutor() == "ScriptWare iOS" then 
 		--until getcustomasset is fixed I have to do this
+		print("bro")
 		getcustomasset = function(location) return vapeAssetTable[location] or "" end
 	end
 
