@@ -100,7 +100,7 @@ if shared.VapeExecuted then
 	local translations = shared.VapeTranslation or {}
 	local translatedlogo = false
 
-	if identifyexecutor and identifyexecutor():find("iOS") then 
+	if identifyexecutor and ({identifyexecutor()})[2] == "iOS" then 
 		--until getcustomasset is fixed I have to do this
 		getcustomasset = function(location) return vapeAssetTable[location] or "" end
 	end

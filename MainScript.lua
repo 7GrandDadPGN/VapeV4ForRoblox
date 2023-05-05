@@ -172,7 +172,7 @@ end
 assert(not shared.VapeExecuted, "Vape Already Injected")
 shared.VapeExecuted = true
 
-if identifyexecutor and identifyexecutor():find("iOS") then 
+if identifyexecutor and ({identifyexecutor()})[2] == "iOS" then 
 	--until getcustomasset is fixed I have to do this
 	getcustomasset = function(location) return vapeAssetTable[location] or "" end
 end
