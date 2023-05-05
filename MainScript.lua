@@ -172,6 +172,12 @@ end
 assert(not shared.VapeExecuted, "Vape Already Injected")
 shared.VapeExecuted = true
 
+if identifyexecutor and identifyexecutor() == "ScriptWare iOS" then 
+	--until getcustomasset is fixed I have to do this
+	getgenv().getcustomasset = nil
+	getgenv().getsynasset = nil
+end
+
 for i,v in pairs({baseDirectory:gsub("/", ""), "vape", "vape/Libraries", "vape/CustomModules", "vape/Profiles", baseDirectory.."Profiles", "vape/assets"}) do 
 	if not isfolder(v) then makefolder(v) end
 end
