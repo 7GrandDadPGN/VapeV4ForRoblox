@@ -9926,7 +9926,7 @@ end)
 if inputService.TouchEnabled then 
 	local infiniteFlyButton = Instance.new("TextButton")
 	infiniteFlyButton.Size = UDim2.new(0, 32, 0, 32)
-	infiniteFlyButton.Position = UDim2.new(1, -32, 1, -128)
+	infiniteFlyButton.Position = UDim2.new(1, -40, 1, -256)
 	infiniteFlyButton.Parent = GuiLibrary.MainGui
 	infiniteFlyButton.MouseButton1Click:Connect(function()
 		GuiLibrary.ObjectsThatCanBeSaved.InfiniteFlyOptionsButton.Api.ToggleButton(true)
