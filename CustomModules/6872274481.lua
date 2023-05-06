@@ -449,11 +449,12 @@ local function getBestTool(block)
 	local blockmeta = bedwars.ItemTable[block]
 	local blockType = blockmeta.block and blockmeta.block.breakType
 	if blockType then
+		local best = 0
 		for i,v in pairs(bedwarsStore.localInventory.inventory.items) do
 			local meta = bedwars.ItemTable[v.itemType]
-			if meta.breakBlock and meta.breakBlock[blockType] then
+			if meta.breakBlock and meta.breakBlock[blockType] and meta.breakBlock[blockType] >= best then
+				best = meta.breakBlock[blockType]
 				tool = v
-				break
 			end
 		end
 	end
@@ -2948,6 +2949,15 @@ runFunction(function()
 						FlyDown = false
 					end
 				end))
+				if inputService.TouchEnabled then
+					pcall(function()
+						local jumpButton = lplr.PlayerGui.TouchGui.TouchControlFrame.JumpButton
+						table.insert(Fly.Connections, jumpButton:GetPropertyChangedSignal("ImageRectOffset"):Connect(function()
+							FlyUp = jumpButton.ImageRectOffset.X == 146
+						end))
+						FlyUp = jumpButton.ImageRectOffset.X == 146
+					end)
+				end
 				table.insert(Fly.Connections, vapeEvents.BalloonPopped.Event:Connect(function(poppedTable)
 					if poppedTable.inflatedBalloon and poppedTable.inflatedBalloon:GetAttribute("BalloonOwner") == lplr.UserId then 
 						lastonground = not onground
@@ -3314,6 +3324,15 @@ runFunction(function()
 						InfiniteFlyDown = false
 					end
 				end))
+				if inputService.TouchEnabled then
+					pcall(function()
+						local jumpButton = lplr.PlayerGui.TouchGui.TouchControlFrame.JumpButton
+						table.insert(InfiniteFly.Connections, jumpButton:GetPropertyChangedSignal("ImageRectOffset"):Connect(function()
+							InfiniteFlyUp = jumpButton.ImageRectOffset.X == 146
+						end))
+						InfiniteFlyUp = jumpButton.ImageRectOffset.X == 146
+					end)
+				end
 				clonesuccess = false
 				if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and isnetworkowner(entityLibrary.character.HumanoidRootPart) then
 					cloned = lplr.Character
@@ -4243,6 +4262,7 @@ runFunction(function()
 				task.delay(0.1, function()
 					local block, pos2 = getPlacedBlock(pos)
 					if block and block.Name == "cannon" and (entityLibrary.character.HumanoidRootPart.CFrame.p - block.Position).Magnitude < 20 then 
+						switchToAndUseTool(block)
 						local vec = entityLibrary.character.HumanoidRootPart.CFrame.lookVector
 						local damage = bedwars.BlockController:calculateBlockDamage(lplr, {
 							blockPosition = pos2
@@ -4251,19 +4271,23 @@ runFunction(function()
 							["cannonBlockPos"] = pos2,
 							["lookVector"] = vec
 						})
+						local broken = 0.1
 						if damage < block:GetAttribute("Health") then 
 							task.spawn(function()
+								broken = 0.4
 								bedwars.breakBlock(block.Position, true, getBestBreakSide(block.Position), true, true)
 							end)
 						end
-						task.delay(0.4, function()
+						task.delay(broken, function()
 							for i = 1, 3 do 
 								local call = bedwars.ClientHandler:Get(bedwars.CannonLaunchRemote):CallServer({cannonBlockPos = bedwars.BlockController:getBlockPosition(block.Position)})
 								if call then
 									bedwars.breakBlock(block.Position, true, getBestBreakSide(block.Position), true, true)
-									damagetimer = LongJumpSpeed.Value * 6
-									damagetimertick = tick() + 2.5
-									directionvec = Vector3.new(vec.X, 0, vec.Z).Unit
+									task.delay(0.1, function()
+										damagetimer = LongJumpSpeed.Value * 6
+										damagetimertick = tick() + 2.5
+										directionvec = Vector3.new(vec.X, 0, vec.Z).Unit
+									end)
 									break
 								end
 								task.wait(0.1)
