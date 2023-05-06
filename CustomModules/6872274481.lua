@@ -9930,7 +9930,7 @@ if inputService.TouchEnabled then
 	infiniteFlyButton.BackgroundColor3 = Color3.new()
 	infiniteFlyButton.TextColor3 = Color3.new(1, 1, 1)
 	infiniteFlyButton.Text = "InfFly"
-	infiniteFlyButton.Position = UDim2.new(1, -48, 1, -290)
+	infiniteFlyButton.Position = UDim2.new(1, -50, 1, -290)
 	infiniteFlyButton.Parent = GuiLibrary.MainGui
 	infiniteFlyButton.MouseButton1Click:Connect(function()
 		GuiLibrary.ObjectsThatCanBeSaved.InfiniteFlyOptionsButton.Api.ToggleButton(true)
