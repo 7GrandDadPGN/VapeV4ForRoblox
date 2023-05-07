@@ -9923,23 +9923,6 @@ runFunction(function()
 	})
 end)
 
-if inputService.TouchEnabled then 
-	local infiniteFlyButton = Instance.new("TextButton")
-	infiniteFlyButton.Size = UDim2.new(0, 32, 0, 32)
-	infiniteFlyButton.BackgroundTransparency = 0.5
-	infiniteFlyButton.BackgroundColor3 = Color3.new()
-	infiniteFlyButton.TextColor3 = Color3.new(1, 1, 1)
-	infiniteFlyButton.Text = "InfFly"
-	infiniteFlyButton.Position = UDim2.new(1, -50, 1, -290)
-	infiniteFlyButton.Parent = GuiLibrary.MainGui
-	infiniteFlyButton.MouseButton1Click:Connect(function()
-		GuiLibrary.ObjectsThatCanBeSaved.InfiniteFlyOptionsButton.Api.ToggleButton(true)
-	end)
-	local infiniteFlyCorner = Instance.new("UICorner")
-	infiniteFlyCorner.CornerRadius = UDim.new(0, 1024)
-	infiniteFlyCorner.Parent = infiniteFlyButton
-end
-
 runFunction(function()
 	bedwarsStore.TPString = shared.vapeoverlay or nil
 	local origtpstring = bedwarsStore.TPString

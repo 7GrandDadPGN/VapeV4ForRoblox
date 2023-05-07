@@ -90,6 +90,7 @@ if shared.VapeExecuted then
 		Notifications = false,
 		ToggleTooltips = false,
 		ObjectsThatCanBeSaved = {["Gui ColorSliderColor"] = {Api = {Hue = 0.44, Sat = 1, Value = 1}}},
+		MobileButtons = {}
 	}
 	local inputService = game:GetService("UserInputService")
 	local httpService = game:GetService("HttpService")
@@ -379,6 +380,45 @@ if shared.VapeExecuted then
 		end)
 	end
 
+	local function createMobileButton(buttonapi, position)
+		local touchButton = Instance.new("TextButton")
+		touchButton.Size = UDim2.new(0, 40, 0, 40)
+		touchButton.BackgroundTransparency = 0.5
+		touchButton.BackgroundColor3 = buttonapi.Enabled and Color3.new(0, 0.7, 0) or Color3.new()
+		touchButton.TextColor3 = Color3.new(1, 1, 1)
+		touchButton.Text = argstablemain["Name"]
+		touchButton.Font = Enum.Font.Gotham
+		touchButton.TextScaled = true
+		touchButton.AnchorPoint = Vector2.new(0.5, 0.5)
+		touchButton.Position = UDim2.new(0, position.X, 0, position.Y)
+		touchButton.Parent = GuiLibrary.MainGui
+		touchButton.MouseButton1Click:Connect(function()
+			buttonapi.ToggleButton(true)
+			touchButton.BackgroundColor3 = buttonapi.Enabled and Color3.new(0, 0.7, 0) or Color3.new()
+		end)
+		local touchedButton = false
+		touchButton.MouseButton1Down:Connect(function()
+			touchedButton = true
+			local touchtick2 = tick()
+			repeat task.wait() until (tick() - touchtick2) > 1 or not touchedButton
+			if touchedButton then 
+				local ind = table.find(GuiLibrary.MobileButtons, touchButton)
+				if ind then table.remove(GuiLibrary.MobileButtons, ind) end
+				touchButton:Destroy()
+			end
+		end)
+		touchButton.MouseButton1Up:Connect(function()
+			touchedButton = false
+		end)
+		local touchCorner = Instance.new("UICorner")
+		touchCorner.CornerRadius = UDim.new(0, 1024)
+		touchCorner.Parent = touchButton
+		local touchTextLimit = Instance.new("UITextSizeConstraint")
+		touchTextLimit.MaxTextSize = 16
+		touchTextLimit.Parent = touchButton
+		table.insert(GuiLibrary.MobileButtons, touchButton)
+	end
+
 	GuiLibrary.SaveSettings = function()
 		if loadedsuccessfully then
 			writefile(baseDirectory.."Profiles/"..(shared.CustomSaveVape or game.PlaceId)..".vapeprofiles.txt", httpService:JSONEncode(GuiLibrary.Profiles))
@@ -440,6 +480,11 @@ if shared.VapeExecuted then
 					GuiLibrary.Settings[i] = {["Type"] = "ColorSlider", ["Hue"] = v["Api"]["Hue"], ["Sat"] = v["Api"]["Sat"], ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
 				end
 			end
+			local mobileButtonSaving = {}
+			for _, mobileButton in pairs(GuiLibrary.MobileButtons) do 
+				table.insert(mobileButtonSaving, {Position = {mobileButton.Position.X.Offset, mobileButton.Position.Y.Offset}, Module = mobileButton.Text.."OptionsButton"})
+			end
+			WindowTable["MobileButtons"] = {["Type"] = "MobileButtons", ["Buttons"] = mobileButtonSaving}
 			WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = GuiLibrary["GUIKeybind"]}
 			writefile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", httpService:JSONEncode(GuiLibrary.Settings))
 			writefile(baseDirectory.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", httpService:JSONEncode(WindowTable))
@@ -551,6 +596,11 @@ if shared.VapeExecuted then
 				end
 				if v.Type == "GUIKeybind" then
 					GuiLibrary["GUIKeybind"] = v["Value"]
+				end
+				if v.Type == "MobileButtons" then 
+					for _, mobileButton in pairs(v.Buttons) do 
+						createMobileButton(GuiLibrary.ObjectsThatCanBeSaved[mobileButton.Module], Vector2.new(mobileButton.Position[1], mobileButton.Position[2]))
+					end
 				end
 			end
 		end
@@ -5464,6 +5514,28 @@ if shared.VapeExecuted then
 			button.MouseButton1Click:Connect(function() 
 				buttonapi["ToggleButton"](true) 
 			end)
+			if inputService.TouchEnabled then 
+				local touched = false
+				button.MouseButton1Down:Connect(function()
+					touched = true
+					local touchtick = tick()
+					repeat task.wait() until (tick() - touchtick) > 1 or not touched
+					if touched then 
+						clickgui.Visible = false
+						local touchconnection
+						touchconnection = inputService.InputBegan:Connect(function(inputType)
+							if inputType.UserInputType == Enum.UserInputType.Touch then 
+								createMobileButton(buttonapi, inputType.Position)
+								clickgui.Visible = true
+								touchconnection:Disconnect()
+							end
+						end)
+					end
+				end)
+				button.MouseButton1Up:Connect(function()
+					touched = false
+				end)
+			end
 			button.MouseEnter:Connect(function() 
 				bindbkg.Visible = true
 				if not buttonapi["Enabled"] then
