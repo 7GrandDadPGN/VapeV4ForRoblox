@@ -5522,11 +5522,13 @@ if shared.VapeExecuted then
 					repeat task.wait() until (tick() - touchtick) > 1 or not touched
 					if touched then 
 						clickgui.Visible = false
+						game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)	
 						local touchconnection
 						touchconnection = inputService.InputBegan:Connect(function(inputType)
 							if inputType.UserInputType == Enum.UserInputType.Touch then 
 								createMobileButton(buttonapi, inputType.Position)
 								clickgui.Visible = true
+								game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)	
 								touchconnection:Disconnect()
 							end
 						end)
