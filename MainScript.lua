@@ -10,6 +10,7 @@ local teleportedServers = false
 local gameCamera = workspace.CurrentCamera
 local textService = game:GetService("TextService")
 local playersService = game:GetService("Players")
+local inputService = game:GetService("UserInputService")
 local isfile = isfile or function(file)
 	local suc, res = pcall(function() return readfile(file) end)
 	return suc and res ~= nil
@@ -172,7 +173,7 @@ end
 assert(not shared.VapeExecuted, "Vape Already Injected")
 shared.VapeExecuted = true
 
-if identifyexecutor and ({identifyexecutor()})[2] == "iOS" then 
+if inputService.TouchEnabled then 
 	--until getcustomasset is fixed I have to do this
 	getcustomasset = function(location) return vapeAssetTable[location] or "" end
 end
@@ -1463,7 +1464,7 @@ ModuleSettings.CreateToggle({
 	Name = "MiddleClick friends", 
 	Function = function(callback) 
 		if callback then
-			MiddleClickInput = game:GetService("UserInputService").InputBegan:Connect(function(input1)
+			MiddleClickInput = inputService.InputBegan:Connect(function(input1)
 				if input1.UserInputType == Enum.UserInputType.MouseButton3 then
 					local entityLibrary = shared.vapeentity
 					if entityLibrary then 
@@ -1766,7 +1767,7 @@ GuiLibrary.SelfDestruct = function()
 		GuiLibrary.SaveSettings()
 	end
 	vapeInjected = false
-	game:GetService("UserInputService").OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.None
+	inputService.OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.None
 
 	for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do
 		if (v.Type == "Button" or v.Type == "OptionsButton") and v.Api.Enabled then
