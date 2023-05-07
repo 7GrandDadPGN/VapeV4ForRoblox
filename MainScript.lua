@@ -962,7 +962,7 @@ local function TextGUIUpdate()
             if (TextGUI.GetCustomChildren().Parent.Position.X.Offset + TextGUI.GetCustomChildren().Parent.Size.X.Offset / 2) >= (gameCamera.ViewportSize.X / 2) then
                 VapeText.TextXAlignment = Enum.TextXAlignment.Right
                 VapeTextExtra.TextXAlignment = Enum.TextXAlignment.Right
-                VapeTextExtra.Position = UDim2.fromOffset(5, (inputService.TouchEnabled and -10 or 1))
+                VapeTextExtra.Position = UDim2.fromOffset((inputService.TouchEnabled and 7 or 5), (inputService.TouchEnabled and -10 or 1))
                 VapeLogo.Position = UDim2.new(1, -142, 0, 8)
                 VapeText.Position = UDim2.new(1, -158, 0, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + (VapeCustomText.Visible and 25 or 0) - (inputService.TouchEnabled and 14 or 23))
                 VapeCustomText.Position = UDim2.fromOffset(0, VapeLogo.Visible and 35 or 0)
@@ -972,7 +972,7 @@ local function TextGUIUpdate()
             else
                 VapeText.TextXAlignment = Enum.TextXAlignment.Left
                 VapeTextExtra.TextXAlignment = Enum.TextXAlignment.Left
-                VapeTextExtra.Position = UDim2.fromOffset(5, (inputService.TouchEnabled and -10 or 1))
+                VapeTextExtra.Position = UDim2.fromOffset((inputService.TouchEnabled and 7 or 5), (inputService.TouchEnabled and -10 or 1))
                 VapeLogo.Position = UDim2.fromOffset(2, 8)
                 VapeText.Position = UDim2.fromOffset(6, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + (VapeCustomText.Visible and 25 or 0) - (inputService.TouchEnabled and 14 or 23))
 				VapeCustomText.Position = UDim2.fromOffset(0, VapeLogo.Visible and 35 or 0)
