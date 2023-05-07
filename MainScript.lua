@@ -998,7 +998,7 @@ local function TextGUIUpdate()
 				textdraw.Text = v
 				textdraw.Size = 23 * VapeScale.Scale
 				textdraw.ZIndex = 2
-				textdraw.Position = VapeText.AbsolutePosition + Vector2.new(VapeText.TextXAlignment == Enum.TextXAlignment.Right and (VapeText.AbsoluteSize.X - textdraw.TextBounds.X), ((textdraw.Size - 3) * i) + 6)
+				textdraw.Position = VapeText.AbsolutePosition + Vector2.new(VapeText.TextXAlignment == Enum.TextXAlignment.Right and (VapeText.AbsoluteSize.X - textdraw.TextBounds.X), ((textdraw.Size - 3) * i) + (inputService.TouchEnabled and 0 or 6))
 				textdraw.Visible = true
 				local textdraw2 = Drawing.new("Text")
 				textdraw2.Text = textdraw.Text
