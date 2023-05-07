@@ -10240,6 +10240,7 @@ task.spawn(function()
 	end
 	task.spawn(function()
 		pcall(function()
+			if inputService.TouchEnabled then return end
 			if not isfile("vape/Profiles/bedwarsdata.txt") then 
 				local commit = "main"
 				for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/VapeV4ForRoblox"):split("\n")) do 
