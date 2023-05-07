@@ -101,7 +101,7 @@ if shared.VapeExecuted then
 	local translations = shared.VapeTranslation or {}
 	local translatedlogo = false
 
-	if identifyexecutor and ({identifyexecutor()})[2] == "iOS" then 
+	if inputService.TouchEnabled then 
 		--until getcustomasset is fixed I have to do this
 		getcustomasset = function(location) return vapeAssetTable[location] or "" end
 	end
@@ -484,7 +484,7 @@ if shared.VapeExecuted then
 			for _, mobileButton in pairs(GuiLibrary.MobileButtons) do 
 				table.insert(mobileButtonSaving, {Position = {mobileButton.Position.X.Offset, mobileButton.Position.Y.Offset}, Module = mobileButton.Text.."OptionsButton"})
 			end
-			WindowTable["MobileButtons"] = {["Type"] = "MobileButtons", ["Buttons"] = mobileButtonSaving}
+			GuiLibrary.Settings["MobileButtons"] = {["Type"] = "MobileButtons", ["Buttons"] = mobileButtonSaving}
 			WindowTable["GUIKeybind"] = {["Type"] = "GUIKeybind", ["Value"] = GuiLibrary["GUIKeybind"]}
 			writefile(baseDirectory.."Profiles/"..(GuiLibrary.CurrentProfile == "default" and "" or GuiLibrary.CurrentProfile)..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt", httpService:JSONEncode(GuiLibrary.Settings))
 			writefile(baseDirectory.."Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", httpService:JSONEncode(WindowTable))
@@ -597,14 +597,6 @@ if shared.VapeExecuted then
 				if v.Type == "GUIKeybind" then
 					GuiLibrary["GUIKeybind"] = v["Value"]
 				end
-				if v.Type == "MobileButtons" then 
-					for _, mobileButton in pairs(v.Buttons) do 
-						local module = GuiLibrary.ObjectsThatCanBeSaved[mobileButton.Module]
-						if module then 
-							createMobileButton(module.Api, Vector2.new(mobileButton.Position[1], mobileButton.Position[2]))
-						end
-					end
-				end
 			end
 		end
 		local success, result = pcall(function()
@@ -615,6 +607,14 @@ if shared.VapeExecuted then
 			for i,v in pairs(result) do
 				if v.Type == "Custom" and GuiLibrary.Settings[i] then
 					GuiLibrary.Settings[i] = v
+				end
+				if v.Type == "MobileButtons" then 
+					for _, mobileButton in pairs(v.Buttons) do 
+						local module = GuiLibrary.ObjectsThatCanBeSaved[mobileButton.Module]
+						if module then 
+							createMobileButton(module.Api, Vector2.new(mobileButton.Position[1], mobileButton.Position[2]))
+						end
+					end
 				end
 				local obj = GuiLibrary.ObjectsThatCanBeSaved[i]
 				if obj then
