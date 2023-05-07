@@ -968,7 +968,7 @@ local function TextGUIUpdate()
                 VapeCustomText.Position = UDim2.fromOffset(0, VapeLogo.Visible and 35 or 0)
                 VapeCustomText.TextXAlignment = Enum.TextXAlignment.Right
                 VapeBackgroundList.HorizontalAlignment = Enum.HorizontalAlignment.Right
-                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-56, 2 + 23)
+                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-56, 2 + (inputService.TouchEnabled and 14 or 23))
             else
                 VapeText.TextXAlignment = Enum.TextXAlignment.Left
                 VapeTextExtra.TextXAlignment = Enum.TextXAlignment.Left
@@ -978,7 +978,7 @@ local function TextGUIUpdate()
 				VapeCustomText.Position = UDim2.fromOffset(0, VapeLogo.Visible and 35 or 0)
 				VapeCustomText.TextXAlignment = Enum.TextXAlignment.Left
                 VapeBackgroundList.HorizontalAlignment = Enum.HorizontalAlignment.Left
-                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-1, 2 + 23)
+                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-1, 2 + (inputService.TouchEnabled and 14 or 23))
             end
         end
         
@@ -998,7 +998,7 @@ local function TextGUIUpdate()
 				textdraw.Text = v
 				textdraw.Size = 23 * VapeScale.Scale
 				textdraw.ZIndex = 2
-				textdraw.Position = VapeText.AbsolutePosition + Vector2.new(VapeText.TextXAlignment == Enum.TextXAlignment.Right and (VapeText.AbsoluteSize.X - textdraw.TextBounds.X), ((textdraw.Size - 3) * i) + (inputService.TouchEnabled and 12 or 6))
+				textdraw.Position = VapeText.AbsolutePosition + Vector2.new(VapeText.TextXAlignment == Enum.TextXAlignment.Right and (VapeText.AbsoluteSize.X - textdraw.TextBounds.X), ((textdraw.Size - 3) * i) + 6)
 				textdraw.Visible = true
 				local textdraw2 = Drawing.new("Text")
 				textdraw2.Text = textdraw.Text
