@@ -386,7 +386,7 @@ if shared.VapeExecuted then
 		touchButton.BackgroundTransparency = 0.5
 		touchButton.BackgroundColor3 = buttonapi.Enabled and Color3.new(0, 0.7, 0) or Color3.new()
 		touchButton.TextColor3 = Color3.new(1, 1, 1)
-		touchButton.Text = argstablemain["Name"]
+		touchButton.Text = buttonapi.Name
 		touchButton.Font = Enum.Font.Gotham
 		touchButton.TextScaled = true
 		touchButton.AnchorPoint = Vector2.new(0.5, 0.5)
