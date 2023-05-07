@@ -27,7 +27,8 @@ local isnetworkowner = isnetworkowner or function(part)
 	end
 	return networkownerswitch <= tick()
 end
-local getcustomasset = getsynasset or getcustomasset or function(location) return "rbxasset://"..location end
+local vapeAssetTable = {["vape/assets/VapeCape.png"] = "rbxassetid://13380453812"}
+local getcustomasset = getsynasset or getcustomasset or function(location) return vapeAssetTable[location] or "" end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local synapsev3 = syn and syn.toast_notification and "V3" or ""
 local worldtoscreenpoint = function(pos)
@@ -1452,6 +1453,15 @@ runFunction(function()
 						FlyDown = false
 					end
 				end))
+				if inputService.TouchEnabled then
+					pcall(function()
+						local jumpButton = lplr.PlayerGui.TouchGui.TouchControlFrame.JumpButton
+						table.insert(Fly.Connections, jumpButton:GetPropertyChangedSignal("ImageRectOffset"):Connect(function()
+							FlyUp = jumpButton.ImageRectOffset.X == 146
+						end))
+						FlyUp = jumpButton.ImageRectOffset.X == 146
+					end)
+				end
 				if FlyMethod.Value == "Jump" and entityLibrary.isAlive then
 					entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
