@@ -5521,9 +5521,16 @@ if shared.VapeExecuted then
 				local touched = false
 				button.MouseButton1Down:Connect(function()
 					touched = true
+					local oldbuttonposition = button.AbsolutePosition
 					local touchtick = tick()
-					repeat task.wait() until (tick() - touchtick) > 1 or not touched
-					if touched then 
+					repeat 
+						task.wait() 
+						if button.AbsolutePosition ~= oldbuttonposition then 
+							touched = false
+							break
+						end
+					until (tick() - touchtick) > 1 or not touched or not clickgui.Visible
+					if touched and clickgui.Visible then 
 						clickgui.Visible = false
 						game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)	
 						local touchconnection
