@@ -599,7 +599,10 @@ if shared.VapeExecuted then
 				end
 				if v.Type == "MobileButtons" then 
 					for _, mobileButton in pairs(v.Buttons) do 
-						createMobileButton(GuiLibrary.ObjectsThatCanBeSaved[mobileButton.Module], Vector2.new(mobileButton.Position[1], mobileButton.Position[2]))
+						local module = GuiLibrary.ObjectsThatCanBeSaved[mobileButton.Module]
+						if module then 
+							createMobileButton(module.Api, Vector2.new(mobileButton.Position[1], mobileButton.Position[2]))
+						end
 					end
 				end
 			end
