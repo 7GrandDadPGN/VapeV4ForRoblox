@@ -3661,9 +3661,6 @@ runFunction(function()
         Name = "Killaura",
         Function = function(callback)
             if callback then
-				if inputService.TouchEnabled then
-					pcall(function() lplr.PlayerGui.MobileUI["1"].Visible = false end)
-				end
 				if killauraaimcirclepart then killauraaimcirclepart.Parent = gameCamera end
 				if killaurarangecirclepart then killaurarangecirclepart.Parent = gameCamera end
 				if killauraparticlepart then killauraparticlepart.Parent = gameCamera end
@@ -3872,9 +3869,6 @@ runFunction(function()
 					until (not Killaura.Enabled)
 				end)
             else
-				if inputService.TouchEnabled then
-					pcall(function() lplr.PlayerGui.MobileUI["1"].Visible = true end)
-				end
 				vapeTargetInfo.Targets.Killaura = nil
 				RunLoops:UnbindFromHeartbeat("Killaura") 
                 killauraNearPlayer = false
