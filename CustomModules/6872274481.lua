@@ -558,7 +558,7 @@ local function getBestBreakSide(pos)
 		if sidehardness <= softest then
 			softest = sidehardness
 			softestside = v
-		end
+		end	
 	end
 	return softestside, softest
 end
@@ -9807,6 +9807,9 @@ runFunction(function()
 										playergrav = (workspace.Gravity * 0.3)
 									end
 									local newLaunchVelo = bedwars.ProjectileMeta[proj2].launchVelocity
+									for i,v in pairs(plr) do 
+										print(i,v)
+									end
 									local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / newLaunchVelo, plr, playergrav)
 									if proj2 == "telepearl" then
 										shootpos = pos
