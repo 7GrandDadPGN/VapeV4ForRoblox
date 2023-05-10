@@ -9778,6 +9778,7 @@ runFunction(function()
 				oldrealremote = debug.getupvalue(bedwars.ClientConstructor.Function.constructor, 1)
 				debug.setupvalue(bedwars.ClientConstructor.Function.constructor, 1, function(self, ind, ...)
 					local res = oldrealremote(self, ind, ...)
+					print(res, ind, self, ...)
 					if ind == bedwars.ProjectileRemote and res then 
 						return {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
 							local plr
