@@ -6549,7 +6549,7 @@ if shared.VapeExecuted then
 	local holdingalt = false
 	local uninjected = false
 
-	if inputService.TouchEnabled or identifyexecutor and ({identifyexecutor()})[2] == "UWP" then 
+	if inputService.TouchEnabled or identifyexecutor and ({identifyexecutor()})[1] == "Fluxus" then 
 		local button = Instance.new("TextButton")
 		button.Position = UDim2.new(1, -30, 0, 0)
 		button.Text = "Vape"
