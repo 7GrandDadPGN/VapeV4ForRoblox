@@ -91,6 +91,7 @@ if getcustomasset then
 		getgenv().getsynasset = nil
 		getgenv().getcustomasset = nil
 	end
+	repeat task.wait() until suc ~= nil
 end
 local getcustomasset = getsynasset or getcustomasset or function(location) return vapeAssetTable[location] or "" end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
