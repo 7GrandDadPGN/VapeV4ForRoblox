@@ -101,11 +101,6 @@ if shared.VapeExecuted then
 	local translations = shared.VapeTranslation or {}
 	local translatedlogo = false
 
-	if inputService.TouchEnabled then 
-		--until getcustomasset is fixed I have to do this
-		getcustomasset = function(location) return vapeAssetTable[location] or "" end
-	end
-
 	coroutine.resume(coroutine.create(function()
 		repeat
 			task.wait(0.01)
@@ -6554,7 +6549,7 @@ if shared.VapeExecuted then
 	local holdingalt = false
 	local uninjected = false
 
-	if inputService.TouchEnabled then 
+	if inputService.TouchEnabled or identifyexecutor and ({identifyexecutor()})[2] == "UWP" then 
 		local button = Instance.new("TextButton")
 		button.Position = UDim2.new(1, -30, 0, 0)
 		button.Text = "Vape"
