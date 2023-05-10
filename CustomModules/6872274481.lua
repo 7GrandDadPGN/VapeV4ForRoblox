@@ -1206,7 +1206,7 @@ runFunction(function()
 		BlockEngine = require(lplr.PlayerScripts.TS.lib["block-engine"]["client-block-engine"]).ClientBlockEngine,
 		BlockEngineClientEvents = require(replicatedStorageService["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client["block-engine-client-events"]).BlockEngineClientEvents,
 		BlockPlacementController = KnitClient.Controllers.BlockPlacementController,
-		BowConstantsTable = debug.getupvalue(KnitClient.Controllers.ProjectileController.enableBeam, 5),
+		BowConstantsTable = debug.getupvalue(KnitClient.Controllers.ProjectileController.enableBeam, 6),
 		ProjectileController = KnitClient.Controllers.ProjectileController,
 		ChestController = KnitClient.Controllers.ChestController,
 		CannonHandController = KnitClient.Controllers.CannonHandController,
