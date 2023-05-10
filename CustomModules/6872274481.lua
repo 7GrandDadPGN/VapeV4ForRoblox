@@ -9772,73 +9772,58 @@ runFunction(function()
 		Name = "ProjectileExploit",
 		Function = function(callback)
 			if callback then 
-				oldrealremote = debug.getupvalue(debug.getupvalue(bedwars.ProjectileController.launchProjectileWithValues, 2), 10)
-				debug.setupvalue(debug.getupvalue(bedwars.ProjectileController.launchProjectileWithValues, 2), 10, {
-					Client = {
-						WaitFor = function(self6, remote)
-							local res = bedwars.ClientHandler:Get(remote)
-							return {
-								andThen = function(self5, func) 
-									return func({
-										CallServerAsync = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
-											local plr
-											if BowExploitTarget["Value"] == "Mouse" then 
-												plr = EntityNearMouse(10000)
-											else
-												plr = EntityNearPosition(BowExploitAutoShootFOV.Value)
-											end
-											if plr then	
-												local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
-												if not playerattackable then 
-													return res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
-												end
-
-												tab1.drawDurationSeconds = 1
-												repeat
-													task.wait(0.03)
-													local offsetStartPos = plr.RootPart.CFrame.p - plr.RootPart.CFrame.lookVector
-													local pos = plr.RootPart.Position
-													local playergrav = workspace.Gravity
-													local balloons = plr.Character:GetAttribute("InflatedBalloons")
-													if balloons and balloons > 0 then 
-														playergrav = (workspace.Gravity * (1 - ((balloons >= 4 and 1.2 or balloons >= 3 and 1 or 0.975))))
-													end
-													if plr.Character.PrimaryPart:FindFirstChild("rbxassetid://8200754399") then 
-														playergrav = (workspace.Gravity * 0.3)
-													end
-													local newLaunchVelo = bedwars.ProjectileMeta[proj2].launchVelocity
-													local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / newLaunchVelo, plr, playergrav)
-													if proj2 == "telepearl" then
-														shootpos = pos
-														shootvelo = Vector3.zero
-													end
-													local newlook = CFrame.new(offsetStartPos, shootpos) * CFrame.new(Vector3.new(-bedwars.BowConstantsTable.RelX, -bedwars.BowConstantsTable.RelY, -bedwars.BowConstantsTable.RelZ))
-													shootpos = newlook.p + (newlook.lookVector * (offsetStartPos - shootpos).magnitude)
-													local calculated = LaunchDirection(offsetStartPos, shootpos, newLaunchVelo, workspace.Gravity, false)
-													if calculated then 
-														launchvelo = calculated
-														launchpos1 = offsetStartPos
-														launchpos2 = offsetStartPos
-														tab1.drawDurationSeconds = 1
-													else
-														break
-													end
-													if bedwars.RuntimeLib.await(res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, workspace:GetServerTimeNow() - 0.045)) then break end
-												until false
-											else
-												return res:CallServerAsync(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
-											end
-										end
-									})
-								end
-							}
+				oldrealremote = bedwars.ClientHandler:Get(bedwars.ProjectileRemote).instance
+				bedwars.ClientHandler:Get(bedwars.ProjectileRemote).instance = {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
+					local plr
+					if BowExploitTarget["Value"] == "Mouse" then 
+						plr = EntityNearMouse(10000)
+					else
+						plr = EntityNearPosition(BowExploitAutoShootFOV.Value)
+					end
+					if plr then	
+						local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
+						if not playerattackable then 
+							return oldrealremote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
 						end
-					}
-				})
+
+						tab1.drawDurationSeconds = 1
+						repeat
+							task.wait(0.03)
+							local offsetStartPos = plr.RootPart.CFrame.p - plr.RootPart.CFrame.lookVector
+							local pos = plr.RootPart.Position
+							local playergrav = workspace.Gravity
+							local balloons = plr.Character:GetAttribute("InflatedBalloons")
+							if balloons and balloons > 0 then 
+								playergrav = (workspace.Gravity * (1 - ((balloons >= 4 and 1.2 or balloons >= 3 and 1 or 0.975))))
+							end
+							if plr.Character.PrimaryPart:FindFirstChild("rbxassetid://8200754399") then 
+								playergrav = (workspace.Gravity * 0.3)
+							end
+							local newLaunchVelo = bedwars.ProjectileMeta[proj2].launchVelocity
+							local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / newLaunchVelo, plr, playergrav)
+							if proj2 == "telepearl" then
+								shootpos = pos
+								shootvelo = Vector3.zero
+							end
+							local newlook = CFrame.new(offsetStartPos, shootpos) * CFrame.new(Vector3.new(-bedwars.BowConstantsTable.RelX, -bedwars.BowConstantsTable.RelY, -bedwars.BowConstantsTable.RelZ))
+							shootpos = newlook.p + (newlook.lookVector * (offsetStartPos - shootpos).magnitude)
+							local calculated = LaunchDirection(offsetStartPos, shootpos, newLaunchVelo, workspace.Gravity, false)
+							if calculated then 
+								launchvelo = calculated
+								launchpos1 = offsetStartPos
+								launchpos2 = offsetStartPos
+								tab1.drawDurationSeconds = 1
+							else
+								break
+							end
+							if oldrealremote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, workspace:GetServerTimeNow() - 0.045) then break end
+						until false
+					else
+						return oldrealremote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
+					end
+				end}
 			else
-				debug.setupvalue(debug.getupvalue(bedwars.ProjectileController.launchProjectileWithValues, 2), 10, {
-					Client = bedwars.ClientHandler
-				})
+				bedwars.ClientHandler:Get(bedwars.ProjectileRemote).instance = oldrealremote
 				oldrealremote = nil
 			end
 		end
