@@ -84,6 +84,14 @@ local vapeAssetTable = {
 	["vape/assets/VapeLogo2.png"] = "rbxassetid://13350876307",
 	["vape/assets/VapeLogo4.png"] = "rbxassetid://13350877564"
 }
+if getcustomasset then 
+	local suc, res = pcall(function() return getcustomasset("") end)
+	if suc and res == "rbxasset://textures/ui/WarningIcon.png" then
+		--mobile exploit fix
+		getgenv().getsynasset = nil
+		getgenv().getcustomasset = nil
+	end
+end
 local getcustomasset = getsynasset or getcustomasset or function(location) return vapeAssetTable[location] or "" end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local delfile = delfile or function(file) writefile(file, "") end
@@ -172,11 +180,6 @@ end
 
 assert(not shared.VapeExecuted, "Vape Already Injected")
 shared.VapeExecuted = true
-
-if identifyexecutor and ({identifyexecutor()})[1] == "Fluxus" then 
-	--ur exploit bad
-	getcustomasset = function(location) return vapeAssetTable[location] or "" end
-end
 
 for i,v in pairs({baseDirectory:gsub("/", ""), "vape", "vape/Libraries", "vape/CustomModules", "vape/Profiles", baseDirectory.."Profiles", "vape/assets"}) do 
 	if not isfolder(v) then makefolder(v) end
