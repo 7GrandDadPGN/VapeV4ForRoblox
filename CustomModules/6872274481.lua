@@ -3399,7 +3399,7 @@ runFunction(function()
 							local speedCFrame = {oldcloneroot.CFrame:GetComponents()}
 							speedCFrame[1] = clone.CFrame.X
 							if speedCFrame[2] < 1000 or (not goneup) then 
-								warningNotification("InfiniteFly", "Teleported Up", 3)
+								task.spawn(warningNotification, "InfiniteFly", "Teleported Up", 3)
 								speedCFrame[2] = 100000
 								goneup = true
 							end
