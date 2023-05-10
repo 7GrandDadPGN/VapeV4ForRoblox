@@ -9775,12 +9775,11 @@ runFunction(function()
 		Name = "ProjectileExploit",
 		Function = function(callback)
 			if callback then 
-				oldrealremote = debug.getupvalue(bedwars.ClientConstructor.Function.constructor, 1)
-				debug.setupvalue(bedwars.ClientConstructor.Function.constructor, 1, function(self, ind, ...)
+				oldrealremote = bedwars.ClientConstructor.Function.new
+				bedwars.ClientConstructor.Function.new = function(self, ind, ...)
 					local res = oldrealremote(self, ind, ...)
-					print(res, ind, self, ...)
-					if ind == bedwars.ProjectileRemote and res then 
-						return {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
+					if self.instance.Name == bedwars.ProjectileRemote then 
+						self.instance = {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
 							local plr
 							if BowExploitTarget["Value"] == "Mouse" then 
 								plr = EntityNearMouse(10000)
@@ -9833,7 +9832,7 @@ runFunction(function()
 					return res
 				end)
 			else
-				debug.setupvalue(bedwars.ClientConstructor.Function.constructor, 1, oldrealremote)
+				bedwars.ClientConstructor.Function.new = oldrealremote
 				oldrealremote = nil
 			end
 		end
