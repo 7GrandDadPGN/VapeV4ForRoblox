@@ -9830,7 +9830,7 @@ runFunction(function()
 						end}
 					end
 					return res
-				end)
+				end
 			else
 				bedwars.ClientConstructor.Function.new = oldrealremote
 				oldrealremote = nil
