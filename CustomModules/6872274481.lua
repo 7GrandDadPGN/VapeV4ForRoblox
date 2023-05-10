@@ -195,9 +195,6 @@ local physicsUpdate = 1 / 60
 
 local function predictGravity(playerPosition, vel, bulletTime, targetPart, Gravity)
 	local estimatedVelocity = vel.Y
-	for i,v in pairs(targetPart) do
-		print(i,v)
-	end
 	local rootSize = (targetPart.Humanoid.HipHeight + (targetPart.RootPart.Size.Y / 2))
 	local velocityCheck = (tick() - targetPart.JumpTick) < 0.2
 	vel = vel * physicsUpdate
@@ -588,7 +585,7 @@ local function EntityNearPosition(distance, overridepos)
 					mag = (overridepos - v2.PrimaryPart.Position).magnitude
 				end
                 if mag <= closestMagnitude then
-					closestEntity, closestMagnitude = {Player = {Name = v.Name, UserId = (v.Name == "Duck" and 2020831224 or 1443379645)}, Character = v, RootPart = v.PrimaryPart}, mag
+					closestEntity, closestMagnitude = {Player = {Name = v.Name, UserId = (v.Name == "Duck" and 2020831224 or 1443379645)}, Character = v, RootPart = v.PrimaryPart, Humanoid = {HipHeight = 2}}, mag
                 end
 			end
 		end
@@ -599,7 +596,7 @@ local function EntityNearPosition(distance, overridepos)
 					mag = (overridepos - v2.PrimaryPart.Position).magnitude
 				end
                 if mag <= closestMagnitude then
-					closestEntity, closestMagnitude = {Player = {Name = "DiamondGuardian", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart}, mag
+					closestEntity, closestMagnitude = {Player = {Name = "DiamondGuardian", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, Humanoid = {HipHeight = 2}}, mag
                 end
 			end
 		end
@@ -610,7 +607,7 @@ local function EntityNearPosition(distance, overridepos)
 					mag = (overridepos - v2.PrimaryPart.Position).magnitude
 				end
                 if mag <= closestMagnitude then
-					closestEntity, closestMagnitude = {Player = {Name = "GolemBoss", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart}, mag
+					closestEntity, closestMagnitude = {Player = {Name = "GolemBoss", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, Humanoid = {HipHeight = 2}}, mag
                 end
 			end
 		end
@@ -623,7 +620,7 @@ local function EntityNearPosition(distance, overridepos)
 					mag = (overridepos - v.PrimaryPart.Position).magnitude
 				end
                 if mag <= closestMagnitude then -- magcheck
-                   	closestEntity, closestMagnitude = {Player = {Name = "Drone", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart}, mag
+                   	closestEntity, closestMagnitude = {Player = {Name = "Drone", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, Humanoid = {HipHeight = 2}}, mag
                 end
 			end
 		end
