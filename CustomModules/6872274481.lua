@@ -9778,8 +9778,9 @@ runFunction(function()
 				oldrealremote = bedwars.ClientConstructor.Function.new
 				bedwars.ClientConstructor.Function.new = function(self, ind, ...)
 					local res = oldrealremote(self, ind, ...)
-					if self.instance.Name == bedwars.ProjectileRemote then 
-						self.instance = {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
+					local oldRemote = res.instance
+					if res.instance.Name == bedwars.ProjectileRemote then 
+						res.instance = {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
 							local plr
 							if BowExploitTarget["Value"] == "Mouse" then 
 								plr = EntityNearMouse(10000)
@@ -9789,7 +9790,7 @@ runFunction(function()
 							if plr then	
 								local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
 								if not playerattackable then 
-									return res:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
+									return oldRemote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
 								end
 		
 								tab1.drawDurationSeconds = 1
@@ -9822,10 +9823,10 @@ runFunction(function()
 									else
 										break
 									end
-									if res:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, workspace:GetServerTimeNow() - 0.045) then break end
+									if oldRemote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, workspace:GetServerTimeNow() - 0.045) then break end
 								until false
 							else
-								return res:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
+								return oldRemote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
 							end
 						end}
 					end
