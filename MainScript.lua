@@ -173,8 +173,8 @@ end
 assert(not shared.VapeExecuted, "Vape Already Injected")
 shared.VapeExecuted = true
 
-if inputService.TouchEnabled then 
-	--until getcustomasset is fixed I have to do this
+if identifyexecutor and ({identifyexecutor()})[1] == "Fluxus" then 
+	--ur exploit bad
 	getcustomasset = function(location) return vapeAssetTable[location] or "" end
 end
 
