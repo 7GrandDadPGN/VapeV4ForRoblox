@@ -9777,7 +9777,6 @@ runFunction(function()
 				debug.setupvalue(bedwars.ClientConstructor.Function.constructor, 1, function(self, ind, ...)
 					if ind == bedwars.ProjectileRemote then 
 						local res = oldrealremote(self, ind, ...)
-						print(res, "gotten")
 						return {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
 							local plr
 							if BowExploitTarget["Value"] == "Mouse" then 
