@@ -9980,7 +9980,7 @@ runFunction(function()
 	local matchstatechanged = 0
 	local mapname = "Unknown"
 	local overlayenabled = false
-	--why
+	
 	task.spawn(function()
 		pcall(function()
 			mapname = workspace:WaitForChild("Map"):WaitForChild("Worlds"):GetChildren()[1].Name
@@ -10238,6 +10238,7 @@ task.spawn(function()
 	end
 	task.spawn(function()
 		pcall(function()
+			if inputService.TouchEnabled then return end
 			if not isfile("vape/Profiles/bedwarsdata.txt") then 
 				local commit = "main"
 				for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/VapeV4ForRoblox"):split("\n")) do 
@@ -10267,7 +10268,7 @@ task.spawn(function()
 					olddata = newdata
 					writefile("vape/Profiles/bedwarsdata.txt", newdata)
 				end
-				if inputService.TouchEnabled then break end
+
 				task.wait(10)
 			until not vapeInjected
 		end)
