@@ -10148,7 +10148,6 @@ runFunction(function()
 	})
 end)
 
---hello world!
 task.spawn(function()
 	local function createannouncement(announcetab)
 		local vapenotifframe = Instance.new("TextButton")
