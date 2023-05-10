@@ -9773,7 +9773,7 @@ runFunction(function()
 		Function = function(callback)
 			if callback then 
 				oldrealremote = bedwars.ClientHandler:Get(bedwars.ProjectileRemote).instance
-				bedwars.ClientHandler:Get(bedwars.ProjectileRemote).instance = {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
+				--[[bedwars.ClientHandler:Get(bedwars.ProjectileRemote).instance = {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
 					local plr
 					if BowExploitTarget["Value"] == "Mouse" then 
 						plr = EntityNearMouse(10000)
@@ -9821,7 +9821,8 @@ runFunction(function()
 					else
 						return oldrealremote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
 					end
-				end}
+				end}]]
+				bedwars.ClientHandler:Get(bedwars.ProjectileRemote).instance = nil
 			else
 				bedwars.ClientHandler:Get(bedwars.ProjectileRemote).instance = oldrealremote
 				oldrealremote = nil
