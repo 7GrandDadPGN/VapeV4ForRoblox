@@ -585,7 +585,7 @@ local function EntityNearPosition(distance, overridepos)
 					mag = (overridepos - v2.PrimaryPart.Position).magnitude
 				end
                 if mag <= closestMagnitude then
-					closestEntity, closestMagnitude = {Player = {Name = v.Name, UserId = (v.Name == "Duck" and 2020831224 or 1443379645)}, Character = v, RootPart = v.PrimaryPart, Humanoid = {HipHeight = 2}}, mag
+					closestEntity, closestMagnitude = {Player = {Name = v.Name, UserId = (v.Name == "Duck" and 2020831224 or 1443379645)}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
                 end
 			end
 		end
@@ -596,7 +596,7 @@ local function EntityNearPosition(distance, overridepos)
 					mag = (overridepos - v2.PrimaryPart.Position).magnitude
 				end
                 if mag <= closestMagnitude then
-					closestEntity, closestMagnitude = {Player = {Name = "DiamondGuardian", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, Humanoid = {HipHeight = 2}}, mag
+					closestEntity, closestMagnitude = {Player = {Name = "DiamondGuardian", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
                 end
 			end
 		end
@@ -607,7 +607,7 @@ local function EntityNearPosition(distance, overridepos)
 					mag = (overridepos - v2.PrimaryPart.Position).magnitude
 				end
                 if mag <= closestMagnitude then
-					closestEntity, closestMagnitude = {Player = {Name = "GolemBoss", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, Humanoid = {HipHeight = 2}}, mag
+					closestEntity, closestMagnitude = {Player = {Name = "GolemBoss", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
                 end
 			end
 		end
@@ -620,7 +620,7 @@ local function EntityNearPosition(distance, overridepos)
 					mag = (overridepos - v.PrimaryPart.Position).magnitude
 				end
                 if mag <= closestMagnitude then -- magcheck
-                   	closestEntity, closestMagnitude = {Player = {Name = "Drone", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, Humanoid = {HipHeight = 2}}, mag
+                   	closestEntity, closestMagnitude = {Player = {Name = "Drone", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
                 end
 			end
 		end
@@ -9807,9 +9807,6 @@ runFunction(function()
 										playergrav = (workspace.Gravity * 0.3)
 									end
 									local newLaunchVelo = bedwars.ProjectileMeta[proj2].launchVelocity
-									for i,v in pairs(plr) do 
-										print(i,v)
-									end
 									local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / newLaunchVelo, plr, playergrav)
 									if proj2 == "telepearl" then
 										shootpos = pos
