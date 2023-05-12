@@ -433,10 +433,10 @@ if shared.VapeExecuted then
 					WindowTable[i] = {["Type"] = "ButtonMain", ["Enabled"] = v["Api"]["Enabled"], ["Keybind"] = v["Api"]["Keybind"]}
 				end
 				if v.Type == "ColorSliderMain" then
-					WindowTable[i] = {["Type"] = "ColorSliderMain", ["Hue"] = v["Api"]["Hue"], ["Sat"] = v["Api"]["Sat"], ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
+					WindowTable[i] = {["Type"] = "ColorSliderMain", ["Hue"] = v["Api"]["Hue"], ["Sat"] = v["Api"]["Sat"], ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"], ["Custom"] = v["Api"]["Custom"]}
 				end
 				if v.Type == "ColorSliderGUI" then
-					WindowTable[i] = {["Type"] = "ColorSliderGUI", ["Hue"] = v["Api"]["Saved"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
+					WindowTable[i] = {["Type"] = "ColorSliderGUI", ["Hue"] = v["Api"]["Custom"] and v["Api"]["Hue"] or v["Api"]["Saved"], ["Sat"] = v["Api"]["Sat"], ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"], ["Custom"] = v["Api"]["Custom"]}
 				end
 				if v.Type == "SliderMain" then
 					WindowTable[i] = {["Type"] = "SliderMain", ["Value"] = v["Api"]["Value"]}
@@ -579,7 +579,12 @@ if shared.VapeExecuted then
 					end
 					if v.Type == "ColorSliderGUI" then
 						local valcheck = v["Hue"] ~= nil
-						obj["Api"]["SetValue"](valcheck and v["Hue"] and (v["Hue"] / 7) - 0.1 or v["Value"] or 0.44, valcheck or v["Sat"] or 1, valcheck and v["Value"] or 1)
+						obj["Api"]["Custom"] = v["Custom"]
+						if v["Custom"] then
+							obj["Api"]["SetValue"](v["Hue"], v["Sat"], v["Value"])
+						else
+							obj["Api"]["SetValue"](valcheck and v["Hue"] and (v["Hue"] / 7) - 0.1 or v["Value"] or 0.44, valcheck and v["Sat"] or 1, valcheck and v["Value"] or 1)
+						end
 						obj["Api"]["SetRainbow"](v["RainbowValue"])
 					end
 					if v.Type == "SliderMain" then
@@ -1751,6 +1756,85 @@ if shared.VapeExecuted then
 			local defsca = (def - min)/(max - min)
 			local sliderapi = {}
 			local amount2 = #children2:GetChildren()
+
+			local function createSlider(text, changeType)
+				local frame = Instance.new("Frame")
+				frame.Size = UDim2.new(0, 220, 0, 50)
+				frame.BorderSizePixel = 0
+				frame.BackgroundTransparency = 0
+				frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+				frame.LayoutOrder = amount2 + 1
+				frame.Name = text
+				frame.Visible = false
+				frame.Parent = children2
+				local text1 = Instance.new("TextLabel")
+				text1.Font = Enum.Font.SourceSans
+				text1.TextXAlignment = Enum.TextXAlignment.Left
+				text1.Text = "    "..text
+				text1.Size = UDim2.new(1, 0, 0, 27)
+				text1.TextColor3 = Color3.fromRGB(162, 162, 162)
+				text1.BackgroundTransparency = 1
+				text1.TextSize = 14
+				text1.Parent = frame
+				local slider1 = Instance.new("TextButton")
+				slider1.AutoButtonColor = false
+				slider1.Text = ""
+				slider1.Size = UDim2.new(0, 200, 0, 2)
+				slider1.BorderSizePixel = 0
+				slider1.BackgroundColor3 = Color3.new(1, 1, 1)
+				slider1.Position = UDim2.new(0, 10, 0, 32)
+				slider1.Name = "Slider"
+				slider1.Parent = frame
+				local uigradient = Instance.new("UIGradient")
+				uigradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)), ColorSequenceKeypoint.new(0.2, Color3.fromHSV(0.2, 1, 1)), ColorSequenceKeypoint.new(0.3, Color3.fromHSV(0.3, 1, 1)), ColorSequenceKeypoint.new(0.4, Color3.fromHSV(0.4, 1, 1)), ColorSequenceKeypoint.new(0.5, Color3.fromHSV(0.5, 1, 1)), ColorSequenceKeypoint.new(0.6, Color3.fromHSV(0.6, 1, 1)), ColorSequenceKeypoint.new(0.7, Color3.fromHSV(0.7, 1, 1)), ColorSequenceKeypoint.new(0.8, Color3.fromHSV(0.8, 1, 1)), ColorSequenceKeypoint.new(0.9, Color3.fromHSV(0.9, 1, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))})
+				uigradient.Parent = slider1
+				local slider3 = Instance.new("ImageButton")
+				slider3.AutoButtonColor = false
+				slider3.Size = UDim2.new(0, 24, 0, 16)
+				slider3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+				slider3.BorderSizePixel = 0
+				slider3.Image = downloadVapeAsset("vape/assets/SliderButton1.png")
+				slider3.Position = UDim2.new(0.44, -11, 0, -7)
+				slider3.Parent = slider1
+				slider3.Name = "ButtonSlider"
+
+				local clicktick = tick()
+				local function slidercode(obj)
+					sliderapi["Custom"] = true
+					if clicktick > tick() then
+						sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
+					end
+					clicktick = tick() + 0.3
+					local x,y,xscale,yscale,xscale2 = RelativeXY(obj, inputService:GetMouseLocation())
+					sliderapi["SetValue"]((changeType == "Hue" and (min + ((max - min) * xscale)) or sliderapi["Hue"]), (changeType == "Sat" and (min + ((max - min) * xscale)) or sliderapi["Sat"]), (changeType == "Value" and (min + ((max - min) * xscale)) or sliderapi["Value"]))
+					obj.ButtonSlider.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
+					local move
+					local kill
+					move = inputService.InputChanged:Connect(function(input)
+						if input.UserInputType == Enum.UserInputType.MouseMovement then
+							local x,y,xscale,yscale,xscale2 = RelativeXY(obj, inputService:GetMouseLocation())
+							sliderapi["SetValue"]((changeType == "Hue" and (min + ((max - min) * xscale)) or sliderapi["Hue"]), (changeType == "Sat" and (min + ((max - min) * xscale)) or sliderapi["Sat"]), (changeType == "Value" and (min + ((max - min) * xscale)) or sliderapi["Value"]))
+							obj.ButtonSlider.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -7)
+						end
+					end)
+					kill = inputService.InputEnded:Connect(function(input)
+						if input.UserInputType == Enum.UserInputType.MouseButton1 then
+							capturedslider = {["Type"] = "ColorSlider", ["Object"] = obj.Parent, ["Api"] = sliderapi}
+							move:Disconnect()
+							kill:Disconnect()
+						end
+					end)
+				end
+				slider1.MouseButton1Down:Connect(function()
+					slidercode(slider1)
+				end)
+				slider3.MouseButton1Down:Connect(function()
+					slidercode(slider1)
+				end)
+
+				return frame
+			end
+
 			local frame = Instance.new("Frame")
 			frame.Size = UDim2.new(0, 220, 0, 50)
 			frame.BackgroundTransparency = 1
@@ -1769,7 +1853,7 @@ if shared.VapeExecuted then
 			local text2 = Instance.new("Frame")
 			text2.Size = UDim2.new(0, 12, 0, 12)
 			text2.Position = UDim2.new(1, -22, 0, 10)
-			text2.BackgroundColor3 = Color3.fromHSV(0.44, 1, 1)
+			text2.BackgroundColor3 = Color3.fromRGB(5, 133, 104)
 			text2.Parent = frame
 			local uicorner4 = Instance.new("UICorner")
 			uicorner4.CornerRadius = UDim.new(0, 4)
@@ -1779,7 +1863,7 @@ if shared.VapeExecuted then
 			slider1.Text = ""
 			slider1.Size = UDim2.new(0, 200, 0, 2)
 			slider1.BackgroundTransparency = 1
-			slider1.BackgroundColor3 = Color3.new(1, 1, 1)
+			slider1.BackgroundColor3 = Color3.fromRGB(5, 133, 104)
 			slider1.Position = UDim2.new(0, 10, 0, 32)
 			slider1.Name = "Slider"
 			slider1.Parent = frame
@@ -1811,12 +1895,38 @@ if shared.VapeExecuted then
 			slider3.Position = UDim2.new(0, sldiercolorpos[4] - 3, 0, -5)
 			slider3.Parent = slider1
 			slider3.Name = "ButtonSlider"
+			local hueSlider = createSlider("Custom color", "Hue")
+			local satSlider = createSlider("Saturation", "Sat")
+			satSlider.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0.4, 1, 1))})
+			local valSlider = createSlider("Vibrance", "Value")
+			valSlider.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromHSV(0.4, 1, 1))})
+			local sliderexpand = Instance.new("ImageButton")
+			sliderexpand.AutoButtonColor = false
+			sliderexpand.Size = UDim2.new(0, 15, 0, 15)
+			sliderexpand.BackgroundTransparency = 1
+			sliderexpand.Position = UDim2.new(0, textService:GetTextSize(text1.Text, text1.TextSize, text1.Font, Vector2.new(10000, 100000)).X + 3, 0, 6)
+			sliderexpand.Image = downloadVapeAsset("vape/assets/HoverArrow3.png")
+			sliderexpand.Parent = frame
+			sliderexpand.MouseEnter:Connect(function()
+				sliderexpand.Image = downloadVapeAsset("vape/assets/HoverArrow4.png")
+			end)
+			sliderexpand.MouseLeave:Connect(function()
+				sliderexpand.Image = downloadVapeAsset("vape/assets/HoverArrow3.png")
+			end)
+			sliderexpand.MouseButton1Click:Connect(function()
+				local val = not hueSlider.Visible
+				hueSlider.Visible = val
+				satSlider.Visible = val
+				valSlider.Visible = val
+				sliderexpand.Rotation = (val and 180 or 0)
+			end)
 			local defaulth, defaults, defaultv = slidercolors[4]:ToHSV()
 			sliderapi["Hue"] = defaulth
 			sliderapi["Sat"] = defaults
 			sliderapi["Value"] = defaultv
 			sliderapi["Saved"] = 4
 			sliderapi["RainbowValue"] = false
+			sliderapi["Custom"] = false
 			sliderapi["Object"] = frame
 
 			--[[
@@ -1847,13 +1957,20 @@ if shared.VapeExecuted then
 				val = val or 0.9
 				slider3.Image = (sliderapi["RainbowValue"] and downloadVapeAsset("vape/assets/ColorSlider2.png") or downloadVapeAsset("vape/assets/ColorSlider1.png"))
 				sliderrainbow.Image = (sliderapi["RainbowValue"] and downloadVapeAsset("vape/assets/RainbowIcon2.png") or downloadVapeAsset("vape/assets/RainbowIcon1.png"))
-				if sliderapi["RainbowValue"] then
+				if sliderapi["RainbowValue"] or sliderapi["Custom"] then
 					val = math.clamp(val, min, max)
 					text2.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
 					slider3.ImageColor3 = Color3.new(1, 1, 1)
-					sliderapi["Hue"] = hue
+					sliderapi["Hue"] = hue	
 					sliderapi["Sat"] = sat
 					sliderapi["Value"] = val
+					pcall(function()
+						satSlider.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, val)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, 1, val))})
+						valSlider.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, 1))})
+						hueSlider.Slider.ButtonSlider.Position = UDim2.new(math.clamp(hue, 0.02, 0.95), -9, 0, -7)
+						satSlider.Slider.ButtonSlider.Position = UDim2.new(math.clamp(sat, 0.02, 0.95), -9, 0, -7)
+						valSlider.Slider.ButtonSlider.Position = UDim2.new(math.clamp(val, 0.02, 0.95), -9, 0, -7)
+					end)
 					slider3.Position = UDim2.new(0, sldiercolorpos[4] - 3, 0, -5)
 					temporaryfunction(hue, sat, val)
 				else
@@ -1891,6 +2008,7 @@ if shared.VapeExecuted then
 				sliderrainbow.Image = (sliderapi["RainbowValue"] and downloadVapeAsset("vape/assets/RainbowIcon2.png") or downloadVapeAsset("vape/assets/RainbowIcon1.png"))
 			end)
 			slider1.MouseButton1Down:Connect(function()
+				sliderapi["Custom"] = false
 				local x,y,xscale,yscale,xscale2 = RelativeXY(slider1, inputService:GetMouseLocation())
 				sliderapi["SetValue"](min + ((max - min) * xscale), 0.7, 0.9)
 			--	slider3.Position = UDim2.new(math.clamp(xscale2, 0.02, 0.95), -9, 0, -5)
@@ -1913,6 +2031,7 @@ if shared.VapeExecuted then
 			end)
 			local clicktick = tick()
 			slider3.MouseButton1Down:Connect(function()
+				sliderapi["Custom"] = false
 				if clicktick > tick() then
 					sliderapi["SetRainbow"](not sliderapi["RainbowValue"])
 				end
@@ -2083,6 +2202,7 @@ if shared.VapeExecuted then
 				buttonicon.Size = UDim2.new(0, argstable["IconSize"] - 2, 0, 14)
 				buttonicon.BackgroundTransparency = 1
 				buttonicon.Position = UDim2.new(0, 10, 0, 13)
+				buttonicon.ImageColor3 = Color3.fromRGB(162, 162, 162)
 				buttonicon.Image = downloadVapeAsset(argstable["Icon"])
 				buttonicon.Name = "ButtonIcon"
 				buttonicon.Parent = button
@@ -4993,6 +5113,8 @@ if shared.VapeExecuted then
 					pcall(function()
 						slidersat.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, val)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, 1, val))})
 						sliderval.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, 1))})
+						slidersat.Slider.ButtonSlider.Position = UDim2.new(math.clamp(sat, 0.02, 0.95), -9, 0, -7)
+						sliderval.Slider.ButtonSlider.Position = UDim2.new(math.clamp(val, 0.02, 0.95), -9, 0, -7)
 					end)
 					sliderapi["Hue"] = hue
 					sliderapi["Sat"] = sat
