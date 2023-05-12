@@ -231,11 +231,11 @@ if shared.VapeExecuted then
 	searchbar.Text = ""
 	searchbar.ZIndex = 10
 	searchbar.TextColor3 = Color3.fromRGB(121, 121, 121)
-	searchbar.Size = UDim2.new(1, -13, 0, 37)
+	searchbar.Size = UDim2.new(1, -56, 0, 37)
 	searchbar.Font = Enum.Font.Gotham
 	searchbar.TextXAlignment = Enum.TextXAlignment.Left
 	searchbar.TextSize = 15
-	searchbar.Position = UDim2.new(0, 13, 0, 0)
+	searchbar.Position = UDim2.new(0, 56, 0, 0)
 	searchbar.BackgroundTransparency = 1
 	searchbar.Parent = searchbarmain
 	local searchbarshadow = Instance.new("ImageLabel")
@@ -252,12 +252,105 @@ if shared.VapeExecuted then
 	local searchbarround = Instance.new("UICorner")
 	searchbarround.CornerRadius = UDim.new(0, 5)
 	searchbarround.Parent = searchbarmain
+	local searchbaricon2 = Instance.new("TextButton")
+	searchbaricon2.Size = UDim2.new(0, 29, 0, 16)
+	searchbaricon2.AutoButtonColor = false
+	searchbaricon2.TextColor3 = Color3.new(1, 1, 1)
+	searchbaricon2.Font = Enum.Font.Gotham
+	searchbaricon2.Text = "Legit"
+	searchbaricon2.BackgroundTransparency = 1
+	searchbaricon2.ZIndex = 10
+	searchbaricon2.Position = UDim2.new(0, 8, 0, 11)
+	searchbaricon2.Parent = searchbarmain
+	local searchbarborder = Instance.new("Frame")
+	searchbarborder.Size = UDim2.new(0, 2, 0, 12)
+	searchbarborder.BorderSizePixel = 0
+	searchbarborder.ZIndex = 10
+	searchbarborder.Position = UDim2.new(0, 43, 0, 13)
+	searchbarborder.BackgroundColor3 = Color3.fromRGB(51, 51, 51)
+	searchbarborder.Parent = searchbarmain
 	local OnlineProfilesBigFrame = Instance.new("Frame")
 	OnlineProfilesBigFrame.Size = UDim2.new(1, 0, 1, 0)
 	OnlineProfilesBigFrame.Name = "OnlineProfiles"
 	OnlineProfilesBigFrame.BackgroundTransparency = 1
 	OnlineProfilesBigFrame.Visible = false
 	OnlineProfilesBigFrame.Parent = scaledgui
+	local LegitModulesBigFrame = Instance.new("Frame")
+	LegitModulesBigFrame.Size = UDim2.new(1, 0, 1, 0)
+	LegitModulesBigFrame.Name = "LegitModules"
+	LegitModulesBigFrame.BackgroundTransparency = 1
+	LegitModulesBigFrame.Visible = false
+	LegitModulesBigFrame.Parent = scaledgui
+	local LegitModulesFrame = Instance.new("Frame")
+	LegitModulesFrame.Size = UDim2.new(0, 700, 0, 389)
+	LegitModulesFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	LegitModulesFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	LegitModulesFrame.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+	LegitModulesFrame.Parent = LegitModulesBigFrame
+	local LegitModulesExitButton = Instance.new("ImageButton")
+	LegitModulesExitButton.Name = "LegitModulesExitButton"
+	LegitModulesExitButton.ImageColor3 = Color3.fromRGB(121, 121, 121)
+	LegitModulesExitButton.Size = UDim2.new(0, 24, 0, 24)
+	LegitModulesExitButton.AutoButtonColor = false
+	LegitModulesExitButton.Image = downloadVapeAsset("vape/assets/ExitIcon1.png")
+	LegitModulesExitButton.Visible = true
+	LegitModulesExitButton.Position = UDim2.new(1, -31, 0, 8)
+	LegitModulesExitButton.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+	LegitModulesExitButton.Parent = LegitModulesFrame
+	LegitModulesExitButton.MouseButton1Click:Connect(function()
+		LegitModulesBigFrame.Visible = false
+		clickgui.Visible = true
+	end)
+	local LegitModulesExitButtonround = Instance.new("UICorner")
+	LegitModulesExitButtonround.CornerRadius = UDim.new(0, 16)
+	LegitModulesExitButtonround.Parent = LegitModulesExitButton
+	LegitModulesExitButton.MouseEnter:Connect(function()
+		game:GetService("TweenService"):Create(LegitModulesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+	end)
+	LegitModulesExitButton.MouseLeave:Connect(function()
+		game:GetService("TweenService"):Create(LegitModulesExitButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(26, 25, 26), ImageColor3 = Color3.fromRGB(121, 121, 121)}):Play()
+	end)
+	local LegitModulesFrameShadow = Instance.new("ImageLabel")
+	LegitModulesFrameShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+	LegitModulesFrameShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	LegitModulesFrameShadow.Image = downloadVapeAsset("vape/assets/WindowBlur.png")
+	LegitModulesFrameShadow.BackgroundTransparency = 1
+	LegitModulesFrameShadow.ZIndex = -1
+	LegitModulesFrameShadow.Size = UDim2.new(1, 6, 1, 6)
+	LegitModulesFrameShadow.ImageColor3 = Color3.new()
+	LegitModulesFrameShadow.ScaleType = Enum.ScaleType.Slice
+	LegitModulesFrameShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+	LegitModulesFrameShadow.Parent = LegitModulesFrame
+	local LegitModulesFrameIcon = Instance.new("ImageLabel")
+	LegitModulesFrameIcon.Size = UDim2.new(0, 19, 0, 16)
+	LegitModulesFrameIcon.Image = downloadVapeAsset("vape/assets/ProfilesIcon.png")
+	LegitModulesFrameIcon.Name = "WindowIcon"
+	LegitModulesFrameIcon.BackgroundTransparency = 1
+	LegitModulesFrameIcon.Position = UDim2.new(0, 10, 0, 13)
+	LegitModulesFrameIcon.ImageColor3 = Color3.fromRGB(200, 200, 200)
+	LegitModulesFrameIcon.Parent = LegitModulesFrame
+	local LegitModulesList = Instance.new("ScrollingFrame")
+	LegitModulesList.BackgroundTransparency = 1
+	LegitModulesList.Size = UDim2.new(0, 700, 0, 294)
+	LegitModulesList.Position = UDim2.new(0, 14, 0, 81)
+	LegitModulesList.CanvasSize = UDim2.new(0, 700, 0, 294)
+	LegitModulesList.Parent = LegitModulesFrame
+	local LegitModulesListGrid = Instance.new("UIGridLayout")
+	LegitModulesListGrid.CellSize = UDim2.new(0, 163, 0, 114)
+	LegitModulesListGrid.CellPadding = UDim2.new(0, 6, 0, 6)
+	LegitModulesListGrid.Parent = LegitModulesList
+	local LegitModulesFrameCorner = Instance.new("UICorner")
+	LegitModulesFrameCorner.CornerRadius = UDim.new(0, 4)
+	LegitModulesFrameCorner.Parent = LegitModulesFrame
+	local LegitModulesDrag = Instance.new("TextButton")
+	LegitModulesDrag.Size = UDim2.new(0, 40, 0, 40)
+	LegitModulesDrag.Position = UDim2.new(0, 5, 1, -40)
+	LegitModulesDrag.Font = Enum.Font.Gotham
+	LegitModulesDrag.TextColor3 = Color3.new(1, 1, 1)
+	LegitModulesDrag.TextSize = 18
+	LegitModulesDrag.Text = "Drag"
+	LegitModulesDrag.BackgroundTransparency = 1
+	LegitModulesDrag.Parent = LegitModulesBigFrame
 	local notificationwindow = Instance.new("Frame")
 	notificationwindow.BackgroundTransparency = 1
 	notificationwindow.Active = false
@@ -328,6 +421,20 @@ if shared.VapeExecuted then
 	hudgui.BackgroundTransparency = 1
 	hudgui.Visible = true
 	hudgui.Parent = scaledgui
+	local legitgui = Instance.new("Frame")
+	legitgui.Name = "LegitGui"
+	legitgui.Size = UDim2.new(1, 0, 1, 0)
+	legitgui.BackgroundTransparency = 1
+	legitgui.Visible = true
+	legitgui.Parent = scaledgui
+	LegitModulesDrag.MouseButton1Click:Connect(function()
+		LegitModulesFrame.Visible = not LegitModulesFrame.Visible
+		GuiLibrary.LegitDragging = not LegitModulesFrame.Visible
+		legitgui.Visible = GuiLibrary.LegitDragging
+		for i, v in pairs(legitgui:GetChildren()) do 
+			if v:IsA("Frame") then v.BackgroundTransparency = GuiLibrary.LegitDragging and 0.8 or 1 end
+		end
+	end)
 	GuiLibrary["MainBlur"] = {Size = 25}
 	GuiLibrary["MainRescale"] = Instance.new("UIScale")
 	GuiLibrary["MainRescale"].Parent = scaledgui
@@ -335,7 +442,7 @@ if shared.VapeExecuted then
 		vertext.Position = UDim2.new(1 / GuiLibrary["MainRescale"].Scale, -(vertextsize.X) - 20, 1 / GuiLibrary["MainRescale"].Scale, -25)
 	end)
 
-	local function dragGUI(gui)
+	local function dragGUI(gui, mod)
 		task.spawn(function()
 			local dragging
 			local dragInput
@@ -343,24 +450,24 @@ if shared.VapeExecuted then
 			local startPos
 			local function update(input)
 				local delta = input.Position - dragStart
-				local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (delta.X * (1 / GuiLibrary["MainRescale"].Scale)), startPos.Y.Scale, startPos.Y.Offset + (delta.Y * (1 / GuiLibrary["MainRescale"].Scale)))
+				local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (delta.X * (1 / GuiLibrary.MainRescale.Scale)), startPos.Y.Scale, startPos.Y.Offset + (delta.Y * (1 / GuiLibrary.MainRescale.Scale)))
 				tweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
 			end
 			gui.InputBegan:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-						dragStart = input.Position
-						local delta = (dragStart - Vector3.new(gui.AbsolutePosition.X, gui.AbsolutePosition.Y, 0)) * (1 / GuiLibrary["MainRescale"].Scale)
-						if delta.Y <= 40 then
-							dragging = clickgui.Visible
-							startPos = gui.Position
-							
-							input.Changed:Connect(function()
-								if input.UserInputState == Enum.UserInputState.End then
-									dragging = false
-								end
-							end)
-						end
+				if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and (not mod or GuiLibrary.LegitDragging) then
+					dragStart = input.Position
+					local delta = (dragStart - Vector3.new(gui.AbsolutePosition.X, gui.AbsolutePosition.Y, 0)) * (1 / GuiLibrary.MainRescale.Scale)
+					if delta.Y <= 40 then
+						dragging = mod and GuiLibrary.LegitDragging or clickgui.Visible
+						startPos = gui.Position
+						
+						input.Changed:Connect(function()
+							if input.UserInputState == Enum.UserInputState.End then
+								dragging = false
+							end
+						end)
 					end
+				end
 			end)
 			gui.InputChanged:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
@@ -473,6 +580,9 @@ if shared.VapeExecuted then
 				end
 				if v.Type == "ColorSlider" then
 					GuiLibrary.Settings[i] = {["Type"] = "ColorSlider", ["Hue"] = v["Api"]["Hue"], ["Sat"] = v["Api"]["Sat"], ["Value"] = v["Api"]["Value"], ["RainbowValue"] = v["Api"]["RainbowValue"]}
+				end
+				if v.Type == "LegitModule" then 
+					GuiLibrary.Settings[i] = {["Type"] = "LegitModule", ["Enabled"] = v["Api"]["Enabled"], ["Position"] = {v.Object.Position.X.Scale, v.Object.Position.X.Offset, v.Object.Position.Y.Scale, v.Object.Position.Y.Offset}}
 				end
 			end
 			local mobileButtonSaving = {}
@@ -608,14 +718,6 @@ if shared.VapeExecuted then
 				if v.Type == "Custom" and GuiLibrary.Settings[i] then
 					GuiLibrary.Settings[i] = v
 				end
-				if v.Type == "MobileButtons" then 
-					for _, mobileButton in pairs(v.Buttons) do 
-						local module = GuiLibrary.ObjectsThatCanBeSaved[mobileButton.Module]
-						if module then 
-							createMobileButton(module.Api, Vector2.new(mobileButton.Position[1], mobileButton.Position[2]))
-						end
-					end
-				end
 				local obj = GuiLibrary.ObjectsThatCanBeSaved[i]
 				if obj then
 					local starttick = tick()
@@ -692,6 +794,12 @@ if shared.VapeExecuted then
 							obj["Object3"].Slider.ButtonSlider.Position = UDim2.new(math.clamp(v["Value"], 0.02, 0.95), -9, 0, -7)
 						end)
 					end
+					if v.Type == "LegitModule" then 
+						obj.Object.Position = UDim2.new(v["Position"][1], v["Position"][2], v["Position"][3], v["Position"][4])
+						if v["Enabled"] then
+							obj["Api"]["ToggleButton"](true)
+						end
+					end
 				end
 			end
 			for i,v in pairs(result) do
@@ -703,6 +811,16 @@ if shared.VapeExecuted then
 						end
 						if v["Keybind"] ~= "" then
 							GuiLibrary.ObjectsThatCanBeSaved[i]["Api"]["SetKeybind"](v["Keybind"])
+						end
+					end
+				end
+			end
+			for i,v in pairs(result) do
+				if v.Type == "MobileButtons" then 
+					for _, mobileButton in pairs(v.Buttons) do 
+						local module = GuiLibrary.ObjectsThatCanBeSaved[mobileButton.Module]
+						if module then 
+							createMobileButton(module.Api, Vector2.new(mobileButton.Position[1], mobileButton.Position[2]))
 						end
 					end
 				end
@@ -5649,6 +5767,7 @@ if shared.VapeExecuted then
 					until (tick() - touchtick) > 1 or not touched or not clickgui.Visible
 					if touched and clickgui.Visible then 
 						clickgui.Visible = false
+						legitgui.Visible = not clickgui.Visible
 						game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)
 						for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end	
 						local touchconnection
@@ -5656,6 +5775,7 @@ if shared.VapeExecuted then
 							if inputType.UserInputType == Enum.UserInputType.Touch then 
 								createMobileButton(buttonapi, inputType.Position)
 								clickgui.Visible = true
+								legitgui.Visible = not clickgui.Visible
 								game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)
 								for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end		
 								touchconnection:Disconnect()
@@ -6523,6 +6643,92 @@ if shared.VapeExecuted then
 		return windowapi
 	end
 
+	GuiLibrary["CreateLegitModule"] = function(legittable)
+		local legitapi = {}
+		local customlegit = Instance.new("Frame")
+		customlegit.Size = UDim2.new(0, 40, 0, 40)
+		customlegit.BackgroundTransparency = 1
+		customlegit.BackgroundColor3 = Color3.new(0, 1, 0)
+		customlegit.BorderSizePixel = 0
+		customlegit.Visible = false
+		customlegit.Parent = legitgui
+		local legitframe = Instance.new("TextButton")
+		legitframe.AutoButtonColor = false
+		legitframe.Text = ""
+		legitframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+		legitframe.Size = UDim2.new(0, 163, 0, 114)
+		legitframe.Parent = LegitModulesList
+		local legitframecorner = Instance.new("UICorner")
+		legitframecorner.CornerRadius = UDim.new(0, 5)
+		legitframecorner.Parent = legitframe
+		local legitframetext = Instance.new("TextLabel")
+		legitframetext.Font = Enum.Font.Gotham
+		legitframetext.TextSize = 15
+		legitframetext.BackgroundTransparency = 1
+		legitframetext.TextXAlignment = Enum.TextXAlignment.Left
+		legitframetext.TextYAlignment = Enum.TextYAlignment.Top
+		legitframetext.TextColor3 = Color3.fromRGB(163, 163, 164)
+		legitframetext.Size = UDim2.new(1, -16, 0, 22)
+		legitframetext.Position = UDim2.new(0, 16, 0, 83)
+		legitframetext.Text = legittable.Name
+		legitframetext.Parent = legitframe
+		local toggleframe1 = Instance.new("Frame")
+		toggleframe1.Size = UDim2.new(0, 22, 0, 12)
+		toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		toggleframe1.BorderSizePixel = 0
+		toggleframe1.Name = "ToggleFrame1"
+		toggleframe1.Position = UDim2.new(1, -57, 0, 14)
+		toggleframe1.Parent = legitframe
+		local toggleframe2 = Instance.new("Frame")
+		toggleframe2.Size = UDim2.new(0, 8, 0, 8)
+		toggleframe2.Active = false
+		toggleframe2.Position = UDim2.new(0, 2, 0, 2)
+		toggleframe2.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+		toggleframe2.BorderSizePixel = 0
+		toggleframe2.Parent = toggleframe1
+		local uicorner = Instance.new("UICorner")
+		uicorner.CornerRadius = UDim.new(0, 16)
+		uicorner.Parent = toggleframe1
+		local uicorner2 = Instance.new("UICorner")
+		uicorner2.CornerRadius = UDim.new(0, 16)
+		uicorner2.Parent = toggleframe2
+		dragGUI(customlegit, true)
+		legitapi.Enabled = false
+
+		legitapi.ToggleButton = function(first)
+			legitapi.Enabled = not legitapi.Enabled
+			customlegit.Visible = legitapi.Enabled
+			if legitapi.Enabled then
+				legitframe.BackgroundColor3 = Color3.fromRGB(40, 39, 40)
+				legitframetext.TextColor3 = Color3.fromRGB(228, 228, 228)
+				if not first then
+					tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])}):Play()
+				else
+					toggleframe1.BackgroundColor3 = Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Hue"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Sat"], GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"]["Api"]["Value"])
+				end
+				toggleframe2:TweenPosition(UDim2.new(0, 12, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
+			else
+				legitframe.BackgroundColor3 = Color3.fromRGB(31, 30, 31)
+				legitframetext.TextColor3 = Color3.fromRGB(163, 163, 164)
+				if not first then
+					tweenService:Create(toggleframe1, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+				else
+					toggleframe1.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+				end
+				toggleframe2:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.1, true)
+			end
+			legittable.Function(legitapi.Enabled)
+		end
+		legitframe.MouseButton1Click:Connect(function() legitapi["ToggleButton"](not legitapi["Enabled"], false) end)
+		
+		legitapi["GetCustomChildren"] = function()
+			return customlegit
+		end
+
+		GuiLibrary.ObjectsThatCanBeSaved[legittable.Name.."LegitModule"] = {Api = legitapi, Type = "LegitModule", Object = customlegit}
+		return legitapi	
+	end
+
 	local function bettertween(obj, newpos, dir, style, tim, override)
 		task.spawn(function()
 			local frame = Instance.new("Frame")
@@ -6683,11 +6889,15 @@ if shared.VapeExecuted then
 		button.Parent = GuiLibrary.MainGui
 		button.MouseButton1Click:Connect(function()
 			clickgui.Visible = not clickgui.Visible
+			legitgui.Visible = not clickgui.Visible
 			inputService.OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
 			game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)	
 			for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end	
 			if OnlineProfilesBigFrame.Visible then
 				OnlineProfilesBigFrame.Visible = false
+			end
+			if LegitModulesBigFrame.Visible then
+				LegitModulesBigFrame.Visible = false
 			end
 		end)
 	end
@@ -6696,11 +6906,15 @@ if shared.VapeExecuted then
 		if inputService:GetFocusedTextBox() == nil then
 			if input1.KeyCode == Enum.KeyCode[GuiLibrary["GUIKeybind"]] and GuiLibrary["KeybindCaptured"] == false then
 				clickgui.Visible = not clickgui.Visible
+				legitgui.Visible = not clickgui.Visible
 				inputService.OverrideMouseIconBehavior = (clickgui.Visible and Enum.OverrideMouseIconBehavior.ForceShow or game:GetService("VRService").VREnabled and Enum.OverrideMouseIconBehavior.ForceHide or Enum.OverrideMouseIconBehavior.None)
 				game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)	
 				for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end	
 				if OnlineProfilesBigFrame.Visible then
 					OnlineProfilesBigFrame.Visible = false
+				end
+				if LegitModulesBigFrame.Visible then
+					LegitModulesBigFrame.Visible = false
 				end
 			end
 			if input1.KeyCode == Enum.KeyCode.RightAlt then 
@@ -6810,6 +7024,11 @@ if shared.VapeExecuted then
 	end)
 	GuiLibrary["MainRescale"]:GetPropertyChangedSignal("Scale"):Connect(function()
 		searchbarmain.Position = UDim2.new(0.5 / GuiLibrary["MainRescale"].Scale, -110, 0, -23)
+	end)
+
+	searchbaricon2.MouseButton1Click:Connect(function()
+		LegitModulesBigFrame.Visible = true
+		clickgui.Visible = false
 	end)
 
 	return GuiLibrary
