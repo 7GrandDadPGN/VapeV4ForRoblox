@@ -6,6 +6,7 @@ local textChatService = game:GetService("TextChatService")
 local inputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
 local replicatedStorageService = game:GetService("ReplicatedStorage")
+local tweenService = game:GetService("TweenService")
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
 local vapeConnections = {}
@@ -433,7 +434,7 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 								local widgettextsize = Instance.new("UITextSizeConstraint")
 								widgettextsize.MaxTextSize = 18
 								widgettextsize.Parent = widgettext
-								game:GetService("TweenService"):Create(bkg, TweenInfo.new(0.12), {BackgroundTransparency = 0.6}):Play()
+								tweenService:Create(bkg, TweenInfo.new(0.12), {BackgroundTransparency = 0.6}):Play()
 								task.wait(0.13)
 							end
 							pcall(function()
@@ -5587,12 +5588,12 @@ runFunction(function()
 										flyingsound:Play()
 									end
 									if currenttween then currenttween:Cancel() end
-									tween = game:GetService("TweenService"):Create(chairlegs, TweenInfo.new(0.15), {Size = Vector3.zero})
+									tween = tweenService:Create(chairlegs, TweenInfo.new(0.15), {Size = Vector3.zero})
 									tween.Completed:Connect(function(state)
 										if state == Enum.PlaybackState.Completed then 
 											chairfan.Transparency = 0
 											chairlegs.Transparency = 1
-											tween = game:GetService("TweenService"):Create(chairfan, TweenInfo.new(0.15), {Size = Vector3.new(1.534, 0.328, 1.537) / Vector3.new(791.138, 168.824, 792.027)})
+											tween = tweenService:Create(chairfan, TweenInfo.new(0.15), {Size = Vector3.new(1.534, 0.328, 1.537) / Vector3.new(791.138, 168.824, 792.027)})
 											tween:Play()
 										end
 									end)
@@ -5605,12 +5606,12 @@ runFunction(function()
 										movingsound:Play()
 									end
 									if currenttween then currenttween:Cancel() end
-									tween = game:GetService("TweenService"):Create(chairfan, TweenInfo.new(0.15), {Size = Vector3.zero})
+									tween = tweenService:Create(chairfan, TweenInfo.new(0.15), {Size = Vector3.zero})
 									tween.Completed:Connect(function(state)
 										if state == Enum.PlaybackState.Completed then 
 											chairfan.Transparency = 1
 											chairlegs.Transparency = 0
-											tween = game:GetService("TweenService"):Create(chairlegs, TweenInfo.new(0.15), {Size = Vector3.new(1.8, 1.2, 1.8) / Vector3.new(10.432, 8.105, 9.488)})
+											tween = tweenService:Create(chairlegs, TweenInfo.new(0.15), {Size = Vector3.new(1.8, 1.2, 1.8) / Vector3.new(10.432, 8.105, 9.488)})
 											tween:Play()
 										end
 									end)
@@ -5673,7 +5674,7 @@ runFunction(function()
 			if (not SongBeats.Enabled) then break end
 			gameCamera.FieldOfView = SongFOV - 5
 			if SongTween then SongTween:Cancel() end
-			SongTween = game:GetService("TweenService"):Create(gameCamera, TweenInfo.new(0.2), {FieldOfView = SongFOV})
+			SongTween = tweenService:Create(gameCamera, TweenInfo.new(0.2), {FieldOfView = SongFOV})
 			SongTween:Play()
 			task.wait(bpm)
 		until (not SongBeats.Enabled) or SongAudio.IsPaused
@@ -5850,7 +5851,6 @@ runFunction(function()
 	})
 end)
 
-
 runFunction(function()
 	local Disabler = {Enabled = false}
 	local DisablerAntiKick = {Enabled = false}
@@ -5898,4 +5898,78 @@ runFunction(function()
 			end
 		end
 	})
+end)
+
+runFunction(function()
+	local Keystrokes = {}
+	local keys = {}
+	local keystrokesframe
+	local keyconnection1
+	local keyconnection2
+
+	local function createKeystroke(keybutton, pos, pos2)
+		local key = Instance.new("Frame")
+		key.Size = keybutton == Enum.KeyCode.Space and UDim2.new(0, 110, 0, 24) or UDim2.new(0, 34, 0, 36)
+		key.BackgroundColor3 = Color3.new()
+		key.BackgroundTransparency = 0.5
+		key.Position = pos
+		key.Parent = keystrokesframe
+		local keytext = Instance.new("TextLabel")
+		keytext.BackgroundTransparency = 1
+		keytext.Size = UDim2.new(1, 0, 1, 0)
+		keytext.Font = Enum.Font.Gotham
+		keytext.Text = keybutton == Enum.KeyCode.Space and "______" or keybutton.Name
+		keytext.TextXAlignment = Enum.TextXAlignment.Left
+		keytext.TextYAlignment = Enum.TextYAlignment.Top
+		keytext.Position = pos2
+		keytext.TextSize = keybutton == Enum.KeyCode.Space and 18 or 15
+		keytext.TextColor3 = Color3.new(1, 1, 1)
+		keytext.Parent = key
+		local keycorner = Instance.new("UICorner")
+		keycorner.CornerRadius = UDim.new(0, 4)
+		keycorner.Parent = key
+		keys[keybutton] = {Key = key}
+	end
+
+	Keystrokes = GuiLibrary.CreateLegitModule({
+		Name = "Keystrokes",
+		Function = function(callback)
+			if callback then 
+				keyconnection1 = inputService.InputBegan:Connect(function(inputType)
+					local key = keys[inputType.KeyCode]
+					if key then 
+						if key.Tween then key.Tween:Cancel() end
+						if key.Tween2 then key.Tween2:Cancel() end
+						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0})
+						key.Tween:Play()
+						key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {TextColor3 = Color3.new()})
+						key.Tween2:Play()
+					end
+				end)
+				keyconnection2 = inputService.InputEnded:Connect(function(inputType)
+					local key = keys[inputType.KeyCode]
+					if key then 
+						if key.Tween then key.Tween:Cancel() end
+						if key.Tween2 then key.Tween2:Cancel() end
+						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {BackgroundColor3 = Color3.new(), BackgroundTransparency = 0.5})
+						key.Tween:Play()
+						key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {TextColor3 = Color3.new(1, 1, 1)})
+						key.Tween2:Play()
+					end
+				end)
+			else
+				if keyconnection1 then keyconnection1:Disconnect() end
+				if keyconnection2 then keyconnection2:Disconnect() end
+			end
+		end
+	})
+	keystrokesframe = Instance.new("Frame")
+	keystrokesframe.Size = UDim2.new(0, 110, 0, 176)
+	keystrokesframe.BackgroundTransparency = 1
+	keystrokesframe.Parent = Keystrokes.GetCustomChildren()
+	createKeystroke(Enum.KeyCode.W, UDim2.new(0, 38, 0, 0), UDim2.new(0, 6, 0, 5))
+	createKeystroke(Enum.KeyCode.S, UDim2.new(0, 38, 0, 42), UDim2.new(0, 8, 0, 5))
+	createKeystroke(Enum.KeyCode.A, UDim2.new(0, 0, 0, 42), UDim2.new(0, 7, 0, 5))
+	createKeystroke(Enum.KeyCode.D, UDim2.new(0, 76, 0, 42), UDim2.new(0, 8, 0, 5))
+	createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10))
 end)
