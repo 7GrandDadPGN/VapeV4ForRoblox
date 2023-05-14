@@ -565,7 +565,7 @@ local function getBestBreakSide(pos)
 	return softestside, softest
 end
 
-local function EntityNearPosition(distance, overridepos)
+local function EntityNearPosition(distance, ignore, overridepos)
 	local closestEntity, closestMagnitude = nil, distance
 	if entityLibrary.isAlive then
 		for i, v in pairs(entityLibrary.entityList) do
@@ -580,50 +580,52 @@ local function EntityNearPosition(distance, overridepos)
                 end
             end
         end
-		for i, v in pairs(collectionService:GetTagged("Monster")) do
-			if v.PrimaryPart and v:GetAttribute("Team") ~= lplr:GetAttribute("Team") then
-				local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
-				if overridepos and mag > distance then 
-					mag = (overridepos - v2.PrimaryPart.Position).magnitude
+		if not ignore then
+			for i, v in pairs(collectionService:GetTagged("Monster")) do
+				if v.PrimaryPart and v:GetAttribute("Team") ~= lplr:GetAttribute("Team") then
+					local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
+					if overridepos and mag > distance then 
+						mag = (overridepos - v2.PrimaryPart.Position).magnitude
+					end
+					if mag <= closestMagnitude then
+						closestEntity, closestMagnitude = {Player = {Name = v.Name, UserId = (v.Name == "Duck" and 2020831224 or 1443379645)}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
+					end
 				end
-                if mag <= closestMagnitude then
-					closestEntity, closestMagnitude = {Player = {Name = v.Name, UserId = (v.Name == "Duck" and 2020831224 or 1443379645)}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
-                end
 			end
-		end
-		for i, v in pairs(collectionService:GetTagged("DiamondGuardian")) do
-			if v.PrimaryPart then
-				local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
-				if overridepos and mag > distance then 
-					mag = (overridepos - v2.PrimaryPart.Position).magnitude
+			for i, v in pairs(collectionService:GetTagged("DiamondGuardian")) do
+				if v.PrimaryPart then
+					local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
+					if overridepos and mag > distance then 
+						mag = (overridepos - v2.PrimaryPart.Position).magnitude
+					end
+					if mag <= closestMagnitude then
+						closestEntity, closestMagnitude = {Player = {Name = "DiamondGuardian", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
+					end
 				end
-                if mag <= closestMagnitude then
-					closestEntity, closestMagnitude = {Player = {Name = "DiamondGuardian", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
-                end
 			end
-		end
-		for i, v in pairs(collectionService:GetTagged("GolemBoss")) do
-			if v.PrimaryPart then
-				local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
-				if overridepos and mag > distance then 
-					mag = (overridepos - v2.PrimaryPart.Position).magnitude
+			for i, v in pairs(collectionService:GetTagged("GolemBoss")) do
+				if v.PrimaryPart then
+					local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
+					if overridepos and mag > distance then 
+						mag = (overridepos - v2.PrimaryPart.Position).magnitude
+					end
+					if mag <= closestMagnitude then
+						closestEntity, closestMagnitude = {Player = {Name = "GolemBoss", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
+					end
 				end
-                if mag <= closestMagnitude then
-					closestEntity, closestMagnitude = {Player = {Name = "GolemBoss", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
-                end
 			end
-		end
-		for i, v in pairs(collectionService:GetTagged("Drone")) do
-			if v.PrimaryPart and tonumber(v:GetAttribute("PlayerUserId")) ~= lplr.UserId then
-				local droneplr = playersService:GetPlayerByUserId(v:GetAttribute("PlayerUserId"))
-				if droneplr and droneplr.Team == lplr.Team then continue end
-				local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
-				if overridepos and mag > distance then 
-					mag = (overridepos - v.PrimaryPart.Position).magnitude
+			for i, v in pairs(collectionService:GetTagged("Drone")) do
+				if v.PrimaryPart and tonumber(v:GetAttribute("PlayerUserId")) ~= lplr.UserId then
+					local droneplr = playersService:GetPlayerByUserId(v:GetAttribute("PlayerUserId"))
+					if droneplr and droneplr.Team == lplr.Team then continue end
+					local mag = (entityLibrary.character.HumanoidRootPart.Position - v.PrimaryPart.Position).magnitude
+					if overridepos and mag > distance then 
+						mag = (overridepos - v.PrimaryPart.Position).magnitude
+					end
+					if mag <= closestMagnitude then -- magcheck
+						closestEntity, closestMagnitude = {Player = {Name = "Drone", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
+					end
 				end
-                if mag <= closestMagnitude then -- magcheck
-                   	closestEntity, closestMagnitude = {Player = {Name = "Drone", UserId = 1443379645}, Character = v, RootPart = v.PrimaryPart, JumpTick = tick() + 5, Jumping = false, Humanoid = {HipHeight = 2}}, mag
-                end
 			end
 		end
 	end
@@ -9791,7 +9793,7 @@ runFunction(function()
 							if BowExploitTarget["Value"] == "Mouse" then 
 								plr = EntityNearMouse(10000)
 							else
-								plr = EntityNearPosition(BowExploitAutoShootFOV.Value)
+								plr = EntityNearPosition(BowExploitAutoShootFOV.Value, true)
 							end
 							if plr then	
 								local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
