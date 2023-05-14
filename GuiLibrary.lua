@@ -1,5 +1,5 @@
 if shared.VapeExecuted then
-	local VERSION = "4.09"..(shared.VapePrivate and " PRIVATE" or "").." "..readfile("vape/commithash.txt"):sub(1, 6)
+	local VERSION = "4.10"..(shared.VapePrivate and " PRIVATE" or "").." "..readfile("vape/commithash.txt"):sub(1, 6)
 	local baseDirectory = (shared.VapePrivate and "vapeprivate/" or "vape/")
 	local universalRainbowValue = 0
 	local vapeAssetTable = {
@@ -23,6 +23,7 @@ if shared.VapeExecuted then
 		["vape/assets/HoverArrow4.png"] = "rbxassetid://13350773643",
 		["vape/assets/InfoNotification.png"] = "rbxassetid://13350774006",
 		["vape/assets/KeybindIcon.png"] = "rbxassetid://13350774323",
+		["vape/assets/LegitModeIcon.png"] = "rbxassetid://13436400428",
 		["vape/assets/MoreButton1.png"] = "rbxassetid://13350775005",
 		["vape/assets/MoreButton2.png"] = "rbxassetid://13350775731",
 		["vape/assets/MoreButton3.png"] = "rbxassetid://13350776241",
@@ -212,6 +213,7 @@ if shared.VapeExecuted then
 	searchbarmain.ClipsDescendants = false
 	searchbarmain.ZIndex = 10
 	searchbarmain.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	searchbarmain.Name = "SearchBar"
 	searchbarmain.Parent = clickgui
 	local searchbarchildren = Instance.new("Frame")
 	searchbarchildren.Size = UDim2.new(1, 0, 1, -37)
@@ -252,13 +254,12 @@ if shared.VapeExecuted then
 	local searchbarround = Instance.new("UICorner")
 	searchbarround.CornerRadius = UDim.new(0, 5)
 	searchbarround.Parent = searchbarmain
-	local searchbaricon2 = Instance.new("TextButton")
+	local searchbaricon2 = Instance.new("ImageButton")
 	searchbaricon2.Size = UDim2.new(0, 29, 0, 16)
 	searchbaricon2.AutoButtonColor = false
-	searchbaricon2.TextColor3 = Color3.new(1, 1, 1)
-	searchbaricon2.Font = Enum.Font.Gotham
-	searchbaricon2.Text = "Legit"
+	searchbaricon2.Image = downloadVapeAsset("vape/assets/LegitModeIcon.png")
 	searchbaricon2.BackgroundTransparency = 1
+	searchbaricon2.Name = "LegitMode"
 	searchbaricon2.ZIndex = 10
 	searchbaricon2.Position = UDim2.new(0, 8, 0, 11)
 	searchbaricon2.Parent = searchbarmain
@@ -275,6 +276,12 @@ if shared.VapeExecuted then
 	OnlineProfilesBigFrame.BackgroundTransparency = 1
 	OnlineProfilesBigFrame.Visible = false
 	OnlineProfilesBigFrame.Parent = scaledgui
+	local legitgui = Instance.new("Frame")
+	legitgui.Name = "LegitGui"
+	legitgui.Size = UDim2.new(1, 0, 1, 0)
+	legitgui.BackgroundTransparency = 1
+	legitgui.Visible = true
+	legitgui.Parent = scaledgui
 	local LegitModulesBigFrame = Instance.new("Frame")
 	LegitModulesBigFrame.Size = UDim2.new(1, 0, 1, 0)
 	LegitModulesBigFrame.Name = "LegitModules"
@@ -300,6 +307,10 @@ if shared.VapeExecuted then
 	LegitModulesExitButton.MouseButton1Click:Connect(function()
 		LegitModulesBigFrame.Visible = false
 		clickgui.Visible = true
+		legitgui.Visible = not clickgui.Visible
+		for i, v in pairs(legitgui:GetChildren()) do 
+			if v:IsA("Frame") then v.BackgroundTransparency = legitgui.Visible and 0.8 or 1 end
+		end
 	end)
 	local LegitModulesExitButtonround = Instance.new("UICorner")
 	LegitModulesExitButtonround.CornerRadius = UDim.new(0, 16)
@@ -342,15 +353,6 @@ if shared.VapeExecuted then
 	local LegitModulesFrameCorner = Instance.new("UICorner")
 	LegitModulesFrameCorner.CornerRadius = UDim.new(0, 4)
 	LegitModulesFrameCorner.Parent = LegitModulesFrame
-	local LegitModulesDrag = Instance.new("TextButton")
-	LegitModulesDrag.Size = UDim2.new(0, 40, 0, 40)
-	LegitModulesDrag.Position = UDim2.new(0, 5, 1, -40)
-	LegitModulesDrag.Font = Enum.Font.Gotham
-	LegitModulesDrag.TextColor3 = Color3.new(1, 1, 1)
-	LegitModulesDrag.TextSize = 18
-	LegitModulesDrag.Text = "Drag"
-	LegitModulesDrag.BackgroundTransparency = 1
-	LegitModulesDrag.Parent = LegitModulesBigFrame
 	local notificationwindow = Instance.new("Frame")
 	notificationwindow.BackgroundTransparency = 1
 	notificationwindow.Active = false
@@ -421,20 +423,6 @@ if shared.VapeExecuted then
 	hudgui.BackgroundTransparency = 1
 	hudgui.Visible = true
 	hudgui.Parent = scaledgui
-	local legitgui = Instance.new("Frame")
-	legitgui.Name = "LegitGui"
-	legitgui.Size = UDim2.new(1, 0, 1, 0)
-	legitgui.BackgroundTransparency = 1
-	legitgui.Visible = true
-	legitgui.Parent = scaledgui
-	LegitModulesDrag.MouseButton1Click:Connect(function()
-		LegitModulesFrame.Visible = not LegitModulesFrame.Visible
-		GuiLibrary.LegitDragging = not LegitModulesFrame.Visible
-		legitgui.Visible = GuiLibrary.LegitDragging
-		for i, v in pairs(legitgui:GetChildren()) do 
-			if v:IsA("Frame") then v.BackgroundTransparency = GuiLibrary.LegitDragging and 0.8 or 1 end
-		end
-	end)
 	GuiLibrary["MainBlur"] = {Size = 25}
 	GuiLibrary["MainRescale"] = Instance.new("UIScale")
 	GuiLibrary["MainRescale"].Parent = scaledgui
@@ -454,11 +442,11 @@ if shared.VapeExecuted then
 				tweenService:Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
 			end
 			gui.InputBegan:Connect(function(input)
-				if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and (not mod or GuiLibrary.LegitDragging) then
+				if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and (not mod or LegitModulesFrame.Visible) then
 					dragStart = input.Position
 					local delta = (dragStart - Vector3.new(gui.AbsolutePosition.X, gui.AbsolutePosition.Y, 0)) * (1 / GuiLibrary.MainRescale.Scale)
 					if delta.Y <= 40 then
-						dragging = mod and GuiLibrary.LegitDragging or clickgui.Visible
+						dragging = mod and LegitModulesFrame.Visible or clickgui.Visible
 						startPos = gui.Position
 						
 						input.Changed:Connect(function()
@@ -695,7 +683,9 @@ if shared.VapeExecuted then
 						else
 							obj["Api"]["SetValue"](valcheck and v["Hue"] and (v["Hue"] / 7) - 0.1 or v["Value"] or 0.44, valcheck and v["Sat"] or 1, valcheck and v["Value"] or 1)
 						end
-						obj["Api"]["SetRainbow"](v["RainbowValue"])
+						if v["RainbowValue"] then
+							obj["Api"]["SetRainbow"](v["RainbowValue"])
+						end
 					end
 					if v.Type == "SliderMain" then
 						obj["Api"]["SetValue"](v["Value"])
@@ -2070,10 +2060,10 @@ if shared.VapeExecuted then
 				end
 			]]
 			sliderapi["SetValue"] = function(hue, sat, val)
-				hue = hue or 0.44
-				sat = sat or 0.7
-				val = val or 0.9
-				slider3.Image = (sliderapi["RainbowValue"] and downloadVapeAsset("vape/assets/ColorSlider2.png") or downloadVapeAsset("vape/assets/ColorSlider1.png"))
+				hue = hue or 0.46
+				sat = sat or 0.96
+				val = val or 0.52
+				slider3.Image = ((sliderapi["RainbowValue"] or sliderapi["Custom"]) and downloadVapeAsset("vape/assets/ColorSlider2.png") or downloadVapeAsset("vape/assets/ColorSlider1.png"))
 				sliderrainbow.Image = (sliderapi["RainbowValue"] and downloadVapeAsset("vape/assets/RainbowIcon2.png") or downloadVapeAsset("vape/assets/RainbowIcon1.png"))
 				if sliderapi["RainbowValue"] or sliderapi["Custom"] then
 					val = math.clamp(val, min, max)
@@ -2100,6 +2090,13 @@ if shared.VapeExecuted then
 					sliderapi["Hue"] = h
 					sliderapi["Sat"] = s
 					sliderapi["Value"] = v
+					pcall(function()
+						satSlider.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, val)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, 1, val))})
+						valSlider.Slider.UIGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, 1))})
+						hueSlider.Slider.ButtonSlider.Position = UDim2.new(math.clamp(h, 0.02, 0.95), -9, 0, -7)
+						satSlider.Slider.ButtonSlider.Position = UDim2.new(math.clamp(s, 0.02, 0.95), -9, 0, -7)
+						valSlider.Slider.ButtonSlider.Position = UDim2.new(math.clamp(v, 0.02, 0.95), -9, 0, -7)
+					end)
 					slider3.Position = UDim2.new(0, sldiercolorpos[colornum] - 3, 0, -5)
 					temporaryfunction(h, s, v)
 				end
@@ -2107,18 +2104,21 @@ if shared.VapeExecuted then
 			end
 			sliderapi["SetRainbow"] = function(val)
 				sliderapi["RainbowValue"] = val
+				sliderapi["Custom"] = false
 				if sliderapi["RainbowValue"] then
 					local heh
 					heh = coroutine.resume(coroutine.create(function()
 						repeat
 							task.wait()
 							if sliderapi["RainbowValue"] then
-								sliderapi["SetValue"](universalRainbowValue)
+								sliderapi["SetValue"](universalRainbowValue, 0.7, 0.9)
 							else
 								coroutine.yield(heh)
 							end
 						until sliderapi["RainbowValue"] == false or shared.VapeExecuted == nil
 					end))
+				else
+					sliderapi["SetValue"]()
 				end
 			end
 			sliderrainbow.MouseButton1Click:Connect(function()
@@ -6877,7 +6877,7 @@ if shared.VapeExecuted then
 	local holdingalt = false
 	local uninjected = false
 
-	if inputService.TouchEnabled or identifyexecutor and ({identifyexecutor()})[1] == "Fluxus" then 
+	if inputService.TouchEnabled or inputService:GetPlatform() == Enum.Platform.UWP then 
 		local button = Instance.new("TextButton")
 		button.Position = UDim2.new(1, -30, 0, 0)
 		button.Text = "Vape"
@@ -6898,6 +6898,10 @@ if shared.VapeExecuted then
 			end
 			if LegitModulesBigFrame.Visible then
 				LegitModulesBigFrame.Visible = false
+				legitgui.Visible = not clickgui.Visible
+				for i, v in pairs(legitgui:GetChildren()) do 
+					if v:IsA("Frame") then v.BackgroundTransparency = legitgui.Visible and 0.8 or 1 end
+				end
 			end
 		end)
 	end
@@ -6915,6 +6919,10 @@ if shared.VapeExecuted then
 				end
 				if LegitModulesBigFrame.Visible then
 					LegitModulesBigFrame.Visible = false
+					legitgui.Visible = not clickgui.Visible
+					for i, v in pairs(legitgui:GetChildren()) do 
+						if v:IsA("Frame") then v.BackgroundTransparency = legitgui.Visible and 0.8 or 1 end
+					end
 				end
 			end
 			if input1.KeyCode == Enum.KeyCode.RightAlt then 
@@ -7029,6 +7037,10 @@ if shared.VapeExecuted then
 	searchbaricon2.MouseButton1Click:Connect(function()
 		LegitModulesBigFrame.Visible = true
 		clickgui.Visible = false
+		legitgui.Visible = not clickgui.Visible
+		for i, v in pairs(legitgui:GetChildren()) do 
+			if v:IsA("Frame") then v.BackgroundTransparency = legitgui.Visible and 0.8 or 1 end
+		end
 	end)
 
 	return GuiLibrary

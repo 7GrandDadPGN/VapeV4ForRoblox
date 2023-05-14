@@ -5901,6 +5901,48 @@ runFunction(function()
 end)
 
 runFunction(function()
+	local FPS = {}
+	local FPSLabel
+	FPS = GuiLibrary.CreateLegitModule({
+		Name = "FPS",
+		Function = function(callback)
+			if callback then 
+				local frames = {}
+				local framerate = 0
+				local startClock = os.clock()
+				local updateTick = tick()
+				RunLoops:BindToHeartbeat("FPS", function()
+					-- https://devforum.roblox.com/t/get-client-fps-trough-a-script/282631, annoying math, I thought either adding dt to a table or doing 1 / dt would work, but this is just better lol
+					local updateClock = os.clock()
+					for i = #frames, 1, -1 do
+						frames[i + 1] = frames[i] >= updateClock - 1 and frames[i] or nil
+					end
+					frames[1] = updateClock
+					if updateTick < tick() then 
+						updateTick = tick() + 1
+						FPSLabel.Text = math.floor(os.clock() - startClock >= 1 and #frames or #frames / (os.clock() - startClock)).." FPS"
+					end
+				end)
+			else
+				RunLoops:UnbindFromHeartbeat("FPS")
+			end
+		end
+	})
+	FPSLabel = Instance.new("TextLabel")
+	FPSLabel.Size = UDim2.new(0, 100, 0, 41)
+	FPSLabel.BackgroundTransparency = 0.5
+	FPSLabel.TextSize = 15
+	FPSLabel.Font = Enum.Font.Gotham
+	FPSLabel.Text = "inf FPS"
+	FPSLabel.TextColor3 = Color3.new(1, 1, 1)
+	FPSLabel.BackgroundColor3 = Color3.new()
+	FPSLabel.Parent = FPS.GetCustomChildren()
+	local ReachCorner = Instance.new("UICorner")
+	ReachCorner.CornerRadius = UDim.new(0, 4)
+	ReachCorner.Parent = FPSLabel
+end)
+
+runFunction(function()
 	local Keystrokes = {}
 	local keys = {}
 	local keystrokesframe
@@ -5913,6 +5955,7 @@ runFunction(function()
 		key.BackgroundColor3 = Color3.new()
 		key.BackgroundTransparency = 0.5
 		key.Position = pos
+		key.Name = keybutton.Name
 		key.Parent = keystrokesframe
 		local keytext = Instance.new("TextLabel")
 		keytext.BackgroundTransparency = 1
