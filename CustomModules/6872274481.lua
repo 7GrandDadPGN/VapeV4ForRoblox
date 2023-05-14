@@ -23,6 +23,8 @@ local vapeInjected = true
 
 local bedwars = {}
 local bedwarsStore = {
+	attackReach = 0,
+	attackReachUpdate = tick(),
 	blocks = {},
 	blockPlacer = {},
 	blockPlace = tick(),
@@ -1181,6 +1183,8 @@ runFunction(function()
 							end
 							attackTable.validate.selfPosition = attackValue(attackTable.validate.selfPosition.value + (attackMagnitude > 14.4 and (CFrame.lookAt(attackTable.validate.selfPosition.value, attackTable.validate.targetPosition.value).lookVector * 4) or Vector3.zero))
 						end
+						bedwarsStore.attackReach = math.floor((attackTable.validate.selfPosition.value - attackTable.validate.targetPosition.value).magnitude * 100) / 100
+						bedwarsStore.attackReachUpdate = tick() + 1
 					end
 					return originalRemote:SendToServer(attackTable, ...)
 				end
@@ -1269,7 +1273,7 @@ runFunction(function()
 		MageKitUtil = require(replicatedStorageService.TS.games.bedwars.kit.kits.mage["mage-kit-util"]).MageKitUtil,
 		MageController = KnitClient.Controllers.MageController,
 		MissileController = KnitClient.Controllers.GuidedProjectileController,
-		PickupMetalRemote = dumpRemote(debug.getconstants(debug.getproto(KnitClient.Controllers.MetalDetectorController.KnitStart, 1))),
+		PickupMetalRemote = dumpRemote(debug.getconstants(debug.getproto(debug.getproto(KnitClient.Controllers.MetalDetectorController.KnitStart, 1), 2))),
 		PickupRemote = dumpRemote(debug.getconstants(KnitClient.Controllers.ItemDropController.checkForPickup)),
 		ProjectileMeta = require(replicatedStorageService.TS.projectile["projectile-meta"]).ProjectileMeta,
 		ProjectileRemote = dumpRemote(debug.getconstants(debug.getupvalue(KnitClient.Controllers.ProjectileController.launchProjectileWithValues, 2))),
@@ -3830,6 +3834,8 @@ runFunction(function()
 										end
 									end
 									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
+									bedwarsStore.attackReach = math.floor((selfpos - root.Position).magnitude * 100) / 100
+									bedwarsStore.attackReachUpdate = tick() + 1
 									killaurarealremote:FireServer({
 										weapon = sword.tool,
 										chargedAttack = {chargeRatio = swordmeta.sword and swordmeta.sword.chargedAttack and swordmeta.sword.chargedAttack.maxChargeTimeSec or 0},
@@ -3837,7 +3843,7 @@ runFunction(function()
 										validate = {
 											raycast = {
 												cameraPosition = attackValue(root.Position), 
-												cursorDirection = attackValue(Ray.new(root.Position, root.Position).Direction)
+												cursorDirection = attackValue(CFrame.new(selfpos, root.Position).lookVector)
 											},
 											targetPosition = attackValue(root.Position),
 											selfPosition = attackValue(selfpos)
@@ -6431,7 +6437,7 @@ runFunction(function()
 		image.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		image.Size = UDim2.new(0, 32, 0, 32)
 		image.AnchorPoint = Vector2.new(0.5, 0.5)
-		image.Parent = espfold
+		image.Parent = billboard
 		local uicorner = Instance.new("UICorner")
 		uicorner.CornerRadius = UDim.new(0, 4)
 		uicorner.Parent = image
@@ -9779,7 +9785,7 @@ runFunction(function()
 				bedwars.ClientConstructor.Function.new = function(self, ind, ...)
 					local res = oldrealremote(self, ind, ...)
 					local oldRemote = res.instance
-					if res.instance.Name == bedwars.ProjectileRemote then 
+					if oldRemote and oldRemote.Name == bedwars.ProjectileRemote then 
 						res.instance = {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...) 
 							local plr
 							if BowExploitTarget["Value"] == "Mouse" then 
@@ -10141,6 +10147,36 @@ runFunction(function()
 		end, 
 		Priority = 2
 	})
+end)
+
+runFunction(function()
+	local ReachDisplay = {}
+	local ReachLabel
+	ReachDisplay = GuiLibrary.CreateLegitModule({
+		Name = "Reach Display",
+		Function = function(callback)
+			if callback then 
+				task.spawn(function()
+					repeat
+						task.wait(0.4)
+						ReachLabel.Text = bedwarsStore.attackReachUpdate > tick() and bedwarsStore.attackReach.." studs" or "0.00 studs"
+					until (not ReachDisplay.Enabled)
+				end)
+			end
+		end
+	})
+	ReachLabel = Instance.new("TextLabel")
+	ReachLabel.Size = UDim2.new(0, 100, 0, 41)
+	ReachLabel.BackgroundTransparency = 0.5
+	ReachLabel.TextSize = 15
+	ReachLabel.Font = Enum.Font.Gotham
+	ReachLabel.Text = "0.00 studs"
+	ReachLabel.TextColor3 = Color3.new(1, 1, 1)
+	ReachLabel.BackgroundColor3 = Color3.new()
+	ReachLabel.Parent = ReachDisplay.GetCustomChildren()
+	local ReachCorner = Instance.new("UICorner")
+	ReachCorner.CornerRadius = UDim.new(0, 4)
+	ReachCorner.Parent = ReachLabel
 end)
 
 task.spawn(function()

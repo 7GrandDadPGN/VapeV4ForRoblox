@@ -38,6 +38,7 @@ local vapeAssetTable = {
 	["vape/assets/HoverArrow4.png"] = "rbxassetid://13350773643",
 	["vape/assets/InfoNotification.png"] = "rbxassetid://13350774006",
 	["vape/assets/KeybindIcon.png"] = "rbxassetid://13350774323",
+	["vape/assets/LegitModeIcon.png"] = "rbxassetid://13436400428",
 	["vape/assets/MoreButton1.png"] = "rbxassetid://13350775005",
 	["vape/assets/MoreButton2.png"] = "rbxassetid://13350775731",
 	["vape/assets/MoreButton3.png"] = "rbxassetid://13350776241",
@@ -84,16 +85,13 @@ local vapeAssetTable = {
 	["vape/assets/VapeLogo2.png"] = "rbxassetid://13350876307",
 	["vape/assets/VapeLogo4.png"] = "rbxassetid://13350877564"
 }
-if getcustomasset then 
-	local suc, res = pcall(function() return getcustomasset("") end)
-	if suc and res == "rbxasset://textures/ui/WarningIcon.png" then
-		--mobile exploit fix
-		getgenv().getsynasset = nil
-		getgenv().getcustomasset = nil
-		-- why is this needed
-		getsynasset = nil
-		getcustomasset = nil
-	end
+if inputService:GetPlatform() ~= Enum.Platform.Windows then 
+	--mobile exploit fix
+	getgenv().getsynasset = nil
+	getgenv().getcustomasset = nil
+	-- why is this needed
+	getsynasset = nil
+	getcustomasset = nil
 end
 local getcustomasset = getsynasset or getcustomasset or function(location) return vapeAssetTable[location] or "" end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
@@ -921,7 +919,22 @@ VapeBackgroundList.Parent = VapeBackground
 local VapeBackgroundTable = {}
 local VapeScale = Instance.new("UIScale")
 VapeScale.Parent = VapeLogoFrame
-
+--why do other platforms do rendering differently
+local TextGUIOffsets = {
+	[Enum.Platform.Android] = {
+		6,
+		-10,
+		15,
+		12
+	},
+	[Enum.Platform.UWP] = {
+		1,
+		1,
+		23,
+		23
+	}
+}
+TextGUIOffsets[Enum.Platform.IOS] = TextGUIOffsets[Enum.Platform.Android]
 local function TextGUIUpdate()
 	local scaledgui = vapeInjected and GuiLibrary.MainGui.ScaledGui
 	if scaledgui and scaledgui.Visible then
@@ -964,27 +977,33 @@ local function TextGUIUpdate()
 		VapeTextExtra.Text = formattedText
         VapeText.Size = UDim2.fromOffset(154, (formattedText ~= "" and textService:GetTextSize(formattedText, VapeText.TextSize, VapeText.Font, Vector2.new(1000000, 1000000)) or Vector2.zero).Y)
 
+		local offsets = TextGUIOffsets[inputService:GetPlatform()] or {
+			5,
+			1,
+			23,
+			23
+		}
         if TextGUI.GetCustomChildren().Parent then
             if (TextGUI.GetCustomChildren().Parent.Position.X.Offset + TextGUI.GetCustomChildren().Parent.Size.X.Offset / 2) >= (gameCamera.ViewportSize.X / 2) then
                 VapeText.TextXAlignment = Enum.TextXAlignment.Right
                 VapeTextExtra.TextXAlignment = Enum.TextXAlignment.Right
-                VapeTextExtra.Position = UDim2.fromOffset((inputService.TouchEnabled and 6 or 5), (inputService.TouchEnabled and -10 or 1))
+                VapeTextExtra.Position = UDim2.fromOffset(offsets[1], offsets[2])
                 VapeLogo.Position = UDim2.new(1, -142, 0, 8)
-                VapeText.Position = UDim2.new(1, -158, 0, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + (VapeCustomText.Visible and 25 or 0) - (inputService.TouchEnabled and 15 or 23))
+                VapeText.Position = UDim2.new(1, -158, 0, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + (VapeCustomText.Visible and 25 or 0) - offsets[3])
                 VapeCustomText.Position = UDim2.fromOffset(0, VapeLogo.Visible and 35 or 0)
                 VapeCustomText.TextXAlignment = Enum.TextXAlignment.Right
                 VapeBackgroundList.HorizontalAlignment = Enum.HorizontalAlignment.Right
-                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-56, 2 + (inputService.TouchEnabled and 12 or 23))
+                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-56, 2 + offsets[4])
             else
                 VapeText.TextXAlignment = Enum.TextXAlignment.Left
                 VapeTextExtra.TextXAlignment = Enum.TextXAlignment.Left
-                VapeTextExtra.Position = UDim2.fromOffset((inputService.TouchEnabled and 6 or 5), (inputService.TouchEnabled and -10 or 1))
+                VapeTextExtra.Position = UDim2.fromOffset(offsets[1], offsets[2])
                 VapeLogo.Position = UDim2.fromOffset(2, 8)
-                VapeText.Position = UDim2.fromOffset(6, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + (VapeCustomText.Visible and 25 or 0) - (inputService.TouchEnabled and 15 or 23))
+                VapeText.Position = UDim2.fromOffset(6, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + (VapeCustomText.Visible and 25 or 0) - offsets[3])
 				VapeCustomText.Position = UDim2.fromOffset(0, VapeLogo.Visible and 35 or 0)
 				VapeCustomText.TextXAlignment = Enum.TextXAlignment.Left
                 VapeBackgroundList.HorizontalAlignment = Enum.HorizontalAlignment.Left
-                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-1, 2 + (inputService.TouchEnabled and 12 or 23))
+                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-1, 2 + offsets[4])
             end
         end
         
@@ -1599,6 +1618,7 @@ GuiLibrary.UpdateUI = function(h, s, val, bypass)
 		VapeText.Text = newTextGUIText
 
 		if (not GuiLibrary.MainGui.ScaledGui.ClickGui.Visible) and (not bypass) then return end
+		GuiLibrary.MainGui.ScaledGui.ClickGui.SearchBar.LegitMode.ImageColor3 = Color3.fromHSV(h, mainRainbowSaturation, rainbowGUICheck and 1 or val)
 		local buttonColorIndex = 0
 		for i, v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do
 			if v.Type == "TargetFrame" then
@@ -1777,7 +1797,7 @@ GuiLibrary.SelfDestruct = function()
 	inputService.OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.None
 
 	for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do
-		if (v.Type == "Button" or v.Type == "OptionsButton") and v.Api.Enabled then
+		if (v.Type == "Button" or v.Type == "OptionsButton" or v.Type == "LegitModule") and v.Api.Enabled then
 			v.Api.ToggleButton(false)
 		end
 	end
@@ -1938,6 +1958,7 @@ local function loadVape()
 	end
 	if shared.VapeOpenGui then
 		GuiLibrary.MainGui.ScaledGui.ClickGui.Visible = true
+		GuiLibrary.MainGui.ScaledGui.LegitGui.Visible = false
 		game:GetService("RunService"):SetRobloxGuiFocused(GuiLibrary.MainBlur.Size ~= 0) 
 		shared.VapeOpenGui = nil
 	end
