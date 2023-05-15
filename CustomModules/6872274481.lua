@@ -69,7 +69,8 @@ local isfile = isfile or function(file)
 end
 local networkownerswitch = tick()
 local isnetworkowner = isnetworkowner or function(part)
-	if gethiddenproperty(part, "NetworkOwnershipRule") == Enum.NetworkOwnership.Manual then 
+	local suc, res = pcall(function() return gethiddenproperty(part, "NetworkOwnershipRule") end)
+	if suc and res == Enum.NetworkOwnership.Manual then 
 		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
 		networkownerswitch = tick() + 8
 	end
@@ -3772,8 +3773,7 @@ runFunction(function()
 						task.wait()
 						if not Killaura.Enabled then break end
 						vapeTargetInfo.Targets.Killaura = nil
-						local plrs = AllNearPosition(killaurarange.Value, 1, killaurasortmethods[killaurasortmethod.Value], true)
-						local attackedplayers = {}
+						local plrs = AllNearPosition(killaurarange.Value, 10, killaurasortmethods[killaurasortmethod.Value], true)
 						local firstPlayerNear
 						if #plrs > 0 then
 							local sword, swordmeta = getAttackData()
@@ -3819,9 +3819,6 @@ runFunction(function()
 												end
 											end
 										end
-									end
-									if killauratarget.Enabled then
-										table.insert(attackedplayers, plr)
 									end
 									if (workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack) < 0.03 then 
 										continue
@@ -3872,7 +3869,7 @@ runFunction(function()
 							end)
 						end
 						for i,v in pairs(killauraboxes) do 
-							local attacked = attackedplayers[i]
+							local attacked = killauratarget.Enabled and plrs[i]
 							v.Adornee = attacked and ((not killauratargethighlight.Enabled) and attacked.RootPart or (not GuiLibrary.ObjectsThatCanBeSaved.ChamsOptionsButton.Api.Enabled) and attacked.Character or nil)
 						end
 					until (not Killaura.Enabled)
