@@ -3869,7 +3869,7 @@ runFunction(function()
 							end)
 						end
 						for i,v in pairs(killauraboxes) do 
-							local attacked = killauratarget.Enabled and plrs[i]
+							local attacked = killauratarget.Enabled and plrs[i] or nil
 							v.Adornee = attacked and ((not killauratargethighlight.Enabled) and attacked.RootPart or (not GuiLibrary.ObjectsThatCanBeSaved.ChamsOptionsButton.Api.Enabled) and attacked.Character or nil)
 						end
 					until (not Killaura.Enabled)
