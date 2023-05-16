@@ -2841,18 +2841,18 @@ runFunction(function()
 				thing.Quad4.Color = Color3.new()
 			end
 			if ESPName.Enabled then 
+				thing.Drop = Drawing.new("Text")
+				thing.Drop.Color = Color3.new()
+				thing.Drop.Text = WhitelistFunctions:GetTag(plr.Player)..(plr.Player.DisplayName or plr.Player.Name)
+				thing.Drop.ZIndex = 1
+				thing.Drop.Center = true
+				thing.Drop.Size = 20
 				thing.Text = Drawing.new("Text")
-				thing.Text.Text = WhitelistFunctions:GetTag(plr.Player)..(plr.Player.DisplayName or plr.Player.Name)
+				thing.Text.Text = thing.Drop.Text
 				thing.Text.ZIndex = 2
 				thing.Text.Color = thing.Quad1.Color
 				thing.Text.Center = true
 				thing.Text.Size = 20
-				thing.Drop = Drawing.new("Text")
-				thing.Drop.Color = Color3.new()
-				thing.Drop.Text = thing.Text.Text
-				thing.Drop.ZIndex = 1
-				thing.Drop.Center = true
-				thing.Drop.Size = 20
 			end
 			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
 		end,
