@@ -585,18 +585,6 @@ if shared.VapeExecuted then
 	end
 
 	GuiLibrary.LoadSettings = function(customprofile)
-		if identifyexecutor and identifyexecutor():find("ScriptWare") == nil and listfiles then
-			for i,v in pairs(listfiles(baseDirectory.."Profiles")) do 
-				local newstr = v:gsub(baseDirectory.."Profiles", ""):sub(2, v:len())
-				local ext = (v:len() >= 12 and v:sub(v:len() - 12, v:len()))
-				if (ext and ext:find("vapeprofile") and ext:find("txt") == nil) then
-					writefile(baseDirectory.."Profiles/"..newstr..".txt", readfile(baseDirectory.."Profiles/"..newstr))
-					if delfile then
-						delfile(baseDirectory.."Profiles/"..newstr)
-					end
-				end
-			end
-		end
 		if isfile("vape/Profiles/GUIPositions.vapeprofile.txt") and game.GameId == 2619619496 then
 			writefile("vape/Profiles/"..(game.GameId).."GUIPositions.vapeprofile.txt", readfile("vape/Profiles/GUIPositions.vapeprofile.txt"))
 			if delfile then delfile("vape/Profiles/GUIPositions.vapeprofile.txt") end

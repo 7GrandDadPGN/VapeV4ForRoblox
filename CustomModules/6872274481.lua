@@ -717,7 +717,9 @@ local function AllNearPosition(distance, amount, sortfunction, prediction)
                 end
 			end
 		end
-		table.sort(sortedentities, sortfunction)
+		if sortfunction then
+			table.sort(sortedentities, sortfunction)
+		end
 		for i,v in pairs(sortedentities) do 
 			table.insert(returnedplayer, v)
 			currentamount = currentamount + 1
@@ -2373,6 +2375,7 @@ GuiLibrary.RemoveObject("BlinkOptionsButton")
 GuiLibrary.RemoveObject("FOVChangerOptionsButton")
 GuiLibrary.RemoveObject("AntiVoidOptionsButton")
 GuiLibrary.RemoveObject("SongBeatsOptionsButton")
+GuiLibrary.RemoveObject("TargetStrafeOptionsButton")
 
 runFunction(function()
 	local AimAssist = {Enabled = false}
@@ -9926,6 +9929,73 @@ runFunction(function()
 		Min = 1,
 		Max = 10,
 		Default = 5
+	})
+end)
+
+runFunction(function()
+	local TargetStrafe = {Enabled = false}
+	local TargetStrafeRange = {Value = 18}
+	local oldmove
+	local controlmodule
+	local block
+	TargetStrafe = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+		Name = "TargetStrafe",
+		Function = function(callback)
+			if callback then 
+				task.spawn(function()
+					if not controlmodule then
+						local suc = pcall(function() controlmodule = require(lplr.PlayerScripts.PlayerModule).controls end)
+						if not suc then controlmodule = {} end
+					end
+					oldmove = controlmodule.moveFunction
+					local ang = 0
+					local oldplr
+					block = Instance.new("Part")
+					block.Anchored = true
+					block.CanCollide = false
+					block.Parent = gameCamera
+					controlmodule.moveFunction = function(Self, vec, facecam, ...)
+						if entityLibrary.isAlive then
+							local plr = AllNearPosition(TargetStrafeRange.Value + 5, 10)[1]
+							plr = plr and (not workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, (plr.RootPart.Position - entityLibrary.character.HumanoidRootPart.Position), bedwarsStore.blockRaycast)) and workspace:Raycast(plr.RootPart.Position, Vector3.new(0, -70, 0), bedwarsStore.blockRaycast) and plr or nil
+							if plr ~= oldplr then
+								if plr then
+									local x, y, z = CFrame.new(plr.RootPart.Position, entityLibrary.character.HumanoidRootPart.Position):ToEulerAnglesXYZ()
+									ang = math.deg(z)
+								end
+								oldplr = plr
+							end
+							if plr then 
+								facecam = false
+								local localPos = CFrame.new(plr.RootPart.Position)
+								local ray = workspace:Blockcast(localPos, Vector3.new(3, 3, 3), CFrame.Angles(0, math.rad(ang), 0).lookVector * TargetStrafeRange.Value, bedwarsStore.blockRaycast)
+								local newPos = localPos + (CFrame.Angles(0, math.rad(ang), 0).lookVector * (ray and ray.Distance - 1 or TargetStrafeRange.Value))
+								local factor = getSpeedMultiplier() > 1.7 and 6 or 4
+								if not workspace:Raycast(newPos.p, Vector3.new(0, -70, 0), bedwarsStore.blockRaycast) then 
+									newPos = localPos
+									factor = 40
+								end
+								if ((entityLibrary.character.HumanoidRootPart.Position * Vector3.new(1, 0, 1)) - (newPos.p * Vector3.new(1, 0, 1))).Magnitude < 4 or ray then
+									ang = ang + factor % 360
+								end
+								block.Position = newPos.p
+								vec = (newPos.p - entityLibrary.character.HumanoidRootPart.Position) * Vector3.new(1, 0, 1)
+							end
+						end
+						return oldmove(Self, vec, facecam, ...)
+					end
+				end)
+			else
+				block:Destroy()
+				controlmodule.moveFunction = oldmove
+			end
+		end
+	})
+	TargetStrafeRange = TargetStrafe.CreateSlider({
+		Name = "Range",
+		Min = 0,
+		Max = 18,
+		Function = function() end
 	})
 end)
 
