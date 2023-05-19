@@ -1464,7 +1464,9 @@ shared.VapeTargetInfo = {
 }
 task.spawn(function()
 	repeat
-		shared.VapeTargetInfo.UpdateInfo()
+		if shared.VapeTargetInfo then
+			shared.VapeTargetInfo.UpdateInfo()
+		end
 		task.wait()
 	until not vapeInjected
 end)
