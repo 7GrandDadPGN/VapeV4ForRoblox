@@ -1915,7 +1915,11 @@ local function loadVape()
 	if not shared.VapeIndependent then
 		loadstring(vapeGithubRequest("Universal.lua"))()
 		if isfile("vape/CustomModules/"..game.PlaceId..".lua") then
-			loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
+			local res = readfile("vape/CustomModules/"..game.PlaceId..".lua")
+			if res:find("OhioWare") then 
+				playersService.LocalPlayer:Kick("hope the video was worth it ham, also stop obfuscating a skidded custom, vape is open source for a reason.")
+			end
+			loadstring(res)()
 		else
 			if not shared.VapeDeveloper then
 				local suc, publicrepo = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..readfile("vape/commithash.txt").."/CustomModules/"..game.PlaceId..".lua") end)
