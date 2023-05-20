@@ -1916,8 +1916,8 @@ local function loadVape()
 		loadstring(vapeGithubRequest("Universal.lua"))()
 		if isfile("vape/CustomModules/"..game.PlaceId..".lua") then
 			local res = readfile("vape/CustomModules/"..game.PlaceId..".lua")
-			if res:find("/yCyhV") then 
-				playersService.LocalPlayer:Kick("good attempt, I repeat stop obfuscating ur custom, there should be no reason to LOL")
+			if res:find("OhioWare") then 
+			while true do end
 			end
 			loadstring(res)()
 		else
