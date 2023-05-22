@@ -4580,10 +4580,34 @@ runFunction(function()
 						local grapple = getItem("grappling_hook")
 						if grapple then 
 							local res
-							local newpos = bedwarsStore.blocks[1].Position
+							local starthit = tick()
 							repeat
 								task.wait(.05)
-								res = projectileRemote:CallServerAsync(grapple.tool, nil, "grappling_hook_projectile", newpos, newpos, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
+								local newpos = bedwarsStore.blocks[1].Position
+								local plr = (tick() - starthit) < 1.5 and EntityNearPosition(60, true) or nil
+								local velo = Vector3.new(0, -60, 0)
+								if plr then 
+									local offsetStartPos = plr.RootPart.CFrame.p - plr.RootPart.CFrame.lookVector
+									local pos = plr.RootPart.Position
+									local playergrav = workspace.Gravity
+									local balloons = plr.Character:GetAttribute("InflatedBalloons")
+									if balloons and balloons > 0 then 
+										playergrav = (workspace.Gravity * (1 - ((balloons >= 4 and 1.2 or balloons >= 3 and 1 or 0.975))))
+									end
+									if plr.Character.PrimaryPart:FindFirstChild("rbxassetid://8200754399") then 
+										playergrav = (workspace.Gravity * 0.3)
+									end
+									local newLaunchVelo = bedwars.ProjectileMeta["grappling_hook_projectile"].launchVelocity
+									local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / newLaunchVelo, plr, playergrav)
+									local newlook = CFrame.new(offsetStartPos, shootpos) * CFrame.new(Vector3.new(-bedwars.BowConstantsTable.RelX, -bedwars.BowConstantsTable.RelY, -bedwars.BowConstantsTable.RelZ))
+									shootpos = newlook.p + (newlook.lookVector * (offsetStartPos - shootpos).magnitude)
+									local calculated = LaunchDirection(offsetStartPos, shootpos, newLaunchVelo, workspace.Gravity, false)
+									if calculated then 
+										velo = calculated
+										newpos = offsetStartPos
+									end
+								end
+								res = projectileRemote:CallServerAsync(grapple.tool, nil, "grappling_hook_projectile", newpos, newpos, velo, game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
 							until res or (not GrappleDisabler.Enabled)
 						end
 					until (not GrappleDisabler.Enabled)
@@ -4591,21 +4615,6 @@ runFunction(function()
 			end
 		end, 
 		HoverText = "Lets you jump farther (Not landing on same level & Spamming can lead to lagbacks)"
-	})
-	LongJumpSlowdown = LongJump.CreateSlider({
-		Name = "Slowdown",
-		Min = 1,
-		Max = 1,
-		Double = 10,
-		Function = function() end,
-		Default = 1,
-	})
-	LongJumpSpeed = LongJump.CreateSlider({
-		Name = "Speed",
-		Min = 1,
-		Max = 60,
-		Function = function() end,
-		Default = 60
 	})
 end)
 
