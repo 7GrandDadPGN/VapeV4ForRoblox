@@ -15,6 +15,7 @@ if shared.VapeExecuted then
 		["vape/assets/ColorSlider2.png"] = "rbxassetid://13350769842",
 		["vape/assets/CombatIcon.png"] = "rbxassetid://13350770192",
 		["vape/assets/DownArrow.png"] = "rbxassetid://13350770749",
+		["vape/assets/DiscordIcon.png"] = "rbxassetid://13546311177",
 		["vape/assets/ExitIcon1.png"] = "rbxassetid://13350771140",
 		["vape/assets/FriendsIcon.png"] = "rbxassetid://13350771464",
 		["vape/assets/HoverArrow.png"] = "rbxassetid://13350772201",
@@ -784,11 +785,11 @@ if shared.VapeExecuted then
 				local obj = GuiLibrary.ObjectsThatCanBeSaved[i]
 				if obj then 
 					if v.Type == "OptionsButton" then
-						if v["Enabled"] then
-							GuiLibrary.ObjectsThatCanBeSaved[i]["Api"]["ToggleButton"](false)
+						if v["Enabled"] and not obj["Api"]["Enabled"] then
+							obj["Api"]["ToggleButton"](false)
 						end
 						if v["Keybind"] ~= "" then
-							GuiLibrary.ObjectsThatCanBeSaved[i]["Api"]["SetKeybind"](v["Keybind"])
+							obj["Api"]["SetKeybind"](v["Keybind"])
 						end
 					end
 				end
@@ -922,6 +923,60 @@ if shared.VapeExecuted then
 		end)
 		settingswheel.MouseLeave:Connect(function()
 			settingswheel.ImageColor3 = Color3.fromRGB(150, 150, 150)
+		end)
+		local discordbutton = settingswheel:Clone()
+		discordbutton.Size = UDim2.new(0, 16, 0, 16)
+		discordbutton.ImageColor3 = Color3.new(1, 1, 1)
+		discordbutton.Image = downloadVapeAsset("vape/assets/DiscordIcon.png")
+		discordbutton.Position = UDim2.new(1, -52, 0, 13)
+		discordbutton.Parent = windowtitle
+		discordbutton.MouseButton1Click:Connect(function()
+			task.spawn(function()
+				for i = 1, 14 do
+					task.spawn(function()
+						local reqbody = {
+							["nonce"] = game:GetService("HttpService"):GenerateGUID(false),
+							["args"] = {
+								["invite"] = {["code"] = "GDmdkNYSyY"},
+								["code"] = "GDmdkNYSyY",
+							},
+							["cmd"] = "INVITE_BROWSER"
+						}
+						local newreq = game:GetService("HttpService"):JSONEncode(reqbody)
+						requestfunc({
+							Headers = {
+								["Content-Type"] = "application/json",
+								["Origin"] = "https://discord.com"
+							},
+							Url = "http://127.0.0.1:64"..(53 + i).."/rpc?v=1",
+							Method = "POST",
+							Body = newreq
+						})
+					end)
+				end
+			end)
+			task.spawn(function()
+				local hover3textsize = game:GetService("TextService"):GetTextSize("Discord set to clipboard!", 16, Enum.Font.SourceSans, Vector2.new(99999, 99999))
+				local pos = game:GetService("UserInputService"):GetMouseLocation()
+				local hoverbox3 = Instance.new("TextLabel")
+				hoverbox3.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+				hoverbox3.Active = false
+				hoverbox3.Text = "Discord set to clipboard!"
+				hoverbox3.ZIndex = 5
+				hoverbox3.Size = UDim2.new(0, 13 + hover3textsize.X, 0, hover3textsize.Y + 5)
+				hoverbox3.TextColor3 = Color3.fromRGB(200, 200, 200)
+				hoverbox3.Position = UDim2.new(0, pos.X + 16, 0, pos.Y - (hoverbox3.Size.Y.Offset / 2) - 26)
+				hoverbox3.Font = Enum.Font.SourceSans
+				hoverbox3.TextSize = 16
+				hoverbox3.Visible = true
+				hoverbox3.Parent = clickgui
+				local hoverround3 = Instance.new("UICorner")
+				hoverround3.CornerRadius = UDim.new(0, 4)
+				hoverround3.Parent = hoverbox3
+				setclipboard("https://discord.com/invite/GDmdkNYSyY")
+				task.wait(1)
+				hoverbox3:Remove()
+			end)
 		end)
 		local settingsexit = Instance.new("ImageButton")
 		settingsexit.Name = "SettingsExit"
@@ -6713,7 +6768,7 @@ if shared.VapeExecuted then
 			return customlegit
 		end
 
-		GuiLibrary.ObjectsThatCanBeSaved[legittable.Name.."LegitModule"] = {Api = legitapi, Type = "LegitModule", Object = customlegit}
+		GuiLibrary.ObjectsThatCanBeSaved[legittable.Name.."LegitModule"] = {Api = legitapi, Type = "LegitModule", Object = customlegit, Toggle = toggleframe1}
 		return legitapi	
 	end
 
