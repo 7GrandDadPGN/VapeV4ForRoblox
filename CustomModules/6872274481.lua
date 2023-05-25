@@ -10503,7 +10503,7 @@ task.spawn(function()
 		vapeiconicon.Size = UDim2.new(1, -10, 1, -10)
 		vapeiconicon.AnchorPoint = Vector2.new(0.5, 0.5)
 		vapeiconicon.Position = UDim2.new(0.5, 0, 0.5, 0)
-		vapeiconicon.Image = getsynasset("vape/assets/VapeIcon.png")
+		vapeiconicon.Image = getcustomasset("vape/assets/VapeIcon.png")
 		vapeiconicon.Parent = vapeicon
 		local vapeiconcorner = Instance.new("UICorner")
 		vapeiconcorner.CornerRadius = UDim.new(0, 256)
@@ -10578,7 +10578,6 @@ task.spawn(function()
 	end
 	task.spawn(function()
 		pcall(function()
-			if inputService.TouchEnabled then return end
 			if not isfile("vape/Profiles/bedwarsdata.txt") then 
 				local commit = "main"
 				for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/VapeV4ForRoblox"):split("\n")) do 
