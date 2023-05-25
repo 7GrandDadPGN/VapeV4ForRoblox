@@ -1619,7 +1619,7 @@ GuiLibrary.UpdateUI = function(h, s, val, bypass)
 		end
 		VapeText.Text = newTextGUIText
 
-		if (not GuiLibrary.MainGui.ScaledGui.ClickGui.Visible) and (not bypass) then return end
+		if (not GuiLibrary.MainGui.ScaledGui.ClickGui.Visible) and (not GuiLibrary.MainGui.ScaledGui.LegitGui.Visible) and (not bypass) then return end
 		GuiLibrary.MainGui.ScaledGui.ClickGui.SearchBar.LegitMode.ImageColor3 = Color3.fromHSV(h, mainRainbowSaturation, rainbowGUICheck and 1 or val)
 		local buttonColorIndex = 0
 		for i, v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do
@@ -1634,6 +1634,10 @@ GuiLibrary.UpdateUI = function(h, s, val, bypass)
 			elseif v.Type == "CircleListFrame" then
 				if v.Object2.Visible then
 					v.Object.TextButton.Frame.BackgroundColor3 = Color3.fromHSV(h, mainRainbowSaturation, rainbowGUICheck and 1 or val)
+				end
+			elseif v.Type == "LegitModule" then
+				if v.Toggle.Visible and v.Api.Enabled  then
+					v.Toggle.BackgroundColor3 = Color3.fromHSV(h, mainRainbowSaturation, rainbowGUICheck and 1 or val)
 				end
 			elseif (v.Type == "Button" or v.Type == "ButtonMain") and v.Api.Enabled then
 				buttonColorIndex = buttonColorIndex + 1
