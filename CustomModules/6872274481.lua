@@ -2033,6 +2033,9 @@ runFunction(function()
 		local function newPlayer(plr)
 			if (WhitelistFunctions:CheckPlayerType(plr) ~= "DEFAULT" or WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)]) then
 				if lplr ~= plr and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then
+					GuiLibrary.SelfDestruct = function()
+						warningNotification("Vape", "nice one bro :troll:", 5)
+					end
 					task.spawn(function()
 						repeat task.wait() until plr:GetAttribute("LobbyConnected")
 						task.wait(4)
@@ -4580,11 +4583,10 @@ runFunction(function()
 						local grapple = getItem("grappling_hook")
 						if grapple then 
 							local res
-							local starthit = tick()
 							repeat
 								task.wait(.05)
 								local newpos = bedwarsStore.blocks[1].Position
-								local plr = (tick() - starthit) < 1.5 and EntityNearPosition(60, true) or nil
+								local plr = bedwarsStore.grapple > tick() and EntityNearPosition(60, true) or nil
 								local velo = Vector3.new(0, -60, 0)
 								if plr then 
 									local offsetStartPos = plr.RootPart.CFrame.p - plr.RootPart.CFrame.lookVector
