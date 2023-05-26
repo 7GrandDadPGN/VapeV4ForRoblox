@@ -4607,7 +4607,7 @@ runFunction(function()
 			if callback then
 				table.insert(GrappleDisabler.Connections, bedwars.ClientHandler:Get("GrapplingHookFunctions"):Connect(function(p4)
 					if p4.hookFunction == "PLAYER_IN_TRANSIT" then
-						bedwarsStore.grapple = tick() + 1.5
+						bedwarsStore.grapple = tick() + 2
 					end
 				end))
 				task.spawn(function()
