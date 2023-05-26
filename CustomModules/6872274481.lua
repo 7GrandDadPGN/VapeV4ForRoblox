@@ -4690,7 +4690,12 @@ runFunction(function()
 				end
 				if not clonesuccess then 
 					warningNotification("GrappleDisabler", "Character missing", 3)
-					InfiniteFly.ToggleButton(false)
+					GrappleDisabler.ToggleButton(false)
+					return 
+				end
+				if not getItem("grappling_hook") then 
+					warningNotification("GrappleDisabler", "no grapple hook stupid", 3)
+					GrappleDisabler.ToggleButton(false)
 					return 
 				end
 				local realtick = tick()
