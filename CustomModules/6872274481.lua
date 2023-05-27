@@ -3311,37 +3311,10 @@ runFunction(function()
 		Name = "GrappleExploit",
 		Function = function(callback)
 			if callback then
-				table.insert(GrappleExploit.Connections, inputService.InputBegan:Connect(function(input1)
-					if GrappleExploitVertical.Enabled and inputService:GetFocusedTextBox() == nil then
-						if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
-							GrappleExploitUp = true
-						end
-						if input1.KeyCode == Enum.KeyCode.LeftShift or input1.KeyCode == Enum.KeyCode.ButtonL2 then
-							GrappleExploitDown = true
-						end
-					end
-				end))
-				table.insert(GrappleExploit.Connections, inputService.InputEnded:Connect(function(input1)
-					if input1.KeyCode == Enum.KeyCode.Space or input1.KeyCode == Enum.KeyCode.ButtonA then
-						GrappleExploitUp = false
-					end
-					if input1.KeyCode == Enum.KeyCode.LeftShift or input1.KeyCode == Enum.KeyCode.ButtonL2 then
-						GrappleExploitDown = false
-					end
-				end))
-				if inputService.TouchEnabled then
-					pcall(function()
-						local jumpButton = lplr.PlayerGui.TouchGui.TouchControlFrame.JumpButton
-						table.insert(GrappleExploit.Connections, jumpButton:GetPropertyChangedSignal("ImageRectOffset"):Connect(function()
-							GrappleExploitUp = jumpButton.ImageRectOffset.X == 146
-						end))
-						GrappleExploitUp = jumpButton.ImageRectOffset.X == 146
-					end)
-				end
 				local grappleHooked = false
 				table.insert(GrappleExploit.Connections, bedwars.ClientHandler:Get("GrapplingHookFunctions"):Connect(function(p4)
 					if p4.hookFunction == "PLAYER_IN_TRANSIT" then
-						bedwarsStore.grapple = tick() + 1.9
+						bedwarsStore.grapple = tick() + 1.8
 						grappleHooked = true
 						GrappleExploit.ToggleButton(false)
 					end
