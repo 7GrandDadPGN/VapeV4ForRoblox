@@ -4601,51 +4601,54 @@ runFunction(function()
 	local projectileRemote = bedwars.ClientHandler:Get(bedwars.ProjectileRemote)
 	local GrappleDisabler = {Enabled = false}
 	local GrappleDisablerRange = {Value = 60}
+	bedwars.ClientHandler:Get("GrapplingHookFunctions"):Connect(function(p4)
+		if p4.hookFunction == "PLAYER_IN_TRANSIT" then
+			bedwarsStore.grapple = tick() + 2
+		end
+	end)
 	GrappleDisabler = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "GrappleDisabler",
+		Name = "GrappleExploit",
 		Function = function(callback)
 			if callback then
-				table.insert(GrappleDisabler.Connections, bedwars.ClientHandler:Get("GrapplingHookFunctions"):Connect(function(p4)
-					if p4.hookFunction == "PLAYER_IN_TRANSIT" then
-						bedwarsStore.grapple = tick() + 2
-					end
-				end))
 				task.spawn(function()
-					repeat
-						task.wait()
-						local grapple = getItem("grappling_hook")
-						if grapple then 
-							local res
-							repeat
-								task.wait(.05)
-								local newpos = bedwarsStore.blocks[1].Position
-								local plr = bedwarsStore.grapple > tick() and EntityNearPosition(GrappleDisablerRange.Value, true) or nil
-								local velo = Vector3.new(0, -60, 0)
-								if plr then 
-									local offsetStartPos = plr.RootPart.CFrame.p - plr.RootPart.CFrame.lookVector
-									local pos = plr.RootPart.Position
-									local playergrav = workspace.Gravity
-									local balloons = plr.Character:GetAttribute("InflatedBalloons")
-									if balloons and balloons > 0 then 
-										playergrav = (workspace.Gravity * (1 - ((balloons >= 4 and 1.2 or balloons >= 3 and 1 or 0.975))))
-									end
-									if plr.Character.PrimaryPart:FindFirstChild("rbxassetid://8200754399") then 
-										playergrav = (workspace.Gravity * 0.3)
-									end
-									local newLaunchVelo = bedwars.ProjectileMeta["grappling_hook_projectile"].launchVelocity
-									local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / newLaunchVelo, plr, playergrav)
-									local newlook = CFrame.new(offsetStartPos, shootpos) * CFrame.new(Vector3.new(-bedwars.BowConstantsTable.RelX, -bedwars.BowConstantsTable.RelY, -bedwars.BowConstantsTable.RelZ))
-									shootpos = newlook.p + (newlook.lookVector * (offsetStartPos - shootpos).magnitude)
-									local calculated = LaunchDirection(offsetStartPos, shootpos, newLaunchVelo, workspace.Gravity, false)
-									if calculated then 
-										velo = calculated
-										newpos = offsetStartPos
-									end
+					local grapple = getItem("grappling_hook")
+					if grapple then 
+						local res
+						repeat
+							task.wait(.05)
+							local newpos = bedwarsStore.blocks[1].Position
+							local plr = bedwarsStore.grapple > tick() and EntityNearPosition(GrappleDisablerRange.Value, true) or nil
+							local velo = Vector3.new(0, -60, 0)
+							if plr then 
+								local offsetStartPos = plr.RootPart.CFrame.p - plr.RootPart.CFrame.lookVector
+								local pos = plr.RootPart.Position
+								local playergrav = workspace.Gravity
+								local balloons = plr.Character:GetAttribute("InflatedBalloons")
+								if balloons and balloons > 0 then 
+									playergrav = (workspace.Gravity * (1 - ((balloons >= 4 and 1.2 or balloons >= 3 and 1 or 0.975))))
 								end
-								res = projectileRemote:CallServerAsync(grapple.tool, nil, "grappling_hook_projectile", newpos, newpos, velo, game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
-							until res or (not GrappleDisabler.Enabled)
+								if plr.Character.PrimaryPart:FindFirstChild("rbxassetid://8200754399") then 
+									playergrav = (workspace.Gravity * 0.3)
+								end
+								local newLaunchVelo = bedwars.ProjectileMeta["grappling_hook_projectile"].launchVelocity
+								local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / newLaunchVelo, plr, playergrav)
+								local newlook = CFrame.new(offsetStartPos, shootpos) * CFrame.new(Vector3.new(-bedwars.BowConstantsTable.RelX, -bedwars.BowConstantsTable.RelY, -bedwars.BowConstantsTable.RelZ))
+								shootpos = newlook.p + (newlook.lookVector * (offsetStartPos - shootpos).magnitude)
+								local calculated = LaunchDirection(offsetStartPos, shootpos, newLaunchVelo, workspace.Gravity, false)
+								if calculated then 
+									velo = calculated
+									newpos = offsetStartPos
+								end
+							end
+							res = projectileRemote:CallServerAsync(grapple.tool, nil, "grappling_hook_projectile", newpos, newpos, velo, game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
+						until res or (not GrappleDisabler.Enabled)
+						if GrappleDisabler.Enabled then
+							GrappleDisabler.ToggleButton(false)
 						end
-					until (not GrappleDisabler.Enabled)
+					else
+						warningNotification("GrappleExploit", "no grapple hook", 3)
+						GrappleDisabler.ToggleButton(false)
+					end
 				end)
 			end
 		end, 
@@ -10578,6 +10581,7 @@ task.spawn(function()
 	end
 	task.spawn(function()
 		pcall(function()
+			if inputService.TouchEnabled or inputService:GetPlatform() == Enum.Platform.UWP then return end
 			if not isfile("vape/Profiles/bedwarsdata.txt") then 
 				local commit = "main"
 				for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/VapeV4ForRoblox"):split("\n")) do 
