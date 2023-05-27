@@ -4601,124 +4601,13 @@ runFunction(function()
 	local projectileRemote = bedwars.ClientHandler:Get(bedwars.ProjectileRemote)
 	local GrappleDisabler = {Enabled = false}
 	local GrappleDisablerRange = {Value = 60}
-
-	local clonesuccess = false
-	local disabledproper = true
-	local oldcloneroot
-	local cloned
-	local clone
-	local bodyvelo
-
-	local function disablefunc()
-		if bodyvelo then bodyvelo:Destroy() end
-		disabledproper = true
-		if not oldcloneroot or not oldcloneroot.Parent then return end
-		lplr.Character.Parent = game
-		oldcloneroot.Parent = lplr.Character
-		lplr.Character.PrimaryPart = oldcloneroot
-		lplr.Character.Parent = workspace
-		oldcloneroot.CanCollide = true
-		for i,v in pairs(lplr.Character:GetDescendants()) do 
-			if v:IsA("Weld") or v:IsA("Motor6D") then 
-				if v.Part0 == clone then v.Part0 = oldcloneroot end
-				if v.Part1 == clone then v.Part1 = oldcloneroot end
-			end
-			if v:IsA("BodyVelocity") then 
-				v:Destroy()
-			end
-		end
-		for i,v in pairs(oldcloneroot:GetChildren()) do 
-			if v:IsA("BodyVelocity") then 
-				v:Destroy()
-			end
-		end
-		local oldclonepos = clone.Position.Y
-		if clone then 
-			clone:Destroy()
-			clone = nil
-		end
-		lplr.Character.Humanoid.HipHeight = hip or 2
-		local origcf = {oldcloneroot.CFrame:GetComponents()}
-		origcf[2] = oldclonepos
-		oldcloneroot.CFrame = CFrame.new(unpack(origcf))
-		oldcloneroot = nil
-	end
-
 	GrappleDisabler = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
 		Name = "GrappleDisabler",
 		Function = function(callback)
 			if callback then
-				if not entityLibrary.isAlive then 
-					disabledproper = true
-				end
-				if not disabledproper then 
-					warningNotification("GrappleDisabler", "failed", 3)
-					GrappleDisabler.ToggleButton(false)
-					return 
-				end
-				clonesuccess = false
-				if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and isnetworkowner(entityLibrary.character.HumanoidRootPart) then
-					cloned = lplr.Character
-					oldcloneroot = entityLibrary.character.HumanoidRootPart
-					lplr.Character.Parent = game
-					clone = oldcloneroot:Clone()
-					clone.Parent = lplr.Character
-					oldcloneroot.Parent = gameCamera
-					bedwars.QueryUtil:setQueryIgnored(oldcloneroot, true)
-					clone.CFrame = oldcloneroot.CFrame
-					lplr.Character.PrimaryPart = clone
-					lplr.Character.Parent = workspace
-					for i,v in pairs(lplr.Character:GetDescendants()) do 
-						if v:IsA("Weld") or v:IsA("Motor6D") then 
-							if v.Part0 == oldcloneroot then v.Part0 = clone end
-							if v.Part1 == oldcloneroot then v.Part1 = clone end
-						end
-						if v:IsA("BodyVelocity") then 
-							v:Destroy()
-						end
-					end
-					for i,v in pairs(oldcloneroot:GetChildren()) do 
-						if v:IsA("BodyVelocity") then 
-							v:Destroy()
-						end
-					end
-					if hip then 
-						lplr.Character.Humanoid.HipHeight = hip
-					end
-					hip = lplr.Character.Humanoid.HipHeight
-					clonesuccess = true
-				end
-				if not clonesuccess then 
-					warningNotification("GrappleDisabler", "Character missing", 3)
-					GrappleDisabler.ToggleButton(false)
-					return 
-				end
-				if not getItem("grappling_hook") then 
-					warningNotification("GrappleDisabler", "no grapple hook stupid", 3)
-					GrappleDisabler.ToggleButton(false)
-					return 
-				end
-				local realtick = tick()
-				RunLoops:BindToHeartbeat("GrappleDisabler", function(delta) 
-					if entityLibrary.isAlive then
-						if isnetworkowner(oldcloneroot) then 
-							if realtick > tick() then
-								oldcloneroot.CFrame = clone.CFrame
-								oldcloneroot.Velocity = clone.Velocity
-							else
-								if oldcloneroot.CFrame.p.Y < 1000 then 
-									oldcloneroot.CFrame = oldcloneroot.CFrame + Vector3.new(0, 10000, 0)
-								end
-							end
-						else
-							GrappleDisabler.ToggleButton(false)
-						end
-					end
-				end)
 				table.insert(GrappleDisabler.Connections, bedwars.ClientHandler:Get("GrapplingHookFunctions"):Connect(function(p4)
 					if p4.hookFunction == "PLAYER_IN_TRANSIT" then
-						bedwarsStore.grapple = tick() + 5
-						realtick = tick() + 1.8
+						bedwarsStore.grapple = tick() + 2
 					end
 				end))
 				task.spawn(function()
@@ -4758,14 +4647,6 @@ runFunction(function()
 						end
 					until (not GrappleDisabler.Enabled)
 				end)
-			else
-				RunLoops:UnbindFromHeartbeat("GrappleDisabler")
-				if clonesuccess and oldcloneroot and clone and lplr.Character.Parent == workspace and oldcloneroot.Parent ~= nil and disabledproper and cloned == lplr.Character then 
-					oldcloneroot.CanCollide = true
-					oldcloneroot.CFrame = clone.CFrame
-					disablefunc()
-					disabledproper = false
-				end
 			end
 		end, 
 		HoverText = "Lets you jump farther (Not landing on same level & Spamming can lead to lagbacks)"
