@@ -4618,6 +4618,10 @@ runFunction(function()
 							task.wait(.05)
 							local newpos = bedwarsStore.blocks[1].Position
 							res = projectileRemote:CallServerAsync(grapple.tool, nil, "grappling_hook_projectile", newpos, newpos, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
+							if res then 
+								task.wait(0.3)
+								if bedwarsStore.grapple < tick() then res = nil end
+							end
 						until res or (not GrappleDisabler.Enabled)
 						if GrappleDisabler.Enabled then
 							GrappleDisabler.ToggleButton(false)
