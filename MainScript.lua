@@ -94,6 +94,7 @@ if inputService:GetPlatform() ~= Enum.Platform.Windows then
 	getcustomasset = nil
 end
 local getcustomasset = getsynasset or getcustomasset or function(location) return vapeAssetTable[location] or "" end
+local customassetcheck = (getsynasset or getcustomasset) and true
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local delfile = delfile or function(file) writefile(file, "") end
 
@@ -154,27 +155,29 @@ local function vapeGithubRequest(scripturl)
 end
 
 local function downloadVapeAsset(path)
-	if not isfile(path) then
-		task.spawn(function()
-			local textlabel = Instance.new("TextLabel")
-			textlabel.Size = UDim2.new(1, 0, 0, 36)
-			textlabel.Text = "Downloading "..path
-			textlabel.BackgroundTransparency = 1
-			textlabel.TextStrokeTransparency = 0
-			textlabel.TextSize = 30
-			textlabel.Font = Enum.Font.SourceSans
-			textlabel.TextColor3 = Color3.new(1, 1, 1)
-			textlabel.Position = UDim2.new(0, 0, 0, -36)
-			textlabel.Parent = GuiLibrary.MainGui
-			repeat task.wait() until isfile(path)
-			textlabel:Destroy()
-		end)
-		local suc, req = pcall(function() return vapeGithubRequest(path:gsub("vape/assets", "assets")) end)
-        if suc and req then
-		    writefile(path, req)
-        else
-            return ""
-        end
+	if customassetcheck then
+		if not isfile(path) then
+			task.spawn(function()
+				local textlabel = Instance.new("TextLabel")
+				textlabel.Size = UDim2.new(1, 0, 0, 36)
+				textlabel.Text = "Downloading "..path
+				textlabel.BackgroundTransparency = 1
+				textlabel.TextStrokeTransparency = 0
+				textlabel.TextSize = 30
+				textlabel.Font = Enum.Font.SourceSans
+				textlabel.TextColor3 = Color3.new(1, 1, 1)
+				textlabel.Position = UDim2.new(0, 0, 0, -36)
+				textlabel.Parent = GuiLibrary.MainGui
+				repeat task.wait() until isfile(path)
+				textlabel:Destroy()
+			end)
+			local suc, req = pcall(function() return vapeGithubRequest(path:gsub("vape/assets", "assets")) end)
+			if suc and req then
+				writefile(path, req)
+			else
+				return ""
+			end
+		end
 	end
 	return getcustomasset(path) 
 end
