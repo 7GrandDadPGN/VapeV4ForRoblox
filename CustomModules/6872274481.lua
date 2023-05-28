@@ -5391,14 +5391,16 @@ runFunction(function()
 					BedFolder.Parent = BedESPFolder
 					BedESPTable[bed] = BedFolder
 					for bedespnumber, bedesppart in pairs(bed:GetChildren()) do
-						local boxhandle = Instance.new("BoxHandleAdornment")
-						boxhandle.Size = bedesppart.Size + Vector3.new(.01, .01, .01)
-						boxhandle.AlwaysOnTop = true
-						boxhandle.ZIndex = (bedesppart.Name == "Covers" and 10 or 0)
-						boxhandle.Visible = true
-						boxhandle.Adornee = bedesppart
-						boxhandle.Color3 = bedesppart.Color
-						boxhandle.Parent = BedFolder
+						if bedesppart:IsA("BasePart") then
+							local boxhandle = Instance.new("BoxHandleAdornment")
+							boxhandle.Size = bedesppart.Size + Vector3.new(.01, .01, .01)
+							boxhandle.AlwaysOnTop = true
+							boxhandle.ZIndex = (bedesppart.Name == "Covers" and 10 or 0)
+							boxhandle.Visible = true
+							boxhandle.Adornee = bedesppart
+							boxhandle.Color3 = bedesppart.Color
+							boxhandle.Parent = BedFolder
+						end
 					end
 				end
 			else
