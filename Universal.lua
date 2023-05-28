@@ -5943,6 +5943,37 @@ runFunction(function()
 	ReachCorner.Parent = FPSLabel
 end)
 
+
+runFunction(function()
+	local Ping = {}
+	local PingLabel
+	Ping = GuiLibrary.CreateLegitModule({
+		Name = "Ping",
+		Function = function(callback)
+			if callback then 
+				task.spawn(function()
+					repeat 
+						PingLabel.Text = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())).." ms"
+						task.wait(1)
+					until false
+				end)
+			end
+		end
+	})
+	PingLabel = Instance.new("TextLabel")
+	PingLabel.Size = UDim2.new(0, 100, 0, 41)
+	PingLabel.BackgroundTransparency = 0.5
+	PingLabel.TextSize = 15
+	PingLabel.Font = Enum.Font.Gotham
+	PingLabel.Text = "0 ms"
+	PingLabel.TextColor3 = Color3.new(1, 1, 1)
+	PingLabel.BackgroundColor3 = Color3.new()
+	PingLabel.Parent = Ping.GetCustomChildren()
+	local PingCorner = Instance.new("UICorner")
+	PingCorner.CornerRadius = UDim.new(0, 4)
+	PingCorner.Parent = PingLabel
+end)
+
 runFunction(function()
 	local Keystrokes = {}
 	local keys = {}
