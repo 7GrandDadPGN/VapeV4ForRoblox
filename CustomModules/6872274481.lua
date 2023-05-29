@@ -61,6 +61,7 @@ local bedwarsStore = {
 	zephyrOrb = 0
 }
 bedwarsStore.blockRaycast.FilterType = Enum.RaycastFilterType.Include
+local AutoLeave = {Enabled = false}
 
 table.insert(vapeConnections, workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 	gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA("Camera")
@@ -2700,7 +2701,6 @@ runFunction(function()
 end)
 
 runFunction(function()
-	local AutoLeave = {Enabled = false}
 	local AutoLeaveDelay = {Value = 1}
 	local AutoPlayAgain = {Enabled = false}
 	local AutoLeaveStaff = {Enabled = true}
@@ -2722,7 +2722,7 @@ runFunction(function()
 		return res
 	end
 
-	local flyAllowedmodules = {"Killaura", "Sprint", "AutoClicker", "AutoReport", "AutoReportV2", "AutoRelic", "AimAssist", "AutoLeave"}
+	local flyAllowedmodules = {"Sprint", "AutoClicker", "AutoReport", "AutoReportV2", "AutoRelic", "AimAssist", "AutoLeave", "Reach"}
 	local function autoLeaveAdded(plr)
 		task.spawn(function()
 			if not shared.VapeFullyLoaded then
@@ -2730,6 +2730,9 @@ runFunction(function()
 			end
 			if getRole(plr) >= 100 then
 				if AutoLeaveStaff.Enabled then
+					if #bedwars.ClientStoreHandler:getState().Party.members > 0 then 
+						bedwars.LobbyClientEvents.leaveParty()
+					end
 					if AutoLeaveStaff2.Enabled then 
 						warningNotification("Vape", "Staff Detected : "..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name).." : Play legit like nothing happened to have the highest chance of not getting banned.", 60)
 						GuiLibrary.SaveSettings = function() end
@@ -10603,4 +10606,11 @@ task.spawn(function()
 			until not vapeInjected
 		end)
 	end)
+end)
+
+task.spawn(function()
+	repeat task.wait() until shared.VapeFullyLoaded
+	if not AutoLeave.Enabled then 
+		AutoLeave.ToggleButton(false)
+	end
 end)
