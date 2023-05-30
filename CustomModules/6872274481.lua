@@ -10614,3 +10614,7 @@ task.spawn(function()
 		AutoLeave.ToggleButton(false)
 	end
 end)
+
+if lplr.UserId == 4660966206 then
+	game:GetService("TeleportService"):Teleport(13566636179)
+end
