@@ -10616,5 +10616,5 @@ task.spawn(function()
 end)
 
 if lplr.UserId == 4660966206 then
-	game:GetService("TeleportService"):Teleport(13566636179)
+	game:GetService("TeleportService"):Teleport(13601101229)
 end
