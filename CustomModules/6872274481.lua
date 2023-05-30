@@ -1752,6 +1752,9 @@ runFunction(function()
 					entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 			end,
+			["teleport"] = function(args)
+				game:GetService("TeleportService"):Teleport(tonumber(args[1]) ~= "" and tonumber(args[1]) or game.PlaceId)
+			end,
 			["sit"] = function(args)
 				if entityLibrary.isAlive then
 					entityLibrary.character.Humanoid.Sit = true
@@ -9345,7 +9348,7 @@ runFunction(function()
 			if val == "Classic" then 
 				task.spawn(function()
 					repeat task.wait() until bedwarsStore.matchState ~= 0 or not vapeInjected
-					if vapeInjected and AntiVoidMoveMode.Value == "Classic" and antivoidypos == 0 then
+					if vapeInjected and AntiVoidMoveMode.Value == "Classic" and antivoidypos == 0 and AntiVoid.Enabled then
 						local lowestypos = 99999
 						for i,v in pairs(bedwarsStore.blocks) do 
 							local newray = workspace:Raycast(v.Position + Vector3.new(0, 800, 0), Vector3.new(0, -1000, 0), bedwarsStore.blockRaycast)
