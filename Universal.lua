@@ -162,15 +162,16 @@ do
 		repeat
 			task.wait()
 			if entityLibrary.isAlive then
-				table.insert(postable, {Time = tick() + 0.1, Position = entityLibrary.character.HumanoidRootPart.Position})
+				table.insert(postable, {Time = tick(), Position = entityLibrary.character.HumanoidRootPart.Position})
 				if #postable > 100 then 
 					table.remove(postable, 1)
 				end
 				local closestmag = 9e9
 				local closestpos = entityLibrary.character.HumanoidRootPart.Position
+				local currenttime = tick()
 				for i, v in pairs(postable) do 
-					local mag = math.abs(tick() - v.Time)
-					if mag < closestmag then
+					local mag = 0.1 - (currenttime - v.Time)
+					if mag < closestmag and mag > 0 then
 						closestmag = mag
 						closestpos = v.Position
 					end
