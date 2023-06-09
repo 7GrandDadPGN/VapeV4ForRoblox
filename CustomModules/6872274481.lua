@@ -8663,12 +8663,12 @@ runFunction(function()
 						textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(msg)
 					end
 				end))
-				table.insert(AutoToxic.Connections, replicatedStorageService.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab, channel)
+				table.insert(AutoToxic.Connections, textChatService.MessageReceived:Connect(function(tab)
 					if AutoToxicRespond.Enabled then
-						local plr = playersService:FindFirstChild(tab.FromSpeaker)
-						local args = tab.Message:split(" ")
+						local plr = tab.TextSource
+						local args = tab.Text:split(" ")
 						if plr and plr ~= lplr and not alreadyreported[plr] then
-							local reportreason, reportedmatch = findreport(tab.Message)
+							local reportreason, reportedmatch = findreport(tab.Text)
 							if reportreason then 
 								alreadyreported[plr] = true
 								local custommsg = #AutoToxicPhrases4.ObjectList > 0 and AutoToxicPhrases4.ObjectList[math.random(1, #AutoToxicPhrases4.ObjectList)]
