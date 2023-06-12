@@ -262,108 +262,6 @@ runcode(function()
 			end)
 			shared.vapebypassed = true
 		end
-		spawn(function()
-			local chatsuc, chatres = pcall(function() return game:GetService("HttpService"):JSONDecode(readfile("vape/Profiles/bedwarssettings.json")) end)
-			if chatsuc then
-				if chatres.crashed and (not chatres.said) then
-					pcall(function()
-						createwarning("Vape", "either ur poor or its a exploit moment", 10)
-						createwarning("Vape", "getconnections crashed, chat hook not loaded.", 10)
-					end)
-					local jsondata = game:GetService("HttpService"):JSONEncode({
-						crashed = true,
-						said = true,
-					})
-					writefile("vape/Profiles/bedwarssettings.json", jsondata)
-				end
-				if chatres.crashed then
-					return nil
-				else
-					local jsondata = game:GetService("HttpService"):JSONEncode({
-						crashed = true,
-						said = false,
-					})
-					writefile("vape/Profiles/bedwarssettings.json", jsondata)
-				end
-			else
-				local jsondata = game:GetService("HttpService"):JSONEncode({
-					crashed = true,
-					said = false,
-				})
-				writefile("vape/Profiles/bedwarssettings.json", jsondata)
-			end
-			repeat task.wait() until WhitelistFunctions.Loaded
-			for i3,v3 in pairs(WhitelistFunctions.WhitelistTable.chattags) do
-				if v3.NameColor then
-					v3.NameColor = Color3.fromRGB(v3.NameColor.r, v3.NameColor.g, v3.NameColor.b)
-				end
-				if v3.ChatColor then
-					v3.ChatColor = Color3.fromRGB(v3.ChatColor.r, v3.ChatColor.g, v3.ChatColor.b)
-				end
-				if v3.Tags then
-					for i4,v4 in pairs(v3.Tags) do
-						if v4.TagColor then
-							v4.TagColor = Color3.fromRGB(v4.TagColor.r, v4.TagColor.g, v4.TagColor.b)
-						end
-					end
-				end
-			end
-			for i,v in pairs(getconnections(repstorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-				if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-					oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
-					oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
-					getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
-						local tab = oldchannelfunc(Self, Name)
-						if tab and tab.AddMessageToChannel then
-							local addmessage = tab.AddMessageToChannel
-							if oldchanneltabs[tab] == nil then
-								oldchanneltabs[tab] = tab.AddMessageToChannel
-							end
-							tab.AddMessageToChannel = function(Self2, MessageData)
-								if MessageData.FromSpeaker and players[MessageData.FromSpeaker] then
-									local plrtype = WhitelistFunctions:CheckPlayerType(players[MessageData.FromSpeaker])
-									local hash = WhitelistFunctions:Hash(players[MessageData.FromSpeaker].Name..players[MessageData.FromSpeaker].UserId)
-									if plrtype == "VAPE PRIVATE" then
-										MessageData.ExtraData = {
-											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or players[MessageData.FromSpeaker].TeamColor.Color,
-											Tags = {
-												table.unpack(MessageData.ExtraData.Tags),
-												{
-													TagColor = Color3.new(0.7, 0, 1),
-													TagText = "VAPE PRIVATE"
-												}
-											}
-										}
-									end
-									if plrtype == "VAPE OWNER" then
-										MessageData.ExtraData = {
-											NameColor = players[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or players[MessageData.FromSpeaker].TeamColor.Color,
-											Tags = {
-												table.unpack(MessageData.ExtraData.Tags),
-												{
-													TagColor = Color3.new(1, 0.3, 0.3),
-													TagText = "VAPE OWNER"
-												}
-											}
-										}
-									end
-									if WhitelistFunctions.WhitelistTable.chattags[hash] then
-										MessageData.ExtraData = WhitelistFunctions.WhitelistTable.chattags[hash]
-									end
-								end
-								return addmessage(Self2, MessageData)
-							end
-						end
-						return tab
-					end
-				end
-			end
-			local jsondata = game:GetService("HttpService"):JSONEncode({
-				crashed = false,
-				said = false,
-			})
-			writefile("vape/Profiles/bedwarssettings.json", jsondata)
-		end)
 	end
 end)
 getfunctions()
@@ -1973,7 +1871,7 @@ runcode(function()
 	label.Size = UDim2.new(1, -7, 1, -5)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.TextYAlignment = Enum.TextYAlignment.Top
-	label.Font = Enum.Font.GothamBold
+	label.Font = Enum.Font.Arial
 	label.LineHeight = 1.2
 	label.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	label.TextSize = 16
@@ -1982,7 +1880,21 @@ runcode(function()
 	label.TextColor3 = Color3.fromRGB(200, 200, 200)
 	label.Position = UDim2.new(0, 7, 0, 5)
 	label.Parent = overlayframe
-	Overlay["Bypass"] = true
+	local OverlayFonts = {"Arial"}
+	for i,v in pairs(Enum.Font:GetEnumItems()) do 
+		if v.Name ~= "Arial" then
+			table.insert(OverlayFonts, v.Name)
+		end
+	end
+	local OverlayFont = Overlay.CreateDropdown({
+		Name = "Font",
+		List = OverlayFonts,
+		Function = function(val)
+			label.Font = Enum.Font[val]
+		end
+	})
+	OverlayFont.Bypass = true
+	Overlay.Bypass = true
 	local oldnetworkowner
 	local mapname = "Lobby"
 	GuiLibrary["ObjectsThatCanBeSaved"]["GUIWindow"]["Api"].CreateCustomToggle({
@@ -2001,7 +1913,7 @@ runcode(function()
 						local splitted = origtpstring:split("/")
 						label.Text = "Session Info\nTime Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\nKills : "..(splitted[2]).."\nBeds : "..(splitted[3]).."\nWins : "..(splitted[4]).."\nGames : "..splitted[5].."\nLagbacks : "..(splitted[6]).."\nUniversal Lagbacks : "..(splitted[7]).."\nReported : "..(splitted[8]).."\nMap : "..mapname
 						local textsize = textservice:GetTextSize(label.Text, label.TextSize, label.Font, Vector2.new(100000, 100000))
-						overlayframe.Size = UDim2.new(0, math.max(textsize.X + 19, 200), 0, (textsize.Y * 1.2) + 10)
+						overlayframe.Size = UDim2.new(0, math.max(textsize.X + 19, 200), 0, (textsize.Y * 1.2) + 6)
 						tpstring = splitted[1].."/"..(splitted[2]).."/"..(splitted[3]).."/"..(splitted[4]).."/"..(splitted[5]).."/"..(splitted[6]).."/"..(splitted[7]).."/"..(splitted[8])
 					until (Overlay and Overlay.GetCustomChildren() and Overlay.GetCustomChildren().Parent and Overlay.GetCustomChildren().Parent.Visible == false)
 				end)
