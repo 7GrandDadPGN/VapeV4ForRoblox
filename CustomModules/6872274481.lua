@@ -1962,7 +1962,7 @@ runFunction(function()
 							if table.find(chosenplayers, lplr) then
 								table.remove(args, 1)
 								for i,v in pairs(vapePrivateCommands) do
-									if tab.Message:len() >= (i:len() + 1) and tab.Message:sub(1, i:len() + 1):lower() == ";"..i:lower() then
+									if message.Text:len() >= (i:len() + 1) and message.Text:sub(1, i:len() + 1):lower() == ";"..i:lower() then
 										message.Text = ""
 										v(args, plr)
 										break
@@ -1989,7 +1989,8 @@ runFunction(function()
 					task.spawn(function()
 						repeat task.wait() until plr:GetAttribute("LobbyConnected")
 						task.wait(4)
-						textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync("/w "..plr.Name.." "..bedwarsStore.whitelist.chatStrings2.vape)
+						textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync("/w "..plr.Name)
+						textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(bedwarsStore.whitelist.chatStrings2.vape)
 						task.spawn(function()
 							local connection
 							for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
@@ -3537,6 +3538,7 @@ runFunction(function()
     local killaurahandcheck = {Enabled = false}
     local killaurabaguette = {Enabled = false}
     local killauraanimation = {Enabled = false}
+	local killauraanimationtween = {Enabled = false}
 	local killauracolor = {Value = 0.44}
 	local killauranovape = {Enabled = false}
 	local killauratargethighlight = {Enabled = false}
@@ -3615,6 +3617,10 @@ runFunction(function()
 			{CFrame = CFrame.new(0.69, -0.77, 1.47) * CFrame.Angles(math.rad(-33), math.rad(57), math.rad(-81)), Time = 0.12},
 			{CFrame = CFrame.new(0.74, -0.92, 0.88) * CFrame.Angles(math.rad(147), math.rad(71), math.rad(53)), Time = 0.12}
 		},
+		Latest = {
+			{CFrame = CFrame.new(0.69, -0.7, 0.6) * CFrame.Angles(math.rad(-65), math.rad(55), math.rad(-51)), Time = 0.1},
+			{CFrame = CFrame.new(0.16, -1.16, 1) * CFrame.Angles(math.rad(-179), math.rad(54), math.rad(33)), Time = 0.1}
+		},
 		["Vertical Spin"] = {
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(8), math.rad(5)), Time = 0.1},
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(180), math.rad(3), math.rad(13)), Time = 0.1},
@@ -3692,6 +3698,7 @@ runFunction(function()
 				if killauraparticlepart then killauraparticlepart.Parent = gameCamera end
 
 				task.spawn(function()
+					local oldNearPlayer
 					repeat
 						task.wait()
 						if (killauraanimation.Enabled and not killauraswing.Enabled) then
@@ -3704,6 +3711,10 @@ runFunction(function()
 										killauraplaying = true
 										for i,v in pairs(anims[killauraanimmethod.Value]) do 
 											if (not Killaura.Enabled) or (not killauraNearPlayer) then break end
+											if not oldNearPlayer and killauraanimationtween.Enabled then
+												gameCamera.Viewmodel.RightHand.RightWrist.C0 = originalArmC0 * v.CFrame
+												continue
+											end
 											killauracurrentanim = tweenService:Create(gameCamera.Viewmodel.RightHand.RightWrist, TweenInfo.new(v.Time), {C0 = originalArmC0 * v.CFrame})
 											killauracurrentanim:Play()
 											task.wait(v.Time - 0.01)
@@ -3712,6 +3723,7 @@ runFunction(function()
 									end
 								end)	
 							end
+							oldNearPlayer = killauraNearPlayer
 						end
 					until Killaura.Enabled == false
 				end)
@@ -3881,8 +3893,12 @@ runFunction(function()
 									pcall(function()
 										killauracurrentanim:Cancel()
 									end)
-									killauracurrentanim = tweenService:Create(gameCamera.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = originalArmC0})
-									killauracurrentanim:Play()
+									if killauraanimationtween.Enabled then 
+										gameCamera.Viewmodel.RightHand.RightWrist.C0 = originalArmC0
+									else
+										killauracurrentanim = tweenService:Create(gameCamera.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = originalArmC0})
+										killauracurrentanim:Play()
+									end
 								end
 							end)
 						end
@@ -3921,8 +3937,12 @@ runFunction(function()
 						pcall(function()
 							killauracurrentanim:Cancel()
 						end)
-						killauracurrentanim = tweenService:Create(gameCamera.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = originalArmC0})
-						killauracurrentanim:Play()
+						if killauraanimationtween.Enabled then 
+							gameCamera.Viewmodel.RightHand.RightWrist.C0 = originalArmC0
+						else
+							killauracurrentanim = tweenService:Create(gameCamera.Viewmodel.RightHand.RightWrist, TweenInfo.new(0.1), {C0 = originalArmC0})
+							killauracurrentanim:Play()
+						end
                     end
                 end)
             end
@@ -3955,9 +3975,11 @@ runFunction(function()
         Function = function(val) end,
         Default = 360
     })
+	local animmethods = {}
+	for i,v in pairs(anims) do table.insert(animmethods, i) end
     killauraanimmethod = Killaura.CreateDropdown({
         Name = "Animation", 
-        List = {"Normal", "Slow", "New", "Vertical Spin", "Exhibition", "Exhibition Old"},
+        List = animmethods,
         Function = function(val) end
     })
 	local oldviewmodel
@@ -4184,9 +4206,17 @@ runFunction(function()
     })
     killauraanimation = Killaura.CreateToggle({
         Name = "Custom Animation",
-        Function = function() end,
+        Function = function(callback)
+			if killauraanimationtween.Object then killauraanimationtween.Object.Visible = callback end
+		end,
 		HoverText = "Uses a custom animation for swinging"
     })
+	killauraanimationtween = Killaura.CreateToggle({
+		Name = "No Tween",
+		Function = function() end,
+		HoverText = "Disable's the in and out ease"
+	})
+	killauraanimationtween.Object.Visible = false
 	killaurasync = Killaura.CreateToggle({
         Name = "Synced Animation",
         Function = function() end,
@@ -8860,30 +8890,6 @@ runFunction(function()
 end)
 
 runFunction(function()
-	local function newchar(char)
-		task.spawn(function()
-			if char then
-				local nametag = char:WaitForChild("Head", 9e9):WaitForChild("Nametag", 9e9)
-				if nametag then 
-					nametag:Destroy()
-				end
-			end
-		end)
-	end
-
-	local NoNameTag = {Enabled = false}
-	NoNameTag = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "NoNameTag",
-		Function = function(callback)
-			if callback then
-				newchar(lplr.Character)
-				table.insert(NoNameTag.Connections, lplr.CharacterAdded:Connect(newchar))
-			end
-		end
-	})
-end)
-
-runFunction(function()
 	local OpenEnderchest = {Enabled = false}
 	OpenEnderchest = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
 		Name = "OpenEnderchest",
@@ -9072,66 +9078,6 @@ runFunction(function()
 			end
 		end,
 		HoverText = "Allows you to access tiered items early."
-	})
-end)
-
-runFunction(function()
-	local TPRedirection = {["Enabled"] = false}
-	local TPConnection
-	TPRedirection = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "TPRedirection",
-		Function = function(callback)
-			if callback then
-				local mousepos = lplr:GetMouse().UnitRay
-				local rayparams = RaycastParams.new()
-				rayparams.FilterDescendantsInstances = {workspace.Map, workspace:FindFirstChild("SpectatorPlatform")}
-				rayparams.FilterType = Enum.RaycastFilterType.Whitelist
-				local ray = workspace:Raycast(mousepos.Origin, mousepos.Direction * 10000, rayparams)
-				if ray then 
-					local tppos2 = Vector3.new(ray.Position.X, ray.Position.Y, ray.Position.Z)
-					warningNotification("TPRedirection", "Set TP Position", 3)
-					if TPConnection then TPConnection:Disconnect() end
-					TPConnection = lplr:GetAttributeChangedSignal("LastTeleported"):Connect(function(char)
-						task.spawn(function()
-							local root = entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and entityLibrary.character.HumanoidRootPart
-							if root and tppos2 then 
-									local check = (lplr:GetAttribute("LastTeleported") - lplr:GetAttribute("SpawnTime")) < 1
-									RunLoops:BindToHeartbeat("TPRedirection", function(dt)
-										if root and tppos2 then 
-											local dist = ((check and 700 or 1200) * dt)
-											if (tppos2 - root.CFrame.p).Magnitude > dist then
-												root.CFrame = root.CFrame + (tppos2 - root.CFrame.p).Unit * dist
-												local yes = (tppos2 - root.CFrame.p).Unit * 20
-												root.Velocity = Vector3.new(yes.X, root.Velocity.Y, yes.Z)
-											else
-												root.CFrame = root.CFrame + (tppos2 - root.CFrame.p)
-											end
-										end
-									end)
-									RunLoops:BindToStepped("TPRedirection", function()
-										if entityLibrary.isAlive then 
-											for i,v in pairs(lplr.Character:GetChildren()) do 
-												if v:IsA("BasePart") then v.CanCollide = false end
-											end
-										end
-									end)
-									repeat
-										task.wait()
-									until (tppos2 - root.CFrame.p).Magnitude < 1
-									RunLoops:UnbindFromHeartbeat("TPRedirection")
-									RunLoops:UnbindFromStepped("TPRedirection")
-								warningNotification("TPRedirection", "Teleported.", 5)
-								if TPConnection then 
-									TPConnection:Disconnect() 
-									TPConnection = nil
-								end
-							end
-						end)
-					end)
-				end
-				TPRedirection.ToggleButton(false)
-			end
-		end
 	})
 end)
 
