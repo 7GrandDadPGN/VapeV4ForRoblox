@@ -1509,115 +1509,6 @@ runFunction(function()
 				end
 			end
 		end
-		--[[if getconnections then 
-			for i,v in pairs(getconnections(replicatedStorageService.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-				if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-					bedwarsStore.whitelist.oldChatTable = getmetatable(debug.getupvalues(v.Function)[1])
-					bedwarsStore.whitelist.oldChatFunction = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
-					getmetatable(debug.getupvalues(v.Function)[1]).GetChannel = function(Self, Name)
-						local tab = bedwarsStore.whitelist.oldChatFunction(Self, Name)
-						if tab and tab.AddMessageToChannel then
-							local addmessage = tab.AddMessageToChannel
-							if bedwarsStore.whitelist.oldChatFunctions[tab] == nil then
-								bedwarsStore.whitelist.oldChatFunctions[tab] = tab.AddMessageToChannel
-							end
-							tab.AddMessageToChannel = function(Self2, MessageData)
-								if MessageData.FromSpeaker and playersService[MessageData.FromSpeaker] then
-									local plrtype, plrattackable, plrtag = WhitelistFunctions:CheckPlayerType(playersService[MessageData.FromSpeaker])
-									local hash = WhitelistFunctions:Hash(playersService[MessageData.FromSpeaker].Name..playersService[MessageData.FromSpeaker].UserId)
-									if plrtag then
-										if plrtype == "VAPE PRIVATE" then
-											MessageData.ExtraData = {
-												NameColor = playersService[MessageData.FromSpeaker].Team == nil and Color3.new(0, 1, 1) or playersService[MessageData.FromSpeaker].TeamColor.Color,
-												Tags = {
-													table.unpack(MessageData.ExtraData.Tags),
-													{
-														TagColor = Color3.new(0.7, 0, 1),
-														TagText = "VAPE PRIVATE"
-													}
-												}
-											}
-										end
-										if plrtype == "VAPE OWNER" then
-											MessageData.ExtraData = {
-												NameColor = playersService[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or playersService[MessageData.FromSpeaker].TeamColor.Color,
-												Tags = {
-													table.unpack(MessageData.ExtraData.Tags),
-													{
-														TagColor = Color3.new(1, 0.3, 0.3),
-														TagText = "VAPE OWNER"
-													}
-												}
-											}
-										end
-										if bedwarsStore.whitelist.clientUsers[tostring(playersService[MessageData.FromSpeaker])] then
-											MessageData.ExtraData = {
-												NameColor = playersService[MessageData.FromSpeaker].Team == nil and Color3.new(1, 0, 0) or playersService[MessageData.FromSpeaker].TeamColor.Color,
-												Tags = {
-													table.unpack(MessageData.ExtraData.Tags),
-													{
-														TagColor = Color3.new(1, 1, 0),
-														TagText = bedwarsStore.whitelist.clientUsers[tostring(playersService[MessageData.FromSpeaker])]
-													}
-												}
-											}
-										end
-										if WhitelistFunctions.WhitelistTable.chattags[hash] then
-											local newdata = {
-												NameColor = playersService[MessageData.FromSpeaker].Team == nil and WhitelistFunctions.WhitelistTable.chattags[hash].NameColor or playersService[MessageData.FromSpeaker].TeamColor.Color,
-												Tags = WhitelistFunctions.WhitelistTable.chattags[hash].Tags
-											}
-											MessageData.ExtraData = newdata
-										end
-									end
-								end
-								return addmessage(Self2, MessageData)
-							end
-						end
-						return tab
-					end
-				end
-			end
-		end
-		table.insert(vapeConnections, lplr.PlayerGui:WaitForChild("Chat").Frame.ChatChannelParentFrame["Frame_MessageLogDisplay"].Scroller.ChildAdded:Connect(function(text)
-			local textlabel2 = text:WaitForChild("TextLabel")
-			if WhitelistFunctions:IsSpecialIngame() then
-				local args = textlabel2.Text:split(" ")
-				local client = bedwarsStore.whitelist.chatStrings1[#args > 0 and args[#args] or tab.Message]
-				if textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
-					text.Size = UDim2.new(0, 0, 0, 0)
-					text:GetPropertyChangedSignal("Size"):Connect(function()
-						text.Size = UDim2.new(0, 0, 0, 0)
-					end)
-				end
-				if client then
-					if textlabel2.Text:find(bedwarsStore.whitelist.chatStrings2[client]) then
-						text.Size = UDim2.new(0, 0, 0, 0)
-						text:GetPropertyChangedSignal("Size"):Connect(function()
-							text.Size = UDim2.new(0, 0, 0, 0)
-						end)
-					end
-				end
-				textlabel2:GetPropertyChangedSignal("Text"):Connect(function()
-					local args = textlabel2.Text:split(" ")
-					local client = bedwarsStore.whitelist.chatStrings1[#args > 0 and args[#args] or tab.Message]
-					if textlabel2.Text:find("You are now chatting") or textlabel2.Text:find("You are now privately chatting") then
-						text.Size = UDim2.new(0, 0, 0, 0)
-						text:GetPropertyChangedSignal("Size"):Connect(function()
-							text.Size = UDim2.new(0, 0, 0, 0)
-						end)
-					end
-					if client then
-						if textlabel2.Text:find(bedwarsStore.whitelist.chatStrings2[client]) then
-							text.Size = UDim2.new(0, 0, 0, 0)
-							text:GetPropertyChangedSignal("Size"):Connect(function()
-								text.Size = UDim2.new(0, 0, 0, 0)
-							end)
-						end
-					end
-				end)
-			end
-		end))]]
 
 		local priolist = {
 			DEFAULT = 0,
@@ -1993,82 +1884,103 @@ runFunction(function()
 			end
 		}
 
-		table.insert(vapeConnections, textChatService.MessageReceived:Connect(function(tab)
-			local plr = tab.TextSource
-			if not plr then return end
-			local args = tab.Text:split(" ")
-			local client = bedwarsStore.whitelist.chatStrings1[#args > 0 and args[#args] or tab.Text]
-			local localPriority = priolist[WhitelistFunctions:CheckPlayerType(lplr)]
-			local otherPriority = priolist[WhitelistFunctions:CheckPlayerType(plr)]
-			if plr == lplr then 
-				if localPriority > 0 then
-					if tab.Text:len() >= 5 and tab.Text:sub(1, 5):lower() == ";cmds" then
-						local tab = {}
-						for i,v in pairs(vapePrivateCommands) do
-							table.insert(tab, i)
+		textChatService.OnIncomingMessage = function(message)
+			local props = Instance.new("TextChatMessageProperties")
+			if message.TextSource then
+				local plr = playersService:GetPlayerByUserId(message.TextSource.UserId)
+				if plr then
+					local plrtype, plrattackable, plrtag = WhitelistFunctions:CheckPlayerType(plr)
+					local args = message.Text:split(" ")
+					local client = bedwarsStore.whitelist.chatStrings1[#args > 0 and args[#args] or message.Text]
+					local localPriority = priolist[WhitelistFunctions:CheckPlayerType(lplr)]
+					local otherPriority = priolist[plrtype]
+					local hash = WhitelistFunctions:Hash(plr.Name..plr.UserId)
+					if plrtag then
+						if plrtype == "VAPE OWNER" then
+							props.PrefixText = "<font color='#"..Color3.new(1, 0.3, 0.3):ToHex().."'>[VAPE OWNER]</font> "..message.PrefixText
+						elseif plrtype == "VAPE PRIVATE" then
+							props.PrefixText = "<font color='#"..Color3.new(0.7, 0, 1):ToHex().."'>[VAPE PRIVATE]</font> "..message.PrefixText
+						elseif bedwarsStore.whitelist.clientUsers[plr.Name] then
+							props.PrefixText = "<font color='#"..Color3.new(1, 1, 0):ToHex().."'>[VAPE USER]</font> "..message.PrefixText
 						end
-						table.sort(tab)
-						local str = ""
-						for i,v in pairs(tab) do
-							str = str..";"..v.."\n"
+						if WhitelistFunctions.WhitelistTable.chattags[hash] then
+							props.PrefixText = message.PrefixText
+							for i, v in pairs(WhitelistFunctions.WhitelistTable.chattags[hash].Tags) do 
+								props.PrefixText = "<font color='#"..v.TagColor:ToHex().."'>["..v.TagText.."]</font> "..props.PrefixText
+							end
 						end
-						game.StarterGui:SetCore("ChatMakeSystemMessage",{
-							Text = 	str,
-						})
+					end
+					if plr == lplr then 
+						if localPriority > 0 then
+							if message.Text:len() >= 5 and message.Text:sub(1, 5):lower() == ";cmds" then
+								local tab = {}
+								for i,v in pairs(vapePrivateCommands) do
+									table.insert(tab, i)
+								end
+								table.sort(tab)
+								local str = ""
+								for i,v in pairs(tab) do
+									str = str..";"..v.."\n"
+								end
+								message.TextChannel:DisplaySystemMessage(str)
+							end
+						end
+					else
+						if client ~= nil then message.Text = "" end
+						if localPriority > 0 and message.TextChannel.Name:find("RBXWhisper") and client ~= nil and alreadysaidlist[plr.Name] == nil then
+							alreadysaidlist[plr.Name] = true
+							task.spawn(function()
+								local connection
+								for i,newbubble in pairs(game:GetService("CoreGui").ExperienceChat.bubbleChat:GetDescendants()) do
+									if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2[client]) then
+										newbubble.Parent.Parent.Visible = false
+										repeat task.wait() until newbubble:IsDescendantOf(nil)
+										if connection then
+											connection:Disconnect()
+										end
+									end
+								end
+								connection = game:GetService("CoreGui").ExperienceChat.bubbleChat.DescendantAdded:Connect(function(newbubble)
+									if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2[client]) then
+										newbubble.Parent.Parent.Visible = false
+										repeat task.wait() until newbubble:IsDescendantOf(nil)
+										if connection then
+											connection:Disconnect()
+										end
+									end
+								end)
+							end)
+							warningNotification("Vape", plr.Name.." is using "..client.."!", 60)
+							WhitelistFunctions.CustomTags[plr] = string.format("[%s] ", client:upper()..' USER')
+							bedwarsStore.whitelist.clientUsers[plr.Name] = client:upper()..' USER'
+							local ind, newent = entityLibrary.getEntityFromPlayer(plr)
+							if newent then entityLibrary.entityUpdatedEvent:Fire(newent) end
+						end
+						if otherPriority > 0 and otherPriority > localPriority and #args > 1 then
+							table.remove(args, 1)
+							local chosenplayers = findplayers(args[1], plr)
+							if table.find(chosenplayers, lplr) then
+								table.remove(args, 1)
+								for i,v in pairs(vapePrivateCommands) do
+									if tab.Message:len() >= (i:len() + 1) and tab.Message:sub(1, i:len() + 1):lower() == ";"..i:lower() then
+										message.Text = ""
+										v(args, plr)
+										break
+									end
+								end
+							end
+						end
 					end
 				end
 			else
-				if localPriority > 0 and tab.MessageType == "Whisper" and client ~= nil and alreadysaidlist[plr.Name] == nil then
-					alreadysaidlist[plr.Name] = true
-					task.spawn(function()
-						local connection
-						for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
-							if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2[client]) then
-								newbubble.Parent.Parent.Visible = false
-								repeat task.wait() until newbubble:IsDescendantOf(nil)
-								if connection then
-									connection:Disconnect()
-								end
-							end
-						end
-						connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:Connect(function(newbubble)
-							if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2[client]) then
-								newbubble.Parent.Parent.Visible = false
-								repeat task.wait() until newbubble:IsDescendantOf(nil)
-								if connection then
-									connection:Disconnect()
-								end
-							end
-						end)
-					end)
-					warningNotification("Vape", plr.Name.." is using "..client.."!", 60)
-					WhitelistFunctions.CustomTags[plr] = string.format("[%s] ", client:upper()..' USER')
-					bedwarsStore.whitelist.clientUsers[plr.Name] = client:upper()..' USER'
-					local ind, newent = entityLibrary.getEntityFromPlayer(plr)
-					if newent then entityLibrary.entityUpdatedEvent:Fire(newent) end
-				end
-				if otherPriority > 0 and otherPriority > localPriority and #args > 1 then
-					table.remove(args, 1)
-					local chosenplayers = findplayers(args[1], plr)
-					if table.find(chosenplayers, lplr) then
-						table.remove(args, 1)
-						for i,v in pairs(vapePrivateCommands) do
-							if tab.Message:len() >= (i:len() + 1) and tab.Message:sub(1, i:len() + 1):lower() == ";"..i:lower() then
-								v(args, plr)
-								break
-							end
-						end
-					end
+				if WhitelistFunctions:IsSpecialIngame() and message.Text:find("You are now privately chatting") then 
+					message.Text = ""
 				end
 			end
-		end))
+			return props	
+		end
 
 		local function newPlayer(plr)
-			if plr.UserId == 239702688 then 
-				task.spawn(function() lplr:Kick("ur not funny") end)
-				task.wait(0.5)
-				while true do end
-			end
 			if (WhitelistFunctions:CheckPlayerType(plr) ~= "DEFAULT" or WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)]) then
 				if lplr ~= plr and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then
 					GuiLibrary.SelfDestruct = function()
@@ -2099,15 +2011,6 @@ runFunction(function()
 								end
 							end)
 						end)
-					--[[	replicatedStorageService.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Wait()
-						task.wait(0.2)
-						if getconnections then
-							for i,v in pairs(getconnections(replicatedStorageService.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
-								if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
-									debug.getupvalues(v.Function)[1]:SwitchCurrentChannel("all")
-								end
-							end
-						end]]
 					end)
 				end
 			end
@@ -2123,12 +2026,7 @@ runFunction(function()
 		bedwars.ZephyrController.updateJump = oldZephyrUpdate
 		getmetatable(bedwars.ClientHandler).Get = oldRemoteGet
 		bedwarsStore.blockPlacer:disable()
-		if bedwarsStore.whitelist.oldChatTable and bedwarsStore.whitelist.oldChatFunction and bedwarsStore.whitelist.oldChatFunctions then 
-			bedwarsStore.whitelist.oldChatTable.GetChannel = bedwarsStore.whitelist.oldChatFunction 
-			for oldChannelTable, oldChannelFunction in pairs(bedwarsStore.whitelist.oldChatFunctions) do 
-				oldChannelTable.AddMessageToChannel = oldChannelFunction
-			end
-		end
+		textChatService.OnIncomingMessage = nil
 	end)
 	
 	local teleportedServers = false
@@ -2345,22 +2243,22 @@ runFunction(function()
 	local handsquare = Instance.new("ImageLabel")
 	handsquare.Size = UDim2.new(0, 26, 0, 27)
 	handsquare.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
-	handsquare.Position = UDim2.new(0, 72, 0, 39)
+	handsquare.Position = UDim2.new(0, 72, 0, 44)
 	handsquare.Parent = vapeTargetInfo.Object.GetCustomChildren().Frame.MainInfo
 	local handround = Instance.new("UICorner")
 	handround.CornerRadius = UDim.new(0, 4)
 	handround.Parent = handsquare
 	local helmetsquare = handsquare:Clone()
-	helmetsquare.Position = UDim2.new(0, 100, 0, 39)
+	helmetsquare.Position = UDim2.new(0, 100, 0, 44)
 	helmetsquare.Parent = vapeTargetInfo.Object.GetCustomChildren().Frame.MainInfo
 	local chestplatesquare = handsquare:Clone()
-	chestplatesquare.Position = UDim2.new(0, 127, 0, 39)
+	chestplatesquare.Position = UDim2.new(0, 127, 0, 44)
 	chestplatesquare.Parent = vapeTargetInfo.Object.GetCustomChildren().Frame.MainInfo
 	local bootssquare = handsquare:Clone()
-	bootssquare.Position = UDim2.new(0, 155, 0, 39)
+	bootssquare.Position = UDim2.new(0, 155, 0, 44)
 	bootssquare.Parent = vapeTargetInfo.Object.GetCustomChildren().Frame.MainInfo
 	local uselesssquare = handsquare:Clone()
-	uselesssquare.Position = UDim2.new(0, 182, 0, 39)
+	uselesssquare.Position = UDim2.new(0, 182, 0, 44)
 	uselesssquare.Parent = vapeTargetInfo.Object.GetCustomChildren().Frame.MainInfo
 	local oldupdate = vapeTargetInfo.UpdateInfo
 	vapeTargetInfo.UpdateInfo = function(tab, targetsize)
@@ -3092,7 +2990,7 @@ runFunction(function()
 					if entityLibrary.isAlive then
 						local playerMass = (entityLibrary.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 						flyAllowed = ((lplr.Character:GetAttribute("InflatedBalloons") and lplr.Character:GetAttribute("InflatedBalloons") > 0) or bedwarsStore.matchState == 2 or megacheck) and 1 or 0
-						playerMass = playerMass + (flyAllowed > 0 and 10 or 0.03) * (tick() % 0.4 < 0.2 and -1 or 1)
+						playerMass = playerMass + (flyAllowed > 0 and 3 or 0.03) * (tick() % 0.4 < 0.2 and -1 or 1)
 
 						if FlyAnywayProgressBarFrame then
 							FlyAnywayProgressBarFrame.Visible = flyAllowed <= 0
@@ -7700,9 +7598,9 @@ runFunction(function()
 		Function = function(callback)
 			if callback then
 				autobankui = Instance.new("Frame")
-				autobankui.Size = UDim2.new(0, 200, 0, 40)
+				autobankui.Size = UDim2.new(0, 240, 0, 40)
 				autobankui.AnchorPoint = Vector2.new(0.5, 0)
-				autobankui.Position = UDim2.new(0.5, 0, 0, -200)
+				autobankui.Position = UDim2.new(0.5, 0, 0, -240)
 				task.spawn(function()
 					repeat
 						task.wait()
@@ -7725,7 +7623,7 @@ runFunction(function()
 				emerald.Image = bedwars.getIcon({itemType = "emerald"}, true)
 				emerald.Size = UDim2.new(0, 40, 0, 40)
 				emerald.Name = "emerald"
-				emerald.Position = UDim2.new(0, 80, 0, 0)
+				emerald.Position = UDim2.new(0, 120, 0, 0)
 				emerald.BackgroundTransparency = 1
 				emerald.Parent = autobankui
 				local emeraldtext = Instance.new("TextLabel")
@@ -7740,9 +7638,14 @@ runFunction(function()
 				emeraldtext.Parent = emerald
 				local diamond = emerald:Clone()
 				diamond.Image = bedwars.getIcon({itemType = "diamond"}, true)
-				diamond.Position = UDim2.new(0, 40, 0, 0)
+				diamond.Position = UDim2.new(0, 80, 0, 0)
 				diamond.Name = "diamond"
 				diamond.Parent = autobankui
+				local gold = emerald:Clone()
+				gold.Image = bedwars.getIcon({itemType = "gold"}, true)
+				gold.Position = UDim2.new(0, 40, 0, 0)
+				gold.Name = "gold"
+				gold.Parent = autobankui
 				local iron = emerald:Clone()
 				iron.Image = bedwars.getIcon({itemType = "iron"}, true)
 				iron.Position = UDim2.new(0, 0, 0, 0)
@@ -7750,12 +7653,12 @@ runFunction(function()
 				iron.Parent = autobankui
 				local apple = emerald:Clone()
 				apple.Image = bedwars.getIcon({itemType = "apple"}, true)
-				apple.Position = UDim2.new(0, 120, 0, 0)
+				apple.Position = UDim2.new(0, 160, 0, 0)
 				apple.Name = "apple"
 				apple.Parent = autobankui
 				local balloon = emerald:Clone()
 				balloon.Image = bedwars.getIcon({itemType = "balloon"}, true)
-				balloon.Position = UDim2.new(0, 160, 0, 0)
+				balloon.Position = UDim2.new(0, 200, 0, 0)
 				balloon.Name = "balloon"
 				balloon.Parent = autobankui
 				local echest = replicatedStorageService.Inventories:FindFirstChild(lplr.Name.."_personal")
@@ -7763,7 +7666,7 @@ runFunction(function()
 					task.spawn(function()
 						local chestitems = bedwarsStore.localInventory.inventory.items
 						for i3,v3 in pairs(chestitems) do
-							if (v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond" or (v3.itemType == "apple" and AutoBankApple.Enabled) or (v3.itemType == "balloon" and AutoBankBalloon.Enabled)) then
+							if (v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond" or v3.itemType == "gold" or (v3.itemType == "apple" and AutoBankApple.Enabled) or (v3.itemType == "balloon" and AutoBankBalloon.Enabled)) then
 								bedwars.ClientHandler:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(echest, v3.tool)
 								refreshbank()
 							end
@@ -7784,7 +7687,7 @@ runFunction(function()
 							if autobankapple then return end
 						elseif p3.Name == "balloon" and AutoBankBalloon.Enabled then 
 							if autobankballoon then vapeEvents.AutoBankBalloon:Fire() return end
-						elseif (p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond") then
+						elseif (p3.Name == "emerald" or p3.Name == "iron" or p3.Name == "diamond" or p3.Name == "gold") then
 							if not ((not AutoBankTransmitted) or (AutoBankTransmittedType and p3.Name ~= "diamond")) then return end
 						else
 							return
@@ -7872,7 +7775,7 @@ runFunction(function()
 								local chestitems = bedwarsStore.localInventory.inventory.items
 								if #chestitems > 0 then
 									for i3,v3 in pairs(chestitems) do
-										if v3 and (v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond") then
+										if v3 and (v3.itemType == "emerald" or v3.itemType == "iron" or v3.itemType == "diamond" or v3.itemType == "gold") then
 											if (not AutoBankTransmitted) or (AutoBankTransmittedType and v3.Name ~= "diamond") then 
 												task.spawn(function()
 													pcall(function()
@@ -7890,7 +7793,7 @@ runFunction(function()
 							local chestitems = echest and echest:GetChildren() or {}
 							if #chestitems > 0 then
 								for i3,v3 in pairs(chestitems) do
-									if v3:IsA("Accessory") and ((npctype == false and (v3.Name == "emerald" or v3.Name == "iron")) or v3.Name == "diamond") then
+									if v3:IsA("Accessory") and ((npctype == false and (v3.Name == "emerald" or v3.Name == "iron" or v3.Name == "gold")) or v3.Name == "diamond") then
 										task.spawn(function()
 											pcall(function()
 												bedwars.ClientHandler:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(echest, v3)
@@ -8665,7 +8568,7 @@ runFunction(function()
 				end))
 				table.insert(AutoToxic.Connections, textChatService.MessageReceived:Connect(function(tab)
 					if AutoToxicRespond.Enabled then
-						local plr = tab.TextSource
+						local plr = playersService:GetPlayerByUserId(tab.TextSource.UserId)
 						local args = tab.Text:split(" ")
 						if plr and plr ~= lplr and not alreadyreported[plr] then
 							local reportreason, reportedmatch = findreport(tab.Text)
@@ -10270,7 +10173,7 @@ runFunction(function()
 	label.Size = UDim2.new(1, -7, 1, -5)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.TextYAlignment = Enum.TextYAlignment.Top
-	label.Font = Enum.Font.GothamBold
+	label.Font = Enum.Font.Arial
 	label.LineHeight = 1.2
 	label.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	label.TextSize = 16
@@ -10279,6 +10182,20 @@ runFunction(function()
 	label.TextColor3 = Color3.fromRGB(200, 200, 200)
 	label.Position = UDim2.new(0, 7, 0, 5)
 	label.Parent = overlayframe
+	local OverlayFonts = {"Arial"}
+	for i,v in pairs(Enum.Font:GetEnumItems()) do 
+		if v.Name ~= "Arial" then
+			table.insert(OverlayFonts, v.Name)
+		end
+	end
+	local OverlayFont = Overlay.CreateDropdown({
+		Name = "Font",
+		List = OverlayFonts,
+		Function = function(val)
+			label.Font = Enum.Font[val]
+		end
+	})
+	OverlayFont.Bypass = true
 	Overlay.Bypass = true
 	local overlayconnections = {}
 	local oldnetworkowner
@@ -10435,7 +10352,7 @@ runFunction(function()
 						local splitted = origtpstring:split("/")
 						label.Text = "Session Info\nTime Played : "..os.date("!%X",math.floor(tick() - splitted[1])).."\nKills : "..(splitted[2] + bedwarsStore.statistics.kills).."\nBeds : "..(splitted[3] + bedwarsStore.statistics.beds).."\nWins : "..(splitted[4] + (victorysaid and 1 or 0)).."\nGames : "..splitted[5].."\nLagbacks : "..(splitted[6] + bedwarsStore.statistics.lagbacks).."\nUniversal Lagbacks : "..(splitted[7] + bedwarsStore.statistics.universalLagbacks).."\nReported : "..(splitted[8] + bedwarsStore.statistics.reported).."\nMap : "..mapname
 						local textsize = textService:GetTextSize(label.Text, label.TextSize, label.Font, Vector2.new(9e9, 9e9))
-						overlayframe.Size = UDim2.new(0, math.max(textsize.X + 19, 200), 0, (textsize.Y * 1.2) + 10)
+						overlayframe.Size = UDim2.new(0, math.max(textsize.X + 19, 200), 0, (textsize.Y * 1.2) + 6)
 						bedwarsStore.TPString = splitted[1].."/"..(splitted[2] + bedwarsStore.statistics.kills).."/"..(splitted[3] + bedwarsStore.statistics.beds).."/"..(splitted[4] + (victorysaid and 1 or 0)).."/"..(splitted[5] + 1).."/"..(splitted[6] + bedwarsStore.statistics.lagbacks).."/"..(splitted[7] + bedwarsStore.statistics.universalLagbacks).."/"..(splitted[8] + bedwarsStore.statistics.reported)
 					until not overlayenabled
 				end)

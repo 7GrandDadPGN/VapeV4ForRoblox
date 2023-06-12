@@ -471,12 +471,14 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 	function WhitelistFunctions:GetTag(plr)
 		local plrstr, plrattackable, plrtag = WhitelistFunctions:CheckPlayerType(plr)
 		local hash = WhitelistFunctions:Hash(plr.Name..plr.UserId)
+		local newtag = WhitelistFunctions.CustomTags[plr] or ""
 		if plrtag then
 			if plrstr == "VAPE OWNER" then
-				return "[VAPE OWNER] "
+				newtag = "[VAPE OWNER] "
 			elseif plrstr == "VAPE PRIVATE" then 
-				return "[VAPE PRIVATE] "
-			elseif WhitelistFunctions.WhitelistTable.chattags[hash] then
+				newtag = "[VAPE PRIVATE] "
+			end
+			if WhitelistFunctions.WhitelistTable.chattags[hash] then
 				local data = WhitelistFunctions.WhitelistTable.chattags[hash]
 				local newnametag = ""
 				if data.Tags then
@@ -484,10 +486,10 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 						newnametag = newnametag..'['..v2.TagText..'] '
 					end
 				end
-				return newnametag
+				newtag = newnametag
 			end
 		end
-		return WhitelistFunctions.CustomTags[plr] or ""
+		return newtag
 	end
 
 	function WhitelistFunctions:Hash(str)
@@ -4628,25 +4630,25 @@ runFunction(function()
 		Name = "Cape",
 		Function = function(callback)
 			if callback then
-				local successfulcustom = false
+				local successfulcustom
 				if CapeBox.Value ~= "" then
-					successfulcustom = true
 					if (not isfile(CapeBox.Value)) then 
 						warningNotification("Cape", "Missing file", 5)
-						successfulcustom = false
+					else
+						successfulcustom = CapeBox.Value:find(".") and getcustomasset(CapeBox.Value) or CapeBox.Value
 					end
 				end
 				table.insert(Cape.Connections, lplr.CharacterAdded:Connect(function(char)
 					task.spawn(function()
 						pcall(function() 
-							capeFunction(char, (successfulcustom and getcustomasset(CapeBox.Value) or downloadVapeAsset("vape/assets/VapeCape.png")))
+							capeFunction(char, (successfulcustom or downloadVapeAsset("vape/assets/VapeCape.png")))
 						end)
 					end)
 				end))
 				if lplr.Character then
 					task.spawn(function()
 						pcall(function() 
-							capeFunction(lplr.Character, (successfulcustom and getcustomasset(CapeBox.Value) or downloadVapeAsset("vape/assets/VapeCape.png")))
+							capeFunction(lplr.Character, (successfulcustom or downloadVapeAsset("vape/assets/VapeCape.png")))
 						end)
 					end)
 				end
@@ -5019,25 +5021,27 @@ runFunction(function()
 			if callback then 
 				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then 
 					table.insert(AutoReport.Connections, textChatService.MessageReceived:Connect(function(tab)
-						local plr = tab.TextSource
-						local args = tab.Text:split(" ")
-						if plr and plr ~= lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
-							local reportreason, reportedmatch = findreport(tab.Text)
-							if reportreason then 
-								if alreadyreported[plr] then return end
-								task.spawn(function()
-									if syn == nil or reportplayer then
-										if reportplayer then
-											reportplayer(plr, reportreason, "he said a bad word")
-										else
-											playersService:ReportAbuse(plr, reportreason, "he said a bad word")
+						if tab.TextSource then
+							local plr = playersService:GetPlayerByUserId(tab.TextSource.UserId)
+							local args = tab.Text:split(" ")
+							if plr and plr ~= lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
+								local reportreason, reportedmatch = findreport(tab.Text)
+								if reportreason then 
+									if alreadyreported[plr] then return end
+									task.spawn(function()
+										if syn == nil or reportplayer then
+											if reportplayer then
+												reportplayer(plr, reportreason, "he said a bad word")
+											else
+												playersService:ReportAbuse(plr, reportreason, "he said a bad word")
+											end
 										end
+									end)
+									if AutoReportNotify.Enabled then 
+										warningNotification("AutoReport", "Reported "..plr.Name.." for "..reportreason..' ('..reportedmatch..')', 15)
 									end
-								end)
-								if AutoReportNotify.Enabled then 
-									warningNotification("AutoReport", "Reported "..plr.Name.." for "..reportreason..' ('..reportedmatch..')', 15)
+									alreadyreported[plr] = true
 								end
-								alreadyreported[plr] = true
 							end
 						end
 					end))
