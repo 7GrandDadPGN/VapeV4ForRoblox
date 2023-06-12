@@ -863,16 +863,18 @@ VapeText.Position = UDim2.new(1, -154, 0, 35)
 VapeText.TextColor3 = Color3.new(1, 1, 1)
 VapeText.RichText = true
 VapeText.BackgroundTransparency = 1
+VapeText.LineHeight = 1.2
 VapeText.TextXAlignment = Enum.TextXAlignment.Left
 VapeText.TextYAlignment = Enum.TextYAlignment.Top
 VapeText.BorderSizePixel = 0
 VapeText.BackgroundColor3 = Color3.new()
 VapeText.Font = Enum.Font.SourceSans
 VapeText.Text = ""
-VapeText.TextSize = 23
+VapeText.TextSize = 19
 local VapeTextExtra = Instance.new("TextLabel")
 VapeTextExtra.Name = "ExtraText"
 VapeTextExtra.Parent = VapeText
+VapeTextExtra.LineHeight = 1.2
 VapeTextExtra.Size = UDim2.new(1, 0, 1, 0)
 VapeTextExtra.Position = UDim2.new(0, 1, 0, 1)
 VapeTextExtra.BorderSizePixel = 0
@@ -885,7 +887,7 @@ VapeTextExtra.TextXAlignment = Enum.TextXAlignment.Left
 VapeTextExtra.TextYAlignment = Enum.TextYAlignment.Top
 VapeTextExtra.TextColor3 = Color3.new()
 VapeTextExtra.Font = Enum.Font.SourceSans
-VapeTextExtra.TextSize = 23
+VapeTextExtra.TextSize = 19
 local VapeCustomText = Instance.new("TextLabel")
 VapeCustomText.TextSize = 30
 VapeCustomText.Font = Enum.Font.GothamBold
@@ -992,21 +994,21 @@ local function TextGUIUpdate()
                 VapeTextExtra.TextXAlignment = Enum.TextXAlignment.Right
                 VapeTextExtra.Position = UDim2.fromOffset(offsets[1], offsets[2])
                 VapeLogo.Position = UDim2.new(1, -142, 0, 8)
-                VapeText.Position = UDim2.new(1, -158, 0, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + (VapeCustomText.Visible and 25 or 0) - offsets[3])
+                VapeText.Position = UDim2.new(1, -158, 0, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + 5 + (VapeCustomText.Visible and 25 or 0) - offsets[3])
                 VapeCustomText.Position = UDim2.fromOffset(0, VapeLogo.Visible and 35 or 0)
                 VapeCustomText.TextXAlignment = Enum.TextXAlignment.Right
                 VapeBackgroundList.HorizontalAlignment = Enum.HorizontalAlignment.Right
-                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-56, 2 + offsets[4])
+                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-60, -2 + offsets[4])
             else
                 VapeText.TextXAlignment = Enum.TextXAlignment.Left
                 VapeTextExtra.TextXAlignment = Enum.TextXAlignment.Left
                 VapeTextExtra.Position = UDim2.fromOffset(offsets[1], offsets[2])
                 VapeLogo.Position = UDim2.fromOffset(2, 8)
-                VapeText.Position = UDim2.fromOffset(6, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + (VapeCustomText.Visible and 25 or 0) - offsets[3])
+                VapeText.Position = UDim2.fromOffset(6, (VapeLogo.Visible and (TextGUIBackgroundToggle.Enabled and 41 or 35) or 5) + 5 + (VapeCustomText.Visible and 25 or 0) - offsets[3])
 				VapeCustomText.Position = UDim2.fromOffset(0, VapeLogo.Visible and 35 or 0)
 				VapeCustomText.TextXAlignment = Enum.TextXAlignment.Left
                 VapeBackgroundList.HorizontalAlignment = Enum.HorizontalAlignment.Left
-                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-1, 2 + offsets[4])
+                VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-4, -2 + offsets[4])
             end
         end
         
@@ -1053,7 +1055,7 @@ local function TextGUIUpdate()
             backgroundFrame.Visible = true
             backgroundFrame.ZIndex = 0
             backgroundFrame.LayoutOrder = i
-            backgroundFrame.Size = UDim2.fromOffset(textsize.X + 8, textsize.Y)
+            backgroundFrame.Size = UDim2.fromOffset(textsize.X + 8, textsize.Y + 3)
             backgroundFrame.Parent = VapeBackground
             local backgroundLineFrame = Instance.new("Frame")
             backgroundLineFrame.Size = UDim2.new(0, 2, 1, 0)
@@ -1063,7 +1065,7 @@ local function TextGUIUpdate()
             backgroundLineFrame.Parent = backgroundFrame
             local backgroundLineExtra = Instance.new("Frame")
             backgroundLineExtra.BorderSizePixel = 0
-            backgroundLineExtra.BackgroundTransparency = 0.96
+            backgroundLineExtra.BackgroundTransparency = 0.95
             backgroundLineExtra.BackgroundColor3 = Color3.new()
             backgroundLineExtra.ZIndex = 0
             backgroundLineExtra.Size = UDim2.new(1, 0, 0, 2)
@@ -1223,10 +1225,10 @@ TextGUISortMode = TextGUI.CreateDropdown({
 		GuiLibrary.UpdateHudEvent:Fire()
 	end
 })
-local TextGUIFonts = {"SourceSans"}
+local TextGUIFonts = {"Arial"}
 local TextGUIFonts2 = {"GothamBold"}
 for i,v in pairs(Enum.Font:GetEnumItems()) do 
-	if v.Name ~= "SourceSans" then
+	if v.Name ~= "Arial" then
 		table.insert(TextGUIFonts, v.Name)
 	end
 	if v.Name ~= "GothamBold" then
@@ -1246,8 +1248,8 @@ TextGUI.CreateDropdown({
 	Name = "CustomTextFont",
 	List = TextGUIFonts2,
 	Function = function(val)
-		VapeText.Font = Enum.Font[val]
-		VapeTextExtra.Font = Enum.Font[val]
+		VapeCustomText.Font = Enum.Font[val]
+		VapeCustomTextShadow.Font = Enum.Font[val]
 		GuiLibrary.UpdateHudEvent:Fire()
 	end
 })
@@ -1329,15 +1331,18 @@ CustomText = TextGUI.CreateTextBox({
 	end
 })
 CustomText.Object.Visible = false
+
+local function newHealthColor(percent)
+	if percent > 0.5 then 
+		return Color3.fromRGB(5, 134, 105):lerp(Color3.fromRGB(255, 255, 0), (0.5 - (percent - 0.5)) / 0.5)
+	end
+	return Color3.fromRGB(255, 255, 0):lerp(Color3.fromRGB(249, 57, 55), (0.5 - percent) / 0.5)
+end
+
 local TargetInfo = GuiLibrary.CreateCustomWindow({
 	Name = "Target Info",
 	Icon = "vape/assets/TargetInfoIcon1.png",
 	IconSize = 16
-})
-local TargetInfoDisplayNames = TargetInfo.CreateToggle({
-	Name = "Use Display Name",
-	Function = function() end,
-	Default = true
 })
 local TargetInfoBackground = {Enabled = false}
 local TargetInfoMainFrame = Instance.new("Frame")
@@ -1355,14 +1360,13 @@ TargetInfoMainInfo.Position = UDim2.new(0, 0, 0, 0)
 TargetInfoMainInfo.Name = "MainInfo"
 TargetInfoMainInfo.Parent = TargetInfoMainFrame
 local TargetInfoName = Instance.new("TextLabel")
-TargetInfoName.TextSize = 17
-TargetInfoName.Font = Enum.Font.SourceSans
+TargetInfoName.TextSize = 14
+TargetInfoName.Font = Enum.Font.Arial
 TargetInfoName.TextColor3 = Color3.fromRGB(162, 162, 162)
-TargetInfoName.Position = UDim2.new(0, 72, 0, 7)
+TargetInfoName.Position = UDim2.new(0, 70, 0, 10)
 TargetInfoName.TextStrokeTransparency = 1
 TargetInfoName.BackgroundTransparency = 1
-TargetInfoName.Size = UDim2.new(0, 80, 0, 16)
-TargetInfoName.TextScaled = true
+TargetInfoName.Size = UDim2.new(0, 80, 0, 20)
 TargetInfoName.Text = "Target name"
 TargetInfoName.ZIndex = 2
 TargetInfoName.TextXAlignment = Enum.TextXAlignment.Left
@@ -1380,8 +1384,8 @@ end)
 TargetInfoNameShadow.Parent = TargetInfoName
 local TargetInfoHealthBackground = Instance.new("Frame")
 TargetInfoHealthBackground.BackgroundColor3 = Color3.fromRGB(54, 54, 54)
-TargetInfoHealthBackground.Size = UDim2.new(0, 138, 0, 4)
-TargetInfoHealthBackground.Position = UDim2.new(0, 72, 0, 29)
+TargetInfoHealthBackground.Size = UDim2.new(0, 140, 0, 4)
+TargetInfoHealthBackground.Position = UDim2.new(0, 72, 0, 32)
 TargetInfoHealthBackground.Parent = TargetInfoMainInfo
 local TargetInfoHealthBackgroundShadow = Instance.new("ImageLabel")
 TargetInfoHealthBackgroundShadow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1410,10 +1414,10 @@ TargetInfoHealthExtra.AnchorPoint = Vector2.new(1, 0)
 TargetInfoHealthExtra.Position = UDim2.new(1, 0, 0, 0)
 TargetInfoHealthExtra.Parent = TargetInfoHealth
 local TargetInfoImage = Instance.new("ImageLabel")
-TargetInfoImage.Size = UDim2.new(0, 61, 0, 61)
+TargetInfoImage.Size = UDim2.new(0, 50, 0, 50)
 TargetInfoImage.BackgroundTransparency = 1
 TargetInfoImage.Image = 'rbxthumb://type=AvatarHeadShot&id='..playersService.LocalPlayer.UserId..'&w=420&h=420'
-TargetInfoImage.Position = UDim2.new(0, 5, 0, 10)
+TargetInfoImage.Position = UDim2.new(0, 10, 0, 16)
 TargetInfoImage.Parent = TargetInfoMainInfo
 local TargetInfoMainInfoCorner = Instance.new("UICorner")
 TargetInfoMainInfoCorner.CornerRadius = UDim.new(0, 4)
@@ -1430,14 +1434,29 @@ TargetInfoHealthCorner2.Parent = TargetInfoHealthExtra
 local TargetInfoHealthExtraCorner = Instance.new("UICorner")
 TargetInfoHealthExtraCorner.CornerRadius = UDim.new(0, 4)
 TargetInfoHealthExtraCorner.Parent = TargetInfoImage
+TargetInfo.CreateDropdown({
+	Name = "Font",
+	List = TextGUIFonts,
+	Function = function(val)
+		TargetInfoName.Font = Enum.Font[val]
+		TargetInfoNameShadow.Font = Enum.Font[val]
+	end
+})
+
 TargetInfoBackground = TargetInfo.CreateToggle({
 	Name = "Use Background",
 	Function = function(callback) 
 		TargetInfoMainInfo.BackgroundTransparency = callback and 0.25 or 1
 		TargetInfoName.TextColor3 = callback and Color3.fromRGB(162, 162, 162) or Color3.new(1, 1, 1)
 		TargetInfoName.Size = UDim2.new(0, 80, 0, callback and 16 or 18)
+		TargetInfoName.TextSize = callback and 14 or 15
 		TargetInfoHealthBackground.Size = UDim2.new(0, 138, 0, callback and 4 or 7)
 	end,
+	Default = true
+})
+local TargetInfoDisplayNames = TargetInfo.CreateToggle({
+	Name = "Use Display Names",
+	Function = function(callback) end,
 	Default = true
 })
 local TargetInfoHealthTween
@@ -1454,7 +1473,7 @@ shared.VapeTargetInfo = {
 				TargetInfoHealth:TweenSize(UDim2.new(math.clamp(v.Humanoid.Health / v.Humanoid.MaxHealth, 0, 1), 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
 				TargetInfoHealthExtra:TweenSize(UDim2.new(math.clamp((v.Humanoid.Health / v.Humanoid.MaxHealth) - 1, 0, 1), 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
 				if TargetInfoHealthTween then TargetInfoHealthTween:Cancel() end
-				TargetInfoHealthTween = game:GetService("TweenService"):Create(TargetInfoHealth, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromHSV(math.clamp(v.Humanoid.Health / v.Humanoid.MaxHealth, 0, 1) / 2.5, 0.89, 1)})
+				TargetInfoHealthTween = game:GetService("TweenService"):Create(TargetInfoHealth, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = newHealthColor(math.clamp(v.Humanoid.Health / v.Humanoid.MaxHealth, 0, 1))})
 				TargetInfoHealthTween:Play()
 				TargetInfoName.Text = (TargetInfoDisplayNames.Enabled and v.Player.DisplayName or v.Player.Name)
 				break
