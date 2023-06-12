@@ -1990,9 +1990,10 @@ runFunction(function()
 						repeat task.wait() until plr:GetAttribute("LobbyConnected")
 						task.wait(4)
 						local oldchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
-						game:GetService("RobloxReplicatedStorage").ExperienceChat.WhisperChat:InvokeServer(plr.UserId)
-						repeat task.wait() until textChatService.ChatInputBarConfiguration.TargetTextChannel ~= oldchannel
-						textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(bedwarsStore.whitelist.chatStrings2.vape)
+						local newchannel = game:GetService("RobloxReplicatedStorage").ExperienceChat.WhisperChat:InvokeServer(plr.UserId)
+						if newchannel then 
+							newchannel:SendAsync(bedwarsStore.whitelist.chatStrings2.vape)
+						end
 						textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
 						task.spawn(function()
 							local connection
