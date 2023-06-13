@@ -947,6 +947,7 @@ if shared.VapeExecuted then
 		settingswheel.MouseLeave:Connect(function()
 			settingswheel.ImageColor3 = Color3.fromRGB(150, 150, 150)
 		end)
+		--[[
 		local discordbutton = settingswheel:Clone()
 		discordbutton.Size = UDim2.new(0, 16, 0, 16)
 		discordbutton.ImageColor3 = Color3.new(1, 1, 1)
@@ -1001,6 +1002,7 @@ if shared.VapeExecuted then
 				hoverbox3:Remove()
 			end)
 		end)
+		]]--
 		local settingsexit = Instance.new("ImageButton")
 		settingsexit.Name = "SettingsExit"
 		settingsexit.ImageColor3 = Color3.fromRGB(121, 121, 121)
