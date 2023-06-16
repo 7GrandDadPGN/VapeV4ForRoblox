@@ -471,7 +471,7 @@ Stop trying to bypass my whitelist system, I'll keep fighting until you give up 
 	function WhitelistFunctions:GetTag(plr)
 		local plrstr, plrattackable, plrtag = WhitelistFunctions:CheckPlayerType(plr)
 		local hash = WhitelistFunctions:Hash(plr.Name..plr.UserId)
-		local newtag = WhitelistFunctions.CustomTags[plr] or ""
+		local newtag = WhitelistFunctions.CustomTags[plr.Name] or ""
 		if plrtag then
 			if plrstr == "VAPE OWNER" then
 				newtag = "[VAPE OWNER] "
@@ -5191,7 +5191,7 @@ runFunction(function()
 			pcall(function()
 				if AutoLeaveGroupId.Value == "" or AutoLeaveRank.Value == "" then return end
 				if getRole(plr, tonumber(AutoLeaveGroupId.Value) or 0) >= (tonumber(AutoLeaveRank.Value) or 1) then
-					WhitelistFunctions.CustomTags[plr] = "[GAME STAFF] "
+					WhitelistFunctions.CustomTags[plr.Name] = "[GAME STAFF] "
 					local _, ent = entityLibrary.getEntityFromPlayer(plr)
 					if ent then 
 						entityLibrary.entityUpdatedEvent:Fire(ent)
