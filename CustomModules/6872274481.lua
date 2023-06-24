@@ -471,11 +471,13 @@ local function getBestTool(block)
 end
 
 local function switchItem(tool)
-	bedwars.ClientHandler:Get(bedwars.EquipItemRemote):CallServerAsync({
-		hand = tool
-	})
-	local started = tick()
-	repeat task.wait() until (tick() - started) > 0.3 or lplr.Character.HandInvItem.Value == tool
+	if lplr.Character.HandInvItem.Value ~= tool then
+		bedwars.ClientHandler:Get(bedwars.EquipItemRemote):CallServerAsync({
+			hand = tool
+		})
+		local started = tick()
+		repeat task.wait() until (tick() - started) > 0.3 or lplr.Character.HandInvItem.Value == tool
+	end
 end
 
 local function switchToAndUseTool(block, legit)
@@ -3816,7 +3818,6 @@ runFunction(function()
 						if #plrs > 0 then
 							local sword, swordmeta = getAttackData()
 							if sword then
-								local sword, swordmeta = getAttackData()
 								if bedwarsStore.blockPlace > tick() then continue end
 								switchItem(sword.tool)
 								for i, plr in pairs(plrs) do
