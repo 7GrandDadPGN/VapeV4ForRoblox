@@ -1600,9 +1600,8 @@ GuiLibrary.UpdateUI = function(h, s, val, bypass)
 	pcall(function()
 		local rainbowGUICheck = GUIColorSlider.RainbowValue
 		local mainRainbowSaturation = rainbowGUICheck and getVapeSaturation(h) or s
-		local mainRainbowGradient = h + (rainbowGUICheck and (-0.05) or 0)
+		local mainRainbowGradient = h + (rainbowGUICheck and -0.05 or 0)
 		mainRainbowGradient = mainRainbowGradient % 1
-        local mainRainbowGradientSaturation = TextGUIGradient.Enabled and getVapeSaturation(mainRainbowGradient) or mainRainbowSaturation
 
 		GuiLibrary.ObjectsThatCanBeSaved.GUIWindow.Object.Logo1.Logo2.ImageColor3 = Color3.fromHSV(h, mainRainbowSaturation, rainbowGUICheck and 1 or val)
 		VapeText.TextColor3 = Color3.fromHSV(TextGUIGradient.Enabled and mainRainbowGradient or h, mainRainbowSaturation, rainbowGUICheck and 1 or val)
@@ -1817,6 +1816,7 @@ GuiLibrary.SelfDestruct = function()
 	task.spawn(function()
 		coroutine.close(saveSettingsLoop)
 	end)
+	if GuiLibrary.ColorStepped then GuiLibrary.ColorStepped:Disconnect() end
 
 	if vapeInjected then 
 		GuiLibrary.SaveSettings()
