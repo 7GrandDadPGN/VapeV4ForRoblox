@@ -1359,7 +1359,7 @@ runFunction(function()
 			local blockdmg = 0
 			if block and block.Parent ~= nil then
 				if ((entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - (blockpos * 3)).magnitude > 30 then return end
-				bedwarsStore.blockPlace = tick() + 0.5
+				bedwarsStore.blockPlace = tick() + 0.1
 				switchToAndUseTool(block)
 				blockhealthbarpos = {
 					blockPosition = blockpos
