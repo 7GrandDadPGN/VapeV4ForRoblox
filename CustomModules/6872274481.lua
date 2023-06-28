@@ -3819,7 +3819,6 @@ runFunction(function()
 						if #plrs > 0 then
 							local sword, swordmeta = getAttackData()
 							if sword then
-								if bedwarsStore.blockPlace > tick() then continue end
 								switchItem(sword.tool)
 								for i, plr in pairs(plrs) do
 									local root = plr.RootPart
