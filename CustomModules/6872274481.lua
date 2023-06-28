@@ -387,7 +387,7 @@ local function getSpeedMultiplier(reduce)
 	if lplr.Character then 
 		local SpeedDamageBoost = lplr.Character:GetAttribute("SpeedBoost")
 		if SpeedDamageBoost and SpeedDamageBoost > 1 then 
-			speed = speed + (SpeedDamageBoost - 0.8)
+			speed = speed + (SpeedDamageBoost - 0.9)
 		end
 		if bedwarsStore.grapple > tick() then
 			speed = 5.5
