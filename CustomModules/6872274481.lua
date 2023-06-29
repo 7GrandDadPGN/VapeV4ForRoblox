@@ -384,29 +384,26 @@ local function attackValue(vec)
 	return {value = vec}
 end
 
-local function getSpeedMultiplier()
-	local speed = 1
+local function getSpeed()
+	local speed = 0
 	if lplr.Character then 
 		local SpeedDamageBoost = lplr.Character:GetAttribute("SpeedBoost")
 		if SpeedDamageBoost and SpeedDamageBoost > 1 then 
-			speed = speed + (SpeedDamageBoost - 1)
+			speed = speed + (12 * (SpeedDamageBoost - 1))
 		end
 		if bedwarsStore.grapple > tick() then
-			speed = 5.5
+			speed = speed + 90
 		end
 		if lplr.Character:GetAttribute("GrimReaperChannel") then 
-			speed = speed + 0.6
-		end
-		if lplr.Character:GetAttribute("SpeedPieBuff") then 
-			speed = speed + (bedwarsStore.queueType == "SURVIVAL" and 0.15 or 0.24)
+			speed = speed + 20
 		end
 		local armor = bedwarsStore.localInventory.inventory.armor[3]
 		if type(armor) ~= "table" then armor = {itemType = ""} end
 		if armor.itemType == "speed_boots" then 
-			speed = speed + 1
+			speed = speed + 20
 		end
 		if bedwarsStore.zephyrOrb ~= 0 then 
-			speed = speed + 1.3
+			speed = speed + 30
 		end
 	end
 	return speed
@@ -3046,10 +3043,10 @@ runFunction(function()
 							lastonground = true
 						end
 
-						local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (FlyMode.Value == "Normal" and FlySpeed.Value or 20)
+						local speedValue = FlySpeed.Value + getSpeed()
+						local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (FlyMode.Value == "Normal" and speedValue or 20)
 						entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (FlyUp and FlyVerticalSpeed.Value or 0) + (FlyDown and -FlyVerticalSpeed.Value or 0), 0))
 						if FlyMode.Value ~= "Normal" then
-							local speedValue = FlySpeed.Value
 							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20)) * delta
 						end
 					end
@@ -3255,6 +3252,7 @@ runFunction(function()
 					task.spawn(function()
 						repeat task.wait() until bedwars.CooldownController:getRemainingCooldown("grappling_hook") == 0 or (not GrappleExploit.Enabled)
 						if (not GrappleExploit.Enabled) then return end
+						switchItem(fireball.tool)
 						local pos = entityLibrary.character.HumanoidRootPart.CFrame.p
 						local offsetshootpos = (CFrame.new(pos, pos + Vector3.new(0, -60, 0)) * CFrame.new(Vector3.new(-bedwars.BowConstantsTable.RelX, -bedwars.BowConstantsTable.RelY, -bedwars.BowConstantsTable.RelZ))).p
 						projectileRemote:CallServerAsync(fireball["tool"], nil, "grappling_hook_projectile", offsetshootpos, pos, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
@@ -3432,10 +3430,11 @@ runFunction(function()
 						if isnetworkowner(oldcloneroot) then 
 							local playerMass = (entityLibrary.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 							
-							local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlyMode.Value == "Normal" and InfiniteFlySpeed.Value or 20)
+							local speedValue = InfiniteFlySpeed.Value + getSpeed()
+							local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlyMode.Value == "Normal" and speedValue or 20)
 							entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (InfiniteFlyUp and InfiniteFlyVerticalSpeed.Value or 0) + (InfiniteFlyDown and -InfiniteFlyVerticalSpeed.Value or 0), 0))
 							if InfiniteFlyMode.Value ~= "Normal" then
-								entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlySpeed.Value - 20)) * delta
+								entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20)) * delta
 							end
 
 							local speedCFrame = {oldcloneroot.CFrame:GetComponents()}
@@ -4994,7 +4993,9 @@ runFunction(function()
 							end
 						end
 
-						local speedValue = ((damagetick > tick() and SpeedValue.Value * 2 or SpeedValue.Value) * getSpeedMultiplier())
+						local speedValue = SpeedValue.Value + getSpeed()
+						if damagetick > tick() then speedValue = speedValue + 20 end
+
 						local speedVelocity = entityLibrary.character.Humanoid.MoveDirection * (SpeedMode.Value == "Normal" and speedValue or 20)
 						entityLibrary.character.HumanoidRootPart.Velocity = antivoidvelo or Vector3.new(speedVelocity.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, speedVelocity.Z)
 						if SpeedMode.Value ~= "Normal" then 
@@ -5215,7 +5216,7 @@ runFunction(function()
 								local localPos = CFrame.new(plr.RootPart.Position)
 								local ray = workspace:Blockcast(localPos, Vector3.new(3, 3, 3), CFrame.Angles(0, math.rad(ang), 0).lookVector * TargetStrafeRange.Value, bedwarsStore.blockRaycast)
 								local newPos = localPos + (CFrame.Angles(0, math.rad(ang), 0).lookVector * (ray and ray.Distance - 1 or TargetStrafeRange.Value))
-								local factor = getSpeedMultiplier() > 1.7 and 6 or 4
+								local factor = getSpeed() > 20 and 6 or 4
 								if not workspace:Raycast(newPos.p, Vector3.new(0, -70, 0), bedwarsStore.blockRaycast) then 
 									newPos = localPos
 									factor = 40
@@ -8428,15 +8429,11 @@ runFunction(function()
 	local AutoForgeBuyAfter = {Enabled = false}
 
 	local function buyForge(i)
-		if bedwarsStore.forgeUpgrades[i] < 6 then
+		if not bedwarsStore.forgeUpgrades[i] or bedwarsStore.forgeUpgrades[i] < 6 then
 			local cost = bedwars.ForgeUtil:getUpgradeCost(1, bedwarsStore.forgeUpgrades[i] or 0)
 			if bedwarsStore.forgeMasteryPoints >= cost then 
-				bedwars.ClientStoreHandler:dispatch({
-					type = "GameSetForgeUpgradeStartTime",
-					newStartType = workspace:GetServerTimeNow()
-				})
 				bedwars.ClientHandler:Get("ForgePurchaseUpgrade"):SendToServer(i)
-				task.wait(1.6)
+				task.wait(3)
 			end
 		end
 	end
@@ -9338,7 +9335,7 @@ runFunction(function()
 												local newpos = (hori2 - hori1).Unit
 												local realnewpos = CFrame.new(newpos == newpos and entityLibrary.character.HumanoidRootPart.CFrame.p + (newpos * (3 * dt)) or Vector3.zero)
 												entityLibrary.character.HumanoidRootPart.CFrame = CFrame.new(realnewpos.p.X, pos.Y, realnewpos.p.Z)
-												antivoidvelo = newpos == newpos and newpos * (20 * getSpeedMultiplier()) or Vector3.zero
+												antivoidvelo = newpos == newpos and newpos * (20 + getSpeed()) or Vector3.zero
 												entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(antivoidvelo.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, antivoidvelo.Z)
 												if getPlacedBlock((entityLibrary.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)) + entityLibrary.character.HumanoidRootPart.Velocity.Unit) or getPlacedBlock(entityLibrary.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 3)) then
 													pos = pos + Vector3.new(0, 1, 0)
