@@ -385,14 +385,17 @@ local function attackValue(vec)
 end
 
 local function getSpeed()
-	local speed = 0
+	local speed = 20
 	if lplr.Character then 
 		local SpeedDamageBoost = lplr.Character:GetAttribute("SpeedBoost")
 		if SpeedDamageBoost and SpeedDamageBoost > 1 then 
-			speed = speed + (12 * (SpeedDamageBoost - 1))
+			speed = speed + (22 * (SpeedDamageBoost - 1))
 		end
 		if bedwarsStore.grapple > tick() then
 			speed = speed + 90
+		end
+		if lplr.Character:GetAttribute("SpeedPieBuff") then 
+			speed = speed + 5
 		end
 		if lplr.Character:GetAttribute("GrimReaperChannel") then 
 			speed = speed + 20
@@ -400,7 +403,7 @@ local function getSpeed()
 		local armor = bedwarsStore.localInventory.inventory.armor[3]
 		if type(armor) ~= "table" then armor = {itemType = ""} end
 		if armor.itemType == "speed_boots" then 
-			speed = speed + 20
+			speed = speed + 25
 		end
 		if bedwarsStore.zephyrOrb ~= 0 then 
 			speed = speed + 30
@@ -2877,7 +2880,7 @@ end)
 local autobankballoon = false
 runFunction(function()
 	local Fly = {Enabled = false}
-	local FlyMode = {Value = "Normal"}
+	local FlyMode = {Value = "CFrame"}
 	local FlyVerticalSpeed = {Value = 40}
 	local FlyVertical = {Enabled = true}
 	local FlyAutoPop = {Enabled = true}
@@ -3043,11 +3046,10 @@ runFunction(function()
 							lastonground = true
 						end
 
-						local speedValue = FlySpeed.Value + getSpeed()
-						local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (FlyMode.Value == "Normal" and speedValue or 20)
+						local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (FlyMode.Value == "Normal" and FlySpeed.Value or getSpeed())
 						entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (FlyUp and FlyVerticalSpeed.Value or 0) + (FlyDown and -FlyVerticalSpeed.Value or 0), 0))
 						if FlyMode.Value ~= "Normal" then
-							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20)) * delta
+							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (FlySpeed.Value - 20)) * delta
 						end
 					end
 				end)
@@ -3075,16 +3077,8 @@ runFunction(function()
 		end,
 		HoverText = "Makes you go zoom (longer Fly discovered by exelys and Cqded)",
 		ExtraText = function() 
-			if GuiLibrary.ObjectsThatCanBeSaved["Text GUIAlternate TextToggle"]["Api"].Enabled then 
-				return alternatelist[table.find(FlyMode["List"], FlyMode.Value)]
-			end
-			return FlyMode.Value 
+			return "Heatseeker"
 		end
-	})
-	FlyMode = Fly.CreateDropdown({
-		Name = "Mode",
-		List = {"CFrame", "Normal"},
-		Function = function() end
 	})
 	FlySpeed = Fly.CreateSlider({
 		Name = "Speed",
@@ -3430,11 +3424,10 @@ runFunction(function()
 						if isnetworkowner(oldcloneroot) then 
 							local playerMass = (entityLibrary.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 							
-							local speedValue = InfiniteFlySpeed.Value + getSpeed()
-							local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlyMode.Value == "Normal" and speedValue or 20)
+							local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlyMode.Value == "Normal" and InfiniteFlySpeed.Value or getSpeed())
 							entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (InfiniteFlyUp and InfiniteFlyVerticalSpeed.Value or 0) + (InfiniteFlyDown and -InfiniteFlyVerticalSpeed.Value or 0), 0))
 							if InfiniteFlyMode.Value ~= "Normal" then
-								entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20)) * delta
+								entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlySpeed.Value - 20)) * delta
 							end
 
 							local speedCFrame = {oldcloneroot.CFrame:GetComponents()}
@@ -3502,12 +3495,10 @@ runFunction(function()
 				InfiniteFlyDown = false
 			end
 		end,
-		HoverText = "Makes you go zoom"
-	})
-	InfiniteFlyMode = InfiniteFly.CreateDropdown({
-		Name = "Mode",
-		List = {"CFrame", "Normal"},
-		Function = function() end
+		HoverText = "Makes you go zoom",
+		ExtraText = function()
+			return "Heatseeker"
+		end
 	})
 	InfiniteFlySpeed = InfiniteFly.CreateSlider({
 		Name = "Speed",
@@ -4256,8 +4247,6 @@ runFunction(function()
 	local damagetimer = 0
 	local damagetimertick = 0
 	local directionvec
-	local LongJumpdelay = tick()
-	local LongJumpSlowdown = {Value = 1.5}
 	local LongJumpSpeed = {Value = 1.5}
 	local projectileRemote = bedwars.ClientHandler:Get(bedwars.ProjectileRemote)
 
@@ -4290,9 +4279,11 @@ runFunction(function()
 				pos = ray.Position
 				offsetshootpos = pos
 			end
-			switchItem(fireball.tool)
-			bedwars.ProjectileController:createLocalProjectile(bedwars.ProjectileMeta.fireball, "fireball", "fireball", offsetshootpos, "", Vector3.new(0, -60, 0), {drawDurationSeconds = 1})
-			projectileRemote:CallServerAsync(fireball.tool, "fireball", "fireball", offsetshootpos, pos, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
+			task.spawn(function()
+				switchItem(fireball.tool)
+				bedwars.ProjectileController:createLocalProjectile(bedwars.ProjectileMeta.fireball, "fireball", "fireball", offsetshootpos, "", Vector3.new(0, -60, 0), {drawDurationSeconds = 1})
+				projectileRemote:CallServerAsync(fireball.tool, "fireball", "fireball", offsetshootpos, pos, Vector3.new(0, -60, 0), game:GetService("HttpService"):GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045)
+			end)
 		end,
 		tnt = function(tnt, pos2)
 			if not LongJump.Enabled then return end
@@ -4451,7 +4442,6 @@ runFunction(function()
 					end)
 					local LongJumpOrigin = entityLibrary.isAlive and entityLibrary.character.HumanoidRootPart.Position
 					local tntcheck
-					LongJumpdelay = tick()
 					for i,v in pairs(damagemethods) do 
 						local item = getItem(i)
 						if item then
@@ -4465,10 +4455,8 @@ runFunction(function()
 							break
 						end
 					end
-					local passed = false
 					local changecheck
 					LongJumpacprogressbarframe.Visible = true
-					local funnytick = tick() + 0.4
 					RunLoops:BindToHeartbeat("LongJump", function(dt)
 						if entityLibrary.isAlive then 
 							if entityLibrary.character.Humanoid.Health <= 0 then 
@@ -4492,16 +4480,13 @@ runFunction(function()
 								if LongJumpacprogressbartext then 
 									LongJumpacprogressbartext.Text = newnum.."s"
 								end
-								if not passed then 
-									passed = getPlacedBlock(entityLibrary.character.HumanoidRootPart.Position - Vector3.new(0, 3, 0)) == nil
-								end
 								if directionvec == nil then 
 									directionvec = entityLibrary.character.HumanoidRootPart.CFrame.lookVector
 								end
 								local longJumpCFrame = Vector3.new(directionvec.X, 0, directionvec.Z)
-								local newvelo = longJumpCFrame.Unit == longJumpCFrame.Unit and longJumpCFrame.Unit * 20 or Vector3.zero
-								local val = (LongJumpSlowdown.Value / 10)
-								longJumpCFrame = longJumpCFrame * (newnum > 1 and damagetimer - 20 or 3) * dt
+								local newvelo = longJumpCFrame.Unit == longJumpCFrame.Unit and longJumpCFrame.Unit * (newnum > 1 and damagetimer or getSpeed()) or Vector3.zero
+								newvelo = Vector3.new(newvelo.X, 0, newvelo.Z)
+								longJumpCFrame = longJumpCFrame * 3 * dt
 								local ray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, longJumpCFrame, bedwarsStore.blockRaycast)
 								if ray then 
 									longJumpCFrame = Vector3.zero
@@ -4539,20 +4524,12 @@ runFunction(function()
 		end, 
 		HoverText = "Lets you jump farther (Not landing on same level & Spamming can lead to lagbacks)"
 	})
-	LongJumpSlowdown = LongJump.CreateSlider({
-		Name = "Slowdown",
-		Min = 1,
-		Max = 1,
-		Double = 10,
-		Function = function() end,
-		Default = 1,
-	})
 	LongJumpSpeed = LongJump.CreateSlider({
 		Name = "Speed",
 		Min = 1,
-		Max = 55,
+		Max = 50,
 		Function = function() end,
-		Default = 55
+		Default = 50
 	})
 end)
 
@@ -4993,13 +4970,13 @@ runFunction(function()
 							end
 						end
 
-						local speedValue = SpeedValue.Value + getSpeed()
+						local speedValue = getSpeed()
 						if damagetick > tick() then speedValue = speedValue + 20 end
 
-						local speedVelocity = entityLibrary.character.Humanoid.MoveDirection * (SpeedMode.Value == "Normal" and speedValue or 20)
+						local speedVelocity = entityLibrary.character.Humanoid.MoveDirection * (SpeedMode.Value == "Normal" and SpeedValue.Value or speedValue)
 						entityLibrary.character.HumanoidRootPart.Velocity = antivoidvelo or Vector3.new(speedVelocity.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, speedVelocity.Z)
 						if SpeedMode.Value ~= "Normal" then 
-							local speedCFrame = entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20) * delta
+							local speedCFrame = entityLibrary.character.Humanoid.MoveDirection * (SpeedValue.Value - 20) * delta
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
 							local ray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, speedCFrame, raycastparameters)
 							if ray then speedCFrame = (ray.Position - entityLibrary.character.HumanoidRootPart.Position) end
@@ -5026,16 +5003,8 @@ runFunction(function()
 		end, 
 		HoverText = "Increases your movement.",
 		ExtraText = function() 
-			if GuiLibrary.ObjectsThatCanBeSaved["Text GUIAlternate TextToggle"]["Api"].Enabled then 
-				return alternatelist[table.find(SpeedMode.List, SpeedMode.Value)]
-			end
-			return SpeedMode.Value
+			return "Heatseeker"
 		end
-	})
-	SpeedMode = Speed.CreateDropdown({
-		Name = "Mode",
-		Function = function() end,
-		List = {"CFrame", "Normal"}
 	})
 	SpeedValue = Speed.CreateSlider({
 		Name = "Speed",
@@ -5914,7 +5883,7 @@ runFunction(function()
 					bedwars.CombatController.killSounds[i] = oldbedwarssoundtable.KILL
 				end
 				for i,v in pairs(bedwars.CombatController.multiKillLoops) do 
-					bedwars.CombatController.multiKillLoops[i] = oldbedwarssoundtable.KILL
+					bedwars.CombatController.multiKillLoops[i] = ""
 				end
 				for i,v in pairs(bedwars.ItemTable) do 
 					if oldbedwarsicontab[i] then 
