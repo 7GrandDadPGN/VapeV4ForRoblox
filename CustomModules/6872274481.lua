@@ -8420,7 +8420,7 @@ runFunction(function()
 							if AutoForgeBow.Enabled then buyForge(bedwars.ForgeConstants.RANGED) end
 							if AutoForgeSword.Enabled then
 								if AutoForgeBuyAfter.Enabled then
-									if bedwarsStore.forgeUpgrades[bedwars.ForgeConstants.ARMOR] and bedwarsStore.forgeUpgrades[bedwars.ForgeConstants.ARMOR] < 6 then continue end
+									if not bedwarsStore.forgeUpgrades[bedwars.ForgeConstants.ARMOR] or bedwarsStore.forgeUpgrades[bedwars.ForgeConstants.ARMOR] < 6 then continue end
 								end
 								local weapon = bedwars.ForgeConstants[AutoForgeWeapon.Value:upper()]
 								if weapon then buyForge(weapon) end
