@@ -1229,7 +1229,7 @@ runFunction(function()
 		AppController = require(replicatedStorageService["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.controllers["app-controller"]).AppController,
 		AbilityController = Flamework.resolveDependency("@easy-games/game-core:client/controllers/ability/ability-controller@AbilityController"),
 		AbilityUIController = 	Flamework.resolveDependency("@easy-games/game-core:client/controllers/ability/ability-ui-controller@AbilityUIController"),
-		AttackRemote = dumpRemote(debug.getconstants(KnitClient.Controllers.SwordController.attackEntity)),
+		AttackRemote = dumpRemote(debug.getconstants(KnitClient.Controllers.SwordController.sendServerRequest)),
 		BalloonController = KnitClient.Controllers.BalloonController,
 		BalanceFile = require(replicatedStorageService.TS.balance["balance-file"]).BalanceFile,
 		BatteryEffectController = KnitClient.Controllers.BatteryEffectsController,
@@ -8402,7 +8402,7 @@ runFunction(function()
 			local cost = bedwars.ForgeUtil:getUpgradeCost(1, bedwarsStore.forgeUpgrades[i] or 0)
 			if bedwarsStore.forgeMasteryPoints >= cost then 
 				bedwars.ClientHandler:Get("ForgePurchaseUpgrade"):SendToServer(i)
-				task.wait(3)
+				task.wait(bedwars.ForgeUtil.FORGE_DURATION_SEC)
 			end
 		end
 	end
@@ -8414,12 +8414,13 @@ runFunction(function()
 				task.spawn(function()
 					repeat
 						task.wait()
-						if bedwarsStore.matchState == 1 then
+						if bedwarsStore.matchState == 1 and entityLibrary.isAlive then
+							if entityLibrary.character.HumanoidRootPart.Velocity.Magnitude > 0.01 then continue end
 							if AutoForgeArmor.Enabled then buyForge(bedwars.ForgeConstants.ARMOR) end
-							if AutoForgeBow.Enabled then buyForge(bedwars.ForgeConstants.BOW) end
+							if AutoForgeBow.Enabled then buyForge(bedwars.ForgeConstants.RANGED) end
 							if AutoForgeSword.Enabled then
 								if AutoForgeBuyAfter.Enabled then
-									if bedwarsStore.forgeUpgrades[bedwars.ForgeConstants.ARMOR] < 6 then continue end
+									if bedwarsStore.forgeUpgrades[bedwars.ForgeConstants.ARMOR] and bedwarsStore.forgeUpgrades[bedwars.ForgeConstants.ARMOR] < 6 then continue end
 								end
 								local weapon = bedwars.ForgeConstants[AutoForgeWeapon.Value:upper()]
 								if weapon then buyForge(weapon) end
