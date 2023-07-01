@@ -8396,13 +8396,21 @@ runFunction(function()
 	local AutoForgeArmor = {Enabled = false}
 	local AutoForgeSword = {Enabled = false}
 	local AutoForgeBuyAfter = {Enabled = false}
+	local AutoForgeNotification = {Enabled = true}
 
 	local function buyForge(i)
 		if not bedwarsStore.forgeUpgrades[i] or bedwarsStore.forgeUpgrades[i] < 6 then
 			local cost = bedwars.ForgeUtil:getUpgradeCost(1, bedwarsStore.forgeUpgrades[i] or 0)
 			if bedwarsStore.forgeMasteryPoints >= cost then 
+				if AutoForgeNotification.Enabled then
+					local forgeType = "none"
+					for name,v in pairs(bedwars.ForgeConstants) do
+						if v == i then forgeType = name:lower() end
+					end
+					warningNotification("AutoForge", "Purchasing "..forgeType..".", bedwars.ForgeUtil.FORGE_DURATION_SEC)
+				end
 				bedwars.ClientHandler:Get("ForgePurchaseUpgrade"):SendToServer(i)
-				task.wait(bedwars.ForgeUtil.FORGE_DURATION_SEC)
+				task.wait(bedwars.ForgeUtil.FORGE_DURATION_SEC + 0.2)
 			end
 		end
 	end
@@ -8417,7 +8425,9 @@ runFunction(function()
 						if bedwarsStore.matchState == 1 and entityLibrary.isAlive then
 							if entityLibrary.character.HumanoidRootPart.Velocity.Magnitude > 0.01 then continue end
 							if AutoForgeArmor.Enabled then buyForge(bedwars.ForgeConstants.ARMOR) end
+							if entityLibrary.character.HumanoidRootPart.Velocity.Magnitude > 0.01 then continue end
 							if AutoForgeBow.Enabled then buyForge(bedwars.ForgeConstants.RANGED) end
+							if entityLibrary.character.HumanoidRootPart.Velocity.Magnitude > 0.01 then continue end
 							if AutoForgeSword.Enabled then
 								if AutoForgeBuyAfter.Enabled then
 									if not bedwarsStore.forgeUpgrades[bedwars.ForgeConstants.ARMOR] or bedwarsStore.forgeUpgrades[bedwars.ForgeConstants.ARMOR] < 6 then continue end
@@ -8453,6 +8463,11 @@ runFunction(function()
 		Name = "Buy After",
 		Function = function() end,
 		HoverText = "buy a sword after armor is maxed"
+	})
+	AutoForgeNotification = AutoForge.CreateToggle({
+		Name = "Notification",
+		Function = function() end,
+		Default = true
 	})
 end)
 
