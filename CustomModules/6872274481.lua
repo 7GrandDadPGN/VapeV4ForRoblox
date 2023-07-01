@@ -4309,7 +4309,7 @@ runFunction(function()
 						origin = entityLibrary.character.HumanoidRootPart.CFrame.p,
 						weapon = tnt.itemType
 					})
-					damagetimer = LongJumpSpeed.Value * 1.25
+					damagetimer = LongJumpSpeed.Value * 3.5
 					damagetimertick = tick() + 2.5
 					directionvec = Vector3.new(vec.X, 0, vec.Z).Unit
 				end
@@ -4491,9 +4491,9 @@ runFunction(function()
 	LongJumpSpeed = LongJump.CreateSlider({
 		Name = "Speed",
 		Min = 1,
-		Max = 50,
+		Max = 52,
 		Function = function() end,
-		Default = 50
+		Default = 52
 	})
 end)
 
