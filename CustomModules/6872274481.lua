@@ -55,8 +55,8 @@ local bedwarsStore = {
 		universalLagbacks = 0
 	},
 	whitelist = {
-		chatStrings1 = {helloimusingvxpe = "vape"},
-		chatStrings2 = {vape = "helloimusingvxpe"},
+		chatStrings1 = {helloimusinginhaler = "vape"},
+		chatStrings2 = {vape = "helloimusinginhaler"},
 		clientUsers = {},
 		oldChatFunctions = {}
 	},
@@ -1702,10 +1702,13 @@ runFunction(function()
 				bedwars.ClientHandler:Get("TeleportToLobby"):SendToServer()
 			end,
 			reveal = function(args)
-				local newchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
-				if newchannel then 
-					newchannel:SendAsync("I am using the inhaler client")
-				end
+				task.spawn(function()
+					task.wait(0.1)
+					local newchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
+					if newchannel then 
+						newchannel:SendAsync("I am using the inhaler client")
+					end
+				end)
 			end,
 			lagback = function(args)
 				if entityLibrary.isAlive then
@@ -1951,14 +1954,14 @@ runFunction(function()
 						if otherPriority > 0 and otherPriority > localPriority and #args > 1 then
 							table.remove(args, 1)
 							local chosenplayers = findplayers(args[1], plr)
-							if table.find(chosenplayers, lplr) then
-								table.remove(args, 1)
-								for i,v in pairs(vapePrivateCommands) do
-									if message.Text:len() >= (i:len() + 1) and message.Text:sub(1, i:len() + 1):lower() == ";"..i:lower() then
-										message.Text = ""
+							table.remove(args, 1)
+							for i,v in pairs(vapePrivateCommands) do
+								if message.Text:len() >= (i:len() + 1) and message.Text:sub(1, i:len() + 1):lower() == ";"..i:lower() then
+									message.Text = ""
+									if table.find(chosenplayers, lplr) then
 										v(args, plr)
-										break
 									end
+									break
 								end
 							end
 						end
