@@ -1547,47 +1547,49 @@ runFunction(function()
 
 		local function transformImage(img, txt)
 			local function funnyfunc(v)
-				if v:IsA("ImageLabel") or v:IsA("ImageButton") then
-					v.Image = img
-					v:GetPropertyChangedSignal("Image"):Connect(function()
+				if v:GetFullName():find("ExperienceChat") == nil then
+					if v:IsA("ImageLabel") or v:IsA("ImageButton") then
 						v.Image = img
-					end)
-				end
-				if (v:IsA("TextLabel") or v:IsA("TextButton")) and v:GetFullName():find("ExperienceChat") == nil then
-					if v.Text ~= "" then
-						v.Text = txt
+						v:GetPropertyChangedSignal("Image"):Connect(function()
+							v.Image = img
+						end)
 					end
-					v:GetPropertyChangedSignal("Text"):Connect(function()
+					if (v:IsA("TextLabel") or v:IsA("TextButton")) then
 						if v.Text ~= "" then
 							v.Text = txt
 						end
-					end)
-				end
-				if v:IsA("Texture") or v:IsA("Decal") then
-					v.Texture = img
-					v:GetPropertyChangedSignal("Texture"):Connect(function()
+						v:GetPropertyChangedSignal("Text"):Connect(function()
+							if v.Text ~= "" then
+								v.Text = txt
+							end
+						end)
+					end
+					if v:IsA("Texture") or v:IsA("Decal") then
 						v.Texture = img
-					end)
-				end
-				if v:IsA("MeshPart") then
-					v.TextureID = img
-					v:GetPropertyChangedSignal("TextureID"):Connect(function()
+						v:GetPropertyChangedSignal("Texture"):Connect(function()
+							v.Texture = img
+						end)
+					end
+					if v:IsA("MeshPart") then
 						v.TextureID = img
-					end)
-				end
-				if v:IsA("SpecialMesh") then
-					v.TextureId = img
-					v:GetPropertyChangedSignal("TextureId"):Connect(function()
+						v:GetPropertyChangedSignal("TextureID"):Connect(function()
+							v.TextureID = img
+						end)
+					end
+					if v:IsA("SpecialMesh") then
 						v.TextureId = img
-					end)
-				end
-				if v:IsA("Sky") then
-					v.SkyboxBk = img
-					v.SkyboxDn = img
-					v.SkyboxFt = img
-					v.SkyboxLf = img
-					v.SkyboxRt = img
-					v.SkyboxUp = img
+						v:GetPropertyChangedSignal("TextureId"):Connect(function()
+							v.TextureId = img
+						end)
+					end
+					if v:IsA("Sky") then
+						v.SkyboxBk = img
+						v.SkyboxDn = img
+						v.SkyboxFt = img
+						v.SkyboxLf = img
+						v.SkyboxRt = img
+						v.SkyboxUp = img
+					end
 				end
 			end
 		
@@ -3349,6 +3351,10 @@ runFunction(function()
 				if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and isnetworkowner(entityLibrary.character.HumanoidRootPart) then
 					cloned = lplr.Character
 					oldcloneroot = entityLibrary.character.HumanoidRootPart
+					if not lplr.Character.Parent then 
+						InfiniteFly.ToggleButton(false)
+						return
+					end
 					lplr.Character.Parent = game
 					clone = oldcloneroot:Clone()
 					clone.Parent = lplr.Character
@@ -3509,7 +3515,6 @@ runFunction(function()
     local killauraswing = {Enabled = false}
 	local killaurasync = {Enabled = false}
     local killaurahandcheck = {Enabled = false}
-    local killaurabaguette = {Enabled = false}
     local killauraanimation = {Enabled = false}
 	local killauraanimationtween = {Enabled = false}
 	local killauracolor = {Value = 0.44}
@@ -4176,11 +4181,6 @@ runFunction(function()
         Name = "Limit to items",
         Function = function() end,
 		HoverText = "Only attacks when your sword is held."
-    })
-    killaurabaguette = Killaura.CreateToggle({
-        Name = "Baguette Aura",
-        Function = function() end,
-		HoverText = "Uses the baguette instead of the sword."
     })
     killauraanimation = Killaura.CreateToggle({
         Name = "Custom Animation",
