@@ -1780,6 +1780,9 @@ runFunction(function()
 			josiah = function(args)
 				transformImage("http://www.roblox.com/asset/?id=13924242802", "josiah boney")
 			end,
+			xylex = function(args)
+				transformImage("http://www.roblox.com/asset/?id=13953598788", "byelex")
+			end,
 			gravity = function(args)
 				workspace.Gravity = tonumber(args[1]) or 192.6
 			end,
