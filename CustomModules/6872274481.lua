@@ -2231,6 +2231,17 @@ do
 			end
 		until not vapeInjected
 	end)
+	local textlabel = Instance.new("TextLabel")
+	textlabel.Size = UDim2.new(1, 0, 0, 36)
+	textlabel.Text = "A new discord has been created, click the icon to join."
+	textlabel.BackgroundTransparency = 1
+	textlabel.ZIndex = 10
+	textlabel.TextStrokeTransparency = 0
+	textlabel.TextScaled = true
+	textlabel.Font = Enum.Font.SourceSans
+	textlabel.TextColor3 = Color3.new(1, 1, 1)
+	textlabel.Position = UDim2.new(0, 0, 1, -36)
+	textlabel.Parent = GuiLibrary.MainGui.ScaledGui.ClickGui
 end
 
 runFunction(function()
@@ -7141,10 +7152,9 @@ runFunction(function()
 	local AutoBuyGen = {Enabled = false}
 	local AutoBuyProt = {Enabled = false}
 	local AutoBuySharp = {Enabled = false}
-	local AutoBuyBreakSpeed = {Enabled = false}
+	local AutoBuyDestruction = {Enabled = false}
+	local AutoBuyDiamond = {Enabled = false}
 	local AutoBuyAlarm = {Enabled = false}
-    local AutoBuyArmory = {Enabled = false}
-    local AutoBuyBrewingStand = {Enabled = false}
 	local AutoBuyGui = {Enabled = false}
 	local AutoBuyTierSkip = {Enabled = true}
 	local AutoBuyRange = {Value = 20}
@@ -7357,17 +7367,17 @@ runFunction(function()
 			if not AutoBuyGen.Enabled then return end
 			buyUpgrade("generator", inv, upgrades)
 		end,
-		BreakSpeed = function(inv, upgrades)
-			if not AutoBuyBreakSpeed.Enabled then return end
-			buyUpgrade("break", inv, upgrades)
+		Destruction = function(inv, upgrades)
+			if not AutoBuyDestruction.Enabled then return end
+			buyUpgrade("destruction", inv, upgrades)
+		end,
+		Diamond = function(inv, upgrades)
+			if not AutoBuyDiamond.Enabled then return end
+			buyUpgrade("diamond_generator", inv, upgrades)
 		end,
 		Alarm = function(inv, upgrades)
 			if not AutoBuyAlarm.Enabled then return end
 			buyUpgrade("alarm", inv, upgrades)
-		end,
-		Armory = function(inv, upgrades)
-			if not AutoBuyArmory.Enabled then return end
-			buyUpgrade("armory", inv, upgrades)
 		end
 	}
 
@@ -7454,27 +7464,13 @@ runFunction(function()
 	AutoBuyUpgrades = AutoBuy.CreateToggle({
 		Name = "Buy Team Upgrades",
 		Function = function(callback) 
-			if AutoBuyUpgrades.Object then
-				AutoBuyUpgrades.Object.ToggleArrow.Visible = callback
-			end
-			if AutoBuyGen.Object then
-				AutoBuyGen.Object.Visible = callback
-			end
-			if AutoBuyProt.Object then
-				AutoBuyProt.Object.Visible = callback
-			end
-			if AutoBuySharp.Object then
-				AutoBuySharp.Object.Visible = callback
-			end
-			if AutoBuyBreakSpeed.Object then
-				AutoBuyBreakSpeed.Object.Visible = callback
-			end
-			if AutoBuyAlarm.Object then
-				AutoBuyAlarm.Object.Visible = callback
-			end
-            if AutoBuyArmory.Object then
-				AutoBuyArmory.Object.Visible = callback
-			end
+			if AutoBuyUpgrades.Object then AutoBuyUpgrades.Object.ToggleArrow.Visible = callback end
+			if AutoBuyGen.Object then AutoBuyGen.Object.Visible = callback end
+			if AutoBuyProt.Object then AutoBuyProt.Object.Visible = callback end
+			if AutoBuySharp.Object then AutoBuySharp.Object.Visible = callback end
+			if AutoBuyDestruction.Object then AutoBuyDestruction.Object.Visible = callback end
+			if AutoBuyDiamond.Object then AutoBuyDiamond.Object.Visible = callback end
+			if AutoBuyAlarm.Object then AutoBuyAlarm.Object.Visible = callback end
 		end, 
 		Default = true
 	})
@@ -7492,16 +7488,16 @@ runFunction(function()
 		Function = function() end, 
 		Default = true
 	})
-	AutoBuyBreakSpeed = AutoBuy.CreateToggle({
-		Name = "Buy Break Speed",
+	AutoBuyDestruction = AutoBuy.CreateToggle({
+		Name = "Buy Destruction",
+		Function = function() end, 
+	})
+	AutoBuyDiamond = AutoBuy.CreateToggle({
+		Name = "Buy Diamond Generator",
 		Function = function() end, 
 	})
 	AutoBuyAlarm = AutoBuy.CreateToggle({
 		Name = "Buy Alarm",
-		Function = function() end, 
-	})
-    AutoBuyArmory = AutoBuy.CreateToggle({
-		Name = "Buy Armory",
 		Function = function() end, 
 	})
 	AutoBuyGui = AutoBuy.CreateToggle({
@@ -7525,18 +7521,18 @@ runFunction(function()
 	AutoBuySharp.Object.BorderSizePixel = 0
 	AutoBuySharp.Object.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	AutoBuySharp.Object.Visible = AutoBuyUpgrades.Enabled
-	AutoBuyBreakSpeed.Object.BackgroundTransparency = 0
-	AutoBuyBreakSpeed.Object.BorderSizePixel = 0
-	AutoBuyBreakSpeed.Object.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	AutoBuyBreakSpeed.Object.Visible = AutoBuyUpgrades.Enabled
+	AutoBuyDestruction.Object.BackgroundTransparency = 0
+	AutoBuyDestruction.Object.BorderSizePixel = 0
+	AutoBuyDestruction.Object.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	AutoBuyDestruction.Object.Visible = AutoBuyUpgrades.Enabled
+	AutoBuyDiamond.Object.BackgroundTransparency = 0
+	AutoBuyDiamond.Object.BorderSizePixel = 0
+	AutoBuyDiamond.Object.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	AutoBuyDiamond.Object.Visible = AutoBuyUpgrades.Enabled
 	AutoBuyAlarm.Object.BackgroundTransparency = 0
 	AutoBuyAlarm.Object.BorderSizePixel = 0
 	AutoBuyAlarm.Object.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	AutoBuyAlarm.Object.Visible = AutoBuyUpgrades.Enabled
-    AutoBuyArmory.Object.BackgroundTransparency = 0
-	AutoBuyArmory.Object.BorderSizePixel = 0
-	AutoBuyArmory.Object.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	AutoBuyArmory.Object.Visible = AutoBuyUpgrades.Enabled
 	AutoBuyCustom = AutoBuy.CreateTextList({
 		Name = "BuyList",
 		TempText = "item/amount/priority/after",
