@@ -303,76 +303,62 @@ local function AllNearPosition(distance, amount, checktab)
 	return returnedplayer
 end
 
-local WhitelistFunctions = {StoredHashes = {}, PriorityList = {
-	["VAPE OWNER"] = 3,
-	["VAPE PRIVATE"] = 2,
-	Default = 1
-}, WhitelistTable = {}, Loaded = false, CustomTags = {}}
+local WhitelistFunctions = {StoredHashes = {}, WhitelistTable = {WhitelistedUsers = {}}, Loaded = false, CustomTags = {}, LocalPriority = 0}
 do
 	local shalib
-	WhitelistFunctions.WhitelistTable = {
-		players = {},
-		owners = {},
-		chattags = {}
-	}
 
-	function WhitelistFunctions:FindWhitelistTable(tab, obj)
-		for i,v in pairs(tab) do
-			if v == obj or type(v) == "table" and v.hash == obj then
-				return v
+	task.spawn(function()
+		local whitelistloaded
+		whitelistloaded = pcall(function()
+			local commit = "main"
+			for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/whitelists"):split("\n")) do 
+				if v:find("commit") and v:find("fragment") then 
+					local str = v:split("/")[5]
+					commit = str:sub(0, str:find('"') - 1)
+					break
+				end
+			end
+			WhitelistFunctions.WhitelistTable = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/"..commit.."/PlayerWhitelist.json", true))
+		end)
+		shalib = loadstring(vapeGithubRequest("Libraries/sha.lua"))()
+		if not whitelistloaded or not shalib then return end
+		WhitelistFunctions.Loaded = true
+		WhitelistFunctions.LocalPriority = WhitelistFunctions:GetWhitelist(lplr)
+		entityLibrary.fullEntityRefresh()
+	end)
+
+	function WhitelistFunctions:GetWhitelist(plr)
+		local plrstr = WhitelistFunctions:Hash(plr.Name..plr.UserId)
+		for i,v in pairs(WhitelistFunctions.WhitelistTable.WhitelistedUsers) do
+			if v.hash == plrstr then
+				return v.level, v.attackable or WhitelistFunctions.LocalPriority > v.level, v.tags
 			end
 		end
-		return nil
+		return 0, true
 	end
 
 	function WhitelistFunctions:GetTag(plr)
-		local plrstr, plrattackable, plrtag = WhitelistFunctions:CheckPlayerType(plr)
+		local plrstr, plrattackable, plrtag = WhitelistFunctions:GetWhitelist(plr)
 		local hash = WhitelistFunctions:Hash(plr.Name..plr.UserId)
 		local newtag = WhitelistFunctions.CustomTags[plr.Name] or ""
 		if plrtag then
-			if plrstr == "VAPE OWNER" then
-				newtag = "[VAPE OWNER] "
-			elseif plrstr == "VAPE PRIVATE" then 
-				newtag = "[VAPE PRIVATE] "
-			end
-			if WhitelistFunctions.WhitelistTable.chattags[hash] then
-				local data = WhitelistFunctions.WhitelistTable.chattags[hash]
-				local newnametag = ""
-				if data.Tags then
-					for i2,v2 in pairs(data.Tags) do
-						newnametag = newnametag..'['..v2.TagText..'] '
-					end
-				end
-				newtag = newnametag
+			for i2,v2 in pairs(plrtag) do
+				newtag = newtag..'['..v2.text..'] '
 			end
 		end
 		return newtag
 	end
 
 	function WhitelistFunctions:Hash(str)
-		if WhitelistFunctions.StoredHashes[tostring(str)] == nil and shalib then
-			WhitelistFunctions.StoredHashes[tostring(str)] = shalib.sha512(tostring(str).."SelfReport")
+		if WhitelistFunctions.StoredHashes[str] == nil and shalib then
+			WhitelistFunctions.StoredHashes[str] = shalib.sha512(str.."SelfReport")
 		end
-		return WhitelistFunctions.StoredHashes[tostring(str)] or ""
-	end
-
-	function WhitelistFunctions:CheckPlayerType(plr)
-		local plrstr = WhitelistFunctions:Hash(plr.Name..plr.UserId)
-		local playertype, playerattackable, plrtag = "DEFAULT", true, true
-		local private = WhitelistFunctions:FindWhitelistTable(WhitelistFunctions.WhitelistTable.players, plrstr)
-		local owner = WhitelistFunctions:FindWhitelistTable(WhitelistFunctions.WhitelistTable.owners, plrstr)
-		local tab = owner or private
-		playertype = owner and "VAPE OWNER" or private and "VAPE PRIVATE" or "DEFAULT"
-		if tab then 
-			playerattackable = tab.attackable == nil or tab.attackable
-			plrtag = not tab.notag
-		end
-		return playertype, playerattackable, plrtag
+		return WhitelistFunctions.StoredHashes[str] or ""
 	end
 
 	function WhitelistFunctions:CheckWhitelisted(plr)
-		local playertype = WhitelistFunctions:CheckPlayerType(plr)
-		if playertype ~= "DEFAULT" then 
+		local playertype = WhitelistFunctions:GetWhitelist(plr)
+		if playertype ~= 0 then 
 			return true
 		end
 		return false
@@ -1710,8 +1696,7 @@ runFunction(function()
 											table.insert(attackedplayers, v)
 										end
 										vapeTargetInfo.Targets.Killaura = v
-										local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(v.Player)
-										if not playerattackable then
+										if not ({WhitelistFunctions:GetWhitelist(v.Player)})[2] then
 											continue
 										end
 										KillauraNearTarget = true
@@ -4881,7 +4866,7 @@ runFunction(function()
 						if tab.TextSource then
 							local plr = playersService:GetPlayerByUserId(tab.TextSource.UserId)
 							local args = tab.Text:split(" ")
-							if plr and plr ~= lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
+							if plr and plr ~= lplr and WhitelistFunctions:GetWhitelist(plr) == 0 then
 								local reportreason, reportedmatch = findreport(tab.Text)
 								if reportreason then 
 									if alreadyreported[plr] then return end
@@ -4907,7 +4892,7 @@ runFunction(function()
 						table.insert(AutoReport.Connections, replicatedStorageService.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab, channel)
 							local plr = playersService:FindFirstChild(tab.FromSpeaker)
 							local args = tab.Message:split(" ")
-							if plr and plr ~= lplr and WhitelistFunctions:CheckPlayerType(plr) == "DEFAULT" then
+							if plr and plr ~= lplr and WhitelistFunctions:GetWhitelist(plr) == 0 then
 								local reportreason, reportedmatch = findreport(tab.Message)
 								if reportreason then 
 									if alreadyreported[plr] then return end
