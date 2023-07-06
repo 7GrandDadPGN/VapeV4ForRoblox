@@ -1135,7 +1135,7 @@ runFunction(function()
 		if bed then
 			for i,v in pairs(playersService:GetPlayers()) do
 				if v:GetAttribute("Team") and bed and bed:GetAttribute("Team"..(v:GetAttribute("Team") or 0).."NoBreak") then
-					local plrtype, plrattackable = WhitelistFunctions:CheckPlayerType(v)
+					local plrtype, plrattackable = WhitelistFunctions:GetWhitelist(v)
 					if not plrattackable then 
 						return true
 					end
@@ -1202,7 +1202,7 @@ runFunction(function()
 				SendToServer = function(self, attackTable, ...)
 					local suc, plr = pcall(function() return playersService:GetPlayerFromCharacter(attackTable.entityInstance) end)
 					if suc and plr then
-						local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr)
+						local playertype, playerattackable = WhitelistFunctions:GetWhitelist(plr)
 						if not playerattackable then 
 							return nil 
 						end
@@ -1510,36 +1510,23 @@ runFunction(function()
 
 	task.spawn(function()
 		repeat task.wait() until WhitelistFunctions.Loaded
-		for i3,v3 in pairs(WhitelistFunctions.WhitelistTable.chattags) do
-			if v3.NameColor then
-				v3.NameColor = Color3.fromRGB(v3.NameColor.r, v3.NameColor.g, v3.NameColor.b)
-			end
-			if v3.ChatColor then
-				v3.ChatColor = Color3.fromRGB(v3.ChatColor.r, v3.ChatColor.g, v3.ChatColor.b)
-			end
-			if v3.Tags then
-				for i4,v4 in pairs(v3.Tags) do
-					if v4.TagColor then
-						v4.TagColor = Color3.fromRGB(v4.TagColor.r, v4.TagColor.g, v4.TagColor.b)
-					end
+		for i, v in pairs(WhitelistFunctions.WhitelistTable.WhitelistedUsers) do
+			if v.tags then
+				for i2, v2 in pairs(v.tags) do
+					v2.color = Color3.fromRGB(unpack(v2.color))
 				end
 			end
 		end
 
-		local priolist = {
-			DEFAULT = 0,
-			["VAPE PRIVATE"] = 1,
-			["VAPE OWNER"] = 2
-		}
 		local alreadysaidlist = {}
 
 		local function findplayers(arg, plr)
 			local temp = {}
 			local continuechecking = true
 
-			if arg == "default" and continuechecking and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then table.insert(temp, lplr) continuechecking = false end
-			if arg == "teamdefault" and continuechecking and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" and plr and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") then table.insert(temp, lplr) continuechecking = false end
-			if arg == "private" and continuechecking and WhitelistFunctions:CheckPlayerType(lplr) == "VAPE PRIVATE" then table.insert(temp, lplr) continuechecking = false end
+			if arg == "default" and continuechecking and WhitelistFunctions.LocalPriority == 0 then table.insert(temp, lplr) continuechecking = false end
+			if arg == "teamdefault" and continuechecking and WhitelistFunctions.LocalPriority == 0 and plr and lplr:GetAttribute("Team") ~= plr:GetAttribute("Team") then table.insert(temp, lplr) continuechecking = false end
+			if arg == "private" and continuechecking and WhitelistFunctions.LocalPriority == 1 then table.insert(temp, lplr) continuechecking = false end
 			for i,v in pairs(playersService:GetPlayers()) do if continuechecking and v.Name:lower():sub(1, arg:len()) == arg:lower() then table.insert(temp, v) continuechecking = false end end
 
 			return temp
@@ -1906,33 +1893,24 @@ runFunction(function()
 			if message.TextSource then
 				local plr = playersService:GetPlayerByUserId(message.TextSource.UserId)
 				if plr then
-					local plrtype, plrattackable, plrtag = WhitelistFunctions:CheckPlayerType(plr)
 					local args = message.Text:split(" ")
 					local client = bedwarsStore.whitelist.chatStrings1[#args > 0 and args[#args] or message.Text]
-					local localPriority = priolist[WhitelistFunctions:CheckPlayerType(lplr)]
-					local otherPriority = priolist[plrtype]
-					local hash = WhitelistFunctions:Hash(plr.Name..plr.UserId)
+					local otherPriority, plrattackable, plrtag = WhitelistFunctions:GetWhitelist(plr)
 					props.PrefixText = message.PrefixText
+					if bedwarsStore.whitelist.clientUsers[plr.Name] then
+						props.PrefixText = "<font color='#"..Color3.new(1, 1, 0):ToHex().."'>["..bedwarsStore.whitelist.clientUsers[plr.Name].."]</font> "..props.PrefixText
+					end
 					if plrtag then
-						if plrtype == "VAPE OWNER" then
-							props.PrefixText = "<font color='#"..Color3.new(1, 0.3, 0.3):ToHex().."'>[VAPE OWNER]</font> "..props.PrefixText
-						elseif plrtype == "VAPE PRIVATE" then
-							props.PrefixText = "<font color='#"..Color3.new(0.7, 0, 1):ToHex().."'>[VAPE PRIVATE]</font> "..props.PrefixText
-						elseif bedwarsStore.whitelist.clientUsers[plr.Name] then
-							props.PrefixText = "<font color='#"..Color3.new(1, 1, 0):ToHex().."'>["..bedwarsStore.whitelist.clientUsers[plr.Name].."]</font> "..props.PrefixText
-						end
-						if WhitelistFunctions.WhitelistTable.chattags[hash] then
-							props.PrefixText = message.PrefixText
-							for i, v in pairs(WhitelistFunctions.WhitelistTable.chattags[hash].Tags) do 
-								props.PrefixText = "<font color='#"..v.TagColor:ToHex().."'>["..v.TagText.."]</font> "..props.PrefixText
-							end
+						props.PrefixText = message.PrefixText
+						for i, v in pairs(plrtag) do 
+							props.PrefixText = "<font color='#"..v.color:ToHex().."'>["..v.text.."]</font> "..props.PrefixText
 						end
 					end
 					if plr:GetAttribute("ClanTag") then 
 						props.PrefixText = "<font color='#FFFFFF'>["..plr:GetAttribute("ClanTag").."]</font> "..props.PrefixText
 					end
 					if plr == lplr then 
-						if localPriority > 0 then
+						if WhitelistFunctions.LocalPriority > 0 then
 							if message.Text:len() >= 5 and message.Text:sub(1, 5):lower() == ";cmds" then
 								local tab = {}
 								for i,v in pairs(vapePrivateCommands) do
@@ -1947,7 +1925,7 @@ runFunction(function()
 							end
 						end
 					else
-						if localPriority > 0 and message.TextChannel.Name:find("RBXWhisper") and client ~= nil and alreadysaidlist[plr.Name] == nil then
+						if WhitelistFunctions.LocalPriority > 0 and message.TextChannel.Name:find("RBXWhisper") and client ~= nil and alreadysaidlist[plr.Name] == nil then
 							message.Text = ""
 							alreadysaidlist[plr.Name] = true
 							warningNotification("Vape", plr.Name.." is using "..client.."!", 60)
@@ -1956,7 +1934,7 @@ runFunction(function()
 							local ind, newent = entityLibrary.getEntityFromPlayer(plr)
 							if newent then entityLibrary.entityUpdatedEvent:Fire(newent) end
 						end
-						if otherPriority > 0 and otherPriority > localPriority and #args > 1 then
+						if otherPriority > 0 and otherPriority > WhitelistFunctions.LocalPriority and #args > 1 then
 							table.remove(args, 1)
 							local chosenplayers = findplayers(args[1], plr)
 							table.remove(args, 1)
@@ -1981,35 +1959,33 @@ runFunction(function()
 		end
 
 		local function newPlayer(plr)
-			if (WhitelistFunctions:CheckPlayerType(plr) ~= "DEFAULT" or WhitelistFunctions.WhitelistTable.chattags[WhitelistFunctions:Hash(plr.Name..plr.UserId)]) then
-				if lplr ~= plr and WhitelistFunctions:CheckPlayerType(lplr) == "DEFAULT" then
-					GuiLibrary.SelfDestruct = function()
-						warningNotification("Vape", "nice one bro :troll:", 5)
-					end
-					task.spawn(function()
-						repeat task.wait() until plr:GetAttribute("LobbyConnected")
-						task.wait(4)
-						local oldchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
-						local newchannel = game:GetService("RobloxReplicatedStorage").ExperienceChat.WhisperChat:InvokeServer(plr.UserId)
-						local client = bedwarsStore.whitelist.chatStrings2.vape
-						task.spawn(function()
-							game:GetService("CoreGui").ExperienceChat.bubbleChat.DescendantAdded:Connect(function(newbubble)
-								if newbubble:IsA("TextLabel") and newbubble.Text:find(client) then
-									newbubble.Parent.Parent.Visible = false
-								end
-							end)
-							game:GetService("CoreGui").ExperienceChat:FindFirstChild("RCTScrollContentView", true).ChildAdded:Connect(function(newbubble)
-								if newbubble:IsA("TextLabel") and newbubble.Text:find(client) then
-									newbubble.Visible = false
-								end
-							end)
-						end)
-						if newchannel then 
-							newchannel:SendAsync(client)
-						end
-						textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
-					end)
+			if WhitelistFunctions:GetWhitelist(plr) ~= 0 and WhitelistFunctions.LocalPriority == 0 then
+				GuiLibrary.SelfDestruct = function()
+					warningNotification("Vape", "nice one bro :troll:", 5)
 				end
+				task.spawn(function()
+					repeat task.wait() until plr:GetAttribute("LobbyConnected")
+					task.wait(4)
+					local oldchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
+					local newchannel = game:GetService("RobloxReplicatedStorage").ExperienceChat.WhisperChat:InvokeServer(plr.UserId)
+					local client = bedwarsStore.whitelist.chatStrings2.vape
+					task.spawn(function()
+						game:GetService("CoreGui").ExperienceChat.bubbleChat.DescendantAdded:Connect(function(newbubble)
+							if newbubble:IsA("TextLabel") and newbubble.Text:find(client) then
+								newbubble.Parent.Parent.Visible = false
+							end
+						end)
+						game:GetService("CoreGui").ExperienceChat:FindFirstChild("RCTScrollContentView", true).ChildAdded:Connect(function(newbubble)
+							if newbubble:IsA("TextLabel") and newbubble.Text:find(client) then
+								newbubble.Visible = false
+							end
+						end)
+					end)
+					if newchannel then 
+						newchannel:SendAsync(client)
+					end
+					textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
+				end)
 			end
 		end
 
@@ -3816,8 +3792,7 @@ runFunction(function()
 									if killauratargetframe.Walls.Enabled then
 										if not bedwars.SwordController:canSee({player = plr.Player, getInstance = function() return plr.Character end}) then continue end
 									end
-									local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
-									if not playerattackable then
+									if not ({WhitelistFunctions:GetWhitelist(plr.Player)})[2] then
 										continue
 									end
 									if killauranovape.Enabled and bedwarsStore.whitelist.clientUsers[plr.Player.Name] then
@@ -4214,13 +4189,16 @@ runFunction(function()
         Function = function() end,
 		HoverText = "Times animation with hit attempt"
     })
-	if WhitelistFunctions:CheckPlayerType(lplr) ~= "DEFAULT" then
-		killauranovape = Killaura.CreateToggle({
-			Name = "No Vape",
-			Function = function() end,
-			HoverText = "no hit vape user"
-		})
-	end
+	killauranovape = Killaura.CreateToggle({
+		Name = "No Vape",
+		Function = function() end,
+		HoverText = "no hit vape user"
+	})
+	killauranovape.Object.Visible = false
+	task.spawn(function()
+		repeat task.wait() until WhitelistFunctions.Loaded
+		killauranovape.Object.Visible = WhitelistFunctions.LocalPriority ~= 0
+	end)
 end)
 
 local LongJump = {Enabled = false}
@@ -8449,7 +8427,7 @@ runFunction(function()
 					repeat
 						task.wait()
 						for i,v in pairs(playersService:GetPlayers()) do 
-							if v ~= lplr and alreadyreportedlist[v] == nil and v:GetAttribute("PlayerConnected") and WhitelistFunctions:CheckPlayerType(v) == "DEFAULT" then 
+							if v ~= lplr and alreadyreportedlist[v] == nil and v:GetAttribute("PlayerConnected") and WhitelistFunctions:GetWhitelist(v) == 0 then 
 								task.wait(1)
 								alreadyreportedlist[v] = true
 								bedwars.ClientHandler:Get(bedwars.ReportRemote):SendToServer(v.UserId)
@@ -9015,8 +8993,7 @@ runFunction(function()
 								plr = EntityNearPosition(BowExploitAutoShootFOV.Value, true)
 							end
 							if plr then	
-								local playertype, playerattackable = WhitelistFunctions:CheckPlayerType(plr.Player)
-								if not playerattackable then 
+								if not ({WhitelistFunctions:GetWhitelist(plr.Player)})[2] then 
 									return oldRemote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
 								end
 		
