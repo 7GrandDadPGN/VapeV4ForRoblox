@@ -474,7 +474,7 @@ end
 
 local function getOpenApps()
 	local count = 0
-	for i,v in pairs(bedwars.AppController:getOpenApps()) do if not tostring(v):find("Billboard") then count = count + 1 end end
+	for i,v in pairs(bedwars.AppController:getOpenApps()) do if (not tostring(v):find("Billboard")) and (not tostring(v):find("GameNametag")) then count = count + 1 end end
 	return count
 end
 
@@ -3821,7 +3821,7 @@ runFunction(function()
 									if (workspace:GetServerTimeNow() - bedwars.SwordController.lastAttack) < 0.02 then 
 										break
 									end
-									local selfpos = selfrootpos + (killaurarange.Value > 14 and (selfrootpos - root.Position).magnitude > 14.4 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * ((selfrootpos - root.Position).magnitude - 14.4)) or Vector3.zero)
+									local selfpos = selfrootpos + (killaurarange.Value > 14 and (selfrootpos - root.Position).magnitude > 14.4 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * ((selfrootpos - root.Position).magnitude - 14)) or Vector3.zero)
 									if killaurasync.Enabled then 
 										if animationdelay <= tick() then
 											animationdelay = tick() + 0.19
@@ -3833,13 +3833,9 @@ runFunction(function()
 									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
 									bedwarsStore.attackReach = math.floor((selfrootpos - root.Position).magnitude * 100) / 100
 									bedwarsStore.attackReachUpdate = tick() + 1
-									local chargeRatio = swordmeta.sword and swordmeta.sword.chargedAttack and swordmeta.sword.chargedAttack.maxChargeTimeSec or 0
-									if swordmeta.displayName:find("Scythe") then
-										chargeRatio = 0
-									end
 									killaurarealremote:FireServer({
 										weapon = sword.tool,
-										chargedAttack = {chargeRatio = chargeRatio},
+										chargedAttack = {chargeRatio = swordmeta.sword.chargedAttack and not swordmeta.sword.chargedAttack.disableOnGrounded and 1 or 0},
 										entityInstance = plr.Character,
 										validate = {
 											raycast = {
@@ -6974,12 +6970,12 @@ runFunction(function()
 					debug.setconstant(hotbar.render, 73, 100)
 					debug.setconstant(hotbar.render, 89, 1)
 					debug.setconstant(hotbar.render, 90, 0.04)
-					debug.setconstant(hotbar.render, 91, -0.025)
+					debug.setconstant(hotbar.render, 91, -0.03)
 					debug.setconstant(hotbar.render, 109, 1.35)
 					debug.setconstant(hotbar.render, 110, 0)
-					 debug.setconstant(debug.getupvalue(hotbar.render, 11).render, 30, 1)
+					debug.setconstant(debug.getupvalue(hotbar.render, 11).render, 30, 1)
 					debug.setconstant(debug.getupvalue(hotbar.render, 11).render, 31, 0.175)
-					debug.setconstant(debug.getupvalue(hotbar.render, 11).render, 33, -0.1)
+					debug.setconstant(debug.getupvalue(hotbar.render, 11).render, 33, -0.101)
 					debug.setconstant(debug.getupvalue(hotbar.render, 18).render, 71, 0)
 					debug.setconstant(debug.getupvalue(hotbar.render, 18).tweenPosition, 16, 0)
 					gametheme.topBarBGTransparency = 0.5
@@ -7000,6 +6996,15 @@ runFunction(function()
 							debug.setconstant(bedwars.QueueCard.render, 9, 0.1)
 						end
 					end)
+					local slot = bedwars.ClientStoreHandler:getState().Inventory.observedInventory.hotbarSlot
+					bedwars.ClientStoreHandler:dispatch({
+						type = "InventorySelectHotbarSlot",
+						slot = slot + 1 % 8
+					})
+					bedwars.ClientStoreHandler:dispatch({
+						type = "InventorySelectHotbarSlot",
+						slot = slot
+					})
 				end)
 			end
 		end
@@ -8396,7 +8401,7 @@ runFunction(function()
 		Default = true
 	})
 	AutoForgeSword = AutoForge.CreateToggle({
-		Name = "Sword",
+		Name = "Weapon",
 		Function = function() end
 	})
 	AutoForgeBow = AutoForge.CreateToggle({
@@ -8406,7 +8411,7 @@ runFunction(function()
 	AutoForgeBuyAfter = AutoForge.CreateToggle({
 		Name = "Buy After",
 		Function = function() end,
-		HoverText = "buy a sword after armor is maxed"
+		HoverText = "buy a weapon after armor is maxed"
 	})
 	AutoForgeNotification = AutoForge.CreateToggle({
 		Name = "Notification",
