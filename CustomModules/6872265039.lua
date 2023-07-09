@@ -445,11 +445,7 @@ runcode(function()
 				RunLoops:BindToHeartbeat("Fly", 1, function(delta) 
 					if isAlive() then
 						local mass = (lplr.Character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
-						mass = mass + (flytog and -10 or 10)
-						if flytogtick <= tick() then
-							flytog = not flytog
-							flytogtick = tick() + 0.2
-						end
+						mass = mass + 3 * (tick() % 0.4 < 0.2 and -1 or 1)
 						local flypos = lplr.Character.Humanoid.MoveDirection * math.clamp(flyspeed["Value"], 1, 20)
 						local flypos2 = (lplr.Character.Humanoid.MoveDirection * math.clamp(flyspeed["Value"] - 20, 0, 1000)) * delta
 						lplr.Character.HumanoidRootPart.Transparency = 1
