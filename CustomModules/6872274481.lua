@@ -406,7 +406,7 @@ local function getSpeed()
 			speed = speed + 25
 		end
 		if bedwarsStore.zephyrOrb ~= 0 then 
-			speed = speed + 30
+			speed = speed + 28
 		end
 	end
 	return speed
