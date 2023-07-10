@@ -4474,7 +4474,13 @@ runFunction(function()
 			if callback then
 				local successfulcustom
 				if CapeBox.Value ~= "" then
-					if (not isfile(CapeBox.Value)) then 
+					if (tonumber(CapeBox.Value)) then
+						local suc, id = pcall(function() return string.match(game:GetObjects("rbxassetid://"..CapeBox.Value)[1].Texture, "%?id=(%d+)") end)
+						if not suc then
+							id = CapeBox.Value
+						end
+						successfulcustom = "rbxassetid://"..id
+					elseif (not isfile(CapeBox.Value)) then 
 						warningNotification("Cape", "Missing file", 5)
 					else
 						successfulcustom = CapeBox.Value:find(".") and getcustomasset(CapeBox.Value) or CapeBox.Value
@@ -5506,7 +5512,7 @@ runFunction(function()
 
 	local function PlaySong(arg)
 		local args = arg:split(":")
-		local song = isfile(args[1]) and getcustomasset(args[1])
+		local song = isfile(args[1]) and getcustomasset(args[1]) or tonumber(args[1]) and "rbxassetid://"..args[1]
 		if not song then 
 			warningNotification("SongBeats", "missing music file "..args[1], 5)
 			SongBeats.ToggleButton(false)
