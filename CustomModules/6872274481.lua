@@ -6879,7 +6879,7 @@ runFunction(function()
 
 	local function PlaySong(arg)
 		local args = arg:split(":")
-		local song = isfile(args[1]) and getcustomasset(args[1])
+		local song = isfile(args[1]) and getcustomasset(args[1]) or tonumber(args[1]) and "rbxassetid://"..args[1]
 		if not song then 
 			warningNotification("SongBeats", "missing music file "..args[1], 5)
 			SongBeats.ToggleButton(false)
