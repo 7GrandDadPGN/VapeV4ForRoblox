@@ -29,7 +29,7 @@ local isnetworkowner = isnetworkowner or function(part)
 	end
 	return networkownerswitch <= tick()
 end
-local vapeAssetTable = {["vape/assets/VapeCape.png"] = "rbxassetid://13380453812"}
+local vapeAssetTable = {["vape/assets/VapeCape.png"] = "rbxassetid://13380453812", ["vape/assets/ArrowIndicator.png"] = "rbxassetid://13350766521"}
 local getcustomasset = getsynasset or getcustomasset or function(location) return vapeAssetTable[location] or "" end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local synapsev3 = syn and syn.toast_notification and "V3" or ""
