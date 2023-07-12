@@ -9963,7 +9963,7 @@ end)
 runFunction(function()
     local Disabler = {Enabled = false}
     Disabler = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-        Name = "Disabler",
+        Name = "FirewallBypass",
         Function = function(callback)
             if callback then 
 				task.spawn(function()
