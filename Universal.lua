@@ -5402,7 +5402,7 @@ runFunction(function()
 						if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 then
 							if not chairanim.IsPlaying then 
 								local temp2 = Instance.new("Animation")
-								temp2.AnimationId = "http://www.roblox.com/asset/?id=2506281703"
+								temp2.AnimationId = entityLibrary.character.Humanoid.RigType == Enum.HumanoidRigType.R15 and "http://www.roblox.com/asset/?id=2506281703" or "http://www.roblox.com/asset/?id=178130996"
 								chairanim = entityLibrary.character.Humanoid:LoadAnimation(temp2)
 								chairanim.Priority = Enum.AnimationPriority.Movement
 								chairanim.Looped = true
