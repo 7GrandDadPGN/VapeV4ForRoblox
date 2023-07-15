@@ -9973,7 +9973,7 @@ runFunction(function()
 						if item and lplr.Character.HandInvItem.Value == item.tool then 
 							bedwars.ClientHandler:Get("ScytheDash"):SendToServer({direction = Vector3.new(9e9, 9e9, 9e9)})
 							if bedwarsStore.attackReachUpdate < tick() then 
-								lplr.Character:SetAttribute("SpeedBoost", 1.5)
+								lplr.Character:SetAttribute("SpeedBoost", 1)
 							else
 								lplr.Character:SetAttribute("SpeedBoost", nil)
 							end
