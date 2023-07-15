@@ -9971,7 +9971,7 @@ runFunction(function()
 						task.wait(0.03)
 						local item = getItemNear("scythe")
 						if item and lplr.Character.HandInvItem.Value == item.tool then 
-							bedwars.ClientHandler:Get("ScytheDash"):SendToServer({direction = Vector3.new(math.huge, math.huge, math.huge)})
+							bedwars.ClientHandler:Get("ScytheDash"):SendToServer({direction = Vector3.new(9e9, 9e9, 9e9)})
 							if bedwarsStore.attackReachUpdate < tick() then 
 								bedwarsStore.grapple = tick() + 0.3
 							end
