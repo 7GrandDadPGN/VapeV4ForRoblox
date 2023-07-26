@@ -1842,43 +1842,67 @@ runFunction(function()
 			end,
 			enable = function(args)
 				if #args >= 1 then
-					local module
-					for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
-						if v.Type == "OptionsButton" and i:lower() == args[1]:lower().."optionsbutton" then
-							module = v
-							break
+					if args[1]:lower() == "all" then
+						for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
+							if v.Type == "OptionsButton" and i ~= "Panic" and not v.Api.Enabled then
+								v.Api.ToggleButton()
+							end
 						end
-					end
-					if module and not module.Api.Enabled then
-						module.Api.ToggleButton()
+					else
+						local module
+						for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
+							if v.Type == "OptionsButton" and i:lower() == args[1]:lower().."optionsbutton" then
+								module = v
+								break
+							end
+						end
+						if module and not module.Api.Enabled then
+							module.Api.ToggleButton()
+						end
 					end
 				end
 			end,
 			disable = function(args)
 				if #args >= 1 then
-					local module
-					for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
-						if v.Type == "OptionsButton" and i:lower() == args[1]:lower().."optionsbutton" then
-							module = v
-							break
+					if args[1]:lower() == "all" then
+						for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
+							if v.Type == "OptionsButton" and i ~= "Panic" and v.Api.Enabled then
+								v.Api.ToggleButton()
+							end
 						end
-					end
-					if module and module.Api.Enabled then
-						module.Api.ToggleButton()
+					else
+						local module
+						for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
+							if v.Type == "OptionsButton" and i:lower() == args[1]:lower().."optionsbutton" then
+								module = v
+								break
+							end
+						end
+						if module and module.Api.Enabled then
+							module.Api.ToggleButton()
+						end
 					end
 				end
 			end,
 			toggle = function(args)
 				if #args >= 1 then
-					local module
-					for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
-						if v.Type == "OptionsButton" and i:lower() == args[1]:lower().."optionsbutton" then
-							module = v
-							break
+					if args[1]:lower() == "all" then
+						for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
+							if v.Type == "OptionsButton" and i ~= "Panic" then
+								v.Api.ToggleButton()
+							end
 						end
-					end
-					if module then
-						module.Api.ToggleButton()
+					else
+						local module
+						for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do 
+							if v.Type == "OptionsButton" and i:lower() == args[1]:lower().."optionsbutton" then
+								module = v
+								break
+							end
+						end
+						if module then
+							module.Api.ToggleButton()
+						end
 					end
 				end
 			end,
