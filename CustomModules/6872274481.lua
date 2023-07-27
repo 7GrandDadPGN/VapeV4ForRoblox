@@ -10412,7 +10412,7 @@ end)
 
 local e = Instance.new("TextLabel")
 e.Size = UDim2.fromOffset(50, 30)
-e.Position = UDim2.new(1, -80, 0, 0)
+e.Position = UDim2.new(1, -100, 0, 0)
 e.TextScaled = true
 e.BackgroundTransparency = 1
 e.TextColor3 = Color3.new(1, 1, 1)
