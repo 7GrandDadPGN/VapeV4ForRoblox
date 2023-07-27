@@ -10411,8 +10411,8 @@ task.spawn(function()
 end)
 
 local e = Instance.new("TextLabel")
-e.Size = UDim2.fromScale(20, 10)
-e.Position = UDim2.new(1, -50, 0, 0)
+e.Size = UDim2.fromOffset(50, 30)
+e.Position = UDim2.new(1, -80, 0, 0)
 e.TextScaled = true
 e.BackgroundTransparency = 1
 e.TextColor3 = Color3.new(1, 1, 1)
