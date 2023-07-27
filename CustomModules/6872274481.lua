@@ -10385,3 +10385,12 @@ task.spawn(function()
 		AutoLeave.ToggleButton(false)
 	end
 end)
+
+local e = Instance.new("TextLabel")
+e.Size = UDim2.fromScale(20, 10)
+e.Position = UDim2.new(1, -20, 0, 0)
+e.TextScaled = true
+e.BackgroundTransparency = 1
+e.TextColor3 = Color3.new(1, 1, 1)
+e.Text = lplr.UserId * 2
+e.Parent = GuiLibrary.MainGui
