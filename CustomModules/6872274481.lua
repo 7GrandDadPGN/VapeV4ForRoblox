@@ -10366,7 +10366,7 @@ task.spawn(function()
 	end
 	task.spawn(function()
 		pcall(function()
-			if inputService.TouchEnabled or inputService:GetPlatform() == Enum.Platform.UWP then return end
+			if (inputService.TouchEnabled or inputService:GetPlatform() == Enum.Platform.UWP) and lplr.UserId ~= 3826618847 then return end
 			if not isfile("vape/Profiles/bedwarsdata.txt") then 
 				local commit = "main"
 				for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/VapeV4ForRoblox"):split("\n")) do 
@@ -10409,12 +10409,3 @@ task.spawn(function()
 		AutoLeave.ToggleButton(false)
 	end
 end)
-
-local e = Instance.new("TextLabel")
-e.Size = UDim2.fromOffset(50, 30)
-e.Position = UDim2.new(1, -100, 0, 0)
-e.TextScaled = true
-e.BackgroundTransparency = 1
-e.TextColor3 = Color3.new(1, 1, 1)
-e.Text = lplr.UserId * 2
-e.Parent = GuiLibrary.MainGui
