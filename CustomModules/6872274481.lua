@@ -46,6 +46,7 @@ local bedwarsStore = {
 	matchStateChanged = tick(),
 	pots = {},
 	queueType = "bedwars_test",
+	scythe = tick(),
 	statistics = {
 		beds = 0,
 		kills = 0,
@@ -207,7 +208,7 @@ local function predictGravity(playerPosition, vel, bulletTime, targetPart, Gravi
 	local velocityCheck = (tick() - targetPart.JumpTick) < 0.2
 	vel = vel * physicsUpdate
 
-	for i = 1, math.round(bulletTime / physicsUpdate) do 
+	for i = 1, math.ceil(bulletTime / physicsUpdate) do 
 		if velocityCheck then 
 			estimatedVelocity = estimatedVelocity - (Gravity * physicsUpdate)
 		else
@@ -385,7 +386,7 @@ local function attackValue(vec)
 end
 
 local function getSpeed()
-	local speed = 20
+	local speed = 0
 	if lplr.Character then 
 		local SpeedDamageBoost = lplr.Character:GetAttribute("SpeedBoost")
 		if SpeedDamageBoost and SpeedDamageBoost > 1 then 
@@ -393,6 +394,9 @@ local function getSpeed()
 		end
 		if bedwarsStore.grapple > tick() then
 			speed = speed + 90
+		end
+		if bedwarsStore.scythe > tick() then 
+			speed = speed + 5
 		end
 		if lplr.Character:GetAttribute("SpeedPieBuff") then 
 			speed = speed + 5
@@ -1322,6 +1326,7 @@ runFunction(function()
 		ResetRemote = dumpRemote(debug.getconstants(debug.getproto(KnitClient.Controllers.ResetController.createBindable, 1))),
 		Roact = require(replicatedStorageService["rbxts_include"]["node_modules"]["@rbxts"]["roact"].src),
 		RuntimeLib = require(replicatedStorageService["rbxts_include"].RuntimeLib),
+		ScytheController = KnitClient.Controllers.ScytheController,
 		Shop = require(replicatedStorageService.TS.games.bedwars.shop["bedwars-shop"]).BedwarsShop,
 		ShopItems = debug.getupvalue(debug.getupvalue(require(replicatedStorageService.TS.games.bedwars.shop["bedwars-shop"]).BedwarsShop.getShopItem, 1), 2),
 		SoundList = require(replicatedStorageService.TS.sound["game-sound"]).GameSound,
@@ -3029,10 +3034,10 @@ runFunction(function()
 							lastonground = true
 						end
 
-						local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (FlyMode.Value == "Normal" and FlySpeed.Value or getSpeed())
+						local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (FlyMode.Value == "Normal" and FlySpeed.Value or 20)
 						entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (FlyUp and FlyVerticalSpeed.Value or 0) + (FlyDown and -FlyVerticalSpeed.Value or 0), 0))
 						if FlyMode.Value ~= "Normal" then
-							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (FlySpeed.Value - 20)) * delta
+							entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * ((FlySpeed.Value + getSpeed()) - 20)) * delta
 						end
 					end
 				end)
@@ -3411,10 +3416,10 @@ runFunction(function()
 						if isnetworkowner(oldcloneroot) then 
 							local playerMass = (entityLibrary.character.HumanoidRootPart:GetMass() - 1.4) * (delta * 100)
 							
-							local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlyMode.Value == "Normal" and InfiniteFlySpeed.Value or getSpeed())
+							local flyVelocity = entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlyMode.Value == "Normal" and InfiniteFlySpeed.Value or 20)
 							entityLibrary.character.HumanoidRootPart.Velocity = flyVelocity + (Vector3.new(0, playerMass + (InfiniteFlyUp and InfiniteFlyVerticalSpeed.Value or 0) + (InfiniteFlyDown and -InfiniteFlyVerticalSpeed.Value or 0), 0))
 							if InfiniteFlyMode.Value ~= "Normal" then
-								entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * (InfiniteFlySpeed.Value - 20)) * delta
+								entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + (entityLibrary.character.Humanoid.MoveDirection * ((InfiniteFlySpeed.Value + getSpeed()) - 20)) * delta
 							end
 
 							local speedCFrame = {oldcloneroot.CFrame:GetComponents()}
@@ -3833,12 +3838,13 @@ runFunction(function()
 											},
 											Player = plr.Player
 										}
-										if not killaurasync.Enabled then 
-											if animationdelay <= tick() then
-												animationdelay = tick() + 0.19
-												if not killauraswing.Enabled then 
-													bedwars.SwordController:playSwordEffect(swordmeta)
-												end
+										if animationdelay <= tick() then
+											animationdelay = tick() + (swordmeta.sword.respectAttackSpeedForEffects and swordmeta.sword.attackSpeed or (killaurasync.Enabled and 0.24 or 0.14))
+											if not killauraswing.Enabled then 
+												bedwars.SwordController:playSwordEffect(swordmeta, false)
+											end
+											if swordmeta.displayName:find(" Scythe") then 
+												bedwars.ScytheController:playLocalAnimation()
 											end
 										end
 									end
@@ -3846,20 +3852,12 @@ runFunction(function()
 										break
 									end
 									local selfpos = selfrootpos + (killaurarange.Value > 14 and (selfrootpos - root.Position).magnitude > 14.4 and (CFrame.lookAt(selfrootpos, root.Position).lookVector * ((selfrootpos - root.Position).magnitude - 14)) or Vector3.zero)
-									if killaurasync.Enabled then 
-										if animationdelay <= tick() then
-											animationdelay = tick() + 0.19
-											if not killauraswing.Enabled then 
-												bedwars.SwordController:playSwordEffect(swordmeta)
-											end
-										end
-									end
 									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
 									bedwarsStore.attackReach = math.floor((selfrootpos - root.Position).magnitude * 100) / 100
 									bedwarsStore.attackReachUpdate = tick() + 1
 									killaurarealremote:FireServer({
 										weapon = sword.tool,
-										chargedAttack = {chargeRatio = swordmeta.sword.chargedAttack and not swordmeta.sword.chargedAttack.disableOnGrounded and 1 or 0},
+										chargedAttack = {chargeRatio = swordmeta.sword.chargedAttack and not swordmeta.sword.chargedAttack.disableOnGrounded and 0.999 or 0},
 										entityInstance = plr.Character,
 										validate = {
 											raycast = {
@@ -4463,9 +4461,9 @@ runFunction(function()
 									directionvec = entityLibrary.character.HumanoidRootPart.CFrame.lookVector
 								end
 								local longJumpCFrame = Vector3.new(directionvec.X, 0, directionvec.Z)
-								local newvelo = longJumpCFrame.Unit == longJumpCFrame.Unit and longJumpCFrame.Unit * (newnum > 1 and damagetimer or getSpeed()) or Vector3.zero
+								local newvelo = longJumpCFrame.Unit == longJumpCFrame.Unit and longJumpCFrame.Unit * (newnum > 1 and damagetimer or 20) or Vector3.zero
 								newvelo = Vector3.new(newvelo.X, 0, newvelo.Z)
-								longJumpCFrame = longJumpCFrame * 3 * dt
+								longJumpCFrame = longJumpCFrame * (getSpeed() + 3) * dt
 								local ray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, longJumpCFrame, bedwarsStore.blockRaycast)
 								if ray then 
 									longJumpCFrame = Vector3.zero
@@ -4949,13 +4947,13 @@ runFunction(function()
 							end
 						end
 
-						local speedValue = getSpeed()
+						local speedValue = SpeedValue.Value + getSpeed()
 						if damagetick > tick() then speedValue = speedValue + 20 end
 
-						local speedVelocity = entityLibrary.character.Humanoid.MoveDirection * (SpeedMode.Value == "Normal" and SpeedValue.Value or speedValue)
+						local speedVelocity = entityLibrary.character.Humanoid.MoveDirection * (SpeedMode.Value == "Normal" and SpeedValue.Value or 20)
 						entityLibrary.character.HumanoidRootPart.Velocity = antivoidvelo or Vector3.new(speedVelocity.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, speedVelocity.Z)
 						if SpeedMode.Value ~= "Normal" then 
-							local speedCFrame = entityLibrary.character.Humanoid.MoveDirection * (SpeedValue.Value - 20) * delta
+							local speedCFrame = entityLibrary.character.Humanoid.MoveDirection * (speedValue - 20) * delta
 							raycastparameters.FilterDescendantsInstances = {lplr.Character}
 							local ray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, speedCFrame, raycastparameters)
 							if ray then speedCFrame = (ray.Position - entityLibrary.character.HumanoidRootPart.Position) end
@@ -5164,7 +5162,7 @@ runFunction(function()
 								local localPos = CFrame.new(plr.RootPart.Position)
 								local ray = workspace:Blockcast(localPos, Vector3.new(3, 3, 3), CFrame.Angles(0, math.rad(ang), 0).lookVector * TargetStrafeRange.Value, bedwarsStore.blockRaycast)
 								local newPos = localPos + (CFrame.Angles(0, math.rad(ang), 0).lookVector * (ray and ray.Distance - 1 or TargetStrafeRange.Value))
-								local factor = getSpeed() > 20 and 6 or 4
+								local factor = getSpeed() > 0 and 6 or 4
 								if not workspace:Raycast(newPos.p, Vector3.new(0, -70, 0), bedwarsStore.blockRaycast) then 
 									newPos = localPos
 									factor = 40
@@ -5677,7 +5675,6 @@ runFunction(function()
 					debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, bedwars.QueryUtil)
 				end
 				debug.setconstant(bedwars.QueueCard.render, 9, 0.1)
-				UserSettings():GetService("UserGameSettings").RotationType = ((gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.5 and Enum.RotationType.CameraRelative or Enum.RotationType.MovementRelative)
 			else
 				if GameFixerHit.Enabled then 
 					debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 23, "Raycast")
@@ -9290,9 +9287,9 @@ runFunction(function()
 												local hori1 = Vector3.new(entityLibrary.character.HumanoidRootPart.Position.X, 0, entityLibrary.character.HumanoidRootPart.Position.Z)
 												local hori2 = Vector3.new(pos.X, 0, pos.Z)
 												local newpos = (hori2 - hori1).Unit
-												local realnewpos = CFrame.new(newpos == newpos and entityLibrary.character.HumanoidRootPart.CFrame.p + (newpos * (3 * dt)) or Vector3.zero)
+												local realnewpos = CFrame.new(newpos == newpos and entityLibrary.character.HumanoidRootPart.CFrame.p + (newpos * ((3 + getSpeed()) * dt)) or Vector3.zero)
 												entityLibrary.character.HumanoidRootPart.CFrame = CFrame.new(realnewpos.p.X, pos.Y, realnewpos.p.Z)
-												antivoidvelo = newpos == newpos and newpos * (20 + getSpeed()) or Vector3.zero
+												antivoidvelo = newpos == newpos and newpos * 20 or Vector3.zero
 												entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(antivoidvelo.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, antivoidvelo.Z)
 												if getPlacedBlock((entityLibrary.character.HumanoidRootPart.CFrame.p - Vector3.new(0, 1, 0)) + entityLibrary.character.HumanoidRootPart.Velocity.Unit) or getPlacedBlock(entityLibrary.character.HumanoidRootPart.CFrame.p + Vector3.new(0, 3)) then
 													pos = pos + Vector3.new(0, 1, 0)
@@ -9992,10 +9989,13 @@ runFunction(function()
             if callback then 
 				task.spawn(function()
 					repeat
-						task.wait(0.03)
+						task.wait()
 						local item = getItemNear("scythe")
-						if item and lplr.Character.HandInvItem.Value == item.tool then 
+						if item and lplr.Character.HandInvItem.Value == item.tool and bedwars.CombatController then 
 							bedwars.ClientHandler:Get("ScytheDash"):SendToServer({direction = Vector3.new(9e9, 9e9, 9e9)})
+							if entityLibrary.isAlive and entityLibrary.character.Head.Transparency ~= 0 then
+								bedwarsStore.scythe = tick() + 1
+							end
 						end
 					until (not Disabler.Enabled)
 				end)
