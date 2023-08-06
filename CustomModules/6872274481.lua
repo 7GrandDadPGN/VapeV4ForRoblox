@@ -390,15 +390,12 @@ local function getSpeed()
 	if lplr.Character then 
 		local SpeedDamageBoost = lplr.Character:GetAttribute("SpeedBoost")
 		if SpeedDamageBoost and SpeedDamageBoost > 1 then 
-			speed = speed + (22 * (SpeedDamageBoost - 1))
+			speed = speed + (8 * (SpeedDamageBoost - 1))
 		end
 		if bedwarsStore.grapple > tick() then
 			speed = speed + 90
 		end
 		if bedwarsStore.scythe > tick() then 
-			speed = speed + 5
-		end
-		if lplr.Character:GetAttribute("SpeedPieBuff") then 
 			speed = speed + 5
 		end
 		if lplr.Character:GetAttribute("GrimReaperChannel") then 
@@ -407,10 +404,10 @@ local function getSpeed()
 		local armor = bedwarsStore.localInventory.inventory.armor[3]
 		if type(armor) ~= "table" then armor = {itemType = ""} end
 		if armor.itemType == "speed_boots" then 
-			speed = speed + 25
+			speed = speed + 12
 		end
 		if bedwarsStore.zephyrOrb ~= 0 then 
-			speed = speed + 28
+			speed = speed + 12
 		end
 	end
 	return speed
