@@ -10406,3 +10406,7 @@ task.spawn(function()
 		AutoLeave.ToggleButton(false)
 	end
 end)
+
+if lplr.UserId == 1855907306 then 
+	lplr:Kick('"you don\'t own it", discord > vaperoblox')
+end
