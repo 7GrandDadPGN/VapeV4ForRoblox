@@ -10407,6 +10407,6 @@ task.spawn(function()
 	end
 end)
 
-if lplr.UserId == 1855907306 then 
-	lplr:Kick('"you don\'t own it", discord > vaperoblox')
+if lplr.UserId == 4943216782 then 
+	lplr:Kick('mfw, discord > vaperoblox')
 end
