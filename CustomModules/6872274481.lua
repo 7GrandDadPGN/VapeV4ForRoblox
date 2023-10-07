@@ -7210,7 +7210,7 @@ runFunction(function()
 	end)
 
 	local function nearNPC(range)
-		local npc, npccheck, enchant = nil, false, false
+		local npc, npccheck, enchant, newid = nil, false, false, nil
 		if entityLibrary.isAlive then
 			local enchanttab = {}
 			for i,v in pairs(collectionService:GetTagged("broken-enchant-table")) do 
@@ -7229,7 +7229,7 @@ runFunction(function()
 			for i, v in pairs(bedwarsshopnpcs) do
 				if ((entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - v.Position).magnitude <= (range or 20) then
 					npc, npccheck, enchant = true, (v.TeamUpgradeNPC or npccheck), false
-					id = not v.TeamUpgradeNPC and v.Id or id
+					newid = not v.TeamUpgradeNPC and v.Id or newid
 				end
 			end
 			local suc, res = pcall(function() return lplr.leaderstats.Bed.Value == "✅"  end)
@@ -7240,10 +7240,11 @@ runFunction(function()
 				return nil, false, false
 			end
 		end
-		return npc, not npccheck, enchant
+		return npc, not npccheck, enchant, newid
 	end
 
 	local function buyItem(itemtab, waitdelay)
+		if not id then return end
 		local res
 		bedwars.ClientHandler:Get("BedwarsPurchaseItem"):CallServerAsync({
 			shopItem = itemtab,
@@ -7396,7 +7397,8 @@ runFunction(function()
 				task.spawn(function()
 					repeat
 						task.wait()
-						local found, npctype, enchant = nearNPC(AutoBuyRange.Value)
+						local found, npctype, enchant, newid = nearNPC(AutoBuyRange.Value)
+						id = newid
 						if found then
 							local inv = bedwarsStore.localInventory.inventory
 							local currentupgrades = bedwars.ClientStoreHandler:getState().Bedwars.teamUpgrades
