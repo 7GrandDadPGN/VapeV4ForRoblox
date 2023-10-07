@@ -7229,7 +7229,7 @@ runFunction(function()
 			for i, v in pairs(bedwarsshopnpcs) do
 				if ((entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - v.Position).magnitude <= (range or 20) then
 					npc, npccheck, enchant = true, (v.TeamUpgradeNPC or npccheck), false
-					id = v.Id
+					id = not v.TeamUpgradeNPC and v.Id or id
 				end
 			end
 			local suc, res = pcall(function() return lplr.leaderstats.Bed.Value == "✅"  end)
@@ -9125,90 +9125,6 @@ runFunction(function()
 			end
 		end,
 		HoverText = "Spawns and teleports a raven to a player\nnear your mouse."
-	})
-end)
-
-runFunction(function()
-	local SetEmote = {Enabled = false}
-	local SetEmoteList = {Value = ""}
-	local oldemote
-	local SetEmoteName2 = {}
-	SetEmote = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "SetEmote",
-		Function = function(callback)
-			if callback then
-				oldemote = bedwars.ClientStoreHandler:getState().Locker.selectedSpray
-				task.spawn(function()
-					repeat task.wait() until matchState ~= 0 or not SetEmote.Enabled
-					if SetEmote.Enabled then
-						oldemote = bedwars.ClientStoreHandler:getState().Locker.selectedSpray
-						bedwars.ClientStoreHandler:getState().Locker.selectedSpray = SetEmoteName2[SetEmoteList.Value]
-					end
-				end)
-			else
-				if oldemote then 
-					bedwars.ClientStoreHandler:getState().Locker.selectedSpray = oldemote
-					oldemote = nil 
-				end
-			end
-		end
-	})
-	local SetEmoteName = {}
-	for i,v in pairs(bedwars.EmoteMeta) do 
-		table.insert(SetEmoteName, v.name)
-		SetEmoteName2[v.name] = i
-	end
-	table.sort(SetEmoteName, function(a, b) return a:lower() < b:lower() end)
-	SetEmoteList = SetEmote.CreateDropdown({
-		Name = "Emote",
-		List = SetEmoteName,
-		Function = function()
-			if SetEmote.Enabled then 
-				bedwars.ClientStoreHandler:getState().Locker.selectedSpray = SetEmoteName2[SetEmoteList.Value]
-			end
-		end
-	})
-end)
-
-runFunction(function()
-	local tiered = {}
-	local nexttier = {}
-
-	for i,v in pairs(bedwars.ShopItems) do
-		if type(v) == "table" then 
-			if v.tiered then
-				tiered[v.itemType] = v.tiered
-			end
-			if v.nextTier then
-				nexttier[v.itemType] = v.nextTier
-			end
-		end
-	end
-
-	GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "ShopTierBypass",
-		Function = function(callback) 
-			if callback then
-				for i,v in pairs(bedwars.ShopItems) do
-					if type(v) == "table" then 
-						v.tiered = nil
-						v.nextTier = nil
-					end
-				end
-			else
-				for i,v in pairs(bedwars.ShopItems) do
-					if type(v) == "table" then 
-						if tiered[v.itemType] then
-							v.tiered = tiered[v.itemType]
-						end
-						if nexttier[v.itemType] then
-							v.nextTier = nexttier[v.itemType]
-						end
-					end
-				end
-			end
-		end,
-		HoverText = "Allows you to access tiered items early."
 	})
 end)
 
