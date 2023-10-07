@@ -7169,6 +7169,7 @@ runFunction(function()
 	local buyingthing = false
 	local shoothook
 	local bedwarsshopnpcs = {}
+	local id
 	local armors = {
 		[1] = "leather_chestplate",
 		[2] = "iron_chestplate",
@@ -7201,10 +7202,10 @@ runFunction(function()
 	task.spawn(function()
 		repeat task.wait() until bedwarsStore.matchState ~= 0 or not vapeInjected
 		for i,v in pairs(collectionService:GetTagged("BedwarsItemShop")) do
-			table.insert(bedwarsshopnpcs, {Position = v.Position, TeamUpgradeNPC = true})
+			table.insert(bedwarsshopnpcs, {Position = v.Position, TeamUpgradeNPC = true, Id = v.Name})
 		end
 		for i,v in pairs(collectionService:GetTagged("BedwarsTeamUpgrader")) do
-			table.insert(bedwarsshopnpcs, {Position = v.Position, TeamUpgradeNPC = false})
+			table.insert(bedwarsshopnpcs, {Position = v.Position, TeamUpgradeNPC = false, Id = v.Name})
 		end
 	end)
 
@@ -7228,6 +7229,7 @@ runFunction(function()
 			for i, v in pairs(bedwarsshopnpcs) do
 				if ((entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - v.Position).magnitude <= (range or 20) then
 					npc, npccheck, enchant = true, (v.TeamUpgradeNPC or npccheck), false
+					id = v.Id
 				end
 			end
 			local suc, res = pcall(function() return lplr.leaderstats.Bed.Value == "✅"  end)
@@ -7244,7 +7246,8 @@ runFunction(function()
 	local function buyItem(itemtab, waitdelay)
 		local res
 		bedwars.ClientHandler:Get("BedwarsPurchaseItem"):CallServerAsync({
-			shopItem = itemtab
+			shopItem = itemtab,
+			shopId = id
 		}):andThen(function(p11)
 			if p11 then
 				bedwars.SoundManager:playSound(bedwars.SoundList.BEDWARS_PURCHASE_ITEM)
