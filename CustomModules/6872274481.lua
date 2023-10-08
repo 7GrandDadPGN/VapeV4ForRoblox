@@ -9130,6 +9130,48 @@ runFunction(function()
 	})
 end)
 
+runFunction(function()
+	local tiered = {}
+	local nexttier = {}
+
+	for i,v in pairs(bedwars.ShopItems) do
+		if type(v) == "table" then 
+			if v.tiered then
+				tiered[v.itemType] = v.tiered
+			end
+			if v.nextTier then
+				nexttier[v.itemType] = v.nextTier
+			end
+		end
+	end
+
+	GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
+		Name = "ShopTierBypass",
+		Function = function(callback) 
+			if callback then
+				for i,v in pairs(bedwars.ShopItems) do
+					if type(v) == "table" then 
+						v.tiered = nil
+						v.nextTier = nil
+					end
+				end
+			else
+				for i,v in pairs(bedwars.ShopItems) do
+					if type(v) == "table" then 
+						if tiered[v.itemType] then
+							v.tiered = tiered[v.itemType]
+						end
+						if nexttier[v.itemType] then
+							v.nextTier = nexttier[v.itemType]
+						end
+					end
+				end
+			end
+		end,
+		HoverText = "Allows you to access tiered items early."
+	})
+end)
+
 local lagbackedaftertouch = false
 runFunction(function()
 	local AntiVoidPart
