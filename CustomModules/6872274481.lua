@@ -8861,27 +8861,6 @@ runFunction(function()
 	})
 end)
 
-local denyregions = {}
-runFunction(function()
-	local ignoreplaceregions = {Enabled = false}
-	ignoreplaceregions = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "IgnorePlaceRegions",
-		Function = function(callback)
-			if callback then
-				denyregions = bedwars.MapController.denyRegions
-				task.spawn(function()
-					repeat
-						bedwars.MapController.denyRegions = {}
-						task.wait()
-					until (not ignoreplaceregions.Enabled)
-				end)
-			else 
-				bedwars.MapController.denyRegions = denyregions
-			end
-		end
-	})
-end)
-
 runFunction(function()
 	local MissileTP = {Enabled = false}
 	local MissileTeleportDelaySlider = {Value = 30}
