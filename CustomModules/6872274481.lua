@@ -2249,6 +2249,7 @@ do
 	textlabel.Parent = GuiLibrary.MainGui.ScaledGui.ClickGui]]
 end
 
+--[[
 runFunction(function()
 	local handsquare = Instance.new("ImageLabel")
 	handsquare.Size = UDim2.new(0, 26, 0, 27)
@@ -2306,7 +2307,7 @@ runFunction(function()
 		end)
 		return oldupdate(tab, targetsize)
 	end
-end)
+end)]]
 
 GuiLibrary.RemoveObject("SilentAimOptionsButton")
 GuiLibrary.RemoveObject("ReachOptionsButton")
