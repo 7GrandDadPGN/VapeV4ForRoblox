@@ -2073,6 +2073,7 @@ do
 						table.insert(entityLibrary.entityConnections, char.AttributeChanged:Connect(function(...)
 							vapeEvents.AttributeChanged:Fire(...)
 						end))
+						print("Added!", entityLibrary.isAlive)
                     else
 						newent = {
                             Player = plr,
@@ -2159,6 +2160,7 @@ do
 					childremoved = char.ChildRemoved:Connect(function(part)
 						if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then			
 							if localcheck then
+								print("remove check")
 								if char == lplr.Character then
 									if part.Name == "HumanoidRootPart" then
 										entityLibrary.isAlive = false
