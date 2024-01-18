@@ -74,9 +74,9 @@ local isfile = isfile or function(file)
 	return suc and res ~= nil
 end
 local networkownerswitch = tick()
-local isnetworkowner = isnetworkowner or function(part)
+--ME WHEN THE MOBILE EXPLOITS ADD A DISFUNCTIONAL ISNETWORKOWNER (its for compatability I swear!!)
+local isnetworkowner = function(part)
 	local suc, res = pcall(function() return gethiddenproperty(part, "NetworkOwnershipRule") end)
-	print(suc, res, "testing")
 	if suc and res == Enum.NetworkOwnership.Manual then 
 		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
 		networkownerswitch = tick() + 8
@@ -2061,7 +2061,6 @@ do
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10)
                 local hum = char:WaitForChild("Humanoid", 10)
-				print("hmm", plr, char, humrootpart, head, hum)
 				if entityLibrary.entityIds[plr.Name] ~= id then return end
                 if humrootpart and hum and head then
 					local childremoved
@@ -2074,7 +2073,6 @@ do
 						table.insert(entityLibrary.entityConnections, char.AttributeChanged:Connect(function(...)
 							vapeEvents.AttributeChanged:Fire(...)
 						end))
-						print("Added!", entityLibrary.isAlive)
                     else
 						newent = {
                             Player = plr,
@@ -2161,7 +2159,6 @@ do
 					childremoved = char.ChildRemoved:Connect(function(part)
 						if part.Name == "HumanoidRootPart" or part.Name == "Head" or part.Name == "Humanoid" then			
 							if localcheck then
-								print("remove check")
 								if char == lplr.Character then
 									if part.Name == "HumanoidRootPart" then
 										entityLibrary.isAlive = false
@@ -2197,7 +2194,6 @@ do
                 entityLibrary.refreshEntity(plr, localcheck)
             else
                 if localcheck then
-					print("removed check2")
                     entityLibrary.isAlive = false
                 else
                     entityLibrary.removeEntity(plr)
@@ -3369,7 +3365,6 @@ runFunction(function()
 					end)
 				end
 				clonesuccess = false
-				print(entityLibrary.isAlive, entityLibrary.character.Humanoid.Health, isnetworkowner(entityLibrary.character.HumanoidRootPart))
 				if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and isnetworkowner(entityLibrary.character.HumanoidRootPart) then
 					cloned = lplr.Character
 					oldcloneroot = entityLibrary.character.HumanoidRootPart
