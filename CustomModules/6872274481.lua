@@ -76,6 +76,7 @@ end
 local networkownerswitch = tick()
 local isnetworkowner = isnetworkowner or function(part)
 	local suc, res = pcall(function() return gethiddenproperty(part, "NetworkOwnershipRule") end)
+	print(suc, res, "testing")
 	if suc and res == Enum.NetworkOwnership.Manual then 
 		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
 		networkownerswitch = tick() + 8
@@ -2196,6 +2197,7 @@ do
                 entityLibrary.refreshEntity(plr, localcheck)
             else
                 if localcheck then
+					print("removed check2")
                     entityLibrary.isAlive = false
                 else
                     entityLibrary.removeEntity(plr)
