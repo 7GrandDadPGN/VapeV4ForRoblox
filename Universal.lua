@@ -21,7 +21,7 @@ local isfile = isfile or function(file)
 	return suc and res ~= nil
 end
 local networkownerswitch = tick()
-local isnetworkowner = isnetworkowner or function(part)
+local isnetworkowner = function(part)
 	local suc, res = pcall(function() return gethiddenproperty(part, "NetworkOwnershipRule") end)
 	if suc and res == Enum.NetworkOwnership.Manual then 
 		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
