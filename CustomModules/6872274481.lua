@@ -3369,6 +3369,7 @@ runFunction(function()
 					end)
 				end
 				clonesuccess = false
+				print(entityLibrary.isAlive, entityLibrary.character.Humanoid.Health, isnetworkowner(entityLibrary.character.HumanoidRootPart))
 				if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 and isnetworkowner(entityLibrary.character.HumanoidRootPart) then
 					cloned = lplr.Character
 					oldcloneroot = entityLibrary.character.HumanoidRootPart
