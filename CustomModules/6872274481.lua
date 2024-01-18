@@ -2060,7 +2060,7 @@ do
                 local humrootpart = char:WaitForChild("HumanoidRootPart", 10)
                 local head = char:WaitForChild("Head", 10)
                 local hum = char:WaitForChild("Humanoid", 10)
-				print("hmm", plr, char)
+				print("hmm", plr, char, humrootpart, head, hum)
 				if entityLibrary.entityIds[plr.Name] ~= id then return end
                 if humrootpart and hum and head then
 					local childremoved
