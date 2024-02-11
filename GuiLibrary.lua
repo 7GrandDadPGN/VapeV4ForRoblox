@@ -481,8 +481,13 @@ if shared.VapeExecuted then
 		local touchedButton = false
 		touchButton.MouseButton1Down:Connect(function()
 			touchedButton = true
-			local touchtick2 = tick()
-			repeat task.wait() until (tick() - touchtick2) > 1 or not touchedButton
+			local touchtick = tick()
+			local touchposition = inputService:GetMouseLocation()
+			repeat 
+				task.wait()
+				if not touchedButton then break end
+				touchedButton = (inputService:GetMouseLocation() - touchposition).Magnitude < 3
+			until (tick() - touchtick) > 1 or not touchedButton
 			if touchedButton then 
 				local ind = table.find(GuiLibrary.MobileButtons, touchButton)
 				if ind then table.remove(GuiLibrary.MobileButtons, ind) end
@@ -5783,38 +5788,34 @@ if shared.VapeExecuted then
 				buttonapi["ToggleButton"](true) 
 			end)
 			if inputService.TouchEnabled then 
-				local touched = false
-				button.MouseButton1Down:Connect(function()
-					touched = true
-					local oldbuttonposition = button.AbsolutePosition
+				local touchedButton = false
+				modulebutton.MouseButton1Down:Connect(function()
+					touchedButton = true
 					local touchtick = tick()
+					local touchposition = inputService:GetMouseLocation()
 					repeat 
-						task.wait() 
-						if button.AbsolutePosition ~= oldbuttonposition then 
-							touched = false
-							break
-						end
-					until (tick() - touchtick) > 1 or not touched or not clickgui.Visible
-					if touched and clickgui.Visible then 
+						task.wait()
+						if not touchedButton then break end
+						touchedButton = (inputService:GetMouseLocation() - touchposition).Magnitude < 3
+					until (tick() - touchtick) > 1 or not touchedButton or not clickgui.Visible
+					if touchedButton and clickgui.Visible then 
 						clickgui.Visible = false
-						legitgui.Visible = not clickgui.Visible
-						--game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)
+						--runService:SetRobloxGuiFocused(guiService:GetErrorType() ~= Enum.ConnectionError.OK)
 						for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end	
 						local touchconnection
 						touchconnection = inputService.InputBegan:Connect(function(inputType)
 							if inputType.UserInputType == Enum.UserInputType.Touch then 
-								createMobileButton(buttonapi, inputType.Position)
+								createMobileButton(buttonapi, inputType.Position + Vector3.new(0, guiService:GetGuiInset().Y, 0))
 								clickgui.Visible = true
-								legitgui.Visible = not clickgui.Visible
-							--	game:GetService("RunService"):SetRobloxGuiFocused(clickgui.Visible and GuiLibrary["MainBlur"].Size ~= 0 or guiService:GetErrorType() ~= Enum.ConnectionError.OK)
-								for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end		
+								--runService:SetRobloxGuiFocused((clickgui.Visible or guiService:GetErrorType() ~= Enum.ConnectionError.OK) and mainapi.Blur.Enabled)
+								for _, mobileButton in pairs(GuiLibrary.MobileButtons) do mobileButton.Visible = not clickgui.Visible end	
 								touchconnection:Disconnect()
 							end
 						end)
 					end
 				end)
 				button.MouseButton1Up:Connect(function()
-					touched = false
+					touchedButton = false
 				end)
 			end
 			button.MouseEnter:Connect(function() 
