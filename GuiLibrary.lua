@@ -5789,7 +5789,7 @@ if shared.VapeExecuted then
 			end)
 			if inputService.TouchEnabled then 
 				local touchedButton = false
-				modulebutton.MouseButton1Down:Connect(function()
+				button.MouseButton1Down:Connect(function()
 					touchedButton = true
 					local touchtick = tick()
 					local touchposition = inputService:GetMouseLocation()
