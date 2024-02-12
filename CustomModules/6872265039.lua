@@ -1794,42 +1794,6 @@ runcode(function()
 end)
 
 runcode(function()
-	local SetEmote = {Enabled = false}
-	local SetEmoteList = {Value = ""}
-	local oldemote
-	local emo2 = {}
-	SetEmote = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "SetEmote",
-		Function = function(callback)
-			if callback then
-				oldemote = bedwars.ClientStoreHandler:getState().Locker.selectedSpray
-				bedwars.ClientStoreHandler:getState().Locker.selectedSpray = emo2[SetEmoteList.Value]
-			else
-				if oldemote then 
-					bedwars.ClientStoreHandler:getState().Locker.selectedSpray = oldemote
-					oldemote = nil 
-				end
-			end
-		end
-	})
-	local emo = {}
-	for i,v in pairs(bedwars.EmoteMeta) do 
-		table.insert(emo, v.name)
-		emo2[v.name] = i
-	end
-	table.sort(emo, function(a, b) return a:lower() < b:lower() end)
-	SetEmoteList = SetEmote.CreateDropdown({
-		Name = "Emote",
-		List = emo,
-		Function = function()
-			if SetEmote.Enabled then 
-				bedwars.ClientStoreHandler:getState().Locker.selectedSpray = emo2[SetEmoteList.Value]
-			end
-		end
-	})
-end)
-
-runcode(function()
 	local tpstring = shared.vapeoverlay or nil
 	local origtpstring = tpstring
 	local Overlay = GuiLibrary.CreateCustomWindow({
