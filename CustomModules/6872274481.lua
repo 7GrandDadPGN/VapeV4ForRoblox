@@ -2547,7 +2547,7 @@ runFunction(function()
 		Function = function(callback)
 			if callback then
 				if inputService.TouchEnabled then
-					pcall(function() lplr.PlayerGui.MobileUI["2"].Visible = false end)
+					pcall(function() lplr.PlayerGui.MobileUI["3"].Visible = false end)
 				end
 				oldSprintFunction = bedwars.SprintController.stopSprinting
 				bedwars.SprintController.stopSprinting = function(...)
@@ -2565,7 +2565,7 @@ runFunction(function()
 				end)
 			else
 				if inputService.TouchEnabled then
-					pcall(function() lplr.PlayerGui.MobileUI["2"].Visible = true end)
+					pcall(function() lplr.PlayerGui.MobileUI["3"].Visible = true end)
 				end
 				bedwars.SprintController.stopSprinting = oldSprintFunction
 				bedwars.SprintController:stopSprinting()
@@ -6985,7 +6985,7 @@ runFunction(function()
 					hotbaropeninv.render = function(self) 
 						return bedwars.Roact.createElement("TextButton", {Visible = false}, {})
 					end
-					debug.setconstant(hotbar.render, 52, 0.9975)
+					--[[debug.setconstant(hotbar.render, 52, 0.9975)
 					debug.setconstant(hotbar.render, 73, 100)
 					debug.setconstant(hotbar.render, 89, 1)
 					debug.setconstant(hotbar.render, 90, 0.04)
@@ -6996,7 +6996,7 @@ runFunction(function()
 					debug.setconstant(debug.getupvalue(hotbar.render, 11).render, 31, 0.175)
 					debug.setconstant(debug.getupvalue(hotbar.render, 11).render, 33, -0.101)
 					debug.setconstant(debug.getupvalue(hotbar.render, 18).render, 71, 0)
-					debug.setconstant(debug.getupvalue(hotbar.render, 18).tweenPosition, 16, 0)
+					debug.setconstant(debug.getupvalue(hotbar.render, 18).tweenPosition, 16, 0)]]
 					gametheme.topBarBGTransparency = 0.5
 					bedwars.TopBarController:mountHud()
 					game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, true)
