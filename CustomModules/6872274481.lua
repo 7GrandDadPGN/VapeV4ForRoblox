@@ -2547,7 +2547,7 @@ runFunction(function()
 		Function = function(callback)
 			if callback then
 				if inputService.TouchEnabled then
-					pcall(function() lplr.PlayerGui.MobileUI["3"].Visible = false end)
+					pcall(function() lplr.PlayerGui.MobileUI["4"].Visible = false end)
 				end
 				oldSprintFunction = bedwars.SprintController.stopSprinting
 				bedwars.SprintController.stopSprinting = function(...)
