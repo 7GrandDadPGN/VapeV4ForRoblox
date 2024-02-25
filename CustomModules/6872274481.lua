@@ -5672,13 +5672,13 @@ runFunction(function()
 					debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 23, "raycast")
 					debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, bedwars.QueryUtil)
 				end
-				debug.setconstant(bedwars.QueueCard.render, 9, 0.1)
+				--debug.setconstant(bedwars.QueueCard.render, 9, 0.1)
 			else
 				if GameFixerHit.Enabled then 
 					debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 23, "Raycast")
 					debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, workspace)
 				end
-				debug.setconstant(bedwars.QueueCard.render, 9, 0.01)
+			--	debug.setconstant(bedwars.QueueCard.render, 9, 0.01)
 			end
 		end,
 		HoverText = "Fixes game bugs"
