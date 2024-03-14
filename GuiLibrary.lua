@@ -802,7 +802,8 @@ if shared.VapeExecuted then
 				if obj then 
 					if v.Type == "OptionsButton" then
 						if v["Enabled"] and not obj["Api"]["Enabled"] then
-							obj["Api"]["ToggleButton"](false)
+							local suc, res = pcall(function() obj["Api"]["ToggleButton"](false) end)
+							if not suc then print(res) end
 						end
 						if v["Keybind"] ~= "" then
 							obj["Api"]["SetKeybind"](v["Keybind"])
@@ -3949,7 +3950,7 @@ if shared.VapeExecuted then
 					bindimg.ImageColor3 = Color3.fromRGB(88, 88, 88)
 				end
 				argstablemain["Function"](buttonapi["Enabled"])
---				GuiLibrary["UpdateHudEvent"]:Fire()
+				GuiLibrary["UpdateHudEvent"]:Fire()
 			end
 
 			buttonapi["ExpandToggle"] = function()
