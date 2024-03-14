@@ -3972,8 +3972,8 @@ runFunction(function()
 					killaurabox.Parent = GuiLibrary.MainGui
 				end
 				killauraboxes[i] = killaurabox
-			end
-		end]]
+			end]]
+		end
 	})
 	killauratargethighlight.Object.BorderSizePixel = 0
 	killauratargethighlight.Object.BackgroundTransparency = 0
