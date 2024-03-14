@@ -3949,7 +3949,7 @@ runFunction(function()
 	killauratargethighlight = Killaura.CreateToggle({
 		Name = "Use New Highlight",
 		Function = function(callback) 
-			for i,v in pairs(killauraboxes) do 
+			for i, v in pairs(killauraboxes) do 
 				v:Remove()
 			end
 			for i = 1, 10 do 
