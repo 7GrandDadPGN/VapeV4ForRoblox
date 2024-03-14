@@ -3949,7 +3949,7 @@ if shared.VapeExecuted then
 					bindimg.ImageColor3 = Color3.fromRGB(88, 88, 88)
 				end
 				argstablemain["Function"](buttonapi["Enabled"])
-				GuiLibrary["UpdateHudEvent"]:Fire()
+--				GuiLibrary["UpdateHudEvent"]:Fire()
 			end
 
 			buttonapi["ExpandToggle"] = function()
