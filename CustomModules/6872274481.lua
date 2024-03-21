@@ -5550,25 +5550,9 @@ runFunction(function()
 		Name = "GameFixer",
 		Function = function(callback)
 			debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 23, callback and 'raycast' or 'Raycast')
-            debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, callback and bedwars.QueryUtil or workspace)
+        	debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, callback and bedwars.QueryUtil or workspace)
 		end,
 		HoverText = "Fixes game bugs"
-	})
-	GameFixerHit = GameFixer.CreateToggle({
-		Name = "Hit Fix",
-		Function = function(callback)
-			if GameFixer.Enabled then
-				if callback then 
-					debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 23, "raycast")
-					debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, bedwars.QueryUtil)
-				else
-					debug.setconstant(bedwars.SwordController.swingSwordAtMouse, 23, "Raycast")
-					debug.setupvalue(bedwars.SwordController.swingSwordAtMouse, 4, workspace)
-				end
-			end
-		end,
-		HoverText = "Fixes the raycast function used for extra reach",
-		Default = true
 	})
 end)
 
