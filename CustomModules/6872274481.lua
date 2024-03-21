@@ -8111,7 +8111,7 @@ runFunction(function()
 									local itemdrops = collectionService:GetTagged(lplr.Name..':pinata')
 									for i,v in pairs(itemdrops) do
 										if entityLibrary.isAlive and getItem('candy') then
-											bedwars.Client:Get(bedwars.PinataRemote):CallServer(v) 
+											bedwars.ClientHandler:Get(bedwars.PinataRemote):CallServer(v) 
 										end
 									end
 								until (not AutoKit.Enabled)
