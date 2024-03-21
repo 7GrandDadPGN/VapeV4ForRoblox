@@ -3538,7 +3538,7 @@ runFunction(function()
 			if not inputService:IsMouseButtonPressed(0) then return false end
 		end
 		if killauragui.Enabled then
-			if bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then continue end
+			if bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then return false end
 		end
 		local sword = killaurahandcheck.Enabled and bedwarsStore.localHand or getSword()
 		if not sword or not sword.tool then return false end
