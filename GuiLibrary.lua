@@ -674,7 +674,7 @@ if shared.VapeExecuted then
 					end
 				end
 				if v.Type == "GUIKeybind" then
-					if (v.Value ~= "RightShift") then 
+					if (v.Value and v.Value ~= "RightShift") then 
 						if shared.VapeButton then shared.VapeButton:Destroy() end
 					end
 					GuiLibrary["GUIKeybind"] = v["Value"]
