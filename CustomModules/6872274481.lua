@@ -8826,7 +8826,7 @@ runFunction(function()
 		HoverText = 'average bw dev iq'
 	})
 	local list = {}
-	for i, v in require(replicatedStorage.TS.match.mechanics["match-mechanic-types"]).MatchMechanic do table.insert(list, v) end
+	for i, v in require(replicatedStorageService.TS.match.mechanics["match-mechanic-types"]).MatchMechanic do table.insert(list, v) end
 	SetMechanicList = SetMechanic.CreateDropdown({
 		Name = 'Mechanic',
 		List = list,
