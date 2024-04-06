@@ -496,7 +496,7 @@ run(function()
 		whitelist.loaded = true
 		if not first or whitelist.textdata ~= whitelist.olddata then
 			if not first then
-				whitelist.olddata = isfile('newvape/profiles/whitelist.json') and readfile('newvape/profiles/whitelist.json') or nil
+				whitelist.olddata = isfile('vape/profiles/whitelist.json') and readfile('vape/profiles/whitelist.json') or nil
 			end
 			whitelist.data = game:GetService('HttpService'):JSONDecode(whitelist.textdata)
 			whitelist.localprio = whitelist:get(lplr)
@@ -528,7 +528,7 @@ run(function()
 					end
 				end
 				whitelist.olddata = whitelist.textdata
-				pcall(function() writefile('newvape/profiles/whitelist.json', whitelist.textdata) end)
+				pcall(function() writefile('vape/profiles/whitelist.json', whitelist.textdata) end)
 			end
 
 			if whitelist.data.KillVape then
