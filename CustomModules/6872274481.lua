@@ -8797,7 +8797,7 @@ runFunction(function()
 	local Disabler = {Enabled = false}
 
 	Disabler = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = 'Disabler',
+		Name = 'AnticheatDisabler',
 		Function = function(callback)
 			if callback then
 				task.spawn(function()
