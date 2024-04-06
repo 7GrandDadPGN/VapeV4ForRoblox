@@ -8802,7 +8802,7 @@ runFunction(function()
 			if callback then
 				task.spawn(function()
 					repeat
-						bedwars.Client:Get('RocketImpulse'):CallServer({velocity = Vector3.new(math.huge, math.huge, math.huge)})
+						bedwars.ClientHandler:Get('RocketImpulse'):CallServer({velocity = Vector3.new(math.huge, math.huge, math.huge)})
 						task.wait(0.1)
 					until (not Disabler.Enabled)
 				end)
@@ -8820,7 +8820,7 @@ runFunction(function()
 		Name = 'SetMechanic',
 		Function = function(callback)
 			if callback and store.matchState == 0 then
-				bedwars.Client:GetNamespace('CustomMatches'):Get('SetMatchMechanic'):CallServerAsync(SetMechanicList.Value)
+				bedwars.ClientHandler:GetNamespace('CustomMatches'):Get('SetMatchMechanic'):CallServerAsync(SetMechanicList.Value)
 			end
 		end,
 		HoverText = 'average bw dev iq'
