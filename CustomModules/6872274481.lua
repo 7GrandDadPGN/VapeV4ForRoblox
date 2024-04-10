@@ -7352,7 +7352,7 @@ run(function()
 	AutoForgeWeapon = AutoForge.CreateDropdown({
 		Name = "Weapon",
 		Function = function() end,
-		List = {"Sword", "Dagger", "Scythe", "Great_Hammer"}
+		List = {"Sword", "Dagger", "Scythe", "Great_Hammer", "Gauntlets"}
 	})
 	AutoForgeArmor = AutoForge.CreateToggle({
 		Name = "Armor",
