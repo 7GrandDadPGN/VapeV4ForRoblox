@@ -4824,8 +4824,10 @@ run(function()
 		end
 	end
 	local function refreshAdornee(v)
-		local chest = v.Adornee.ChestFolderValue.Value
-        local chestitems = chest and chest:GetChildren() or {}
+		local chest = v:FindFirstChild("ChestFolderValue")
+		chest = chest and chest.Value or nil
+		if not chest then return end
+		local chestitems = chest and chest:GetChildren() or {}
 		for i2,v2 in pairs(v.Frame:GetChildren()) do
 			if v2:IsA("ImageLabel") then
 				v2:Remove()
@@ -4854,6 +4856,9 @@ run(function()
 
 	local function chestfunc(v)
 		task.spawn(function()
+			local chest = v:FindFirstChild("ChestFolderValue")
+			chest = chest and chest.Value or nil
+			if not chest then return end
 			local billboard = Instance.new("BillboardGui")
 			billboard.Parent = ChestESPFolder
 			billboard.Name = "chest"
@@ -4878,7 +4883,6 @@ run(function()
 			local uicorner = Instance.new("UICorner")
 			uicorner.CornerRadius = UDim.new(0, 4)
 			uicorner.Parent = frame
-			local chest = v:WaitForChild("ChestFolderValue").Value
 			if chest then
 				table.insert(ChestESP.Connections, chest.ChildAdded:Connect(function(item)
 					if table.find(ChestESPList.ObjectList, item.Name) or nearchestitem(item.Name) then
