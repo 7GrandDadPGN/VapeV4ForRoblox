@@ -7848,26 +7848,6 @@ run(function()
 end)
 
 run(function()
-	local OpenEnderchest = {Enabled = false}
-	OpenEnderchest = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "OpenEnderchest",
-		Function = function(callback)
-			if callback then
-				local echest = replicatedStorage.Inventories:FindFirstChild(lplr.Name.."_personal")
-				if echest then
-					bedwars.AppController:openApp("ChestApp", {})
-					bedwars.ChestController:openChest(echest)
-				else
-					warningNotification("OpenEnderchest", "Enderchest not found", 5)
-				end
-				OpenEnderchest.ToggleButton(false)
-			end
-		end,
-		HoverText = "Opens the enderchest"
-	})
-end)
-
-run(function()
 	local PickupRangeRange = {Value = 1}
 	local PickupRange = {Enabled = false}
 	PickupRange = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
