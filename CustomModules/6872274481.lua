@@ -4638,6 +4638,7 @@ run(function()
 					BedFolder.Parent = BedESPFolder
 					BedESPTable[bed] = BedFolder
 					for bedespnumber, bedesppart in pairs(bed:GetChildren()) do
+						if bedesppart.Name ~= 'Bed' then continue end
 						local boxhandle = Instance.new("BoxHandleAdornment")
 						boxhandle.Size = bedesppart.Size + Vector3.new(.01, .01, .01)
 						boxhandle.AlwaysOnTop = true
