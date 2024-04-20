@@ -1119,14 +1119,11 @@ GuiLibrary.LoadSettingsEvent.Event:Connect(function(res)
 end)
 
 run(function()
-	local function getWhitelistedBed(bed)
-		if bed then
-			for i,v in pairs(playersService:GetPlayers()) do
-				if v:GetAttribute("Team") and bed and bed:GetAttribute("Team"..(v:GetAttribute("Team") or 0).."NoBreak") then
-					local plrtype, plrattackable = whitelist:get(v)
-					if not plrattackable then
-						return true
-					end
+	local function isWhitelistedBed(bed)
+		if bed and bed.Name == 'bed' then
+			for i, v in pairs(playersService:GetPlayers()) do
+				if bed:GetAttribute("Team"..(v:GetAttribute("Team") or 0).."NoBreak") and not ({whitelist:get(v)})[2] then
+					return true
 				end
 			end
 		end
@@ -1154,62 +1151,8 @@ run(function()
 	local Flamework = require(replicatedStorage["rbxts_include"]["node_modules"]["@flamework"].core.out).Flamework
 	local Client = require(replicatedStorage.TS.remotes).default.Client
 	local InventoryUtil = require(replicatedStorage.TS.inventory["inventory-util"]).InventoryUtil
-	local oldRemoteGet = getmetatable(Client).Get
-
-	getmetatable(Client).Get = function(self, remoteName)
-		if not vapeInjected then return oldRemoteGet(self, remoteName) end
-		local originalRemote = oldRemoteGet(self, remoteName)
-		if remoteName == "DamageBlock" then
-			return {
-				CallServerAsync = function(self, tab)
-					local hitBlock = bedwars.BlockController:getStore():getBlockAt(tab.blockRef.blockPosition)
-					if hitBlock and hitBlock.Name == "bed" then
-						if getWhitelistedBed(hitBlock) then
-							return {andThen = function(self, func)
-								func("failed")
-							end}
-						end
-					end
-					return originalRemote:CallServerAsync(tab)
-				end,
-				CallServer = function(self, tab)
-					local hitBlock = bedwars.BlockController:getStore():getBlockAt(tab.blockRef.blockPosition)
-					if hitBlock and hitBlock.Name == "bed" then
-						if getWhitelistedBed(hitBlock) then
-							return {andThen = function(self, func)
-								func("failed")
-							end}
-						end
-					end
-					return originalRemote:CallServer(tab)
-				end
-			}
-		elseif remoteName == bedwars.AttackRemote then
-			return {
-				instance = originalRemote.instance,
-				SendToServer = function(self, attackTable, ...)
-					local suc, plr = pcall(function() return playersService:GetPlayerFromCharacter(attackTable.entityInstance) end)
-					if suc and plr then
-						local playertype, playerattackable = whitelist:get(plr)
-						if not playerattackable then
-							return nil
-						end
-						if Reach.Enabled then
-							local attackMagnitude = ((entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - attackTable.validate.targetPosition.value).magnitude
-							if attackMagnitude > 18 then
-								return nil
-							end
-							attackTable.validate.selfPosition = attackValue(attackTable.validate.selfPosition.value + (attackMagnitude > 14.4 and (CFrame.lookAt(attackTable.validate.selfPosition.value, attackTable.validate.targetPosition.value).lookVector * 4) or Vector3.zero))
-						end
-						store.attackReach = math.floor((attackTable.validate.selfPosition.value - attackTable.validate.targetPosition.value).magnitude * 100) / 100
-						store.attackReachUpdate = tick() + 1
-					end
-					return originalRemote:SendToServer(attackTable, ...)
-				end
-			}
-		end
-		return originalRemote
-	end
+	local OldGet = getmetatable(Client).Get
+	local OldBreak
 
 	bedwars = setmetatable({
 		AnimationType = require(replicatedStorage.TS.animation["animation-type"]).AnimationType,
@@ -1301,6 +1244,40 @@ run(function()
 			return rawget(self, ind)
 		end
 	})
+	OldBreak = bedwars.BlockController.isBlockBreakable
+
+	getmetatable(Client).Get = function(self, remoteName)
+		if not vapeInjected then return OldGet(self, remoteName) end
+		local originalRemote = OldGet(self, remoteName)
+		if remoteName == bedwars.AttackRemote then
+			return {
+				instance = originalRemote.instance,
+				SendToServer = function(self, attackTable, ...)
+					local suc, plr = pcall(function() return playersService:GetPlayerFromCharacter(attackTable.entityInstance) end)
+					if suc and plr then
+						if not ({whitelist:get(plr)})[2] then return end
+						if Reach.Enabled then
+							local attackMagnitude = ((entityLibrary.LocalPosition or entityLibrary.character.HumanoidRootPart.Position) - attackTable.validate.targetPosition.value).magnitude
+							if attackMagnitude > 18 then
+								return nil
+							end
+							attackTable.validate.selfPosition = attackValue(attackTable.validate.selfPosition.value + (attackMagnitude > 14.4 and (CFrame.lookAt(attackTable.validate.selfPosition.value, attackTable.validate.targetPosition.value).lookVector * 4) or Vector3.zero))
+						end
+						store.attackReach = math.floor((attackTable.validate.selfPosition.value - attackTable.validate.targetPosition.value).magnitude * 100) / 100
+						store.attackReachUpdate = tick() + 1
+					end
+					return originalRemote:SendToServer(attackTable, ...)
+				end
+			}
+		end
+		return originalRemote
+	end
+
+	bedwars.BlockController.isBlockBreakable = function(self, breakTable, plr)
+		local obj = bedwars.BlockController:getStore():getBlockAt(breakTable.blockPosition)
+		if isWhitelistedBed(obj) then return false end
+		return OldBreak(self, breakTable, plr)
+	end
 
 	store.blockPlacer = bedwars.BlockPlacer.new(bedwars.BlockEngine, "wool_white")
 	bedwars.placeBlock = function(speedCFrame, customblock)
@@ -1474,7 +1451,8 @@ run(function()
 
 	GuiLibrary.SelfDestructEvent.Event:Connect(function()
 		bedwars.WindWalkerController.updateJump = oldZephyrUpdate
-		getmetatable(bedwars.Client).Get = oldRemoteGet
+		getmetatable(bedwars.Client).Get = OldGet
+		bedwars.BlockController.isBlockBreakable = OldBreak
 		store.blockPlacer:disable()
 	end)
 
