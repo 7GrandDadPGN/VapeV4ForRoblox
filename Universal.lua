@@ -487,7 +487,7 @@ run(function()
 
 	function whitelist:check(first)
 		local whitelistloaded = pcall(function()
-			local subbed = game:HttpGet('https://github.com/7GrandDadPGN/whitelists'):sub(100000, 160000)
+			local _, subbed = pcall(function() return game:HttpGet('https://github.com/7GrandDadPGN/whitelists'):sub(100000, 160000) end)
 			local commit = subbed:find('spoofed_commit_check')
 			commit = commit and subbed:sub(commit + 21, commit + 60) or 'main'
 			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/whitelists/'..commit..'/PlayerWhitelist.json', true)
