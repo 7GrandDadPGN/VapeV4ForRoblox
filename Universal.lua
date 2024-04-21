@@ -486,12 +486,13 @@ run(function()
 	end
 
 	function whitelist:check(first)
-		local whitelistloaded = pcall(function()
+		local whitelistloaded, err = pcall(function()
 			local _, subbed = pcall(function() return game:HttpGet('https://github.com/7GrandDadPGN/whitelists'):sub(100000, 160000) end)
 			local commit = subbed:find('spoofed_commit_check')
 			commit = commit and subbed:sub(commit + 21, commit + 60) or 'main'
 			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/whitelists/'..commit..'/PlayerWhitelist.json', true)
 		end)
+		if not whitelistloaded then warningNotification('Vape', 'Whitelist Error, Please contact vaperoblox on discord. '..err, 30) end
 		if not whitelistloaded or not sha or not whitelist.get then return true end
 		whitelist.loaded = true
 		if not first or whitelist.textdata ~= whitelist.olddata then
@@ -546,7 +547,8 @@ run(function()
 	whitelist.commands = {
 		byfron = function()
 			task.spawn(function()
-				if vape.ThreadFix and setthreadcaps then setthreadcaps(8) end
+				if setthreadcaps then setthreadcaps(8) end
+				if setthreadidentity then setthreadidentity(8) end
 				local UIBlox = getrenv().require(game:GetService('CorePackages').UIBlox)
 				local Roact = getrenv().require(game:GetService('CorePackages').Roact)
 				UIBlox.init(getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppUIBloxConfig))
@@ -633,7 +635,10 @@ run(function()
 			task.spawn(function() lplr:Kick(table.concat(args, ' ')) end)
 		end,
 		kill = function()
-			entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+			if entityLibrary.isAlive then
+				entityLibrary.character.Humanoid:ChangeState(Enum.HumanoidStateType.Dead)
+				entityLibrary.character.Humanoid.Health = 0
+			end
 		end,
 		reveal = function(args)
 			task.delay(0.1, function()
@@ -650,13 +655,17 @@ run(function()
 		toggle = function(sender, args)
 			if #args < 1 then return end
 			if args[1]:lower() == 'all' then
-				for i, v in vape.Modules do
-					if i ~= 'Panic' and i ~= 'ServerHop' then v:ToggleButton(false) end
+				for i, v in GuiLibrary.ObjectsThatCanBeSaved do
+					local newname = i:gsub('OptionsButton', '')
+					if v.Type == "OptionsButton" and newname ~= 'Panic' then
+						v.Api.ToggleButton()
+					end
 				end
 			else
-				for i, v in vape.Modules do
-					if i:lower() == args[1]:lower() then
-						v:ToggleButton(false)
+				for i, v in GuiLibrary.ObjectsThatCanBeSaved do
+					local newname = i:gsub('OptionsButton', '')
+					if v.Type == "OptionsButton" and newname:lower() == args[1]:lower() then
+						v.Api.ToggleButton()
 						break
 					end
 				end
@@ -676,7 +685,7 @@ run(function()
 		end,
 		void = function()
 			if entityLibrary.isAlive then
-				entityLibrary.character.RootPart.CFrame = entityLibrary.character.RootPart.CFrame + Vector3.new(0, -1000, 0)
+				entityLibrary.character.HumanoidRootPart.CFrame = entityLibrary.character.HumanoidRootPart.CFrame + Vector3.new(0, -1000, 0)
 			end
 		end
 	}
