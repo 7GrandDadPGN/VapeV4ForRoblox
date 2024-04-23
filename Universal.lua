@@ -470,13 +470,13 @@ run(function()
 		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
 			pcall(function()
 				for i, v in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent) do
-					if table.find(debug.getconstants(v.Function), 'UpdateMessagePostedInChannel') then
+					if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessagePostedInChannel') then
 						whitelist:oldchat(v.Function)
 						break
 					end
 				end
 				for i, v in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent) do
-					if table.find(debug.getconstants(v.Function), 'UpdateMessageFiltered') then
+					if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessageFiltered') then
 						whitelist:oldchat(v.Function)
 						break
 					end
