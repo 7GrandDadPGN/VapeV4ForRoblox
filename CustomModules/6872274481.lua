@@ -7494,7 +7494,11 @@ run(function()
 						if custommsg then
 							custommsg = custommsg:gsub("<name>", (bedTable.player.DisplayName or bedTable.player.Name))
 						end
-						textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+						if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                            textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+                        else
+                            replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, 'All')
+                        end
 					elseif AutoToxicBedBreak.Enabled and bedTable.player.UserId == lplr.UserId then
 						local custommsg = #AutoToxicPhrases7.ObjectList > 0 and AutoToxicPhrases7.ObjectList[math.random(1, #AutoToxicPhrases7.ObjectList)] or "nice bed <teamname> | vxpe on top"
 						if custommsg then
@@ -7502,7 +7506,11 @@ run(function()
 							local teamname = team and team.displayName:lower() or "white"
 							custommsg = custommsg:gsub("<teamname>", teamname)
 						end
-						textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+						if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                            textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+                        else
+                            replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, 'All')
+                        end
 					end
 				end))
 				table.insert(AutoToxic.Connections, vapeEvents.EntityDeathEvent.Event:Connect(function(deathTable)
@@ -7517,7 +7525,11 @@ run(function()
 								if custommsg then
 									custommsg = custommsg:gsub("<name>", (killer.DisplayName or killer.Name))
 								end
-								textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+								if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+									textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+								else
+									replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, 'All')
+								end
 							end
 						else
 							if killer == lplr and AutoToxicFinalKill.Enabled then
@@ -7530,7 +7542,11 @@ run(function()
 								if custommsg then
 									custommsg = custommsg:gsub("<name>", (killed.DisplayName or killed.Name))
 								end
-								textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+								if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+									textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+								else
+									replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, 'All')
+								end
 							end
 						end
 					end
@@ -7545,7 +7561,12 @@ run(function()
 							end
 						end
 						if AutoToxicWin.Enabled then
-							textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(#AutoToxicPhrases.ObjectList > 0 and AutoToxicPhrases.ObjectList[math.random(1, #AutoToxicPhrases.ObjectList)] or "EZ L TRASH KIDS | vxpe on top")
+							local custommsg = #AutoToxicPhrases.ObjectList > 0 and AutoToxicPhrases.ObjectList[math.random(1, #AutoToxicPhrases.ObjectList)] or "EZ L TRASH KIDS | vxpe on top"
+							if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+								textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+							else
+								replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, 'All')
+							end
 						end
 					end
 				end))
@@ -7556,7 +7577,11 @@ run(function()
 							custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 						end
 						local msg = custommsg or "Imagine lagbacking L "..(plr.DisplayName or plr.Name).." | vxpe on top"
-						textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(msg)
+						if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+							textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(msg)
+						else
+							replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, 'All')
+						end
 					end
 				end))
 				table.insert(AutoToxic.Connections, textChatService.MessageReceived:Connect(function(tab)
@@ -7572,7 +7597,11 @@ run(function()
 									custommsg = custommsg:gsub("<name>", (plr.DisplayName or plr.Name))
 								end
 								local msg = custommsg or "I don't care about the fact that I'm hacking, I care about you dying in a block game. L "..(plr.DisplayName or plr.Name).." | vxpe on top"
-								textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(msg)
+								if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+									textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(msg)
+								else
+									replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, 'All')
+								end
 							end
 						end
 					end
