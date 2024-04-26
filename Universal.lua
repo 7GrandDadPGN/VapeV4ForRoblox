@@ -489,10 +489,10 @@ run(function()
 		local whitelistloaded, err = pcall(function()
 			local _, subbed = pcall(function() return game:HttpGet('https://github.com/7GrandDadPGN/whitelists'):sub(100000, 160000) end)
 			local commit = subbed:find('spoofed_commit_check')
-			commit = commit and subbed:sub(commit + 21, commit + 60) or 'main'
+			commit = commit and subbed:sub(commit + 21, commit + 60) or nil
+			commit = commit and #commit == 40 and commit or 'main'
 			whitelist.textdata = game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/whitelists/'..commit..'/PlayerWhitelist.json', true)
 		end)
-		if not whitelistloaded then warningNotification('Vape', 'Whitelist Error, Please contact vaperoblox on discord. '..err, 30) end
 		if not whitelistloaded or not sha or not whitelist.get then return true end
 		whitelist.loaded = true
 		if not first or whitelist.textdata ~= whitelist.olddata then
