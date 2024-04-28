@@ -443,7 +443,7 @@ run(function()
 		if exp then
 			local bubblechat = exp:WaitForChild('bubbleChat', 5)
 			if bubblechat then
-				table.insert(vape.Connections, bubblechat.DescendantAdded:Connect(function(newbubble)
+				table.insert(vapeConnections, bubblechat.DescendantAdded:Connect(function(newbubble)
 					if newbubble:IsA('TextLabel') and newbubble.Text:find('helloimusinginhaler') then
 						newbubble.Parent.Parent.Visible = false
 					end
@@ -452,7 +452,7 @@ run(function()
 		end
 		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 			if exp then
-				table.insert(vape.Connections, exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
+				table.insert(vapeConnections, exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
 					local plr = playersService:GetPlayerByUserId(tonumber(obj.Name:split('-')[1]) or 0)
 					obj = obj:FindFirstChild('TextMessage', true)
 					if obj then
