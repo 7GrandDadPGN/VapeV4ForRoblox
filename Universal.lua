@@ -547,8 +547,8 @@ run(function()
 	whitelist.commands = {
 		byfron = function()
 			task.spawn(function()
-				if setthreadcaps then setthreadcaps(8) end
 				if setthreadidentity then setthreadidentity(8) end
+				if setthreadcaps then setthreadcaps(8) end
 				local UIBlox = getrenv().require(game:GetService('CorePackages').UIBlox)
 				local Roact = getrenv().require(game:GetService('CorePackages').Roact)
 				UIBlox.init(getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppUIBloxConfig))
@@ -558,13 +558,13 @@ run(function()
 				local tLocalization = getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppLocales).Localization
 				local a = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Localization).LocalizationProvider
 				lplr.PlayerGui:ClearAllChildren()
-				vape.gui.Enabled = false
+				GuiLibrary.MainGui.Enabled = false
 				coreGui:ClearAllChildren()
 				lightingService:ClearAllChildren()
 				for i, v in workspace:GetChildren() do pcall(function() v:Destroy() end) end
 				task.wait(0.2)
 				lplr.kick(lplr)
-				guiService:ClearError()
+				game:GetService('GuiService'):ClearError()
 				task.wait(2)
 				local gui = Instance.new('ScreenGui')
 				gui.IgnoreGuiInset = true
