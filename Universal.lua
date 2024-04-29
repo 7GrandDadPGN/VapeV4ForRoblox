@@ -440,32 +440,24 @@ run(function()
 		if self.hooked then return end
 		self.hooked = true
 		local exp = coreGui:FindFirstChild('ExperienceChat')
-		if exp then
-			local bubblechat = exp:WaitForChild('bubbleChat', 5)
-			if bubblechat then
-				table.insert(vapeConnections, bubblechat.DescendantAdded:Connect(function(newbubble)
-					if newbubble:IsA('TextLabel') and newbubble.Text:find('helloimusinginhaler') then
-						newbubble.Parent.Parent.Visible = false
-					end
-				end))
-			end
-		end
 		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 			if exp then
-				table.insert(vapeConnections, exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
-					local plr = playersService:GetPlayerByUserId(tonumber(obj.Name:split('-')[1]) or 0)
-					obj = obj:FindFirstChild('TextMessage', true)
-					if obj then
-						if plr then
-							self:newchat(obj, plr, true)
-							obj:GetPropertyChangedSignal('Text'):Wait()
-							self:newchat(obj, plr)
+				if exp:WaitForChild('appLayout', 5) then
+					table.insert(vapeConnections, exp:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(obj)
+						local plr = playersService:GetPlayerByUserId(tonumber(obj.Name:split('-')[1]) or 0)
+						obj = obj:FindFirstChild('TextMessage', true)
+						if obj then
+							if plr then
+								self:newchat(obj, plr, true)
+								obj:GetPropertyChangedSignal('Text'):Wait()
+								self:newchat(obj, plr)
+							end
+							if obj.ContentText:sub(1, 35) == 'You are now privately chatting with' then
+								obj.Visible = false
+							end
 						end
-						if obj.ContentText:sub(1, 35) == 'You are now privately chatting with' then
-							obj.Visible = false
-						end
-					end
-				end))
+					end))
+				end
 			end
 		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
 			pcall(function()
@@ -482,6 +474,16 @@ run(function()
 					end
 				end
 			end)
+		end
+		if exp then
+			local bubblechat = exp:WaitForChild('bubbleChat', 5)
+			if bubblechat then
+				table.insert(vapeConnections, bubblechat.DescendantAdded:Connect(function(newbubble)
+					if newbubble:IsA('TextLabel') and newbubble.Text:find('helloimusinginhaler') then
+						newbubble.Parent.Parent.Visible = false
+					end
+				end))
+			end
 		end
 	end
 
@@ -554,7 +556,7 @@ run(function()
 				UIBlox.init(getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppUIBloxConfig))
 				local auth = getrenv().require(coreGui.RobloxGui.Modules.LuaApp.Components.Moderation.ModerationPrompt)
 				local darktheme = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Style).Themes.DarkTheme
-				local gotham = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Style).Fonts.Gotham
+				local buildersans = getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.App.Style.Fonts.FontLoader):loadFont()
 				local tLocalization = getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppLocales).Localization
 				local a = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Localization).LocalizationProvider
 				lplr.PlayerGui:ClearAllChildren()
@@ -599,7 +601,7 @@ run(function()
 						}, {Roact.createElement(UIBlox.Style.Provider, {
 								style = {
 									Theme = darktheme,
-									Font = gotham
+									Font = buildersans
 								},
 							}, {e})}))
 					Roact.mount(screengui, coreGui)
