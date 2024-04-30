@@ -556,30 +556,29 @@ run(function()
 				UIBlox.init(getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppUIBloxConfig))
 				local auth = getrenv().require(coreGui.RobloxGui.Modules.LuaApp.Components.Moderation.ModerationPrompt)
 				local darktheme = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Style).Themes.DarkTheme
-				local buildersans = getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.App.Style.Fonts.FontLoader):loadFont()
+				local fonttokens = getrenv().require(game:GetService("CorePackages").Packages._Index.UIBlox.UIBlox.App.Style.Tokens).getTokens('Desktop', 'Dark', true)
+				local buildersans = getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.App.Style.Fonts.FontLoader).new(true, fonttokens):loadFont()
 				local tLocalization = getrenv().require(game:GetService('CorePackages').Workspace.Packages.RobloxAppLocales).Localization
-				local a = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Localization).LocalizationProvider
+				local localProvider = getrenv().require(game:GetService('CorePackages').Workspace.Packages.Localization).LocalizationProvider
 				lplr.PlayerGui:ClearAllChildren()
 				GuiLibrary.MainGui.Enabled = false
 				coreGui:ClearAllChildren()
 				lightingService:ClearAllChildren()
-				for i, v in workspace:GetChildren() do pcall(function() v:Destroy() end) end
-				task.wait(0.2)
+				for _, v in workspace:GetChildren() do pcall(function() v:Destroy() end) end
 				lplr.kick(lplr)
 				game:GetService('GuiService'):ClearError()
-				task.wait(2)
 				local gui = Instance.new('ScreenGui')
 				gui.IgnoreGuiInset = true
 				gui.Parent = coreGui
 				local frame = Instance.new('ImageLabel')
 				frame.BorderSizePixel = 0
 				frame.Size = UDim2.fromScale(1, 1)
-				frame.BackgroundColor3 = Color3.new(1, 1, 1)
+				frame.BackgroundColor3 = Color3.fromRGB(224, 223, 225)
 				frame.ScaleType = Enum.ScaleType.Crop
 				frame.Parent = gui
-				task.delay(0.1, function() frame.Image = 'rbxasset://textures/ui/LuaApp/graphic/Auth/GridBackground.jpg' end)
-				task.delay(2, function()
-					local e = Roact.createElement(auth, {
+				task.delay(0.3, function() frame.Image = 'rbxasset://textures/ui/LuaApp/graphic/Auth/GridBackground.jpg' end)
+				task.delay(0.6, function()
+					local modPrompt = Roact.createElement(auth, {
 						style = {},
 						screenSize = gameCamera.ViewportSize or Vector2.new(1920, 1080),
 						moderationDetails = {
@@ -596,14 +595,14 @@ run(function()
 						logoutCallback = function() end,
 						globalGuiInset = {top = 0}
 					})
-					local screengui = Roact.createElement('ScreenGui', {}, Roact.createElement(a, {
-							localization = tLocalization.new('en-us')
-						}, {Roact.createElement(UIBlox.Style.Provider, {
-								style = {
-									Theme = darktheme,
-									Font = buildersans
-								},
-							}, {e})}))
+					local screengui = Roact.createElement(localProvider, {
+						localization = tLocalization.new('en-us')
+					}, {Roact.createElement(UIBlox.Style.Provider, {
+						style = {
+							Theme = darktheme,
+							Font = buildersans
+						},
+					}, {modPrompt})})
 					Roact.mount(screengui, coreGui)
 				end)
 			end)
