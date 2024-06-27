@@ -85,7 +85,7 @@ local vapeAssetTable = {
 	["vape/assets/VapeLogo2.png"] = "rbxassetid://13350876307",
 	["vape/assets/VapeLogo4.png"] = "rbxassetid://13350877564"
 }
-if inputService:GetPlatform() ~= Enum.Platform.Windows then 
+if inputService:GetPlatform() ~= Enum.Platform.Windows then
 	--mobile exploit fix
 	getgenv().getsynasset = nil
 	getgenv().getcustomasset = nil
@@ -107,15 +107,15 @@ local function displayErrorPopup(text, funclist)
 	local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 	prompt:setErrorTitle("Vape")
 	local funcs
-	if funclist then 
+	if funclist then
 		funcs = {}
 		local num = 0
-		for i,v in pairs(funclist) do 
+		for i,v in pairs(funclist) do
 			num = num + 1
 			table.insert(funcs, {
 				Text = i,
-				Callback = function() 
-					prompt:_close() 
+				Callback = function()
+					prompt:_close()
 					v()
 				end,
 				Primary = num == #funclist
@@ -124,8 +124,8 @@ local function displayErrorPopup(text, funclist)
 	end
 	prompt:updateButtons(funcs or {{
 		Text = "OK",
-		Callback = function() 
-			prompt:_close() 
+		Callback = function()
+			prompt:_close()
 		end,
 		Primary = true
 	}}, 'Default')
@@ -138,7 +138,7 @@ local function vapeGithubRequest(scripturl)
 	if not isfile("vape/"..scripturl) then
 		local suc, res
 		task.delay(15, function()
-			if not res and not errorPopupShown then 
+			if not res and not errorPopupShown then
 				errorPopupShown = true
 				displayErrorPopup("The connection to github is taking a while, Please be patient.")
 			end
@@ -179,13 +179,13 @@ local function downloadVapeAsset(path)
 			end
 		end
 	end
-	return getcustomasset(path) 
+	return getcustomasset(path)
 end
 
 assert(not shared.VapeExecuted, "Vape Already Injected")
 shared.VapeExecuted = true
 
-for i,v in pairs({baseDirectory:gsub("/", ""), "vape", "vape/Libraries", "vape/CustomModules", "vape/Profiles", baseDirectory.."Profiles", "vape/assets"}) do 
+for i,v in pairs({baseDirectory:gsub("/", ""), "vape", "vape/Libraries", "vape/CustomModules", "vape/Profiles", baseDirectory.."Profiles", "vape/assets"}) do
 	if not isfolder(v) then makefolder(v) end
 end
 task.spawn(function()
@@ -204,26 +204,26 @@ task.spawn(function()
 end)
 if not isfile("vape/CustomModules/cachechecked.txt") then
 	local isNotCached = false
-	for i,v in pairs({"vape/Universal.lua", "vape/MainScript.lua", "vape/GuiLibrary.lua"}) do 
+	for i,v in pairs({"vape/Universal.lua", "vape/MainScript.lua", "vape/GuiLibrary.lua"}) do
 		if isfile(v) and not readfile(v):find("--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.") then
 			isNotCached = true
-		end 
+		end
 	end
-	if isfolder("vape/CustomModules") then 
-		for i,v in pairs(listfiles("vape/CustomModules")) do 
+	if isfolder("vape/CustomModules") then
+		for i,v in pairs(listfiles("vape/CustomModules")) do
 			if isfile(v) and not readfile(v):find("--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.") then
 				isNotCached = true
-			end 
+			end
 		end
 	end
 	if isNotCached and not shared.VapeDeveloper then
 		displayErrorPopup("Vape has detected uncached files, If you have CustomModules click no, else click yes.", {No = function() end, Yes = function()
-			for i,v in pairs({"vape/Universal.lua", "vape/MainScript.lua", "vape/GuiLibrary.lua"}) do 
+			for i,v in pairs({"vape/Universal.lua", "vape/MainScript.lua", "vape/GuiLibrary.lua"}) do
 				if isfile(v) and not readfile(v):find("--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.") then
 					delfile(v)
-				end 
+				end
 			end
-			for i,v in pairs(listfiles("vape/CustomModules")) do 
+			for i,v in pairs(listfiles("vape/CustomModules")) do
 				if isfile(v) and not readfile(v):find("--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.") then
 					local last = v:split('\\')
 					last = last[#last]
@@ -231,7 +231,7 @@ if not isfile("vape/CustomModules/cachechecked.txt") then
 					if suc and publicrepo and publicrepo ~= "404: Not Found" then
 						writefile("vape/CustomModules/"..last, "--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.\n"..publicrepo)
 					end
-				end 
+				end
 			end
 		end})
 	end
@@ -240,6 +240,14 @@ end
 
 GuiLibrary = loadstring(vapeGithubRequest("GuiLibrary.lua"))()
 shared.GuiLibrary = GuiLibrary
+
+if identifyexecutor and identifyexecutor() == 'Wave' then
+	local text = Instance.new('TextLabel')
+	text.Size = UDim2.new(1, 0, 0, 40)
+	text.Text = 'wave user moment'
+	text.TextScaled = true
+	text.Parent = GuiLibrary.MainGui
+end
 
 local saveSettingsLoop = coroutine.create(function()
 	if inputService.TouchEnabled then return end
@@ -263,7 +271,7 @@ task.spawn(function()
     end)
 	task.spawn(function()
 		task.wait(15)
-		if image and image.ContentImageSize == Vector2.zero and (not errorPopupShown) and (not redownloadedAssets) and (not isfile("vape/assets/check3.txt")) then 
+		if image and image.ContentImageSize == Vector2.zero and (not errorPopupShown) and (not redownloadedAssets) and (not isfile("vape/assets/check3.txt")) then
             errorPopupShown = true
             displayErrorPopup("Assets failed to load, Try another executor (executor : "..(identifyexecutor and identifyexecutor() or "Unknown")..")", {OK = function()
                 writefile("vape/assets/check3.txt", "")
@@ -274,101 +282,101 @@ end)
 
 local GUI = GuiLibrary.CreateMainWindow()
 local Combat = GuiLibrary.CreateWindow({
-	Name = "Combat", 
-	Icon = "vape/assets/CombatIcon.png", 
+	Name = "Combat",
+	Icon = "vape/assets/CombatIcon.png",
 	IconSize = 15
 })
 local Blatant = GuiLibrary.CreateWindow({
-	Name = "Blatant", 
-	Icon = "vape/assets/BlatantIcon.png", 
+	Name = "Blatant",
+	Icon = "vape/assets/BlatantIcon.png",
 	IconSize = 16
 })
 local Render = GuiLibrary.CreateWindow({
-	Name = "Render", 
-	Icon = "vape/assets/RenderIcon.png", 
+	Name = "Render",
+	Icon = "vape/assets/RenderIcon.png",
 	IconSize = 17
 })
 local Utility = GuiLibrary.CreateWindow({
-	Name = "Utility", 
-	Icon = "vape/assets/UtilityIcon.png", 
+	Name = "Utility",
+	Icon = "vape/assets/UtilityIcon.png",
 	IconSize = 17
 })
 local World = GuiLibrary.CreateWindow({
-	Name = "World", 
-	Icon = "vape/assets/WorldIcon.png", 
+	Name = "World",
+	Icon = "vape/assets/WorldIcon.png",
 	IconSize = 16
 })
 local Friends = GuiLibrary.CreateWindow2({
-	Name = "Friends", 
-	Icon = "vape/assets/FriendsIcon.png", 
+	Name = "Friends",
+	Icon = "vape/assets/FriendsIcon.png",
 	IconSize = 17
 })
 local Targets = GuiLibrary.CreateWindow2({
-	Name = "Targets", 
-	Icon = "vape/assets/FriendsIcon.png", 
+	Name = "Targets",
+	Icon = "vape/assets/FriendsIcon.png",
 	IconSize = 17
 })
 local Profiles = GuiLibrary.CreateWindow2({
-	Name = "Profiles", 
-	Icon = "vape/assets/ProfilesIcon.png", 
+	Name = "Profiles",
+	Icon = "vape/assets/ProfilesIcon.png",
 	IconSize = 19
 })
 GUI.CreateDivider()
 GUI.CreateButton({
-	Name = "Combat", 
-	Function = function(callback) Combat.SetVisible(callback) end, 
-	Icon = "vape/assets/CombatIcon.png", 
+	Name = "Combat",
+	Function = function(callback) Combat.SetVisible(callback) end,
+	Icon = "vape/assets/CombatIcon.png",
 	IconSize = 15
 })
 GUI.CreateButton({
-	Name = "Blatant", 
-	Function = function(callback) Blatant.SetVisible(callback) end, 
-	Icon = "vape/assets/BlatantIcon.png", 
+	Name = "Blatant",
+	Function = function(callback) Blatant.SetVisible(callback) end,
+	Icon = "vape/assets/BlatantIcon.png",
 	IconSize = 16
 })
 GUI.CreateButton({
-	Name = "Render", 
-	Function = function(callback) Render.SetVisible(callback) end, 
-	Icon = "vape/assets/RenderIcon.png", 
+	Name = "Render",
+	Function = function(callback) Render.SetVisible(callback) end,
+	Icon = "vape/assets/RenderIcon.png",
 	IconSize = 17
 })
 GUI.CreateButton({
-	Name = "Utility", 
-	Function = function(callback) Utility.SetVisible(callback) end, 
-	Icon = "vape/assets/UtilityIcon.png", 
+	Name = "Utility",
+	Function = function(callback) Utility.SetVisible(callback) end,
+	Icon = "vape/assets/UtilityIcon.png",
 	IconSize = 17
 })
 GUI.CreateButton({
-	Name = "World", 
-	Function = function(callback) World.SetVisible(callback) end, 
-	Icon = "vape/assets/WorldIcon.png", 
+	Name = "World",
+	Function = function(callback) World.SetVisible(callback) end,
+	Icon = "vape/assets/WorldIcon.png",
 	IconSize = 16
 })
 GUI.CreateDivider("MISC")
 GUI.CreateButton({
-	Name = "Friends", 
-	Function = function(callback) Friends.SetVisible(callback) end, 
+	Name = "Friends",
+	Function = function(callback) Friends.SetVisible(callback) end,
 })
 GUI.CreateButton({
-	Name = "Targets", 
-	Function = function(callback) Targets.SetVisible(callback) end, 
+	Name = "Targets",
+	Function = function(callback) Targets.SetVisible(callback) end,
 })
 GUI.CreateButton({
-	Name = "Profiles", 
-	Function = function(callback) Profiles.SetVisible(callback) end, 
+	Name = "Profiles",
+	Function = function(callback) Profiles.SetVisible(callback) end,
 })
 
 local FriendsTextListTable = {
-	Name = "FriendsList", 
-	TempText = "Username [Alias]", 
+	Name = "FriendsList",
+	TempText = "Username [Alias]",
 	Color = Color3.fromRGB(5, 133, 104)
 }
 local FriendsTextList = Friends.CreateCircleTextList(FriendsTextListTable)
 FriendsTextList.FriendRefresh = Instance.new("BindableEvent")
 FriendsTextList.FriendColorRefresh = Instance.new("BindableEvent")
 local TargetsTextList = Targets.CreateCircleTextList({
-	Name = "TargetsList", 
-	TempText = "Username [Alias]", 
+	Name = "TargetsList",
+	TempText = "Username [Alias]",
 	Color = Color3.fromRGB(5, 133, 104)
 })
 local oldFriendRefresh = FriendsTextList.RefreshValues
@@ -383,7 +391,7 @@ TargetsTextList.RefreshValues = function(...)
 end
 Friends.CreateToggle({
 	Name = "Use Friends",
-	Function = function(callback) 
+	Function = function(callback)
 		FriendsTextList.FriendRefresh:Fire()
 	end,
 	Default = true
@@ -404,19 +412,19 @@ local friendRecolorToggle = Friends.CreateToggle({
 })
 local friendWindowFrame
 Friends.CreateColorSlider({
-	Name = "Friends Color", 
-	Function = function(h, s, v) 
+	Name = "Friends Color",
+	Function = function(h, s, v)
 		local cachedColor = Color3.fromHSV(h, s, v)
 		local addCircle = FriendsTextList.Object:FindFirstChild("AddButton", true)
-		if addCircle then 
+		if addCircle then
 			addCircle.ImageColor3 = cachedColor
 		end
 		friendWindowFrame = friendWindowFrame or FriendsTextList.ScrollingObject and FriendsTextList.ScrollingObject:FindFirstChild("ScrollingFrame")
-		if friendWindowFrame then 
-			for i,v in pairs(friendWindowFrame:GetChildren()) do 
+		if friendWindowFrame then
+			for i,v in pairs(friendWindowFrame:GetChildren()) do
 				local friendCircle = v:FindFirstChild("FriendCircle")
 				local friendText = v:FindFirstChild("ItemText")
-				if friendCircle and friendText then 
+				if friendCircle and friendText then
 					friendCircle.BackgroundColor3 = friendText.TextColor3 == Color3.fromRGB(160, 160, 160) and cachedColor or friendCircle.BackgroundColor3
 				end
 			end
@@ -430,27 +438,27 @@ Friends.CreateColorSlider({
 local ProfilesTextList = {RefreshValues = function() end}
 ProfilesTextList = Profiles.CreateTextList({
 	Name = "ProfilesList",
-	TempText = "Type name", 
+	TempText = "Type name",
 	NoSave = true,
 	AddFunction = function(profileName)
 		GuiLibrary.Profiles[profileName] = {Keybind = "", Selected = false}
 		local profiles = {}
-		for i,v in pairs(GuiLibrary.Profiles) do 
+		for i,v in pairs(GuiLibrary.Profiles) do
 			table.insert(profiles, i)
 		end
 		table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
 		ProfilesTextList.RefreshValues(profiles)
-	end, 
-	RemoveFunction = function(profileIndex, profileName) 
-		if profileName ~= "default" and profileName ~= GuiLibrary.CurrentProfile then 
+	end,
+	RemoveFunction = function(profileIndex, profileName)
+		if profileName ~= "default" and profileName ~= GuiLibrary.CurrentProfile then
 			pcall(function() delfile(baseDirectory.."Profiles/"..profileName..(shared.CustomSaveVape or game.PlaceId)..".vapeprofile.txt") end)
 			GuiLibrary.Profiles[profileName] = nil
 		else
 			table.insert(ProfilesTextList.ObjectList, profileName)
 			ProfilesTextList.RefreshValues(ProfilesTextList.ObjectList)
 		end
-	end, 
-	CustomFunction = function(profileObject, profileName) 
+	end,
+	CustomFunction = function(profileObject, profileName)
 		if GuiLibrary.Profiles[profileName] == nil then
 			GuiLibrary.Profiles[profileName] = {Keybind = ""}
 		end
@@ -532,14 +540,14 @@ ProfilesTextList = Profiles.CreateTextList({
 				end)
 			end
 		end)
-		bindbkg.MouseEnter:Connect(function() 
-			bindimg.Image = downloadVapeAsset("vape/assets/PencilIcon.png") 
+		bindbkg.MouseEnter:Connect(function()
+			bindimg.Image = downloadVapeAsset("vape/assets/PencilIcon.png")
 			bindimg.Visible = true
 			bindtext.Visible = false
 			bindbkg.Size = UDim2.new(0, 20, 0, 21)
 			bindbkg.Position = UDim2.new(1, -50, 0, 6)
 		end)
-		bindbkg.MouseLeave:Connect(function() 
+		bindbkg.MouseLeave:Connect(function()
 			bindimg.Image = downloadVapeAsset("vape/assets/KeybindIcon.png")
 			if GuiLibrary.Profiles[profileName].Keybind ~= "" then
 				bindimg.Visible = false
@@ -715,7 +723,7 @@ OnlineProfilesButton.MouseButton1Click:Connect(function()
         local success, result = pcall(function()
             return game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeProfiles/main/Profiles/"..saveplaceid.."/profilelist.txt", true))
         end)
-		for i,v in pairs(success and result or {}) do 
+		for i,v in pairs(success and result or {}) do
 			onlineprofiles[i] = v
 		end
 		for i2,v2 in pairs(onlineprofiles) do
@@ -743,7 +751,7 @@ OnlineProfilesButton.MouseButton1Click:Connect(function()
 			profiledownload.AutoButtonColor = false
 			profiledownload.Text = "DOWNLOAD"
 			profiledownload.Position = UDim2.new(0, 14, 0, 96)
-			profiledownload.Visible = false 
+			profiledownload.Visible = false
 			profiledownload.Parent = profilebox
 			profiledownload.ZIndex = 2
 			local profiledownloadbkg = Instance.new("Frame")
@@ -755,7 +763,7 @@ OnlineProfilesButton.MouseButton1Click:Connect(function()
 			profiledownloadbkg.Parent = profilebox
 			profilebox.MouseEnter:Connect(function()
 				profiletext.TextColor3 = Color3.fromRGB(200, 200, 200)
-				profiledownload.Visible = true 
+				profiledownload.Visible = true
 				profiledownloadbkg.Visible = true
 			end)
 			profilebox.MouseLeave:Connect(function()
@@ -773,7 +781,7 @@ OnlineProfilesButton.MouseButton1Click:Connect(function()
 				writefile(baseDirectory.."Profiles/"..v2.ProfileName..saveplaceid..".vapeprofile.txt", game:HttpGet(profileurl, true))
 				GuiLibrary.Profiles[v2.ProfileName] = {Keybind = "", Selected = false}
 				local profiles = {}
-				for i,v in pairs(GuiLibrary.Profiles) do 
+				for i,v in pairs(GuiLibrary.Profiles) do
 					table.insert(profiles, i)
 				end
 				table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
@@ -799,17 +807,17 @@ end)
 GUI.CreateDivider()
 
 local TextGUI = GuiLibrary.CreateCustomWindow({
-	Name = "Text GUI", 
-	Icon = "vape/assets/TextGUIIcon1.png", 
+	Name = "Text GUI",
+	Icon = "vape/assets/TextGUIIcon1.png",
 	IconSize = 21
 })
 local TextGUICircleObject = {CircleList = {}}
 GUI.CreateCustomToggle({
-	Name = "Text GUI", 
+	Name = "Text GUI",
 	Icon = "vape/assets/TextGUIIcon3.png",
 	Function = function(callback) TextGUI.SetVisible(callback) end,
 	Priority = 2
-})	
+})
 local GUIColorSlider = {RainbowValue = false}
 local TextGUIMode = {Value = "Normal"}
 local TextGUISortMode = {Value = "Alphabetical"}
@@ -913,7 +921,7 @@ VapeBackground.BackgroundTransparency = 1
 VapeBackground.BorderSizePixel = 0
 VapeBackground.BackgroundColor3 = Color3.new()
 VapeBackground.Size = UDim2.new(1, 0, 1, 0)
-VapeBackground.Visible = false 
+VapeBackground.Visible = false
 VapeBackground.Parent = VapeLogoFrame
 VapeBackground.ZIndex = 0
 local VapeBackgroundList = Instance.new("UIListLayout")
@@ -960,8 +968,8 @@ local function TextGUIUpdate()
 		if TextGUISortMode.Value == "Alphabetical" then
 			table.sort(moduleList, function(a, b) return a.Text:lower() < b.Text:lower() end)
 		else
-			table.sort(moduleList, function(a, b) 
-				return textService:GetTextSize(a.Text..a.ExtraText, VapeText.TextSize, VapeText.Font, Vector2.new(1000000, 1000000)).X > textService:GetTextSize(b.Text..b.ExtraText, VapeText.TextSize, VapeText.Font, Vector2.new(1000000, 1000000)).X 
+			table.sort(moduleList, function(a, b)
+				return textService:GetTextSize(a.Text..a.ExtraText, VapeText.TextSize, VapeText.Font, Vector2.new(1000000, 1000000)).X > textService:GetTextSize(b.Text..b.ExtraText, VapeText.TextSize, VapeText.Font, Vector2.new(1000000, 1000000)).X
 			end)
 		end
 
@@ -1011,19 +1019,19 @@ local function TextGUIUpdate()
                 VapeBackground.Position = VapeText.Position + UDim2.fromOffset(-4, -2 + offsets[4])
             end
         end
-        
-		if TextGUIMode.Value == "Drawing" then 
-			for i,v in pairs(TextGUIObjects.Labels) do 
+
+		if TextGUIMode.Value == "Drawing" then
+			for i,v in pairs(TextGUIObjects.Labels) do
 				v.Visible = false
 				v:Remove()
 				TextGUIObjects.Labels[i] = nil
 			end
-			for i,v in pairs(TextGUIObjects.ShadowLabels) do 
+			for i,v in pairs(TextGUIObjects.ShadowLabels) do
 				v.Visible = false
 				v:Remove()
 				TextGUIObjects.ShadowLabels[i] = nil
 			end
-			for i,v in pairs(backgroundList) do 
+			for i,v in pairs(backgroundList) do
 				local textdraw = Drawing.new("Text")
 				textdraw.Text = v
 				textdraw.Size = 23 * VapeScale.Scale
@@ -1073,7 +1081,7 @@ local function TextGUIUpdate()
             backgroundLineExtra.Parent = backgroundFrame
 			table.insert(VapeBackgroundTable, backgroundFrame)
         end
-		
+
 		GuiLibrary.UpdateUI(GUIColorSlider.Hue, GUIColorSlider.Sat, GUIColorSlider.Value)
 	end
 end
@@ -1091,11 +1099,11 @@ TextGUIMode = TextGUI.CreateDropdown({
 	List = {"Normal", "Drawing"},
 	Function = function(val)
 		VapeLogoFrame.Visible = val == "Normal"
-		for i,v in pairs(TextGUIConnections) do 
+		for i,v in pairs(TextGUIConnections) do
 			v:Disconnect()
 		end
-		for i,v in pairs(TextGUIObjects) do 
-			for i2,v2 in pairs(v) do 
+		for i,v in pairs(TextGUIObjects) do
+			for i2,v2 in pairs(v) do
 				v2.Visible = false
 				v2:Remove()
 				v[i2] = nil
@@ -1178,7 +1186,7 @@ TextGUIMode = TextGUI.CreateDropdown({
 				VapeLogo4Drawing.Visible = VapeLogoShadow.Visible
 			end))
 			table.insert(TextGUIConnections, VapeTextExtra:GetPropertyChangedSignal("Visible"):Connect(function()
-				for i,textdraw in pairs(TextGUIObjects.ShadowLabels) do 
+				for i,textdraw in pairs(TextGUIObjects.ShadowLabels) do
 					textdraw.Visible = VapeTextExtra.Visible
 				end
 				VapeCustomDrawingShadow.Visible = VapeCustomText.Visible and VapeTextExtra.Visible
@@ -1203,10 +1211,10 @@ TextGUIMode = TextGUI.CreateDropdown({
 				VapeCustomDrawingText.Color = VapeCustomText.TextColor3
 			end))
 			table.insert(TextGUIConnections, VapeText:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
-				for i,textdraw in pairs(TextGUIObjects.Labels) do 
+				for i,textdraw in pairs(TextGUIObjects.Labels) do
 					textdraw.Position = VapeText.AbsolutePosition + Vector2.new(VapeText.TextXAlignment == Enum.TextXAlignment.Right and (VapeText.AbsoluteSize.X - textdraw.TextBounds.X), ((textdraw.Size - 3) * i) + 6)
 				end
-				for i,textdraw in pairs(TextGUIObjects.ShadowLabels) do 
+				for i,textdraw in pairs(TextGUIObjects.ShadowLabels) do
 					textdraw.Position = Vector2.new(1, 1) + (VapeText.AbsolutePosition + Vector2.new(VapeText.TextXAlignment == Enum.TextXAlignment.Right and (VapeText.AbsoluteSize.X - textdraw.TextBounds.X), ((textdraw.Size - 3) * i) + 6))
 				end
 			end))
@@ -1227,7 +1235,7 @@ TextGUISortMode = TextGUI.CreateDropdown({
 })
 local TextGUIFonts = {"Arial"}
 local TextGUIFonts2 = {"GothamBold"}
-for i,v in pairs(Enum.Font:GetEnumItems()) do 
+for i,v in pairs(Enum.Font:GetEnumItems()) do
 	if v.Name ~= "Arial" then
 		table.insert(TextGUIFonts, v.Name)
 	end
@@ -1263,23 +1271,23 @@ TextGUI.CreateSlider({
 	end
 })
 TextGUI.CreateToggle({
-	Name = "Shadow", 
-	Function = function(callback) 
-        VapeTextExtra.Visible = callback 
-        VapeLogoShadow.Visible = callback 
+	Name = "Shadow",
+	Function = function(callback)
+        VapeTextExtra.Visible = callback
+        VapeLogoShadow.Visible = callback
     end,
 	HoverText = "Renders shadowed text."
 })
 TextGUI.CreateToggle({
-	Name = "Watermark", 
-	Function = function(callback) 
+	Name = "Watermark",
+	Function = function(callback)
 		VapeLogo.Visible = callback
 		GuiLibrary.UpdateHudEvent:Fire()
 	end,
 	HoverText = "Renders a vape watermark"
 })
 TextGUIBackgroundToggle = TextGUI.CreateToggle({
-	Name = "Render background", 
+	Name = "Render background",
 	Function = function(callback)
 		VapeBackground.Visible = callback
 		GuiLibrary.UpdateHudEvent:Fire()
@@ -1287,7 +1295,7 @@ TextGUIBackgroundToggle = TextGUI.CreateToggle({
 })
 TextGUI.CreateToggle({
 	Name = "Hide Modules",
-	Function = function(callback) 
+	Function = function(callback)
 		if TextGUICircleObject.Object then
 			TextGUICircleObject.Object.Visible = callback
 		end
@@ -1303,20 +1311,20 @@ TextGUICircleObject = TextGUI.CreateCircleWindow({
 TextGUICircleObject.Object.Visible = false
 local TextGUIGradient = TextGUI.CreateToggle({
 	Name = "Gradient Logo",
-	Function = function() 
+	Function = function()
 		GuiLibrary.UpdateHudEvent:Fire()
 	end
 })
 TextGUI.CreateToggle({
 	Name = "Alternate Text",
-	Function = function() 
+	Function = function()
 		GuiLibrary.UpdateHudEvent:Fire()
 	end
 })
 local CustomText = {Value = "", Object = nil}
 TextGUI.CreateToggle({
-	Name = "Add custom text", 
-	Function = function(callback) 
+	Name = "Add custom text",
+	Function = function(callback)
 		VapeCustomText.Visible = callback
 		CustomText.Object.Visible = callback
 		GuiLibrary.UpdateHudEvent:Fire()
@@ -1333,7 +1341,7 @@ CustomText = TextGUI.CreateTextBox({
 CustomText.Object.Visible = false
 
 local function newHealthColor(percent)
-	if percent > 0.5 then 
+	if percent > 0.5 then
 		return Color3.fromRGB(5, 134, 105):lerp(Color3.fromRGB(255, 255, 0), (0.5 - (percent - 0.5)) / 0.5)
 	end
 	return Color3.fromRGB(255, 255, 0):lerp(Color3.fromRGB(249, 57, 55), (0.5 - percent) / 0.5)
@@ -1445,7 +1453,7 @@ TargetInfo.CreateDropdown({
 
 TargetInfoBackground = TargetInfo.CreateToggle({
 	Name = "Use Background",
-	Function = function(callback) 
+	Function = function(callback)
 		TargetInfoMainInfo.BackgroundTransparency = callback and 0.25 or 1
 		TargetInfoName.TextColor3 = callback and Color3.fromRGB(162, 162, 162) or Color3.new(1, 1, 1)
 		TargetInfoName.Size = UDim2.new(0, 80, 0, callback and 16 or 18)
@@ -1464,7 +1472,7 @@ TargetInfo.GetCustomChildren().Parent:GetPropertyChangedSignal("Size"):Connect(f
 	TargetInfoMainInfo.Position = UDim2.fromOffset(0, TargetInfo.GetCustomChildren().Parent.Size ~= UDim2.fromOffset(220, 0) and -5 or 40)
 end)
 shared.VapeTargetInfo = {
-	UpdateInfo = function(tab, targetsize) 
+	UpdateInfo = function(tab, targetsize)
 		if TargetInfo.GetCustomChildren().Parent then
 			local hasTarget = false
 			for _, v in pairs(shared.VapeTargetInfo.Targets) do
@@ -1493,8 +1501,8 @@ task.spawn(function()
 	until not vapeInjected
 end)
 GUI.CreateCustomToggle({
-	Name = "Target Info", 
-	Icon = "vape/assets/TargetInfoIcon2.png", 
+	Name = "Target Info",
+	Icon = "vape/assets/TargetInfoIcon2.png",
 	Function = function(callback) TargetInfo.SetVisible(callback) end,
 	Priority = 1
 })
@@ -1503,7 +1511,7 @@ local ModuleSettings = GUI.CreateDivider2("Module Settings")
 local GUISettings = GUI.CreateDivider2("GUI Settings")
 local TeamsByColorToggle = {Enabled = false}
 TeamsByColorToggle = ModuleSettings.CreateToggle({
-	Name = "Teams by color", 
+	Name = "Teams by color",
 	Function = function() if TeamsByColorToggle.Refresh then TeamsByColorToggle.Refresh:Fire() end end,
 	Default = true,
 	HoverText = "Ignore players on your team designated by the game"
@@ -1511,25 +1519,25 @@ TeamsByColorToggle = ModuleSettings.CreateToggle({
 TeamsByColorToggle.Refresh = Instance.new("BindableEvent")
 local MiddleClickInput
 ModuleSettings.CreateToggle({
-	Name = "MiddleClick friends", 
-	Function = function(callback) 
+	Name = "MiddleClick friends",
+	Function = function(callback)
 		if callback then
 			MiddleClickInput = inputService.InputBegan:Connect(function(input1)
 				if input1.UserInputType == Enum.UserInputType.MouseButton3 then
 					local entityLibrary = shared.vapeentity
-					if entityLibrary then 
+					if entityLibrary then
 						local rayparams = RaycastParams.new()
 						rayparams.FilterType = Enum.RaycastFilterType.Whitelist
 						local chars = {}
-						for i,v in pairs(entityLibrary.entityList) do 
+						for i,v in pairs(entityLibrary.entityList) do
 							table.insert(chars, v.Character)
 						end
 						rayparams.FilterDescendantsInstances = chars
 						local mouseunit = playersService.LocalPlayer:GetMouse().UnitRay
 						local ray = workspace:Raycast(mouseunit.Origin, mouseunit.Direction * 10000, rayparams)
-						if ray then 
-							for i,v in pairs(entityLibrary.entityList) do 
-								if ray.Instance:IsDescendantOf(v.Character) then 
+						if ray then
+							for i,v in pairs(entityLibrary.entityList) do
+								if ray.Instance:IsDescendantOf(v.Character) then
 									local found = table.find(FriendsTextList.ObjectList, v.Player.Name)
 									if not found then
 										table.insert(FriendsTextList.ObjectList, v.Player.Name)
@@ -1559,8 +1567,8 @@ ModuleSettings.CreateToggle({
 	Default = true,
 	HoverText = "Temporarily disables certain features in server lobbies."
 })
-GUIColorSlider = GUI.CreateColorSlider("GUI Theme", function(h, s, v) 
-	GuiLibrary.UpdateUI(h, s, v) 
+GUIColorSlider = GUI.CreateColorSlider("GUI Theme", function(h, s, v)
+	GuiLibrary.UpdateUI(h, s, v)
 end)
 local BlatantModeToggle = GUI.CreateToggle({
 	Name = "Blatant mode",
@@ -1581,16 +1589,16 @@ local windowSortOrder2 = {"Combat", "Blatant", "Render", "Utility", "World"}
 
 local function getVapeSaturation(val)
 	local sat = 0.9
-	if val < 0.03 then 
+	if val < 0.03 then
 		sat = 0.75 + (0.15 * math.clamp(val / 0.03, 0, 1))
 	end
-	if val > 0.59 then 
+	if val > 0.59 then
 		sat = 0.9 - (0.4 * math.clamp((val - 0.59) / 0.07, 0, 1))
 	end
-	if val > 0.68 then 
+	if val > 0.68 then
 		sat = 0.5 + (0.4 * math.clamp((val - 0.68) / 0.14, 0, 1))
 	end
-	if val > 0.89 then 
+	if val > 0.89 then
 		sat = 0.9 - (0.15 * math.clamp((val - 0.89) / 0.1, 0, 1))
 	end
 	return sat
@@ -1625,9 +1633,9 @@ GuiLibrary.UpdateUI = function(h, s, val, bypass)
 			backgroundTable[i] = newcolor
 		end
 
-		if TextGUIMode.Value == "Drawing" then 
-			for i,v in pairs(TextGUIObjects.Labels) do 
-				if backgroundTable[i] then 
+		if TextGUIMode.Value == "Drawing" then
+			for i,v in pairs(TextGUIObjects.Labels) do
+				if backgroundTable[i] then
 					v.Color = backgroundTable[i]
 				end
 			end
@@ -1716,34 +1724,34 @@ GuiLibrary.UpdateUI = function(h, s, val, bypass)
 end
 
 GUISettings.CreateToggle({
-	Name = "Blur Background", 
-	Function = function(callback) 
-		GuiLibrary.MainBlur.Size = (callback and 25 or 0) 
-		--game:GetService("RunService"):SetRobloxGuiFocused(GuiLibrary.MainGui.ScaledGui.ClickGui.Visible and callback) 
+	Name = "Blur Background",
+	Function = function(callback)
+		GuiLibrary.MainBlur.Size = (callback and 25 or 0)
+		--game:GetService("RunService"):SetRobloxGuiFocused(GuiLibrary.MainGui.ScaledGui.ClickGui.Visible and callback)
 	end,
 	Default = true,
 	HoverText = "Blur the background of the GUI"
 })
 local welcomeMessage = GUISettings.CreateToggle({
-	Name = "GUI bind indicator", 
-	Function = function() end, 
+	Name = "GUI bind indicator",
+	Function = function() end,
 	Default = true,
 	HoverText = 'Displays a message indicating your GUI keybind upon injecting.\nI.E "Press RIGHTSHIFT to open GUI"'
 })
 GUISettings.CreateToggle({
-	Name = "Old Rainbow", 
+	Name = "Old Rainbow",
 	Function = function(callback) oldrainbow = callback end,
 	HoverText = "Reverts to old rainbow"
 })
 GUISettings.CreateToggle({
-	Name = "Show Tooltips", 
+	Name = "Show Tooltips",
 	Function = function(callback) GuiLibrary.ToggleTooltips = callback end,
 	Default = true,
 	HoverText = "Toggles visibility of these"
 })
 local GUIRescaleToggle = GUISettings.CreateToggle({
-	Name = "Rescale", 
-	Function = function(callback) 
+	Name = "Rescale",
+	Function = function(callback)
 		task.spawn(function()
 			GuiLibrary.MainRescale.Scale = (callback and math.clamp(gameCamera.ViewportSize.X / 1920, 0.5, 1) or 0.99)
 			task.wait(0.01)
@@ -1759,16 +1767,16 @@ gameCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 	end
 end)
 GUISettings.CreateToggle({
-	Name = "Notifications", 
-	Function = function(callback) 
-		GuiLibrary.Notifications = callback 
+	Name = "Notifications",
+	Function = function(callback)
+		GuiLibrary.Notifications = callback
 	end,
 	Default = true,
 	HoverText = "Shows notifications"
 })
 local ToggleNotifications
 ToggleNotifications = GUISettings.CreateToggle({
-	Name = "Toggle Alert", 
+	Name = "Toggle Alert",
 	Function = function(callback) GuiLibrary.ToggleNotifications = callback end,
 	Default = true,
 	HoverText = "Notifies you if a module is enabled/disabled."
@@ -1791,11 +1799,11 @@ local teleportConnection = playersService.LocalPlayer.OnTeleport:Connect(functio
     if (not teleportedServers) and (not shared.VapeIndependent) then
 		teleportedServers = true
 		local teleportScript = [[
-			shared.VapeSwitchServers = true 
-			if shared.VapeDeveloper then 
-				loadstring(readfile("vape/NewMainScript.lua"))() 
-			else 
-				loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..readfile("vape/commithash.txt").."/NewMainScript.lua", true))() 
+			shared.VapeSwitchServers = true
+			if shared.VapeDeveloper then
+				loadstring(readfile("vape/NewMainScript.lua"))()
+			else
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/"..readfile("vape/commithash.txt").."/NewMainScript.lua", true))()
 			end
 		]]
 		if shared.VapeDeveloper then
@@ -1804,7 +1812,7 @@ local teleportConnection = playersService.LocalPlayer.OnTeleport:Connect(functio
 		if shared.VapePrivate then
 			teleportScript = 'shared.VapePrivate = true\n'..teleportScript
 		end
-		if shared.VapeCustomProfile then 
+		if shared.VapeCustomProfile then
 			teleportScript = "shared.VapeCustomProfile = '"..shared.VapeCustomProfile.."'\n"..teleportScript
 		end
 		GuiLibrary.SaveSettings()
@@ -1818,7 +1826,7 @@ GuiLibrary.SelfDestruct = function()
 	end)
 	if GuiLibrary.ColorStepped then GuiLibrary.ColorStepped:Disconnect() end
 
-	if vapeInjected then 
+	if vapeInjected then
 		GuiLibrary.SaveSettings()
 	end
 	vapeInjected = false
@@ -1830,11 +1838,11 @@ GuiLibrary.SelfDestruct = function()
 		end
 	end
 
-	for i,v in pairs(TextGUIConnections) do 
+	for i,v in pairs(TextGUIConnections) do
 		v:Disconnect()
 	end
-	for i,v in pairs(TextGUIObjects) do 
-		for i2,v2 in pairs(v) do 
+	for i,v in pairs(TextGUIObjects) do
+		for i2,v2 in pairs(v) do
 			v2.Visible = false
 			v2:Destroy()
 			v[i2] = nil
@@ -1857,11 +1865,11 @@ GuiLibrary.SelfDestruct = function()
 	end
 	teleportConnection:Disconnect()
 	GuiLibrary.MainGui:Destroy()
-	--game:GetService("RunService"):SetRobloxGuiFocused(false)	
+	--game:GetService("RunService"):SetRobloxGuiFocused(false)
 end
 
 GeneralSettings.CreateButton2({
-	Name = "RESET CURRENT PROFILE", 
+	Name = "RESET CURRENT PROFILE",
 	Function = function()
 		local vapePrivateCheck = shared.VapePrivate
 		GuiLibrary.SelfDestruct()
@@ -1877,7 +1885,7 @@ GeneralSettings.CreateButton2({
 	end
 })
 GUISettings.CreateButton2({
-	Name = "RESET GUI POSITIONS", 
+	Name = "RESET GUI POSITIONS",
 	Function = function()
 		for i,v in pairs(GuiLibrary.ObjectsThatCanBeSaved) do
 			if (v.Type == "Window" or v.Type == "CustomWindow") then
@@ -1887,7 +1895,7 @@ GUISettings.CreateButton2({
 	end
 })
 GUISettings.CreateButton2({
-	Name = "SORT GUI", 
+	Name = "SORT GUI",
 	Function = function()
 		local sorttable = {}
 		local movedown = false
@@ -1954,7 +1962,7 @@ local function loadVape()
 		if shared.VapePrivate then
 			if isfile("vapeprivate/CustomModules/"..game.PlaceId..".lua") then
 				loadstring(readfile("vapeprivate/CustomModules/"..game.PlaceId..".lua"))()
-			end	
+			end
 		end
 	else
 		repeat task.wait() until shared.VapeManualLoad
@@ -1965,7 +1973,7 @@ local function loadVape()
 	end
 	GuiLibrary.LoadSettings(shared.VapeCustomProfile)
 	local profiles = {}
-	for i,v in pairs(GuiLibrary.Profiles) do 
+	for i,v in pairs(GuiLibrary.Profiles) do
 		table.insert(profiles, i)
 	end
 	table.sort(profiles, function(a, b) return b == "default" and true or a:lower() < b:lower() end)
@@ -1987,7 +1995,7 @@ local function loadVape()
 	if shared.VapeOpenGui then
 		GuiLibrary.MainGui.ScaledGui.ClickGui.Visible = true
 		GuiLibrary.MainGui.ScaledGui.LegitGui.Visible = false
-		--game:GetService("RunService"):SetRobloxGuiFocused(GuiLibrary.MainBlur.Size ~= 0) 
+		--game:GetService("RunService"):SetRobloxGuiFocused(GuiLibrary.MainBlur.Size ~= 0)
 		shared.VapeOpenGui = nil
 	end
 
