@@ -244,7 +244,7 @@ shared.GuiLibrary = GuiLibrary
 if identifyexecutor and identifyexecutor() == 'Wave' then
 	local text = Instance.new('TextLabel')
 	text.Size = UDim2.new(1, 0, 0, 40)
-	text.Text = 'wave user moment'
+	text.Text = 'wave user moment, hello there!'
 	text.TextScaled = true
 	text.Parent = GuiLibrary.MainGui
 end
