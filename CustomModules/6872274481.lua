@@ -46,7 +46,6 @@ local store = {
 	matchStateChanged = tick(),
 	pots = {},
 	queueType = "bedwars_test",
-	scythe = tick(),
 	statistics = {
 		beds = 0,
 		kills = 0,
@@ -395,9 +394,6 @@ local function getSpeed()
 		end
 		if store.grapple > tick() then
 			speed = speed + 90
-		end
-		if store.scythe > tick() then
-			speed = speed + 5
 		end
 		if lplr.Character:GetAttribute("GrimReaperChannel") then
 			speed = speed + 20
@@ -7911,92 +7907,6 @@ run(function()
 end)
 
 run(function()
-	local BowExploit = {Enabled = false}
-	local BowExploitTarget = {Value = "Mouse"}
-	local BowExploitAutoShootFOV = {Value = 1000}
-	local oldrealremote
-	local noveloproj = {
-		"fireball",
-		"telepearl"
-	}
-
-	BowExploit = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "ProjectileExploit",
-		Function = function(callback)
-			if callback then
-				oldrealremote = bedwars.ClientConstructor.Function.new
-				bedwars.ClientConstructor.Function.new = function(self, ind, ...)
-					local res = oldrealremote(self, ind, ...)
-					local oldRemote = res.instance
-					if oldRemote and oldRemote.Name == bedwars.ProjectileRemote then
-						res.instance = {InvokeServer = function(self, shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
-							local plr
-							if BowExploitTarget.Value == "Mouse" then
-								plr = EntityNearMouse(10000)
-							else
-								plr = EntityNearPosition(BowExploitAutoShootFOV.Value, true)
-							end
-							if plr then
-								tab1.drawDurationSeconds = 1
-								repeat
-									task.wait(0.03)
-									local offsetStartPos = plr.RootPart.CFrame.p - plr.RootPart.CFrame.lookVector
-									local pos = plr.RootPart.Position
-									local playergrav = workspace.Gravity
-									local balloons = plr.Character:GetAttribute("InflatedBalloons")
-									if balloons and balloons > 0 then
-										playergrav = (workspace.Gravity * (1 - ((balloons >= 4 and 1.2 or balloons >= 3 and 1 or 0.975))))
-									end
-									if plr.Character.PrimaryPart:FindFirstChild("rbxassetid://8200754399") then
-										playergrav = (workspace.Gravity * 0.3)
-									end
-									local newLaunchVelo = bedwars.ProjectileMeta[proj2].launchVelocity
-									local shootpos, shootvelo = predictGravity(pos, plr.RootPart.Velocity, (pos - offsetStartPos).Magnitude / newLaunchVelo, plr, playergrav)
-									if proj2 == "telepearl" then
-										shootpos = pos
-										shootvelo = Vector3.zero
-									end
-									local newlook = CFrame.new(offsetStartPos, shootpos) * CFrame.new(Vector3.new(-bedwars.BowConstantsTable.RelX, -bedwars.BowConstantsTable.RelY, -bedwars.BowConstantsTable.RelZ))
-									shootpos = newlook.p + (newlook.lookVector * (offsetStartPos - shootpos).magnitude)
-									local calculated = LaunchDirection(offsetStartPos, shootpos, newLaunchVelo, workspace.Gravity, false)
-									if calculated then
-										launchvelo = calculated
-										launchpos1 = offsetStartPos
-										launchpos2 = offsetStartPos
-										tab1.drawDurationSeconds = 1
-									else
-										break
-									end
-									if oldRemote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, workspace:GetServerTimeNow() - 0.045) then break end
-								until false
-							else
-								return oldRemote:InvokeServer(shooting, proj, proj2, launchpos1, launchpos2, launchvelo, tag, tab1, ...)
-							end
-						end}
-					end
-					return res
-				end
-			else
-				bedwars.ClientConstructor.Function.new = oldrealremote
-				oldrealremote = nil
-			end
-		end
-	})
-	BowExploitTarget = BowExploit.CreateDropdown({
-		Name = "Mode",
-		List = {"Mouse", "Range"},
-		Function = function() end
-	})
-	BowExploitAutoShootFOV = BowExploit.CreateSlider({
-		Name = "FOV",
-		Function = function() end,
-		Min = 1,
-		Max = 1000,
-		Default = 1000
-	})
-end)
-
-run(function()
 	local RavenTP = {Enabled = false}
 	RavenTP = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
 		Name = "RavenTP",
@@ -8828,30 +8738,6 @@ run(function()
 				end
 			end
 		end
-	})
-end)
-
-run(function()
-	local Disabler = {Enabled = false}
-	Disabler = GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
-		Name = "FirewallBypass",
-		Function = function(callback)
-			if callback then
-				task.spawn(function()
-					repeat
-						task.wait()
-						local item = getItemNear("scythe")
-						if item and lplr.Character.HandInvItem.Value == item.tool and bedwars.CombatController then
-							bedwars.Client:Get("ScytheDash"):SendToServer({direction = Vector3.new(9e9, 9e9, 9e9)})
-							if entityLibrary.isAlive and entityLibrary.character.Head.Transparency ~= 0 then
-								store.scythe = tick() + 1
-							end
-						end
-					until (not Disabler.Enabled)
-				end)
-			end
-		end,
-		HoverText = "Float disabler with scythe"
 	})
 end)
 
