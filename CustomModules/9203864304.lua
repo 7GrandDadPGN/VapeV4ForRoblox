@@ -350,12 +350,12 @@ run(function()
     GetMeteorites = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
         Name = "CollectMeteorites",
         Function = function(callback) 
-            local meteorites = 0
-            local oldcframe = nil
-            if callback then 
+             if callback then 
+                local meteorites = 0
+                local oldcframe = nil
+                oldcframe = lplr.Character.HumanoidRootPart.CFrame
                 for i, v in pairs(workspace:GetChildren()) do
                     if v:IsA("Tool") and v.Name == "Meteorite" then 
-                        oldcframe = lplr.Character.HumanoidRootPart.CFrame
                         TweenChar(v.Handle.CFrame)
                         meteorites = meteorites + 1
                         task.wait(1.1)
