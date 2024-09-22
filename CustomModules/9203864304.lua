@@ -351,6 +351,7 @@ run(function()
         Name = "CollectMeteorites",
         Function = function(callback) 
              if callback then 
+                GetMeteorites.ToggleButton(true)
                 local meteorites = 0
                 local oldcframe = nil
                 oldcframe = lplr.Character.HumanoidRootPart.CFrame
@@ -363,7 +364,6 @@ run(function()
                 end
                 TweenChar(oldcframe)
                 InfoNotification("CollectMeteorites", "Successfully Collected. Meteorites: "..meteorites, 4)
-                GetMeteorites.ToggleButton(true)
             end
         end
     })
