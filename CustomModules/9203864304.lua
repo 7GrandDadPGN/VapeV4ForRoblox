@@ -297,10 +297,9 @@ run(function()
                         end
                         if Meteorites >= 2 then 
                             for i = 1, 2, 1 do
-                                TweenChar(workspace:FindFirstChild("Meteorite").CFrame)
+                                TweenChar(workspace:FindFirstChild("Meteorite").Handle.CFrame)
+                                task.wait(1.1)
                             end
-                        else
-                            return
                         end
                         TweenToStove()
                         splitsecond()
