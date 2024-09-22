@@ -178,7 +178,6 @@ run(function()
         splitsecond()
         Buy("Cheese")
         TweenToStove()
-        task.wait(1.01) -- lol
         AddItem("Flour")
         splitsecond()
         AddItem("Tomato")
@@ -228,6 +227,48 @@ run(function()
         InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
     end
 
+    local function cookspaghetti() 
+        Buy("Beef")
+        splitsecond()
+        Buy("Tomato")
+        splitsecond()
+        Buy("Noodles")
+        splitsecond()
+        TweenToStove()
+        splitsecond()
+        AddItem("Beef")
+        splitsecond()
+        AddItem("Tomato")
+        splitsecond()
+        AddItem("Noodles")
+        splitsecond()
+        temp(2)
+        splitsecond()
+        Cook()
+        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
+    end
+
+    local function cookramen() 
+        Buy("Noodles")
+        splitsecond()
+        Buy("Egg")
+        splitsecond()
+        Buy("Soy Sauce")
+        splitsecond()
+        TweenToStove()
+        splitsecond()
+        AddItem("Noodles")
+        splitsecond()
+        AddItem("Egg")
+        splitsecond()
+        AddItem("Soy Sauce")
+        splitsecond()
+        temp(2)
+        splitsecond()
+        Cook()
+        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
+    end
+
     Recipies = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
         Name = "Recipies",
         Function = function(callback) 
@@ -239,24 +280,9 @@ run(function()
                 elseif Dropdown.Value == "Pizza" then
                     cookpizza()
                 elseif Dropdown.Value == "Spaghetti" then
-                    Buy("Beef")
-                    splitsecond()
-                    Buy("Tomato")
-                    splitsecond()
-                    Buy("Noodles")
-                    splitsecond()
-                    TweenToStove()
-                    splitsecond()
-                    AddItem("Beef")
-                    splitsecond()
-                    AddItem("Tomato")
-                    splitsecond()
-                    AddItem("Noodles")
-                    splitsecond()
-                    temp(2)
-                    splitsecond()
-                    Cook()
-                    InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
+                    cookspaghetti()
+                elseif Dropdown.Value == "Ramen" then
+                    cookramen()
                 end
                 Recipies.ToggleButton(true)
             end
@@ -265,10 +291,10 @@ run(function()
 
     Dropdown = Recipies.CreateDropdown({
         Name = "Recipies",
-        List = {"None", "Grilled Cheese", "Salad", "Pizza", "Spaghetti"},
+        List = {"None", "Grilled Cheese", "Salad", "Pizza", "Spaghetti", "Ramen"},
         Function = function(val) end
     })
-end)
+end) -- longest piece of code i have ever written (lol)
 
 run(function() 
     local SaveButton = {Enabled = false}
