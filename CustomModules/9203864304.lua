@@ -140,6 +140,8 @@ local function TweenChar(cframe)
     tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = cframe}):Play()
 end
 
+local backpack = lplr.Backpack
+
 run(function() 
     local Recipies = {Enabled = false}
     local Dropdown = {Value = "None"}
@@ -380,6 +382,19 @@ run(function()
                     workspace["Floppy Disk"]:FindFirstChildWhichIsA("ProximityPrompt"):InputHoldBegin()
                     workspace["Floppy Disk"]:FindFirstChildWhichIsA("ProximityPrompt"):InputHoldEnd()
                 until not AutoSave.Enabled
+            end
+        end
+    })
+end)
+
+run(function() 
+    local ClearBackpack = {Enabled = false}
+
+    ClearBackpack = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
+        Name = "ClearBackpack",
+        Function = function(callback) 
+            if callback then 
+                backpack:ClearAllChildren()
             end
         end
     })
