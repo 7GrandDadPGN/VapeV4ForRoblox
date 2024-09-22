@@ -377,6 +377,7 @@ run(function()
         Function = function(callback) 
             if callback then 
                 repeat task.wait(1)
+                    workspace["Floppy Disk"]:FindFirstChildWhichIsA("ProximityPrompt"):InputHoldBegin()
                     workspace["Floppy Disk"]:FindFirstChildWhichIsA("ProximityPrompt"):InputHoldEnd()
                 until not AutoSave.Enabled
             end
