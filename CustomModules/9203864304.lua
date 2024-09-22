@@ -105,25 +105,24 @@ local function run(func) func() end
 
 
 run(function() 
-    local success, fail = pcall(function()
-        local AutoClickCar = {Enabled = false}
-        local Delay = {Value = 0.01}
+    local AutoClickCar = {Enabled = false}
+    local Delay = {Value = 0.01}
 
-        AutoClickCar = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
-            Name = "AutoClickCar",
-            Function = function(callback) 
-                repeat task.wait(Delay.Value or 0.01)
-            end,
-            HoverText = "AutoClicks your floppa"
-        })
+    AutoClickCar = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
+        Name = "AutoClickCar",
+        Function = function(callback) 
+            repeat task.wait(Delay.Value or 0.01)
+                fireclickdetector(workspace.Floppa:FindFirstChildWhichIsA("ClickDetector"))
+            until not AutoClickCar.Enabled
+        end,
+        HoverText = "AutoClicks your floppa"
+    })
 
-        Delay = AutoClickCar.CreateSlider({
-            Name = "Delay",
-            Min = 0.01,
-            Max = 60,
-            Default = 0.01,
-            Function = function(val) end
-        })  
-    end)
-    if fail then print(fail ~= nil) end
+    Delay = AutoClickCar.CreateSlider({
+        Name = "Delay",
+        Min = 0.01,
+        Max = 60,
+        Default = 0.01,
+        Function = function(val) end
+    })  
 end)
