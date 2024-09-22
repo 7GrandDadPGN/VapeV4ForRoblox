@@ -188,7 +188,7 @@ run(function()
         temp(2)
         splitsecond()
         Cook()
-        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick().." Recipie: Pizza", 3)
+        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
     end
 
     local function cookgc() 
@@ -204,16 +204,19 @@ run(function()
         temp(3)
         splitsecond()
         Cook()
-        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick().." Recipie: Grilled Cheese", 3)
+        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
     end
 
     Recipies = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
         Name = "Recipies",
-        Function = function() 
-            if Dropdown.Value == "Grilled Cheese" then
-                cookgc()
-            elseif Dropdown.Value == "Pizza" then
-                cookpizza()
+        Function = function(callback) 
+            if callback then
+                if Dropdown.Value == "Grilled Cheese" then
+                    cookgc()
+                elseif Dropdown.Value == "Pizza" then
+                    cookpizza()
+                end
+                Recipies.ToggleButton(true)
             end
         end
     })
