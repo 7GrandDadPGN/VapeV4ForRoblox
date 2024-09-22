@@ -312,6 +312,7 @@ local function AllNearPosition(distance, amount, checktab)
 end
 
 run(function() 
+    local success, fail = pcall(function()
     local AutoClickCar = {Enabled = false}
     local Delay = {Value = 0.01}
 
@@ -329,5 +330,6 @@ run(function()
         Max = 60,
         Default = 0.01,
         Function = function(val) end
-    })
+    })  
+    end)
 end)
