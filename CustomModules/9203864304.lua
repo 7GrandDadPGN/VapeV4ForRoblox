@@ -363,6 +363,7 @@ run(function()
                 end
                 TweenChar(oldcframe)
                 InfoNotification("CollectMeteorites", "Successfully Collected. Meteorites: "..meteorites, 4)
+                GetMeteorites.ToggleButton(true)
             end
         end
     })
