@@ -103,233 +103,27 @@ end
 
 local function run(func) func() end
 
-local function isFriend(plr, recolor)
-	if GuiLibrary.ObjectsThatCanBeSaved["Use FriendsToggle"].Api.Enabled then
-		local friend = table.find(GuiLibrary.ObjectsThatCanBeSaved.FriendsListTextCircleList.Api.ObjectList, plr.Name)
-		friend = friend and GuiLibrary.ObjectsThatCanBeSaved.FriendsListTextCircleList.Api.ObjectListEnabled[friend]
-		if recolor then
-			friend = friend and GuiLibrary.ObjectsThatCanBeSaved["Recolor visualsToggle"].Api.Enabled
-		end
-		return friend
-	end
-	return nil
-end
-
-local function isTarget(plr)
-	local friend = table.find(GuiLibrary.ObjectsThatCanBeSaved.TargetsListTextCircleList.Api.ObjectList, plr.Name)
-	friend = friend and GuiLibrary.ObjectsThatCanBeSaved.TargetsListTextCircleList.Api.ObjectListEnabled[friend]
-	return friend
-end
-
-local function isVulnerable(plr)
-	return plr.Humanoid.Health > 0 and not plr.Character.FindFirstChildWhichIsA(plr.Character, "ForceField")
-end
-
-local function getPlayerColor(plr)
-	if isFriend(plr, true) then
-		return Color3.fromHSV(GuiLibrary.ObjectsThatCanBeSaved["Friends ColorSliderColor"].Api.Hue, GuiLibrary.ObjectsThatCanBeSaved["Friends ColorSliderColor"].Api.Sat, GuiLibrary.ObjectsThatCanBeSaved["Friends ColorSliderColor"].Api.Value)
-	end
-	return tostring(plr.TeamColor) ~= "White" and plr.TeamColor.Color
-end
-
-local whitelist = {data = {WhitelistedUsers = {}}, hashes = {}, said = {}, alreadychecked = {}, customtags = {}, loaded = false, localprio = 0, hooked = false, get = function() return 0, true end}
-local entityLibrary = loadstring(vapeGithubRequest("Libraries/entityHandler.lua"))()
-shared.vapeentity = entityLibrary
-do
-	entityLibrary.selfDestruct()
-	table.insert(vapeConnections, GuiLibrary.ObjectsThatCanBeSaved.FriendsListTextCircleList.Api.FriendRefresh.Event:Connect(function()
-		entityLibrary.fullEntityRefresh()
-	end))
-	table.insert(vapeConnections, GuiLibrary.ObjectsThatCanBeSaved["Teams by colorToggle"].Api.Refresh.Event:Connect(function()
-		entityLibrary.fullEntityRefresh()
-	end))
-	local oldUpdateBehavior = entityLibrary.getUpdateConnections
-	entityLibrary.getUpdateConnections = function(newEntity)
-		local oldUpdateConnections = oldUpdateBehavior(newEntity)
-		table.insert(oldUpdateConnections, {Connect = function()
-			newEntity.Friend = isFriend(newEntity.Player) and true
-			newEntity.Target = isTarget(newEntity.Player) and true
-			return {Disconnect = function() end}
-		end})
-		return oldUpdateConnections
-	end
-	entityLibrary.isPlayerTargetable = function(plr)
-		if isFriend(plr) then return false end
-		if not ({whitelist:get(plr)})[2] then return false end
-		if (not GuiLibrary.ObjectsThatCanBeSaved["Teams by colorToggle"].Api.Enabled) then return true end
-		if (not lplr.Team) then return true end
-		if (not plr.Team) then return true end
-		if plr.Team ~= lplr.Team then return true end
-        return #plr.Team:GetPlayers() == playersService.NumPlayers
-	end
-	entityLibrary.fullEntityRefresh()
-	entityLibrary.LocalPosition = Vector3.zero
-
-	task.spawn(function()
-		local postable = {}
-		repeat
-			task.wait()
-			if entityLibrary.isAlive then
-				table.insert(postable, {Time = tick(), Position = entityLibrary.character.HumanoidRootPart.Position})
-				if #postable > 100 then
-					table.remove(postable, 1)
-				end
-				local closestmag = 9e9
-				local closestpos = entityLibrary.character.HumanoidRootPart.Position
-				local currenttime = tick()
-				for i, v in pairs(postable) do
-					local mag = 0.1 - (currenttime - v.Time)
-					if mag < closestmag and mag > 0 then
-						closestmag = mag
-						closestpos = v.Position
-					end
-				end
-				entityLibrary.LocalPosition = closestpos
-			end
-		until not vapeInjected
-	end)
-end
-
-local function calculateMoveVector(cameraRelativeMoveVector)
-	local c, s
-	local _, _, _, R00, R01, R02, _, _, R12, _, _, R22 = gameCamera.CFrame:GetComponents()
-	if R12 < 1 and R12 > -1 then
-		c = R22
-		s = R02
-	else
-		c = R00
-		s = -R01*math.sign(R12)
-	end
-	local norm = math.sqrt(c*c + s*s)
-	return Vector3.new(
-		(c*cameraRelativeMoveVector.X + s*cameraRelativeMoveVector.Z)/norm,
-		0,
-		(c*cameraRelativeMoveVector.Z - s*cameraRelativeMoveVector.X)/norm
-	)
-end
-
-local raycastWallProperties = RaycastParams.new()
-local function raycastWallCheck(char, checktable)
-	if not checktable.IgnoreObject then
-		checktable.IgnoreObject = raycastWallProperties
-		local filter = {lplr.Character, gameCamera}
-		for i,v in pairs(entityLibrary.entityList) do
-			if v.Targetable then
-				table.insert(filter, v.Character)
-			end
-		end
-		for i,v in pairs(checktable.IgnoreTable or {}) do
-			table.insert(filter, v)
-		end
-		raycastWallProperties.FilterDescendantsInstances = filter
-	end
-	local ray = workspace.Raycast(workspace, checktable.Origin, (char[checktable.AimPart].Position - checktable.Origin), checktable.IgnoreObject)
-	return not ray
-end
-
-local function EntityNearPosition(distance, checktab)
-	checktab = checktab or {}
-	if entityLibrary.isAlive then
-		local sortedentities = {}
-		for i, v in pairs(entityLibrary.entityList) do -- loop through playersService
-			if not v.Targetable then continue end
-            if isVulnerable(v) then -- checks
-				local playerPosition = v.RootPart.Position
-				local mag = (entityLibrary.character.HumanoidRootPart.Position - playerPosition).magnitude
-				if checktab.Prediction and mag > distance then
-					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
-				end
-                if mag <= distance then -- mag check
-					table.insert(sortedentities, {entity = v, Magnitude = v.Target and -1 or mag})
-                end
-            end
-        end
-		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
-		for i, v in pairs(sortedentities) do
-			if checktab.WallCheck then
-				if not raycastWallCheck(v.entity, checktab) then continue end
-			end
-			return v.entity
-		end
-	end
-end
-
-local function EntityNearMouse(distance, checktab)
-	checktab = checktab or {}
-    if entityLibrary.isAlive then
-		local sortedentities = {}
-		local mousepos = inputService.GetMouseLocation(inputService)
-		for i, v in pairs(entityLibrary.entityList) do
-			if not v.Targetable then continue end
-            if isVulnerable(v) then
-				local vec, vis = worldtoscreenpoint(v[checktab.AimPart].Position)
-				local mag = (mousepos - Vector2.new(vec.X, vec.Y)).magnitude
-                if vis and mag <= distance then
-					table.insert(sortedentities, {entity = v, Magnitude = v.Target and -1 or mag})
-                end
-            end
-        end
-		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
-		for i, v in pairs(sortedentities) do
-			if checktab.WallCheck then
-				if not raycastWallCheck(v.entity, checktab) then continue end
-			end
-			return v.entity
-		end
-    end
-end
-
-local function AllNearPosition(distance, amount, checktab)
-	local returnedplayer = {}
-	local currentamount = 0
-	checktab = checktab or {}
-    if entityLibrary.isAlive then
-		local sortedentities = {}
-		for i, v in pairs(entityLibrary.entityList) do
-			if not v.Targetable then continue end
-            if isVulnerable(v) then
-				local playerPosition = v.RootPart.Position
-				local mag = (entityLibrary.character.HumanoidRootPart.Position - playerPosition).magnitude
-				if checktab.Prediction and mag > distance then
-					mag = (entityLibrary.LocalPosition - playerPosition).magnitude
-				end
-                if mag <= distance then
-					table.insert(sortedentities, {entity = v, Magnitude = mag})
-                end
-            end
-        end
-		table.sort(sortedentities, function(a, b) return a.Magnitude < b.Magnitude end)
-		for i,v in pairs(sortedentities) do
-			if checktab.WallCheck then
-				if not raycastWallCheck(v.entity, checktab) then continue end
-			end
-			table.insert(returnedplayer, v.entity)
-			currentamount = currentamount + 1
-			if currentamount >= amount then break end
-		end
-	end
-	return returnedplayer
-end
 
 run(function() 
     local success, fail = pcall(function()
-    local AutoClickCar = {Enabled = false}
-    local Delay = {Value = 0.01}
+        local AutoClickCar = {Enabled = false}
+        local Delay = {Value = 0.01}
 
-    AutoClickCar = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
-        Name = "AutoClickCar",
-        Function = function(callback) 
-            repeat task.wait(Delay.Value or 0.01)
-        end,
-        HoverText = "AutoClicks your floppa"
-    })
+        AutoClickCar = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
+            Name = "AutoClickCar",
+            Function = function(callback) 
+                repeat task.wait(Delay.Value or 0.01)
+            end,
+            HoverText = "AutoClicks your floppa"
+        })
 
-    Delay = AutoClickCar.CreateSlider({
-        Name = "Delay",
-        Min = 0.01,
-        Max = 60,
-        Default = 0.01,
-        Function = function(val) end
-    })  
+        Delay = AutoClickCar.CreateSlider({
+            Name = "Delay",
+            Min = 0.01,
+            Max = 60,
+            Default = 0.01,
+            Function = function(val) end
+        })  
     end)
+    if fail then print(fail ~= nil) end
 end)
