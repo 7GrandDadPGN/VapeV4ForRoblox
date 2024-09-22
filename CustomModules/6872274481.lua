@@ -9012,7 +9012,6 @@ run(function()
 						return (check1.Position - entityLibrary.character.HumanoidRootPart.Position).Magnitude < (check2.Position - entityLibrary.character.HumanoidRootPart.Position).Magnitude
 					end
 				}
-				local lplr = game:GetService("Players").LocalPlayer
 				local function sendRequest(entity)
 					local targetPosition = entity.HumanoidRootPart.Position
 					local direction = (targetPosition - lplr.Character.HumanoidRootPart.Position).unit
@@ -9052,6 +9051,7 @@ run(function()
 		HoverText = "Max entities to attack \n at the same time"
 	})
 end)
+
 run(function()
 	local ReachDisplay = {}
 	local ReachLabel
