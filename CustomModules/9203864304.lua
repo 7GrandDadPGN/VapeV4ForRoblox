@@ -269,3 +269,14 @@ run(function()
         Function = function(val) end
     })
 end)
+
+run(function() 
+    local SaveButton = {Enabled = false}
+
+    SaveButton = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
+        Name = "SaveButton",
+        Function = function(callback) 
+            game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frame.SaveButton.Visible = callback
+        end
+    })
+end)
