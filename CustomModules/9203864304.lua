@@ -171,6 +171,10 @@ run(function()
         tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = CFrame.new(-50.2197418, 7.79999876, -60.5010338, 0.999999762, -1.30630951e-10, 0.000655336305, 2.20219593e-10, 1, -1.36706277e-07, -0.000655336305, 1.3670639e-07, 0.999999762)}):Play()
     end
 
+    local function TweenChar(cframe) 
+        tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = cframe}):Play()
+    end
+
     local function cookpizza() 
         Buy("Flour")
         splitsecond()
@@ -284,7 +288,20 @@ run(function()
                 elseif Dropdown.Value == "Ramen" then
                     cookramen()
                 elseif Dropdown.Value == "Space Soup" then
-                    if backpack:FindFirstChild("Almond Water") and backpack:FindFirstChild("Meteorite") then 
+                    if backpack:FindFirstChild("Almond Water") then 
+                        local Meteorites = 0
+                        for i, v in pairs(workspace:GetChildren()) do 
+                            if v:IsA("Tool") and v.Name == "Meteorite" then 
+                                Meteorites = Meteorites + 1
+                            end
+                        end
+                        if Meteorites >= 2 then 
+                            for i = 1, 2, 1 do
+                                TweenChar(workspace:FindFirstChild("Meteorite").CFrame)
+                            end
+                        else
+                            return
+                        end
                         TweenToStove()
                         splitsecond()
                         AddItem("Almond Water")
