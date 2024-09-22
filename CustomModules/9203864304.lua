@@ -220,7 +220,7 @@ run(function()
 
     Dropdown = Recipies.CreateDropdown({
         Name = "Recipies",
-        List = {"None", "Grilled Cheese", "Pizza"}
+        List = {"None", "Grilled Cheese", "Pizza"},
         Function = function(val) end
     })
 end)
