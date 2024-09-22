@@ -238,6 +238,25 @@ run(function()
                     cooksalad()
                 elseif Dropdown.Value == "Pizza" then
                     cookpizza()
+                elseif Dropdown.Value == "Spaghetti" then
+                    Buy("Beef")
+                    splitsecond()
+                    Buy("Tomato")
+                    splitsecond()
+                    Buy("Noodles")
+                    splitsecond()
+                    TweenToStove()
+                    splitsecond()
+                    AddItem("Beef")
+                    splitsecond()
+                    AddItem("Tomato")
+                    splitsecond()
+                    AddItem("Noodles")
+                    splitsecond()
+                    temp(2)
+                    splitsecond()
+                    Cook()
+                    InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
                 end
                 Recipies.ToggleButton(true)
             end
@@ -246,7 +265,7 @@ run(function()
 
     Dropdown = Recipies.CreateDropdown({
         Name = "Recipies",
-        List = {"None", "Grilled Cheese", "Salad", "Pizza"},
+        List = {"None", "Grilled Cheese", "Salad", "Pizza", "Spaghetti"},
         Function = function(val) end
     })
 end)
