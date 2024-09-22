@@ -96,6 +96,15 @@ local function warningNotification(title, text, delay)
 	return (suc and res)
 end
 
+local function InfoNotification(title, text, delay)
+	local suc, res = pcall(function()
+		local frame = GuiLibrary.CreateNotification(title, text, delay, "assets/InfoNotification.png")
+		frame.Frame.Frame.ImageColor3 = Color3.fromRGB(255,255,255)
+		return frame
+	end)
+	return (suc and res)
+end
+
 local function removeTags(str)
 	str = str:gsub("<br%s*/>", "\n")
 	return (str:gsub("<[^<>]->", ""))
@@ -125,4 +134,93 @@ run(function()
         Default = 0.01,
         Function = function(val) end
     })  
+end)
+
+run(function() 
+    local Recipies = {Enabled = false}
+    local Dropdown = {Value = "None"}
+    local hum = lplr.Character:FindFirstChildWhichIsA("Humanoid")
+    local backpack = lplr.Backpack
+    local function splitsecond() task.wait(0.1) end
+
+    local function Buy(item) 
+        local args = {[1] = item}
+        game:GetService("ReplicatedStorage"):WaitForChild("Purchase5"):FireServer(unpack(args))
+    end
+
+    local function AddItem(item) 
+        hum:EquipTool(backpack:FindFirstChild(item))
+        local args = {[1] = "Add Ingredient",[2] = item}
+        game:GetService("ReplicatedStorage"):WaitForChild("CookingEvent"):FireServer(unpack(args))        
+    end
+
+    local function temp(val) 
+        local args = {[1] = "Change Temperature",[2] = val}
+        game:GetService("ReplicatedStorage"):WaitForChild("CookingEvent"):FireServer(unpack(args))        
+    end
+
+    local function Cook() 
+        local args = {
+            [1] = "Cook"
+        }
+        
+        game:GetService("ReplicatedStorage"):WaitForChild("CookingEvent"):FireServer(unpack(args))        
+    end
+
+    local function TweenToStove() 
+        tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = CFrame.new(-50.2197418, 7.79999876, -60.5010338, 0.999999762, -1.30630951e-10, 0.000655336305, 2.20219593e-10, 1, -1.36706277e-07, -0.000655336305, 1.3670639e-07, 0.999999762)}):Play()
+    end
+
+    local function cookpizza() 
+        Buy("Flour")
+        splitsecond()
+        Buy("Tomato")
+        splitsecond()
+        Buy("Cheese")
+        TweenToStove()
+        task.wait(1.01) -- lol
+        AddItem("Flour")
+        splitsecond()
+        AddItem("Tomato")
+        splitsecond()
+        AddItem("Cheese")
+        splitsecond()
+        temp(2)
+        splitsecond()
+        Cook()
+        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick().." Recipie: Pizza", 3)
+    end
+
+    local function cookgc() 
+        Buy("Bread")
+        splitsecond()
+        Buy("Cheese")
+        splitsecond()
+        TweenToStove()
+        AddItem("Bread")
+        splitsecond()
+        AddItem("Cheese")
+        splitsecond()
+        temp(3)
+        splitsecond()
+        Cook()
+        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick().." Recipie: Grilled Cheese", 3)
+    end
+
+    Recipies = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
+        Name = "Recipies",
+        Function = function() 
+            if Dropdown.Value == "Grilled Cheese" then
+                cookgc()
+            elseif Dropdown.Value == "Pizza" then
+                cookpizza()
+            end
+        end
+    })
+
+    Dropdown = Recipies.CreateDropdown({
+        Name = "Recipies",
+        List = {"None", "Grilled Cheese", "Pizza"}
+        Function = function(val) end
+    })
 end)
