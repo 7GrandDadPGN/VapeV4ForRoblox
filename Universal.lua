@@ -6073,6 +6073,9 @@ run(function()
 		Name = "Infinite Yield",
 		Function = function(callback) 
 			loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source", callback))()
+			if callback then
+				iy.ToggleButton(true)
+			end
 		end
 	})
 end)
