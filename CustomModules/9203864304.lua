@@ -351,14 +351,18 @@ run(function()
         Name = "CollectMeteorites",
         Function = function(callback) 
             local meteorites = 0
+            local oldcframe = nil
             if callback then 
                 for i, v in pairs(workspace:GetChildren()) do
                     if v:IsA("Tool") and v.Name == "Meteorite" then 
+                        oldcframe = lplr.Character.HumanoidRootPart.CFrame
                         TweenChar(v.Handle.CFrame)
                         meteorites = meteorites + 1
                         task.wait(1.1)
                     end
                 end
+                TweenChar(oldcframe)
+                InfoNotification("CollectMeteorites", "Successfully Collected. Meteorites: "..meteorites, 4)
             end
         end
     })
