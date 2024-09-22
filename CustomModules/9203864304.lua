@@ -369,6 +369,20 @@ run(function()
     })
 end)
 
+run(function() 
+    local AutoSave = {Enabled = false}
+
+    AutoSave = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
+        Name = "AutoSave",
+        Function = function(callback) 
+            if callback then 
+                repeat task.wait(1)
+                    workspace["Floppy Disk"]:FindFirstChildWhichIsA("ProximityPrompt"):InputHoldEnd()
+                until not AutoSave.Enabled
+            end
+        end
+    })
+end)
 
 task.spawn(function() 
     if workspace:FindFirstChild("Crystal Ball") then 
