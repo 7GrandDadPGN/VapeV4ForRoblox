@@ -136,6 +136,10 @@ run(function()
     })  
 end)
 
+local function TweenChar(cframe) 
+    tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = cframe}):Play()
+end
+
 run(function() 
     local Recipies = {Enabled = false}
     local Dropdown = {Value = "None"}
@@ -171,9 +175,7 @@ run(function()
         tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = CFrame.new(-50.2197418, 7.79999876, -60.5010338, 0.999999762, -1.30630951e-10, 0.000655336305, 2.20219593e-10, 1, -1.36706277e-07, -0.000655336305, 1.3670639e-07, 0.999999762)}):Play()
     end
 
-    local function TweenChar(cframe) 
-        tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = cframe}):Play()
-    end
+    
 
     local function cookpizza() 
         Buy("Flour")
@@ -340,4 +342,32 @@ run(function()
             game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frame.SaveButton.Visible = callback
         end
     })
+end)
+
+run(function() 
+    local GetMeteorites = {Enabled = false}
+
+    GetMeteorites = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
+        Name = "CollectMeteorites",
+        Function = function(callback) 
+            local meteorites = 0
+            if callback then 
+                for i, v in pairs(workspace:GetChildren()) do
+                    if v:IsA("Tool") and v.Name == "Meteorite" then 
+                        TweenChar(v.Handle.CFrame)
+                        meteorites = meteorites + 1
+                        task.wait(1.1)
+                    end
+                end
+            end
+        end
+    })
+end)
+
+
+task.spawn(function() 
+    if workspace:FindFirstChild("Crystal Ball") then 
+        workspace["Crystal Ball"].Transparency = 1
+        workspace["Crystal Ball"]:FindFirstChildWhichIsA("ProximityPrompt").ActionText = "Interact"
+    end
 end)
