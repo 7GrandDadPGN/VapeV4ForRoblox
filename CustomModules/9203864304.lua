@@ -395,6 +395,7 @@ run(function()
         Function = function(callback) 
             if callback then 
                 backpack:ClearAllChildren()
+                ClearBackpack.ToggleButton(true)
             end
         end
     })
