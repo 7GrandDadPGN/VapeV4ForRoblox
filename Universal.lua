@@ -6066,6 +6066,16 @@ run(function()
 	})
 end)
 
+local function optionsbutton(api, name, func, hovertxt, default) 
+	return api.CreateOptionsButton({Name = name,Function = func,if hovertxt ~= nil then HoverText = hovertxt end,if default ~= nil then Default = default end})
+end
+
+run(function() 
+	local iy = {Enabled = false}
+
+	iy = CreateOptionsButton(GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api, "Infinite Yield", function(callback) loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))() end, nil, nil)
+end)
+
 run(function()
 	local FPS = {}
 	local FPSLabel
