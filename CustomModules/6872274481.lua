@@ -8995,6 +8995,64 @@ run(function()
 end)
 
 run(function()
+	local KaidaInstaKill = {Enabled = false}
+	local Range = {Value = 40}
+	local MaxEntities = {Value = 1}
+	KaidaInstaKill = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+		Name = "KaidaInstaKill",
+		Function = function(call) 
+			if call then
+				if store.queueType ~= "training_room" and store.equippedKit ~= "summoner" then warningNotification("KaidaInstakill", "Kaida kit is required!", 1.5); return KaidaInstaKill.ToggleButton(false); end
+				local npcsortmethods = {
+					Distance = function(a, b)
+						local check1 = a.HumanoidRootPart
+						local check2 = b.HumanoidRootPart
+						if a:FindFirstChild("RootPart") then check1 = a.RootPart end
+						if b:FindFirstChild("RootPart") then check2 = b.RootPart end
+						return (check1.Position - entityLibrary.character.HumanoidRootPart.Position).Magnitude < (check2.Position - entityLibrary.character.HumanoidRootPart.Position).Magnitude
+					end
+				}
+				local lplr = game:GetService("Players").LocalPlayer
+				local function sendRequest(entity)
+					local targetPosition = entity.HumanoidRootPart.Position
+					local direction = (targetPosition - lplr.Character.HumanoidRootPart.Position).unit
+					local args = {
+						[1] = {
+							["clientTime"] = tick(),
+							["direction"] = direction,
+							["position"] = targetPosition
+						}
+					}
+					return game:GetService("ReplicatedStorage").rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged.SummonerClawAttackRequest:FireServer(unpack(args))
+				end
+				repeat task.wait();
+					if entityLibrary.isAlive and store.matchState > 0 then
+						local res = AllNearPosition(Range.Value, MaxEntities.Value, npcsortmethods["Distance"], nil, true)
+						for i,v in pairs(res) do
+							local req_res = sendRequest(v)
+						end
+					end
+				until (not KaidaInstaKill.Enabled)
+			end
+		end
+	})
+	Range = KaidaInstaKill.CreateSlider({
+		Name = "Aura Range",
+		Min = 30,
+		Max = 50,
+		Function = function(val) end,
+		Default = 50
+	})
+	MaxEntities = KaidaInstaKill.CreateSlider({
+		Name = "Max Entities",
+		Min = 10,
+		Max = 15,
+		Function = function(val) end,
+		Default = 10,
+		HoverText = "Max entities to attack \n at the same time"
+	})
+end)
+run(function()
 	local ReachDisplay = {}
 	local ReachLabel
 	ReachDisplay = GuiLibrary.CreateLegitModule({
