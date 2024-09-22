@@ -234,7 +234,7 @@ run(function()
             if callback then
                 if Dropdown.Value == "Grilled Cheese" then
                     cookgc()
-                elseif dropdown.Value == "Salad" then
+                elseif Dropdown.Value == "Salad" then
                     cooksalad()
                 elseif Dropdown.Value == "Pizza" then
                     cookpizza()
