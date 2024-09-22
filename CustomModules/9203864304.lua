@@ -191,6 +191,27 @@ run(function()
         InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
     end
 
+    local function cooksalad() 
+        Buy("Lettuce")
+        splitsecond()
+        Buy("Lettuce")
+        splitsecond()
+        Buy("Tomato")
+        splitsecond()
+        TweenToStove()
+        splitsecond()
+        AddItem("Lettuce")
+        splitsecond()
+        AddItem("Lettuce")
+        splitsecond()
+        AddItem("Tomato")
+        splitsecond()
+        temp(3)
+        splitsecond()
+        Cook()
+        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
+    end
+
     local function cookgc() 
         Buy("Bread")
         splitsecond()
@@ -213,6 +234,8 @@ run(function()
             if callback then
                 if Dropdown.Value == "Grilled Cheese" then
                     cookgc()
+                elseif dropdown.Value == "Salad" then
+                    cooksalad()
                 elseif Dropdown.Value == "Pizza" then
                     cookpizza()
                 end
@@ -223,7 +246,7 @@ run(function()
 
     Dropdown = Recipies.CreateDropdown({
         Name = "Recipies",
-        List = {"None", "Grilled Cheese", "Pizza"},
+        List = {"None", "Grilled Cheese", "Salad", "Pizza"},
         Function = function(val) end
     })
 end)
