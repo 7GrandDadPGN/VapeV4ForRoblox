@@ -283,6 +283,25 @@ run(function()
                     cookspaghetti()
                 elseif Dropdown.Value == "Ramen" then
                     cookramen()
+                elseif Dropdown.Value == "Space Soup" then
+                    if backpack:FindFirstChild("Almond Water") and backpack:FindFirstChild("Meteorite") then 
+                        TweenToStove()
+                        splitsecond()
+                        AddItem("Almond Water")
+                        splitsecond()
+                        AddItem("Almond Water")
+                        splitsecond()
+                        AddItem("Meteorite")
+                        splitsecond()
+                        AddItem("Meteorite")
+                        splitsecond()
+                        temp(1)
+                        splitsecond()
+                        Cook()
+                        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
+                    else
+                        warningNotification("Recipies", "Need 2x Almond Water, 2x Meteorite.", 5)
+                    end
                 end
                 Recipies.ToggleButton(true)
             end
@@ -291,7 +310,7 @@ run(function()
 
     Dropdown = Recipies.CreateDropdown({
         Name = "Recipies",
-        List = {"None", "Grilled Cheese", "Salad", "Pizza", "Spaghetti", "Ramen"},
+        List = {"None", "Grilled Cheese", "Salad", "Pizza", "Spaghetti", "Ramen", "Space Soup"},
         Function = function(val) end
     })
 end) -- longest piece of code i have ever written (lol)
