@@ -1954,10 +1954,13 @@ print("h")
 local function loadVape()
 	print('hi')
 	if not shared.VapeIndependent then
+		print("hello")
 		loadstring(vapeGithubRequest("Universal.lua"))()
 		if isfile("vape/CustomModules/"..game.PlaceId..".lua") then
 			loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
+			print("random")
 		else
+			print("else")
 			if not shared.VapeDeveloper then
 				local suc, publicrepo = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/Owner1213/VapeV4ForRoblox/"..readfile("vape/commithash.txt").."/CustomModules/"..game.PlaceId..".lua") end)
 				if suc and publicrepo and publicrepo ~= "404: Not Found" then
