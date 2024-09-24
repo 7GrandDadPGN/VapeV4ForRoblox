@@ -1950,8 +1950,9 @@ GeneralSettings.CreateButton2({
 	Name = "UNINJECT",
 	Function = GuiLibrary.SelfDestruct
 })
-
+print("h")
 local function loadVape()
+	print('hi')
 	if not shared.VapeIndependent then
 		loadstring(vapeGithubRequest("Universal.lua"))()
 		if isfile("vape/CustomModules/"..game.PlaceId..".lua") then
@@ -2015,4 +2016,5 @@ if shared.VapeIndependent then
 	return GuiLibrary
 else
 	loadVape()
+	print("true")
 end
