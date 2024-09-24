@@ -218,18 +218,14 @@ run(function()
     }
 
     local function Buy(item) 
-        if item ~= "None" then 
-            local args = {[1] = item}
-            game:GetService("ReplicatedStorage"):WaitForChild("Purchase5"):FireServer(unpack(args))
-        end
+        local args = {[1] = item}
+        game:GetService("ReplicatedStorage"):WaitForChild("Purchase5"):FireServer(unpack(args))
     end
 
     local function AddItem(item) 
-        if item ~= "None" then
-            hum:EquipTool(backpack:FindFirstChild(item))
-            local args = {[1] = "Add Ingredient",[2] = item}
-            game:GetService("ReplicatedStorage"):WaitForChild("CookingEvent"):FireServer(unpack(args))
-        end
+        hum:EquipTool(backpack:FindFirstChild(item))
+        local args = {[1] = "Add Ingredient",[2] = item}
+        game:GetService("ReplicatedStorage"):WaitForChild("CookingEvent"):FireServer(unpack(args))
     end
 
     local function temp(val) 
