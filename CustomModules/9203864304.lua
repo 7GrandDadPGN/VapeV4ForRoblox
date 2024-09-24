@@ -141,23 +141,95 @@ local function TweenChar(cframe)
 end
 
 local backpack = lplr.Backpack
+local hum = lplr.Character:FindFirstChildWhichIsA("Humanoid")
+
+local function splitsecond() task.wait(0.1) end
+local function second() task.wait(1) end
 
 run(function() 
     local Recipies = {Enabled = false}
     local Dropdown = {Value = "None"}
-    local hum = lplr.Character:FindFirstChildWhichIsA("Humanoid")
-    local backpack = lplr.Backpack
-    local function splitsecond() task.wait(0.1) end
+    
+    local Methods = {
+        ["Grilled Cheese"] = {
+            Item1 = "Bread",
+            Item2 = "Cheese",
+            temp = 3
+        },
+
+        ["Pizza"] = {
+            Item1 = "Flour",
+            Item2 = "Tomato"
+            Item3 = "Cheese",
+            temp = 2
+        },
+
+        ["Salad"] = {
+            Item1 = "Lettuce",
+            Item2 = "Lettuce",
+            Item3 = "Tomato",
+            temp = 3
+        },
+
+        ["Spaghetti"] = {
+            Item1 = "Beef",
+            Item2 = "Tomato",
+            Item3 = "Noodles",
+            temp = 2
+        },
+
+        ["Ramen"] = {
+            Item1 = "Noodles",
+            Item2 = "Eggs",
+            Item3 = "Soy Sauce",
+            temp = 2
+        },
+
+        ["Mac & Cheese"] = {
+            Item1 = "Noodles",
+            Item2 = "Milk",
+            Item3 = "Cheese",
+            temp = 2
+        },
+
+        ["Cake"] = {
+            Item1 = "Eggs",
+            Item2 = "Milk",
+            Item3 = "Sugar",
+            Item4 = "Flour",
+            temp = 1
+        },
+
+        ["Burger"] = {
+            Item1 = "Bread",
+            Item2 = "Beef",
+            Item3 = "Lettuce",
+            Item4 = "Tomato",
+            temp = 1
+        },
+
+        ["Space Soup"] = {
+            Item1 = "Almond Water",
+            Item2 = "Almond Water",
+            Item3 = "Meteorite",
+            Item4 = "Meteorite",
+            temp = 1
+        }
+    }
 
     local function Buy(item) 
-        local args = {[1] = item}
-        game:GetService("ReplicatedStorage"):WaitForChild("Purchase5"):FireServer(unpack(args))
+        if item ~= "None" then 
+            local args = {[1] = item}
+            game:GetService("ReplicatedStorage"):WaitForChild("Purchase5"):FireServer(unpack(args))
+        end
     end
 
     local function AddItem(item) 
-        hum:EquipTool(backpack:FindFirstChild(item))
-        local args = {[1] = "Add Ingredient",[2] = item}
-        game:GetService("ReplicatedStorage"):WaitForChild("CookingEvent"):FireServer(unpack(args))        
+        if item ~= "None" then
+            hum:EquipTool(backpack:FindFirstChild(item))
+            local args = {[1] = "Add Ingredient",[2] = item}
+            game:GetService("ReplicatedStorage"):WaitForChild("CookingEvent"):FireServer(unpack(args))
+        end
     end
 
     local function temp(val) 
@@ -165,11 +237,8 @@ run(function()
         game:GetService("ReplicatedStorage"):WaitForChild("CookingEvent"):FireServer(unpack(args))        
     end
 
-    local function Cook() 
-        local args = {
-            [1] = "Cook"
-        }
-        
+    local function FireCookEvent() 
+        local args = {[1] = "Cook"}
         game:GetService("ReplicatedStorage"):WaitForChild("CookingEvent"):FireServer(unpack(args))        
     end
 
@@ -177,151 +246,26 @@ run(function()
         tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = CFrame.new(-50.2197418, 7.79999876, -60.5010338, 0.999999762, -1.30630951e-10, 0.000655336305, 2.20219593e-10, 1, -1.36706277e-07, -0.000655336305, 1.3670639e-07, 0.999999762)}):Play()
     end
 
-    
-
-    local function cookpizza() 
-        Buy("Flour")
-        splitsecond()
-        Buy("Tomato")
-        splitsecond()
-        Buy("Cheese")
-        TweenToStove()
-        AddItem("Flour")
-        splitsecond()
-        AddItem("Tomato")
-        splitsecond()
-        AddItem("Cheese")
-        splitsecond()
-        temp(2)
-        splitsecond()
-        Cook()
-        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
-    end
-
-    local function cooksalad() 
-        Buy("Lettuce")
-        splitsecond()
-        Buy("Lettuce")
-        splitsecond()
-        Buy("Tomato")
-        splitsecond()
-        TweenToStove()
-        splitsecond()
-        AddItem("Lettuce")
-        splitsecond()
-        AddItem("Lettuce")
-        splitsecond()
-        AddItem("Tomato")
-        splitsecond()
-        temp(3)
-        splitsecond()
-        Cook()
-        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
-    end
-
-    local function cookgc() 
-        Buy("Bread")
-        splitsecond()
-        Buy("Cheese")
-        splitsecond()
-        TweenToStove()
-        AddItem("Bread")
-        splitsecond()
-        AddItem("Cheese")
-        splitsecond()
-        temp(3)
-        splitsecond()
-        Cook()
-        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
-    end
-
-    local function cookspaghetti() 
-        Buy("Beef")
-        splitsecond()
-        Buy("Tomato")
-        splitsecond()
-        Buy("Noodles")
-        splitsecond()
-        TweenToStove()
-        splitsecond()
-        AddItem("Beef")
-        splitsecond()
-        AddItem("Tomato")
-        splitsecond()
-        AddItem("Noodles")
-        splitsecond()
-        temp(2)
-        splitsecond()
-        Cook()
-        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
-    end
-
-    local function cookramen() 
-        Buy("Noodles")
-        splitsecond()
-        Buy("Eggs")
-        splitsecond()
-        Buy("Soy Sauce")
-        splitsecond()
-        TweenToStove()
-        splitsecond()
-        AddItem("Noodles")
-        splitsecond()
-        AddItem("Eggs")
-        splitsecond()
-        AddItem("Soy Sauce")
-        splitsecond()
-        temp(2)
-        splitsecond()
-        Cook()
-        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
-    end
-
     Recipies = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
         Name = "Recipies",
         Function = function(callback) 
             if callback then
-                if Dropdown.Value == "Grilled Cheese" then
-                    cookgc()
-                elseif Dropdown.Value == "Salad" then
-                    cooksalad()
-                elseif Dropdown.Value == "Pizza" then
-                    cookpizza()
-                elseif Dropdown.Value == "Spaghetti" then
-                    cookspaghetti()
-                elseif Dropdown.Value == "Ramen" then
-                    cookramen()
-                elseif Dropdown.Value == "Space Soup" then
-                    if backpack:FindFirstChild("Almond Water") then 
-                        local Meteorites = 0
-                        for i, v in pairs(workspace:GetChildren()) do 
-                            if v:IsA("Tool") and v.Name == "Meteorite" then 
-                                Meteorites = Meteorites + 1
-                            end
-                        end
-                        if Meteorites >= 2 then 
-                            for i = 1, 2, 1 do
-                                TweenChar(workspace:FindFirstChild("Meteorite").Handle.CFrame)
-                                task.wait(1.1)
-                            end
-                        end
-                        TweenToStove()
+                if Dropdown.Value ~= "None" then
+                    local meth = Methods[Dropdown.Value]
+                    local items = #meth - 1
+                    local item = 1
+
+                    for i = 1,items,1 do 
                         splitsecond()
-                        AddItem("Almond Water")
+                        Buy(meth[item])
                         splitsecond()
-                        AddItem("Almond Water")
-                        splitsecond()
-                        AddItem("Meteorite")
-                        splitsecond()
-                        AddItem("Meteorite")
-                        splitsecond()
-                        temp(1)
-                        splitsecond()
-                        Cook()
-                        InfoNotification("Recipies", "Successfully Cooked. Time Took: "..tick(), 3)
-                    else
-                        warningNotification("Recipies", "Need 2x Almond Water, 2x Meteorite.", 5)
+                        AddItem(meth[item])
+                        item = item + 1
                     end
+                    splitsecond()
+                    temp(meth.temp)
+                    splitsecond()
+                    FireCookEvent()
                 end
                 Recipies.ToggleButton(true)
             end
@@ -330,7 +274,7 @@ run(function()
 
     Dropdown = Recipies.CreateDropdown({
         Name = "Recipies",
-        List = {"None", "Grilled Cheese", "Salad", "Pizza", "Spaghetti", "Ramen", "Space Soup"},
+        List = {"None", "Grilled Cheese", "Salad", "Pizza", "Spaghetti", "Ramen", "Mac & Cheese", "Cake", "Burger", "Space Soup"},
         Function = function(val) end
     })
 end) -- longest piece of code i have ever written (lol)
@@ -348,24 +292,24 @@ end)
 
 run(function() 
     local GetMeteorites = {Enabled = false}
-
+    
     GetMeteorites = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
         Name = "CollectMeteorites",
         Function = function(callback) 
              if callback then 
-                GetMeteorites.ToggleButton(true)
-                local meteorites = 0
-                local oldcframe = nil
-                oldcframe = lplr.Character.HumanoidRootPart.CFrame
-                for i, v in pairs(workspace:GetChildren()) do
-                    if v:IsA("Tool") and v.Name == "Meteorite" then 
+                local Meteorites = 0
+                local oldcframe = lplr.Character.HumanoidRootPart.CFrame
+
+                for i, v in paris(workspace:GetDescendants()) do 
+                    if v:IsA("Tool") and v.Name = "Meteorite" then 
                         TweenChar(v.Handle.CFrame)
-                        meteorites = meteorites + 1
-                        task.wait(1.1)
                     end
                 end
+                repeat task.wait() until not workspace:FindFirstChild("Meteorite")
+                second()
                 TweenChar(oldcframe)
-                InfoNotification("CollectMeteorites", "Successfully Collected. Meteorites: "..meteorites, 4)
+                splitsecond()
+                InfoNotification("CollectMeteorites", "Successfully Collected Meteorites. Meteorites:"..Meteorites, 3)
             end
         end
     })
@@ -385,6 +329,8 @@ run(function()
             end
         end
     })
+
+    AutoSave.Object.Visible = false
 end)
 
 run(function() 
