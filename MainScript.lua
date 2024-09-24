@@ -1950,27 +1950,24 @@ GeneralSettings.CreateButton2({
 	Name = "UNINJECT",
 	Function = GuiLibrary.SelfDestruct
 })
-print("h")
 local function loadVape()
-	print('hi')
 	if not shared.VapeIndependent then
-		print("hello")
 		loadstring(vapeGithubRequest("Universal.lua"))()
 		if isfile("vape/CustomModules/"..game.PlaceId..".lua") then
 			loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
-			print("random")
 		else
-			print("else")
 			if not shared.VapeDeveloper then
-				print("start2")
 				local suc, publicrepo = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/Owner1213/VapeV4ForRoblox/"..readfile("vape/commithash.txt").."/CustomModules/"..game.PlaceId..".lua") end)
-				print("start3")
 				if suc and publicrepo and publicrepo ~= "404: Not Found" then
-					print("start4")
 					writefile("vape/CustomModules/"..game.PlaceId..".lua", "--This watermark is used to delete the file if its cached, remove it to make the file persist after commits.\n"..publicrepo)
-					print("start5")
-					loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
-					print("start")
+					local success, fail = pcall(function()
+						loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
+					end)
+					
+					if fail and fail ~= nil then 
+						local frame = GuiLibrary.CreateNotification("Vape: Error Detected", fail, 10, "assets/WarningNotification.png")
+						frame.Frame.Frame.ImageColor3 = Color3.fromRGB(255, 0, 0)
+					end
 				end
 			end
 		end
