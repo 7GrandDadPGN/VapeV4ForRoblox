@@ -146,7 +146,7 @@ local hum = lplr.Character:FindFirstChildWhichIsA("Humanoid")
 local function splitsecond() task.wait(0.1) end
 local function second() task.wait(1) end
 
-run(function() 
+--[[run(function() 
     local Recipies = {Enabled = false}
     local Dropdown = {Value = "None"}
     
@@ -284,7 +284,9 @@ run(function()
             game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frame.SaveButton.Visible = callback
         end
     })
-end)
+end)]]
+
+print("succeded")
 
 run(function() 
     local GetMeteorites = {Enabled = false}
