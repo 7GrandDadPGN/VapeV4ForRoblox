@@ -159,7 +159,7 @@ run(function()
 
         ["Pizza"] = {
             Item1 = "Flour",
-            Item2 = "Tomato"
+            Item2 = "Tomato",
             Item3 = "Cheese",
             temp = 2
         },
