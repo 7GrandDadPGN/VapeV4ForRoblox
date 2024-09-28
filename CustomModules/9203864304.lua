@@ -135,7 +135,7 @@ local function run(func) func() end
     })  
 end)]]
 
-local function TweenChar(cframe) 
+--[[local function TweenChar(cframe) 
     tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = cframe}):Play()
 end
 
@@ -272,7 +272,7 @@ run(function()
         List = {"None", "Grilled Cheese", "Salad", "Pizza", "Spaghetti", "Ramen", "Mac & Cheese", "Cake", "Burger", "Space Soup"},
         Function = function(val) end
     })
-end) -- longest piece of code i have ever written (lol)
+end) -- longest piece of code i have ever written (lol)]]
 
 run(function() 
     local SaveButton = {Enabled = false}
