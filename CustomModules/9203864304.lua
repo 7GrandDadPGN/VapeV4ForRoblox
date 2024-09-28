@@ -274,7 +274,7 @@ run(function()
     })
 end) -- longest piece of code i have ever written (lol)]]
 
-run(function() 
+--[[run(function() 
     local SaveButton = {Enabled = false}
 
     SaveButton = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
@@ -283,7 +283,7 @@ run(function()
             game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frame.SaveButton.Visible = callback
         end
     })
-end)
+end)]]
 
 run(function() 
     local GetMeteorites = {Enabled = false}
