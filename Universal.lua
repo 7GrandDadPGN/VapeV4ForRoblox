@@ -6233,5 +6233,5 @@ end)
 
 task.spawn(function() 
 	repeat task.wait() until game:IsLoaded() and lplr.Character
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/Owner1213/VapeV4ForRoblox/main/chat.lua", true))
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Owner1213/VapeV4ForRoblox/main/chat.lua", true))()
 end)
