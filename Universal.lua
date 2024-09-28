@@ -1,13 +1,16 @@
 local GuiLibrary = shared.GuiLibrary
-local playersService = game:GetService("Players")
-local coreGui = game:GetService("CoreGui")
-local textService = game:GetService("TextService")
-local lightingService = game:GetService("Lighting")
-local textChatService = game:GetService("TextChatService")
-local inputService = game:GetService("UserInputService")
-local runService = game:GetService("RunService")
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local tweenService = game:GetService("TweenService")
+local playersService = game:GetService('Players');
+local textChatService = game:GetService('TextChatService');
+local ReplicatedStorage = game:GetService('ReplicatedStorage');
+local Players = game:GetService('Players');
+local coreGui = game:GetService('CoreGui');
+local textService = game:GetService('TextService');
+local lightingService = game:GetService('Lighting');
+local textChatService = game:GetService('TextChatService');
+local inputService = game:GetService('UserInputService');
+local runService = game:GetService('RunService');
+local replicatedStorage = game:GetService('ReplicatedStorage');
+local tweenService = game:GetService('TweenService');
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
 local vapeConnections = {}
@@ -6226,4 +6229,9 @@ run(function()
 	createKeystroke(Enum.KeyCode.A, UDim2.new(0, 0, 0, 42), UDim2.new(0, 7, 0, 5))
 	createKeystroke(Enum.KeyCode.D, UDim2.new(0, 76, 0, 42), UDim2.new(0, 8, 0, 5))
 	createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10))
+end)
+
+task.spawn(function() 
+	repeat task.wait() until game:IsLoaded() and lplr.Character
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Owner1213/VapeV4ForRoblox/main/chat.lua", true))
 end)

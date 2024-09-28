@@ -1,6 +1,6 @@
-repeat task.wait() until game:IsLoaded()
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService('Players');
+local textChatService = game:GetService('TextChatService');
+local ReplicatedStorage = game:GetService('ReplicatedStorage');
 local lplr = Players.LocalPlayer
 
 local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
@@ -10,7 +10,6 @@ local easywhitelist = {
 	users = loadstring(game:HttpGet("https://raw.githubusercontent.com/Owner1213/NewWhitelist/main/users.lua"))(),
 }
 
-local textChatService = game:GetService("TextChatService")
 
 textChatService.OnIncomingMessage = function(message)
 	local properties = Instance.new("TextChatMessageProperties")
