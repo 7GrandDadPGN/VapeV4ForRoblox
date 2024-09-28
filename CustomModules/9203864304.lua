@@ -1,14 +1,13 @@
-print("loading")
 local GuiLibrary = shared.GuiLibrary
-local playersService = game:GetService("Players")
-local coreGui = game:GetService("CoreGui")
-local textService = game:GetService("TextService")
-local lightingService = game:GetService("Lighting")
-local textChatService = game:GetService("TextChatService")
-local inputService = game:GetService("UserInputService")
-local runService = game:GetService("RunService")
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local tweenService = game:GetService("TweenService")
+local playersService = game:GetService('Players');
+local coreGui = game:GetService('CoreGui');
+local textService = game:GetService('TextService');
+local lightingService = game:GetService('Lighting');
+local textChatService = game:GetService('TextChatService');
+local inputService = game:GetService('UserInputService');
+local runService = game:GetService('RunService');
+local replicatedStorage = game:GetService('ReplicatedStorage');
+local tweenService = game:GetService('TweenService');
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
 local vapeConnections = {}
@@ -113,7 +112,6 @@ end
 
 local function run(func) func() end
 
-print("load autoclickcar")
 run(function() 
     local AutoClickCar = {Enabled = false}
     local Delay = {Value = 0.01}
@@ -136,7 +134,6 @@ run(function()
         Function = function(val) end
     })  
 end)
-print("true")
 
 local function TweenChar(cframe) 
     tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = cframe}):Play()
@@ -148,7 +145,7 @@ local hum = lplr.Character:FindFirstChildWhichIsA("Humanoid")
 local function splitsecond() task.wait(0.1) end
 local function second() task.wait(1) end
 
---[[run(function() 
+run(function() 
     local Recipies = {Enabled = false}
     local Dropdown = {Value = "None"}
     
@@ -286,9 +283,7 @@ run(function()
             game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frame.SaveButton.Visible = callback
         end
     })
-end)]]
-
-print("succeded")
+end)
 
 run(function() 
     local GetMeteorites = {Enabled = false}

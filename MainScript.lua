@@ -1963,7 +1963,6 @@ local function loadVape()
 					local success, fail = pcall(function()
 						loadstring(readfile("vape/CustomModules/"..game.PlaceId..".lua"))()
 					end)
-					
 					if fail and fail ~= nil then 
 						local frame = GuiLibrary.CreateNotification("Vape: Error Detected", fail, 10, "assets/WarningNotification.png")
 						frame.Frame.Frame.ImageColor3 = Color3.fromRGB(255, 0, 0)
