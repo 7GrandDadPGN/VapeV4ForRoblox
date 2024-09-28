@@ -6231,7 +6231,7 @@ run(function()
 	createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10))
 end)
 
-task.spawn(function() 
+--[[task.spawn(function() 
 	repeat task.wait() until game:IsLoaded() and lplr.Character
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/Owner1213/VapeV4ForRoblox/main/chat.lua", true))()
-end)
+end)]]
