@@ -112,7 +112,7 @@ end
 
 local function run(func) func() end
 
---[[run(function() 
+run(function() 
     local AutoClickCar = {Enabled = false}
     local Delay = {Value = 0.01}
 
@@ -133,9 +133,9 @@ local function run(func) func() end
         Default = 0.01,
         Function = function(val) end
     })  
-end)]]
+end)
 
---[[local function TweenChar(cframe) 
+local function TweenChar(cframe) 
     tweenService:Create(lplr.Character.HumanoidRootPart, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = cframe}):Play()
 end
 
@@ -274,7 +274,7 @@ run(function()
     })
 end) -- longest piece of code i have ever written (lol)]]
 
---[[run(function() 
+run(function() 
     local SaveButton = {Enabled = false}
 
     SaveButton = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
@@ -283,9 +283,9 @@ end) -- longest piece of code i have ever written (lol)]]
             game:GetService("Players").LocalPlayer.PlayerGui.HUD.Frame.SaveButton.Visible = callback
         end
     })
-end)]]
+end)
 
-run(function() 
+--[[run(function() 
     local GetMeteorites = {Enabled = false}
     
     GetMeteorites = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
@@ -308,7 +308,7 @@ run(function()
             end
         end
     })
-end)
+end)]]
 
 run(function() 
     local AutoSave = {Enabled = false}
