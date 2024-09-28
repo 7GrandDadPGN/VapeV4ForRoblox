@@ -1947,8 +1947,19 @@ GUISettings.CreateButton2({
 	end
 })
 GeneralSettings.CreateButton2({
-	Name = "UNINJECT",
+	Name = "UnInject",
 	Function = GuiLibrary.SelfDestruct
+})
+GeneralSettings.CreateButton2({
+	Name = "Hard Destroy",
+	Function = function(callback) 
+		if delfolder then 
+			delfolder("vape")
+			GuiLibrary.SelfDestruct()
+		else
+			createwarning("Vape", "Your exploit does not support delfolder.", 10)
+		end
+	end
 })
 local function loadVape()
 	if not shared.VapeIndependent then
