@@ -285,7 +285,7 @@ end) -- longest piece of code i have ever written (lol)]]
     })
 end)]]
 
---[[run(function() 
+run(function() 
     local GetMeteorites = {Enabled = false}
     
     GetMeteorites = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
@@ -308,7 +308,7 @@ end)]]
             end
         end
     })
-end)]]
+end)
 
 run(function() 
     local AutoSave = {Enabled = false}
@@ -325,7 +325,7 @@ run(function()
         end
     })
 
-    AutoSave.Object.Visible = false
+    --AutoSave.Object.Visible = false
 end)
 
 run(function() 
