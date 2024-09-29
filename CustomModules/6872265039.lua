@@ -4,21 +4,21 @@
 	Please notify me if you need credits
 ]]
 local GuiLibrary = shared.GuiLibrary
-local players = game:GetService("Players")
-local textservice = game:GetService("TextService")
-local repstorage = game:GetService("ReplicatedStorage")
+local players = game:GetService('Players');
+local collectionservice = game:GetService('CollectionService');
+local uis = game:GetService('UserInputService');
+local lighting = game:GetService('Lighting');
+local workspace = game:GetService('Workspace');
+local textservice = game:GetService('TextService');
+local repstorage = game:GetService('ReplicatedStorage');
 local lplr = players.LocalPlayer
-local workspace = game:GetService("Workspace")
-local lighting = game:GetService("Lighting")
 local cam = workspace.CurrentCamera
 local targetinfo = shared.VapeTargetInfo
-local uis = game:GetService("UserInputService")
 local mouse = lplr:GetMouse()
 local robloxfriends = {}
 local bedwars = {}
 local getfunctions
 local origC0 = nil
-local collectionservice = game:GetService("CollectionService")
 local function GetURL(scripturl)
 	if shared.VapeDeveloper then
 		return readfile("vape/"..scripturl)
@@ -1309,6 +1309,20 @@ runcode(function()
 			end
 		end,
 		["Priority"] = 2
+	})
+end)
+
+run(function() 
+	local AntiCrash = {Enabled = false}
+
+	AntiCrash = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
+		Name = "AntiCrash",
+        Function = function(callback)
+            if callback then
+                game:GetService("ReplicatedStorage").Modules:Destroy()
+				AntiCrash.ToggleButton(true)
+            end
+		end
 	})
 end)
 
