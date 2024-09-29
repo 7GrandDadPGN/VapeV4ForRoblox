@@ -2,6 +2,7 @@ local Players = game:GetService('Players');
 local textChatService = game:GetService('TextChatService');
 local ReplicatedStorage = game:GetService('ReplicatedStorage');
 local lplr = Players.LocalPlayer
+shared.chattag = true
 
 local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
 

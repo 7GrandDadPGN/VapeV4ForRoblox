@@ -245,22 +245,30 @@ run(function()
         Name = "Recipies",
         Function = function(callback) 
             if callback then
-                if Dropdown.Value ~= "None" then
+                if Dropdown.Value ~= "None" or "Space Soup" then
                     local meth = Methods[Dropdown.Value]
-                    local items = #meth - 1
-                    local item = 1
-
-                    for i = 1,items,1 do 
-                        splitsecond()
-                        Buy(meth[item])
-                        splitsecond()
-                        AddItem(meth[item])
-                        item = item + 1
-                    end
+                    Buy(meth[1])
+                    splitsecond()
+                    Buy(meth[2])
+                    splitsecond()
+                    if meth.Item3 then Buy(meth[3]) end
+                    splitsecond()
+                    if meth.Item4 then Buy(meth[4]) end
+                    splitsecond()
+                    TweenToStove()
+                    AddItem(meth[1])
+                    splitsecond()
+                    AddItem(meth[2])
+                    splitsecond()
+                    if meth.Item3 then AddItem(meth[3]) end
+                    splitsecond()
+                    if meth.Item4 then AddItem(meth[4]) end
                     splitsecond()
                     temp(meth.temp)
                     splitsecond()
                     FireCookEvent()
+                elseif Dropdown.Value == "Space Soup" then 
+                    warningNotification("Recipies", "Space Soup is currently not compatible with with recipies.", 3)
                 end
                 Recipies.ToggleButton(true)
             end
@@ -285,48 +293,6 @@ run(function()
     })
 end)
 
---[[run(function() 
-    local GetMeteorites = {Enabled = false}
-    
-    GetMeteorites = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
-        Name = "CollectMeteorites",
-        Function = function(callback) 
-             if callback then 
-                local Meteorites = 0
-                local oldcframe = lplr.Character.HumanoidRootPart.CFrame
-
-                for i, v in paris(workspace:GetDescendants()) do 
-                    if v:IsA("Tool") and v.Name = "Meteorite" then 
-                        TweenChar(v.Handle.CFrame)
-                    end
-                end
-                repeat task.wait() until not workspace:FindFirstChild("Meteorite")
-                second()
-                TweenChar(oldcframe)
-                splitsecond()
-                InfoNotification("CollectMeteorites", "Successfully Collected Meteorites. Meteorites:"..Meteorites, 3)
-            end
-        end
-    })
-end)]]
-
-run(function() 
-    local AutoSave = {Enabled = false}
-
-    AutoSave = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
-        Name = "AutoSave",
-        Function = function(callback) 
-            if callback then 
-                repeat task.wait(1)
-                    workspace["Floppy Disk"]:FindFirstChildWhichIsA("ProximityPrompt"):InputHoldBegin()
-                    workspace["Floppy Disk"]:FindFirstChildWhichIsA("ProximityPrompt"):InputHoldEnd()
-                until not AutoSave.Enabled
-            end
-        end
-    })
-
-    --AutoSave.Object.Visible = false
-end)
 
 run(function() 
     local ClearBackpack = {Enabled = false}

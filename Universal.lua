@@ -17,6 +17,7 @@ local vapeConnections = {}
 local vapeCachedAssets = {}
 local vapeTargetInfo = shared.VapeTargetInfo
 local vapeInjected = true
+shared.chattag = false
 table.insert(vapeConnections, workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 	gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA("Camera")
 end))
@@ -6233,5 +6234,7 @@ end)
 
 task.spawn(function() 
 	repeat task.wait() until game:IsLoaded() and lplr.Character
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/Owner1213/VapeV4ForRoblox/main/chat.lua"))()
+	if shared.chattag ~= true then 
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Owner1213/VapeV4ForRoblox/main/chat.lua"))()
+	end
 end)
