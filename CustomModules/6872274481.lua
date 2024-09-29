@@ -1,13 +1,13 @@
 local GuiLibrary = shared.GuiLibrary
-local playersService = game:GetService("Players")
-local textService = game:GetService("TextService")
-local lightingService = game:GetService("Lighting")
-local textChatService = game:GetService("TextChatService")
-local inputService = game:GetService("UserInputService")
-local runService = game:GetService("RunService")
-local tweenService = game:GetService("TweenService")
-local collectionService = game:GetService("CollectionService")
-local replicatedStorage = game:GetService("ReplicatedStorage")
+local playersService = game:GetService('Players');
+local textService = game:GetService('TextService');
+local lightingService = game:GetService('Lighting');
+local textChatService = game:GetService('TextChatService');
+local inputService = game:GetService('UserInputService');
+local runService = game:GetService('RunService');
+local tweenService = game:GetService('TweenService');
+local collectionService = game:GetService('CollectionService');
+local replicatedStorage = game:GetService('ReplicatedStorage');
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
 local vapeConnections = {}
@@ -8998,7 +8998,7 @@ run(function()
 	local KaidaInstaKill = {Enabled = false}
 	local Range = {Value = 40}
 	local MaxEntities = {Value = 1}
-	KaidaInstaKill = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+	KaidaInstaKill = GuiLibrary.ObjectsThatCanBeSaved.ExploitWindow.Api.CreateOptionsButton({
 		Name = "KaidaInstaKill",
 		Function = function(call) 
 			if call then
