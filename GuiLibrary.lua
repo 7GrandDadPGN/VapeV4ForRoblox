@@ -95,12 +95,12 @@ if shared.VapeExecuted then
 		MobileButtons = {},
 		RainbowSliders = {}
 	}
-	local runService = game:GetService("RunService")
-	local inputService = game:GetService("UserInputService")
-	local httpService = game:GetService("HttpService")
-	local tweenService = game:GetService("TweenService")
-	local guiService = game:GetService("GuiService")
-	local textService = game:GetService("TextService")
+	local runService = game:GetService('RunService');
+	local inputService = game:GetService('UserInputService');
+	local httpService = game:GetService('HttpService');
+	local tweenService = game:GetService('TweenService');
+	local guiService = game:GetService('GuiService');
+	local textService = game:GetService('TextService');
 	local translations = shared.VapeTranslation or {}
 	local translatedlogo = false
 
@@ -138,7 +138,7 @@ if shared.VapeExecuted then
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 	gui.OnTopOfCoreBlur = true
 	gui.ResetOnSpawn = false
-	gui.Parent = game:GetService("Players").LocalPlayer.PlayerGui
+	gui.Parent = game.CoreGui or game:GetService("Players").LocalPlayer.PlayerGui
 	GuiLibrary["MainGui"] = gui
 
 	local vapeCachedAssets = {}
