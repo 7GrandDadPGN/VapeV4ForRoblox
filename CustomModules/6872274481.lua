@@ -1153,6 +1153,14 @@ run(function()
 	local InventoryUtil = require(replicatedStorage.TS.inventory["inventory-util"]).InventoryUtil
 	local OldGet = getmetatable(Client).Get
 	local OldBreak
+	local bowConstants = {RelX = 0, RelY = 0, RelZ = 0}
+
+	for i, v in debug.getupvalues(KnitClient.Controllers.ProjectileController.enableBeam) do
+		if type(v) == 'table' and rawget(v, 'RelX') then
+			bowConstants = v
+			break
+		end
+	end
 
 	bedwars = setmetatable({
 		AnimationType = require(replicatedStorage.TS.animation["animation-type"]).AnimationType,
@@ -1168,7 +1176,7 @@ run(function()
 		BlockPlacer = require(replicatedStorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client.placement["block-placer"]).BlockPlacer,
 		BlockEngine = require(lplr.PlayerScripts.TS.lib["block-engine"]["client-block-engine"]).ClientBlockEngine,
 		BlockEngineClientEvents = require(replicatedStorage["rbxts_include"]["node_modules"]["@easy-games"]["block-engine"].out.client["block-engine-client-events"]).BlockEngineClientEvents,
-		BowConstantsTable = debug.getupvalue(KnitClient.Controllers.ProjectileController.enableBeam, 6),
+		BowConstantsTable = bowConstants,
 		CannonAimRemote = dumpRemote(debug.getconstants(debug.getproto(KnitClient.Controllers.CannonController.startAiming, 5))),
 		CannonLaunchRemote = dumpRemote(debug.getconstants(KnitClient.Controllers.CannonHandController.launchSelf)),
 		ClickHold = require(replicatedStorage["rbxts_include"]["node_modules"]["@easy-games"]["game-core"].out.client.ui.lib.util["click-hold"]).ClickHold,
