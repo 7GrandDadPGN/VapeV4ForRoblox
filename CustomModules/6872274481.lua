@@ -225,7 +225,7 @@ local function predictGravity(playerPosition, vel, bulletTime, targetPart, Gravi
 				estimatedVelocity = 130 - (Gravity * physicsUpdate)
 				velocityCheck = true
 			else
-				estimatedVelocity = targetPart.Humanoid.JumpPower - (Gravity * physicsUpdate)
+				estimatedVelocity = (targetPart.Humanoid.JumpPower or 0) - (Gravity * physicsUpdate)
 				velocityCheck = targetPart.Jumping
 			end
 		end
