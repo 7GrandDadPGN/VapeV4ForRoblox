@@ -1184,7 +1184,7 @@ run(function()
 		List = {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay"},
 		Function = function(val)
 			SilentAimRaycastMode.Object.Visible = val == "Raycast"
-			if SilentAimFilterObject then SilentAimFilterObject.Filters[1].NamecallMethod = val end
+			if typeof(SilentAimFilterObject) ~= 'userdata' then SilentAimFilterObject.Filters[1].NamecallMethod = val end
 		end
 	})
 	SilentAimRaycastMode = SilentAim.CreateDropdown({

@@ -225,7 +225,7 @@ local function predictGravity(playerPosition, vel, bulletTime, targetPart, Gravi
 				estimatedVelocity = 130 - (Gravity * physicsUpdate)
 				velocityCheck = true
 			else
-				estimatedVelocity = targetPart.Humanoid.JumpPower - (Gravity * physicsUpdate)
+				estimatedVelocity = (targetPart.Humanoid.JumpPower or 0) - (Gravity * physicsUpdate)
 				velocityCheck = targetPart.Jumping
 			end
 		end
@@ -4806,7 +4806,7 @@ run(function()
 		end
 	end
 	local function refreshAdornee(v)
-		local chest = v:FindFirstChild("ChestFolderValue")
+		local chest = v.Adornee:FindFirstChild("ChestFolderValue")
 		chest = chest and chest.Value or nil
 		if not chest then return end
 		local chestitems = chest and chest:GetChildren() or {}
@@ -7062,8 +7062,12 @@ run(function()
 	local AutoKit = {Enabled = false}
 	local AutoKitTrinity = {Value = "Void"}
 	local oldfish
+
+	local sortFunction = function(a, b)
+		return (a.RootPart.Position - entityLibrary.character.HumanoidRootPart.Position).Magnitude < (b.RootPart.Position - entityLibrary.character.HumanoidRootPart.Position).Magnitude
+	end
 	local function GetTeammateThatNeedsMost()
-		local plrs = GetAllNearestHumanoidToPosition(true, 30, 1000, true)
+		local plrs = AllNearPosition(30, 1000, sortFunction)
 		local lowest, lowestplayer = 10000, nil
 		for i,v in pairs(plrs) do
 			if not v.Targetable then
@@ -7708,7 +7712,7 @@ run(function()
 			if bedwars.AppController:isAppOpen("ChestApp") then
 				local chest = lplr.Character:FindFirstChild("ObservedChestFolder")
 				local chestitems = chest and chest.Value and chest.Value:GetChildren() or {}
-				if #chestitems > 0 then
+				if #chestitems > 1 then
 					for i3,v3 in pairs(chestitems) do
 						if v3:IsA("Accessory") and (cheststealerdelays[v3] == nil or cheststealerdelays[v3] < tick()) then
 							task.spawn(function()
@@ -7729,7 +7733,7 @@ run(function()
 					local chest = v:FindFirstChild("ChestFolderValue")
 					chest = chest and chest.Value or nil
 					local chestitems = chest and chest:GetChildren() or {}
-					if #chestitems > 0 then
+					if #chestitems > 1 then
 						bedwars.Client:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer(chest)
 						for i3,v3 in pairs(chestitems) do
 							if v3:IsA("Accessory") then
