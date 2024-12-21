@@ -33,19 +33,10 @@ end
 local vapeAssetTable = {["vape/assets/VapeCape.png"] = "rbxassetid://13380453812", ["vape/assets/ArrowIndicator.png"] = "rbxassetid://13350766521"}
 local getcustomasset = getsynasset or getcustomasset or function(location) return vapeAssetTable[location] or "" end
 local queueonteleport = syn and syn.queue_on_teleport or queue_on_teleport or function() end
-local synapsev3 = syn and syn.toast_notification and "V3" or ""
 local worldtoscreenpoint = function(pos)
-	if synapsev3 == "V3" then
-		local scr = worldtoscreen({pos})
-		return scr[1] - Vector3.new(0, 36, 0), scr[1].Z > 0
-	end
 	return gameCamera.WorldToScreenPoint(gameCamera, pos)
 end
 local worldtoviewportpoint = function(pos)
-	if synapsev3 == "V3" then
-		local scr = worldtoscreen({pos})
-		return scr[1], scr[1].Z > 0
-	end
 	return gameCamera.WorldToViewportPoint(gameCamera, pos)
 end
 
@@ -896,7 +887,6 @@ run(function()
 	local SilentAimRaycastWhitelist = RaycastParams.new()
 	SilentAimRaycastWhitelist.FilterType = Enum.RaycastFilterType.Whitelist
 	local SlientAimShotTick = tick()
-	local SilentAimFilterObject = synapsev3 == "V3" and AllFilter.new({NamecallFilter.new(SilentAimMethod.Value), CallerFilter.new(true)})
 	local SilentAimMethodUsed
 	local SilentAimHooked
 	local SilentAimCircle
@@ -1122,27 +1112,6 @@ run(function()
 					return oldnamecall(self, unpack(Args))
 				end)
 			end
-		end,
-		NormalV3 = function()
-			if not SilentAimHooked then
-				SilentAimHooked = true
-				local oldnamecall
-				oldnamecall = hookmetamethod(game, "__namecall", getfilter(SilentAimFilterObject, function(self, ...) return oldnamecall(self, ...) end, function(self, ...)
-					local calling = getcallingscript()
-					if calling then
-						local list = #SilentAimIgnoredScripts.ObjectList > 0 and SilentAimIgnoredScripts.ObjectList or {"ControlScript", "ControlModule"}
-						if table.find(list, tostring(calling)) then
-							return oldnamecall(self, ...)
-						end
-					end
-					local Args = {...}
-					local res = SilentAimFunctions[SilentAimMethod.Value](Args)
-					if res then
-						return unpack(res)
-					end
-					return oldnamecall(self, unpack(Args))
-				end))
-			end
 		end
 	}
 
@@ -1150,7 +1119,7 @@ run(function()
 		Name = "SilentAim",
 		Function = function(callback)
 			if callback then
-				SilentAimMethodUsed = "Normal"..synapsev3
+				SilentAimMethodUsed = "Normal"
 				task.spawn(function()
 					repeat
 						vapeTargetInfo.Targets.SilentAim = SlientAimShotTick >= tick() and SilentAimShot or nil
@@ -1184,7 +1153,6 @@ run(function()
 		List = {"FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist", "Raycast", "FindPartOnRay", "ScreenPointToRay", "ViewportPointToRay"},
 		Function = function(val)
 			SilentAimRaycastMode.Object.Visible = val == "Raycast"
-			if typeof(SilentAimFilterObject) ~= 'userdata' then SilentAimFilterObject.Filters[1].NamecallMethod = val end
 		end
 	})
 	SilentAimRaycastMode = SilentAim.CreateDropdown({
@@ -3030,52 +2998,6 @@ run(function()
 			end
 			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
 		end,
-		Drawing2DV3 = function(plr)
-			if ESPTeammates.Enabled and (not plr.Targetable) and (not plr.Friend) then return end
-			local toppoint = PointInstance.new(plr.RootPart, CFrame.new(2, 3, 0))
-			local bottompoint = PointInstance.new(plr.RootPart, CFrame.new(-2, -3.5, 0))
-			local newobj = RectDynamic.new(toppoint)
-			newobj.BottomRight = bottompoint
-			newobj.Outlined = ESPBoundingBox.Enabled
-			newobj.Opacity = ESPBoundingBox.Enabled and 1 or 0
-			newobj.OutlineOpacity = 0.5
-			newobj.Color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor.Hue, ESPColor.Sat, ESPColor.Value)
-			local newobj2 = {}
-			local newobj3 = {}
-			if ESPHealthBar.Enabled then
-				local topoffset = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(-2, 3, 0)), Vector2.new(-5, -1))
-				local bottomoffset = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(-2, -3.5, 0)), Vector2.new(-3, 1))
-				local healthoffset = PointOffset.new(bottomoffset, Vector2.new(0, -1))
-				local healthoffset2 = PointOffset.new(bottomoffset, Vector2.new(-1, -((bottomoffset.ScreenPos.Y - topoffset.ScreenPos.Y) - 1)))
-				newobj2.Bkg = RectDynamic.new(topoffset)
-				newobj2.Bkg.Filled = true
-				newobj2.Bkg.Opacity = 0.5
-				newobj2.Bkg.BottomRight = bottomoffset
-				newobj2.Line = RectDynamic.new(healthoffset)
-				newobj2.Line.Filled = true
-				newobj2.Line.YAlignment = YAlignment.Bottom
-				newobj2.Line.BottomRight = healthoffset2
-				newobj2.Line.Color = Color3.fromHSV(math.clamp(plr.Humanoid.Health / plr.Humanoid.MaxHealth, 0, 1) / 2.5, 0.89, 1)
-				newobj2.Offset = healthoffset2
-				newobj2.TopOffset = topoffset
-				newobj2.BottomOffset = bottomoffset
-			end
-			if ESPName.Enabled then
-				local nameoffset1 = PointOffset.new(PointInstance.new(plr.RootPart, CFrame.new(0, 3, 0)), Vector2.new(0, -15))
-				local nameoffset2 = PointOffset.new(nameoffset1, Vector2.new(1, 1))
-				newobj3.Text = TextDynamic.new(nameoffset1)
-				newobj3.Text.Text = whitelist:tag(plr.Player, true)..(plr.Player.DisplayName or plr.Player.Name)
-				newobj3.Text.Color = newobj.Color
-				newobj3.Text.ZIndex = 2
-				newobj3.Text.Size = 20
-				newobj3.Drop = TextDynamic.new(nameoffset2)
-				newobj3.Drop.Text = newobj3.Text.Text
-				newobj3.Drop.Color = Color3.new()
-				newobj3.Drop.ZIndex = 1
-				newobj3.Drop.Size = 20
-			end
-			espfolderdrawing[plr.Player] = {entity = plr, Main = newobj, HealthBar = newobj2, Name = newobj3}
-		end,
 		DrawingSkeleton = function(plr)
 			if ESPTeammates.Enabled and (not plr.Targetable) and (not plr.Friend) then return end
 			local thing = {}
@@ -3091,47 +3013,6 @@ run(function()
 			local color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor.Hue, ESPColor.Sat, ESPColor.Value)
 			for i,v in pairs(thing) do v.Thickness = 2 v.Color = color end
 			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
-		end,
-		DrawingSkeletonV3 = function(plr)
-			if ESPTeammates.Enabled and (not plr.Targetable) and (not plr.Friend) then return end
-			local thing = {Main = {}, entity = plr}
-			local rigcheck = plr.Humanoid.RigType == Enum.HumanoidRigType.R6
-			local head = PointInstance.new(plr.Head)
-			head.RotationType = CFrameRotationType.TargetRelative
-			local headfront = PointInstance.new(plr.Head, CFrame.new(0, 0, -0.5))
-			headfront.RotationType = CFrameRotationType.TargetRelative
-			local toplefttorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(-1.5, 0.8, 0))
-			toplefttorso.RotationType = CFrameRotationType.TargetRelative
-			local toprighttorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(1.5, 0.8, 0))
-			toprighttorso.RotationType = CFrameRotationType.TargetRelative
-			local toptorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(0, 0.8, 0))
-			toptorso.RotationType = CFrameRotationType.TargetRelative
-			local bottomtorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(0, -0.8, 0))
-			bottomtorso.RotationType = CFrameRotationType.TargetRelative
-			local bottomlefttorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(-0.5, -0.8, 0))
-			bottomlefttorso.RotationType = CFrameRotationType.TargetRelative
-			local bottomrighttorso = PointInstance.new(plr.Character[(rigcheck and "Torso" or "UpperTorso")], CFrame.new(0.5, -0.8, 0))
-			bottomrighttorso.RotationType = CFrameRotationType.TargetRelative
-			local leftarm = PointInstance.new(plr.Character[(rigcheck and "Left Arm" or "LeftHand")], CFrame.new(0, -0.8, 0))
-			leftarm.RotationType = CFrameRotationType.TargetRelative
-			local rightarm = PointInstance.new(plr.Character[(rigcheck and "Right Arm" or "RightHand")], CFrame.new(0, -0.8, 0))
-			rightarm.RotationType = CFrameRotationType.TargetRelative
-			local leftleg = PointInstance.new(plr.Character[(rigcheck and "Left Leg" or "LeftFoot")], CFrame.new(0, -0.8, 0))
-			leftleg.RotationType = CFrameRotationType.TargetRelative
-			local rightleg = PointInstance.new(plr.Character[(rigcheck and "Right Leg" or "RightFoot")], CFrame.new(0, -0.8, 0))
-			rightleg.RotationType = CFrameRotationType.TargetRelative
-			thing.Main.Head = LineDynamic.new(toptorso, head)
-			thing.Main.Head2 = LineDynamic.new(head, headfront)
-			thing.Main.Torso = LineDynamic.new(toplefttorso, toprighttorso)
-			thing.Main.Torso2 = LineDynamic.new(toptorso, bottomtorso)
-			thing.Main.Torso3 = LineDynamic.new(bottomlefttorso, bottomrighttorso)
-			thing.Main.LeftArm = LineDynamic.new(toplefttorso, leftarm)
-			thing.Main.RightArm = LineDynamic.new(toprighttorso, rightarm)
-			thing.Main.LeftLeg = LineDynamic.new(bottomlefttorso, leftleg)
-			thing.Main.RightLeg = LineDynamic.new(bottomrighttorso, rightleg)
-			local color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor.Hue, ESPColor.Sat, ESPColor.Value)
-			for i,v in pairs(thing.Main) do v.Thickness = 2 v.Color = color end
-			espfolderdrawing[plr.Player] = thing
 		end,
 		Drawing3D = function(plr)
 			if ESPTeammates.Enabled and (not plr.Targetable) and (not plr.Friend) then return end
@@ -3151,41 +3032,6 @@ run(function()
 			local color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor.Hue, ESPColor.Sat, ESPColor.Value)
 			for i,v in pairs(thing) do v.Thickness = 1 v.Color = color end
 			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
-		end,
-		Drawing3DV3 = function(plr)
-			if ESPTeammates.Enabled and (not plr.Targetable) and (not plr.Friend) then return end
-			local thing = {}
-			local point1 = PointInstance.new(plr.RootPart, CFrame.new(1.5, 3, 1.5))
-			point1.RotationType = CFrameRotationType.Ignore
-			local point2 = PointInstance.new(plr.RootPart, CFrame.new(1.5, -3, 1.5))
-			point2.RotationType = CFrameRotationType.Ignore
-			local point3 = PointInstance.new(plr.RootPart, CFrame.new(-1.5, 3, 1.5))
-			point3.RotationType = CFrameRotationType.Ignore
-			local point4 = PointInstance.new(plr.RootPart, CFrame.new(-1.5, -3, 1.5))
-			point4.RotationType = CFrameRotationType.Ignore
-			local point5 = PointInstance.new(plr.RootPart, CFrame.new(1.5, 3, -1.5))
-			point5.RotationType = CFrameRotationType.Ignore
-			local point6 = PointInstance.new(plr.RootPart, CFrame.new(1.5, -3, -1.5))
-			point6.RotationType = CFrameRotationType.Ignore
-			local point7 = PointInstance.new(plr.RootPart, CFrame.new(-1.5, 3, -1.5))
-			point7.RotationType = CFrameRotationType.Ignore
-			local point8 = PointInstance.new(plr.RootPart, CFrame.new(-1.5, -3, -1.5))
-			point8.RotationType = CFrameRotationType.Ignore
-			thing.Line1 = LineDynamic.new(point1, point2)
-			thing.Line2 = LineDynamic.new(point3, point4)
-			thing.Line3 = LineDynamic.new(point5, point6)
-			thing.Line4 = LineDynamic.new(point7, point8)
-			thing.Line5 = LineDynamic.new(point1, point3)
-			thing.Line6 = LineDynamic.new(point1, point5)
-			thing.Line7 = LineDynamic.new(point5, point7)
-			thing.Line8 = LineDynamic.new(point7, point3)
-			thing.Line9 = LineDynamic.new(point2, point4)
-			thing.Line10 = LineDynamic.new(point2, point6)
-			thing.Line11 = LineDynamic.new(point6, point8)
-			thing.Line12 = LineDynamic.new(point8, point4)
-			local color = getPlayerColor(plr.Player) or Color3.fromHSV(ESPColor.Hue, ESPColor.Sat, ESPColor.Value)
-			for i,v in pairs(thing) do v.Thickness = 1 v.Color = color end
-			espfolderdrawing[plr.Player] = {entity = plr, Main = thing}
 		end
 	}
 	local espfuncs2 = {
@@ -3198,23 +3044,6 @@ run(function()
 				end
 			end
 		end,
-		Drawing2DV3 = function(ent)
-			local v = espfolderdrawing[ent]
-			espfolderdrawing[ent] = nil
-			if v then
-				v.Main.Visible = false
-				for i2,v2 in pairs(v.HealthBar) do
-					if typeof(v2):find("Point") == nil then
-						v2.Visible = false
-					end
-				end
-				for i2,v2 in pairs(v.Name) do
-					if typeof(v2):find("Point") == nil then
-						v2.Visible = false
-					end
-				end
-			end
-		end,
 		Drawing3D = function(ent)
 			local v = espfolderdrawing[ent]
 			espfolderdrawing[ent] = nil
@@ -3224,34 +3053,12 @@ run(function()
 				end
 			end
 		end,
-		Drawing3DV3 = function(ent)
-			local v = espfolderdrawing[ent]
-			espfolderdrawing[ent] = nil
-			if v then
-				for i2,v2 in pairs(v.Main) do
-					if typeof(v2):find("Dynamic") then
-						v2.Visible = false
-					end
-				end
-			end
-		end,
 		DrawingSkeleton = function(ent)
 			local v = espfolderdrawing[ent]
 			espfolderdrawing[ent] = nil
 			if v then
 				for i2,v2 in pairs(v.Main) do
 					pcall(function() v2.Visible = false v2:Remove() end)
-				end
-			end
-		end,
-		DrawingSkeletonV3 = function(ent)
-			local v = espfolderdrawing[ent]
-			espfolderdrawing[ent] = nil
-			if v then
-				for i2,v2 in pairs(v.Main) do
-					if typeof(v2):find("Dynamic") then
-						v2.Visible = false
-					end
 				end
 			end
 		end
@@ -3267,18 +3074,6 @@ run(function()
 				v.Text.Text = whitelist:tag(ent.Player, true)..(ent.Player.DisplayName or ent.Player.Name)
 				v.Drop.Text = v.Text.Text
 			end
-		end,
-		Drawing2DV3 = function(ent)
-			local v = espfolderdrawing[ent.Player]
-			if v and v.HealthBar.Line then
-				local health = ent.Humanoid.Health / ent.Humanoid.MaxHealth
-				local color = Color3.fromHSV(math.clamp(health, 0, 1) / 2.5, 0.89, 1)
-				v.HealthBar.Line.Color = color
-			end
-			if v and v.Name and v.Name.Text then
-				v.Name.Text.Text = whitelist:tag(ent.Player, true)..(ent.Player.DisplayName or ent.Player.Name)
-				v.Name.Drop.Text = v.Name.Text.Text
-			end
 		end
 	}
 	local espcolorfuncs = {
@@ -3291,32 +3086,12 @@ run(function()
 				end
 			end
 		end,
-		Drawing2DV3 = function(hue, sat, value)
-			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(espfolderdrawing) do
-				v.Main.Color = getPlayerColor(v.entity.Player) or color
-				if v.Name.Text then
-					v.Name.Text.Color = v.Main.Color
-				end
-			end
-		end,
 		Drawing3D = function(hue, sat, value)
 			local color = Color3.fromHSV(hue, sat, value)
 			for i,v in pairs(espfolderdrawing) do
 				local newcolor = getPlayerColor(v.entity.Player) or color
 				for i2,v2 in pairs(v.Main) do
 					v2.Color = newcolor
-				end
-			end
-		end,
-		Drawing3DV3 = function(hue, sat, value)
-			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(espfolderdrawing) do
-				local newcolor = getPlayerColor(v.entity.Player) or color
-				for i2,v2 in pairs(v.Main) do
-					if typeof(v2):find("Dynamic") then
-						v2.Color = newcolor
-					end
 				end
 			end
 		end,
@@ -3328,18 +3103,7 @@ run(function()
 					v2.Color = newcolor
 				end
 			end
-		end,
-		DrawingSkeletonV3 = function(hue, sat, value)
-			local color = Color3.fromHSV(hue, sat, value)
-			for i,v in pairs(espfolderdrawing) do
-				local newcolor = getPlayerColor(v.entity.Player) or color
-				for i2,v2 in pairs(v.Main) do
-					if typeof(v2):find("Dynamic") then
-						v2.Color = newcolor
-					end
-				end
-			end
-		end,
+		end
 	}
 	local esploop = {
 		Drawing2D = function()
@@ -3386,14 +3150,6 @@ run(function()
 					v.Main.Drop.Visible = true
 					v.Main.Text.Position = floorESPPosition(Vector2.new(posx + (sizex / 2), posy + (sizey - 25)))
 					v.Main.Drop.Position = v.Main.Text.Position + Vector2.new(1, 1)
-				end
-			end
-		end,
-		Drawing2DV3 = function()
-			for i,v in pairs(espfolderdrawing) do
-				if v.HealthBar.Offset then
-					v.HealthBar.Offset.Offset = Vector2.new(-1, -(((v.HealthBar.BottomOffset.ScreenPos.Y - v.HealthBar.TopOffset.ScreenPos.Y) - 1) * (v.entity.Humanoid.Health / v.entity.Humanoid.MaxHealth)))
-					v.HealthBar.Line.Visible = v.entity.Humanoid.Health > 0
 				end
 			end
 		end,
@@ -3495,7 +3251,7 @@ run(function()
 		Name = "ESP",
 		Function = function(callback)
 			if callback then
-				methodused = "Drawing"..ESPMethod.Value..synapsev3
+				methodused = "Drawing"..ESPMethod.Value
 				if espfuncs2[methodused] then
 					table.insert(ESP.Connections, entityLibrary.entityRemovedEvent:Connect(espfuncs2[methodused]))
 				end
@@ -4173,15 +3929,6 @@ run(function()
 			newobj.Color = getPlayerColor(plr.Player) or Color3.fromHSV(TracersColor.Hue, TracersColor.Sat, TracersColor.Value)
 			tracersfolderdrawing[plr.Player] = {entity = plr, Main = newobj}
 		end,
-		DrawingV3 = function(plr)
-			if TracersTeammates.Enabled and (not plr.Targetable) and (not plr.Friend) then return end
-			local toppoint = PointInstance.new(plr[TracersEndPosition.Value == "Torso" and "RootPart" or "Head"])
-			local bottompoint = TracersStartPosition.Value == "Mouse" and PointMouse.new() or Point2D.new(UDim2.new(0.5, 0, TracersStartPosition.Value == "Middle" and 0.5 or 1, 0))
-			local newobj = LineDynamic.new(toppoint, bottompoint)
-			newobj.Opacity = 1 - (TracersTransparency.Value / 100)
-			newobj.Color = getPlayerColor(plr.Player) or Color3.fromHSV(TracersColor.Hue, TracersColor.Sat, TracersColor.Value)
-			tracersfolderdrawing[plr.Player] = {entity = plr, Main = newobj}
-		end,
 	}
 	local tracersfuncs2 = {
 		Drawing = function(ent)
@@ -4222,7 +3969,7 @@ run(function()
 		Name = "Tracers",
 		Function = function(callback)
 			if callback then
-				methodused = "Drawing"..synapsev3
+				methodused = "Drawing"
 				if tracersfuncs2[methodused] then
 					table.insert(Tracers.Connections, entityLibrary.entityRemovedEvent:Connect(tracersfuncs2[methodused]))
 				end
