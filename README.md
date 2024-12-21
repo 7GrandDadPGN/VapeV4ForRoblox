@@ -8,6 +8,10 @@
   Rise up to the top while remaining completely untouchable.
 </h3>
 
+## Contacts
+[Discord](https://discord.gg/ZqS836yx9k)
+[Youtube](https://youtube.com/c/7GrandDadVape)
+
 ## Usage
 1. Download the specific scripting utility of your choice.
 2. Execute the provided loadstring below.
