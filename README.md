@@ -34,6 +34,9 @@ If its not the supposed utility at fault, please try some troubleshooting steps.
 
 # Developers & Credits
 7GrandDad - Lead maintainer of the project - vaperoblox on discord
+<br/>
 rce-incorporated - LuaU bytecode disassembly with modifications
+<br/>
 Egor Skriptunoff, boatbomber, and howmanysmall - HashLibrary for LuaU
+<br/>
 Vernumerator - Projectile prediction for roblox
