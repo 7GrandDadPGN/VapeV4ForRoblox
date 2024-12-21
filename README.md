@@ -2,7 +2,7 @@
   <img src="./README/vapelogo.png"/>
 </p>
 <h2 align="center">
-  A roblox script build from the ground up for your precise needs!
+  A roblox script built from the ground up for your precise needs!
   <br/>
   Rise up to the top while remaining completely untouchable.
 </h2>
