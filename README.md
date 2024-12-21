@@ -20,6 +20,8 @@ All contributions must be held to a certain standard of quality, mainly keeping 
 1. Tab formatting
 2. Unless its a return, please do not use 1 line for most function calls.
 3. Localize variables when possible, most of the time the code should never have to index a variable, or call a function twice in a loop.
+<br/>
+Here is the provided [documentation](https://github.com/7GrandDadPGN/VapeV4ForRoblox/wiki) for if you want to contribute.
 
 # Possible Issues
 Half of the time its usually the scripting utility at fault, please make sure the utility meets certain quality standards such as.
@@ -29,7 +31,7 @@ Half of the time its usually the scripting utility at fault, please make sure th
 ## User Issues
 If its not the supposed utility at fault, please try some troubleshooting steps.
 1. Deleting the newvape folder (WITH THE GAME CLOSED)
-2. Making sure you have connection to https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/refs/heads/main/NewMainScript.lua
+2. Making sure you have connection to [the main loadstring.](https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/refs/heads/main/NewMainScript.lua)
 3. Ensuring no external script is conflicting with vape
 
 # Developers & Credits
