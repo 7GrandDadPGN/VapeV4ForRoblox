@@ -3,10 +3,9 @@
 </p>
 <h2 align="center">
   A roblox script build from the ground up for your precise needs!
-</h2>
-<h3 align="center">
+  <br/>
   Rise up to the top while remaining completely untouchable.
-</h3>
+</h2>
 
 ## Contacts
 [Discord](https://discord.gg/ZqS836yx9k)
