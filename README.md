@@ -1,15 +1,16 @@
 <p align="center">
   <img src="./README/vapelogo.png"/>
 </p>
-<h1 align="center">
+<h2 align="center">
   A roblox script build from the ground up for your precise needs!
-</h1>
+</h2>
 <h3 align="center">
   Rise up to the top while remaining completely untouchable.
 </h3>
 
 ## Contacts
 [Discord](https://discord.gg/ZqS836yx9k)
+<br/>
 [Youtube](https://youtube.com/c/7GrandDadVape)
 
 ## Usage
