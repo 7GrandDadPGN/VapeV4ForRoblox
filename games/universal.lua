@@ -2128,20 +2128,6 @@ run(function()
 end)
 	
 run(function()
-	local InfiniteFly
-	
-	InfiniteFly = vape.Categories.Blatant:CreateModule({
-		Name = 'InfiniteYield',
-		Function = function(callback)
-			if callback then
-				InfiniteFly:Toggle()
-				loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source', true))()
-			end
-		end
-	})
-end)
-	
-run(function()
 	local Invisible
 	local clone, oldroot, hip, valid
 	local animtrack
