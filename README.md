@@ -15,7 +15,7 @@
 ## Usage
 1. Download the specific scripting utility of your choice.
 2. Execute the provided loadstring below.
-```
+```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/main/NewMainScript.lua", true))()
 ```
 
