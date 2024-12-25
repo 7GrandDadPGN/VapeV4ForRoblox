@@ -50,8 +50,8 @@ local function getVehicle(ent)
 			for _, seat in car:GetChildren() do
 				if (seat.Name == 'Seat' or seat.Name == 'Passenger') then
 					seat = seat:FindFirstChild('PlayerName')
-					if seat and seat.Value == ent.Player.Name then 
-						return car 
+					if seat and seat.Value == ent.Player.Name then
+						return car
 					end
 				end
 			end
@@ -71,8 +71,8 @@ end
 local function isFriend(plr, recolor)
 	if vape.Categories.Friends.Options['Use friends'].Enabled then
 		local friend = table.find(vape.Categories.Friends.ListEnabled, plr.Name) and true
-		if recolor then 
-			friend = friend and vape.Categories.Friends.Options['Recolor visuals'].Enabled 
+		if recolor then
+			friend = friend and vape.Categories.Friends.Options['Recolor visuals'].Enabled
 		end
 		return friend
 	end
@@ -85,8 +85,8 @@ local function isIllegal(ent)
 		items = items and items.Value
 		if items then
 			for i, v in items:GetChildren() do
-				if v.Name ~= 'MansionInvite' then 
-					return true 
+				if v.Name ~= 'MansionInvite' then
+					return true
 				end
 			end
 		end
@@ -100,8 +100,8 @@ local function isTarget(plr)
 	return table.find(vape.Categories.Targets.ListEnabled, plr.Name) and true
 end
 
-local function notif(...) 
-	return vape:CreateNotification(...) 
+local function notif(...)
+	return vape:CreateNotification(...)
 end
 
 run(function()
@@ -120,8 +120,8 @@ run(function()
 			{
 				Connect = function()
 					return hum:GetPropertyChangedSignal('Sit'):Connect(function()
-						if getVehicle(ent) then 
-							ent.Illegal = true 
+						if getVehicle(ent) then
+							ent.Illegal = true
 						end
 					end)
 				end
@@ -295,8 +295,8 @@ run(function()
 	local function fireHook(self, id, ...)
 		local rem
 		for i, v in remotes do
-			if v == id then 
-				rem = i 
+			if v == id then
+				rem = i
 			end
 		end
 
@@ -317,9 +317,9 @@ run(function()
 	end)
 
 	function jb:FireServer(id, ...)
-		if not remotes[id] then 
+		if not remotes[id] then
 			notif('Vape', 'Failed to find remote ('..id..')', 10, 'alert')
-			return 
+			return
 		end
 		return hook(remotetable, remotes[id], ...)
 	end
@@ -344,13 +344,15 @@ run(function()
 	end, false)
 
 	local cashfunc, cashhook = getCash()
-	cashhook = hookfunction(cashfunc, function(amount, text, ...)
-		moneymade:Increment(amount)
-		if text == 'Arrest' then 
-			arrests:Increment() 
-		end
-		return cashhook(amount, text, ...)
-	end)
+	if cashfunc then
+		cashhook = hookfunction(cashfunc, function(amount, text, ...)
+			moneymade:Increment(amount)
+			if text == 'Arrest' then
+				arrests:Increment()
+			end
+			return cashhook(amount, text, ...)
+		end)
+	end
 
 	vape:Clean(function()
 		table.clear(remotes)
