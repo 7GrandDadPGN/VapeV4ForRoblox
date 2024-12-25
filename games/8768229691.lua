@@ -746,8 +746,8 @@ run(function()
 								end
 							end
 	
-							if not started then 
-								task.wait(1 / 60) 
+							if not started then
+								task.wait(1 / 60)
 							end
 						until (not Killaura.Enabled) or (not Animation.Enabled)
 					end)
@@ -778,10 +778,13 @@ run(function()
 								table.insert(attacked, v)
 								targetinfo.Targets[v] = tick() + 1
 	
-								if not Swing.Enabled then 
-									skywars.MeleeController:playAnimation(lplr.Character, tool) 
+								if not Swing.Enabled then
+									skywars.MeleeController:playAnimation(lplr.Character, tool)
+									if vape.ThreadFix then
+										setthreadidentity(8)
+									end
 								end
-								
+	
 								if not switched then
 									switched = true
 									skywars.Remotes[remotes.updateActiveItem]:fire(tool.Name)
@@ -791,8 +794,8 @@ run(function()
 							end
 						end
 	
-						if switched then 
-							skywars.Remotes[remotes.updateActiveItem](store.hand.Name) 
+						if switched then
+							skywars.Remotes[remotes.updateActiveItem](store.hand.Name)
 						end
 					end
 	
@@ -814,11 +817,11 @@ run(function()
 					task.wait(0.05)
 				until not Killaura.Enabled
 			else
-				for i, v in Boxes do 
-					v.Adornee = nil 
+				for i, v in Boxes do
+					v.Adornee = nil
 				end
-				for i, v in Particles do 
-					v.Parent = nil 
+				for i, v in Particles do
+					v.Parent = nil
 				end
 				if armC0 and ViewmodelMotor then
 					AnimTween = tweenService:Create(ViewmodelMotor, TweenInfo.new(AnimationTween.Enabled and 0.001 or 0.3, Enum.EasingStyle.Exponential), {
@@ -836,8 +839,8 @@ run(function()
 		Min = 1,
 		Max = 18,
 		Default = 18,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 	AngleCheck = Killaura:CreateSlider({
@@ -870,7 +873,7 @@ run(function()
 					Boxes[i] = box
 				end
 			else
-				for i, v in Boxes do 
+				for i, v in Boxes do
 					v:Destroy()
 				end
 				table.clear(Boxes)
@@ -911,15 +914,15 @@ run(function()
 					particles.Drag = 16
 					particles.ShapePartial = 1
 					particles.Color = ColorSequence.new({
-						ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
+						ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
 						ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
 					})
 					particles.Parent = part
 					Particles[i] = part
 				end
 			else
-				for _, v in Particles do 
-					v:Destroy() 
+				for _, v in Particles do
+					v:Destroy()
 				end
 				table.clear(Particles)
 			end
@@ -941,7 +944,7 @@ run(function()
 		Function = function(hue, sat, val)
 			for _, v in Particles do
 				v.ParticleEmitter.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)), 
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
 					ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
 				})
 			end
@@ -954,7 +957,7 @@ run(function()
 		Function = function(hue, sat, val)
 			for _, v in Particles do
 				v.ParticleEmitter.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
 					ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, val))
 				})
 			end
@@ -989,8 +992,8 @@ run(function()
 		end
 	})
 	local animnames = {}
-	for i in anims do 
-		table.insert(animnames, i) 
+	for i in anims do
+		table.insert(animnames, i)
 	end
 	AnimationMode = Killaura:CreateDropdown({
 		Name = 'Animation Mode',

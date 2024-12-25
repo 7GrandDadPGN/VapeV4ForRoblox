@@ -2815,14 +2815,14 @@ run(function()
 						Wallcheck = Targets.Walls.Enabled,
 						Origin = entitylib.isAlive and entitylib.character.RootPart.Position or Vector3.zero
 					})
-					
+	
 					if plr then
 						local pos = shootpos or self:getLaunchPosition(origin)
 						if not pos then
 							return old(...)
 						end
 	
-						if (not OtherProjectiles.Enabled) and projmeta.projectile:find('arrow') == nil then
+						if (not OtherProjectiles.Enabled) and not projmeta.projectile:find('arrow') then
 							return old(...)
 						end
 	
@@ -2855,7 +2855,7 @@ run(function()
 							}
 						end
 					end
-					
+	
 					return old(...)
 				end
 			else
@@ -2865,7 +2865,7 @@ run(function()
 		Tooltip = 'Silently adjusts your aim towards the enemy'
 	})
 	Targets = ProjectileAimbot:CreateTargets({
-		Players = true, 
+		Players = true,
 		Walls = true
 	})
 	TargetPart = ProjectileAimbot:CreateDropdown({
@@ -2879,7 +2879,7 @@ run(function()
 		Default = 1000
 	})
 	OtherProjectiles = ProjectileAimbot:CreateToggle({
-		Name = 'Other OtherProjectiles',
+		Name = 'Other Projectiles',
 		Default = true
 	})
 end)
