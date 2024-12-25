@@ -183,7 +183,7 @@ run(function()
 		if Mouse.Enabled then
 			if not inputService:IsMouseButtonPressed(0) then return false end
 		end
-		
+
 		local tool = getTool('meleeDamage')
 		return tool
 	end
@@ -227,7 +227,7 @@ run(function()
 									AIHit:FireServer(tool, aiController:GetServerModelFromClientModel(v.Character))
 								else
 									local public, private = Crypt.checkpublickeys()
-									meleePlayer:FireServer(tool, Crypt.le3(math.abs(v.Player.UserId), public, private))
+									meleePlayer:FireServer(tool, Crypt.localencrypt(math.abs(v.Player.UserId), public, private))
 								end
 								break
 							end
@@ -237,15 +237,15 @@ run(function()
 						end
 					end
 
-					for i, v in KillauraFunctions do 
-						v(attacked) 
+					for i, v in KillauraFunctions do
+						v(attacked)
 					end
 
 					task.wait(Attacking and 0.15 or 0.03)
 				until not Killaura.Enabled
 			else
-				for i, v in KillauraFunctions do 
-					v({}) 
+				for i, v in KillauraFunctions do
+					v({})
 				end
 				Attacking = false
 				block(false)
@@ -262,8 +262,8 @@ run(function()
 		Min = 1,
 		Max = 15,
 		Default = 15,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 	AngleSlider = Killaura:CreateSlider({
@@ -286,8 +286,8 @@ run(function()
 			BoxAttackColor.Object.Visible = callback
 			if callback then
 				KillauraFunctions.Box = function(attacked)
-					if vape.ThreadFix then 
-						setthreadidentity(8) 
+					if vape.ThreadFix then
+						setthreadidentity(8)
 					end
 
 					for i, v in Boxes do
@@ -310,8 +310,8 @@ run(function()
 				end
 			else
 				KillauraFunctions.Box = nil
-				for i, v in Boxes do 
-					v:Destroy() 
+				for i, v in Boxes do
+					v:Destroy()
 				end
 				table.clear(Boxes)
 			end
@@ -339,8 +339,8 @@ run(function()
 			ParticleSize.Object.Visible = callback
 			if callback then
 				KillauraFunctions.Particles = function(attacked)
-					if vape.ThreadFix then 
-						setthreadidentity(8) 
+					if vape.ThreadFix then
+						setthreadidentity(8)
 					end
 					for i, v in Particles do
 						v.Position = attacked[i] and attacked[i].Entity.RootPart.Position or Vector3.new(9e9, 9e9, 9e9)
@@ -367,15 +367,15 @@ run(function()
 					particles.Shape = Enum.ParticleEmitterShape.Sphere
 					particles.ShapePartial = 1
 					particles.Color = ColorSequence.new({
-						ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
+						ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
 						ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
 					})
 					particles.Parent = part
 					Particles[i] = part
 				end
 			else
-				for i, v in Particles do 
-					v:Destroy() 
+				for i, v in Particles do
+					v:Destroy()
 				end
 				table.clear(Particles)
 			end
@@ -397,7 +397,7 @@ run(function()
 		Function = function(hue, sat, val)
 			for i, v in Particles do
 				v.ParticleEmitter.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)), 
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
 					ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
 				})
 			end
@@ -410,7 +410,7 @@ run(function()
 		Function = function(hue, sat, val)
 			for i, v in Particles do
 				v.ParticleEmitter.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
 					ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, val))
 				})
 			end
