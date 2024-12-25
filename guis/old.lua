@@ -147,23 +147,23 @@ end
 
 local function checkKeybinds(compare, target, key)
 	if type(target) == 'table' then
-		if table.find(target, key) then 
-			for i, v in target do 
-				if not table.find(compare, v) then 
+		if table.find(target, key) then
+			for i, v in target do
+				if not table.find(compare, v) then
 					return false
 				end
 			end
 			return true
 		end
 	end
-	
+
 	return false
 end
 
 local function createDownloader(text)
-	if mainapi.Loaded ~= true then 
+	if mainapi.Loaded ~= true then
 		local downloader = mainapi.Downloader
-		if not downloader then 
+		if not downloader then
 			downloader = Instance.new('TextLabel')
 			downloader.Size = UDim2.new(1, 0, 0, 40)
 			downloader.BackgroundTransparency = 1
@@ -2034,7 +2034,7 @@ function mainapi:CreateCategory(categorysettings)
 
 		function moduleapi:SetBind(tab, mouse)
 			if tab.Mobile then
-				createMobileButton(object, Vector2.new(tab.X, tab.Y))
+				createMobileButton(moduleapi, Vector2.new(tab.X, tab.Y))
 				return
 			end
 
@@ -2498,14 +2498,14 @@ function mainapi:CreateOverlay(categorysettings)
 			Function = function(callback)
 				window.Visible = callback and (clickgui.Visible or categoryapi.Pinned)
 				if not callback then
-					for _, v in categoryapi.Connections do 
-						v:Disconnect() 
+					for _, v in categoryapi.Connections do
+						v:Disconnect()
 					end
 					table.clear(categoryapi.Connections)
 				end
 
-				if categorysettings.Function then 
-					task.spawn(categorysettings.Function, callback) 
+				if categorysettings.Function then
+					task.spawn(categorysettings.Function, callback)
 				end
 			end,
 			Special = true
@@ -3127,7 +3127,7 @@ function mainapi:Load(skipgui, profile)
 
 	self.Profile = profile or guidata.Profile or 'default'
 	self.Profiles = guidata.Profiles or {{
-		Name = 'default', 
+		Name = 'default',
 		Bind = {}
 	}}
 	self.Categories.Profiles:ChangeValue()
@@ -3201,7 +3201,7 @@ function mainapi:Load(skipgui, profile)
 		self:Save()
 	end
 
-	if self.Downloader then 
+	if self.Downloader then
 		self.Downloader:Destroy()
 		self.Downloader = nil
 	end
@@ -4345,7 +4345,7 @@ end))
 mainapi:Clean(inputService.InputEnded:Connect(function(inputObj)
 	if not inputService:GetFocusedTextBox() and inputObj.KeyCode ~= Enum.KeyCode.Unknown then
 		if mainapi.Binding and inputObj.KeyCode.Name ~= 'LeftShift' then
-			if not mainapi.MultiKeybind.Enabled then 
+			if not mainapi.MultiKeybind.Enabled then
 				mainapi.HeldKeybinds = {inputObj.KeyCode.Name}
 			end
 			mainapi.Binding:SetBind(checkKeybinds(mainapi.HeldKeybinds, mainapi.Binding.Bind, inputObj.KeyCode.Name) and {} or mainapi.HeldKeybinds, true)
@@ -4354,7 +4354,7 @@ mainapi:Clean(inputService.InputEnded:Connect(function(inputObj)
 	end
 
 	local ind = table.find(mainapi.HeldKeybinds, inputObj.KeyCode.Name)
-	if ind then 
+	if ind then
 		table.remove(mainapi.HeldKeybinds, ind)
 	end
 end))
