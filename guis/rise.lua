@@ -183,22 +183,22 @@ local function addMaid(object)
 end
 
 local function checkKeybinds(compare, target, key)
-	if table.find(target, key) then 
-		for _, v in target do 
-			if not table.find(compare, v) then 
+	if table.find(target, key) then
+		for _, v in target do
+			if not table.find(compare, v) then
 				return false
 			end
 		end
 		return true
 	end
-	
+
 	return false
 end
 
 local function createDownloader(text)
-	if mainapi.Loaded ~= true then 
+	if mainapi.Loaded ~= true then
 		local downloader = mainapi.Downloader
-		if not downloader then 
+		if not downloader then
 			downloader = Instance.new('TextLabel')
 			downloader.Size = UDim2.new(1, 0, 0, 40)
 			downloader.BackgroundTransparency = 1
@@ -306,11 +306,11 @@ local function makeDraggable(obj, window)
 			local ended
 			ended = inputObj.Changed:Connect(function()
 				if inputObj.UserInputState == Enum.UserInputState.End then
-					if changed then 
-						changed:Disconnect() 
+					if changed then
+						changed:Disconnect()
 					end
-					if ended then 
-						ended:Disconnect() 
+					if ended then
+						ended:Disconnect()
 					end
 				end
 			end)
@@ -331,14 +331,14 @@ local function writeFont()
 	writefile('newvape/assets/rise/risefont.json', httpService:JSONEncode({
 		name = 'ProductSans',
 		faces = {
-			{style = 'normal', assetId = getcustomasset('newvape/assets/rise/SF-Pro-Rounded-Light.otf'), name = 'Light', weight = 300},
-			{style = 'normal', assetId = getcustomasset('newvape/assets/rise/SF-Pro-Rounded-Regular.otf'), name = 'Regular', weight = 400},
-			{style = 'normal', assetId = getcustomasset('newvape/assets/rise/SF-Pro-Rounded-Medium.otf'), name = 'Medium', weight = 500},
-			{style = 'normal', assetId = getcustomasset('newvape/assets/rise/Icon-1.ttf'), name = 'Icon1', weight = 600},
-			{style = 'normal', assetId = getcustomasset('newvape/assets/rise/Icon-3.ttf'), name = 'Icon3', weight = 800}
+			{style = 'normal', assetId = assetfunction('newvape/assets/rise/SF-Pro-Rounded-Light.otf'), name = 'Light', weight = 300},
+			{style = 'normal', assetId = assetfunction('newvape/assets/rise/SF-Pro-Rounded-Regular.otf'), name = 'Regular', weight = 400},
+			{style = 'normal', assetId = assetfunction('newvape/assets/rise/SF-Pro-Rounded-Medium.otf'), name = 'Medium', weight = 500},
+			{style = 'normal', assetId = assetfunction('newvape/assets/rise/Icon-1.ttf'), name = 'Icon1', weight = 600},
+			{style = 'normal', assetId = assetfunction('newvape/assets/rise/Icon-3.ttf'), name = 'Icon3', weight = 800}
 		}
 	}))
-	return getcustomasset('newvape/assets/rise/risefont.json')
+	return assetfunction('newvape/assets/rise/risefont.json')
 end
 
 do
@@ -2136,14 +2136,14 @@ function mainapi:CreateOverlay(categorysettings)
 			Function = function(callback)
 				customchildren.Visible = callback
 				if not callback then
-					for _, v in categoryapi.Connections do 
-						v:Disconnect() 
+					for _, v in categoryapi.Connections do
+						v:Disconnect()
 					end
 					table.clear(categoryapi.Connections)
 				end
-				
-				if categorysettings.Function then 
-					task.spawn(categorysettings.Function, callback) 
+
+				if categorysettings.Function then
+					task.spawn(categorysettings.Function, callback)
 				end
 			end,
 			Tooltip = categorysettings.Tooltip or 'None',
@@ -2368,7 +2368,7 @@ function mainapi:Load(skipgui, profile)
 		self:Save()
 	end
 
-	if self.Downloader then 
+	if self.Downloader then
 		self.Downloader:Destroy()
 		self.Downloader = nil
 	end
@@ -3389,7 +3389,7 @@ mainapi:Clean(inputService.InputEnded:Connect(function(inputObj)
 	end
 
 	local ind = table.find(mainapi.HeldKeybinds, inputObj.KeyCode.Name)
-	if ind then 
+	if ind then
 		table.remove(mainapi.HeldKeybinds, ind)
 	end
 end))
