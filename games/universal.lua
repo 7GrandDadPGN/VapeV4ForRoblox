@@ -6440,7 +6440,7 @@ run(function()
 		Min = 0,
 		Max = 192,
 		Function = function(val)
-			if Gravity.Enabled and Mode.Value == 'Normal' then
+			if Gravity.Enabled and Mode.Value == 'Workspace' then
 				changed = true
 				workspace.Gravity = val
 				changed = false
