@@ -3180,7 +3180,7 @@ run(function()
 		beekeeper = {'bee', 'bee'},
 		bigman = {'treeOrb', 'natures_essence_1'},
 		ghost_catcher = {'ghost', 'ghost_orb'},
-		metal_detector = {'hidden_metal', 'iron'},
+		metal_detector = {'hidden-metal', 'iron'},
 		sheep_herder = {'SheepModel', 'purple_hay_bale'},
 		sorcerer = {'alchemy_crystal', 'wild_flower'},
 		star_collector = {'stars', 'crit_star'}
@@ -3213,8 +3213,8 @@ run(function()
 	end
 	
 	local function addKit(tag, icon)
-		KitESP:Clean(collectionService:GetInstanceAddedSignal(tag):Connect(function(v) 
-			Added(v.PrimaryPart, icon) 
+		KitESP:Clean(collectionService:GetInstanceAddedSignal(tag):Connect(function(v)
+			Added(v.PrimaryPart, icon)
 		end))
 		KitESP:Clean(collectionService:GetInstanceRemovedSignal(tag):Connect(function(v)
 			if Reference[v.PrimaryPart] then
@@ -3222,8 +3222,8 @@ run(function()
 				Reference[v.PrimaryPart] = nil
 			end
 		end))
-		for _, v in collectionService:GetTagged(tag) do 
-			Added(v.PrimaryPart, icon) 
+		for _, v in collectionService:GetTagged(tag) do
+			Added(v.PrimaryPart, icon)
 		end
 	end
 	
@@ -3233,8 +3233,8 @@ run(function()
 			if callback then
 				repeat task.wait() until store.equippedKit ~= '' or (not KitESP.Enabled)
 				local kit = KitESP.Enabled and ESPKits[store.equippedKit] or nil
-				if kit then 
-					addKit(kit[1], kit[2]) 
+				if kit then
+					addKit(kit[1], kit[2])
 				end
 			else
 				Folder:ClearAllChildren()
@@ -3895,7 +3895,7 @@ run(function()
 				local localPosition = entitylib.character.RootPart.Position
 				for _, v in objs do
 					if InfiniteFly.Enabled or not AutoKit.Enabled then break end
-					local part = v:IsA('Model') and v.PrimaryPart or v
+					local part = not v:IsA('Model') and v or v.PrimaryPart
 					if part and (part.Position - localPosition).Magnitude <= (not Legit.Enabled and specific and math.huge or range) then
 						func(v)
 					end
@@ -3924,8 +3924,8 @@ run(function()
 		end,
 		bigman = function()
 			kitCollection('treeOrb', function(v)
-				if bedwars.Client:Get(remotes.ConsumeTreeOrb):CallServer({treeOrbSecret = v:GetAttribute('TreeOrbSecret')}) then 
-					v:Destroy() 
+				if bedwars.Client:Get(remotes.ConsumeTreeOrb):CallServer({treeOrbSecret = v:GetAttribute('TreeOrbSecret')}) then
+					v:Destroy()
 				end
 			end, 12, false)
 		end,
@@ -3939,8 +3939,8 @@ run(function()
 		end,
 		fisherman = function()
 			local old = bedwars.FishermanController.startMinigame
-			bedwars.FishermanController.startMinigame = function(_, _, result) 
-				result({win = true}) 
+			bedwars.FishermanController.startMinigame = function(_, _, result)
+				result({win = true})
 			end
 			AutoKit:Clean(function()
 				bedwars.FishermanController.startMinigame = old
@@ -4021,7 +4021,7 @@ run(function()
 			local old = bedwars.VoidDragonController.voidDragonActive
 			local oldflap = bedwars.VoidDragonController.flapWings
 	
-			bedwars.VoidDragonController.voidDragonActive = function(self, ...) 
+			bedwars.VoidDragonController.voidDragonActive = function(self, ...)
 				local Client = bedwars.Client
 				local Remote = remotes.DragonEndFly
 				self.SpeedMaid:GiveTask(function()
@@ -4029,10 +4029,10 @@ run(function()
 				end)
 	
 				task.spawn(function()
-					for i = 1, 10 do 
-						if bedwars.Client:Get(remotes.DragonFly):CallServer() then 
+					for i = 1, 10 do
+						if bedwars.Client:Get(remotes.DragonFly):CallServer() then
 							local modifier = bedwars.SprintController:getMovementStatusModifier():addModifier({
-								blockSprint = true, 
+								blockSprint = true,
 								constantSpeedMultiplier = 1.7
 							})
 							self.SpeedMaid:GiveTask(modifier)
@@ -4054,13 +4054,13 @@ run(function()
 			end)
 	
 			repeat
-				if bedwars.VoidDragonController.inDragonForm then 
+				if bedwars.VoidDragonController.inDragonForm then
 					local plr = entitylib.EntityPosition({
 						Range = 30,
 						Part = 'RootPart',
 						Players = true
 					})
-					if plr then 
+					if plr then
 						bedwars.Client:Get(remotes.DragonBreath):SendToServer({
 							player = lplr,
 							targetPoint = plr.RootPart.Position
@@ -5233,6 +5233,7 @@ run(function()
 	local UpgradeToggles = {}
 	local Functions, id = {}
 	local Callbacks = {Custom, Functions, CustomPost}
+	local npctick = tick()
 	
 	local swords = {
 		'wood_sword',
@@ -5333,8 +5334,8 @@ run(function()
 				bedwars.Client:Get('RequestPurchaseTeamUpgrade'):CallServerAsync(upgradeType)
 				currencytable.diamond -= tier.cost
 				bought = true
-			else 
-				break 
+			else
+				break
 			end
 		end
 	
@@ -5364,8 +5365,8 @@ run(function()
 			if TierCheck.Enabled and v.nextTier then break end
 		end
 	
-		if buyable then 
-			buyItem(buyable, currencytable) 
+		if buyable then
+			buyItem(buyable, currencytable)
 		end
 	
 		return bought
@@ -5378,7 +5379,6 @@ run(function()
 				repeat task.wait() until store.queueType ~= 'bedwars_test'
 				if BedwarsCheck.Enabled and not store.queueType:find('bedwars') then return end
 	
-				local npctick = tick()
 				local lastupgrades
 				AutoBuy:Clean(vapeEvents.InventoryAmountChanged.Event:Connect(function()
 					if (npctick - tick()) > 1 then npctick = tick() end
@@ -5388,8 +5388,8 @@ run(function()
 					local npc, shop, upgrades, newid = getShopNPC()
 					id = newid
 					if GUI.Enabled then
-						if not (bedwars.AppController:isAppOpen('BedwarsItemShopApp') or bedwars.AppController:isAppOpen('BedwarsTeamUpgradeApp')) then 
-							npc = nil 
+						if not (bedwars.AppController:isAppOpen('BedwarsItemShopApp') or bedwars.AppController:isAppOpen('BedwarsTeamUpgradeApp')) then
+							npc = nil
 						end
 					end
 	
@@ -5402,11 +5402,11 @@ run(function()
 						local currencytable = {}
 						local waitcheck
 						if not AutoBuy.Enabled then break end
-						for _, tab in Callbacks do 
-							for _, callback in tab do 
-								if callback(currencytable, shop, upgrades) then 
-									waitcheck = true 
-								end 
+						for _, tab in Callbacks do
+							for _, callback in tab do
+								if callback(currencytable, shop, upgrades) then
+									waitcheck = true
+								end
 							end
 						end
 						npctick = tick() + (waitcheck and 0.4 or math.huge)
@@ -5414,6 +5414,8 @@ run(function()
 	
 					task.wait(0.1)
 				until not AutoBuy.Enabled
+			else
+				npctick = tick()
 			end
 		end,
 		Tooltip = 'Automatically buys items when you go near the shop'
@@ -5421,6 +5423,7 @@ run(function()
 	Sword = AutoBuy:CreateToggle({
 		Name = 'Buy Sword',
 		Function = function(callback)
+			npctick = tick()
 			Functions[2] = callback and function(currencytable, shop)
 				if not shop then return end
 	
@@ -5447,6 +5450,7 @@ run(function()
 	Armor = AutoBuy:CreateToggle({
 		Name = 'Buy Armor',
 		Function = function(callback)
+			npctick = tick()
 			Functions[1] = callback and function(currencytable, shop)
 				if not shop then return end
 				local currentarmor = store.inventory.inventory.armor[2]
@@ -5459,6 +5463,7 @@ run(function()
 	AutoBuy:CreateToggle({
 		Name = 'Buy Axe',
 		Function = function(callback)
+			npctick = tick()
 			Functions[3] = callback and function(currencytable, shop)
 				if not shop then return end
 				return buyTool(store.tools.wood or {itemType = 'none'}, axes, currencytable)
@@ -5468,6 +5473,7 @@ run(function()
 	AutoBuy:CreateToggle({
 		Name = 'Buy Pickaxe',
 		Function = function(callback)
+			npctick = tick()
 			Functions[4] = callback and function(currencytable, shop)
 				if not shop then return end
 				return buyTool(store.tools.stone, pickaxes, currencytable)
@@ -5484,12 +5490,13 @@ run(function()
 		Default = true
 	})
 	local count = 0
-	for i, v in bedwars.TeamUpgradeMeta do 
-		count += 1
+	for i, v in bedwars.TeamUpgradeMeta do
+		local toggleCount = count
 		table.insert(UpgradeToggles, AutoBuy:CreateToggle({
 			Name = 'Buy '..(v.name == 'Armor' and 'Protection' or v.name),
 			Function = function(callback)
-				Functions[4 + count + (i ~= 'ARMOR' and 20 or 0)] = callback and function(currencytable, shop, upgrades)
+				npctick = tick()
+				Functions[5 + toggleCount + (v.name == 'Armor' and 20 or 0)] = callback and function(currencytable, shop, upgrades)
 					if not upgrades then return end
 					if v.disabledInQueue and table.find(v.disabledInQueue, store.queueType) then return end
 					return buyUpgrade(i, currencytable)
@@ -5498,6 +5505,7 @@ run(function()
 			Darker = true,
 			Default = (i == 'ARMOR' or i == 'DAMAGE')
 		}))
+		count += 1
 	end
 	TierCheck = AutoBuy:CreateToggle({Name = 'Tier Check'})
 	BedwarsCheck = AutoBuy:CreateToggle({
@@ -5527,14 +5535,14 @@ run(function()
 				if ind then
 					(tab[4] and CustomPost or Custom)[ind] = function(currencytable, shop)
 						if not shop then return end
-						
+	
 						local v = bedwars.Shop.getShopItem(tab[2], lplr)
 						if v then
 							local item = getItem(tab[2] == 'wool_white' and bedwars.Shop.getTeamWool(lplr:GetAttribute('Team')) or tab[2])
 							item = (item and tonumber(tab[3]) - item.amount or tonumber(tab[3])) // v.amount
 							if item > 0 and canBuy(v, currencytable, item) then
-								for _ = 1, item do 
-									buyItem(v, currencytable) 
+								for _ = 1, item do
+									buyItem(v, currencytable)
 								end
 								return true
 							end
@@ -6449,6 +6457,7 @@ run(function()
 	local Animation
 	local SelfBreak
 	local InstantBreak
+	local LimitItem
 	local customlist, parts = {}, {}
 	
 	local function customHealthbar(self, blockRef, health, maxHealth, changeHealth, block)
@@ -6532,15 +6541,15 @@ run(function()
 				cleanCheck = false
 				self.healthbarBlockRef = nil
 				bedwars.Roact.unmount(mounted)
-				if self.healthbarPart then 
-					self.healthbarPart:Destroy() 
+				if self.healthbarPart then
+					self.healthbarPart:Destroy()
 				end
 				self.healthbarPart = nil
 			end)
 	
 			bedwars.RuntimeLib.Promise.delay(5):andThen(function()
-				if cleanCheck then 
-					self.healthbarMaid:DoCleaning() 
+				if cleanCheck then
+					self.healthbarMaid:DoCleaning()
 				end
 			end)
 		end
@@ -6559,6 +6568,7 @@ run(function()
 			if (v.Position - localPosition).Magnitude < Range.Value and bedwars.BlockController:isBlockBreakable({blockPosition = v.Position / 3}, lplr) then
 				if not SelfBreak.Enabled and v:GetAttribute('PlacedByUserId') == lplr.UserId then continue end
 				if (v:GetAttribute('BedShieldEndTime') or 0) > workspace:GetServerTimeNow() then continue end
+				if LimitItem.Enabled and not (store.hand.tool and bedwars.ItemMeta[store.hand.tool.Name].breakBlock) then continue end
 	
 				hit += 1
 				local target, path, endpos = bedwars.breakBlock(v, Effect.Enabled, Animation.Enabled, CustomHealth.Enabled and customHealthbar or nil, InstantBreak.Enabled)
@@ -6607,8 +6617,8 @@ run(function()
 				local luckyblock = collection('LuckyBlock', Breaker)
 				local ironores = collection('iron-ore', Breaker)
 				customlist = collection('block', Breaker, function(tab, obj)
-					if table.find(Custom.ListEnabled, obj.Name) then 
-						table.insert(tab, obj) 
+					if table.find(Custom.ListEnabled, obj.Name) then
+						table.insert(tab, obj)
 					end
 				end)
 	
@@ -6618,13 +6628,13 @@ run(function()
 					if entitylib.isAlive then
 						local localPosition = entitylib.character.RootPart.Position
 	
-						if attemptBreak(Bed.Enabled and beds, localPosition) then continue end 
+						if attemptBreak(Bed.Enabled and beds, localPosition) then continue end
 						if attemptBreak(customlist, localPosition) then continue end
-						if attemptBreak(LuckyBlock.Enabled and luckyblock, localPosition) then continue end 
-						if attemptBreak(IronOre.Enabled and ironores, localPosition) then continue end 
+						if attemptBreak(LuckyBlock.Enabled and luckyblock, localPosition) then continue end
+						if attemptBreak(IronOre.Enabled and ironores, localPosition) then continue end
 	
-						for _, v in parts do 
-							v.Position = Vector3.zero 
+						for _, v in parts do
+							v.Position = Vector3.zero
 						end
 					end
 				until not Breaker.Enabled
@@ -6643,8 +6653,8 @@ run(function()
 		Min = 1,
 		Max = 30,
 		Default = 30,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 	UpdateRate = Breaker:CreateSlider({
@@ -6660,8 +6670,8 @@ run(function()
 			if not customlist then return end
 			table.clear(customlist)
 			for _, obj in store.blocks do
-				if table.find(Custom.ListEnabled, obj.Name) then 
-					table.insert(customlist, obj) 
+				if table.find(Custom.ListEnabled, obj.Name) then
+					table.insert(customlist, obj)
 				end
 			end
 		end
@@ -6695,6 +6705,10 @@ run(function()
 	Animation = Breaker:CreateToggle({Name = 'Animation'})
 	SelfBreak = Breaker:CreateToggle({Name = 'Self Break'})
 	InstantBreak = Breaker:CreateToggle({Name = 'Instant Break'})
+	LimitItem = Breaker:CreateToggle({
+		Name = 'Limit to items',
+		Tooltip = 'Only breaks when tools are held'
+	})
 end)
 	
 run(function()

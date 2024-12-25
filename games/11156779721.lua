@@ -226,8 +226,10 @@ run(function()
 								if v.NPC then
 									AIHit:FireServer(tool, aiController:GetServerModelFromClientModel(v.Character))
 								else
-									local public, private = Crypt.checkpublickeys()
-									meleePlayer:FireServer(tool, Crypt.localencrypt(math.abs(v.Player.UserId), public, private))
+									local key1, key2, key3 = Crypt.checkpublickeys()
+									if key1 and key2 and key3 then
+										meleePlayer:FireServer(tool, Crypt.crypt(key1, math.abs(v.Player.UserId) + key3, key2))
+									end
 								end
 								break
 							end
@@ -241,7 +243,7 @@ run(function()
 						v(attacked)
 					end
 
-					task.wait(Attacking and 0.15 or 0.03)
+					task.wait(Attacking and 0.25 or 0.03)
 				until not Killaura.Enabled
 			else
 				for i, v in KillauraFunctions do
