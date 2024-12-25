@@ -3779,7 +3779,7 @@ function mainapi:CreateCategory(categorysettings)
 
 		function moduleapi:SetBind(tab, mouse)
 			if tab.Mobile then
-				createMobileButton(object, Vector2.new(tab.X, tab.Y))
+				createMobileButton(moduleapi, Vector2.new(tab.X, tab.Y))
 				return
 			end
 
