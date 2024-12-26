@@ -134,7 +134,7 @@ entitylib.EntityMouse = function(entitysettings)
 				})
 			end
 		end
-		
+
 		table.sort(sortingTable, entitysettings.Sort or function(a, b)
 			return a.Magnitude < b.Magnitude
 		end)
@@ -309,7 +309,7 @@ entitylib.removeEntity = function(char, localcheck)
 			task.cancel(entitylib.EntityThreads[char])
 			entitylib.EntityThreads[char] = nil
 		end
-		
+
 		local entity, ind = entitylib.getEntity(char)
 		if ind then
 			for _, v in entity.Connections do
