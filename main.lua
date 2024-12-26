@@ -1,6 +1,10 @@
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
 
+if identifyexecutor and ({identifyexecutor()})[1] == 'Argon' then
+	getgenv().setthreadidentity = nil
+end
+
 local vape
 local loadstring = function(...)
 	local res, err = loadstring(...)
