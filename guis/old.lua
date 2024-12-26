@@ -310,7 +310,7 @@ local function removeTags(str)
 end
 
 do
-	local res = isfile('newvape/profiles/gui.txt') and loadJson('newvape/profiles/gui.txt')
+	local res = isfile('newvape/profiles/color.txt') and loadJson('newvape/profiles/color.txt')
 	if res then
 		uipallet.Main = res.Main and Color3.fromRGB(unpack(res.Main)) or uipallet.Main
 		uipallet.Text = res.Text and Color3.fromRGB(unpack(res.Text)) or uipallet.Text

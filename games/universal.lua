@@ -5530,7 +5530,7 @@ run(function()
 					continue
 				end
 			end
-			
+	
 			local pos = ent[EndPosition.Value == 'Torso' and 'RootPart' or 'Head'].Position
 			local rootPos, rootVis = gameCamera:WorldToViewportPoint(pos)
 			if not rootVis and Behind.Enabled then
@@ -5539,7 +5539,7 @@ run(function()
 				rootPos = gameCamera:WorldToViewportPoint(gameCamera.CFrame:pointToWorldSpace(tempPos))
 				rootVis = true
 			end
-			
+	
 			local endVector = Vector2.new(rootPos.X, rootPos.Y)
 			EntityTracer.Visible = rootVis
 			EntityTracer.From = startVector
@@ -5611,8 +5611,8 @@ run(function()
 	Color = Tracers:CreateColorSlider({
 		Name = 'Player Color',
 		Function = function(hue, sat, val)
-			if Tracers.Enabled and ColorFuncs then
-				ColorFuncs(hue, sat, val)
+			if Tracers.Enabled then
+				ColorFunc(hue, sat, val)
 			end
 		end
 	})

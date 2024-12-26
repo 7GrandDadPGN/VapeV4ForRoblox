@@ -341,6 +341,11 @@ local function writeFont()
 	return getcustomasset('newvape/assets/rise/risefont.json')
 end
 
+if inputService.TouchEnabled then
+	writefile('newvape/profiles/gui.txt', 'new')
+	return
+end
+
 do
 	local risefont = writeFont()
 	uipallet.Font = Font.new(risefont, Enum.FontWeight.Regular)
@@ -349,7 +354,7 @@ do
 	uipallet.FontIcon1 = Font.new(risefont, Enum.FontWeight.SemiBold)
 	uipallet.FontIcon3 = Font.new(risefont, Enum.FontWeight.ExtraBold)
 
-	local res = isfile('newvape/profiles/gui.txt') and loadJson('newvape/profiles/gui.txt')
+	local res = isfile('newvape/profiles/color.txt') and loadJson('newvape/profiles/color.txt')
 	if res then
 		uipallet.Main = res.Main and Color3.fromRGB(unpack(res.Main)) or uipallet.Main
 		uipallet.Text = res.Text and Color3.fromRGB(unpack(res.Text)) or uipallet.Text
