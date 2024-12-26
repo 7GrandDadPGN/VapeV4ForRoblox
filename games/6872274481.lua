@@ -334,7 +334,7 @@ local frictionConnection
 local frictionState
 
 local function modifyVelocity(v)
-	if v:IsA('BasePart') and not oldfrict[v] then
+	if v:IsA('BasePart') and v.Name ~= 'HumanoidRootPart' and not oldfrict[v] then
 		oldfrict[v] = v.CustomPhysicalProperties or 'none'
 		v.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.2, 0.5, 1, 1)
 	end
@@ -1710,11 +1710,11 @@ run(function()
 						local destination = (moveDirection * math.max(Value.Value - velo, 0) * dt)
 						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
 						rayCheck.CollisionGroup = root.CollisionGroup
-						
+
 						if WallCheck.Enabled then
 							local ray = workspace:Raycast(root.Position, destination, rayCheck)
-							if ray then 
-								destination = ((ray.Position + ray.Normal) - root.Position) 
+							if ray then
+								destination = ((ray.Position + ray.Normal) - root.Position)
 							end
 						end
 
@@ -1788,14 +1788,14 @@ run(function()
 			else
 				bedwars.BalloonController.deflateBalloon = old
 				if PopBalloons.Enabled and entitylib.isAlive and (lplr.Character:GetAttribute('InflatedBalloons') or 0) > 0 then
-					for _ = 1, 3 do 
-						bedwars.BalloonController:deflateBalloon() 
+					for _ = 1, 3 do
+						bedwars.BalloonController:deflateBalloon()
 					end
 				end
 			end
 		end,
-		ExtraText = function() 
-			return 'Heatseeker' 
+		ExtraText = function()
+			return 'Heatseeker'
 		end,
 		Tooltip = 'Makes you go zoom.'
 	})
@@ -1804,8 +1804,8 @@ run(function()
 		Min = 1,
 		Max = 23,
 		Default = 23,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 	VerticalValue = Fly:CreateSlider({
@@ -1813,8 +1813,8 @@ run(function()
 		Min = 1,
 		Max = 150,
 		Default = 50,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 	WallCheck = Fly:CreateToggle({
@@ -2113,8 +2113,8 @@ run(function()
 	local Particles, Boxes = {}, {}
 	local anims, AnimDelay, AnimTween, armC0 = vape.Libraries.auraanims, tick()
 	local AttackRemote = {FireServer = function() end}
-	task.spawn(function() 
-		AttackRemote = bedwars.Client:Get(remotes.AttackEntity).instance 
+	task.spawn(function()
+		AttackRemote = bedwars.Client:Get(remotes.AttackEntity).instance
 	end)
 
 	local function getAttackData()
@@ -2145,29 +2145,36 @@ run(function()
 		Name = 'Killaura',
 		Function = function(callback)
 			if callback then
-				if inputService.TouchEnabled then 
-					pcall(function() 
-						lplr.PlayerGui.MobileUI['2'].Visible = Limit.Enabled 
-					end) 
+				if inputService.TouchEnabled then
+					pcall(function()
+						lplr.PlayerGui.MobileUI['2'].Visible = Limit.Enabled
+					end)
 				end
 
 				if Animation.Enabled then
-					local fake = {Controllers = {ViewmodelController = {
-						isVisible = function() return not Attacking end,
-						playAnimation = function(_, ...)
-							if not Attacking then
-								bedwars.ViewmodelController:playAnimation(...)
-							end
-						end
-					}}}
+					local fake = {
+						Controllers = {
+							ViewmodelController = {
+								isVisible = function()
+									return not Attacking
+								end,
+								playAnimation = function(...)
+									if not Attacking then
+										bedwars.ViewmodelController:playAnimation(select(2, ...))
+									end
+								end
+							}
+						}
+					}
 					debug.setupvalue(bedwars.SwordController.playSwordEffect, 6, fake)
 					debug.setupvalue(bedwars.ScytheController.playLocalAnimation, 3, fake)
+
 					task.spawn(function()
 						local started = false
 						repeat
 							if Attacking then
-								if not armC0 then 
-									armC0 = gameCamera.Viewmodel.RightHand.RightWrist.C0 
+								if not armC0 then
+									armC0 = gameCamera.Viewmodel.RightHand.RightWrist.C0
 								end
 								local first = not started
 								started = true
@@ -2193,8 +2200,8 @@ run(function()
 								AnimTween:Play()
 							end
 
-							if not started then 
-								task.wait(1 / UpdateRate.Value) 
+							if not started then
+								task.wait(1 / UpdateRate.Value)
 							end
 						until (not Killaura.Enabled) or (not Animation.Enabled)
 					end)
@@ -2224,7 +2231,7 @@ run(function()
 								local delta = (v.RootPart.Position - selfpos)
 								local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
 								if angle > (math.rad(AngleSlider.Value) / 2) then continue end
-								
+
 								table.insert(attacked, v)
 								targetinfo.Targets[v] = tick() + 1
 
@@ -2234,12 +2241,12 @@ run(function()
 									if not Swing.Enabled and AnimDelay <= tick() and not LegitAura.Enabled then
 										AnimDelay = tick() + (meta.sword.respectAttackSpeedForEffects and meta.sword.attackSpeed or 0.14)
 										bedwars.SwordController:playSwordEffect(meta, 0)
-										if meta.displayName:find(' Scythe') then 
-											bedwars.ScytheController:playLocalAnimation() 
+										if meta.displayName:find(' Scythe') then
+											bedwars.ScytheController:playLocalAnimation()
 										end
 
-										if vape.ThreadFix then 
-											setthreadidentity(8) 
+										if vape.ThreadFix then
+											setthreadidentity(8)
 										end
 									end
 								end
@@ -2283,16 +2290,16 @@ run(function()
 				until not Killaura.Enabled
 			else
 				store.KillauraTarget = nil
-				for _, v in Boxes do 
-					v.Adornee = nil 
+				for _, v in Boxes do
+					v.Adornee = nil
 				end
-				for _, v in Particles do 
-					v.Parent = nil 
+				for _, v in Particles do
+					v.Parent = nil
 				end
-				if inputService.TouchEnabled then 
-					pcall(function() 
-						lplr.PlayerGui.MobileUI['2'].Visible = true 
-					end) 
+				if inputService.TouchEnabled then
+					pcall(function()
+						lplr.PlayerGui.MobileUI['2'].Visible = true
+					end)
 				end
 				debug.setupvalue(bedwars.SwordController.playSwordEffect, 6, bedwars.Knit)
 				debug.setupvalue(bedwars.ScytheController.playLocalAnimation, 3, bedwars.Knit)
@@ -2308,7 +2315,7 @@ run(function()
 		Tooltip = 'Attack players around you\nwithout aiming at them.'
 	})
 	Targets = Killaura:CreateTargets({
-		Players = true, 
+		Players = true,
 		NPCs = true
 	})
 	local methods = {'Damage', 'Distance'}
@@ -2322,8 +2329,8 @@ run(function()
 		Min = 1,
 		Max = 18,
 		Default = 18,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 	AngleSlider = Killaura:CreateSlider({
@@ -2368,8 +2375,8 @@ run(function()
 					Boxes[i] = box
 				end
 			else
-				for _, v in Boxes do 
-					v:Destroy() 
+				for _, v in Boxes do
+					v:Destroy()
 				end
 				table.clear(Boxes)
 			end
@@ -2409,15 +2416,15 @@ run(function()
 					particles.Drag = 16
 					particles.ShapePartial = 1
 					particles.Color = ColorSequence.new({
-						ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
+						ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
 						ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
 					})
 					particles.Parent = part
 					Particles[i] = part
 				end
 			else
-				for _, v in Particles do 
-					v:Destroy() 
+				for _, v in Particles do
+					v:Destroy()
 				end
 				table.clear(Particles)
 			end
@@ -2439,7 +2446,7 @@ run(function()
 		Function = function(hue, sat, val)
 			for _, v in Particles do
 				v.ParticleEmitter.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)), 
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
 					ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
 				})
 			end
@@ -2452,7 +2459,7 @@ run(function()
 		Function = function(hue, sat, val)
 			for _, v in Particles do
 				v.ParticleEmitter.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
 					ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, val))
 				})
 			end
@@ -2487,7 +2494,7 @@ run(function()
 		end
 	})
 	local animnames = {}
-	for i in anims do 
+	for i in anims do
 		table.insert(animnames, i)
 	end
 	AnimationMode = Killaura:CreateDropdown({
@@ -2513,10 +2520,10 @@ run(function()
 	Limit = Killaura:CreateToggle({
 		Name = 'Limit to items',
 		Function = function(callback)
-			if inputService.TouchEnabled and Killaura.Enabled then 
-				pcall(function() 
-					lplr.PlayerGui.MobileUI['2'].Visible = callback 
-				end) 
+			if inputService.TouchEnabled and Killaura.Enabled then
+				pcall(function()
+					lplr.PlayerGui.MobileUI['2'].Visible = callback
+				end)
 			end
 		end,
 		Tooltip = 'Only attacks when the sword is held'

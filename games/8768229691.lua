@@ -780,9 +780,6 @@ run(function()
 	
 								if not Swing.Enabled then
 									skywars.MeleeController:playAnimation(lplr.Character, tool)
-									if vape.ThreadFix then
-										setthreadidentity(8)
-									end
 								end
 	
 								if not switched then
@@ -800,6 +797,9 @@ run(function()
 					end
 	
 					Attacking = #attacked > 0
+					if Attacking and vape.ThreadFix then
+						setthreadidentity(8)
+					end
 	
 					for i, v in Boxes do
 						v.Adornee = attacked[i] and attacked[i].RootPart or nil
