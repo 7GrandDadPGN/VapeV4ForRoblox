@@ -23,7 +23,7 @@ local contextActionService = cloneref(game:GetService('ContextActionService'))
 local coreGui = cloneref(game:GetService('CoreGui'))
 local starterGui = cloneref(game:GetService('StarterGui'))
 
-local isnetworkowner = not inputService.TouchEnabled and isnetworkowner or function()
+local isnetworkowner = identifyexecutor and table.find({'AWP', 'Nihon'}, ({identifyexecutor()})[1]) and isnetworkowner or function()
 	return true
 end
 local gameCamera = workspace.CurrentCamera
@@ -60,9 +60,9 @@ local store = {
 	queueType = 'bedwars_test',
 	tools = {}
 }
-local Reach
+local Reach = {}
+local HitBoxes = {}
 local InfiniteFly
-local HitBoxes
 local StoreDamage
 local TrapDisabler
 local bedwars, remotes, sides, oldinvrender = {}, {}, {}
@@ -759,10 +759,12 @@ run(function()
 					local targetpos = attackTable.validate.targetPosition.value
 					store.attackReach = ((selfpos - targetpos).Magnitude * 100) // 1 / 100
 					store.attackReachUpdate = tick() + 1
+
 					if Reach.Enabled or HitBoxes.Enabled then
 						attackTable.validate.raycast = attackTable.validate.raycast or {}
 						attackTable.validate.selfPosition.value += CFrame.lookAt(selfpos, targetpos).LookVector * math.max((selfpos - targetpos).Magnitude - 14.399, 0)
 					end
+
 					if suc and plr then
 						if not select(2, whitelist:get(plr)) then return end
 					end
@@ -1131,13 +1133,9 @@ run(function()
 	end)
 end)
 
-if vape.ThreadFix then
-	setthreadidentity(8)
-end
 for _, v in {'AntiRagdoll', 'TriggerBot', 'SilentAim', 'AutoRejoin', 'Rejoin', 'Disabler', 'Timer', 'ServerHop', 'MouseTP', 'MurderMystery'} do
 	vape:Remove(v)
 end
-
 run(function()
 	local AimAssist
 	local Targets
@@ -1347,13 +1345,14 @@ run(function()
 		Name = 'Range',
 		Min = 0,
 		Max = 18,
+		Default = 18,
 		Function = function(val)
 			if Reach.Enabled then
 				bedwars.CombatConstant.RAYCAST_SWORD_CHARACTER_DISTANCE = val + 2
 			end
 		end,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 end)
@@ -4637,11 +4636,11 @@ run(function()
 	local joined = {}
 	
 	local function getRole(plr, id)
-		local suc, res = pcall(function() 
+		local suc, res = pcall(function()
 			return plr:GetRankInGroup(id)
 		end)
-		if not suc then 
-			notif('StaffDetector', res, 30, 'alert') 
+		if not suc then
+			notif('StaffDetector', res, 30, 'alert')
 		end
 		return suc and res or 0
 	end
@@ -4652,8 +4651,8 @@ run(function()
 		whitelist.customtags[plr.Name] = {{text = 'GAME STAFF', color = Color3.new(1, 0, 0)}}
 	
 		if Mode.Value == 'Uninject' then
-			task.spawn(function() 
-				vape:Uninject() 
+			task.spawn(function()
+				vape:Uninject()
 			end)
 			game:GetService('StarterGui'):SetCore('SendNotification', {
 				Title = 'StaffDetector',
@@ -4670,8 +4669,8 @@ run(function()
 			vape.Save = function() end
 			for i, v in vape.Modules do
 				if not (table.find(safe, i) or v.Category == 'Render') then
-					if v.Enabled then 
-						v:Toggle() 
+					if v.Enabled then
+						v:Toggle()
 					end
 					v:SetBind('')
 				end
@@ -4681,8 +4680,8 @@ run(function()
 	
 	local function checkFriends(list)
 		for _, v in list do
-			if joined[v] then 
-				return joined[v] 
+			if joined[v] then
+				return joined[v]
 			end
 		end
 		return nil
@@ -4693,8 +4692,8 @@ run(function()
 			connection:Disconnect()
 			local tab, pages = {}, playersService:GetFriendsAsync(plr.UserId)
 			for _ = 1, 4 do
-				for _, v in pages:GetCurrentPage() do 
-					table.insert(tab, v.Id) 
+				for _, v in pages:GetCurrentPage() do
+					table.insert(tab, v.Id)
 				end
 				if pages.IsFinished then break end
 				pages:AdvanceToNextPageAsync()
@@ -4703,6 +4702,7 @@ run(function()
 			local friend = checkFriends(tab)
 			if not friend then
 				staffFunction(plr, 'impossible_join')
+				return true
 			else
 				notif('StaffDetector', string.format('Spectator %s joined from %s', plr.Name, friend), 20, 'warning')
 			end
@@ -4721,12 +4721,18 @@ run(function()
 			staffFunction(plr, 'staff_role')
 		else
 			local connection
-			connection = plr:GetAttributeChangedSignal('Spectator'):Connect(function() checkJoin(plr, connection) end)
-			checkJoin(plr, connection)
+			connection = plr:GetAttributeChangedSignal('Spectator'):Connect(function()
+				checkJoin(plr, connection)
+			end)
 			StaffDetector:Clean(connection)
+			if checkJoin(plr, connection) then
+				return
+			end
+	
 			if not plr:GetAttribute('ClanTag') then
 				plr:GetAttributeChangedSignal('ClanTag'):Wait()
 			end
+	
 			if table.find(blacklistedclans, plr:GetAttribute('ClanTag')) and vape.Loaded then
 				connection:Disconnect()
 				staffFunction(plr, 'blacklisted_clan_'..plr:GetAttribute('ClanTag'):lower())
@@ -4739,8 +4745,8 @@ run(function()
 		Function = function(callback)
 			if callback then
 				StaffDetector:Clean(playersService.PlayerAdded:Connect(playerAdded))
-				for _, v in playersService:GetPlayers() do 
-					task.spawn(playerAdded, v) 
+				for _, v in playersService:GetPlayers() do
+					task.spawn(playerAdded, v)
 				end
 			else
 				table.clear(joined)
@@ -5543,7 +5549,8 @@ run(function()
 			table.clear(Custom)
 			table.clear(CustomPost)
 			for _, entry in list do
-				local ind, tab = tonumber(tab[1]), entry:split('/')
+				local tab = entry:split('/')
+				local ind = tonumber(tab[1])
 				if ind then
 					(tab[4] and CustomPost or Custom)[ind] = function(currencytable, shop)
 						if not shop then return end
@@ -7649,6 +7656,7 @@ run(function()
 	local Depth
 	local Horizontal
 	local Vertical
+	local NoBob
 	local Rots = {}
 	local old, oldc1
 	
@@ -7659,22 +7667,24 @@ run(function()
 			if callback then
 				old = bedwars.ViewmodelController.playAnimation
 				oldc1 = viewmodel and viewmodel.RightHand.RightWrist.C1 or CFrame.identity
-				bedwars.ViewmodelController.playAnimation = function(self, animtype, ...)
-					if bedwars.AnimationType and animtype == bedwars.AnimationType.FP_WALK then return end
-					return old(self, animtype, ...)
+				if NoBob.Enabled then
+					bedwars.ViewmodelController.playAnimation = function(self, animtype, ...)
+						if bedwars.AnimationType and animtype == bedwars.AnimationType.FP_WALK then return end
+						return old(self, animtype, ...)
+					end
 				end
 	
 				bedwars.InventoryViewmodelController:handleStore(bedwars.Store:getState())
-				if viewmodel then 
-					gameCamera.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value)) 
+				if viewmodel then
+					gameCamera.Viewmodel.RightHand.RightWrist.C1 = oldc1 * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value))
 				end
 				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_DEPTH_OFFSET', -Depth.Value)
 				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_HORIZONTAL_OFFSET', Horizontal.Value)
 				lplr.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_VERTICAL_OFFSET', Vertical.Value)
 			else
 				bedwars.ViewmodelController.playAnimation = old
-				if viewmodel then 
-					viewmodel.RightHand.RightWrist.C1 = oldc1 
+				if viewmodel then
+					viewmodel.RightHand.RightWrist.C1 = oldc1
 				end
 	
 				bedwars.InventoryViewmodelController:handleStore(bedwars.Store:getState())
@@ -7722,7 +7732,7 @@ run(function()
 			end
 		end
 	})
-	for _, name in {'Rotation X', 'Rotation Y', 'Rotation Z'} do 
+	for _, name in {'Rotation X', 'Rotation Y', 'Rotation Z'} do
 		table.insert(Rots, Viewmodel:CreateSlider({
 			Name = name,
 			Min = 0,
@@ -7734,5 +7744,15 @@ run(function()
 			end
 		}))
 	end
+	NoBob = Viewmodel:CreateToggle({
+		Name = 'No Bobbing',
+		Default = true,
+		Function = function()
+			if Viewmodel.Enabled then
+				Viewmodel:Toggle()
+				Viewmodel:Toggle()
+			end
+		end
+	})
 end)
 	

@@ -3253,6 +3253,10 @@ function mainapi:Remove(obj)
 	local tab = (self.Modules[obj] and self.Modules or self.Legit.Modules[obj] and self.Legit.Modules or self.Categories)
 	if tab and tab[obj] then
 		local newobj = tab[obj]
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+
 		for _, v in {'Object', 'Children', 'Toggle', 'Button'} do
 			local childobj = typeof(newobj[v]) == 'table' and newobj[v].Object or newobj[v]
 			if typeof(childobj) == 'Instance' then
@@ -3260,6 +3264,7 @@ function mainapi:Remove(obj)
 				childobj:ClearAllChildren()
 			end
 		end
+
 		loopClean(newobj)
 		tab[obj] = nil
 	end
@@ -3419,7 +3424,7 @@ scaledgui.Size = UDim2.fromScale(1 / scale.Scale, 1 / scale.Scale)
 
 mainapi:Clean(gui:GetPropertyChangedSignal('AbsoluteSize'):Connect(function()
 	if mainapi.Scale.Enabled then
-		scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.68)
+		scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.6)
 	end
 end))
 
@@ -3691,7 +3696,7 @@ mainapi.Scale = topbar:CreateToggle({
 	Function = function(callback)
 		scaleslider.Object.Visible = not callback
 		if callback then
-			scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.68)
+			scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.6)
 		else
 			scale.Scale = scaleslider.Value
 		end
@@ -3714,7 +3719,7 @@ scaleslider = topbar:CreateSlider({
 })
 topbar:CreateDropdown({
 	Name = 'GUI Theme',
-	List = {'old', 'new', 'rise'},
+	List = inputService.TouchEnabled and {'new', 'old'} or {'new', 'old', 'rise'},
 	Function = function(val, mouse)
 		if mouse then
 			writefile('newvape/profiles/gui.txt', val)
