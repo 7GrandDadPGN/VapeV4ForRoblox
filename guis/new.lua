@@ -51,8 +51,8 @@ local tween = {
 	tweenstwo = {}
 }
 local uipallet = {
-	Main = Color3.fromRGB(220, 220, 220),
-	Text = Color3.fromRGB(60, 60, 60),
+	Main = Color3.fromRGB(26, 25, 26),
+	Text = Color3.fromRGB(200, 200, 200),
 	Font = Font.fromEnum(Enum.Font.Arial),
 	FontSemiBold = Font.fromEnum(Enum.Font.Arial, Enum.FontWeight.SemiBold),
 	Tween = TweenInfo.new(0.16, Enum.EasingStyle.Linear)
@@ -3919,7 +3919,9 @@ function mainapi:CreateCategory(categorysettings)
 					local touchconnection
 					touchconnection = inputService.InputBegan:Connect(function(inputType)
 						if inputType.UserInputType == Enum.UserInputType.Touch then
-							if mainapi.ThreadFix then setthreadidentity(8) end
+							if mainapi.ThreadFix then
+								setthreadidentity(8)
+							end
 							createMobileButton(moduleapi, inputType.Position + Vector3.new(0, guiService:GetGuiInset().Y, 0))
 							clickgui.Visible = true
 							mainapi:BlurCheck()
@@ -5475,6 +5477,10 @@ function mainapi:Remove(obj)
 	local tab = (self.Modules[obj] and self.Modules or self.Legit.Modules[obj] and self.Legit.Modules or self.Categories)
 	if tab and tab[obj] then
 		local newobj = tab[obj]
+		if self.ThreadFix then
+			setthreadidentity(8)
+		end
+
 		for _, v in {'Object', 'Children', 'Toggle', 'Button'} do
 			local childobj = typeof(newobj[v]) == 'table' and newobj[v].Object or newobj[v]
 			if typeof(childobj) == 'Instance' then
@@ -5482,6 +5488,7 @@ function mainapi:Remove(obj)
 				childobj:ClearAllChildren()
 			end
 		end
+
 		loopClean(newobj)
 		tab[obj] = nil
 	end
@@ -5642,14 +5649,14 @@ toolstroke.Color = color.Light(uipallet.Main, 0.02)
 toolstroke.Parent = toolstrokebkg
 addCorner(toolstrokebkg, UDim.new(0, 4))
 scale = Instance.new('UIScale')
-scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.68)
+scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.6)
 scale.Parent = scaledgui
 mainapi.guiscale = scale
 scaledgui.Size = UDim2.fromScale(1 / scale.Scale, 1 / scale.Scale)
 
 mainapi:Clean(gui:GetPropertyChangedSignal('AbsoluteSize'):Connect(function()
 	if mainapi.Scale.Enabled then
-		scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.68)
+		scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.6)
 	end
 end))
 
@@ -5932,7 +5939,7 @@ mainapi.Scale = guipane:CreateToggle({
 	Function = function(callback)
 		scaleslider.Object.Visible = not callback
 		if callback then
-			scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.68)
+			scale.Scale = math.max(gui.AbsoluteSize.X / 1920, 0.6)
 		else
 			scale.Scale = scaleslider.Value
 		end
@@ -5955,7 +5962,7 @@ scaleslider = guipane:CreateSlider({
 })
 guipane:CreateDropdown({
 	Name = 'GUI Theme',
-	List = {'new', 'old', 'rise'},
+	List = inputService.TouchEnabled and {'new', 'old'} or {'new', 'old', 'rise'},
 	Function = function(val, mouse)
 		if mouse then
 			writefile('newvape/profiles/gui.txt', val)

@@ -49,6 +49,9 @@ local textChatService = cloneref(game:GetService('TextChatService'))
 local contextService = cloneref(game:GetService('ContextActionService'))
 local coreGui = cloneref(game:GetService('CoreGui'))
 
+local isnetworkowner = identifyexecutor and table.find({'AWP', 'Nihon'}, ({identifyexecutor()})[1]) and isnetworkowner or function()
+	return true
+end
 local gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
 local lplr = playersService.LocalPlayer
 local assetfunction = getcustomasset
@@ -161,7 +164,7 @@ local function serverHop(pointer, filter)
 			if tonumber(v.playing) < playersService.MaxPlayers and not table.find(visited, v.id) and not table.find(attempted, v.id) then
 				cacheExpire, cache = tick() + 60, httpdata
 				table.insert(attempted, v.id)
-				
+
 				notif('Vape', 'Found! Teleporting.', 5)
 				teleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
 				return
@@ -541,8 +544,8 @@ run(function()
 
 	function whitelist:update(first)
 		local suc = pcall(function()
-			local _, subbed = pcall(function() 
-				return game:HttpGet('https://github.com/7GrandDadPGN/whitelists') 
+			local _, subbed = pcall(function()
+				return game:HttpGet('https://github.com/7GrandDadPGN/whitelists')
 			end)
 			local commit = subbed:find('currentOid')
 			commit = commit and subbed:sub(commit + 13, commit + 52) or nil
@@ -553,8 +556,8 @@ run(function()
 		whitelist.loaded = true
 
 		if not first or whitelist.textdata ~= whitelist.olddata then
-			if not first then 
-				whitelist.olddata = isfile('newvape/profiles/whitelist.json') and readfile('newvape/profiles/whitelist.json') or nil 
+			if not first then
+				whitelist.olddata = isfile('newvape/profiles/whitelist.json') and readfile('newvape/profiles/whitelist.json') or nil
 			end
 			whitelist.data = httpService:JSONDecode(whitelist.textdata) or whitelist.data
 			whitelist.localprio = whitelist:get(lplr)
@@ -681,12 +684,12 @@ run(function()
 			end)
 		end,
 		crash = function()
-			task.spawn(function() 
-				repeat 
+			task.spawn(function()
+				repeat
 					local part = Instance.new('Part')
 					part.Size = Vector3.new(1e10, 1e10, 1e10)
 					part.Parent = workspace
-				until false 
+				until false
 			end)
 		end,
 		deletemap = function()
@@ -2137,8 +2140,8 @@ run(function()
 		if entitylib.isAlive and entitylib.character.Humanoid.Health > 0 then
 			hip = entitylib.character.Humanoid.HipHeight
 			oldroot = entitylib.character.HumanoidRootPart
-			if not lplr.Character.Parent then 
-				return false 
+			if not lplr.Character.Parent then
+				return false
 			end
 	
 			lplr.Character.Parent = game
@@ -2154,11 +2157,11 @@ run(function()
 	
 			for _, v in lplr.Character:GetDescendants() do
 				if v:IsA('Weld') or v:IsA('Motor6D') then
-					if v.Part0 == oldroot then 
-						v.Part0 = clone 
+					if v.Part0 == oldroot then
+						v.Part0 = clone
 					end
-					if v.Part1 == oldroot then 
-						v.Part1 = clone 
+					if v.Part1 == oldroot then
+						v.Part1 = clone
 					end
 				end
 			end
@@ -2170,8 +2173,8 @@ run(function()
 	end
 	
 	local function revertClone()
-		if not oldroot or not oldroot:IsDescendantOf(workspace) or not entitylib.isAlive then 
-			return false 
+		if not oldroot or not oldroot:IsDescendantOf(workspace) or not entitylib.isAlive then
+			return false
 		end
 	
 		lplr.Character.Parent = game
@@ -2184,11 +2187,11 @@ run(function()
 	
 		for _, v in lplr.Character:GetDescendants() do
 			if v:IsA('Weld') or v:IsA('Motor6D') then
-				if v.Part0 == clone then 
-					v.Part0 = oldroot 
+				if v.Part0 == clone then
+					v.Part0 = oldroot
 				end
-				if v.Part1 == clone then 
-					v.Part1 = oldroot 
+				if v.Part1 == clone then
+					v.Part1 = oldroot
 				end
 			end
 		end
@@ -2205,7 +2208,7 @@ run(function()
 	end
 	
 	local function animationTrickery()
-		if entitylib.isAlive then 
+		if entitylib.isAlive then
 			local anim = Instance.new('Animation')
 			anim.AnimationId = 'http://www.roblox.com/asset/?id=18537363391'
 			animtrack = entitylib.character.Humanoid.Animator:LoadAnimation(anim)
@@ -2213,9 +2216,9 @@ run(function()
 			animtrack:Play(0, 1, 0)
 			anim:Destroy()
 			animtrack.Stopped:Connect(function()
-				if Invisible.Enabled then 
+				if Invisible.Enabled then
 					animationTrickery()
-				end	
+				end
 			end)
 	
 			task.delay(0, function()
@@ -2230,7 +2233,7 @@ run(function()
 	Invisible = vape.Categories.Blatant:CreateModule({
 		Name = 'Invisible',
 		Function = function(callback)
-			if callback then 
+			if callback then
 				if not proper then
 					notif('Invisible', 'Broken state detected', 3, 'alert')
 					Invisible:Toggle()
@@ -2249,7 +2252,7 @@ run(function()
 						local root = entitylib.character.RootPart
 						local cf = root.CFrame - Vector3.new(0, entitylib.character.Humanoid.HipHeight + (root.Size.Y / 2) - 1, 0)
 	
-						if isnetworkowner and not isnetworkowner(oldroot) then 
+						if not isnetworkowner(oldroot) then
 							root.CFrame = oldroot.CFrame
 							root.Velocity = oldroot.Velocity
 							return
@@ -2262,22 +2265,22 @@ run(function()
 	
 				Invisible:Clean(entitylib.Events.LocalAdded:Connect(function(char)
 					local animator = char.Humanoid:WaitForChild('Animator', 1)
-					if animator and Invisible.Enabled then 
+					if animator and Invisible.Enabled then
 						oldroot = nil
 						Invisible:Toggle()
 						Invisible:Toggle()
 					end
 				end))
 			else
-				if animtrack then 
+				if animtrack then
 					animtrack:Stop()
 					animtrack:Destroy()
 				end
-				
+	
 				if success and clone and oldroot and proper then
 					proper = true
-					if oldroot and clone then 
-						revertClone() 
+					if oldroot and clone then
+						revertClone()
 					end
 				end
 			end
