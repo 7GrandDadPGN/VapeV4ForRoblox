@@ -225,7 +225,7 @@ end
 local function getShieldAttribute(char)
 	local returned = 0
 	for name, val in char:GetAttributes() do
-		if name:find('Shield') and type(val) == 'number' then
+		if name:find('Shield') and type(val) == 'number' and val > 0 then
 			returned += val
 		end
 	end
@@ -321,7 +321,7 @@ local function waitForChildOfType(obj, name, timeout, prop)
 	local check, returned = tick() + timeout
 	repeat
 		returned = prop and obj[name] or obj:FindFirstChildOfClass(name)
-		if returned or check < tick() then
+		if returned and returned.Name ~= 'UpperTorso' or check < tick() then
 			break
 		end
 		task.wait()
@@ -2255,24 +2255,27 @@ run(function()
 									end
 								end
 
-								local dir = CFrame.lookAt(selfpos, v.RootPart.Position).LookVector
-								local pos = selfpos + dir * math.max(delta.Magnitude - 14.399, 0)
-								bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
-								store.attackReach = (delta.Magnitude * 100) // 1 / 100
-								store.attackReachUpdate = tick() + 1
-								AttackRemote:FireServer({
-									weapon = sword.tool,
-									chargedAttack = {chargeRatio = meta.sword.chargedAttack and not meta.sword.chargedAttack.disableOnGrounded and 0.999 or 0},
-									entityInstance = v.Character,
-									validate = {
-										raycast = {
-											cameraPosition = {value = pos},
-											rayDirection = {value = dir}
-										},
-										targetPosition = {value = v.RootPart.Position},
-										selfPosition = {value = pos}
-									}
-								})
+								local actualRoot = v.Character.PrimaryPart
+								if actualRoot then
+									local dir = CFrame.lookAt(selfpos, actualRoot.Position).LookVector
+									local pos = selfpos + dir * math.max(delta.Magnitude - 14.399, 0)
+									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
+									store.attackReach = (delta.Magnitude * 100) // 1 / 100
+									store.attackReachUpdate = tick() + 1
+									AttackRemote:FireServer({
+										weapon = sword.tool,
+										chargedAttack = {chargeRatio = meta.sword.chargedAttack and not meta.sword.chargedAttack.disableOnGrounded and 0.999 or 0},
+										entityInstance = v.Character,
+										validate = {
+											raycast = {
+												cameraPosition = {value = pos},
+												cursorDirection = {value = dir}
+											},
+											targetPosition = {value = actualRoot.Position},
+											selfPosition = {value = pos}
+										}
+									})
+								end
 							end
 						end
 					end
@@ -3949,12 +3952,12 @@ run(function()
 			end, 10, false)
 		end,
 		fisherman = function()
-			local old = bedwars.FishermanController.startMinigame
-			bedwars.FishermanController.startMinigame = function(_, _, result)
+			local old = bedwars.FishingMinigameController.startMinigame
+			bedwars.FishingMinigameController.startMinigame = function(_, _, result)
 				result({win = true})
 			end
 			AutoKit:Clean(function()
-				bedwars.FishermanController.startMinigame = old
+				bedwars.FishingMinigameController.startMinigame = old
 			end)
 		end,
 		hannah = function()
