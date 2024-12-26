@@ -904,8 +904,8 @@ run(function()
 				hitNormal = Vector3.FromNormalId(Enum.NormalId.Top)
 			}):andThen(function(result)
 				if result then
-					if result == 'failed' then
-						store.damageBlockFail = tick() + 0.3
+					if result == 'cancelled' then
+						store.damageBlockFail = tick() + 1
 						return
 					end
 
@@ -1674,7 +1674,7 @@ run(function()
 	local WallCheck
 	local PopBalloons
 	local TP
-	local TPPacket = {Object = {}}
+	local DamageBoost
 	local rayCheck = RaycastParams.new()
 	rayCheck.RespectCanCollide = true
 	local knockbackRemote = {FireServer = function() end}
@@ -1682,6 +1682,7 @@ run(function()
 		knockbackRemote = bedwars.Client:Get(remotes.AckKnockback).instance
 	end)
 	local up, down, old = 0, 0
+	local boostTick, boostAmount = tick(), 0
 
 	Fly = vape.Categories.Blatant:CreateModule({
 		Name = 'Fly',
@@ -1706,7 +1707,7 @@ run(function()
 						local flyAllowed = (lplr.Character:GetAttribute('InflatedBalloons') and lplr.Character:GetAttribute('InflatedBalloons') > 0) or store.matchState == 2
 						local mass = (1.5 + (flyAllowed and 6 or 0) * (tick() % 0.4 < 0.2 and -1 or 1)) + ((up + down) * VerticalValue.Value)
 						local root, moveDirection = entitylib.character.RootPart, entitylib.character.Humanoid.MoveDirection
-						local velo = getSpeed()
+						local velo = getSpeed() + (boostTick > tick() and boostAmount or 0)
 						local destination = (moveDirection * math.max(Value.Value - velo, 0) * dt)
 						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
 						rayCheck.CollisionGroup = root.CollisionGroup
@@ -1739,6 +1740,9 @@ run(function()
 													playerPosition = entitylib.character.RootPart.Position
 												})
 												entitylib.character.AirTime = tick()
+												if DamageBoost.Enabled then
+													boostTick, boostAmount = tick() + 0.4, 37 * (packet.knockbackMultiplier and packet.knockbackMultiplier.horizontal or 1)
+												end
 											end
 										end
 									end
@@ -1829,6 +1833,7 @@ run(function()
 		Name = 'TP Down',
 		Default = true
 	})
+	DamageBoost = Fly:CreateToggle({Name = 'Damage Boost'})
 end)
 	
 run(function()
@@ -2556,8 +2561,8 @@ run(function()
 		if projectileRemote:InvokeServer(item.tool, proj, proj, shootPosition.Position, pos, shootPosition.LookVector * speed, httpService:GenerateGUID(true), {drawDurationSeconds = 1}, workspace:GetServerTimeNow() - 0.045) then
 			local shoot = bedwars.ItemMeta[item.itemType].projectileSource.launchSound
 			shoot = shoot and shoot[math.random(1, #shoot)] or nil
-			if shoot then 
-				bedwars.SoundManager:playSound(shoot) 
+			if shoot then
+				bedwars.SoundManager:playSound(shoot)
 			end
 		end
 	end
@@ -2574,8 +2579,8 @@ run(function()
 					local vec = entitylib.character.HumanoidRootPart.CFrame.LookVector
 					local breaktype = bedwars.ItemMeta[block.Name].block.breakType
 					local tool = store.tools[breaktype]
-					if tool then 
-						switchItem(tool.tool) 
+					if tool then
+						switchItem(tool.tool)
 					end
 	
 					bedwars.Client:Get(remotes.CannonAim):SendToServer({
@@ -2715,8 +2720,8 @@ run(function()
 							start = nil
 						else
 							root.AssemblyLinearVelocity = Vector3.zero
-							if start then 
-								root.CFrame = CFrame.lookAlong(start, root.CFrame.LookVector) 
+							if start then
+								root.CFrame = CFrame.lookAlong(start, root.CFrame.LookVector)
 							end
 							JumpSpeed = 0
 						end
@@ -2739,18 +2744,18 @@ run(function()
 				Extend = false
 			end
 		end,
-		ExtraText = function() 
-			return 'Heatseeker' 
+		ExtraText = function()
+			return 'Heatseeker'
 		end,
 		Tooltip = 'Lets you jump farther'
 	})
 	Value = LongJump:CreateSlider({
 		Name = 'Speed',
 		Min = 1,
-		Max = 38,
-		Default = 38,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Max = 37,
+		Default = 37,
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 end)
@@ -6590,7 +6595,7 @@ run(function()
 					end
 				end
 	
-				task.wait(InstantBreak.Enabled and (store.damageBlockFail > tick() and 3 or 0) or 0.25)
+				task.wait(InstantBreak.Enabled and (store.damageBlockFail > tick() and 4.5 or 0) or 0.25)
 	
 				return true
 			end
