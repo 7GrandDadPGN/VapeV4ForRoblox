@@ -560,7 +560,11 @@ run(function()
 			if not first then
 				whitelist.olddata = isfile('newvape/profiles/whitelist.json') and readfile('newvape/profiles/whitelist.json') or nil
 			end
-			whitelist.data = httpService:JSONDecode(whitelist.textdata) or whitelist.data
+			local suc, res = pcall(function()
+				return httpService:JSONDecode(whitelist.textdata)
+			end)
+
+			whitelist.data = suc and res or whitelist.data
 			whitelist.localprio = whitelist:get(lplr)
 
 			for _, v in whitelist.data.WhitelistedUsers do
