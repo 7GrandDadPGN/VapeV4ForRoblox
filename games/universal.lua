@@ -404,6 +404,7 @@ run(function()
 				vape.Uninject = function()
 					notif('Vape', 'No escaping the private members :)', 10)
 				end
+				vape.Save = function() end
 				if joined then
 					task.wait(10)
 				end
