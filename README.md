@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="./README/vapelogo.png"/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./README/vapelogo-white.png">
+    <source media="(prefers-color-scheme: light)" srcset="./README/vapelogo-dark.png">
+    <img alt="vape logo" src="./README/vapelogo.png">
+  </picture>
 </p>
 <h2 align="center">
   A roblox script built from the ground up for your precise needs!
