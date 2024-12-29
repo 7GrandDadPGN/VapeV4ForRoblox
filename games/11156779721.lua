@@ -347,10 +347,8 @@ run(function()
 
 					for i, v in Particles do
 						local entity = attacked[i] and attacked[i].Entity
-						if entity then
-							v.Position = attacked[i] and attacked[i].Entity.RootPart.Position or Vector3.new(9e9, 9e9, 9e9)
-							v.Parent = attacked[i] and gameCamera or nil
-						end
+						v.Position = entity and entity.RootPart.Position or Vector3.new(9e9, 9e9, 9e9)
+						v.Parent = entity and gameCamera or nil
 					end
 				end
 				for i = 1, 10 do
