@@ -4748,6 +4748,8 @@ run(function()
 						nametag.Size = UDim2.fromOffset(ize.X + 8, ize.Y + 7)
 						Sizes[ent] = mag
 					end
+				elseif (Distance.Enabled) then
+					nametag.Text = string.format(Strings[ent], 'N/A')
 				end
 				nametag.Position = UDim2.fromOffset(headPos.X, headPos.Y)
 			end
@@ -4777,6 +4779,8 @@ run(function()
 						nametag.BG.Size = Vector2.new(nametag.Text.TextBounds.X + 8, nametag.Text.TextBounds.Y + 7)
 						Sizes[ent] = mag
 					end
+				elseif (Distance.Enabled) then
+					nametag.Text = string.format(Strings[ent], 'N/A')
 				end
 				nametag.BG.Position = Vector2.new(headPos.X - (nametag.BG.Size.X / 2), headPos.Y + (nametag.BG.Size.Y / 2))
 				nametag.Text.Position = nametag.BG.Position + Vector2.new(4, 2.5)
