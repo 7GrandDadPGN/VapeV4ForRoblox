@@ -4565,7 +4565,7 @@ run(function()
 			end
 	
 			Strings[ent] = ent.Player and whitelist:tag(ent.Player, true, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
-			
+	
 			if Health.Enabled then
 				local healthColor = Color3.fromHSV(math.clamp(ent.Health / ent.MaxHealth, 0, 1) / 2.5, 0.89, 0.75)
 				Strings[ent] = Strings[ent]..' <font color="rgb('..tostring(math.floor(healthColor.R * 255))..','..tostring(math.floor(healthColor.G * 255))..','..tostring(math.floor(healthColor.B * 255))..')">'..math.round(ent.Health)..'</font>'
@@ -4611,7 +4611,7 @@ run(function()
 			nametag.Text.Font = 0
 			nametag.Text.ZIndex = 2
 			Strings[ent] = ent.Player and whitelist:tag(ent.Player, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
-			
+	
 			if Health.Enabled then
 				Strings[ent] = Strings[ent]..' '..math.round(ent.Health)
 			end
@@ -4668,7 +4668,7 @@ run(function()
 				end
 				Sizes[ent] = nil
 				Strings[ent] = ent.Player and whitelist:tag(ent.Player, true, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
-				
+	
 				if Health.Enabled then
 					local color = Color3.fromHSV(math.clamp(ent.Health / ent.MaxHealth, 0, 1) / 2.5, 0.89, 0.75)
 					Strings[ent] = Strings[ent]..' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.round(ent.Health)..'</font>'
@@ -4691,7 +4691,7 @@ run(function()
 				end
 				Sizes[ent] = nil
 				Strings[ent] = ent.Player and whitelist:tag(ent.Player, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
-				
+	
 				if Health.Enabled then
 					Strings[ent] = Strings[ent]..' '..math.round(ent.Health)
 				end
@@ -4741,8 +4741,8 @@ run(function()
 					continue
 				end
 	
-				if Distance.Enabled and entitylib.isAlive then
-					local mag = math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude)
+				if Distance.Enabled then
+					local mag = entitylib.isAlive and math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude) or 0
 					if Sizes[ent] ~= mag then
 						nametag.Text = string.format(Strings[ent], mag)
 						local ize = getfontsize(removeTags(nametag.Text), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
@@ -4771,8 +4771,8 @@ run(function()
 					continue
 				end
 	
-				if Distance.Enabled and entitylib.isAlive then
-					local mag = math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude)
+				if Distance.Enabled then
+					local mag = entitylib.isAlive and math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude) or 0
 					if Sizes[ent] ~= mag then
 						nametag.Text.Text = string.format(Strings[ent], mag)
 						nametag.BG.Size = Vector2.new(nametag.Text.TextBounds.X + 8, nametag.Text.TextBounds.Y + 7)
