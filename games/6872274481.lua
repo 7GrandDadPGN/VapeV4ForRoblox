@@ -65,6 +65,7 @@ local HitBoxes = {}
 local InfiniteFly
 local StoreDamage
 local TrapDisabler
+local AntiFallPart
 local bedwars, remotes, sides, oldinvrender = {}, {}, {}
 
 local function addBlur(parent)
@@ -705,7 +706,8 @@ run(function()
 		PickupMetal = debug.getconstants(debug.getproto(debug.getproto(Knit.Controllers.MetalDetectorController.KnitStart, 1), 2)),
 		ReportPlayer = debug.getconstants(require(lplr.PlayerScripts.TS.controllers.global.report['report-controller']).default.reportPlayer),
 		ResetCharacter = debug.getconstants(debug.getproto(Knit.Controllers.ResetController.createBindable, 1)),
-		SpawnRaven = debug.getconstants(Knit.Controllers.RavenController.spawnRaven)
+		SpawnRaven = debug.getconstants(Knit.Controllers.RavenController.spawnRaven),
+		SummonerClawAttack = debug.getconstants(Knit.Controllers.SummonerClawController.attack)
 	}
 
 	local function dumpRemote(tab)
@@ -1104,10 +1106,20 @@ run(function()
 	end)
 
 	pcall(function()
-		local old = getthreadidentity()
-		setthreadidentity(2)
-		bedwars.Shop.getShopItem('iron_sword', lplr)
-		setthreadidentity(old)
+		if getthreadidentity and setthreadidentity then
+			local old = getthreadidentity()
+			setthreadidentity(2)
+			bedwars.Shop.getShopItem('iron_sword', lplr)
+			setthreadidentity(old)
+			store.shopLoaded = true
+		else
+			task.spawn(function()
+				repeat
+					task.wait(0.1)
+				until vape.Loaded == nil or bedwars.AppController:isAppOpen('BedwarsItemShopApp')
+				store.shopLoaded = true
+			end)
+		end
 	end)
 
 	vape:Clean(function()
@@ -1516,7 +1528,6 @@ run(function()
 	local Color
 	local rayCheck = RaycastParams.new()
 	rayCheck.RespectCanCollide = true
-	local part
 
 	local function getNearGround()
 		local localPosition, mag, closest = entitylib.character.RootPart.Position, 60
@@ -1555,19 +1566,19 @@ run(function()
 
 				local pos, debounce = getLowGround(), tick()
 				if pos ~= math.huge then
-					part = Instance.new('Part')
-					part.Size = Vector3.new(10000, 1, 10000)
-					part.Transparency = 1 - Color.Opacity
-					part.Material = Enum.Material[Material.Value]
-					part.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-					part.Position = Vector3.new(0, pos - 2, 0)
-					part.CanCollide = Mode.Value == 'Collide'
-					part.Anchored = true
-					part.CanQuery = false
-					part.Parent = workspace
-					AntiFall:Clean(part)
-					AntiFall:Clean(part.Touched:Connect(function(touchedpart)
-						if touchedpart.Parent == lplr.Character and entitylib.isAlive and debounce < tick() then
+					AntiFallPart = Instance.new('Part')
+					AntiFallPart.Size = Vector3.new(10000, 1, 10000)
+					AntiFallPart.Transparency = 1 - Color.Opacity
+					AntiFallPart.Material = Enum.Material[Material.Value]
+					AntiFallPart.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+					AntiFallPart.Position = Vector3.new(0, pos - 2, 0)
+					AntiFallPart.CanCollide = Mode.Value == 'Collide'
+					AntiFallPart.Anchored = true
+					AntiFallPart.CanQuery = false
+					AntiFallPart.Parent = workspace
+					AntiFall:Clean(AntiFallPart)
+					AntiFall:Clean(AntiFallPart.Touched:Connect(function(touched)
+						if touched.Parent == lplr.Character and entitylib.isAlive and debounce < tick() then
 							debounce = tick() + 0.1
 							if Mode.Value == 'Normal' then
 								local top = getNearGround()
@@ -1632,8 +1643,8 @@ run(function()
 		Name = 'Move Mode',
 		List = {'Normal', 'Collide', 'Velocity'},
 		Function = function(val)
-			if part then
-				part.CanCollide = val == 'Collide'
+			if AntiFallPart then
+				AntiFallPart.CanCollide = val == 'Collide'
 			end
 		end,
 	Tooltip = 'Normal - Smoothly moves you towards the nearest safe point\nVelocity - Launches you upward after touching\nCollide - Allows you to walk on the part'
@@ -1648,8 +1659,8 @@ run(function()
 		Name = 'Material',
 		List = materials,
 		Function = function(val)
-			if part then 
-				part.Material = Enum.Material[val] 
+			if AntiFallPart then
+				AntiFallPart.Material = Enum.Material[val]
 			end
 		end
 	})
@@ -1657,9 +1668,9 @@ run(function()
 		Name = 'Color',
 		DefaultOpacity = 0.5,
 		Function = function(h, s, v, o)
-			if part then
-				part.Color = Color3.fromHSV(h, s, v)
-				part.Transparency = 1 - o
+			if AntiFallPart then
+				AntiFallPart.Color = Color3.fromHSV(h, s, v)
+				AntiFallPart.Transparency = 1 - o
 			end
 		end
 	})
@@ -1708,7 +1719,7 @@ run(function()
 						local root, moveDirection = entitylib.character.RootPart, entitylib.character.Humanoid.MoveDirection
 						local velo = getSpeed() + (boostTick > tick() and boostAmount or 0)
 						local destination = (moveDirection * math.max(Value.Value - velo, 0) * dt)
-						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
+						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera, AntiFallPart}
 						rayCheck.CollisionGroup = root.CollisionGroup
 
 						if WallCheck.Enabled then
@@ -4031,6 +4042,25 @@ run(function()
 				bedwars.StarCollectorController:collectEntity(lplr, v, v.Name)
 			end, 20, false)
 		end,
+		summoner = function()
+			repeat
+				local plr = entitylib.EntityPosition({
+					Range = 22,
+					Part = 'RootPart',
+					Players = true
+				})
+	
+				if plr then
+					local localPosition = entitylib.character.RootPart.Position
+					bedwars.Client:Get(remotes.SummonerClawAttack):SendToServer({
+						position = localPosition,
+						direction = CFrame.lookAt(localPosition, plr.RootPart.Position).LookVector,
+						clientTime = workspace:GetServerTimeNow()
+					})
+				end
+				task.wait(0.1)
+			until not AutoKit.Enabled
+		end,
 		void_dragon = function()
 			local old = bedwars.VoidDragonController.voidDragonActive
 			local oldflap = bedwars.VoidDragonController.flapWings
@@ -4489,6 +4519,7 @@ run(function()
 	local Downwards
 	local Diagonal
 	local LimitItem
+	local Mouse
 	local adjacent, lastpos = {}, Vector3.zero
 	
 	for x = -3, 3, 3 do
@@ -4496,7 +4527,7 @@ run(function()
 			for z = -3, 3, 3 do
 				local vec = Vector3.new(x, y, z)
 				if vec ~= Vector3.zero then
-					table.insert(adjacent, vec) 
+					table.insert(adjacent, vec)
 				end
 			end
 		end
@@ -4525,8 +4556,8 @@ run(function()
 	
 	local function checkAdjacent(pos)
 		for _, v in adjacent do
-			if getPlacedBlock(pos + v) then 
-				return true 
+			if getPlacedBlock(pos + v) then
+				return true
 			end
 		end
 		return false
@@ -4547,6 +4578,13 @@ run(function()
 				repeat
 					if entitylib.isAlive then
 						local wool = store.hand.toolType == 'block' and store.hand.tool.Name or (not LimitItem.Enabled) and (getWool() or getBlock())
+	
+						if Mouse.Enabled then
+							if not inputService:IsMouseButtonPressed(0) then
+								wool = nil
+							end
+						end
+	
 						if wool then
 							local root = entitylib.character.RootPart
 							if Tower.Enabled and inputService:IsKeyDown(Enum.KeyCode.Space) and (not inputService:GetFocusedTextBox()) then
@@ -4567,14 +4605,15 @@ run(function()
 								local block, blockpos = getPlacedBlock(currentpos)
 								if not block then
 									blockpos = checkAdjacent(blockpos * 3) and blockpos * 3 or blockProximity(currentpos)
-									if blockpos then 
-										task.spawn(bedwars.placeBlock, blockpos, wool, false) 
+									if blockpos then
+										task.spawn(bedwars.placeBlock, blockpos, wool, false)
 									end
 								end
 								lastpos = currentpos
 							end
 						end
 					end
+	
 					task.wait(0.03)
 				until not Scaffold.Enabled
 			end
@@ -4599,6 +4638,7 @@ run(function()
 		Default = true
 	})
 	LimitItem = Scaffold:CreateToggle({Name = 'Limit to items'})
+	Mouse = Scaffold:CreateToggle({Name = 'Require mouse down'})
 end)
 	
 run(function()
@@ -5419,7 +5459,7 @@ run(function()
 						lastupgrades = upgrades
 					end
 	
-					if npc and npctick <= tick() and store.matchState ~= 2 then
+					if npc and npctick <= tick() and store.matchState ~= 2 and store.shopLoaded then
 						local currencytable = {}
 						local waitcheck
 						if not AutoBuy.Enabled then break end
@@ -5840,8 +5880,8 @@ run(function()
 		windowlist.CellPadding = UDim2.fromOffset(4, 3)
 		windowlist.Parent = children
 		windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-			if vape.ThreadFix then 
-				setthreadidentity(8) 
+			if vape.ThreadFix then
+				setthreadidentity(8)
 			end
 			children.CanvasSize = UDim2.fromOffset(0, windowlist.AbsoluteContentSize.Y / vape.guiscale.Scale)
 		end)
@@ -5901,8 +5941,8 @@ run(function()
 			end
 		end
 	
-		search:GetPropertyChangedSignal('Text'):Connect(function() 
-			indexSearch(search.Text) 
+		search:GetPropertyChangedSignal('Text'):Connect(function()
+			indexSearch(search.Text)
 		end)
 		indexSearch('')
 	
@@ -5910,12 +5950,12 @@ run(function()
 	end
 	
 	vape.Components.HotbarList = function(optionsettings, children, api)
-		if vape.ThreadFix then 
-			setthreadidentity(8) 
+		if vape.ThreadFix then
+			setthreadidentity(8)
 		end
 		local optionapi = {
-			Type = 'HotbarList', 
-			Hotbars = {}, 
+			Type = 'HotbarList',
+			Hotbars = {},
 			Selected = 1
 		}
 		local hotbarlist = Instance.new('TextButton')
@@ -5975,8 +6015,8 @@ run(function()
 		windowlist.Padding = UDim.new(0, 3)
 		windowlist.Parent = childrenlist
 		windowlist:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-			if vape.ThreadFix then 
-				setthreadidentity(8) 
+			if vape.ThreadFix then
+				setthreadidentity(8)
 			end
 			hotbarlist.Size = UDim2.fromOffset(220, math.min(43 + windowlist.AbsoluteContentSize.Y / vape.guiscale.Scale, 603))
 		end)
@@ -5991,7 +6031,7 @@ run(function()
 				table.insert(hotbars, v.Hotbar)
 			end
 			savetab.HotbarList = {
-				Selected = self.Selected, 
+				Selected = self.Selected,
 				Hotbars = hotbars
 			}
 		end
@@ -6111,10 +6151,10 @@ run(function()
 			local sword = store.tools.sword
 			v = sword and sword.itemType or 'wood_sword'
 		elseif v == 'diamond_pickaxe' then
-			local pickaxe = store.tools.pickaxe
+			local pickaxe = store.tools.stone
 			v = pickaxe and pickaxe.itemType or 'wood_pickaxe'
 		elseif v == 'diamond_axe' then
-			local axe = store.tools.axe
+			local axe = store.tools.wood
 			v = axe and axe.itemType or 'wood_axe'
 		elseif v == 'wood_bow' then
 			local bow = getBow()
@@ -6168,7 +6208,7 @@ run(function()
 				if olditem.item and olditem.item.itemType == v.itemType then continue end
 				if olditem.item then
 					dispatch({
-						type = 'InventoryRemoveFromHotbar', 
+						type = 'InventoryRemoveFromHotbar',
 						slot = slot - 1
 					})
 				end
@@ -6176,7 +6216,7 @@ run(function()
 				local newslot = findInHotbar(v)
 				if newslot then
 					dispatch({
-						type = 'InventoryRemoveFromHotbar', 
+						type = 'InventoryRemoveFromHotbar',
 						slot = newslot
 					})
 					if olditem.item then
@@ -6197,7 +6237,7 @@ run(function()
 				local newslot = findInHotbar(v)
 				if newslot then
 				   	dispatch({
-						type = 'InventoryRemoveFromHotbar', 
+						type = 'InventoryRemoveFromHotbar',
 						slot = newslot
 					})
 				end
@@ -6212,9 +6252,9 @@ run(function()
 		Function = function(callback)
 			if callback then
 				task.spawn(sortCallback)
-				if Mode.Value == 'On Key' then 
-					AutoHotbar:Toggle() 
-					return 
+				if Mode.Value == 'On Key' then
+					AutoHotbar:Toggle()
+					return
 				end
 	
 				AutoHotbar:Clean(vapeEvents.InventoryAmountChanged.Event:Connect(sortCallback))
