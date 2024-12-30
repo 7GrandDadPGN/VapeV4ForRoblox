@@ -3183,7 +3183,7 @@ function mainapi:UpdateTextGUI(afterload)
 		for i, v in mainapi.Modules do
 			if v.Enabled or table.find(found, i) then
 				if interfaceshow.Value == 'Exclude render' and v.Category == 'Render' then continue end
-				if interfaceshow.Value == 'Only bound' and v.Bind == '' then continue end
+				if interfaceshow.Value == 'Only bound' and #v.Bind <= 0 then continue end
 				if i == 'RiseInterface' then continue end
 				local holder = Instance.new('Frame')
 				holder.Name = i

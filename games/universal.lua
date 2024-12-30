@@ -564,7 +564,7 @@ run(function()
 				return httpService:JSONDecode(whitelist.textdata)
 			end)
 
-			whitelist.data = suc and res or whitelist.data
+			whitelist.data = suc and type(res) == 'table' and res or whitelist.data
 			whitelist.localprio = whitelist:get(lplr)
 
 			for _, v in whitelist.data.WhitelistedUsers do
@@ -2265,6 +2265,7 @@ run(function()
 	
 						oldroot.CFrame = cf * CFrame.Angles(math.rad(180), 0, 0)
 						oldroot.Velocity = root.Velocity
+						oldroot.CanCollide = false
 					end
 				end))
 	
