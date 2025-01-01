@@ -213,7 +213,7 @@ run(function()
 			end
 		end
 
-		for i, v in returned do
+		for i, v in table.clone(returned) do
 			if renamed[i] then
 				returned[i] = nil
 				returned[renamed[i]] = v
