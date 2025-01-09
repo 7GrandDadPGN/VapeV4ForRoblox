@@ -457,12 +457,14 @@ do
 		tab = tab or self.tweens
 		if tab[obj] then
 			tab[obj]:Cancel()
+			tab[obj] = nil
 		end
 
 		if obj.Parent and obj.Visible then
 			tab[obj] = tweenService:Create(obj, tweeninfo, goal)
 			tab[obj].Completed:Once(function()
 				if tab then
+					tab[obj]:Destroy()
 					tab[obj] = nil
 					tab = nil
 				end
@@ -2085,6 +2087,7 @@ components = {
 			Index = getTableSize(api.Options)
 		}
 		
+		local hovered = false
 		local toggle = Instance.new('TextButton')
 		toggle.Name = optionsettings.Name..'Toggle'
 		toggle.Size = UDim2.new(1, 0, 0, 30)
@@ -2111,7 +2114,6 @@ components = {
 		knob.Position = UDim2.fromOffset(2, 2)
 		knob.BackgroundColor3 = uipallet.Main
 		knob.Parent = knobholder
-		local hovered = false
 		optionsettings.Function = optionsettings.Function or function() end
 		
 		function optionapi:Save(tab)
@@ -2832,6 +2834,7 @@ function mainapi:CreateGUI()
 				Index = getTableSize(optionapi.Toggles)
 			}
 
+			local hovered = false
 			local toggle = Instance.new('TextButton')
 			toggle.Name = togglesettings.Name..'Toggle'
 			toggle.Size = UDim2.new(1, 0, 0, 40)
@@ -2880,7 +2883,6 @@ function mainapi:CreateGUI()
 				togglesettings.Function(self.Enabled)
 			end
 
-			local hovered = false
 			scale:GetPropertyChangedSignal('Scale'):Connect(function()
 				toggle.Text = string.rep(' ', 33 * scale.Scale)..togglesettings.Name
 			end)
@@ -3671,6 +3673,7 @@ function mainapi:CreateCategory(categorysettings)
 			Category = categorysettings.Name
 		}
 
+		local hovered = false
 		local modulebutton = Instance.new('TextButton')
 		modulebutton.Name = modulesettings.Name
 		modulebutton.Size = UDim2.fromOffset(220, 40)
@@ -3871,7 +3874,6 @@ function mainapi:CreateCategory(categorysettings)
 		dotsbutton.MouseButton2Click:Connect(function()
 			modulechildren.Visible = not modulechildren.Visible
 		end)
-		local hovered = false
 		modulebutton.MouseEnter:Connect(function()
 			hovered = true
 			if not moduleapi.Enabled and not modulechildren.Visible then
