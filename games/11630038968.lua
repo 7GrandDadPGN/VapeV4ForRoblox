@@ -267,10 +267,10 @@ run(function()
 		if Mouse.Enabled then
 			if not inputService:IsMouseButtonPressed(0) then return false end
 		end
-		if LegitAura.Enabled then 
+		if LegitAura.Enabled then
 			if ClickDelay < tick() then return false end
 		end
-		
+	
 		return getTool()
 	end
 	
@@ -278,9 +278,9 @@ run(function()
 		Name = 'Killaura',
 		Function = function(callback)
 			if callback then
-				if LegitAura.Enabled then 
+				if LegitAura.Enabled then
 					Killaura:Clean(inputService.InputBegan:Connect(function(input)
-						if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+						if input.UserInputType == Enum.UserInputType.MouseButton1 then
 							ClickDelay = tick() + 0.1
 						end
 					end))
@@ -315,25 +315,30 @@ run(function()
 								if Block.Enabled then
 									if bd.Entity.LocalEntity.IsBlocking then continue end
 								end
-								
+	
 								if not Swing.Enabled and SwingDelay < tick() then
 									SwingDelay = tick() + 0.25
 									entitylib.character.Humanoid.Animator:LoadAnimation(tool.Animations.Swing):Play()
-									
-									setthreadidentity(2)
+	
+									if vape.ThreadFix then
+										setthreadidentity(2)
+									end
 									bd.ViewmodelController:PlayAnimation(tool.Name)
-									setthreadidentity(8) 
+									if vape.ThreadFix then
+										setthreadidentity(8)
+									end
 								end
 	
 								if delta.Magnitude > AttackRange.Value then continue end
 								if AttackDelay < tick() then
 									AttackDelay = tick() + (1 / CPS.GetRandomValue())
 									local bdent = bd.Entity.FindByCharacter(v.Character)
-									if bdent then 
+									if bdent then
 										bd.Blink.item_action.attack_entity.fire({
 											target_entity_id = bdent.Id,
 											is_crit = entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0,
-											weapon_name = tool.Name
+											weapon_name = tool.Name,
+											rizz = '\226\128\139'
 										})
 									end
 								end
@@ -480,8 +485,8 @@ run(function()
 					Particles[i] = part
 				end
 			else
-				for _, v in Particles do 
-					v:Destroy() 
+				for _, v in Particles do
+					v:Destroy()
 				end
 				table.clear(Particles)
 			end
@@ -541,7 +546,7 @@ run(function()
 	LegitAura = Killaura:CreateToggle({
 		Name = 'Swing only',
 		Function = function()
-			if Killaura.Enabled then 
+			if Killaura.Enabled then
 				Killaura:Toggle()
 				Killaura:Toggle()
 			end
@@ -626,7 +631,7 @@ run(function()
 					continue
 				end
 	
-				if vec ~= Vector3.zero then 
+				if vec ~= Vector3.zero then
 					table.insert(adjacent, vec)
 				end
 			end
@@ -697,11 +702,11 @@ run(function()
 				repeat
 					if entitylib.isAlive then
 						local tool = true
-						if LimitItem.Enabled then 
+						if LimitItem.Enabled then
 							tool = getTool()
 							tool = tool and tool.Name:find('Block')
 						end
-						
+	
 						if tool then
 							local root = entitylib.character.RootPart
 							if Tower.Enabled and inputService:IsKeyDown(Enum.KeyCode.Space) and (not inputService:GetFocusedTextBox()) then
@@ -730,14 +735,19 @@ run(function()
 										fake.Size = Vector3.new(3, 3, 3)
 										fake.Position = blockpos
 										fake:AddTag('TempBlock')
+										fake:AddTag('Block')
 										fake.Parent = workspace.Map
 										bd.EffectsController:PlaySound(blockpos)
 										bd.Entity.LocalEntity:RemoveTool('Blocks', 1)
 	
 										task.spawn(function()
-											local suc, block = bd.Blink.item_action.place_block.invoke(blockpos)
+											local suc, block = bd.Blink.item_action.place_block.invoke({
+												position = blockpos,
+												block_type = 'Clay',
+												rizz = '\226\128\139'
+											})
 											fake:Destroy()
-											if not (suc or block) then 
+											if not (suc or block) then
 												bd.Entity.LocalEntity:RemoveTool('Blocks', 1)
 											end
 										end)

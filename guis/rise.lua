@@ -48,6 +48,7 @@ local categoryholder
 local categoryhighlight
 local lastSelected
 local guiTween
+local guiTween2
 local scale
 local gui
 
@@ -435,11 +436,14 @@ do
 		tab = tab or self.tweens
 		if tab[obj] then
 			tab[obj]:Cancel()
+			tab[obj] = nil
 		end
+
 		if bypass or obj.Parent and obj.Visible then
 			tab[obj] = tweenService:Create(obj, tweeninfo, goal)
 			tab[obj].Completed:Once(function()
 				if tab then
+					tab[obj]:Destroy()
 					tab[obj] = nil
 					tab = nil
 				end
@@ -2502,7 +2506,7 @@ end
 gui = Instance.new('ScreenGui')
 gui.Name = randomString()
 gui.DisplayOrder = 9999999
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.IgnoreGuiInset = true
 gui.OnTopOfCoreBlur = true
 if mainapi.ThreadFix then
@@ -2542,11 +2546,12 @@ scale.Scale = 1
 scale.Parent = scaledgui
 mainapi.guiscale = scale
 scaledgui.Size = UDim2.fromScale(1 / scale.Scale, 1 / scale.Scale)
-mainframe = Instance.new('Frame')
+mainframe = Instance.new('CanvasGroup')
 mainframe.Size = UDim2.fromOffset(800, 600)
 mainframe.Position = UDim2.fromScale(0.5, 0.5)
 mainframe.AnchorPoint = Vector2.new(0.5, 0.5)
 mainframe.BackgroundColor3 = uipallet.Main
+mainframe.GroupTransparency = 1
 mainframe.Parent = clickgui
 --addBlur(mainframe)
 local selected = Instance.new('TextButton')
@@ -3351,12 +3356,19 @@ mainapi:Clean(inputService.InputBegan:Connect(function(inputObj)
 			if guiTween then
 				guiTween:Cancel()
 			end
+			if guiTween2 then
+				guiTween2:Cancel()
+			end
 			mainapi.Visible = not mainapi.Visible
 			mainapi:CreateNotification('Toggled', 'Toggled Click GUI '..(mainapi.Visible and 'on' or 'off'), 1)
 			guiTween = tweenService:Create(mainscale, TweenInfo.new(0.3, mainapi.Visible and Enum.EasingStyle.Exponential or Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
 				Scale = mainapi.Visible and 1 or 0
 			})
+			guiTween2 = tweenService:Create(mainframe, TweenInfo.new(0.3, mainapi.Visible and Enum.EasingStyle.Exponential or Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+				GroupTransparency = mainapi.Visible and 0 or 1
+			})
 			guiTween:Play()
+			guiTween2:Play()
 			if mainapi.Visible then
 				clickgui.Visible = mainapi.Visible
 			else

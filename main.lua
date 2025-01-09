@@ -1,7 +1,8 @@
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
 
-if identifyexecutor and ({identifyexecutor()})[1] == 'Argon' then
+-- why do exploits fail to implement anything correctly? Is it really that hard?
+if identifyexecutor and identifyexecutor and table.find({'Argon', 'Wave'}, ({identifyexecutor()})[1]) then
 	getgenv().setthreadidentity = nil
 end
 
