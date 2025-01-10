@@ -127,6 +127,24 @@ local function collection(tags, module, customadd, customremove)
 	return objs, cleanFunc
 end
 
+local function getBestArmor(slot)
+	local closest, mag = nil, 0
+
+	for _, item in store.inventory.inventory.items do
+		local meta = item and bedwars.ItemMeta[item.itemType] or {}
+
+		if meta.armor and meta.armor.slot == slot then
+			local newmag = (meta.armor.damageReductionMultiplier or 0)
+
+			if newmag > mag then
+				closest, mag = item, newmag
+			end
+		end
+	end
+
+	return closest
+end
+
 local function getBow()
 	local bestBow, bestBowSlot, bestBowDamage = nil, nil, 0
 	for slot, item in store.inventory.inventory.items do
@@ -663,8 +681,6 @@ run(function()
 		QueueMeta = require(replicatedStorage.TS.game['queue-meta']).QueueMeta,
 		Roact = require(replicatedStorage['rbxts_include']['node_modules']['@rbxts']['roact'].src),
 		RuntimeLib = require(replicatedStorage['rbxts_include'].RuntimeLib),
-		Shop = require(replicatedStorage.TS.games.bedwars.shop['bedwars-shop']).BedwarsShop,
-		ShopItems = debug.getupvalue(debug.getupvalue(require(replicatedStorage.TS.games.bedwars.shop['bedwars-shop']).BedwarsShop.getShopItem, 1), 2),
 		SoundList = require(replicatedStorage.TS.sound['game-sound']).GameSound,
 		SoundManager = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out).SoundManager,
 		Store = require(lplr.PlayerScripts.TS.ui.store).ClientStore,
@@ -1110,7 +1126,11 @@ run(function()
 		if getthreadidentity and setthreadidentity then
 			local old = getthreadidentity()
 			setthreadidentity(2)
+
+			bedwars.Shop = require(replicatedStorage.TS.games.bedwars.shop['bedwars-shop']).BedwarsShop
+			bedwars.ShopItems = debug.getupvalue(debug.getupvalue(bedwars.Shop.getShopItem, 1), 2)
 			bedwars.Shop.getShopItem('iron_sword', lplr)
+
 			setthreadidentity(old)
 			store.shopLoaded = true
 		else
@@ -1118,6 +1138,9 @@ run(function()
 				repeat
 					task.wait(0.1)
 				until vape.Loaded == nil or bedwars.AppController:isAppOpen('BedwarsItemShopApp')
+
+				bedwars.Shop = require(replicatedStorage.TS.games.bedwars.shop['bedwars-shop']).BedwarsShop
+				bedwars.ShopItems = debug.getupvalue(debug.getupvalue(bedwars.Shop.getShopItem, 1), 2)
 				store.shopLoaded = true
 			end)
 		end
@@ -4728,24 +4751,28 @@ run(function()
 end)
 	
 run(function()
+	local ShopTierBypass
 	local tiered, nexttier = {}, {}
 	
-	vape.Categories.Utility:CreateModule({
+	ShopTierBypass = vape.Categories.Utility:CreateModule({
 		Name = 'ShopTierBypass',
 		Function = function(callback)
 			if callback then
-				for _, v in bedwars.Shop.ShopItems do
-					tiered[v] = v.tiered
-					nexttier[v] = v.nextTier
-					v.nextTier = nil
-					v.tiered = nil
+				repeat task.wait() until store.shopLoaded or not ShopTierBypass.Enabled
+				if ShopTierBypass.Enabled then
+					for _, v in bedwars.Shop.ShopItems do
+						tiered[v] = v.tiered
+						nexttier[v] = v.nextTier
+						v.nextTier = nil
+						v.tiered = nil
+					end
 				end
 			else
-				for i, v in tiered do 
-					i.tiered = v 
+				for i, v in tiered do
+					i.tiered = v
 				end
-				for i, v in nexttier do 
-					i.nextTier = v 
+				for i, v in nexttier do
+					i.nextTier = v
 				end
 				table.clear(nexttier)
 				table.clear(tiered)
@@ -5377,24 +5404,6 @@ run(function()
 	local Targets
 	local Range
 	
-	local function getBestArmor(slot)
-		local closest, mag = nil, 0
-	
-		for _, item in store.inventory.inventory.items do
-			local meta = item and bedwars.ItemMeta[item.itemType] or {}
-	
-			if meta.armor and meta.armor.slot == slot then
-				local newmag = (meta.armor.damageReductionMultiplier or 0)
-	
-				if newmag > mag then
-					closest, mag = item, newmag
-				end
-			end
-		end
-	
-		return closest
-	end
-	
 	ArmorSwitch = vape.Categories.Inventory:CreateModule({
 		Name = 'ArmorSwitch',
 		Function = function(callback)
@@ -5637,7 +5646,6 @@ run(function()
 					if npc and npctick <= tick() and store.matchState ~= 2 and store.shopLoaded then
 						local currencytable = {}
 						local waitcheck
-						if not AutoBuy.Enabled then break end
 						for _, tab in Callbacks do
 							for _, callback in tab do
 								if callback(currencytable, shop, upgrades) then
@@ -5689,8 +5697,8 @@ run(function()
 			npctick = tick()
 			Functions[1] = callback and function(currencytable, shop)
 				if not shop then return end
-				local currentarmor = store.inventory.inventory.armor[2]
-				currentarmor = currentarmor and currentarmor ~= 'empty' and currentarmor.itemType or 'none'
+				local currentarmor = store.inventory.inventory.armor[2] ~= 'empty' and store.inventory.inventory.armor[2] or getBestArmor(1)
+				currentarmor = currentarmor and currentarmor.itemType or 'none'
 				return buyTool({itemType = currentarmor}, armors, currencytable)
 			end or nil
 		end,
