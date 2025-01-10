@@ -1,8 +1,8 @@
-local run = function(func) 
-	func() 
+local run = function(func)
+	func()
 end
-local cloneref = cloneref or function(obj) 
-	return obj 
+local cloneref = cloneref or function(obj)
+	return obj
 end
 local vapeEvents = setmetatable({}, {
 	__index = function(self, index)
@@ -52,41 +52,41 @@ local function collection(tags, module, customadd, customremove)
 
 	for _, tag in tags do
 		table.insert(connections, collectionService:GetInstanceAddedSignal(tag):Connect(function(v)
-			if customadd then 
-				customadd(objs, v, tag) 
-				return 
+			if customadd then
+				customadd(objs, v, tag)
+				return
 			end
 			table.insert(objs, v)
 		end))
 		table.insert(connections, collectionService:GetInstanceRemovedSignal(tag):Connect(function(v)
-			if customremove then 
-				customremove(objs, v, tag) 
-				return 
+			if customremove then
+				customremove(objs, v, tag)
+				return
 			end
 			v = table.find(objs, v)
-			if v then 
-				table.remove(objs, v) 
+			if v then
+				table.remove(objs, v)
 			end
 		end))
 
 		for _, v in collectionService:GetTagged(tag) do
-			if customadd then 
-				customadd(objs, v, tag) 
-				continue 
+			if customadd then
+				customadd(objs, v, tag)
+				continue
 			end
 			table.insert(objs, v)
 		end
 	end
 
 	local cleanFunc = function(self)
-		for _, v in connections do 
-			v:Disconnect() 
+		for _, v in connections do
+			v:Disconnect()
 		end
 		table.clear(connections)
 		table.clear(objs)
 		table.clear(self)
 	end
-	if module then 
+	if module then
 		module:Clean(cleanFunc)
 	end
 	return objs, cleanFunc
@@ -139,8 +139,8 @@ local function isTarget(plr)
 	return table.find(vape.Categories.Targets.ListEnabled, plr.Name) and true
 end
 
-local function notif(...) 
-	return vape:CreateNotification(...) 
+local function notif(...)
+	return vape:CreateNotification(...)
 end
 
 local function parsePositions(v, func)
@@ -169,15 +169,15 @@ end
 
 run(function()
 	entitylib.addPlayer = function(plr)
-		if plr.Character then 
-			entitylib.refreshEntity(plr.Character, plr) 
+		if plr.Character then
+			entitylib.refreshEntity(plr.Character, plr)
 		end
 		entitylib.PlayerConnections[plr] = {
-			plr.CharacterAdded:Connect(function(char) 
-				entitylib.refreshEntity(char, plr) 
+			plr.CharacterAdded:Connect(function(char)
+				entitylib.refreshEntity(char, plr)
 			end),
-			plr.CharacterRemoving:Connect(function(char) 
-				entitylib.removeEntity(char, plr == lplr) 
+			plr.CharacterRemoving:Connect(function(char)
+				entitylib.removeEntity(char, plr == lplr)
 			end),
 			plr:GetAttributeChangedSignal('TeamId'):Connect(function()
 				for i, v in entitylib.List do
@@ -282,7 +282,7 @@ run(function()
 
 	local function searchFunction(name, i2, v2)
 		for i3, v3 in debug.getconstants(v2) do
-			if tostring(v3):find('-') == 9 then 
+			if tostring(v3):find('-') == 9 then
 				remotes[(rawget(remotes, i2) and name..':' or '')..i2] = v3
 			end
 		end
@@ -320,17 +320,17 @@ run(function()
 	})
 
 	local kills = sessioninfo:AddItem('Kills')
-	local eggs = sessioninfo:AddItem('Eggs')	
+	local eggs = sessioninfo:AddItem('Eggs')
 	local wins = sessioninfo:AddItem('Wins')
 	local games = sessioninfo:AddItem('Games')
 
-	task.delay(1, function() 
-		games:Increment() 
+	task.delay(1, function()
+		games:Increment()
 	end)
 
 	local function updateStore(newStore, oldStore)
-		if newStore.GameCurrency ~= oldStore.GameCurrency then 
-			vapeEvents.CurrencyChange:Fire(table.clone(newStore.GameCurrency.Quantities)) 
+		if newStore.GameCurrency ~= oldStore.GameCurrency then
+			vapeEvents.CurrencyChange:Fire(table.clone(newStore.GameCurrency.Quantities))
 		end
 
 		if newStore.ActiveSlot ~= oldStore.ActiveSlot then
@@ -345,15 +345,15 @@ run(function()
 			store.tools.sword = getSword()
 			store.tools.pickaxe = getPickaxe()
 			vapeEvents.InventoryAmountChanged:Fire()
-		end 
+		end
 
 		if oldStore.Profile and oldStore.Profile.WasTeleporting and newStore.Profile.Stats ~= oldStore.Profile.Stats then
-			if newStore.Profile.Stats.Kills ~= oldStore.Profile.Stats.Kills and oldStore.Profile.Stats.Kills then 
-				kills:Increment() 
+			if newStore.Profile.Stats.Kills ~= oldStore.Profile.Stats.Kills and oldStore.Profile.Stats.Kills then
+				kills:Increment()
 			end
 
-			if newStore.Profile.Stats.Wins ~= oldStore.Profile.Stats.Wins and oldStore.Profile.Stats.Wins then 
-				wins:Increment() 
+			if newStore.Profile.Stats.Wins ~= oldStore.Profile.Stats.Wins and oldStore.Profile.Stats.Wins then
+				wins:Increment()
 			end
 		end
 	end
@@ -371,24 +371,24 @@ run(function()
 	end)
 
 	vape:Clean(workspace.BlockContainer.DescendantAdded:Connect(function(v)
-		parsePositions(v, function(pos) 
-			store.blocks[pos] = v 
+		parsePositions(v, function(pos)
+			store.blocks[pos] = v
 		end)
 	end))
 	vape:Clean(workspace.BlockContainer.DescendantRemoving:Connect(function(v)
-		parsePositions(v, function(pos) 
-			store.blocks[pos] = nil 
+		parsePositions(v, function(pos)
+			store.blocks[pos] = nil
 		end)
 	end))
 	for _, v in workspace.BlockContainer:GetDescendants() do
-		parsePositions(v, function(pos) 
-			store.blocks[pos] = v 
+		parsePositions(v, function(pos)
+			store.blocks[pos] = v
 		end)
 	end
 
 	vape:Clean(function()
-		for _, v in vapeEvents do 
-			v:Destroy() 
+		for _, v in vapeEvents do
+			v:Destroy()
 		end
 		table.clear(ControllerTable)
 		table.clear(RemoteTable)
@@ -487,11 +487,20 @@ run(function()
 				old = skywars.SprintingController.disableSprinting
 				skywars.SprintingController.disableSprinting = function(tab, ...)
 					local originalCall = old(tab, ...)
-					skywars.SprintingController:enableSprinting(tab)
+					if not tab.canSprint then
+						task.spawn(function()
+							repeat task.wait(0.1) until tab.canSprint or not Sprint.Enabled
+							if Sprint.Enabled then
+								skywars.SprintingController:enableSprinting(tab)
+							end
+						end)
+					else
+						skywars.SprintingController:enableSprinting(tab)
+					end
 					return originalCall
 				end
-				Sprint:Clean(entitylib.Events.LocalAdded:Connect(function() 
-					skywars.SprintingController:disableSprinting() 
+				Sprint:Clean(entitylib.Events.LocalAdded:Connect(function()
+					skywars.SprintingController:disableSprinting()
 				end))
 				skywars.SprintingController:disableSprinting()
 			else

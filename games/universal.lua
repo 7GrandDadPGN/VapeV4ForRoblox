@@ -2759,6 +2759,7 @@ run(function()
 	local overlapCheck = OverlapParams.new()
 	overlapCheck.MaxParts = 9e9
 	local modified, fflag = {}
+	local teleported
 	
 	local function grabClosestNormal(ray)
 		local partCF, mag, closest = ray.Instance.CFrame, 0, Enum.NormalId.Top
@@ -2774,8 +2775,8 @@ run(function()
 	local Functions = {
 		Part = function()
 			local chars = {gameCamera, lplr.Character}
-			for _, v in entitylib.List do 
-				table.insert(chars, v.Character) 
+			for _, v in entitylib.List do
+				table.insert(chars, v.Character)
 			end
 			overlapCheck.FilterDescendantsInstances = chars
 	
@@ -2809,7 +2810,7 @@ run(function()
 			end
 			rayCheck.FilterDescendantsInstances = chars
 			overlapCheck.FilterDescendantsInstances = chars
-			
+	
 			local ray = workspace:Raycast(entitylib.character.Head.CFrame.Position, entitylib.character.Humanoid.MoveDirection * 1.1, rayCheck)
 			if ray and (not Spider.Enabled or SpiderShift) then
 				local phaseDirection = grabClosestNormal(ray)
@@ -2822,6 +2823,7 @@ run(function()
 			end
 		end,
 		FFlag = function()
+			if teleported then return end
 			setfflag('AssemblyExtentsExpansionStudHundredth', '-10000')
 			fflag = true
 		end
@@ -2836,6 +2838,13 @@ run(function()
 						Functions[Mode.Value]()
 					end
 				end))
+	
+				if Mode.Value == 'FFlag' then
+					Phase:Clean(lplr.OnTeleport:Connect(function()
+						teleported = true
+						setfflag('AssemblyExtentsExpansionStudHundredth', '30')
+					end))
+				end
 			else
 				if fflag then
 					setfflag('AssemblyExtentsExpansionStudHundredth', '30')
