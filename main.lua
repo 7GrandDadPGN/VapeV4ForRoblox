@@ -2,8 +2,19 @@ repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
 
 -- why do exploits fail to implement anything correctly? Is it really that hard?
-if identifyexecutor and identifyexecutor and table.find({'Argon', 'Wave'}, ({identifyexecutor()})[1]) then
-	getgenv().setthreadidentity = nil
+if identifyexecutor then
+	if table.find({'Argon', 'Wave'}, ({identifyexecutor()})[1]) then
+		getgenv().setthreadidentity = nil
+	end
+
+	if ({identifyexecutor()})[1] == 'Delta' then
+		getgenv().require = function(path)
+			setthreadidentity(2)
+			local args = {getrenv().require(path)}
+			setthreadidentity(8)
+			return unpack(args)
+		end
+	end
 end
 
 local vape

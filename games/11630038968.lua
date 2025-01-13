@@ -22,8 +22,8 @@ local function getTool()
 	return lplr.Character and lplr.Character:FindFirstChildWhichIsA('Tool', true) or nil
 end
 
-local function notif(...) 
-	return vape:CreateNotification(...) 
+local function notif(...)
+	return vape:CreateNotification(...)
 end
 
 local function parsePositions(v, func)
@@ -62,25 +62,36 @@ run(function()
 		end
 	})
 
+	local rizzList = debug.getconstants(debug.getproto(debug.getproto(getscriptclosure(lplr.PlayerScripts.Components.All.Tools.SwordClient), 4), 1))
+	for i, v in rizzList do
+		if v == 'AttackPlayerWithSword' then
+			bd.Rizz = rizzList[i - 2]
+		end
+	end
+
+	if bd.Rizz == nil then
+		notif('Vape', 'Failed to get Rizz constant.', 10, 'alert')
+	end
+
 	task.spawn(function()
 		local map = workspace:WaitForChild('Map', 99999)
-		if map and vape.Loaded ~= nil then 
+		if map and vape.Loaded ~= nil then
 			vape:Clean(map.DescendantAdded:Connect(function(v)
-				parsePositions(v, function(pos) 
-					store.blocks[pos] = v 
+				parsePositions(v, function(pos)
+					store.blocks[pos] = v
 				end)
 			end))
 			vape:Clean(map.DescendantRemoving:Connect(function(v)
-				parsePositions(v, function(pos) 
+				parsePositions(v, function(pos)
 					if store.blocks[pos] == v then
-						store.blocks[pos] = nil 
-						store.serverBlocks[pos] = nil 
+						store.blocks[pos] = nil
+						store.serverBlocks[pos] = nil
 					end
 				end)
 			end))
 			for _, v in map:GetDescendants() do
-				parsePositions(v, function(pos) 
-					store.blocks[pos] = v 
+				parsePositions(v, function(pos)
+					store.blocks[pos] = v
 					store.serverBlocks[pos] = v
 				end)
 			end
@@ -289,7 +300,7 @@ run(function()
 				repeat
 					local tool = getAttackData()
 					local attacked = {}
-					if tool and rawget(bd.CombatConstants.DAMAGE, tool.Name) then
+					if tool and tool:HasTag('Sword') then
 						local plrs = entitylib.AllPosition({
 							Range = SwingRange.Value,
 							Wallcheck = Targets.Walls.Enabled or nil,
@@ -333,12 +344,12 @@ run(function()
 								if AttackDelay < tick() then
 									AttackDelay = tick() + (1 / CPS.GetRandomValue())
 									local bdent = bd.Entity.FindByCharacter(v.Character)
-									if bdent then
+									if bdent and bd.Rizz ~= nil then
 										bd.Blink.item_action.attack_entity.fire({
 											target_entity_id = bdent.Id,
 											is_crit = entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0,
 											weapon_name = tool.Name,
-											rizz = '\226\128\139'
+											rizz = bd.Rizz
 										})
 									end
 								end
@@ -725,7 +736,7 @@ run(function()
 								end
 	
 								local block = store.blocks[currentpos]
-								if not block then
+								if not block and bd.Rizz ~= nil then
 									blockpos = checkAdjacent(currentpos) and currentpos or blockProximity(currentpos)
 									if blockpos then
 										local fake = Instance.new('Part')
@@ -744,7 +755,7 @@ run(function()
 											local suc, block = bd.Blink.item_action.place_block.invoke({
 												position = blockpos,
 												block_type = 'Clay',
-												rizz = '\226\128\139'
+												rizz = bd.Rizz
 											})
 											fake:Destroy()
 											if not (suc or block) then
@@ -781,5 +792,86 @@ run(function()
 		Default = true
 	})
 	LimitItem = Scaffold:CreateToggle({Name = 'Limit to items'})
+end)
+	
+run(function()
+	local Breaker
+	local Value
+	local OnlyPlayer
+	
+	local function getBlocksInPoints(s, e)
+		local list = {}
+		for x = s.X, e.X, 3 do
+			for y = s.Y, e.Y, 3 do
+				for z = s.Z, e.Z, 3 do
+					local vec = Vector3.new(x, y, z)
+					if store.blocks[vec] then
+						list[vec] = store.blocks[vec]
+					end
+				end
+			end
+		end
+		return list
+	end
+	
+	local function getPickaxe()
+		for name in bd.Entity.LocalEntity.Inventory do
+			if name:find('Pickaxe') then
+				return name
+			end
+		end
+	end
+	
+	Breaker = vape.Categories.Minigames:CreateModule({
+		Name = 'Breaker',
+		Function = function(callback)
+			if callback then
+				local breakPosition
+				local lastBreak
+	
+				repeat
+					breakPosition = nil
+					if entitylib.isAlive then
+						local pickaxe = getPickaxe()
+	
+						if pickaxe then
+							local pos = (entitylib.character.RootPart.Position // 3) * 3
+							local rvec = Vector3.new(3, 3, 3) * Range.Value
+	
+							for blockpos, block in getBlocksInPoints(pos - rvec, pos + rvec) do
+								if block.Name == 'Block' and (block.Parent.Name == 'Bed' and lplr.Team and block.Parent:GetAttribute('Team') ~= lplr.Team.Name) then
+									breakPosition = block.Position
+									break
+								end
+							end
+	
+							if breakPosition ~= lastBreak then
+								if breakPosition then
+									bd.Blink.item_action.start_break_block.fire({
+										position = breakPosition,
+										pickaxe_name = pickaxe
+									})
+								else
+									bd.Blink.item_action.stop_break_block.fire()
+								end
+								lastBreak = breakPosition
+							end
+						end
+					end
+					task.wait(1 / 60)
+				until not Breaker.Enabled
+			end
+		end,
+		Tooltip = 'Breaks enemy blocks around you'
+	})
+	Range = Breaker:CreateSlider({
+		Name = 'Break range',
+		Min = 1,
+		Max = 5,
+		Default = 5,
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
+		end
+	})
 end)
 	
