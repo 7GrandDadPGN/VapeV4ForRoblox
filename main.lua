@@ -6,15 +6,6 @@ if identifyexecutor then
 	if table.find({'Argon', 'Wave'}, ({identifyexecutor()})[1]) then
 		getgenv().setthreadidentity = nil
 	end
-
-	if ({identifyexecutor()})[1] == 'Delta' then
-		getgenv().require = function(path)
-			setthreadidentity(2)
-			local args = {getrenv().require(path)}
-			setthreadidentity(8)
-			return unpack(args)
-		end
-	end
 end
 
 local vape
