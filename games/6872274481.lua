@@ -1264,6 +1264,10 @@ run(function()
 	local Thread
 	
 	local function AutoClick()
+		if Thread then
+			task.cancel(Thread)
+		end
+	
 		Thread = task.delay(1 / 7, function()
 			repeat
 				if not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
@@ -1290,10 +1294,11 @@ run(function()
 		Function = function(callback)
 			if callback then
 				AutoClicker:Clean(inputService.InputBegan:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then 
-						AutoClick() 
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						AutoClick()
 					end
 				end))
+	
 				AutoClicker:Clean(inputService.InputEnded:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 and Thread then
 						task.cancel(Thread)
@@ -1313,7 +1318,7 @@ run(function()
 					end)
 				end
 			else
-				if Thread then 
+				if Thread then
 					task.cancel(Thread)
 					Thread = nil
 				end
@@ -1332,8 +1337,8 @@ run(function()
 		Name = 'Place Blocks',
 		Default = true,
 		Function = function(callback)
-			if BlockCPS.Object then 
-				BlockCPS.Object.Visible = callback 
+			if BlockCPS.Object then
+				BlockCPS.Object.Visible = callback
 			end
 		end
 	})
