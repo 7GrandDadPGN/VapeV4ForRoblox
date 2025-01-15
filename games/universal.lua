@@ -5441,8 +5441,8 @@ run(function()
 	infoholder.BackgroundTransparency = 0.5
 	infoholder.Parent = SessionInfo.Children
 	vape:Clean(SessionInfo.Children:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
-		if vape.ThreadFix then 
-			setthreadidentity(8) 
+		if vape.ThreadFix then
+			setthreadidentity(8)
 		end
 		local newside = SessionInfo.Children.AbsolutePosition.X > (vape.gui.AbsoluteSize.X / 2)
 		infoholder.Position = UDim2.fromScale(newside and 1 or 0, 0)
@@ -5477,12 +5477,15 @@ run(function()
 			return {
 				Increment = function(_, val)
 					self.Objects[name].Value += (val or 1)
+				end,
+				Get = function()
+					return self.Objects[name].Value
 				end
 			}
 		end
 	}
-	vape.Libraries.sessioninfo:AddItem('Time Played', os.clock(), function(value) 
-		return os.date('!%X', math.floor(os.clock() - value)) 
+	vape.Libraries.sessioninfo:AddItem('Time Played', os.clock(), function(value)
+		return os.date('!%X', math.floor(os.clock() - value))
 	end)
 end)
 	
