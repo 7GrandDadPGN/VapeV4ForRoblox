@@ -227,7 +227,7 @@ function module.SolveTrajectory(origin, projectileSpeed, gravity, targetPos, tar
 				table.insert(posRoots, v)
 			end
 		end
-		posRoots[1] = posRoots[1] or (disp.Magnitude / projectileSpeed)
+		posRoots[1] = posRoots[1]
 		if posRoots[1] then
 			local t = posRoots[1]
 			local d = (h + p*t)/t
@@ -235,8 +235,13 @@ function module.SolveTrajectory(origin, projectileSpeed, gravity, targetPos, tar
 			local f = (k + r*t)/t
 			return origin + Vector3.new(d, e, f)
 		end
+	elseif gravity == 0 then
+		local t = (disp.Magnitude / projectileSpeed)
+		local d = (h + p*t)/t
+		local e = (j + q*t - l*t*t)/t
+		local f = (k + r*t)/t
+		return origin + Vector3.new(d, e, f)
 	end
-	return
 end
 
 return module

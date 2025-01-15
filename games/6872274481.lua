@@ -687,7 +687,8 @@ run(function()
 		TeamUpgradeMeta = debug.getupvalue(require(replicatedStorage.TS.games.bedwars['team-upgrade']['team-upgrade-meta']).getTeamUpgradeMeta, 1),
 		UILayers = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out).UILayers,
 		VisualizerUtils = require(lplr.PlayerScripts.TS.lib.visualizer['visualizer-utils']).VisualizerUtils,
-		WeldTable = require(replicatedStorage.TS.util['weld-util']).WeldUtil
+		WeldTable = require(replicatedStorage.TS.util['weld-util']).WeldUtil,
+		WinEffectMeta = require(replicatedStorage.TS.locker['win-effect']['win-effect-meta']).WinEffectMeta
 	}, {
 		__index = function(self, ind)
 			rawset(self, ind, Knit.Controllers[ind])
@@ -4156,7 +4157,8 @@ run(function()
 				local plr = entitylib.EntityPosition({
 					Range = 31,
 					Part = 'RootPart',
-					Players = true
+					Players = true,
+					Sort = sortmethods.Health
 				})
 	
 				if plr then
@@ -4225,6 +4227,25 @@ run(function()
 						})
 					end
 				end
+				task.wait(0.1)
+			until not AutoKit.Enabled
+		end,
+		wizard = function()
+			repeat
+				local ability = lplr:GetAttribute('WizardAbility')
+				if ability and bedwars.AbilityController:canUseAbility(ability) then
+					local plr = entitylib.EntityPosition({
+						Range = 50,
+						Part = 'RootPart',
+						Players = true,
+						Sort = sortmethods.Health
+					})
+	
+					if plr then
+						bedwars.AbilityController:useAbility(ability, newproxy(true), {target = plr.RootPart.Position})
+					end
+				end
+	
 				task.wait(0.1)
 			until not AutoKit.Enabled
 		end
@@ -7363,17 +7384,18 @@ run(function()
 	local KillEffect
 	local Mode
 	local List
+	local NameToId = {}
 	
 	local killeffects = {
 		Gravity = function(_, _, char, _)
 			char:BreakJoints()
 			local highlight = char:FindFirstChildWhichIsA('Highlight')
 			local nametag = char:FindFirstChild('Nametag', true)
-			if highlight then 
-				highlight:Destroy() 
+			if highlight then
+				highlight:Destroy()
 			end
-			if nametag then 
-				nametag:Destroy() 
+			if nametag then
+				nametag:Destroy()
 			end
 	
 			task.spawn(function()
@@ -7407,8 +7429,8 @@ run(function()
 		Lightning = function(_, _, char, _)
 			char:BreakJoints()
 			local highlight = char:FindFirstChildWhichIsA('Highlight')
-			if highlight then 
-				highlight:Destroy() 
+			if highlight then
+				highlight:Destroy()
 			end
 			local startpos = 1125
 			local startcf = char.PrimaryPart.CFrame.p - Vector3.new(0, 8, 0)
@@ -7451,15 +7473,15 @@ run(function()
 					sound.Pitch = 0.5 + (math.random(1, 3) / 10)
 					sound.Parent = soundpart
 					sound:Play()
-					sound.Ended:Connect(function() 
-						soundpart:Destroy() 
+					sound.Ended:Connect(function()
+						soundpart:Destroy()
 					end)
 				end
 				newpos = newpos2
 			end
 		end,
-		Delete = function(_, _, char, _) 
-			char:Destroy() 
+		Delete = function(_, _, char, _)
+			char:Destroy()
 		end
 	}
 	
@@ -7469,23 +7491,23 @@ run(function()
 			if callback then
 				for i, v in killeffects do
 					bedwars.KillEffectController.killEffects['Custom'..i] = {
-						new = function() 
+						new = function()
 							return {
-								onKill = v, 
-								isPlayDefaultKillEffect = function() 
-									return false 
+								onKill = v,
+								isPlayDefaultKillEffect = function()
+									return false
 								end
-							} 
+							}
 						end
 					}
 				end
 				KillEffect:Clean(lplr:GetAttributeChangedSignal('KillEffectType'):Connect(function()
-					lplr:SetAttribute('KillEffectType', Mode.Value == 'Bedwars' and List.Value or 'Custom'..Mode.Value)
+					lplr:SetAttribute('KillEffectType', Mode.Value == 'Bedwars' and NameToId[List.Value] or 'Custom'..Mode.Value)
 				end))
-				lplr:SetAttribute('KillEffectType', Mode.Value == 'Bedwars' and List.Value or 'Custom'..Mode.Value)
+				lplr:SetAttribute('KillEffectType', Mode.Value == 'Bedwars' and NameToId[List.Value] or 'Custom'..Mode.Value)
 			else
-				for i in killeffects do 
-					bedwars.KillEffectController.killEffects['Custom'..i] = nil 
+				for i in killeffects do
+					bedwars.KillEffectController.killEffects['Custom'..i] = nil
 				end
 				lplr:SetAttribute('KillEffectType', 'default')
 			end
@@ -7493,8 +7515,8 @@ run(function()
 		Tooltip = 'Custom final kill effects'
 	})
 	local modes = {'Bedwars'}
-	for i in killeffects do 
-		table.insert(modes, i) 
+	for i in killeffects do
+		table.insert(modes, i)
 	end
 	Mode = KillEffect:CreateDropdown({
 		Name = 'Mode',
@@ -7502,14 +7524,14 @@ run(function()
 		Function = function(val)
 			List.Object.Visible = val == 'Bedwars'
 			if KillEffect.Enabled then
-				lplr:SetAttribute('KillEffectType', val == 'Bedwars' and List.Value or 'Custom'..val)
+				lplr:SetAttribute('KillEffectType', val == 'Bedwars' and NameToId[List.Value] or 'Custom'..val)
 			end
 		end
 	})
 	local KillEffectName = {}
 	for i, v in bedwars.KillEffectMeta do
 		table.insert(KillEffectName, v.name)
-		KillEffectName[v.name] = i
+		NameToId[v.name] = i
 	end
 	table.sort(KillEffectName)
 	List = KillEffect:CreateDropdown({
@@ -7517,7 +7539,7 @@ run(function()
 		List = KillEffectName,
 		Function = function(val)
 			if KillEffect.Enabled then
-				lplr:SetAttribute('KillEffectType', val)
+				lplr:SetAttribute('KillEffectType', NameToId[val])
 			end
 		end,
 		Darker = true
@@ -7697,10 +7719,10 @@ run(function()
 	SoundChanger = vape.Legit:CreateModule({
 		Name = 'SoundChanger',
 		Function = function(callback)
-			if callback then 
+			if callback then
 				old = bedwars.SoundManager.playSound
 				bedwars.SoundManager.playSound = function(self, id, ...)
-					if soundlist[id] then 
+					if soundlist[id] then
 						id = soundlist[id]
 					end
 	
@@ -7722,7 +7744,7 @@ run(function()
 				local split = entry:split('/')
 				local id = bedwars.SoundList[split[1]]
 				if id and #split > 1 then
-					soundlist[id] = split[2]:find('rbxasset') and split[2] or assetfunction(split[2]) 
+					soundlist[id] = split[2]:find('rbxasset') and split[2] or isfile(split[2]) and assetfunction(split[2]) or ''
 				end
 			end
 		end
@@ -7984,6 +8006,41 @@ run(function()
 				Viewmodel:Toggle()
 			end
 		end
+	})
+end)
+	
+run(function()
+	local WinEffect
+	local List
+	local NameToId = {}
+	
+	WinEffect = vape.Legit:CreateModule({
+	    Name = 'WinEffect',
+	    Function = function(callback)
+	        if callback then
+	            WinEffect:Clean(vapeEvents.MatchEndEvent.Event:Connect(function()
+	                for i, v in getconnections(bedwars.Client:Get('WinEffectTriggered').instance.OnServerEvent) do
+	                    if v.Function then
+	                        v.Function({
+	                            winEffectType = NameToId[List.Value],
+	                            winningPlayer = lplr
+	                        })
+	                    end
+	                end
+	            end))
+	        end
+	    end,
+	    Tooltip = 'Allows you to select any clientside win effect'
+	})
+	local WinEffectName = {}
+	for i, v in bedwars.WinEffectMeta do
+		table.insert(WinEffectName, v.name)
+		NameToId[v.name] = i
+	end
+	table.sort(WinEffectName)
+	List = WinEffect:CreateDropdown({
+		Name = 'Effects',
+		List = WinEffectName
 	})
 end)
 	
