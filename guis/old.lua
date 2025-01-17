@@ -370,7 +370,6 @@ do
 			tab[obj] = tweenService:Create(obj, tweeninfo, goal)
 			tab[obj].Completed:Once(function()
 				if tab then
-					tab[obj]:Destroy()
 					tab[obj] = nil
 					tab = nil
 				end
