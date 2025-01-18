@@ -8019,7 +8019,7 @@ run(function()
 	    Function = function(callback)
 	        if callback then
 	            WinEffect:Clean(vapeEvents.MatchEndEvent.Event:Connect(function()
-	                for i, v in getconnections(bedwars.Client:Get('WinEffectTriggered').instance.OnServerEvent) do
+	                for i, v in getconnections(bedwars.Client:Get('WinEffectTriggered').instance.OnClientEvent) do
 	                    if v.Function then
 	                        v.Function({
 	                            winEffectType = NameToId[List.Value],
