@@ -1,3 +1,21 @@
+local loadstring = function(...)
+	local res, err = loadstring(...)
+	if err and vape then vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert') end
+	return res
+end
+local isfile = isfile or function(file)
+	local suc, res = pcall(function() return readfile(file) end)
+	return suc and res ~= nil and res ~= ''
+end
+local function downloadFile(path, func)
+	if not isfile(path) then
+		local suc, res = pcall(function() return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true) end)
+		if not suc or res == '404: Not Found' then error(res) end
+		if path:find('.lua') then res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res end
+		writefile(path, res)
+	end
+	return (func or readfile)(path)
+end
 local run = function(func) func() end
 local cloneref = cloneref or function(obj) return obj end
 
@@ -11,6 +29,7 @@ local lplr = playersService.LocalPlayer
 local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local targetinfo = vape.Libraries.targetinfo
+local vm = loadstring(downloadFile('newvape/libraries/vm.lua'), 'vm')()
 
 local bd = {}
 local store = {
@@ -43,15 +62,65 @@ local function parsePositions(v, func)
 end
 
 run(function()
+	local function dumpArgs(scr, expected)
+		local deserializedcode = vm.luau_deserialize(getscriptbytecode(scr))
+		local dumped = {}
+
+		for _, proto in deserializedcode.protoList do
+			local stack, top, code = {}, -1, proto.code
+			for i, inst in code do
+				if inst.opcode == 3 then -- LOADB
+					stack[inst.A] = inst.B == 1
+				elseif inst.opcode == 4 then -- LOADN
+					stack[inst.A] = inst.D
+				elseif inst.opcode == 5 then -- LOADK
+					stack[inst.A] = inst.K
+				elseif inst.opcode == 6 then -- MOVE
+					stack[inst.A] = stack[inst.B]
+				elseif inst.opcode == 16 then -- SETTABLEKS
+					if table.find(expected, inst.K) then
+						if top == -1 then
+							top = inst.B
+						end
+					else
+						if inst.B == top then
+							dumped[inst.K] = stack[inst.A] == nil or stack[inst.A]
+						else
+							top = -1
+						end
+					end
+				end
+			end
+		end
+
+		return dumped
+	end
+
 	local Knit = require(replicatedStorage.Modules.Knit.Client)
 	if not debug.getupvalue(Knit.Start, 1) then
 		repeat task.wait() until debug.getupvalue(Knit.Start, 1)
 	end
 
 	bd = setmetatable({
+		AttackArgs = dumpArgs(lplr.PlayerScripts.Components.All.Tools.SwordClient, {
+			'target_entity_id',
+			'is_crit',
+			'weapon_name'
+		}),
+		PlaceArgs = dumpArgs(lplr.PlayerScripts.Controllers.All.BlockPlacementController, {
+			'position',
+			'block_type'
+		}),
 		Blink = require(replicatedStorage.Blink.Client),
 		CombatService = Knit.GetService('CombatService'),
 		CombatConstants = require(replicatedStorage.Constants.Melee),
+		Call = function(func, args, expected)
+			for i, v in expected do
+				args[i] = v
+			end
+
+			return func(args)
+		end,
 		Knit = Knit,
 		Entity = require(replicatedStorage.Modules.Entity),
 		ServerData = require(replicatedStorage.Modules.ServerData)
@@ -61,17 +130,6 @@ run(function()
 			return rawget(self, ind)
 		end
 	})
-
-	local rizzList = debug.getconstants(debug.getproto(debug.getproto(getscriptclosure(lplr.PlayerScripts.Components.All.Tools.SwordClient), 4), 1))
-	for i, v in rizzList do
-		if v == 'AttackPlayerWithSword' then
-			bd.Rizz = rizzList[i - 2]
-		end
-	end
-
-	if bd.Rizz == nil then
-		notif('Vape', 'Failed to get Rizz constant.', 10, 'alert')
-	end
 
 	task.spawn(function()
 		local map = workspace:WaitForChild('Map', 99999)
@@ -344,13 +402,12 @@ run(function()
 								if AttackDelay < tick() then
 									AttackDelay = tick() + (1 / CPS.GetRandomValue())
 									local bdent = bd.Entity.FindByCharacter(v.Character)
-									if bdent and bd.Rizz ~= nil then
-										bd.Blink.item_action.attack_entity.fire({
+									if bdent then
+										bd.Call(bd.Blink.item_action.attack_entity.fire, {
 											target_entity_id = bdent.Id,
 											is_crit = entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0,
-											weapon_name = tool.Name,
-											rizz = bd.Rizz
-										})
+											weapon_name = tool.Name
+										}, bd.AttackArgs)
 									end
 								end
 							end
@@ -736,7 +793,7 @@ run(function()
 								end
 	
 								local block = store.blocks[currentpos]
-								if not block and bd.Rizz ~= nil then
+								if not block then
 									blockpos = checkAdjacent(currentpos) and currentpos or blockProximity(currentpos)
 									if blockpos then
 										local fake = Instance.new('Part')
@@ -752,11 +809,10 @@ run(function()
 										bd.Entity.LocalEntity:RemoveTool('Blocks', 1)
 	
 										task.spawn(function()
-											local suc, block = bd.Blink.item_action.place_block.invoke({
+											local suc, block = bd.Call(bd.Blink.item_action.place_block.invoke, {
 												position = blockpos,
-												block_type = 'Clay',
-												rizz = bd.Rizz
-											})
+												block_type = 'Clay'
+											}, bd.PlaceArgs)
 											fake:Destroy()
 											if not (suc or block) then
 												bd.Entity.LocalEntity:RemoveTool('Blocks', 1)
