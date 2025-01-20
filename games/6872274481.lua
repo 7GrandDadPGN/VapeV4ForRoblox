@@ -45,7 +45,6 @@ local getcustomasset = vape.Libraries.getcustomasset
 local store = {
 	attackReach = 0,
 	attackReachUpdate = tick(),
-	damage = {},
 	damageBlockFail = tick(),
 	hand = {},
 	inventory = {
@@ -239,6 +238,24 @@ local function getBlocksInPoints(s, e)
 		end
 	end
 	return list
+end
+
+local function getNearGround(range)
+	range = Vector3.new(3, 3, 3) * (range or 10)
+	local localPosition, mag, closest = entitylib.character.RootPart.Position, 60
+	local blocks = getBlocksInPoints(bedwars.BlockController:getBlockPosition(localPosition - range), bedwars.BlockController:getBlockPosition(localPosition + range))
+
+	for _, v in blocks do
+		if not getPlacedBlock(v + Vector3.new(0, 3, 0)) then
+			local newmag = (localPosition - v).Magnitude
+			if newmag < mag then
+				mag, closest = newmag, v + Vector3.new(0, 3, 0)
+			end
+		end
+	end
+
+	table.clear(blocks)
+	return closest
 end
 
 local function getShieldAttribute(char)
@@ -752,22 +769,7 @@ run(function()
 	Client.Get = function(self, remoteName)
 		local call = OldGet(self, remoteName)
 
-		if remoteName == remotes.AckKnockback then
-			return {
-				instance = call.instance,
-				SendToServer = function(_, knockback)
-					if not StoreDamage.Enabled then
-						return call:SendToServer(knockback)
-					end
-
-					local damage = debug.getstack(3, 3)
-					if damage.knockbackId and (not damage.knockbackMultiplier or not damage.knockbackMultiplier.disabled) then
-						table.insert(store.damage, damage)
-						vapeEvents.KnockbackReceived:Fire()
-					end
-				end
-			}
-		elseif remoteName == remotes.AttackEntity then
+		if remoteName == remotes.AttackEntity then
 			return {
 				instance = call.instance,
 				SendToServer = function(_, attackTable, ...)
@@ -1037,10 +1039,6 @@ run(function()
 		end)
 	end
 
-	vape:Clean(vapeEvents.KnockbackReceived.Event:Connect(function()
-		notif('StoreDamage', 'Added damage packet: '..#store.damage, 3)
-	end))
-
 	store.blocks = collection('block', gui)
 	store.shop = collection({'BedwarsItemShop', 'TeamUpgradeShopkeeper'}, gui, function(tab, obj)
 		table.insert(tab, {
@@ -1062,9 +1060,6 @@ run(function()
 	local beds = sessioninfo:AddItem('Beds')
 	local wins = sessioninfo:AddItem('Wins')
 	local games = sessioninfo:AddItem('Games')
-	sessioninfo:AddItem('Packets', 0, function()
-		return #store.damage
-	end, false)
 
 	local mapname = 'Unknown'
 	sessioninfo:AddItem('Map', 0, function()
@@ -1559,23 +1554,6 @@ run(function()
 	local rayCheck = RaycastParams.new()
 	rayCheck.RespectCanCollide = true
 
-	local function getNearGround()
-		local localPosition, mag, closest = entitylib.character.RootPart.Position, 60
-		local blocks = getBlocksInPoints(bedwars.BlockController:getBlockPosition(localPosition - Vector3.new(30, 30, 30)), bedwars.BlockController:getBlockPosition(localPosition + Vector3.new(30, 30, 30)))
-
-		for _, v in blocks do
-			if not getPlacedBlock(v + Vector3.new(0, 3, 0)) then
-				local newmag = (localPosition - v).Magnitude
-				if newmag < mag then
-					mag, closest = newmag, v + Vector3.new(0, 3, 0)
-				end
-			end
-		end
-
-		table.clear(blocks)
-		return closest
-	end
-
 	local function getLowGround()
 		local mag = math.huge
 		for _, pos in bedwars.BlockController:getStore():getAllBlockPositions() do
@@ -1714,15 +1692,9 @@ run(function()
 	local WallCheck
 	local PopBalloons
 	local TP
-	local DamageBoost
 	local rayCheck = RaycastParams.new()
 	rayCheck.RespectCanCollide = true
-	local knockbackRemote = {FireServer = function() end}
-	task.spawn(function()
-		knockbackRemote = bedwars.Client:Get(remotes.AckKnockback).instance
-	end)
 	local up, down, old = 0, 0
-	local boostTick, boostAmount = tick(), 0
 
 	Fly = vape.Categories.Blatant:CreateModule({
 		Name = 'Fly',
@@ -1747,7 +1719,7 @@ run(function()
 						local flyAllowed = (lplr.Character:GetAttribute('InflatedBalloons') and lplr.Character:GetAttribute('InflatedBalloons') > 0) or store.matchState == 2
 						local mass = (1.5 + (flyAllowed and 6 or 0) * (tick() % 0.4 < 0.2 and -1 or 1)) + ((up + down) * VerticalValue.Value)
 						local root, moveDirection = entitylib.character.RootPart, entitylib.character.Humanoid.MoveDirection
-						local velo = getSpeed() + (boostTick > tick() and boostAmount or 0)
+						local velo = getSpeed()
 						local destination = (moveDirection * math.max(Value.Value - velo, 0) * dt)
 						rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera, AntiFallPart}
 						rayCheck.CollisionGroup = root.CollisionGroup
@@ -1770,20 +1742,6 @@ run(function()
 											oldy = root.Position.Y
 											tpTick = tick() + 0.11
 											root.CFrame = CFrame.lookAlong(Vector3.new(root.Position.X, ray.Position.Y + entitylib.character.HipHeight, root.Position.Z), root.CFrame.LookVector)
-										elseif airleft > 2 then
-											local packet = store.damage[1]
-											if packet then
-												table.remove(store.damage, 1)
-												notif('Fly', 'Damage packets left: '..#store.damage, 2)
-												knockbackRemote:FireServer({
-													knockbackId = packet.knockbackId,
-													playerPosition = entitylib.character.RootPart.Position
-												})
-												entitylib.character.AirTime = tick()
-												if DamageBoost.Enabled then
-													boostTick, boostAmount = tick() + 0.4, 36 * (packet.knockbackMultiplier and packet.knockbackMultiplier.horizontal or 1)
-												end
-											end
 										end
 									end
 								end
@@ -1873,7 +1831,6 @@ run(function()
 		Name = 'TP Down',
 		Default = true
 	})
-	DamageBoost = Fly:CreateToggle({Name = 'Damage Boost'})
 end)
 	
 run(function()
@@ -2597,12 +2554,10 @@ end)
 run(function()
 	local Value
 	local start
-	local JumpTick, JumpSpeed, Extend, Direction = tick(), 0, false
+	local JumpTick, JumpSpeed, Direction = tick(), 0
 	local projectileRemote = {InvokeServer = function() end}
-	local knockbackRemote = {FireServer = function() end}
 	task.spawn(function()
 		projectileRemote = bedwars.Client:Get(remotes.FireProjectile).instance
-		knockbackRemote = bedwars.Client:Get(remotes.AckKnockback).instance
 	end)
 	
 	local function launchProjectile(item, pos, proj, speed)
@@ -2747,24 +2702,9 @@ run(function()
 							local pos = damageTable.fromPosition and Vector3.new(damageTable.fromPosition.X, damageTable.fromPosition.Y, damageTable.fromPosition.Z) or damageTable.fromEntity and damageTable.fromEntity.PrimaryPart.Position
 							if not pos then return end
 							local vec = (entitylib.character.RootPart.Position - pos)
-							Extend = StoreDamage.Enabled
 							JumpSpeed = knockbackBoost
-							JumpTick = tick() + (StoreDamage.Enabled and 4.3 or 2.5)
+							JumpTick = tick() + 2.5
 							Direction = Vector3.new(vec.X, 0, vec.Z).Unit
-							if not StoreDamage.Enabled then return end
-							task.delay(0.1, function()
-								for i, v in store.damage do
-									if v.knockbackId == damageTable.knockbackId then
-										table.remove(store.damage, i)
-										break
-									end
-								end
-							end)
-							task.wait(1.6)
-							knockbackRemote:FireServer({
-								knockbackId = damageTable.knockbackId,
-								playerPosition = entitylib.character.RootPart.Position
-							})
 						end
 					end
 				end))
@@ -2785,9 +2725,9 @@ run(function()
 						if JumpTick > tick() then
 							root.AssemblyLinearVelocity = Direction * (getSpeed() + ((JumpTick - tick()) > 1.1 and JumpSpeed or 0)) + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
 							if entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air and not start then
-								root.AssemblyLinearVelocity += Vector3.new(0, dt * (workspace.Gravity - (Extend and 6 or 23)), 0)
+								root.AssemblyLinearVelocity += Vector3.new(0, dt * (workspace.Gravity - 23), 0)
 							else
-								root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, (Extend and 10 or 15), root.AssemblyLinearVelocity.Z)
+								root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, 15, root.AssemblyLinearVelocity.Z)
 							end
 							start = nil
 						else
@@ -2813,7 +2753,6 @@ run(function()
 				JumpTick = tick()
 				Direction = nil
 				JumpSpeed = 0
-				Extend = false
 			end
 		end,
 		ExtraText = function()
@@ -2996,9 +2935,9 @@ run(function()
 			local ammo = proj and getAmmo(proj)
 			if ammo and table.find(List.ListEnabled, ammo) then
 				table.insert(items, {
-					item, 
-					ammo, 
-					proj.projectileType(ammo), 
+					item,
+					ammo,
+					proj.projectileType(ammo),
 					proj
 				})
 			end
@@ -3043,15 +2982,15 @@ run(function()
 											else
 												local shoot = itemMeta.launchSound
 												shoot = shoot and shoot[math.random(1, #shoot)] or nil
-												if shoot then 
-													bedwars.SoundManager:playSound(shoot) 
+												if shoot then
+													bedwars.SoundManager:playSound(shoot)
 												end
 											end
 										end)
 	
 										FireDelays[item.itemType] = tick() + itemMeta.fireDelaySec
-										if switched then 
-											task.wait(0.05) 
+										if switched then
+											task.wait(0.05)
 										end
 									end
 								end
@@ -3065,7 +3004,7 @@ run(function()
 		Tooltip = 'Shoots people around you'
 	})
 	Targets = ProjectileAura:CreateTargets({
-		Players = true, 
+		Players = true,
 		Walls = true
 	})
 	List = ProjectileAura:CreateTextList({
@@ -3077,8 +3016,8 @@ run(function()
 		Min = 1,
 		Max = 50,
 		Default = 50,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 end)
@@ -3097,8 +3036,8 @@ run(function()
 		Function = function(callback)
 			frictionTable.Speed = callback or nil
 			updateVelocity()
-			pcall(function() 
-				debug.setconstant(bedwars.WindWalkerController.updateSpeed, 7, callback and 'constantSpeedMultiplier' or 'moveSpeedMultiplier') 
+			pcall(function()
+				debug.setconstant(bedwars.WindWalkerController.updateSpeed, 7, callback and 'constantSpeedMultiplier' or 'moveSpeedMultiplier')
 			end)
 	
 			if callback then
@@ -3116,8 +3055,8 @@ run(function()
 							rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
 							rayCheck.CollisionGroup = root.CollisionGroup
 							local ray = workspace:Raycast(root.Position, destination, rayCheck)
-							if ray then 
-								destination = ((ray.Position + ray.Normal) - root.Position) 
+							if ray then
+								destination = ((ray.Position + ray.Normal) - root.Position)
 							end
 						end
 	
@@ -3130,8 +3069,8 @@ run(function()
 				end))
 			end
 		end,
-		ExtraText = function() 
-			return 'Heatseeker' 
+		ExtraText = function()
+			return 'Heatseeker'
 		end,
 		Tooltip = 'Increases your movement with various methods.'
 	})
@@ -3140,8 +3079,8 @@ run(function()
 		Min = 1,
 		Max = 23,
 		Default = 23,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 	WallCheck = Speed:CreateToggle({
@@ -4273,6 +4212,60 @@ run(function()
 end)
 	
 run(function()
+	local AutoPearl
+	local projectileRemote = {InvokeServer = function() end}
+	task.spawn(function()
+		projectileRemote = bedwars.Client:Get(remotes.FireProjectile).instance
+	end)
+	
+	local function firePearl(pos, spot, item)
+		switchItem(item.tool)
+		local meta = bedwars.ProjectileMeta.telepearl
+		local calc = prediction.SolveTrajectory(pos, meta.launchVelocity, meta.gravitationalAcceleration, spot, Vector3.zero, workspace.Gravity, 0, 0)
+	
+		if calc then
+			local dir = CFrame.lookAt(pos, calc).LookVector * meta.launchVelocity
+			bedwars.ProjectileController:createLocalProjectile(meta, 'telepearl', 'telepearl', pos, nil, dir, {drawDurationSeconds = 1})
+			projectileRemote:InvokeServer(item.tool, 'telepearl', 'telepearl', pos, pos, dir, httpService:GenerateGUID(true), {drawDurationSeconds = 1, shotId = httpService:GenerateGUID(false)}, workspace:GetServerTimeNow() - 0.045)
+		end
+	
+		if store.hand then
+			switchItem(store.hand.tool)
+		end
+	end
+	
+	AutoPearl = vape.Categories.Utility:CreateModule({
+		Name = 'AutoPearl',
+		Function = function(callback)
+			if callback then
+				local check
+				repeat
+					if entitylib.isAlive then
+						local root = entitylib.character.RootPart
+						local pearl = getItem('telepearl')
+	
+						if pearl and root.Velocity.Y < -100 then
+							if not check then
+								check = true
+								local ground = getNearGround(20)
+	
+								if ground then
+									firePearl(root.Position, ground, pearl)
+								end
+							end
+						else
+							check = false
+						end
+					end
+					task.wait(0.1)
+				until not AutoPearl.Enabled
+			end
+		end,
+		Tooltip = 'Automatically throws a pearl onto nearby ground after\nfalling a certain distance.'
+	})
+end)
+	
+run(function()
 	local AutoPlay
 	local Random
 	
@@ -4655,7 +4648,7 @@ run(function()
 	local Diagonal
 	local LimitItem
 	local Mouse
-	local adjacent, lastpos = {}, Vector3.zero
+	local adjacent, lastpos, label = {}, Vector3.zero
 	
 	for x = -3, 3, 3 do
 		for y = -3, 3, 3 do
@@ -4698,26 +4691,47 @@ run(function()
 		return false
 	end
 	
-	local function getBlock()
-		for _, item in store.inventory.inventory.items do
-			if bedwars.ItemMeta[item.itemType].block then
-				return item.itemType, item.amount
+	local function getScaffoldBlock()
+		if store.hand.toolType == 'block' then
+			return store.hand.tool.Name, store.hand.amount
+		elseif (not LimitItem.Enabled) then
+			local wool, amount = getWool()
+			if wool then
+				return wool, amount
+			else
+				for _, item in store.inventory.inventory.items do
+					if bedwars.ItemMeta[item.itemType].block then
+						return item.itemType, item.amount
+					end
+				end
 			end
 		end
+	
+		return nil, 0
 	end
 	
 	Scaffold = vape.Categories.Utility:CreateModule({
 		Name = 'Scaffold',
 		Function = function(callback)
+			if label then
+				label.Visible = callback
+			end
+	
 			if callback then
 				repeat
 					if entitylib.isAlive then
-						local wool = store.hand.toolType == 'block' and store.hand.tool.Name or (not LimitItem.Enabled) and (getWool() or getBlock())
+						local wool, amount = getScaffoldBlock()
 	
 						if Mouse.Enabled then
 							if not inputService:IsMouseButtonPressed(0) then
 								wool = nil
 							end
+						end
+	
+						if label then
+							amount = amount or 0
+							label.Text = amount..' <font color="rgb(170, 170, 170)">(Scaffold)</font>'
+							label.TextColor3 = Color3.fromHSV((amount / 128) / 2.8, 0.86, 1)
 						end
 	
 						if wool then
@@ -4751,6 +4765,8 @@ run(function()
 	
 					task.wait(0.03)
 				until not Scaffold.Enabled
+			else
+				Label = nil
 			end
 		end,
 		Tooltip = 'Helps you make bridges/scaffold walk.'
@@ -4774,6 +4790,28 @@ run(function()
 	})
 	LimitItem = Scaffold:CreateToggle({Name = 'Limit to items'})
 	Mouse = Scaffold:CreateToggle({Name = 'Require mouse down'})
+	Count = Scaffold:CreateToggle({
+		Name = 'Block Count',
+		Function = function(callback)
+			if callback then
+				label = Instance.new('TextLabel')
+				label.Size = UDim2.fromOffset(100, 20)
+				label.Position = UDim2.new(0.5, 6, 0.5, 60)
+				label.BackgroundTransparency = 1
+				label.AnchorPoint = Vector2.new(0.5, 0)
+				label.Text = '0'
+				label.TextColor3 = Color3.new(0, 1, 0)
+				label.TextSize = 18
+				label.RichText = true
+				label.Font = Enum.Font.Arial
+				label.Visible = Scaffold.Enabled
+				label.Parent = vape.gui
+			else
+				label:Destroy()
+				label = nil
+			end
+		end
+	})
 end)
 	
 run(function()
@@ -4967,13 +5005,6 @@ run(function()
 			StaffDetector:Toggle()
 		end
 	end)
-end)
-	
-run(function()
-	StoreDamage = vape.Categories.Utility:CreateModule({
-		Name = 'StoreDamage',
-		Tooltip = 'Store damage knockback packets for certain modules.'
-	})
 end)
 	
 run(function()
