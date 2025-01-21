@@ -18,6 +18,47 @@ local prediction = vape.Libraries.prediction
 local ad = {}
 
 run(function()
+	local function searchForScripts(map)
+		local scripts = {}
+		local constants = {}
+
+		for _, v in replicatedStorage:GetDescendants() do
+			if v:IsA('ModuleScript') then
+				pcall(function()
+					constants[v] = debug.getconstants(getscriptclosure(v))
+				end)
+			end
+		end
+
+		for name, entry in map do
+			for scr, list in constants do
+				local found = 0
+
+				for _, v in list do
+					for _, comp in entry do
+						if comp == v then
+							found += 1
+							break
+						end
+					end
+				end
+
+				if found == #entry then
+					scripts[name] = scr
+				end
+			end
+		end
+
+		for name in map do
+			if not scripts[name] then
+				vape:CreateNotification('Vape', 'Unable to find script: '..name, 10, 'alert')
+				return false
+			end
+		end
+
+		return scripts
+	end
+
 	if starterGui:GetCoreGuiEnabled(Enum.CoreGuiType.Health) then
 		repeat task.wait() until not starterGui:GetCoreGuiEnabled(Enum.CoreGuiType.Health) or vape.Loaded == nil
 		if vape.Loaded == nil then return end
@@ -29,12 +70,20 @@ run(function()
 		end
 	end
 
+	local scripts = searchForScripts({
+		BulletHandler = {'BulletUpdate', 'HitEffects'},
+		CharacterController = {'BloodVignette', 'HealthBar'},
+		CharacterReplicatorManager = {'CharacterReplicatorAngleUpdate'},
+		Network = {'CreateRemoteEvent', 'CreateRemoteFunction'},
+		Memory = {'LocalPlayerMemory', 'GlobalPlayerMemory'}
+	})
+
 	ad = {
-		CharacterController = require(replicatedStorage.Modules.Client.Controllers.CharacterController),
-		Network = require(replicatedStorage.Modules.Shared.Utility.Network),
-		Memory = require(replicatedStorage.Modules.Shared.Communications.PlayerMemory).GetLocalMemory(),
-		ReplicationPlayers = debug.getupvalue(require(replicatedStorage.Modules.Client.Classes.CharacterReplicatorManager).GetReplicator, 1),
-		FireBullet = require(replicatedStorage.Modules.Client.Handlers.BulletHandling)
+		CharacterController = require(scripts.CharacterController),
+		Network = require(scripts.Network),
+		Memory = require(scripts.Memory).GetLocalMemory(),
+		ReplicationPlayers = debug.getupvalue(require(scripts.CharacterReplicatorManager).GetReplicator, 1),
+		FireBullet = require(scripts.BulletHandler)
 	}
 end)
 if vape.Loaded == nil then return end
