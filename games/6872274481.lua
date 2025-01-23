@@ -1684,6 +1684,34 @@ run(function()
 	})
 end)
 	
+run(function()
+	local FastBreak
+	local Time
+	
+	FastBreak = vape.Categories.Blatant:CreateModule({
+		Name = 'FastBreak',
+		Function = function(callback)
+			if callback then
+				repeat
+					bedwars.BlockBreakController.blockBreaker:setCooldown(Time.Value)
+					task.wait(0.1)
+				until not FastBreak.Enabled
+			else
+				bedwars.BlockBreakController.blockBreaker:setCooldown(0.3)
+			end
+		end,
+		Tooltip = 'Decreases block hit cooldown'
+	})
+	Time = FastBreak:CreateSlider({
+		Name = 'Break speed',
+		Min = 0,
+		Max = 0.3,
+		Default = 0.25,
+		Decimal = 100,
+		Suffix = 'seconds'
+	})
+end)
+	
 local Fly
 local LongJump
 run(function()
@@ -1834,14 +1862,69 @@ run(function()
 end)
 	
 run(function()
+	local Mode
 	local Expand
+	local objects, set = {}
+	
+	local function createHitbox(ent)
+		if ent.Targetable and ent.Player then
+			local hitbox = Instance.new('Part')
+			hitbox.Size = Vector3.new(3, 6, 3) + Vector3.one * (Expand.Value / 5)
+			hitbox.Position = ent.RootPart.Position
+			hitbox.CanCollide = false
+			hitbox.Massless = true
+			hitbox.Transparency = 1
+			hitbox.Parent = ent.Character
+			local weld = Instance.new('Motor6D')
+			weld.Part0 = hitbox
+			weld.Part1 = ent.RootPart
+			weld.Parent = hitbox
+			objects[ent] = hitbox
+		end
+	end
 	
 	HitBoxes = vape.Categories.Blatant:CreateModule({
 		Name = 'HitBoxes',
 		Function = function(callback)
-			debug.setconstant(bedwars.SwordController.swingSwordInRegion, 6, callback and (Expand.Value / 3) or 3.8)
+			if callback then
+				if Mode.Value == 'Sword' then
+					debug.setconstant(bedwars.SwordController.swingSwordInRegion, 6, (Expand.Value / 3))
+					set = true
+				else
+					HitBoxes:Clean(entitylib.Events.EntityAdded:Connect(createHitbox))
+					HitBoxes:Clean(entitylib.Events.EntityRemoving:Connect(function(ent)
+						if objects[ent] then
+							objects[ent]:Destroy()
+							objects[ent] = nil
+						end
+					end))
+					for _, ent in entitylib.List do
+						createHitbox(ent)
+					end
+				end
+			else
+				if set then
+					debug.setconstant(bedwars.SwordController.swingSwordInRegion, 6, 3.8)
+					set = nil
+				end
+				for _, part in objects do
+					part:Destroy()
+				end
+				table.clear(objects)
+			end
 		end,
 		Tooltip = 'Expands attack hitbox'
+	})
+	Mode = HitBoxes:CreateDropdown({
+		Name = 'Mode',
+		List = {'Sword', 'Player'},
+		Function = function()
+			if HitBoxes.Enabled then
+				HitBoxes:Toggle()
+				HitBoxes:Toggle()
+			end
+		end,
+		Tooltip = 'Sword - Increases the range around you to hit entities\nPlayer - Increases the players hitbox'
 	})
 	Expand = HitBoxes:CreateSlider({
 		Name = 'Expand amount',
@@ -1851,11 +1934,17 @@ run(function()
 		Decimal = 10,
 		Function = function(val)
 			if HitBoxes.Enabled then
-				debug.setconstant(bedwars.SwordController.swingSwordInRegion, 6, (val / 3))
+				if Mode.Value == 'Sword' then
+					debug.setconstant(bedwars.SwordController.swingSwordInRegion, 6, (val / 3))
+				else
+					for _, part in objects do
+						part.Size = Vector3.new(3, 6, 3) + Vector3.one * (val / 5)
+					end
+				end
 			end
 		end,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 end)
@@ -3961,6 +4050,23 @@ run(function()
 	
 			AutoKit:Clean(function()
 				bedwars.CatController.leap = old
+			end)
+		end,
+		davey = function()
+			local old = bedwars.CannonHandController.launchSelf
+			bedwars.CannonHandController.launchSelf = function(...)
+				local res = {old(...)}
+				local self, block = ...
+	
+				if block:GetAttribute('PlacedByUserId') == lplr.UserId and (block.Position - entitylib.character.RootPart.Position).Magnitude < 30 then
+					task.spawn(bedwars.breakBlock, block, false, nil, true)
+				end
+	
+				return unpack(res)
+			end
+	
+			AutoKit:Clean(function()
+				bedwars.CannonHandController.launchSelf = old
 			end)
 		end,
 		dragon_slayer = function()
@@ -8046,22 +8152,22 @@ run(function()
 	local NameToId = {}
 	
 	WinEffect = vape.Legit:CreateModule({
-	    Name = 'WinEffect',
-	    Function = function(callback)
-	        if callback then
-	            WinEffect:Clean(vapeEvents.MatchEndEvent.Event:Connect(function()
-	                for i, v in getconnections(bedwars.Client:Get('WinEffectTriggered').instance.OnClientEvent) do
-	                    if v.Function then
-	                        v.Function({
-	                            winEffectType = NameToId[List.Value],
-	                            winningPlayer = lplr
-	                        })
-	                    end
-	                end
-	            end))
-	        end
-	    end,
-	    Tooltip = 'Allows you to select any clientside win effect'
+		Name = 'WinEffect',
+		Function = function(callback)
+			if callback then
+				WinEffect:Clean(vapeEvents.MatchEndEvent.Event:Connect(function()
+					for i, v in getconnections(bedwars.Client:Get('WinEffectTriggered').instance.OnClientEvent) do
+						if v.Function then
+							v.Function({
+								winEffectType = NameToId[List.Value],
+								winningPlayer = lplr
+							})
+						end
+					end
+				end))
+			end
+		end,
+		Tooltip = 'Allows you to select any clientside win effect'
 	})
 	local WinEffectName = {}
 	for i, v in bedwars.WinEffectMeta do

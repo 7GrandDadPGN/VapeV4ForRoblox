@@ -4865,6 +4865,24 @@ function mainapi:CreateSearch()
 				button.MouseButton1Click:Connect(function()
 					v:Toggle()
 				end)
+
+				button.MouseButton2Click:Connect(function()
+					v.Object.Parent.Parent.Visible = true
+					local frame = v.Object.Parent
+					local highlight = Instance.new('Frame')
+					highlight.Size = UDim2.fromScale(1, 1)
+					highlight.BackgroundColor3 = Color3.new(1, 1, 1)
+					highlight.BackgroundTransparency = 0.6
+					highlight.BorderSizePixel = 0
+					highlight.Parent = v.Object
+					tween:Tween(highlight, TweenInfo.new(0.5), {
+						BackgroundTransparency = 1
+					})
+					task.delay(0.5, highlight.Destroy, highlight)
+
+					frame.CanvasPosition = Vector2.new(0, (v.Object.LayoutOrder * 40) - (math.min(frame.CanvasSize.Y.Offset, 600) / 2))
+				end)
+
 				button.Parent = children
 				task.spawn(function()
 					repeat
