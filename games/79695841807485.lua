@@ -74,7 +74,7 @@ run(function()
 		BulletHandler = {'BulletUpdate', 'HitEffects'},
 		CharacterController = {'BloodVignette', 'HealthBar'},
 		CharacterReplicatorManager = {'CharacterReplicatorAngleUpdate'},
-		Network = {'CreateRemoteEvent', 'CreateRemoteFunction'},
+		Network = {'CreateRemoteEvent', 'CreateRemoteFunction', 'OnInvoke', 'ExceptPlayer', 'AllPlayers'},
 		Memory = {'LocalPlayerMemory', 'GlobalPlayerMemory'}
 	})
 
