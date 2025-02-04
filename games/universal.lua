@@ -2321,7 +2321,7 @@ run(function()
 		if Mouse.Enabled then
 			if not inputService:IsMouseButtonPressed(0) then return false end
 		end
-		
+	
 		local tool = getTool()
 		return tool and tool:FindFirstChildWhichIsA('TouchTransmitter', true) or nil, tool
 	end
@@ -2351,13 +2351,13 @@ run(function()
 								local delta = (v.RootPart.Position - selfpos)
 								local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
 								if angle > (math.rad(AngleSlider.Value) / 2) then continue end
-								
+	
 								table.insert(attacked, {
 									Entity = v,
 									Check = delta.Magnitude > AttackRange.Value and BoxSwingColor or BoxAttackColor
 								})
 								targetinfo.Targets[v] = tick() + 1
-								
+	
 								if AttackDelay < tick() then
 									AttackDelay = tick() + (1 / CPS.GetRandomValue())
 									tool:Activate()
@@ -2365,7 +2365,7 @@ run(function()
 	
 								if Lunge.Enabled and tool.GripUp.X == 0 then break end
 								if delta.Magnitude > AttackRange.Value then continue end
-								
+	
 								Overlay.FilterDescendantsInstances = {v.Character}
 								for _, part in workspace:GetPartBoundsInBox(v.RootPart.CFrame, Vector3.new(4, 4, 4), Overlay) do
 									firetouchinterest(interest.Parent, part, 1)
@@ -2390,7 +2390,7 @@ run(function()
 	
 					if Face.Enabled and attacked[1] then
 						local vec = attacked[1].Entity.RootPart.Position * Vector3.new(1, 0, 1)
-						entitylib.character.RootPart.CFrame = CFrame.lookAt(entitylib.character.RootPart.Position, Vector3.new(vec.X, entitylib.character.RootPart.Position.Y, vec.Z))
+						entitylib.character.RootPart.CFrame = CFrame.lookAt(entitylib.character.RootPart.Position, Vector3.new(vec.X, entitylib.character.RootPart.Position.Y + 0.01, vec.Z))
 					end
 	
 					task.wait()
@@ -2518,8 +2518,8 @@ run(function()
 					Particles[i] = part
 				end
 			else
-				for _, v in Particles do 
-					v:Destroy() 
+				for _, v in Particles do
+					v:Destroy()
 				end
 				table.clear(Particles)
 			end
@@ -6211,18 +6211,18 @@ run(function()
 	end
 	
 	local function playerAdded(plr)
-		if not vape.Loaded then 
-			repeat task.wait() until vape.Loaded 
+		if not vape.Loaded then
+			repeat task.wait() until vape.Loaded
 		end
 	
 		local user = table.find(Users.ListEnabled, tostring(plr.UserId))
 		if user or getRole(plr, tonumber(Group.Value) or 0) >= (tonumber(Role.Value) or 1) then
 			notif('StaffDetector', 'Staff Detected ('..(user and 'blacklisted_user' or 'staff_role')..'): '..plr.Name, 60, 'alert')
 			whitelist.customtags[plr.Name] = {{text = 'GAME STAFF', color = Color3.new(1, 0, 0)}}
-			
+	
 			if Mode.Value == 'Uninject' then
-				task.spawn(function() 
-					vape:Uninject() 
+				task.spawn(function()
+					vape:Uninject()
 				end)
 				game:GetService('StarterGui'):SetCore('SendNotification', {
 					Title = 'StaffDetector',
@@ -6263,7 +6263,7 @@ run(function()
 								if begin then
 									local endof = str:find('/', begin + 1)
 									placeinfo = {Creator = {
-										CreatorType = 'Group', 
+										CreatorType = 'Group',
 										CreatorTargetId = str:sub(begin + 1, endof - 1)
 									}}
 								end
@@ -6280,11 +6280,11 @@ run(function()
 					Group:SetValue(placeinfo.Creator.CreatorTargetId)
 					Role:SetValue(getLowestStaffRole(groupinfo.Roles))
 				end
-				
-				if Group.Value == '' or Role.Value == '' then 
-					return 
+	
+				if Group.Value == '' or Role.Value == '' then
+					return
 				end
-				
+	
 				StaffDetector:Clean(playersService.PlayerAdded:Connect(playerAdded))
 				for _, v in playersService:GetPlayers() do
 					task.spawn(playerAdded, v)
@@ -6700,11 +6700,13 @@ run(function()
 	}
 	
 	local function removeObject(v)
-		if not table.find(newobjects, v) then 
+		if not table.find(newobjects, v) then
 			local toggle = Toggles[v.ClassName]
 			if toggle and toggle.Toggle.Enabled then
-				table.insert(oldobjects, v)
-				v.Parent = game
+				if v.Parent then
+					table.insert(oldobjects, v)
+					v.Parent = game
+				end
 			end
 		end
 	end
