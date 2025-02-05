@@ -207,6 +207,18 @@ local function updateVelocity()
 	end
 end
 
+local function motorMove(target, cf)
+	local part = Instance.new('Part')
+	part.Anchored = true
+	part.Parent = workspace
+	local motor = Instance.new('Motor6D')
+	motor.Part0 = target
+	motor.Part1 = part
+	motor.C1 = cf
+	motor.Parent = part
+	task.delay(0, part.Destroy, part)
+end
+
 local hash = loadstring(downloadFile('newvape/libraries/hash.lua'), 'hash')()
 local prediction = loadstring(downloadFile('newvape/libraries/prediction.lua'), 'prediction')()
 entitylib = loadstring(downloadFile('newvape/libraries/entity.lua'), 'entitylibrary')()
@@ -267,6 +279,13 @@ SpeedMethods = {
 	Velocity = function(options, moveDirection)
 		local root = entitylib.character.RootPart
 		root.AssemblyLinearVelocity = (moveDirection * options.Value.Value) + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+	end,
+	Impulse = function(options, moveDirection)
+		local root = entitylib.character.RootPart
+		local diff = ((moveDirection * options.Value.Value) - root.AssemblyLinearVelocity) * Vector3.new(1, 0, 1)
+		if diff.Magnitude > (moveDirection == Vector3.zero and 10 or 2) then
+			root:ApplyImpulse(diff * root.AssemblyMass)
+		end
 	end,
 	CFrame = function(options, moveDirection, dt)
 		local root = entitylib.character.RootPart
@@ -813,6 +832,7 @@ run(function()
 	local CircleFilled
 	local CircleObject
 	local RightClick
+	local ShowTarget
 	local moveConst = Vector2.new(1, 0.77) * math.rad(0.5)
 	
 	local function wrapAngle(num)
@@ -828,14 +848,14 @@ run(function()
 			if CircleObject then
 				CircleObject.Visible = callback
 			end
-			if callback then 
+			if callback then
 				local ent
 				local rightClicked = not RightClick.Enabled or inputService:IsMouseButtonPressed(1)
 				AimAssist:Clean(runService.RenderStepped:Connect(function(dt)
-					if CircleObject then 
-						CircleObject.Position = inputService:GetMouseLocation() 
+					if CircleObject then
+						CircleObject.Position = inputService:GetMouseLocation()
 					end
-					
+	
 					if rightClicked and not vape.gui.ScaledGui.ClickGui.Visible then
 						ent = entitylib.EntityMouse({
 							Range = FOV.Value,
@@ -846,16 +866,20 @@ run(function()
 							Origin = gameCamera.CFrame.Position
 						})
 	
-						if ent then 
+						if ent then
 							local facing = gameCamera.CFrame.LookVector
 							local new = (ent[Part.Value].Position - gameCamera.CFrame.Position).Unit
 							new = new == new and new or Vector3.zero
-							
-							if new ~= Vector3.zero then 
+	
+							if ShowTarget.Enabled then
+								targetinfo.Targets[ent] = tick() + 1
+							end
+	
+							if new ~= Vector3.zero then
 								local diffYaw = wrapAngle(math.atan2(facing.X, facing.Z) - math.atan2(new.X, new.Z))
 								local diffPitch = math.asin(facing.Y) - math.asin(new.Y)
 								local angle = Vector2.new(diffYaw, diffPitch) // (moveConst * UserSettings():GetService('UserGameSettings').MouseSensitivity)
-								
+	
 								angle *= math.min(Speed.Value * dt, 1)
 								mousemoverel(angle.X, angle.Y)
 							end
@@ -863,15 +887,16 @@ run(function()
 					end
 				end))
 	
-				if RightClick.Enabled then 
+				if RightClick.Enabled then
 					AimAssist:Clean(inputService.InputBegan:Connect(function(input)
-						if input.UserInputType == Enum.UserInputType.MouseButton2 then 
+						if input.UserInputType == Enum.UserInputType.MouseButton2 then
 							ent = nil
 							rightClicked = true
 						end
 					end))
+	
 					AimAssist:Clean(inputService.InputEnded:Connect(function(input)
-						if input.UserInputType == Enum.UserInputType.MouseButton2 then 
+						if input.UserInputType == Enum.UserInputType.MouseButton2 then
 							rightClicked = false
 						end
 					end))
@@ -926,13 +951,13 @@ run(function()
 		end
 	})
 	CircleColor = AimAssist:CreateColorSlider({
-		Name = 'Circle Color', 
+		Name = 'Circle Color',
 		Function = function(hue, sat, val)
 			if CircleObject then
 				CircleObject.Color = Color3.fromHSV(hue, sat, val)
 			end
-		end, 
-		Darker = true, 
+		end,
+		Darker = true,
 		Visible = false
 	})
 	CircleTransparency = AimAssist:CreateSlider({
@@ -950,23 +975,26 @@ run(function()
 		Visible = false
 	})
 	CircleFilled = AimAssist:CreateToggle({
-		Name = 'Circle Filled', 
+		Name = 'Circle Filled',
 		Function = function(callback)
 			if CircleObject then
 				CircleObject.Filled = callback
 			end
-		end, 
-		Darker = true, 
+		end,
+		Darker = true,
 		Visible = false
 	})
 	RightClick = AimAssist:CreateToggle({
 		Name = 'Require right click',
 		Function = function()
-			if AimAssist.Enabled then 
+			if AimAssist.Enabled then
 				AimAssist:Toggle()
 				AimAssist:Toggle()
 			end
 		end
+	})
+	ShowTarget = AimAssist:CreateToggle({
+		Name = 'Show target info'
 	})
 end)
 	
@@ -992,6 +1020,7 @@ run(function()
 							end
 						end
 					end
+	
 					task.wait(1 / CPS.GetRandomValue())
 				until not AutoClicker.Enabled
 			end
@@ -1048,6 +1077,7 @@ run(function()
 									task.wait(0.2)
 									break
 								end
+	
 								firetouchinterest(tool.Parent, v, 1)
 								firetouchinterest(tool.Parent, v, 0)
 							end
@@ -1059,6 +1089,7 @@ run(function()
 							tool.Parent.Massless = true
 						end
 					end
+	
 					task.wait()
 				until not Reach.Enabled
 			else
@@ -1085,8 +1116,8 @@ run(function()
 		Min = 0,
 		Max = 2,
 		Decimal = 10,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end
 	})
 	Chance = Reach:CreateSlider({
@@ -1147,7 +1178,7 @@ run(function()
 				ProjectileRaycast.CollisionGroup = ent[targetPart].CollisionGroup
 			end
 		end
-		
+
 		return ent, ent and ent[targetPart], origin
 	end
 
@@ -1155,8 +1186,8 @@ run(function()
 		FindPartOnRayWithIgnoreList = function(args)
 			local ent, targetPart, origin = getTarget(args[1].Origin, {args[2]})
 			if not ent then return end
-			if Wallbang.Enabled then 
-				return {targetPart, targetPart.Position, targetPart.GetClosestPointOnSurface(targetPart, origin), targetPart.Material} 
+			if Wallbang.Enabled then
+				return {targetPart, targetPart.Position, targetPart.GetClosestPointOnSurface(targetPart, origin), targetPart.Material}
 			end
 			args[1] = Ray.new(origin, CFrame.lookAt(origin, targetPart.Position).LookVector * args[1].Direction.Magnitude)
 		end,
@@ -1578,7 +1609,7 @@ run(function()
 		Name = 'AntiFall',
 		Function = function(callback)
 			if callback then
-				if Method.Value == 'Part' then 
+				if Method.Value == 'Part' then
 					local debounce = tick()
 					part = Instance.new('Part')
 					part.Size = Vector3.new(10000, 1, 10000)
@@ -1595,13 +1626,15 @@ run(function()
 							local root = entitylib.character.RootPart
 							debounce = tick() + 0.1
 							if Mode.Value == 'Velocity' then
-								root.Velocity = Vector3.new(root.Velocity.X, 100, root.Velocity.Z)
+								root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, 100, root.AssemblyLinearVelocity.Z)
+							elseif Mode.Value == 'Impulse' then
+								root:ApplyImpulse(Vector3.new(0, (100 - root.AssemblyLinearVelocity.Y), 0) * root.AssemblyMass)
 							end
 						end
 					end))
 	
 					repeat
-						if entitylib.isAlive then 
+						if entitylib.isAlive then
 							local root = entitylib.character.RootPart
 							rayCheck.FilterDescendantsInstances = {gameCamera, lplr.Character, part}
 							rayCheck.CollisionGroup = root.CollisionGroup
@@ -1634,12 +1667,12 @@ run(function()
 		Name = 'Method',
 		List = {'Part', 'Classic'},
 		Function = function(val)
-			if Mode.Object then 
+			if Mode.Object then
 				Mode.Object.Visible = val == 'Part'
 				Material.Object.Visible = val == 'Part'
 				Color.Object.Visible = val == 'Part'
 			end
-			if AntiFall.Enabled then 
+			if AntiFall.Enabled then
 				AntiFall:Toggle()
 				AntiFall:Toggle()
 			end
@@ -1648,7 +1681,7 @@ run(function()
 	})
 	Mode = AntiFall:CreateDropdown({
 		Name = 'Move Mode',
-		List = {'Velocity', 'Collide'},
+		List = {'Impulse', 'Velocity', 'Collide'},
 		Darker = true,
 		Function = function(val)
 			if part then
@@ -1668,8 +1701,8 @@ run(function()
 		List = materials,
 		Darker = true,
 		Function = function(val)
-			if part then 
-				part.Material = Enum.Material[val] 
+			if part then
+				part.Material = Enum.Material[val]
 			end
 		end
 	})
@@ -1714,10 +1747,17 @@ run(function()
 		Velocity = function()
 			entitylib.character.RootPart.Velocity = (entitylib.character.RootPart.Velocity * Vector3.new(1, 0, 1)) + Vector3.new(0, 2.25 + ((up + down) * VerticalValue.Value), 0)
 		end,
+		Impulse = function(options, moveDirection)
+			local root = entitylib.character.RootPart
+			local diff = (Vector3.new(0, 2.25 + ((up + down) * VerticalValue.Value), 0) - root.AssemblyLinearVelocity) * Vector3.new(0, 1, 0)
+			if diff.Magnitude > 2 then
+				root:ApplyImpulse(diff * root.AssemblyMass)
+			end
+		end,
 		CFrame = function(dt)
 			local root = entitylib.character.RootPart
-			if not YLevel then 
-				YLevel = root.Position.Y 
+			if not YLevel then
+				YLevel = root.Position.Y
 			end
 			YLevel = YLevel + ((up + down) * VerticalValue.Value * dt)
 			if WallCheck.Enabled then
@@ -1757,11 +1797,11 @@ run(function()
 		end,
 		Jump = function(dt)
 			local root = entitylib.character.RootPart
-			if not YLevel then 
-				YLevel = root.Position.Y 
+			if not YLevel then
+				YLevel = root.Position.Y
 			end
 			YLevel = YLevel + ((up + down) * VerticalValue.Value * dt)
-			if root.Position.Y < YLevel then 
+			if root.Position.Y < YLevel then
 				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 			end
 		end
@@ -1831,8 +1871,8 @@ run(function()
 				end
 			end
 		end,
-		ExtraText = function() 
-			return Mode.Value 
+		ExtraText = function()
+			return Mode.Value
 		end,
 		Tooltip = 'Makes you go zoom.'
 	})
@@ -1849,11 +1889,11 @@ run(function()
 				Fly:Toggle()
 			end
 		end,
-		Tooltip = 'Velocity - Uses smooth physics based movement\nCFrame - Directly adjusts the position of the root\nTP - Large teleports within intervals\nPulse - Controllable bursts of speed\nWalkSpeed - The classic mode of speed, usually detected on most games.'
+		Tooltip = 'Velocity - Uses smooth physics based movement\nImpulse - Same as velocity while using forces instead\nCFrame - Directly adjusts the position of the root\nTP - Large teleports within intervals\nPulse - Controllable bursts of speed\nWalkSpeed - The classic mode of speed, usually detected on most games.'
 	})
 	FloatMode = Fly:CreateDropdown({
 		Name = 'Float Mode',
-		List = {'Velocity', 'CFrame', 'Bounce', 'Floor', 'Jump', 'TP'},
+		List = {'Velocity', 'Impulse', 'CFrame', 'Bounce', 'Floor', 'Jump', 'TP'},
 		Function = function(val)
 			WallCheck.Object.Visible = Mode.Value == 'CFrame' or Mode.Value == 'TP' or val == 'CFrame' or val == 'TP'
 			BounceLength.Object.Visible = val == 'Bounce'
@@ -1874,7 +1914,7 @@ run(function()
 				Platform.Parent = Fly.Enabled and gameCamera or nil
 			end
 		end,
-		Tooltip = 'Velocity - Uses smooth physics based movement\nCFrame - Directly adjusts the position of the root\nTP - Teleports you to the ground within intervals\nFloor - Spawns a part under you\nJump - Presses space after going below a certain Y Level\nBounce - Vertical bouncing motion'
+		Tooltip = 'Velocity - Uses smooth physics based movement\nImpulse - Same as velocity while using forces instead\nCFrame - Directly adjusts the position of the root\nTP - Teleports you to the ground within intervals\nFloor - Spawns a part under you\nJump - Presses space after going below a certain Y Level\nBounce - Vertical bouncing motion'
 	})
 	local states = {'None'}
 	for _, v in Enum.HumanoidStateType:GetEnumItems() do
@@ -2028,14 +2068,22 @@ run(function()
 	
 	local function jump()
 		local state = entitylib.isAlive and entitylib.character.Humanoid:GetState() or nil
+	
 		if state == Enum.HumanoidStateType.Running or state == Enum.HumanoidStateType.Landed then
+			local root = entitylib.character.RootPart
+	
 			if Mode.Value == 'Velocity' then
 				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-				entitylib.character.RootPart.Velocity = Vector3.new(entitylib.character.RootPart.Velocity.X, Value.Value, entitylib.character.RootPart.Velocity.Z)
+				root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, Value.Value, root.AssemblyLinearVelocity.Z)
+			elseif Mode.Value == 'Impulse' then
+				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+				task.delay(0, function()
+					root:ApplyImpulse(Vector3.new(0, Value.Value - root.AssemblyLinearVelocity.Y, 0) * root.AssemblyMass)
+				end)
 			else
 				local start = math.max(Value.Value - entitylib.character.Humanoid.JumpHeight, 0)
 				repeat
-					entitylib.character.RootPart.CFrame += Vector3.new(0, start * 0.016, 0)
+					root.CFrame += Vector3.new(0, start * 0.016, 0)
 					start = start - (workspace.Gravity * 0.016)
 					if Mode.Value == 'CFrame' then
 						task.wait()
@@ -2061,15 +2109,15 @@ run(function()
 				end
 			end
 		end,
-		ExtraText = function() 
-			return Mode.Value 
+		ExtraText = function()
+			return Mode.Value
 		end,
 		Tooltip = 'Lets you jump higher'
 	})
 	Mode = HighJump:CreateDropdown({
 		Name = 'Mode',
-		List = {'Velocity', 'CFrame', 'Instant'},
-		Tooltip = 'Velocity - Uses smooth movement to boost you upward\nCFrame - Directly adjusts the position upward\nInstant - Teleports you to the peak of the jump'
+		List = {'Impulse', 'Velocity', 'CFrame', 'Instant'},
+		Tooltip = 'Velocity - Uses smooth movement to boost you upward\nImpulse - Same as velocity while using forces instead\nCFrame - Directly adjusts the position upward\nInstant - Teleports you to the peak of the jump'
 	})
 	Value = HighJump:CreateSlider({
 		Name = 'Velocity',
@@ -2602,24 +2650,30 @@ run(function()
 						end
 	
 						local root = entitylib.character.RootPart
+						local dir = entitylib.character.Humanoid.MoveDirection * Value.Value
 						if Mode.Value == 'Velocity' then
-							root.AssemblyLinearVelocity = (entitylib.character.Humanoid.MoveDirection * Value.Value) + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+							root.AssemblyLinearVelocity = dir + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+						elseif Mode.Value == 'Impulse' then
+							local diff = (dir - root.AssemblyLinearVelocity) * Vector3.new(1, 0, 1)
+							if diff.Magnitude > (dir == Vector3.zero and 10 or 2) then
+								root:ApplyImpulse(diff * root.AssemblyMass)
+							end
 						else
-							root.CFrame += (entitylib.character.Humanoid.MoveDirection * Value.Value * dt)
+							root.CFrame += dir * dt
 						end
 					end
 				end))
 			end
 		end,
-		ExtraText = function() 
-			return Mode.Value 
+		ExtraText = function()
+			return Mode.Value
 		end,
 		Tooltip = 'Lets you jump farther'
 	})
 	Mode = LongJump:CreateDropdown({
 		Name = 'Mode',
-		List = {'Velocity', 'CFrame'},
-		Tooltip = 'Velocity - Uses smooth physics based movement\nCFrame - Directly adjusts the position of the root'
+		List = {'Velocity', 'Impulse', 'CFrame'},
+		Tooltip = 'Velocity - Uses smooth physics based movement\nImpulse - Same as velocity while using forces instead\nCFrame - Directly adjusts the position of the root'
 	})
 	Value = LongJump:CreateSlider({
 		Name = 'Speed',
@@ -2686,18 +2740,22 @@ run(function()
 					return
 				end
 	
-				if MovementMode.Value == 'Normal' then
-					if entitylib.isAlive then
-						entitylib.character.RootPart.CFrame = CFrame.lookAlong(position, entitylib.character.RootPart.CFrame.LookVector)
-					end
+				if MovementMode.Value ~= 'Lerp' then
 					MouseTP:Toggle()
+					if entitylib.isAlive then
+						if MovementMode.Value == 'Motor' then
+							motorMove(entitylib.character.RootPart, CFrame.lookAlong(position, entitylib.character.RootPart.CFrame.LookVector))
+						else
+							entitylib.character.RootPart.CFrame = CFrame.lookAlong(position, entitylib.character.RootPart.CFrame.LookVector)
+						end
+					end
 				else
 					MouseTP:Clean(runService.Heartbeat:Connect(function()
 						if entitylib.isAlive then
 							entitylib.character.RootPart.Velocity = Vector3.zero
 						end
 					end))
-					
+	
 					repeat
 						if entitylib.isAlive then
 							local direction = CFrame.lookAt(entitylib.character.RootPart.Position, position).LookVector * math.min((entitylib.character.RootPart.Position - position).Magnitude, Length.Value)
@@ -2709,6 +2767,7 @@ run(function()
 							MouseTP:Toggle()
 							notif('MouseTP', 'Character missing', 5, 'warning')
 						end
+	
 						task.wait(Delay.Value)
 					until not MouseTP.Enabled
 				end
@@ -2722,7 +2781,7 @@ run(function()
 	})
 	MovementMode = MouseTP:CreateDropdown({
 		Name = 'Movement',
-		List = {'Normal', 'Lerp'},
+		List = {'Motor', 'CFrame', 'Lerp'},
 		Function = function(val)
 			Length.Object.Visible = val == 'Lerp'
 			Delay.Object.Visible = val == 'Lerp'
@@ -2803,7 +2862,7 @@ run(function()
 				end
 			end
 		end,
-		TP = function()
+		CFrame = function()
 			local chars = {gameCamera, lplr.Character}
 			for _, v in entitylib.List do
 				table.insert(chars, v.Character)
@@ -2815,9 +2874,15 @@ run(function()
 			if ray and (not Spider.Enabled or SpiderShift) then
 				local phaseDirection = grabClosestNormal(ray)
 				if ray.Instance.Size[phaseDirection] <= StudLimit.Value then
-					local dest = entitylib.character.RootPart.CFrame + (ray.Normal * (-(ray.Instance.Size[phaseDirection]) - (entitylib.character.RootPart.Size.X / 1.5)))
+					local root = entitylib.character.RootPart
+					local dest = root.CFrame + (ray.Normal * (-(ray.Instance.Size[phaseDirection]) - (root.Size.X / 1.5)))
+	
 					if #workspace:GetPartBoundsInBox(dest, Vector3.one, overlapCheck) <= 0 then
-						entitylib.character.RootPart.CFrame = dest
+						if Mode.Value == 'Motor' then
+							motorMove(root, dest)
+						else
+							root.CFrame = dest
+						end
 					end
 				end
 			end
@@ -2828,6 +2893,7 @@ run(function()
 			fflag = true
 		end
 	}
+	Functions.Motor = Functions.CFrame
 	
 	Phase = vape.Categories.Blatant:CreateModule({
 		Name = 'Phase',
@@ -2860,9 +2926,9 @@ run(function()
 	})
 	Mode = Phase:CreateDropdown({
 		Name = 'Mode',
-		List = {'Part', 'Character', 'TP', 'FFlag'},
+		List = {'Part', 'Character', 'CFrame', 'Motor', 'FFlag'},
 		Function = function(val)
-			StudLimit.Object.Visible = val == 'TP'
+			StudLimit.Object.Visible = val == 'CFrame' or val == 'Motor'
 			if fflag then
 				setfflag('AssemblyExtentsExpansionStudHundredth', '30')
 			end
@@ -2872,7 +2938,7 @@ run(function()
 			table.clear(modified)
 			fflag = nil
 		end,
-		Tooltip = 'Part - Modifies parts collision status around you\nCharacter - Modifies the local collision status of the character\nTP - Teleports you past parts\nFFlag - Directly adjusts all physics collisions'
+		Tooltip = 'Part - Modifies parts collision status around you\nCharacter - Modifies the local collision status of the character\nCFrame - Teleports you past parts\nMotor - Same as CFrame with a bypass\nFFlag - Directly adjusts all physics collisions'
 	})
 	StudLimit = Phase:CreateSlider({
 		Name = 'Wall Size',
@@ -2906,6 +2972,7 @@ run(function()
 					if entitylib.isAlive and not Fly.Enabled and not LongJump.Enabled then
 						local state = entitylib.character.Humanoid:GetState()
 						if state == Enum.HumanoidStateType.Climbing then return end
+	
 						local movevec = TargetStrafeVector or Options.MoveMethod.Value == 'Direct' and calculateMoveVector(Vector3.new(a + d, 0, w + s)) or entitylib.character.Humanoid.MoveDirection
 						SpeedMethods[Mode.Value](Options, movevec, dt)
 						if AutoJump.Enabled and entitylib.character.Humanoid.FloorMaterial ~= Enum.Material.Air and movevec ~= Vector3.zero then
@@ -2960,7 +3027,7 @@ run(function()
 				Speed:Toggle()
 			end
 		end,
-		Tooltip = 'Velocity - Uses smooth physics based movement\nCFrame - Directly adjusts the position of the root\nTP - Large teleports within intervals\nPulse - Controllable bursts of speed\nWalkSpeed - The classic mode of speed, usually detected on most games.'
+		Tooltip = 'Velocity - Uses smooth physics based movement\nImpulse - Same as velocity while using forces instead\nCFrame - Directly adjusts the position of the root\nTP - Large teleports within intervals\nPulse - Controllable bursts of speed\nWalkSpeed - The classic mode of speed, usually detected on most games.'
 	})
 	Options = {
 		MoveMethod = Speed:CreateDropdown({
@@ -3092,11 +3159,14 @@ run(function()
 									if State.Enabled then
 										entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Climbing)
 									end
-									entitylib.character.RootPart.Velocity *= Vector3.new(1, 0, 1)
+	
+									root.Velocity *= Vector3.new(1, 0, 1)
 									if Mode.Value == 'CFrame' then
-										entitylib.character.RootPart.CFrame += Vector3.new(0, Value.Value * dt, 0)
+										root.CFrame += Vector3.new(0, Value.Value * dt, 0)
+									elseif Mode.Value == 'Impulse' then
+										root:ApplyImpulse(Vector3.new(0, Value.Value, 0) * root.AssemblyMass)
 									else
-										entitylib.character.RootPart.Velocity += Vector3.new(0, Value.Value, 0)
+										root.Velocity += Vector3.new(0, Value.Value, 0)
 									end
 								end
 							end
@@ -3121,7 +3191,7 @@ run(function()
 	})
 	Mode = Spider:CreateDropdown({
 		Name = 'Mode',
-		List = {'Velocity', 'CFrame', 'Part'},
+		List = {'Velocity', 'Impulse', 'CFrame', 'Part'},
 		Function = function(val)
 			Value.Object.Visible = val ~= 'Part'
 			State.Object.Visible = val ~= 'Part'
@@ -5900,6 +5970,7 @@ run(function()
 			if entitylib.isAlive then
 				entitylib.character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, not callback)
 			end
+	
 			if callback then
 				AntiRagdoll:Clean(entitylib.Events.LocalAdded:Connect(function(char)
 					char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
@@ -6091,7 +6162,6 @@ run(function()
 	local Disabler
 	
 	local function characterAdded(char)
-		print('yes')
 		for _, v in getconnections(char.RootPart:GetPropertyChangedSignal('CFrame')) do
 			hookfunction(v.Function, function() end)
 		end
@@ -6439,7 +6509,12 @@ run(function()
 				else
 					Gravity:Clean(runService.PreSimulation:Connect(function(dt)
 						if entitylib.isAlive and entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air then
-							entitylib.character.RootPart.AssemblyLinearVelocity += Vector3.new(0, dt * (workspace.Gravity - Value.Value), 0)
+							local root = entitylib.character.RootPart
+							if Mode.Value == 'Impulse' then
+								root:ApplyImpulse(Vector3.new(0, dt * (workspace.Gravity - Value.Value), 0) * root.AssemblyMass)
+							else
+								root.AssemblyLinearVelocity += Vector3.new(0, dt * (workspace.Gravity - Value.Value), 0)
+							end
 						end
 					end))
 				end
@@ -6454,8 +6529,8 @@ run(function()
 	})
 	Mode = Gravity:CreateDropdown({
 		Name = 'Mode',
-		List = {'Workspace', 'Velocity'},
-		Tooltip = 'Workspace - Adjusts the gravity for the entire game\nVelocity - Adjusts the local players gravity'
+		List = {'Workspace', 'Velocity', 'Impulse'},
+		Tooltip = 'Workspace - Adjusts the gravity for the entire game\nVelocity - Adjusts the local players gravity\nImpulse - Same as velocity while using forces instead'
 	})
 	Value = Gravity:CreateSlider({
 		Name = 'Gravity',
