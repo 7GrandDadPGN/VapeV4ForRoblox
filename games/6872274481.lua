@@ -2208,14 +2208,16 @@ run(function()
 	local Killaura
 	local Targets
 	local Sort
-	local Range
+	local SwingRange
+	local AttackRange
 	local UpdateRate
 	local AngleSlider
 	local MaxTargets
 	local Mouse
 	local Swing
 	local GUI
-	local BoxColor
+	local BoxSwingColor
+	local BoxAttackColor
 	local ParticleTexture
 	local ParticleColor1
 	local ParticleColor2
@@ -2331,7 +2333,7 @@ run(function()
 					store.KillauraTarget = nil
 					if sword then
 						local plrs = entitylib.AllPosition({
-							Range = Range.Value,
+							Range = SwingRange.Value,
 							Wallcheck = Targets.Walls.Enabled or nil,
 							Part = 'RootPart',
 							Players = Targets.Players.Enabled,
@@ -2350,7 +2352,10 @@ run(function()
 								local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
 								if angle > (math.rad(AngleSlider.Value) / 2) then continue end
 
-								table.insert(attacked, v)
+								table.insert(attacked, {
+									Entity = v,
+									Check = delta.Magnitude > AttackRange.Value and BoxSwingColor or BoxAttackColor
+								})
 								targetinfo.Targets[v] = tick() + 1
 
 								if not Attacking then
@@ -2368,6 +2373,8 @@ run(function()
 										end
 									end
 								end
+
+								if delta.Magnitude > AttackRange.Value then continue end
 
 								local actualRoot = v.Character.PrimaryPart
 								if actualRoot then
@@ -2395,20 +2402,20 @@ run(function()
 					end
 
 					for i, v in Boxes do
-						v.Adornee = attacked[i] and attacked[i].RootPart or nil
+						v.Adornee = attacked[i] and attacked[i].Entity.RootPart or nil
 						if v.Adornee then
-							v.Color3 = Color3.fromHSV(BoxColor.Hue, BoxColor.Sat, BoxColor.Value)
-							v.Transparency = 1 - BoxColor.Opacity
+							v.Color3 = Color3.fromHSV(attacked[i].Check.Hue, attacked[i].Check.Sat, attacked[i].Check.Value)
+							v.Transparency = 1 - attacked[i].Check.Opacity
 						end
 					end
 
 					for i, v in Particles do
-						v.Position = attacked[i] and attacked[i].RootPart.Position or Vector3.new(9e9, 9e9, 9e9)
+						v.Position = attacked[i] and attacked[i].Entity.RootPart.Position or Vector3.new(9e9, 9e9, 9e9)
 						v.Parent = attacked[i] and gameCamera or nil
 					end
 
 					if Face.Enabled and attacked[1] then
-						local vec = attacked[1].RootPart.Position * Vector3.new(1, 0, 1)
+						local vec = attacked[1].Entity.RootPart.Position * Vector3.new(1, 0, 1)
 						entitylib.character.RootPart.CFrame = CFrame.lookAt(entitylib.character.RootPart.Position, Vector3.new(vec.X, entitylib.character.RootPart.Position.Y + 0.001, vec.Z))
 					end
 
@@ -2450,7 +2457,16 @@ run(function()
 			table.insert(methods, i)
 		end
 	end
-	Range = Killaura:CreateSlider({
+	SwingRange = Killaura:CreateSlider({
+		Name = 'Swing range',
+		Min = 1,
+		Max = 18,
+		Default = 18,
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
+		end
+	})
+	AttackRange = Killaura:CreateSlider({
 		Name = 'Attack range',
 		Min = 1,
 		Max = 18,
@@ -2488,7 +2504,8 @@ run(function()
 	Killaura:CreateToggle({
 		Name = 'Show target',
 		Function = function(callback)
-			BoxColor.Object.Visible = callback
+			BoxSwingColor.Object.Visible = callback
+			BoxAttackColor.Object.Visible = callback
 			if callback then
 				for i = 1, 10 do
 					local box = Instance.new('BoxHandleAdornment')
@@ -2508,7 +2525,14 @@ run(function()
 			end
 		end
 	})
-	BoxColor = Killaura:CreateColorSlider({
+	BoxSwingColor = Killaura:CreateColorSlider({
+		Name = 'Target Color',
+		Darker = true,
+		DefaultHue = 0.6,
+		DefaultOpacity = 0.5,
+		Visible = false
+	})
+	BoxAttackColor = Killaura:CreateColorSlider({
 		Name = 'Attack Color',
 		Darker = true,
 		DefaultOpacity = 0.5,
@@ -4282,7 +4306,7 @@ run(function()
 					Sort = sortmethods.Health
 				})
 	
-				if plr and (lplr.Character:GetAttribute('Health') or 0) > 0 then
+				if plr and (not Legit.Enabled or (lplr.Character:GetAttribute('Health') or 0) > 0) then
 					local localPosition = entitylib.character.RootPart.Position
 					local shootDir = CFrame.lookAt(localPosition, plr.RootPart.Position).LookVector
 					localPosition += shootDir * math.max((localPosition - plr.RootPart.Position).Magnitude - 16, 0)
