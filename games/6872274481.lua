@@ -5284,7 +5284,6 @@ run(function()
 			if callback then
 				repeat
 					local item = store.hand.toolType == 'block' and store.hand.tool.Name or not LimitItem.Enabled and getWool()
-					print(item)
 	
 					if item then
 						local plrs = entitylib.AllPosition({
