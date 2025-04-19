@@ -61,7 +61,7 @@ local store = {
 }
 local Reach = {}
 local HitBoxes = {}
-local InfiniteFly
+local InfiniteFly = {}
 local TrapDisabler
 local AntiFallPart
 local bedwars, remotes, sides, oldinvrender = {}, {}, {}
