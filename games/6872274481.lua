@@ -1041,21 +1041,39 @@ run(function()
 		})
 	end))
 
-	for _, event in {'PlaceBlockEvent', 'BreakBlockEvent'} do
-		bedwars.ClientDamageBlock:WaitFor(event):andThen(function(connection)
-			if not vape.Connections then return end
-			vape:Clean(connection:Connect(function(data)
-				for i, v in cache do
-					if ((data.blockRef.blockPosition * 3) - v[1]).Magnitude <= 30 then
-						table.clear(v[3])
-						table.clear(v)
-						cache[i] = nil
-					end
-				end
-				vapeEvents[event]:Fire(data)
-			end))
-		end)
-	end
+	vape:Clean(bedwars.ZapNetworking.BreakBlockEventZap.On(function(...)
+		local data = {
+			blockRef = {
+				blockPosition = ...;
+			};
+			player = select(5, ...);
+		}
+		for i, v in cache do
+			if ((data.blockRef.blockPosition * 3) - v[1]).Magnitude <= 30 then
+				table.clear(v[3])
+				table.clear(v)
+				cache[i] = nil
+			end
+		end
+		vapeEvents.BreakBlockEvent:Fire(data)
+	end))
+
+	vape:Clean(bedwars.ZapNetworking.PlaceBlockEventZap.On(function(...)
+		local data = {
+			blockRef = {
+				blockPosition = ...;
+			};
+			player = select(5, ...);
+		}
+		for i, v in cache do
+			if ((data.blockRef.blockPosition * 3) - v[1]).Magnitude <= 30 then
+				table.clear(v[3])
+				table.clear(v)
+				cache[i] = nil
+			end
+		end
+		vapeEvents.PlaceBlockEvent:Fire(data)
+	end))
 
 	store.blocks = collection('block', gui)
 	store.shop = collection({'BedwarsItemShop', 'TeamUpgradeShopkeeper'}, gui, function(tab, obj)
