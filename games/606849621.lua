@@ -742,11 +742,10 @@ run(function()
 end)
 	
 run(function()
-	local InfiniteNitro
 	local nitrotable = debug.getupvalue(jb.VehicleController.NitroShopVisible, 1)
 	local oldnitro
 	
-	InfiniteNitro = vape.Categories.Utility:CreateModule({
+	InfNitro = vape.Categories.Utility:CreateModule({
 		Name = 'InfiniteNitro',
 		Function = function(callback)
 			if callback then
@@ -755,7 +754,7 @@ run(function()
 				repeat
 					nitrotable.Nitro = 250
 					task.wait(0.1)
-				until not InfiniteNitro.Enabled
+				until not InfNitro.Enabled
 			else
 				nitrotable.Nitro = oldnitro
 				jb.VehicleController.updateSpdBarRatio(oldnitro / 250)

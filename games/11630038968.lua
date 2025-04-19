@@ -52,13 +52,6 @@ run(function()
 		Blink = require(replicatedStorage.Blink.Client),
 		CombatService = Knit.GetService('CombatService'),
 		CombatConstants = require(replicatedStorage.Constants.Melee),
-		Call = function(func, args, expected)
-			for i, v in expected do
-				args[i] = v
-			end
-
-			return func(args)
-		end,
 		Knit = Knit,
 		Entity = require(replicatedStorage.Modules.Entity),
 		ServerData = require(replicatedStorage.Modules.ServerData)
@@ -341,11 +334,16 @@ run(function()
 									AttackDelay = tick() + (1 / CPS.GetRandomValue())
 									local bdent = bd.Entity.FindByCharacter(v.Character)
 									if bdent then
-										--[[bd.Call(bd.Blink.item_action.attack_entity.fire, {
+										bd.Blink.item_action.attack_entity.fire({
 											target_entity_id = bdent.Id,
 											is_crit = entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0,
-											weapon_name = tool.Name
-										}, bd.AttackArgs)]]
+											weapon_name = tool.Name,
+											extra = {
+												rizz = 'No.',
+												sigma = 'The...',
+												those = workspace.Name == 'Ok'
+											}
+										})
 									end
 								end
 							end
@@ -747,15 +745,18 @@ run(function()
 										--bd.Entity.LocalEntity:RemoveTool('Blocks', 1)
 	
 										task.delay(0.2, function()
-											--[[local suc, block = bd.Blink.item_action.place_block.invoke({
+											local suc, block = bd.Blink.item_action.place_block.invoke({
 												position = blockpos,
 												block_type = 'Clay',
-												sigma = 'The',
-												rizz = 'No'
-											})]]
+												extra = {
+													rizz = 'No.',
+													sigma = 'The...',
+													those = workspace.Name == 'Ok'
+												}
+											})
 											fake:Destroy()
 											if not (suc or block) then
-												--bd.Entity.LocalEntity:RemoveTool('Blocks', 1)
+												bd.Entity.LocalEntity:RemoveTool('Blocks', 1)
 											end
 										end)
 									end

@@ -219,7 +219,7 @@ end
 local function luau_deserialize(bytecode, luau_settings)
 	if luau_settings == nil then
 		luau_settings = luau_newsettings()
-	else 
+	else
 		luau_validatesettings(luau_settings)
 	end
 
@@ -332,7 +332,7 @@ local function luau_deserialize(bytecode, luau_settings)
 			inst.E = if temp < 0x800000 then temp else temp - 0x1000000
 		end
 
-		if usesAux then 
+		if usesAux then
 			local aux = readWord()
 			inst.aux = aux
 
@@ -395,7 +395,7 @@ local function luau_deserialize(bytecode, luau_settings)
 		local isvararg = readByte() ~= 0
 
 		if luauVersion >= 4 then
-			readByte() --// flags 
+			readByte() --// flags
 			local typesize = readVarInt();
 			cursor = cursor + typesize;
 		end
@@ -403,20 +403,20 @@ local function luau_deserialize(bytecode, luau_settings)
 		local sizecode = readVarInt()
 		local codelist = table_create(sizecode)
 
-		local skipnext = false 
+		local skipnext = false
 		for i = 1, sizecode do
-			if skipnext then 
+			if skipnext then
 				skipnext = false
-				continue 
+				continue
 			end
 
 			skipnext = readInstruction(codelist)
 		end
-		
-		local debugcodelist = table_create(sizecode) 
-		for i = 1, sizecode do 
+
+		local debugcodelist = table_create(sizecode)
+		for i = 1, sizecode do
 			debugcodelist[i] = codelist[i].opcode
-		end 
+		end
 
 		local sizek = readVarInt()
 		local klist = table_create(sizek)
@@ -449,7 +449,7 @@ local function luau_deserialize(bytecode, luau_settings)
 
 				if luau_settings.vectorSize == 4 then
 					k = luau_settings.vectorCtor(x,y,z,w)
-				else 
+				else
 					k = luau_settings.vectorCtor(x,y,z)
 				end
 			end
@@ -472,17 +472,17 @@ local function luau_deserialize(bytecode, luau_settings)
 		local linedefined = readVarInt()
 
 		local debugnameindex = readVarInt()
-		local debugname 
+		local debugname
 
 		if debugnameindex ~= 0 then
 			debugname = stringList[debugnameindex]
-		else 
+		else
 			debugname = "(??)"
 		end
 
 		-- // lineinfo
 		local lineinfoenabled = readByte() ~= 0
-		local instructionlineinfo = nil 
+		local instructionlineinfo = nil
 
 		if lineinfoenabled then
 			local linegaplog2 = readByte()
@@ -506,7 +506,7 @@ local function luau_deserialize(bytecode, luau_settings)
 
 			instructionlineinfo = table_create(sizecode)
 
-			for i = 1, sizecode do 
+			for i = 1, sizecode do
 				--// p->abslineinfo[pc >> p->linegaplog2] + p->lineinfo[pc];
 				table_insert(instructionlineinfo, abslineinfo[bit32_rshift(i - 1, linegaplog2) + 1] + lineinfo[i])
 			end
@@ -551,7 +551,7 @@ local function luau_deserialize(bytecode, luau_settings)
 			bytecodeid = bytecodeid;
 		}
 	end
-	
+
 	-- userdataRemapping (not used in VM, left unused)
 	if typesVersion == 3 then
 		local index = readByte()
@@ -572,7 +572,7 @@ local function luau_deserialize(bytecode, luau_settings)
 
 	local mainProto = protoList[readVarInt() + 1]
 
-	assert(cursor == buffer_len(stream), "deserializer cursor position mismatch")
+	--assert(cursor == buffer_len(stream), "deserializer cursor position mismatch")
 
 	mainProto.debugname = "(main)"
 
