@@ -1045,9 +1045,9 @@ run(function()
 		vape:Clean(bedwars.ZapNetworking[event..'Zap'].On(function(...)
 			local data = {
 				blockRef = {
-					blockPosition = ...;
-				};
-				player = select(5, ...);
+					blockPosition = ...
+				}
+				player = select(5, ...)
 			}
 			for i, v in cache do
 				if ((data.blockRef.blockPosition * 3) - v[1]).Magnitude <= 30 then
