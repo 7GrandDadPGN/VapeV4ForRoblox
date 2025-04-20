@@ -2783,7 +2783,7 @@ run(function()
 	})
 	MovementMode = MouseTP:CreateDropdown({
 		Name = 'Movement',
-		List = {'Motor', 'CFrame', 'Lerp'},
+		List = {'CFrame', 'Motor', 'Lerp'},
 		Function = function(val)
 			Length.Object.Visible = val == 'Lerp'
 			Delay.Object.Visible = val == 'Lerp'
