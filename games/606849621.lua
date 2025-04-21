@@ -285,7 +285,7 @@ run(function()
 		Draw = 'TaseReplicate',
 		Gun = 'PopTires',
 		LocalScript2 = 'LookAngle',
-		LocomotiveFront = 'SelfDamage',
+		LocalScript = 'SelfDamage',
 		onPressed = 'FlipVehicle',
 		OnJump = 'GetOut',
 		OnJump1 = 'GetOut',
