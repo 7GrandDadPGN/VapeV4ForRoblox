@@ -511,6 +511,7 @@ run(function()
 	local HitChance
 	local HeadshotChance
 	local AutoFire
+	local Wallbang
 	local CircleColor
 	local CircleTransparency
 	local CircleFilled
@@ -531,10 +532,25 @@ run(function()
 			Players = Target.Players.Enabled,
 			NPCs = Target.NPCs.Enabled
 		})
-		if ent then 
-			targetinfo.Targets[ent] = tick() + 1 
+		if ent then
+			targetinfo.Targets[ent] = tick() + 1
 		end
 		return ent, ent and ent[targetPart]
+	end
+	
+	local function raycastLoop(origin, pos)
+		local returned
+		local real = origin
+		for i = 1, 20 do
+			local ray = workspace:Raycast(origin, (pos - origin), frontlines.ShootRay)
+			if ray and not ray.Instance:HasTag('SOLDIER') then
+				returned = ray.Position - ray.Normal * 0.1
+				origin = returned
+			else
+				break
+			end
+		end
+		return returned
 	end
 	
 	SilentAim = vape.Categories.Combat:CreateModule({
@@ -553,9 +569,16 @@ run(function()
 						if ent then
 							local velo = dir.Magnitude
 							local targetpos = targetPart.Root_M.Spine1_M.WorldCFrame.Position
-							local origin = gameCamera.CFrame.Position
 							ProjectileRaycast.FilterDescendantsInstances = {gameCamera, ent.Character}
 							ProjectileRaycast.CollisionGroup = targetPart.CollisionGroup
+	
+							if Wallbang.Enabled then
+								local wall = raycastLoop(pos, targetpos)
+								if wall and (pos - wall).Magnitude < 8 then
+									pos = wall
+								end
+							end
+	
 							local calc = prediction.SolveTrajectory(pos, velo, workspace.Gravity, targetpos, Vector3.zero, workspace.Gravity, ent.HipHeight, nil, ProjectileRaycast)
 							if calc then
 								dir = -CFrame.new(pos, calc).ZVector * velo
@@ -567,8 +590,8 @@ run(function()
 	
 				local oldent
 				repeat
-					if CircleObject then 
-						CircleObject.Position = inputService:GetMouseLocation() 
+					if CircleObject then
+						CircleObject.Position = inputService:GetMouseLocation()
 					end
 					if AutoFire.Enabled then
 						local ent = entitylib['Entity'..Mode.Value]({
@@ -579,13 +602,13 @@ run(function()
 							Players = Target.Players.Enabled,
 							NPCs = Target.NPCs.Enabled
 						})
-						
+	
 						local gun = frontlines.Main.globals.fpv_sol_equipment.curr_equipment
 						ent = gun and gun.type ~= 2 and ent or nil
 						if ent ~= oldent or ent then
 							frontlines.Main.globals.ctrl_states.trigger = ent and true or false
-							if ent then 
-								frontlines.Main.globals.ctrl_ts.trigger = time() 
+							if ent then
+								frontlines.Main.globals.ctrl_ts.trigger = time()
 							end
 							oldent = ent
 						end
@@ -616,8 +639,8 @@ run(function()
 		Min = 1,
 		Max = 1000,
 		Default = 150,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
 		end,
 		Function = function(val)
 			if CircleObject then
@@ -633,6 +656,7 @@ run(function()
 		Suffix = '%'
 	})
 	AutoFire = SilentAim:CreateToggle({Name = 'AutoFire'})
+	Wallbang = SilentAim:CreateToggle({Name = 'Wallbang'})
 	SilentAim:CreateToggle({
 		Name = 'Range Circle',
 		Function = function(callback)
@@ -657,13 +681,13 @@ run(function()
 		end
 	})
 	CircleColor = SilentAim:CreateColorSlider({
-		Name = 'Circle Color', 
+		Name = 'Circle Color',
 		Function = function(hue, sat, val)
 			if CircleObject then
 				CircleObject.Color = Color3.fromHSV(hue, sat, val)
 			end
-		end, 
-		Darker = true, 
+		end,
+		Darker = true,
 		Visible = false
 	})
 	CircleTransparency = SilentAim:CreateSlider({
@@ -681,13 +705,13 @@ run(function()
 		Visible = false
 	})
 	CircleFilled = SilentAim:CreateToggle({
-		Name = 'Circle Filled', 
+		Name = 'Circle Filled',
 		Function = function(callback)
 			if CircleObject then
 				CircleObject.Filled = callback
 			end
-		end, 
-		Darker = true, 
+		end,
+		Darker = true,
 		Visible = false
 	})
 end)
