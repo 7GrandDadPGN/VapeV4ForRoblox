@@ -6451,8 +6451,8 @@ run(function()
 						end
 					end))
 	
-					contextService:BindActionAtPriority('FreecamKeyboard'..randomkey, function() 
-						return Enum.ContextActionResult.Sink 
+					contextService:BindActionAtPriority('FreecamKeyboard'..randomkey, function()
+						return Enum.ContextActionResult.Sink
 					end, false, Enum.ContextActionPriority.High.Value,
 						Enum.KeyCode.W,
 						Enum.KeyCode.A,
