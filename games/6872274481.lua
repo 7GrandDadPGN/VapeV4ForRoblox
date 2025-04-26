@@ -2107,6 +2107,7 @@ run(function()
 					end)
 				end
 
+				local attackTime = 0
 				repeat
 					local attacked, sword, meta = {}, getAttackData()
 					Attacking = false
@@ -2155,6 +2156,7 @@ run(function()
 								end
 
 								if delta.Magnitude > AttackRange.Value then continue end
+								if delta.Magnitude < 14.4 and (tick() - attackTime) < ChargeTime.Value then continue end
 
 								local actualRoot = v.Character.PrimaryPart
 								if actualRoot then
@@ -2163,6 +2165,7 @@ run(function()
 									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
 									store.attackReach = (delta.Magnitude * 100) // 1 / 100
 									store.attackReachUpdate = tick() + 1
+									attackTime = tick()
 									AttackRemote:FireServer({
 										weapon = sword.tool,
 										chargedAttack = {chargeRatio = 0},
@@ -2200,7 +2203,8 @@ run(function()
 						entitylib.character.RootPart.CFrame = CFrame.lookAt(entitylib.character.RootPart.Position, Vector3.new(vec.X, entitylib.character.RootPart.Position.Y + 0.001, vec.Z))
 					end
 
-					task.wait(#attacked > 0 and #attacked * 0.02 or 1 / UpdateRate.Value)
+					--#attacked > 0 and #attacked * 0.02 or
+					task.wait(1 / UpdateRate.Value)
 				until not Killaura.Enabled
 			else
 				store.KillauraTarget = nil
@@ -2257,10 +2261,10 @@ run(function()
 		end
 	})
 	ChargeTime = Killaura:CreateSlider({
-		Name = 'Charge time',
+		Name = 'Swing time',
 		Min = 0,
-		Max = 1,
-		Default = 0.65,
+		Max = 0.5,
+		Default = 0.4,
 		Decimal = 100
 	})
 	AngleSlider = Killaura:CreateSlider({
@@ -5275,7 +5279,7 @@ run(function()
 		chest = chest and chest.Value or nil
 		local chestitems = chest and chest:GetChildren() or {}
 		if #chestitems > 1 and (Delays[chest] or 0) < tick() then
-			Delays[chest] = tick() + 0.3
+			Delays[chest] = tick() + 0.2
 			bedwars.Client:GetNamespace('Inventory'):Get('SetObservedChest'):SendToServer(chest)
 	
 			for _, v in chestitems do
