@@ -1277,6 +1277,62 @@ run(function()
 end)
 	
 run(function()
+	local old
+	local oldSwing
+	
+	AutoCharge = vape.Categories.Combat:CreateModule({
+	    Name = 'AutoCharge',
+	    Function = function(callback)
+	        debug.setconstant(bedwars.SwordController.attackEntity, 58, callback and 'damage' or 'multiHitCheckDurationSec')
+	        if callback then
+	            local chargeSwingTime = 0
+	            local canSwing
+	
+	            old = bedwars.SwordController.sendServerRequest
+	            bedwars.SwordController.sendServerRequest = function(self, ...)
+	                if (os.clock() - chargeSwingTime) < AutoChargeTime.Value then return end
+	                self.lastSwingServerTimeDelta = 0.5
+	                chargeSwingTime = os.clock()
+	                canSwing = true
+	
+	                local item = self:getHandItem()
+	                if item and item.tool then
+	                    self:playSwordEffect(bedwars.ItemMeta[item.tool.Name], false)
+	                end
+	
+	                return old(self, ...)
+	            end
+	
+	            oldSwing = bedwars.SwordController.playSwordEffect
+	            bedwars.SwordController.playSwordEffect = function(...)
+	                if not canSwing then return end
+	                canSwing = false
+	                return oldSwing(...)
+	            end
+	        else
+	            if old then
+	                bedwars.SwordController.sendServerRequest = old
+	                old = nil
+	            end
+	
+	            if oldSwing then
+	                bedwars.SwordController.playSwordEffect = oldSwing
+	                oldSwing = nil
+	            end
+	        end
+	    end,
+	    Tooltip = 'Allows you to get charged hits while spam clicking.'
+	})
+	AutoChargeTime = AutoCharge:CreateSlider({
+	    Name = 'Charge Time',
+	    Min = 0,
+	    Max = 0.5,
+	    Default = 0.4,
+	    Decimal = 100
+	})
+end)
+	
+run(function()
 	local AutoClicker
 	local CPS
 	local BlockCPS = {}
@@ -2009,7 +2065,7 @@ run(function()
 	local AnimationSpeed
 	local AnimationTween
 	local Limit
-	local LegitAura
+	local LegitAura = {}
 	local Particles, Boxes = {}, {}
 	local anims, AnimDelay, AnimTween, armC0 = vape.Libraries.auraanims, tick()
 	local AttackRemote = {FireServer = function() end}
@@ -2107,7 +2163,7 @@ run(function()
 					end)
 				end
 
-				local attackTime = 0
+				local swingCooldown = 0
 				repeat
 					local attacked, sword, meta = {}, getAttackData()
 					Attacking = false
@@ -2142,8 +2198,8 @@ run(function()
 								if not Attacking then
 									Attacking = true
 									store.KillauraTarget = v
-									if not Swing.Enabled and AnimDelay <= tick() and not LegitAura.Enabled then
-										AnimDelay = tick() + (meta.sword.respectAttackSpeedForEffects and meta.sword.attackSpeed or 0.25)
+									if not Swing.Enabled and AnimDelay < tick() and not LegitAura.Enabled then
+										AnimDelay = tick() + (meta.sword.respectAttackSpeedForEffects and meta.sword.attackSpeed or math.max(ChargeTime.Value, 0.11))
 										bedwars.SwordController:playSwordEffect(meta, false)
 										if meta.displayName:find(' Scythe') then
 											bedwars.ScytheController:playLocalAnimation()
@@ -2156,16 +2212,21 @@ run(function()
 								end
 
 								if delta.Magnitude > AttackRange.Value then continue end
-								if delta.Magnitude < 14.4 and (tick() - attackTime) < ChargeTime.Value then continue end
+								if delta.Magnitude < 14.4 and (tick() - swingCooldown) < ChargeTime.Value then continue end
 
 								local actualRoot = v.Character.PrimaryPart
 								if actualRoot then
 									local dir = CFrame.lookAt(selfpos, actualRoot.Position).LookVector
 									local pos = selfpos + dir * math.max(delta.Magnitude - 14.399, 0)
+									swingCooldown = tick()
 									bedwars.SwordController.lastAttack = workspace:GetServerTimeNow()
 									store.attackReach = (delta.Magnitude * 100) // 1 / 100
 									store.attackReachUpdate = tick() + 1
-									attackTime = tick()
+
+									if delta.Magnitude < 14.4 and ChargeTime.Value > 0.11 then
+										AnimDelay = tick()
+									end
+
 									AttackRemote:FireServer({
 										weapon = sword.tool,
 										chargedAttack = {chargeRatio = 0},
@@ -2264,7 +2325,7 @@ run(function()
 		Name = 'Swing time',
 		Min = 0,
 		Max = 0.5,
-		Default = 0.4,
+		Default = 0.42,
 		Decimal = 100
 	})
 	AngleSlider = Killaura:CreateSlider({
@@ -2471,10 +2532,10 @@ run(function()
 		end,
 		Tooltip = 'Only attacks when the sword is held'
 	})
-	LegitAura = Killaura:CreateToggle({
+	--[[LegitAura = Killaura:CreateToggle({
 		Name = 'Swing only',
 		Tooltip = 'Only attacks while swinging manually'
-	})
+	})]]
 end)
 	
 run(function()
@@ -7231,7 +7292,7 @@ run(function()
 		List = fontitems,
 		Function = function(val)
 			if DamageIndicator.Enabled then
-				debug.setconstant(bedwars.DamageIndicator, 82, val)
+				debug.setconstant(bedwars.DamageIndicator, 86, val)
 			end
 		end
 	})
@@ -7271,7 +7332,7 @@ run(function()
 		Name = 'Stroke',
 		Function = function(callback)
 			if DamageIndicator.Enabled then
-				debug.setconstant(bedwars.DamageIndicator, 102, callback and 'Thickness' or 'Enabled')
+				debug.setconstant(bedwars.DamageIndicator, 119, callback and 'Thickness' or 'Enabled')
 				tab.strokeThickness = callback and 1 or false
 			end
 		end
