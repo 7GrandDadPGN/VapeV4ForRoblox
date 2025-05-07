@@ -601,8 +601,24 @@ end)
 	
 run(function()
 	local AutoPlay
-	local Delay
-	
+	local queuemode
+
+	local queuetypes = {
+		["Ranked Solo"] = "RankedBasicFightSolo",
+		["Solo Basic Fight"] = "BasicFightSolo",
+		["Duos Basic Fight"] = "BasicFightDuos",
+		["Bot Boxing"] = "BoxingBotSolo",
+		["Solo Boxing"] = "BoxingSolo",
+		["Bridge Solo"] = "Solo",
+		["Bridge Duos"] = "Duos",
+		["Bridge Trios"] = "Trios",
+		["Bridge Quads"] = "Quads",
+		["Bridge Ranked Solo"] = "RankedSolo",
+		["Bedwars Solo"] = "BedWarsSolo",
+		["Bedwars Quads"] = "BedWarsQuads"
+
+	}
+
 	AutoPlay = vape.Categories.Utility:CreateModule({
 		Name = 'AutoPlay',
 		Function = function(callback)
@@ -612,9 +628,27 @@ run(function()
 						bd.MatchController:EnterQueue(bd.ServerData.Submode)
 					end
 				end))
+
+				local queueToEnter = queuetypes[queuemode]
+
+				notif("AutoPlay", "You are about to be teleported, turn off AutoPlay if you wanna cancel.", 5)
+				task.wait(5)
+
+				if queueToEnter and game.Workspace.Map:FindFirstChild("SpawnLocation") and AutoPlay.Enabled then
+					local args = {queueToEnter}
+					game.ReplicatedStorage.Modules.Knit.Services.MatchService.RF.EnterQueue:InvokeServer(unpack(args))
+				end
 			end
 		end,
 		Tooltip = 'Automatically queues after the match ends.'
+	})
+
+	AutoPlay:CreateDropdown({
+		Name = "Type",
+		List = {"Ranked Solo", "Solo Basic Fight", "Duos Basic Fight", "Bot Boxing", "Solo Boxing", "Bridge Solo", "Bridge Duos", "Bridge Trios", "Bridge Quads", "Bridge Ranked Solo", "Bedwars Solo", "Bedwars Quads"},
+		Function = function(selected)
+			queuemode = selected
+		end
 	})
 end)
 	
