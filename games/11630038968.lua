@@ -693,9 +693,18 @@ run(function()
 	end
 	
 	local function getBlock()
-		for slot, item in store.inventory do
-			item = skywars.ItemMeta[item.Type]
-			if item.Rewrite then return item, slot end
+		local tool = getTool()
+		if tool and tool:HasTag('Blocks') then
+			local btype = tool.Name == 'Blocks' and 'Clay' or tool.Name:sub(1, -6)
+			return btype, btype == 'Clay' and 'Blocks' or ("%*Block"):format(btype)
+		end
+	
+		if LimitItem.Enabled then return end
+		for _, tool in lplr.Backpack:GetChildren() do
+			if tool:IsA('Tool') and tool:HasTag('Blocks') then
+				local btype = tool.Name == 'Blocks' and 'Clay' or tool.Name:sub(1, -6)
+				return btype, btype == 'Clay' and 'Blocks' or ("%*Block"):format(btype)
+			end
 		end
 	end
 	
@@ -705,13 +714,9 @@ run(function()
 			if callback then
 				repeat
 					if entitylib.isAlive then
-						local tool = true
-						if LimitItem.Enabled then
-							tool = getTool()
-							tool = tool and tool.Name:find('Block')
-						end
+						local btype, bname = getBlock()
 	
-						if tool then
+						if btype then
 							local root = entitylib.character.RootPart
 							if Tower.Enabled and inputService:IsKeyDown(Enum.KeyCode.Space) and (not inputService:GetFocusedTextBox()) then
 								root.Velocity = Vector3.new(root.Velocity.X, 38, root.Velocity.Z)
@@ -732,22 +737,19 @@ run(function()
 								if not block then
 									blockpos = checkAdjacent(currentpos) and currentpos or blockProximity(currentpos)
 									if blockpos then
-										local fake = Instance.new('Part')
+										local fake = replicatedStorage.Assets.Blocks[btype]:Clone()
 										fake.Name = 'TempBlock'
-										fake.Anchored = true
-										fake.Transparency = 1
-										fake.Size = Vector3.new(3, 3, 3)
 										fake.Position = blockpos
 										fake:AddTag('TempBlock')
 										fake:AddTag('Block')
 										fake.Parent = workspace.Map
 										bd.EffectsController:PlaySound(blockpos)
-										--bd.Entity.LocalEntity:RemoveTool('Blocks', 1)
+										bd.Entity.LocalEntity:RemoveTool(bname, 1)
 	
-										task.delay(0.2, function()
+										task.spawn(function()
 											local suc, block = bd.Blink.item_action.place_block.invoke({
 												position = blockpos,
-												block_type = 'Clay',
+												block_type = btype,
 												extra = {
 													rizz = 'No.',
 													sigma = 'The...',
@@ -756,7 +758,7 @@ run(function()
 											})
 											fake:Destroy()
 											if not (suc or block) then
-												bd.Entity.LocalEntity:RemoveTool('Blocks', 1)
+												bd.Entity.LocalEntity:AddTool(bname, 1)
 											end
 										end)
 									end
@@ -824,6 +826,7 @@ run(function()
 		Function = function(callback)
 			if callback then
 				local breakPosition
+				local breakTime = 0
 				local lastBreak
 	
 				repeat
@@ -836,7 +839,7 @@ run(function()
 							local rvec = Vector3.new(3, 3, 3) * Range.Value
 	
 							for blockpos, block in getBlocksInPoints(pos - rvec, pos + rvec) do
-								if block.Name == 'Block' and (block.Parent.Name == 'Bed' and lplr.Team and block.Parent:GetAttribute('Team') ~= lplr.Team.Name) then
+								if block and block.Name == 'Block' and (block.Parent.Name == 'Bed' and lplr.Team and block.Parent:GetAttribute('Team') ~= lplr.Team.Name) then
 									breakPosition = block.Position
 									break
 								end
@@ -844,14 +847,19 @@ run(function()
 	
 							if breakPosition ~= lastBreak then
 								if breakPosition then
+									breakTime = os.clock() + 0.3
 									bd.Blink.item_action.start_break_block.fire({
 										position = breakPosition,
-										pickaxe_name = pickaxe
+										pickaxe_name = pickaxe,
+										timestamp = workspace:GetServerTimeNow()
 									})
 								else
-									bd.Blink.item_action.stop_break_block.fire()
+									bd.Blink.item_action.stop_break_block.fire(false)
 								end
 								lastBreak = breakPosition
+							elseif breakPosition and breakTime < os.clock() then
+								bd.Blink.item_action.stop_break_block.fire(true)
+								breakTime = os.clock() + 9999
 							end
 						end
 					end
