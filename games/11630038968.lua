@@ -601,8 +601,26 @@ end)
 	
 run(function()
 	local AutoPlay
-	local Delay
-	
+	local queuemode
+	local AutoModeToggle
+	local AutoMode
+
+	local queuetypes = {
+		["Basic Fight - Ranked Solo"] = "RankedBasicFightSolo",
+		["Basic Fight - Solo"] = "BasicFightSolo",
+		["Basic Fight - Duos"] = "BasicFightDuos",
+		["Boxing - Bot"] = "BoxingBotSolo",
+		["Boxing - Solo"] = "BoxingSolo",
+		["Bridge - Solo"] = "Solo",
+		["Bridge - Duos"] = "Duos",
+		["Bridge - Trios"] = "Trios",
+		["Bridge - Quads"] = "Quads",
+		["Bridge - Ranked Solo"] = "RankedSolo",
+		["BedWars - Solo"] = "BedWarsSolo",
+		["BedWars - Quads"] = "BedWarsQuads",
+		["None"] = "None"
+	}
+
 	AutoPlay = vape.Categories.Utility:CreateModule({
 		Name = 'AutoPlay',
 		Function = function(callback)
@@ -612,12 +630,44 @@ run(function()
 						bd.MatchController:EnterQueue(bd.ServerData.Submode)
 					end
 				end))
+
+				local queueToEnter = queuetypes[queuemode]
+
+				if queueToEnter and queueToEnter ~= "None" and game.Workspace.Map:FindFirstChild("SpawnLocation") and AutoModeToggle.Enabled then
+					notif("AutoPlay", "You are about to be teleported, turn off AutoPlay if you wanna cancel.", 5)
+					task.wait(5)
+
+					if AutoPlay.Enabled and game.Workspace.Map:FindFirstChild("SpawnLocation") and AutoModeToggle.Enabled then
+						local args = {queueToEnter}
+						game.ReplicatedStorage.Modules.Knit.Services.MatchService.RF.EnterQueue:InvokeServer(unpack(args))
+					end
+				end
 			end
 		end,
 		Tooltip = 'Automatically queues after the match ends.'
 	})
+
+	AutoModeToggle = AutoPlay:CreateToggle({
+		Name = "AutoMode",
+		Default = false,
+		Function = function(callback)
+			if AutoMode and AutoMode.Object then
+				AutoMode.Object.Visible = callback
+			end
+		end,
+		Tooltip = "Auto-Joins modes."
+	})
+
+	AutoMode = AutoPlay:CreateDropdown({
+		Name = "Type",
+		List = {"Basic Fight - Ranked Solo", "Basic Fight - Solo", "Basic Fight - Duos", "Boxing - Bot", "Boxing - Solo", "Bridge - Solo", "Bridge - Duos", "Bridge - Trios", "Bridge - Quads", "Bridge - Ranked Solo", "BedWars - Solo", "BedWars - Quads", "None"},
+		Default = "None",
+		Function = function(selected)
+			queuemode = selected
+		end
+	})
 end)
-	
+
 run(function()
 	local Scaffold
 	local Expand
