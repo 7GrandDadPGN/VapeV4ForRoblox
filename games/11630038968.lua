@@ -11,6 +11,7 @@ local lplr = playersService.LocalPlayer
 local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local targetinfo = vape.Libraries.targetinfo
+local prediction = vape.Libraries.prediction
 
 local bd = {}
 local store = {
@@ -50,6 +51,8 @@ run(function()
 
 	bd = setmetatable({
 		Blink = require(replicatedStorage.Blink.Client),
+		BreakTimes = require(replicatedStorage.Constants.Blocks),
+		BowClient = require(replicatedStorage.Client.Components.All.Tools.BowClient),
 		CombatService = Knit.GetService('CombatService'),
 		CombatConstants = require(replicatedStorage.Constants.Melee),
 		Knit = Knit,
@@ -125,34 +128,22 @@ run(function()
 end)
 	
 run(function()
-	local Reach
-	local Value
 	local old
 	
-	Reach = vape.Categories.Combat:CreateModule({
+	vape.Categories.Combat:CreateModule({
 		Name = 'Reach',
 		Function = function(callback)
-			if callback then 
+			if callback then
 				old = rawget(bd.CombatConstants, 'REACH_IN_STUDS')
-				rawset(bd.CombatConstants, 'REACH_IN_STUDS', Value.Value)
-				rawset(bd.Entity.LocalEntity, 'Reach', Value.Value)
+				rawset(bd.CombatConstants, 'REACH_IN_STUDS', 18)
+				rawset(bd.Entity.LocalEntity, 'Reach', 18)
 			else
 				rawset(bd.CombatConstants, 'REACH_IN_STUDS', old)
 				rawset(bd.Entity.LocalEntity, 'Reach', old)
 				old = nil
 			end
 		end,
-		Tooltip = 'Extends tool attack reach'
-	})
-	Value = Reach:CreateSlider({
-		Name = 'Range',
-		Min = 0,
-		Max = 16,
-		Default = 16,
-		Decimal = 10,
-		Suffix = function(val) 
-			return val == 1 and 'stud' or 'studs' 
-		end
+		Tooltip = 'Extends attack reach'
 	})
 end)
 	
@@ -240,6 +231,29 @@ run(function()
 			end
 		end,
 		Tooltip = 'Always hit criticals'
+	})
+end)
+	
+run(function()
+	local old
+	
+	vape.Categories.Blatant:CreateModule({
+		Name = 'InvMove',
+		Function = function(callback)
+			if callback then
+				old = hookfunction(bd.MovementController.AddSpeedOverride, function(...)
+					if select(2, ...) == 'MenuOpen' then
+						return
+					end
+					return old(...)
+				end)
+				bd.MovementController:RemoveSpeedOverride('MenuOpen')
+			else
+				hookfunction(bd.MovementController.AddSpeedOverride, old)
+				old = nil
+			end
+		end,
+		Tooltip = 'Prevents slowing down when using items.'
 	})
 end)
 	
@@ -600,6 +614,61 @@ run(function()
 end)
 	
 run(function()
+	local TargetPart
+	local FOV
+	local old
+	local rayCheck = RaycastParams.new()
+	rayCheck.FilterType = Enum.RaycastFilterType.Exclude
+	
+	local function aimFunction(...)
+		local plr = entitylib.EntityMouse({
+	        Range = FOV.Value,
+	        Part = 'RootPart',
+	        Players = true
+	    })
+	
+	    if plr then
+	        rayCheck.FilterDescendantsInstances = {plr.Character, gameCamera}
+	        rayCheck.CollisionGroup = plr[TargetPart.Value].CollisionGroup
+	        local offsetpos = entitylib.character.Head.CFrame
+	        local calc = prediction.SolveTrajectory(offsetpos.Position, 180, 60, plr[TargetPart.Value].Position, plr[TargetPart.Value].Velocity, workspace.Gravity, plr.HipHeight, nil, rayCheck)
+	
+	        if calc then
+	            targetinfo.Targets[plr] = tick() + 1
+	            return offsetpos.Position + CFrame.new(offsetpos.Position, calc).LookVector * 100
+	        end
+	    end
+	
+		return old(...)
+	end
+	
+	local ProjectileAimbot = vape.Categories.Blatant:CreateModule({
+		Name = 'ProjectileAimbot',
+		Function = function(callback)
+			if callback then
+				old = hookfunction(debug.getupvalue(bd.BowClient.Start, 11), function(...)
+					return aimFunction(...)
+				end)
+			else
+	            hookfunction(debug.getupvalue(bd.BowClient.Start, 11), old)
+				old = nil
+			end
+		end,
+		Tooltip = 'Silently adjusts your aim towards the enemy'
+	})
+	TargetPart = ProjectileAimbot:CreateDropdown({
+		Name = 'Part',
+		List = {'RootPart', 'Head'}
+	})
+	FOV = ProjectileAimbot:CreateSlider({
+		Name = 'FOV',
+		Min = 1,
+		Max = 1000,
+		Default = 1000
+	})
+end)
+	
+run(function()
 	local AutoPlay
 	local Delay
 	
@@ -825,12 +894,13 @@ run(function()
 		Name = 'Breaker',
 		Function = function(callback)
 			if callback then
-				local breakPosition
+				local breakBlock
 				local breakTime = 0
 				local lastBreak
 	
 				repeat
-					breakPosition = nil
+					breakBlock = nil
+	
 					if entitylib.isAlive then
 						local pickaxe = getPickaxe()
 	
@@ -840,26 +910,26 @@ run(function()
 	
 							for blockpos, block in getBlocksInPoints(pos - rvec, pos + rvec) do
 								if block and block.Name == 'Block' and (block.Parent.Name == 'Bed' and lplr.Team and block.Parent:GetAttribute('Team') ~= lplr.Team.Name) then
-									breakPosition = block.Position
+									breakBlock = block
 									break
 								end
 							end
 	
-							if breakPosition ~= lastBreak then
-								if breakPosition then
-									breakTime = os.clock() + 0.3
+							if breakBlock ~= lastBreak then
+								if breakBlock then
+									breakTime = os.clock() + bd.BreakTimes[breakBlock:GetAttribute('block_type') or 'Clay']
 									bd.Blink.item_action.start_break_block.fire({
-										position = breakPosition,
+										position = breakBlock.Position,
 										pickaxe_name = pickaxe,
 										timestamp = workspace:GetServerTimeNow()
 									})
 								else
 									bd.Blink.item_action.stop_break_block.fire(false)
 								end
-								lastBreak = breakPosition
-							elseif breakPosition and breakTime < os.clock() then
+								lastBreak = breakBlock
+							elseif breakBlock and breakTime < os.clock() then
 								bd.Blink.item_action.stop_break_block.fire(true)
-								breakTime = os.clock() + 9999
+								breakTime = math.huge
 							end
 						end
 					end

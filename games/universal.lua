@@ -5910,9 +5910,9 @@ run(function()
 					return string.match(game:GetObjects('rbxassetid://'..IDBox.Value)[1].AnimationId, '%?id=(%d+)')
 				end)
 				animobject.AnimationId = 'rbxassetid://'..(suc and id or IDBox.Value)
-				
-				if entitylib.isAlive then 
-					playAnimation(entitylib.character) 
+	
+				if entitylib.isAlive then
+					playAnimation(entitylib.character)
 				end
 				AnimationPlayer:Clean(entitylib.Events.LocalAdded:Connect(playAnimation))
 				AnimationPlayer:Clean(animobject)
@@ -6021,7 +6021,7 @@ run(function()
 			if callback then
 				local teleported
 				Blink:Clean(lplr.OnTeleport:Connect(function()
-					setfflag('S2PhysicsSenderRate', '15')
+					setfflag('PhysicsSenderMaxBandwidthBps', '38760')
 					setfflag('DataSenderRate', '60')
 					teleported = true
 				end))
@@ -6029,11 +6029,11 @@ run(function()
 				repeat
 					local physicsrate, senderrate = '0', Type.Value == 'All' and '-1' or '60'
 					if AutoSend.Enabled and tick() % (AutoSendLength.Value + 0.1) > AutoSendLength.Value then
-						physicsrate, senderrate = '15', '60'
+						physicsrate, senderrate = '38760', '60'
 					end
 	
 					if physicsrate ~= oldphys or senderrate ~= oldsend then
-						setfflag('S2PhysicsSenderRate', physicsrate)
+						setfflag('PhysicsSenderMaxBandwidthBps', physicsrate)
 						setfflag('DataSenderRate', senderrate)
 						oldphys, oldsend = physicsrate, senderrate
 					end
@@ -6042,7 +6042,7 @@ run(function()
 				until (not Blink.Enabled and not teleported)
 			else
 				if setfflag then
-					setfflag('S2PhysicsSenderRate', '15')
+					setfflag('PhysicsSenderMaxBandwidthBps', '38760')
 					setfflag('DataSenderRate', '60')
 				end
 				oldphys, oldsend = nil, nil
@@ -7214,7 +7214,7 @@ run(function()
 			repeat
 				if pcall(function()
 					desc = playersService:GetHumanoidDescriptionFromUserId(IDBox.Value == '' and 239702688 or tonumber(IDBox.Value))
-				end) then break end
+				end) and desc then break end
 				task.wait(1)
 			until not Disguise.Enabled
 			if not Disguise.Enabled then
