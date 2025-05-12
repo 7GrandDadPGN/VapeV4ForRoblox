@@ -661,15 +661,16 @@ run(function()
 	local OldGet, OldBreak = Client.Get
 
 	bedwars = setmetatable({
+		AbilityController = Flamework.resolveDependency('@easy-games/game-core:client/controllers/ability/ability-controller@AbilityController'),
 		AnimationType = require(replicatedStorage.TS.animation['animation-type']).AnimationType,
 		AnimationUtil = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out['shared'].util['animation-util']).AnimationUtil,
 		AppController = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out.client.controllers['app-controller']).AppController,
-		AbilityController = Flamework.resolveDependency('@easy-games/game-core:client/controllers/ability/ability-controller@AbilityController'),
+		BedBreakEffectMeta = require(replicatedStorage.TS.locker['break-bed-effect']['break-bed-effect-meta']).BreakBedEffectMeta,
 		BedwarsKitMeta = require(replicatedStorage.TS.games.bedwars.kit['bedwars-kit-meta']).BedwarsKitMeta,
 		BlockBreaker = Knit.Controllers.BlockBreakController.blockBreaker,
 		BlockController = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out).BlockEngine,
-		BlockPlacer = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out.client.placement['block-placer']).BlockPlacer,
 		BlockEngine = require(lplr.PlayerScripts.TS.lib['block-engine']['client-block-engine']).ClientBlockEngine,
+		BlockPlacer = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['block-engine'].out.client.placement['block-placer']).BlockPlacer,
 		BowConstantsTable = debug.getupvalue(Knit.Controllers.ProjectileController.enableBeam, 8),
 		ClickHold = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out.client.ui.lib.util['click-hold']).ClickHold,
 		Client = Client,
@@ -699,8 +700,9 @@ run(function()
 		KillFeedController = Flamework.resolveDependency('client/controllers/game/kill-feed/kill-feed-controller@KillFeedController'),
 		Knit = Knit,
 		KnockbackUtil = require(replicatedStorage.TS.damage['knockback-util']).KnockbackUtil,
-		NametagController = Knit.Controllers.NametagController,
 		MageKitUtil = require(replicatedStorage.TS.games.bedwars.kit.kits.mage['mage-kit-util']).MageKitUtil,
+		NametagController = Knit.Controllers.NametagController,
+		PartyController = Flamework.resolveDependency('@easy-games/lobby:client/controllers/party-controller@PartyController'),
 		ProjectileMeta = require(replicatedStorage.TS.projectile['projectile-meta']).ProjectileMeta,
 		QueryUtil = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out).GameQueryUtil,
 		QueueCard = require(lplr.PlayerScripts.TS.controllers.global.queue.ui['queue-card']).QueueCard,
@@ -2772,6 +2774,8 @@ end)
 	
 run(function()
 	local NoFall
+	local Mode
+	local rayParams = RaycastParams.new()
 	local groundHit
 	task.spawn(function()
 		groundHit = bedwars.Client:Get(remotes.GroundHit).instance
@@ -2784,16 +2788,42 @@ run(function()
 				local tracked = 0
 				repeat
 					if entitylib.isAlive then
-						tracked = entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air and math.min(tracked, entitylib.character.RootPart.AssemblyLinearVelocity.Y) or 0
+						local root = entitylib.character.RootPart
+						tracked = entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air and math.min(tracked, root.AssemblyLinearVelocity.Y) or 0
+	
 						if tracked < -85 then
-							groundHit:FireServer(nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow())
+							if Mode.Value == 'Packet' then
+								groundHit:FireServer(nil, Vector3.new(0, tracked, 0), workspace:GetServerTimeNow())
+							else
+								rayParams.FilterDescendantsInstances = {lplr.Character, gameCamera}
+								rayParams.CollisionGroup = root.CollisionGroup
+	
+								local rootSize = root.Size.Y / 2 + entitylib.character.HipHeight
+								if Mode.Value == 'TP' then
+									local ray = workspace:Blockcast(root.CFrame, Vector3.new(3, 3, 3), Vector3.new(0, -1000, 0), rayParams)
+									if ray then
+										root.CFrame -= Vector3.new(0, root.Position.Y - (ray.Position.Y + rootSize), 0)
+									end
+								else
+									local ray = workspace:Blockcast(root.CFrame, Vector3.new(3, 3, 3), Vector3.new(0, (tracked * 0.1) - rootSize, 0), rayParams)
+									if ray then
+										tracked = 0
+										root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, -80, root.AssemblyLinearVelocity.Z)
+									end
+								end
+							end
 						end
 					end
+	
 					task.wait(0.03)
 				until not NoFall.Enabled
 			end
 		end,
 		Tooltip = 'Prevents taking fall damage.'
+	})
+	Mode = NoFall:CreateDropdown({
+		Name = 'Mode',
+		List = {'Packet', 'TP', 'Velocity'}
 	})
 end)
 	
@@ -4964,6 +4994,7 @@ run(function()
 	local StaffDetector
 	local Mode
 	local Clans
+	local Party
 	local Profile
 	local Users
 	local blacklistedclans = {'gg', 'gg2', 'DV', 'DV2'}
@@ -4987,6 +5018,10 @@ run(function()
 	
 		notif('StaffDetector', 'Staff Detected ('..checktype..'): '..plr.Name..' ('..plr.UserId..')', 60, 'alert')
 		whitelist.customtags[plr.Name] = {{text = 'GAME STAFF', color = Color3.new(1, 0, 0)}}
+	
+		if Party.Enabled and not checktype:find('clan') then
+			bedwars.PartyController:leaveParty()
+		end
 	
 		if Mode.Value == 'Uninject' then
 			task.spawn(function()
@@ -5102,6 +5137,9 @@ run(function()
 	Clans = StaffDetector:CreateToggle({
 		Name = 'Blacklist clans',
 		Default = true
+	})
+	Party = StaffDetector:CreateToggle({
+		Name = 'Leave party'
 	})
 	Profile = StaffDetector:CreateTextBox({
 		Name = 'Profile',
@@ -7205,6 +7243,41 @@ run(function()
 	LimitItem = Breaker:CreateToggle({
 		Name = 'Limit to items',
 		Tooltip = 'Only breaks when tools are held'
+	})
+end)
+	
+run(function()
+	local BedBreakEffect
+	local Mode
+	local List
+	local NameToId = {}
+	
+	BedBreakEffect = vape.Legit:CreateModule({
+		Name = 'Bed Break Effect',
+		Function = function(callback)
+			if callback then
+	            BedBreakEffect:Clean(vapeEvents.BedwarsBedBreak.Event:Connect(function(data)
+	                firesignal(bedwars.Client:Get('BedBreakEffectTriggered').instance.OnClientEvent, {
+	                    player = data.player,
+	                    position = data.bedBlockPosition * 3,
+	                    effectType = NameToId[List.Value],
+	                    teamId = data.brokenBedTeam.id,
+	                    centerBedPosition = data.bedBlockPosition * 3
+	                })
+	            end))
+	        end
+		end,
+		Tooltip = 'Custom bed break effects'
+	})
+	local BreakEffectName = {}
+	for i, v in bedwars.BedBreakEffectMeta do
+		table.insert(BreakEffectName, v.name)
+		NameToId[v.name] = i
+	end
+	table.sort(BreakEffectName)
+	List = BedBreakEffect:CreateDropdown({
+		Name = 'Effect',
+		List = BreakEffectName
 	})
 end)
 	
