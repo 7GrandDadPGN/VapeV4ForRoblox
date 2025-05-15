@@ -1,36 +1,36 @@
 local loadstring = function(...)
 	local res, err = loadstring(...)
-	if err and vape then 
-		vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert') 
+	if err and vape then
+		vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert')
 	end
 	return res
 end
 local isfile = isfile or function(file)
-	local suc, res = pcall(function() 
-		return readfile(file) 
+	local suc, res = pcall(function()
+		return readfile(file)
 	end)
 	return suc and res ~= nil and res ~= ''
 end
 local function downloadFile(path, func)
 	if not isfile(path) then
-		local suc, res = pcall(function() 
-			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true) 
+		local suc, res = pcall(function()
+			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true)
 		end)
-		if not suc or res == '404: Not Found' then 
-			error(res) 
+		if not suc or res == '404: Not Found' then
+			error(res)
 		end
-		if path:find('.lua') then 
-			res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res 
+		if path:find('.lua') then
+			res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res
 		end
 		writefile(path, res)
 	end
 	return (func or readfile)(path)
 end
-local run = function(func) 
-	func() 
+local run = function(func)
+	func()
 end
-local cloneref = cloneref or function(obj) 
-	return obj 
+local cloneref = cloneref or function(obj)
+	return obj
 end
 
 local playersService = cloneref(game:GetService('Players'))
@@ -50,12 +50,12 @@ local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
 local getcustomasset = vape.Libraries.getcustomasset
 local drawingactor = loadstring(downloadFile('newvape/libraries/drawing.lua'), 'drawing')(...)
-local function notif(...) 
-	return vape:CreateNotification(...) 
+local function notif(...)
+	return vape:CreateNotification(...)
 end
 
-if not select(1, ...) then
-	if run_on_actor and getactors then 
+if not select(1, ...) and game.PlaceId == 5938036553 then
+	if run_on_actor and getactors then
 		local oldreload = shared.vapereload
 		vape.Load = function()
 			task.delay(0.1, function()
@@ -69,16 +69,16 @@ if not select(1, ...) then
 			for i, v in shared do
 				if type(v) == 'string' then
 					executionString = string.format("shared.%s = '%s'", i, v)..'\n'..executionString
-				elseif type(v) == 'boolean' then 
+				elseif type(v) == 'boolean' then
 					executionString = string.format("shared.%s = %s", i, tostring(v))..'\n'..executionString
 				end
 			end
-			if oldreload then 
-				executionString = 'shared.vapereload = true\n'..executionString 
+			if oldreload then
+				executionString = 'shared.vapereload = true\n'..executionString
 			end
 
-			for i, v in getactors() do 
-				if tostring(v) == 'frontlines_client_actor' then 
+			for i, v in getactors() do
+				if tostring(v) == 'frontlines_client_actor' then
 					run_on_actor(v, executionString)
 					return
 				end
@@ -110,13 +110,13 @@ local function addBlur(parent)
 end
 
 local function getTeam(plr)
-	return frontlines.Main.globals.sol_teams[table.find(frontlines.Main.globals.cli_names, plr.Name)]
+	return frontlines.Main.globals.cli_teams[table.find(frontlines.Main.globals.cli_names, plr.Name)]
 end
 
 local function getKey(id, server)
 	for i, v in frontlines.Main.enums[(server and 's' or 'c')..'_net_msg'] do
-		if v == id then 
-			return i 
+		if v == id then
+			return i
 		end
 	end
 end
@@ -138,8 +138,8 @@ local function hookEvent(id, rfunc)
 		end
 	end)
 
-	if not suc then 
-		notif('Vape', 'Failed to hook ('..id..')', 10, 'alert') 
+	if not suc then
+		notif('Vape', 'Failed to hook ('..id..')', 10, 'alert')
 	end
 
 	return type(res) == 'function' and res or function() end
@@ -148,8 +148,8 @@ end
 local function isFriend(plr, recolor)
 	if vape.Categories.Friends.Options['Use friends'].Enabled then
 		local friend = table.find(vape.Categories.Friends.ListEnabled, plr.Name) and true
-		if recolor then 
-			friend = friend and vape.Categories.Friends.Options['Recolor visuals'].Enabled 
+		if recolor then
+			friend = friend and vape.Categories.Friends.Options['Recolor visuals'].Enabled
 		end
 		return friend
 	end
@@ -158,30 +158,35 @@ end
 
 run(function()
 	repeat
-		local gc = getgc(true)
-		for _, v in gc do
-			if type(v) == 'table' then
-				if rawget(v, 'script') then
-					frontlines.Main = v._G
-				end
-			elseif type(v) == 'function' and islclosure(v) then
-				local name = debug.info(v, 'n')
-				if name == 'spawn_bullet' and debug.getinfo(v).nups == 14 then
-					frontlines.ShootFunction = v
-					frontlines.ShootRay = debug.getupvalue(v, 6)
-				elseif name == 'on_melee_hit' then
-					frontlines.KnifeFunction = v
-				elseif name == 'spawn_throwable' then
-					frontlines.SpawnThrowable = v
-					frontlines.Throwables = debug.getupvalue(v, 1)
+		if not frontlines.ShootFunction then
+			local gc = getgc(true)
+			for _, v in gc do
+				if type(v) == 'table' then
+					if rawget(v, 'script') and v._G and v._G.append_exe_set then
+						frontlines.Main = v._G
+					end
+				elseif type(v) == 'function' and islclosure(v) then
+					local name = debug.info(v, 'n')
+					if name == 'spawn_bullet' and debug.getinfo(v).nups > 11 then
+						frontlines.ShootFunction = v
+						frontlines.ShootRay = typeof(debug.getupvalue(v, 6)) == 'RaycastParams' and debug.getupvalue(v, 6) or debug.getupvalue(v, 5)
+					elseif name == 'on_melee_hit' then
+						frontlines.KnifeFunction = v
+					elseif name == 'spawn_throwable' then
+						frontlines.SpawnThrowable = v
+						frontlines.Throwables = debug.getupvalue(v, 1)
+					end
 				end
 			end
+			table.clear(gc)
 		end
-		table.clear(gc)
-		if not frontlines.ShootFunction then 
+
+		if not (frontlines.ShootFunction and (game.PlaceId == 5938036553 or game.StarterGui:GetCore('ResetButtonCallback') == false)) then
 			task.wait(1)
+		else
+			break
 		end
-	until frontlines.ShootFunction or vape.Loaded == nil
+	until vape.Loaded == nil
 	if vape.Loaded == nil then return end
 	frontlines.Events = debug.getupvalue(frontlines.Main.append_exe_set, 1)
 	frontlines.PickupBit = debug.getupvalue(frontlines.Events[frontlines.Main.exe_func_t.INIT_FPV_SOL_AMMO_PICKUP], 5)
@@ -191,14 +196,14 @@ run(function()
 	local deaths = sessioninfo:AddItem('Deaths')
 
 	hookEvent('SET_CLI_MATCH_KILLS', function(id)
-		if id == frontlines.Main.globals.cli_state.fpv_sol_id then 
-			kills:Increment() 
+		if id == frontlines.Main.globals.cli_state.fpv_sol_id then
+			kills:Increment()
 		end
 	end)
 
 	hookEvent('PLAY_FPV_SOL_DEATH_SOUND', function(self, id)
-		if id == frontlines.Main.globals.cli_state.fpv_sol_id then 
-			deaths:Increment() 
+		if id == frontlines.Main.globals.cli_state.fpv_sol_id then
+			deaths:Increment()
 		end
 	end)
 
@@ -224,31 +229,34 @@ run(function()
 		end
 	end)
 
-	hookEvent('UPDATE_CHAT_GUI', function(id, text)
-		text = string.unpack('z', text)
-		task.delay(0, function()
-			local name = frontlines.Main.globals.cli_names[id]
-			local plr = playersService:FindFirstChild(name)
-			if not plr then return end
-			for i, v in frontlines.Chat do
-				if v.TextLabel.TextTransparency > 0.5 and v.TextLabel.Text:find(name) then
-					v.TextLabel.Text = whitelist:tag(plr, true, true)..v.TextLabel.Text
-					whitelist:process(text, plr)
-					break
+	if game.PlaceId == 5938036553 then
+		hookEvent('UPDATE_CHAT_GUI', function(id, text)
+			text = string.unpack('z', text)
+			task.delay(0, function()
+				local name = frontlines.Main.globals.cli_names[id]
+				local plr = playersService:FindFirstChild(name)
+				if not plr then return end
+				for i, v in frontlines.Chat do
+					if v.TextLabel.TextTransparency > 0.5 and v.TextLabel.Text:find(name) then
+						v.TextLabel.Text = whitelist:tag(plr, true, true)..v.TextLabel.Text
+						whitelist:process(text, plr)
+						break
+					end
 				end
-			end
+			end)
 		end)
-	end)
+	end
 
 	vape:Clean(Drawing.kill)
 	vape:Clean(function()
-		for i, v in frontlines.Functions do 
-			hookfunction(i, v) 
+		for i, v in frontlines.Functions do
+			hookfunction(i, v)
 		end
 		table.clear(frontlines.Functions)
 		table.clear(frontlines)
 	end)
 end)
+if vape.Loaded == nil then return end
 
 run(function()
 	entitylib.Wallcheck = function(origin, position, ignoreobject)
@@ -289,18 +297,18 @@ run(function()
 			end
 
 			local hum = {
-				HipHeight = 2, 
-				MoveDirection = Vector3.zero, 
-				Health = 100, 
-				MaxHealth = 100, 
-				GetState = function() 
-					return Enum.HumanoidStateType.Running 
+				HipHeight = 2,
+				MoveDirection = Vector3.zero,
+				Health = 100,
+				MaxHealth = 100,
+				GetState = function()
+					return Enum.HumanoidStateType.Running
 				end
 			}
 			if plr == lplr then
-				repeat 
-					hum = frontlines.Main.globals.fpv_sol_instances.humanoid 
-					task.wait() 
+				repeat
+					hum = frontlines.Main.globals.fpv_sol_instances.humanoid
+					task.wait()
 				until hum or not frontlines.Main
 				if not frontlines.Main then
 					entitylib.EntityThreads[char] = nil
@@ -357,7 +365,7 @@ run(function()
 				task.wait()
 			until actor or (not entitylib.Running) or not plr.Parent
 			if not entitylib.Running or not plr.Parent then return end
-			
+
 			entitylib.refreshEntity(actor.main.model.Value, plr)
 		end)
 	end

@@ -1050,6 +1050,23 @@ run(function()
 		}))
 		count += 1
 	end
+	--[[for i, v in bedwars.TeamUpgradeMeta do
+		local toggleCount = count
+		table.insert(UpgradeToggles, AutoBuy:CreateToggle({
+			Name = 'Buy '..(v.name == 'Armor' and 'Protection' or v.name),
+			Function = function(callback)
+				npctick = tick()
+				Functions[5 + toggleCount + (v.name == 'Armor' and 20 or 0)] = callback and function(currencytable, shop, upgrades)
+					if not upgrades then return end
+					if v.disabledInQueue and table.find(v.disabledInQueue, store.queueType) then return end
+					return buyUpgrade(i, currencytable)
+				end or nil
+			end,
+			Darker = true,
+			Default = (i == 'ARMOR' or i == 'DAMAGE')
+		}))
+		count += 1
+	end]]
 end)
 	
 run(function()
