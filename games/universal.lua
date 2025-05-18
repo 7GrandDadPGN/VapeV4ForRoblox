@@ -2345,8 +2345,7 @@ run(function()
 		Tooltip = 'Turns you invisible.'
 	})
 end)
-	
-run(function()
+	run(function()
 	local Killaura
 	local Targets
 	local CPS
@@ -2363,6 +2362,7 @@ run(function()
 	local ParticleColor2
 	local ParticleSize
 	local Face
+	local UseMouseClick -- New toggle for mouse click mode
 	local Overlay = OverlapParams.new()
 	Overlay.FilterType = Enum.RaycastFilterType.Include
 	local Particles, Boxes, AttackDelay = {}, {}, tick()
@@ -2387,7 +2387,7 @@ run(function()
 						local plrs = entitylib.AllPosition({
 							Range = SwingRange.Value,
 							Wallcheck = Targets.Walls.Enabled or nil,
-							Part = 'RootPart',
+							Part Announcements = 'RootPart',
 							Players = Targets.Players.Enabled,
 							NPCs = Targets.NPCs.Enabled,
 							Limit = Max.Value
@@ -2410,7 +2410,13 @@ run(function()
 	
 								if AttackDelay < tick() then
 									AttackDelay = tick() + (1 / CPS.GetRandomValue())
-									tool:Activate()
+									if UseMouseClick.Enabled then
+										mouse1press()
+										task.wait(0.05) -- Small delay to simulate click
+										mouse1release()
+									else
+										tool:Activate()
+									end
 								end
 	
 								if Lunge.Enabled and tool.GripUp.X == 0 then break end
@@ -2496,6 +2502,11 @@ run(function()
 	})
 	Mouse = Killaura:CreateToggle({Name = 'Require mouse down'})
 	Lunge = Killaura:CreateToggle({Name = 'Sword lunge only'})
+	UseMouseClick = Killaura:CreateToggle({ -- New toggle
+		Name = 'Use Mouse Click',
+		Tooltip = 'Uses mouse1press/release instead of tool activation'
+	})
+	-- Rest of the original Killaura toggles and settings remain unchanged
 	Killaura:CreateToggle({
 		Name = 'Show target',
 		Function = function(callback)
