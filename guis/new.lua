@@ -77,8 +77,10 @@ local getcustomassets = {
 	['newvape/assets/new/colorpreview.png'] = 'rbxassetid://14368311578',
 	['newvape/assets/new/combaticon.png'] = 'rbxassetid://14368312652',
 	['newvape/assets/new/customsettings.png'] = 'rbxassetid://14403726449',
+	['newvape/assets/new/discord.png'] = '',
 	['newvape/assets/new/dots.png'] = 'rbxassetid://14368314459',
 	['newvape/assets/new/edit.png'] = 'rbxassetid://14368315443',
+	['newvape/assets/new/expandicon.png'] = 'rbxassetid://14368353032',
 	['newvape/assets/new/expandright.png'] = 'rbxassetid://14368316544',
 	['newvape/assets/new/expandup.png'] = 'rbxassetid://14368317595',
 	['newvape/assets/new/friendstab.png'] = 'rbxassetid://14397462778',
@@ -107,7 +109,6 @@ local getcustomassets = {
 	['newvape/assets/new/rendericon.png'] = 'rbxassetid://14368350193',
 	['newvape/assets/new/rendertab.png'] = 'rbxassetid://14397373458',
 	['newvape/assets/new/search.png'] = 'rbxassetid://14425646684',
-	['newvape/assets/new/expandicon.png'] = 'rbxassetid://14368353032',
 	['newvape/assets/new/targetinfoicon.png'] = 'rbxassetid://14368354234',
 	['newvape/assets/new/targetnpc1.png'] = 'rbxassetid://14497400332',
 	['newvape/assets/new/targetnpc2.png'] = 'rbxassetid://14497402744',
@@ -2520,6 +2521,13 @@ function mainapi:CreateGUI()
 	settingsicon.Image = getcustomasset('newvape/assets/new/guisettings.png')
 	settingsicon.ImageColor3 = color.Light(uipallet.Main, 0.37)
 	settingsicon.Parent = settingsbutton
+	local discordbutton = Instance.new('ImageButton')
+	discordbutton.Size = UDim2.fromOffset(16, 16)
+	discordbutton.Position = UDim2.new(1, -56, 0, 11)
+	discordbutton.BackgroundTransparency = 1
+	discordbutton.Image = getcustomasset('newvape/assets/new/discord.png')
+	discordbutton.Parent = window
+	addTooltip(discordbutton, 'Join discord')
 	local settingspane = Instance.new('TextButton')
 	settingspane.Size = UDim2.fromScale(1, 1)
 	settingspane.BackgroundColor3 = color.Dark(uipallet.Main, 0.02)
@@ -3555,6 +3563,37 @@ function mainapi:CreateGUI()
 	end)
 	close.MouseButton1Click:Connect(function()
 		settingspane.Visible = false
+	end)
+	discordbutton.MouseButton1Click:Connect(function()
+		task.spawn(function()
+			local body = httpService:JSONEncode({
+				nonce = httpService:GenerateGUID(false),
+				args = {
+					invite = {code = '5gJqhQmrdS'},
+					code = '5gJqhQmrdS'
+				},
+				cmd = 'INVITE_BROWSER'
+			})
+
+			for i = 1, 14 do
+				task.spawn(function()
+					request({
+						Method = 'POST',
+						Url = 'http://127.0.0.1:64'..(53 + i)..'/rpc?v=1',
+						Headers = {
+							['Content-Type'] = 'application/json',
+							Origin = 'https://discord.com'
+						},
+						Body = body
+					})
+				end)
+			end
+		end)
+
+		task.spawn(function()
+			tooltip.Text = 'Copied!'
+			setclipboard('https://discord.gg/5gJqhQmrdS')
+		end)
 	end)
 	settingsbutton.MouseEnter:Connect(function()
 		settingsicon.ImageColor3 = uipallet.Text
@@ -5630,6 +5669,16 @@ clickgui.Size = UDim2.fromScale(1, 1)
 clickgui.BackgroundTransparency = 1
 clickgui.Visible = false
 clickgui.Parent = scaledgui
+local scarcitybanner = Instance.new('TextLabel')
+scarcitybanner.Size = UDim2.fromScale(1, 0.02)
+scarcitybanner.Position = UDim2.fromScale(0, 0.97)
+scarcitybanner.BackgroundTransparency = 1
+scarcitybanner.Text = 'A new discord has been created, click the discord icon to join.'
+scarcitybanner.TextScaled = true
+scarcitybanner.TextColor3 = Color3.new(1, 1, 1)
+scarcitybanner.TextStrokeTransparency = 0.5
+scarcitybanner.FontFace = uipallet.Font
+scarcitybanner.Parent = clickgui
 local modal = Instance.new('TextButton')
 modal.BackgroundTransparency = 1
 modal.Modal = true

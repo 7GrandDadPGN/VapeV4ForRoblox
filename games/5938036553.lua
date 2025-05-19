@@ -125,10 +125,13 @@ local function hookEvent(id, rfunc)
 	local suc, res = pcall(function()
 		local func = frontlines.Events[frontlines.Main.exe_func_t[id]]
 		local hook
-		hook = hookfunction(func, function(...)
+
+		local function newFunc(...)
 			if rfunc(...) then return end
 			return hook(...)
-		end)
+		end
+
+		hook = hookfunction(func, function(...) return newFunc(...) end)
 		frontlines.Functions[func] = hook
 		return function()
 			if not frontlines.Functions[func] then return end
@@ -218,15 +221,24 @@ run(function()
 	hookEvent('INIT_SOLDIER_MODEL', function(id)
 		local plr = playersService:FindFirstChild(frontlines.Main.globals.cli_names[id])
 		if plr then
-			entitylib.refreshEntity(frontlines.Main.soldier_actors[id].main.model.Value, plr)
+			entitylib.refreshEntity(frontlines.Main.globals.soldier_models[id], plr)
 		end
 	end)
 
 	hookEvent('DEINIT_SOL_STATE', function(id)
 		local plr = playersService:FindFirstChild(frontlines.Main.globals.cli_names[id])
 		if plr then
-			entitylib.refreshEntity(frontlines.Main.soldier_actors[id].main.model.Value, plr)
+			entitylib.refreshEntity(frontlines.Main.globals.soldier_models[id], plr)
 		end
+	end)
+
+	hookEvent('SET_CLI_TEAM', function(id)
+		task.defer(function()
+			local plr = playersService:FindFirstChild(frontlines.Main.globals.cli_names[id])
+			if plr then
+				entitylib.refreshEntity(frontlines.Main.globals.soldier_models[id], plr)
+			end
+		end)
 	end)
 
 	if game.PlaceId == 5938036553 then
@@ -247,7 +259,7 @@ run(function()
 		end)
 	end
 
-	vape:Clean(Drawing.kill)
+	vape:Clean(Drawing.kill or function() end)
 	vape:Clean(function()
 		for i, v in frontlines.Functions do
 			hookfunction(i, v)
@@ -352,6 +364,7 @@ run(function()
 					entitylib.Events.EntityAdded:Fire(entity)
 				end
 			end
+
 			entitylib.EntityThreads[char] = nil
 		end)
 	end
@@ -1154,17 +1167,20 @@ run(function()
 		Function = function(callback)
 			if callback then
 				Phase:Clean(entitylib.Events.LocalAdded:Connect(function()
-					if frontlines.Main.globals.fpv_sol_instances.root then 
-						frontlines.Main.globals.fpv_sol_instances.root.CanCollide = false 
+					local root = frontlines.Main.globals.fpv_sol_instances.root
+					if root then
+						root.CanCollide = false
 					end
 				end))
-				
-				if frontlines.Main.globals.fpv_sol_instances.root then 
-					frontlines.Main.globals.fpv_sol_instances.root.CanCollide = false 
+	
+				local root = frontlines.Main.globals.fpv_sol_instances.root
+				if root then
+					root.CanCollide = false
 				end
 			else
-				if frontlines.Main.globals.fpv_sol_instances.root then 
-					frontlines.Main.globals.fpv_sol_instances.root.CanCollide = true 
+				local root = frontlines.Main.globals.fpv_sol_instances.root
+				if root then
+					root.CanCollide = true
 				end
 			end
 		end,
