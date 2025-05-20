@@ -5878,7 +5878,7 @@ run(function()
 				table.clear(Items)
 			end
 		end,
-		Tooltip = 'Automatically puts resources in ender chest'
+		Tooltip = 'Automatically puts resources in personal chest'
 	})
 	UIToggle = AutoBank:CreateToggle({
 		Name = 'UI',
