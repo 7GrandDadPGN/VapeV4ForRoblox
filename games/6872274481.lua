@@ -5802,7 +5802,7 @@ run(function()
 		if entitylib.isAlive then
 			local pos = entitylib.character.RootPart.Position
 			for _, chest in Chests do
-				if (chest.Position - pos).Magnitude < 15 then
+				if (chest.Position - pos).Magnitude < 20 then
 					return true
 				end
 			end
