@@ -3021,34 +3021,48 @@ end)
 run(function()
     local speedLoop
     local pulseLoop
+    local currentCharacter
+    local tpwalkEnabled = false
+    local tpwalkSpeed = 0.5
+
+    local function startBypass(character)
+        local humanoid = character:WaitForChild("Humanoid")
+        local hrp = character:WaitForChild("HumanoidRootPart")
+
+        if speedLoop then speedLoop:Disconnect() end
+
+        speedLoop = game:GetService("RunService").RenderStepped:Connect(function()
+            if tpwalkEnabled and humanoid and humanoid.MoveDirection.Magnitude > 0 then
+                hrp.CFrame = hrp.CFrame + humanoid.MoveDirection * tpwalkSpeed
+            end
+        end)
+
+        if pulseLoop then task.cancel(pulseLoop) end
+
+        pulseLoop = task.spawn(function()
+            while SpeedBypass.Enabled do
+                tpwalkEnabled = true
+                task.wait(0.3)
+                tpwalkEnabled = false
+                task.wait(2.7)
+            end
+        end)
+    end
 
     SpeedBypass = vape.Categories.Blatant:CreateModule({
         Name = 'SpeedBypass',
         Function = function(callback)
+            local player = game:GetService("Players").LocalPlayer
+
             if callback then
-                local Players = game:GetService("Players")
-                local RunService = game:GetService("RunService")
+                currentCharacter = player.Character or player.CharacterAdded:Wait()
+                startBypass(currentCharacter)
 
-                local player = Players.LocalPlayer
-                local character = player.Character or player.CharacterAdded:Wait()
-                local humanoid = character:WaitForChild("Humanoid")
-                local hrp = character:WaitForChild("HumanoidRootPart")
-
-                local tpwalkEnabled = false
-                local tpwalkSpeed = 0.5
-
-                speedLoop = RunService.RenderStepped:Connect(function()
-                    if tpwalkEnabled and humanoid and humanoid.MoveDirection.Magnitude > 0 then
-                        hrp.CFrame = hrp.CFrame + humanoid.MoveDirection * tpwalkSpeed
-                    end
-                end)
-
-                pulseLoop = task.spawn(function()
-                    while callback do
-                        tpwalkEnabled = true
-                        task.wait(0.3)
-                        tpwalkEnabled = false
-                        task.wait(2.7)
+                player.CharacterAdded:Connect(function(char)
+                    currentCharacter = char
+                    task.wait(1)
+                    if SpeedBypass.Enabled then
+                        startBypass(char)
                     end
                 end)
             else
