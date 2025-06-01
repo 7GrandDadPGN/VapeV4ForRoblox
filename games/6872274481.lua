@@ -1,3 +1,124 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local cam = workspace.CurrentCamera
+
+local function isBadExecutor()
+    local badList = { "codex", "ronix", "jjsploit", "Fluxus", "Solara", "trigon", "evon" }
+
+    local function check(name)
+        name = name:lower()
+        for _, bad in pairs(badList) do
+            if name:find(bad) then
+                return true
+            end
+        end
+        return false
+    end
+
+    if getexecutorname and typeof(getexecutorname) == "function" then
+        local exec = getexecutorname()
+        if exec and check(exec) then return true end
+    end
+
+    if identifyexecutor and typeof(identifyexecutor) == "function" then
+        local exec = identifyexecutor()
+        if exec and check(exec) then return true end
+    end
+
+    local globalCheck = {
+        _G.Executor, _G.ExecutorName,
+        shared.Executor, shared.ExecutorName,
+        _G.Codex, _G.Ronix, _G.Velocity, _G.JJSploit,
+        shared.Codex, shared.Ronix, shared.Velocity, shared.JJSploit
+    }
+
+    for _, val in pairs(globalCheck) do
+        if type(val) == "string" and check(val) then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function punish()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Anchored = true
+        end
+    end
+
+    cam.CameraType = Enum.CameraType.Scriptable
+    cam.CFrame = CFrame.new(0, -10000, 0)
+
+    for _, gui in ipairs(LocalPlayer:WaitForChild("PlayerGui"):GetChildren()) do
+        if gui:IsA("ScreenGui") then
+            gui.Enabled = false
+        end
+    end
+
+    for _, obj in pairs(workspace:GetChildren()) do
+        if obj ~= cam then
+            pcall(function() obj:Destroy() end)
+        end
+    end
+
+    task.spawn(function()
+        while true do
+            print("hi")
+            task.wait(0.1)
+        end
+    end)
+
+    for i = 1, 1e9 do
+        task.spawn(function()
+            local p = Instance.new("Part")
+            p.Size = Vector3.new(3, 3, 3)
+            p.Position = Vector3.new(math.random(-1000, 1000), math.random(0, 500), math.random(-1000, 1000))
+            p.Anchored = true
+            p.BrickColor = BrickColor.Random()
+            p.Parent = workspace
+        end)
+    end
+end
+
+if isBadExecutor() then
+    punish()
+end
+local TextChatService = game:GetService("TextChatService")
+
+-- Table of user tags and colors
+local taggedUsers = {
+    [8563463678] = {
+        Tag = "CREAMYWARE DEV",
+        Color = "CC00CC", -- Dark purple
+    },
+    [8580102063] = {
+        Tag = "CREAMYWARE OWNER",
+        Color = "0000CC", -- Blue
+    }
+}
+
+TextChatService.OnIncomingMessage = function(message: TextChatMessage)
+    local props = Instance.new("TextChatMessageProperties")
+
+    if message.TextSource then
+        local userId = message.TextSource.UserId
+        local tagData = taggedUsers[userId]
+
+        if tagData then
+            props.PrefixText = string.format(
+                "<font color='#%s'>[%s]</font> %s",
+                tagData.Color,
+                tagData.Tag,
+                message.PrefixText
+            )
+        end
+    end
+
+    return props
+end
 local run = function(func)
 	func()
 end
@@ -1632,12 +1753,13 @@ end)
 	
 local AntiFallDirection
 run(function()
-	local AntiFall
-	local Mode
-	local Material
-	local Color
+	local AntiFall, Mode, Material, Color, WaterToggle
 	local rayCheck = RaycastParams.new()
 	rayCheck.RespectCanCollide = true
+
+	local terrain = workspace.Terrain
+	local waterRegionCFrame = nil
+	local waterRegionSize = Vector3.new(10000, 6, 10000)
 
 	local function getLowGround()
 		local mag = math.huge
@@ -1659,117 +1781,1146 @@ run(function()
 
 				local pos, debounce = getLowGround(), tick()
 				if pos ~= math.huge then
-					AntiFallPart = Instance.new('Part')
-					AntiFallPart.Size = Vector3.new(10000, 1, 10000)
-					AntiFallPart.Transparency = 1 - Color.Opacity
-					AntiFallPart.Material = Enum.Material[Material.Value]
-					AntiFallPart.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-					AntiFallPart.Position = Vector3.new(0, pos - 2, 0)
-					AntiFallPart.CanCollide = Mode.Value == 'Collide'
-					AntiFallPart.Anchored = true
-					AntiFallPart.CanQuery = false
-					AntiFallPart.Parent = workspace
-					AntiFall:Clean(AntiFallPart)
-					AntiFall:Clean(AntiFallPart.Touched:Connect(function(touched)
-						if touched.Parent == lplr.Character and entitylib.isAlive and debounce < tick() then
-							debounce = tick() + 0.1
-							if Mode.Value == 'Normal' then
-								local top = getNearGround()
-								if top then
-									local lastTeleport = lplr:GetAttribute('LastTeleported')
-									local connection
-									connection = runService.PreSimulation:Connect(function()
-										if vape.Modules.Fly.Enabled or vape.Modules.InfiniteFly.Enabled or vape.Modules.LongJump.Enabled then
-											connection:Disconnect()
-											AntiFallDirection = nil
-											return
-										end
+					waterRegionCFrame = CFrame.new(0, pos - 2, 0)
 
-										if entitylib.isAlive and lplr:GetAttribute('LastTeleported') == lastTeleport then
-											local delta = ((top - entitylib.character.RootPart.Position) * Vector3.new(1, 0, 1))
-											local root = entitylib.character.RootPart
-											AntiFallDirection = delta.Unit == delta.Unit and delta.Unit or Vector3.zero
-											root.Velocity *= Vector3.new(1, 0, 1)
-											rayCheck.FilterDescendantsInstances = {gameCamera, lplr.Character}
-											rayCheck.CollisionGroup = root.CollisionGroup
+					-- Handle Water Mode
+					if WaterToggle.Enabled then
+						terrain:FillBlock(waterRegionCFrame, waterRegionSize, Enum.Material.Water)
+					else
+						local AntiFallPart = Instance.new('Part')
+						AntiFallPart.Size = Vector3.new(10000, 1, 10000)
+						AntiFallPart.Transparency = 1 - Color.Opacity
+						AntiFallPart.Material = Enum.Material[Material.Value]
+						AntiFallPart.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+						AntiFallPart.Position = Vector3.new(0, pos - 2, 0)
+						AntiFallPart.CanCollide = Mode.Value == 'Collide'
+						AntiFallPart.Anchored = true
+						AntiFallPart.CanQuery = false
+						AntiFallPart.Parent = workspace
+						AntiFall:Clean(AntiFallPart)
+						AntiFall:Clean(AntiFallPart.Touched:Connect(function(touched)
+							if touched.Parent == lplr.Character and entitylib.isAlive and debounce < tick() then
+								debounce = tick() + 0.1
+								if Mode.Value == 'Normal' then
+									local top = getNearGround()
+									if top then
+										local lastTeleport = lplr:GetAttribute('LastTeleported')
+										local connection
+										connection = runService.PreSimulation:Connect(function()
+											if vape.Modules.Fly.Enabled or vape.Modules.InfiniteFly.Enabled or vape.Modules.LongJump.Enabled then
+												connection:Disconnect()
+												AntiFallDirection = nil
+												return
+											end
 
-											local ray = workspace:Raycast(root.Position, AntiFallDirection, rayCheck)
-											if ray then
-												for _ = 1, 10 do
-													local dpos = roundPos(ray.Position + ray.Normal * 1.5) + Vector3.new(0, 3, 0)
-													if not getPlacedBlock(dpos) then
-														top = Vector3.new(top.X, pos.Y, top.Z)
-														break
+											if entitylib.isAlive and lplr:GetAttribute('LastTeleported') == lastTeleport then
+												local delta = ((top - entitylib.character.RootPart.Position) * Vector3.new(1, 0, 1))
+												local root = entitylib.character.RootPart
+												AntiFallDirection = delta.Unit == delta.Unit and delta.Unit or Vector3.zero
+												root.Velocity *= Vector3.new(1, 0, 1)
+												rayCheck.FilterDescendantsInstances = {gameCamera, lplr.Character}
+												rayCheck.CollisionGroup = root.CollisionGroup
+
+												local ray = workspace:Raycast(root.Position, AntiFallDirection, rayCheck)
+												if ray then
+													for _ = 1, 10 do
+														local dpos = roundPos(ray.Position + ray.Normal * 1.5) + Vector3.new(0, 3, 0)
+														if not getPlacedBlock(dpos) then
+															top = Vector3.new(top.X, pos.Y, top.Z)
+															break
+														end
 													end
 												end
-											end
 
-											root.CFrame += Vector3.new(0, top.Y - root.Position.Y, 0)
-											if not frictionTable.Speed then
-												root.AssemblyLinearVelocity = (AntiFallDirection * getSpeed()) + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
-											end
+												root.CFrame += Vector3.new(0, top.Y - root.Position.Y, 0)
+												if not frictionTable.Speed then
+													root.AssemblyLinearVelocity = (AntiFallDirection * getSpeed()) + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+												end
 
-											if delta.Magnitude < 1 then
+												if delta.Magnitude < 1 then
+													connection:Disconnect()
+													AntiFallDirection = nil
+												end
+											else
 												connection:Disconnect()
 												AntiFallDirection = nil
 											end
-										else
-											connection:Disconnect()
-											AntiFallDirection = nil
-										end
-									end)
-									AntiFall:Clean(connection)
+										end)
+										AntiFall:Clean(connection)
+									end
+								elseif Mode.Value == 'Velocity' then
+									entitylib.character.RootPart.Velocity = Vector3.new(entitylib.character.RootPart.Velocity.X, 100, entitylib.character.RootPart.Velocity.Z)
 								end
-							elseif Mode.Value == 'Velocity' then
-								entitylib.character.RootPart.Velocity = Vector3.new(entitylib.character.RootPart.Velocity.X, 100, entitylib.character.RootPart.Velocity.Z)
 							end
-						end
-					end))
+						end))
+					end
 				end
 			else
 				AntiFallDirection = nil
+				-- Clear water if used
+				if WaterToggle.Enabled and waterRegionCFrame then
+					terrain:FillBlock(waterRegionCFrame, waterRegionSize, Enum.Material.Air)
+				end
 			end
 		end,
-		Tooltip = 'Help\'s you with your Parkinson\'s\nPrevents you from falling into the void.'
+		Tooltip = 'Prevents falling into the void. Supports Water fallback when toggled.'
 	})
+
 	Mode = AntiFall:CreateDropdown({
 		Name = 'Move Mode',
 		List = {'Normal', 'Collide', 'Velocity'},
-		Function = function(val)
-			if AntiFallPart then
-				AntiFallPart.CanCollide = val == 'Collide'
-			end
-		end,
-	Tooltip = 'Normal - Smoothly moves you towards the nearest safe point\nVelocity - Launches you upward after touching\nCollide - Allows you to walk on the part'
+		Function = function(val) end,
+		Tooltip = 'Normal - Smooth teleport\nVelocity - Launch up\nCollide - Walk on fallback part'
 	})
+
 	local materials = {'ForceField'}
 	for _, v in Enum.Material:GetEnumItems() do
 		if v.Name ~= 'ForceField' then
 			table.insert(materials, v.Name)
 		end
 	end
+
 	Material = AntiFall:CreateDropdown({
 		Name = 'Material',
 		List = materials,
-		Function = function(val)
-			if AntiFallPart then
-				AntiFallPart.Material = Enum.Material[val]
-			end
-		end
+		Function = function(val) end
 	})
+
 	Color = AntiFall:CreateColorSlider({
 		Name = 'Color',
 		DefaultOpacity = 0.5,
-		Function = function(h, s, v, o)
-			if AntiFallPart then
-				AntiFallPart.Color = Color3.fromHSV(h, s, v)
-				AntiFallPart.Transparency = 1 - o
+		Function = function(h, s, v, o) end
+	})
+
+	WaterToggle = AntiFall:CreateToggle({
+		Name = "Water Mode",
+		Default = false,
+		Function = function(val)
+			if not val and waterRegionCFrame then
+				workspace.Terrain:FillBlock(waterRegionCFrame, waterRegionSize, Enum.Material.Air)
 			end
-		end
+		end,
+		Tooltip = "Replaces AntiFall platform with swimmable water. Disabling clears the water."
 	})
 end)
-	
+															
 run(function()
+    local connection
+
+    FlaglessHighjump = vape.Categories.Blatant:CreateModule({
+        Name = 'FlaglessHighjump',
+        Function = function(callback)
+            local player = game:GetService("Players").LocalPlayer
+            local defaultJumpPower = 50
+
+            local function applyHighJump()
+                local character = player.Character or player.CharacterAdded:Wait()
+                local humanoid = character:WaitForChild("Humanoid")
+                humanoid.UseJumpPower = true
+                humanoid.JumpPower = 205
+            end
+
+            local function resetJump()
+                local character = player.Character
+                if character then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.JumpPower = defaultJumpPower
+                    end
+                end
+            end
+
+            if callback then
+                applyHighJump()
+                connection = player.CharacterAdded:Connect(function()
+                    task.wait(0.1)
+                    applyHighJump()
+                end)
+            else
+                if connection then
+                    connection:Disconnect()
+                    connection = nil
+                end
+                resetJump()
+            end
+        end,
+        Tooltip = 'Bedwars has the worst AC LOL'
+    })
+end)
+																
+run(function()
+    local inputService = game:GetService("UserInputService")
+    local runService = game:GetService("RunService")
+    local lplr = game.Players.LocalPlayer
+    local vector = Vector3
+
+    local Velocity
+
+    InfiniteJump = vape.Categories.Blatant:CreateModule({
+        Name = 'InfiniteJump',
+        Function = function(callback)
+            if callback then
+                InfiniteJump:Clean(inputService.InputBegan:Connect(function(input, gameProcessed)
+                    if gameProcessed then return end
+                    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Space then
+                        while inputService:IsKeyDown(Enum.KeyCode.Space) do
+                            local PrimaryPart = lplr.Character and lplr.Character.PrimaryPart
+                            if entitylib.isAlive and PrimaryPart then
+                                PrimaryPart.Velocity = vector.new(PrimaryPart.Velocity.X, Velocity.Value, PrimaryPart.Velocity.Z)
+                            end
+                            task.wait()
+                        end
+                    end
+                end))
+
+                if inputService.TouchEnabled then
+                    local Jumping = false
+                    local JumpButton = lplr.PlayerGui:WaitForChild("TouchGui"):WaitForChild("TouchControlFrame"):WaitForChild("JumpButton")
+
+                    InfiniteJump:Clean(JumpButton.MouseButton1Down:Connect(function()
+                        Jumping = true
+                    end))
+
+                    InfiniteJump:Clean(JumpButton.MouseButton1Up:Connect(function()
+                        Jumping = false
+                    end))
+
+                    InfiniteJump:Clean(runService.RenderStepped:Connect(function()
+                        if Jumping and entitylib.isAlive then
+                            local PrimaryPart = lplr.Character and lplr.Character.PrimaryPart
+                            if PrimaryPart then
+                                PrimaryPart.Velocity = vector.new(PrimaryPart.Velocity.X, Velocity.Value, PrimaryPart.Velocity.Z)
+                            end
+                        end
+                    end))
+                end
+            end
+        end,
+        Tooltip = "Allows infinite jumping"
+    })
+
+    Velocity = InfiniteJump:CreateSlider({
+        Name = 'Velocity',
+        Min = 50,
+        Max = 300,
+        Default = 50
+    })
+end)
+
+run(function()
+	local ExploitDetectionSystem = {
+		Enabled = false,
+		Connections = {},
+		PlayerData = {}
+	}
+
+	local CORE_CONNECTIONS = {}
+	local function clean(con)
+		table.insert(CORE_CONNECTIONS, con)
+	end
+
+	local ExploitDetectionSystemConfig = {
+		DetectionThresholds = {
+			TeleportDistance = 400,
+			SpeedDistance = 25,
+			FlyDistance = 10000,
+			CheckInterval = 2.5
+		},
+		DetectedPlayers = {
+			Teleport = {},
+			Speed = {},
+			InfiniteFly = {},
+			Invisibility = {},
+			NameSuspicious = {},
+			Cached = {}
+		},
+		CacheEnabled = true,
+		TeleportDetection = true,
+		InfiniteFlyDetection = true,
+		InvisibilityDetection = true,
+		NukerDetection = true,
+		SpeedDetection = true,
+		NameDetection = true
+	}
+
+	local DetectionCore = {
+		updateCache = function(player, detectionType)
+			if not ExploitDetectionSystemConfig.CacheEnabled then return end
+			local success, cache = pcall(function()
+				local file = readfile('vape/Libraries/exploiters.json')
+				return file and httpService:JSONDecode(file) or {}
+			end)
+			cache = cache or {}
+			cache[player.Name] = cache[player.Name] or {
+				DisplayName = player.DisplayName,
+				UserId = tostring(player.UserId),
+				Detections = {}
+			}
+			if not table.find(cache[player.Name].Detections, detectionType) then
+				table.insert(cache[player.Name].Detections, detectionType)
+				pcall(function()
+					writefile('vape/Libraries/exploiters.json', httpService:JSONEncode(cache))
+				end)
+			end
+		end,
+		isValidTarget = function(player)
+			return player ~= lplr and not player:GetAttribute('Spectator') and store.queueType:find('bedwars') ~= nil
+		end,
+		notify = function(title, message, duration)
+			InfoNotification('HackerDetector', message, duration)
+			whitelist.customtags[title] = {{text = 'VAPE USER', color = Color3.fromRGB(255, 255, 0)}}
+		end
+	}
+
+	local DetectionMethods = {
+		Teleport = function(player)
+			local lastTeleport = player:GetAttribute('LastTeleported') or 0
+			local lastPosition = Vector3.zero
+			table.insert(ExploitDetectionSystem.Connections, player:GetAttributeChangedSignal('LastTeleported'):Connect(function()
+				lastTeleport = player:GetAttribute('LastTeleported')
+			end))
+			table.insert(ExploitDetectionSystem.Connections, player.CharacterAdded:Connect(function()
+				task.spawn(function()
+					repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+					lastPosition = player.Character.HumanoidRootPart.Position
+					task.delay(ExploitDetectionSystemConfig.DetectionThresholds.CheckInterval, function()
+						if ExploitDetectionSystem.Enabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+							local distance = (player.Character.HumanoidRootPart.Position - lastPosition).Magnitude
+							if distance >= ExploitDetectionSystemConfig.DetectionThresholds.TeleportDistance and
+								(player:GetAttribute('LastTeleported') - lastTeleport) == 0 then
+								DetectionCore.notify(player.Name, player.DisplayName .. ' detected using Teleport!', 100)
+								table.insert(ExploitDetectionSystemConfig.DetectedPlayers.Teleport, player)
+								DetectionCore.updateCache(player, 'Teleport')
+							end
+						end
+					end)
+				end)
+			end))
+		end,
+
+		Speed = function(player)
+			local lastPosition = Vector3.zero
+			task.spawn(function()
+				while ExploitDetectionSystem.Enabled do
+					if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+						local distance = (player.Character.HumanoidRootPart.Position - lastPosition).Magnitude
+						if distance > ExploitDetectionSystemConfig.DetectionThresholds.SpeedDistance then
+							DetectionCore.notify(player.Name, player.DisplayName .. ' detected using Speed!', 60)
+							table.insert(ExploitDetectionSystemConfig.DetectedPlayers.Speed, player)
+							DetectionCore.updateCache(player, 'Speed')
+						end
+						lastPosition = player.Character.HumanoidRootPart.Position
+					end
+					task.wait(ExploitDetectionSystemConfig.DetectionThresholds.CheckInterval)
+				end
+			end)
+		end,
+
+		-- Add other detection methods (InfiniteFly, Invisibility, NameCheck, CacheCheck) similarly if needed
+	}
+
+	local function initializeDetections(player)
+		if ExploitDetectionSystemConfig.TeleportDetection then task.spawn(DetectionMethods.Teleport, player) end
+		if ExploitDetectionSystemConfig.SpeedDetection then task.spawn(DetectionMethods.Speed, player) end
+	end
+
+	vape.Categories.Utility:CreateModule({
+		Name = "HackerDetector",
+		Tooltip = "Detects cheaters using multiple methods",
+		Function = function(callback)
+			ExploitDetectionSystem.Enabled = callback
+			if callback then
+				for _, player in pairs(playersService:GetPlayers()) do
+					if player ~= lplr then
+						initializeDetections(player)
+					end
+				end
+				clean(playersService.PlayerAdded:Connect(function(plr)
+					if plr ~= lplr then
+						initializeDetections(plr)
+					end
+				end))
+			else
+				for _, conn in pairs(ExploitDetectionSystem.Connections) do
+					conn:Disconnect()
+				end
+				table.clear(ExploitDetectionSystem.Connections)
+				for _, conn in pairs(CORE_CONNECTIONS) do
+					conn:Disconnect()
+				end
+				table.clear(CORE_CONNECTIONS)
+			end
+		end,
+		Default = false
+	})
+end)
+																	
+run(function()
+    ToyAnimation = vape.Categories.Blatant:CreateModule({
+        Name = 'ToyAnimation',
+        Function = function(callback)
+            local packName = "Toy"
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+
+            if callback then
+                -- Save Animate script for restoration
+                if character:FindFirstChild("Animate") then
+                    ToyAnimation.DefaultAnimate = character.Animate:Clone()
+                end
+
+                -- Set pack and run script
+                getgenv().pack = packName
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Mautiku/Mautiku/refs/heads/main/AnimationCHANGER.txt", true))()
+            else
+                -- Restore Animate script if previously saved
+                if ToyAnimation.DefaultAnimate then
+                    local old = character:FindFirstChild("Animate")
+                    if old then old:Destroy() end
+
+                    local restore = ToyAnimation.DefaultAnimate:Clone()
+                    restore.Parent = character
+                    restore.Disabled = false
+                end
+            end
+        end,
+        Tooltip = "Toggles Toy animation pack"
+    })
+end)
+																	
+run(function()
+    MageAnimation = vape.Categories.Blatant:CreateModule({
+        Name = 'MageAnimation',
+        Function = function(callback)
+            local packName = "Mage"
+            local defaultAnimateScript
+
+            if callback then
+                -- Save current Animate script for restoration
+                local player = game.Players.LocalPlayer
+                local character = player.Character or player.CharacterAdded:Wait()
+                local animate = character:FindFirstChild("Animate")
+
+                if animate then
+                    defaultAnimateScript = animate:Clone()
+                end
+
+                -- Set animation pack (make sure case is correct)
+                getgenv().pack = packName
+
+                -- Load animation changer script
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Mautiku/Mautiku/refs/heads/main/AnimationCHANGER.txt", true))()
+            else
+                -- Restore default animation
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+
+                if character and defaultAnimateScript then
+                    local existingAnimate = character:FindFirstChild("Animate")
+                    if existingAnimate then
+                        existingAnimate:Destroy()
+                    end
+
+                    defaultAnimateScript.Parent = character
+                    defaultAnimateScript.Disabled = false
+                end
+            end
+        end,
+        Tooltip = "Mage Animation Toggle"
+    })
+end)
+																					
+run(function()
+    UltraFPSBoost = vape.Categories.Utility:CreateModule({
+        Name = 'UltraFPSBoost',
+        Function = function(callback)
+            local g = game
+            local w = g.Workspace
+            local l = g.Lighting
+            local t = w.Terrain
+            local players = g:GetService("Players")
+
+            if callback then
+                -- Apply FPS boost settings
+                t.WaterWaveSize = 0
+                t.WaterWaveSpeed = 0
+                t.WaterReflectance = 0
+                t.WaterTransparency = 0
+                l.GlobalShadows = false
+                l.FogEnd = 1e10
+                l.Brightness = 0
+
+                pcall(function()
+                    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+                end)
+
+                local function isInAccessory(instance)
+                    return instance:FindFirstAncestorWhichIsA("Accessory") ~= nil
+                end
+
+                for _, v in ipairs(g:GetDescendants()) do
+                    if not isInAccessory(v) then
+                        if v:IsA("Part") or v:IsA("UnionOperation") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
+                            v.Material = Enum.Material.Plastic
+                            v.Reflectance = 0
+                        elseif v:IsA("MeshPart") then
+                            v.Material = Enum.Material.Plastic
+                            v.Reflectance = 0
+                            v.TextureID = ""
+                        elseif v:IsA("Decal") or v:IsA("Texture") then
+                            v.Transparency = 1
+                        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                            v.Lifetime = NumberRange.new(0)
+                        elseif v:IsA("Explosion") then
+                            v.BlastPressure = 1
+                            v.BlastRadius = 1
+                        elseif v:IsA("Fire") or v:IsA("SpotLight") or v:IsA("Smoke") then
+                            v.Enabled = false
+                        end
+                    end
+                end
+
+                for _, e in ipairs(l:GetChildren()) do
+                    if e:IsA("BlurEffect") or e:IsA("SunRaysEffect") or e:IsA("ColorCorrectionEffect") or 
+                       e:IsA("BloomEffect") or e:IsA("DepthOfFieldEffect") then
+                        e.Enabled = false
+                    end
+                end
+            else
+                -- Restore basic lighting and terrain settings
+                t.WaterWaveSize = 0.1
+                t.WaterWaveSpeed = 1
+                t.WaterReflectance = 1
+                t.WaterTransparency = 0.5
+                l.GlobalShadows = true
+                l.FogEnd = 1000
+                l.Brightness = 2
+
+                -- Re-enable post-processing
+                for _, e in ipairs(l:GetChildren()) do
+                    if e:IsA("BlurEffect") or e:IsA("SunRaysEffect") or e:IsA("ColorCorrectionEffect") or 
+                       e:IsA("BloomEffect") or e:IsA("DepthOfFieldEffect") then
+                        e.Enabled = true
+                    end
+                end
+            end
+        end,
+        Tooltip = "Toggle ultra FPS boost on or off"
+    })
+end)
+
+run(function()
+    PartyPopperExploit = vape.Categories.Utility:CreateModule({
+        Name = 'PartyPopperExploit',
+        Function = function(callback)
+            if callback then
+                task.spawn(function()
+                    while PartyPopperExploit.Enabled do
+                        bedwars.AbilityController:useAbility("PARTY_POPPER")
+                        task.wait()
+                    end
+                end)
+            end
+        end,
+        Tooltip = "Party1!1!1!1!1!"
+    })
+end)
+
+run(function()
+    local disguiseConnection
+    local uiConnections = {}
+    local characterConnection
+    local originalTexts = {}
+    local originalAppearanceId, originalDisplayName
+
+    StreamerMode = vape.Categories.Utility:CreateModule({
+        Name = 'StreamerMode',
+        Function = function(callback)
+            local lp = game:GetService("Players").LocalPlayer
+            local players = game:GetService('Players')
+
+            if callback then
+                if not getgenv().Config then
+                    getgenv().Config = {
+                        Headless = false,
+                        FakeDisplayName = "Chase",
+                        FakeName = "Chasemaser",
+                        FakeId = 22808138,
+                    }
+                end
+
+                local Config = getgenv().Config
+                local oldUserId = tostring(lp.UserId)
+                local oldName = lp.Name
+                originalDisplayName = lp.DisplayName
+                originalAppearanceId = lp.CharacterAppearanceId
+
+                local function processtext(text)
+                    if typeof(text) ~= "string" then return text end
+                    text = text:gsub(oldName, Config.FakeName)
+                    text = text:gsub(oldUserId, tostring(Config.FakeId))
+                    text = text:gsub(originalDisplayName, Config.FakeDisplayName)
+                    return text
+                end
+
+                -- Disguise UI
+                for _, v in ipairs(game:GetDescendants()) do
+                    if v:IsA("TextBox") or v:IsA("TextLabel") or v:IsA("TextButton") then
+                        originalTexts[v] = {Text = v.Text, Name = v.Name}
+                        v.Text = processtext(v.Text)
+                        v.Name = processtext(v.Name)
+                        table.insert(uiConnections, v.Changed:Connect(function()
+                            v.Text = processtext(v.Text)
+                            v.Name = processtext(v.Name)
+                        end))
+                    end
+                end
+
+                disguiseConnection = game.DescendantAdded:Connect(function(descendant)
+                    if descendant:IsA("TextBox") or descendant:IsA("TextLabel") or descendant:IsA("TextButton") then
+                        descendant.Text = processtext(descendant.Text)
+                        descendant.Name = processtext(descendant.Name)
+                        table.insert(uiConnections, descendant.Changed:Connect(function()
+                            descendant.Text = processtext(descendant.Text)
+                            descendant.Name = processtext(descendant.Name)
+                        end))
+                    end
+                end)
+
+                -- Apply fake info
+                lp.DisplayName = Config.FakeDisplayName
+                lp.CharacterAppearanceId = Config.FakeId
+
+                -- Headless effect
+                if Config.Headless then
+                    task.spawn(function()
+                        while StreamerMode.Enabled and task.wait(0.5) do
+                            local char = lp.Character
+                            if char and char:FindFirstChild("Head") then
+                                char.Head.Transparency = 1
+                                local decal = char.Head:FindFirstChildOfClass("Decal")
+                                if decal then decal:Destroy() end
+                            end
+                        end
+                    end)
+                end
+
+                -- Disguise character
+                local function disguisechar(char, id)
+                    task.spawn(function()
+                        local hum = char:FindFirstChildOfClass("Humanoid")
+                        if not hum then return end
+
+                        local desc
+                        repeat
+                            pcall(function()
+                                desc = players:GetHumanoidDescriptionFromUserId(id)
+                            end)
+                            task.wait()
+                        until desc
+
+                        desc.HeightScale = hum:WaitForChild("HumanoidDescription").HeightScale
+                        char.Humanoid:ApplyDescriptionClientServer(desc)
+                    end)
+                end
+
+                disguisechar(lp.Character, Config.FakeId)
+                characterConnection = lp.CharacterAdded:Connect(function(char)
+                    disguisechar(char, Config.FakeId)
+                end)
+            else
+                -- Cleanup: revert everything
+                if characterConnection then characterConnection:Disconnect() end
+                if disguiseConnection then disguiseConnection:Disconnect() end
+                for _, conn in pairs(uiConnections) do
+                    conn:Disconnect()
+                end
+
+                -- Restore original UI text
+                for obj, data in pairs(originalTexts) do
+                    if obj and obj.Parent then
+                        obj.Text = data.Text
+                        obj.Name = data.Name
+                    end
+                end
+
+                -- Restore original player info
+                if lp then
+                    lp.DisplayName = originalDisplayName or lp.Name
+                    lp.CharacterAppearanceId = originalAppearanceId or lp.UserId
+                end
+            end
+        end,
+        Default = false,
+        Tooltip = "Client Sided"
+    })
+end)
+																					
+run(function()
+    local playersService = game:GetService("Players")
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    local tweenService = game:GetService("TweenService")
+    local workspace = game:GetService("Workspace")
+
+    local activeTweens = {}
+    local activeAnimationTrack = nil
+    local activeModel = nil
+    local emoteActive = false
+
+    NightmareEmote = vape.Categories.Utility:CreateModule({
+        Name = 'Nightmare Emote',
+        Function = function(callback)
+            if callback then
+                local function spinParts(model)
+                    for _, part in ipairs(model:GetDescendants()) do
+                        if part:IsA("BasePart") and (part.Name == "Middle" or part.Name == "Outer") then
+                            local tweenInfo, goal
+                            if part.Name == "Middle" then
+                                tweenInfo = TweenInfo.new(12.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1, false, 0)
+                                goal = { Orientation = part.Orientation + Vector3.new(0, -360, 0) }
+                            elseif part.Name == "Outer" then
+                                tweenInfo = TweenInfo.new(1.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1, false, 0)
+                                goal = { Orientation = part.Orientation + Vector3.new(0, 360, 0) }
+                            end
+
+                            local tween = tweenService:Create(part, tweenInfo, goal)
+                            tween:Play()
+                            table.insert(activeTweens, tween)
+                        end
+                    end
+                end
+
+                local function placeModelUnderLeg()
+                    local player = playersService.LocalPlayer
+                    local character = player.Character or player.CharacterAdded:Wait()
+                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
+                    if humanoidRootPart then
+                        local assetsFolder = replicatedStorage:FindFirstChild("Assets")
+                        if assetsFolder then
+                            local effectsFolder = assetsFolder:FindFirstChild("Effects")
+                            if effectsFolder then
+                                local modelTemplate = effectsFolder:FindFirstChild("NightmareEmote")
+                                if modelTemplate and modelTemplate:IsA("Model") then
+                                    local clonedModel = modelTemplate:Clone()
+                                    clonedModel.Parent = workspace
+
+                                    if clonedModel.PrimaryPart then
+                                        clonedModel:SetPrimaryPartCFrame(humanoidRootPart.CFrame - Vector3.new(0, 3, 0))
+                                    else
+                                        warn("PrimaryPart not set for NightmareEmote model!")
+                                        return
+                                    end
+
+                                    spinParts(clonedModel)
+                                    activeModel = clonedModel
+                                else
+                                    warn("NightmareEmote model not found or is not a valid model!")
+                                end
+                            else
+                                warn("Effects folder not found in Assets!")
+                            end
+                        else
+                            warn("Assets folder not found in ReplicatedStorage!")
+                        end
+                    else
+                        warn("HumanoidRootPart not found in character!")
+                    end
+                end
+
+                local function playAnimation(animationId)
+                    local player = playersService.LocalPlayer
+                    local character = player.Character or player.CharacterAdded:Wait()
+                    local humanoid = character:FindFirstChild("Humanoid")
+
+                    if humanoid then
+                        local animator = humanoid:FindFirstChild("Animator") or Instance.new("Animator", humanoid)
+                        local animation = Instance.new("Animation")
+                        animation.AnimationId = animationId
+                        activeAnimationTrack = animator:LoadAnimation(animation)
+                        activeAnimationTrack:Play()
+                    else
+                        warn("Humanoid not found in character!")
+                    end
+                end
+
+                local function stopEffects()
+                    for _, tween in ipairs(activeTweens) do
+                        tween:Cancel()
+                    end
+                    activeTweens = {}
+
+                    if activeAnimationTrack then
+                        activeAnimationTrack:Stop()
+                        activeAnimationTrack = nil
+                    end
+
+                    if activeModel then
+                        activeModel:Destroy()
+                        activeModel = nil
+                    end
+
+                    emoteActive = false
+                end
+
+                local function monitorWalking()
+                    local player = playersService.LocalPlayer
+                    local character = player.Character or player.CharacterAdded:Wait()
+                    local humanoid = character:FindFirstChild("Humanoid")
+
+                    if humanoid then
+                        humanoid.Running:Connect(function(speed)
+                            if speed > 0 and emoteActive then
+                                stopEffects()
+                            end
+                        end)
+                    else
+                        warn("Humanoid not found in character!")
+                    end
+                end
+
+                local function activateNightmareEmote()
+                    if emoteActive then return end
+                    emoteActive = true
+
+                    local success, err = pcall(function()
+                        monitorWalking()
+                        placeModelUnderLeg()
+                        playAnimation("rbxassetid://9191822700")
+                    end)
+
+                    if not success then
+                        warn("Error occurred: " .. tostring(err))
+                        emoteActive = false
+                    end
+                end
+
+                activateNightmareEmote()
+            else
+                -- When toggled off
+                if emoteActive then
+                    stopEffects()
+                end
+            end
+        end,
+        Tooltip = "Free Nightmare emote!1!1!1!1"
+    })
+end)
+																									
+run(function()
+    local runService = game:GetService("RunService")
+    local players = game:GetService("Players")
+    local lplr = players.LocalPlayer
+
+    local NoNameTag = vape.Categories.Utility:CreateModule({
+        Name = 'NoNameTag',
+        Function = function(callback)
+            if callback then
+                NoNameTag:Clean(runService.RenderStepped:Connect(function()
+                    pcall(function()
+                        if lplr.Character and lplr.Character:FindFirstChild("Head") and lplr.Character.Head:FindFirstChild("Nametag") then
+                            lplr.Character.Head.Nametag:Destroy()
+                        end
+                    end)
+                end))
+            end
+        end,
+        Tooltip = "Client Sided",
+        Default = false
+    })
+end)
+
+run(function()
+    GetHost = vape.Categories.Utility:CreateModule({
+        Name = 'GetHost',
+        Function = function(enabled)
+            local player = game.Players.LocalPlayer
+            if enabled then
+                player:SetAttribute("CustomMatchRole", "host")
+            else
+                player:SetAttribute("CustomMatchRole", nil) -- remove the role
+            end
+        end,
+        Default = false,
+        Tooltip = ":troll:"
+    })
+end)
+
+run(function()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local LocalPlayer = Players.LocalPlayer
+    local loopConn
+    local invisibilityEnabled = false
+
+    local function modifyHRP(onEnable)
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+
+        if onEnable then
+            hrp.Transparency = 0.3
+            hrp.Color = Color3.new(1, 1, 1)
+            hrp.Material = Enum.Material.Plastic
+        else
+            hrp.Transparency = 1
+        end
+
+        hrp.CanCollide = true
+        hrp.Anchored = false
+    end
+
+    local function setCharacterVisibility(isVisible)
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                part.LocalTransparencyModifier = isVisible and 0 or 1
+            elseif part:IsA("Decal") then
+                part.Transparency = isVisible and 0 or 1
+            elseif part:IsA("LayerCollector") then
+                part.Enabled = isVisible
+            end
+        end
+    end
+
+    local function startLoop(Character)
+        local Humanoid = Character:FindFirstChild("Humanoid")
+        if not Humanoid or Humanoid.RigType == Enum.HumanoidRigType.R6 then return end
+
+        local RootPart = Character:FindFirstChild("HumanoidRootPart")
+        if not RootPart then return end
+
+        if loopConn then loopConn:Disconnect() end
+
+        loopConn = RunService.Heartbeat:Connect(function()
+            if not invisibilityEnabled or not Character or not Humanoid or not RootPart then return end
+
+            -- Force character invisible every frame
+            for _, part in ipairs(Character:GetDescendants()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    part.LocalTransparencyModifier = 1
+                elseif part:IsA("Decal") then
+                    part.Transparency = 1
+                elseif part:IsA("LayerCollector") then
+                    part.Enabled = false
+                end
+            end
+
+            -- Position/animation spoof
+            local oldcf = RootPart.CFrame
+            local oldcamoffset = Humanoid.CameraOffset
+            local newcf = RootPart.CFrame - Vector3.new(0, Humanoid.HipHeight + (RootPart.Size.Y / 2) - 1, 0)
+
+            RootPart.CFrame = newcf * CFrame.Angles(0, 0, math.rad(180))
+            Humanoid.CameraOffset = Vector3.new(0, -5, 0)
+
+            local anim = Instance.new("Animation")
+            anim.AnimationId = "http://www.roblox.com/asset/?id=11360825341"
+            local loaded = Humanoid.Animator:LoadAnimation(anim)
+            loaded.Priority = Enum.AnimationPriority.Action4
+            loaded:Play()
+            loaded.TimePosition = 0.2
+            loaded:AdjustSpeed(0)
+
+            RunService.RenderStepped:Wait()
+            loaded:Stop()
+
+            Humanoid.CameraOffset = oldcamoffset
+            RootPart.CFrame = oldcf
+        end)
+    end
+
+    Invisibility = vape.Categories.Blatant:CreateModule({
+        Name = 'Invisibility',
+        Function = function(callback)
+            invisibilityEnabled = callback
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+            if callback then
+                vape:CreateNotification('Invisibility Enabled', 'You are now invisible.', 4)
+                modifyHRP(true)
+                setCharacterVisibility(false)
+                startLoop(character)
+            else
+                if loopConn then
+                    loopConn:Disconnect()
+                    loopConn = nil
+                end
+                modifyHRP(false)
+                setCharacterVisibility(true)
+            end
+        end,
+        Default = false,
+        Tooltip = ""
+    })
+
+    LocalPlayer.CharacterAdded:Connect(function()
+        if invisibilityEnabled then
+            task.wait(0.5)
+            Invisibility.Function(true)
+        end
+    end)
+end)
+
+run(function()
+    Furryall = vape.Categories.Blatant:CreateModule({
+        Name = 'Furryall',
+        Function = function(callback)
+            local Players = game:GetService("Players")
+            local Workspace = game:GetService("Workspace")
+            local LOCAL_PLAYER = Players.LocalPlayer
+
+            local HEAD_ACCESSORY_ID = "rbxassetid://5460001849"
+            local HRP_ACCESSORY_ID = "rbxassetid://7485988593"
+
+            local insertedAccessories = {}
+
+            local function loadAccessory(assetId)
+                local asset = game:GetObjects(assetId)[1]
+                if not asset then return nil end
+                if asset:IsA("Accessory") then return asset end
+                for _, child in ipairs(asset:GetChildren()) do
+                    if child:IsA("Accessory") then return child end
+                end
+                return nil
+            end
+
+            local function weldAccessory(character, partName, assetId, offsetCFrame)
+                local part = character:FindFirstChild(partName)
+                if not part or not part:IsA("BasePart") then return end
+                local acc = loadAccessory(assetId)
+                if not acc then return end
+                acc = acc:Clone()
+                local handle = acc:FindFirstChild("Handle")
+                if not handle or not handle:IsA("BasePart") then return end
+
+                for _, p in acc:GetDescendants() do
+                    if p:IsA("BasePart") then
+                        p.Anchored = false
+                        p.CanCollide = false
+                        p.Transparency = 0
+                    end
+                end
+
+                acc.Parent = Workspace
+                handle.CFrame = part.CFrame * offsetCFrame
+
+                local weld = Instance.new("WeldConstraint")
+                weld.Part0 = part
+                weld.Part1 = handle
+                weld.Parent = handle
+
+                table.insert(insertedAccessories, acc)
+            end
+
+            local function applyAccessories(character)
+                if not character or not character.Parent then return end
+                weldAccessory(character, "Head", HEAD_ACCESSORY_ID, CFrame.new(0, 0.8, 0))
+                weldAccessory(character, "HumanoidRootPart", HRP_ACCESSORY_ID, CFrame.Angles(0, math.rad(180), 0) * CFrame.new(0, 0, -1) * CFrame.Angles(0, math.rad(180), 0))
+            end
+
+            local function isPlayerCharacter(model)
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player.Character == model then return true end
+                end
+                return false
+            end
+
+            local function processCharacters()
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= LOCAL_PLAYER and player.Character then
+                        applyAccessories(player.Character)
+                    end
+                end
+                for _, model in ipairs(Workspace:GetChildren()) do
+                    if model:IsA("Model") and not isPlayerCharacter(model) and model:FindFirstChildWhichIsA("BasePart") then
+                        applyAccessories(model)
+                    end
+                end
+            end
+
+            local function onCharacterAdded(char)
+                char:WaitForChild("Head", 5)
+                char:WaitForChild("HumanoidRootPart", 5)
+                applyAccessories(char)
+            end
+
+            local function setupPlayer(player)
+                if player == LOCAL_PLAYER then return end
+                if player.Character then onCharacterAdded(player.Character) end
+                player.CharacterAdded:Connect(onCharacterAdded)
+            end
+
+            local function onWorkspaceAdded(child)
+                if child:IsA("Model") and not isPlayerCharacter(child) and child:FindFirstChild("HumanoidRootPart") then
+                    task.delay(0.1, function()
+                        applyAccessories(child)
+                    end)
+                end
+            end
+
+            if callback then
+                processCharacters()
+                for _, player in ipairs(Players:GetPlayers()) do setupPlayer(player) end
+                Players.PlayerAdded:Connect(setupPlayer)
+                Workspace.ChildAdded:Connect(onWorkspaceAdded)
+            else
+                for _, acc in ipairs(insertedAccessories) do
+                    if acc and acc.Parent then acc:Destroy() end
+                end
+                insertedAccessories = {}
+            end
+        end,
+        Default = false,
+        Tooltip = "Makes everyone a furry except for you"
+    })
+end)
+
+run(function()
+    local Players = game:GetService("Players")
+    local ageCheckConn
+
+    local function checkAccountAges()
+        for _, player in ipairs(Players:GetPlayers()) do
+            local age = player.AccountAge
+            if age < 13 then
+                vape:CreateNotification("Cheater Detected", player.Name .. " might be Cheating (Account Age: " .. tostring(age) .. ")", 5)
+            end
+        end
+    end
+
+    local function startChecking()
+        checkAccountAges()
+        ageCheckConn = Players.PlayerAdded:Connect(function(player)
+            player:GetPropertyChangedSignal("AccountAge"):Wait()
+            local age = player.AccountAge
+            if age < 13 then
+                vape:CreateNotification("Cheater Detected", player.Name .. " might be Cheating (Account Age: " .. tostring(age) .. ")", 5)
+            end
+        end)
+    end
+
+    local function stopChecking()
+        if ageCheckConn then
+            ageCheckConn:Disconnect()
+            ageCheckConn = nil
+        end
+    end
+
+    vape.Categories.Utility:CreateModule({
+        Name = "CheaterDetector",
+        Function = function(callback)
+            if callback then
+                startChecking()
+            else
+                stopChecking()
+            end
+        end,
+        Default = false,
+        Tooltip = "🛡️"
+    })
+end)
+																													
+run(function()																																	
 	local FastBreak
 	local Time
 	
@@ -1796,7 +2947,39 @@ run(function()
 		Suffix = 'seconds'
 	})
 end)
-	
+
+run(function()
+	local TexturePack
+	local Mode
+	local packs = {'FatCat', 'Simply', 'VioletsDreams', 'Enlightened', 'Onyx', 'Fury', 'Wichtiger', 'Makima', 'Marin-Kitsawaba', 'Prime', 'Vile', 'Devourer', 'Acidic', 'Moon4Real', 'Nebula'}
+	TexturePack = vape.Legit:CreateModule({
+		Name = 'Texture Pack',
+		Tooltip = 'Changes your items with new textures',
+		Function = function(callback: boolean)
+			if callback then
+				loadstring(game:HttpGet('https://raw.githubusercontent.com/new-qwertyui/TexturePacks/refs/heads/main/'..Mode.Value..'.lua'))()
+				repeat
+					for i, v in lplr.Character:GetDescendants() do
+						if v.Name:find('Sword') then
+							pcall(function() v.CanCollide = false end)
+						end
+					end
+					task.wait()
+				until (not TexturePack.Enabled)
+			else
+				pcall(function()
+					texturepack:Disconnect()
+					getgenv().texturepack = nil
+				end)
+			end
+		end
+	})
+	Mode = TexturePack:CreateDropdown({
+		Name = 'Pack',
+		List = packs
+	})
+end)
+																												
 local Fly
 local LongJump
 run(function()
@@ -1945,7 +3128,197 @@ run(function()
 		Default = true
 	})
 end)
-	
+
+run(function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local animationId = "rbxassetid://4940563117"
+    local activeTracks = {}
+    local respawnConnection
+
+    SetEmote = vape.Categories.Blatant:CreateModule({
+        Name = 'SetEmote',
+        Function = function(callback)
+            local function applyLoopingAnimation(character)
+                local humanoid = character:WaitForChild("Humanoid")
+                local animation = Instance.new("Animation")
+                animation.AnimationId = animationId
+                local mainAnim = humanoid:LoadAnimation(animation)
+
+                mainAnim.Priority = Enum.AnimationPriority.Action4
+                mainAnim.Looped = true
+                mainAnim:Play()
+                table.insert(activeTracks, mainAnim)
+
+                -- Watchdog to keep animation active
+                task.spawn(function()
+                    while SetEmote.Enabled and character and character.Parent do
+                        for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                            if track.Animation.AnimationId ~= animationId then
+                                track:Stop()
+                            elseif not track.Looped then
+                                track.Looped = true
+                            end
+                        end
+                        if not mainAnim.IsPlaying then
+                            mainAnim:Play()
+                        end
+                        task.wait(0.05)
+                    end
+                end)
+            end
+
+            if callback then
+                -- Apply to current character
+                if LocalPlayer.Character then
+                    applyLoopingAnimation(LocalPlayer.Character)
+                end
+
+                -- Reapply on respawn
+                respawnConnection = LocalPlayer.CharacterAdded:Connect(function(char)
+                    applyLoopingAnimation(char)
+                end)
+            else
+                -- Stop all active animation tracks
+                for _, track in ipairs(activeTracks) do
+                    if track and track.IsPlaying then
+                        track:Stop()
+                    end
+                end
+                activeTracks = {}
+
+                -- Disconnect respawn handler
+                if respawnConnection then
+                    respawnConnection:Disconnect()
+                    respawnConnection = nil
+                end
+            end
+        end,
+        Tooltip = 'Looped emote animation'
+    })
+end)
+
+run(function()
+    CframeHighJump = vape.Categories.Blatant:CreateModule({
+        Name = 'CframeHighJump',
+        Function = function(callback)
+            if callback then
+                local player = game.Players.LocalPlayer
+                local character = player.Character or player.CharacterAdded:Wait()
+                local rootPart = character:WaitForChild("HumanoidRootPart")
+
+                local originalGravity = workspace.Gravity
+                workspace.Gravity = 0
+
+                local totalTime = 2
+                local interval = 0.1
+                local stepHeight = 5
+                local steps = totalTime / interval
+
+                task.spawn(function()
+                    for i = 1, steps do
+                        rootPart.CFrame = rootPart.CFrame + Vector3.new(0, stepHeight, 0)
+                        task.wait(interval)
+                    end
+
+                    workspace.Gravity = originalGravity
+                end)
+            end
+        end,
+        Default = false,
+        Tooltip = "High jump but with Cframe method"
+    })
+end)
+																																	
+run(function()
+    local itemSpawnerConnection
+
+    ItemSpawner = vape.Categories.Utility:CreateModule({
+        Name = 'ItemSpawner',
+        Function = function(callback)
+            if itemSpawnerConnection then
+                itemSpawnerConnection:Disconnect()
+                itemSpawnerConnection = nil
+            end
+
+            if callback then
+                local Players = game:GetService("Players")
+                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+                local player = Players.LocalPlayer
+                local username = player.Name
+
+                local itemsFolder = ReplicatedStorage:WaitForChild("Items")
+                local inventoriesFolder = ReplicatedStorage:WaitForChild("Inventories")
+
+                -- Print all items in the Items folder
+                for _, item in ipairs(itemsFolder:GetChildren()) do
+                    print("Found item:", item.Name)
+                end
+
+                itemSpawnerConnection = player.Chatted:Connect(function(message)
+                    local prefix = "/i "
+                    if message:sub(1, #prefix):lower() == prefix then
+                        local inputName = message:sub(#prefix + 1):lower()
+                        local matchedItem = nil
+
+                        -- Case-insensitive match
+                        for _, item in ipairs(itemsFolder:GetChildren()) do
+                            if item.Name:lower() == inputName then
+                                matchedItem = item
+                                break
+                            end
+                        end
+
+                        if matchedItem then
+                            local inventoryFolder = inventoriesFolder:FindFirstChild(username)
+                            if inventoryFolder then
+                                local clone = matchedItem:Clone()
+                                clone.Parent = inventoryFolder
+                                print("Cloned:", matchedItem.Name, "to", username .. "'s inventory")
+                            else
+                                warn("Inventory folder for", username, "not found")
+                            end
+                        else
+                            warn("Item", inputName, "not found in Items")
+                        end
+                    end
+                end)
+            end
+        end,
+        Default = false,
+        Tooltip = "Client Sided"
+    })
+end)
+
+run(function()
+    local conn
+
+    PixelSword = vape.Categories.Utility:CreateModule({
+        Name = "PixelSword",
+        Function = function(callback)
+            if callback then
+                conn = workspace.CurrentCamera.Viewmodel.ChildAdded:Connect(function(x)
+                    if x and x:FindFirstChild("Handle") then
+                        if string.find(x.Name:lower(), 'sword') then
+                            x.Handle.Material = Enum.Material.ForceField
+                            x.Handle.MeshId = "rbxassetid://13471207377"
+                            x.Handle.BrickColor = BrickColor.new("Hot pink")
+                        end
+                    end
+                end)
+            else
+                if conn then
+                    conn:Disconnect()
+                    conn = nil
+                end
+            end
+        end,
+        Default = false,
+        Tooltip = ""
+    })
+end)
+																																		
 run(function()
 	local Mode
 	local Expand
@@ -3941,7 +5314,50 @@ run(function()
 		Darker = true
 	})
 end)
-	
+
+run(function()
+    Night = vape.Categories.Render:CreateModule({
+        Name = 'Night',
+        Function = function(callback)
+            local Lighting = game:GetService("Lighting")
+
+            if callback then
+                -- Remove all Clouds
+                for _, obj in ipairs(Lighting:GetChildren()) do
+                    if obj:IsA("Clouds") then
+                        obj:Destroy()
+                    end
+                end
+
+                -- Set ClockTime to 20 (8 PM)
+                Lighting.ClockTime = 20
+
+                -- Set default Roblox skybox
+                local defaultSky = Instance.new("Sky")
+                defaultSky.Name = "DefaultSky"
+                defaultSky.SkyboxBk = "rbxassetid://7018684000"
+                defaultSky.SkyboxDn = "rbxassetid://7018687832"
+                defaultSky.SkyboxFt = "rbxassetid://7018685215"
+                defaultSky.SkyboxLf = "rbxassetid://7018684379"
+                defaultSky.SkyboxRt = "rbxassetid://7018686132"
+                defaultSky.SkyboxUp = "rbxassetid://7018689553"
+                defaultSky.Parent = Lighting
+            else
+                -- Reset ClockTime to default (assume 14 = 2 PM)
+                Lighting.ClockTime = 14
+
+                -- Remove inserted skyboxes named "DefaultSky"
+                for _, obj in ipairs(Lighting:GetChildren()) do
+                    if obj:IsA("Sky") and obj.Name == "DefaultSky" then
+                        obj:Destroy()
+                    end
+                end
+            end
+        end,
+        Tooltip = "Night time"
+    })
+end)
+																																																																	
 run(function()
 	local AutoBalloon
 	
