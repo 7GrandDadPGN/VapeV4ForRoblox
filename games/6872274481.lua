@@ -2882,7 +2882,7 @@ run(function()
     local function checkAccountAges()
         for _, player in ipairs(Players:GetPlayers()) do
             local age = player.AccountAge
-            if age < 13 then
+            if age < 20 then
                 vape:CreateNotification("Cheater Detected", player.Name .. " might be Cheating (Account Age: " .. tostring(age) .. ")", 5)
             end
         end
@@ -2893,7 +2893,7 @@ run(function()
         ageCheckConn = Players.PlayerAdded:Connect(function(player)
             player:GetPropertyChangedSignal("AccountAge"):Wait()
             local age = player.AccountAge
-            if age < 13 then
+            if age < 20 then
                 vape:CreateNotification("Cheater Detected", player.Name .. " might be Cheating (Account Age: " .. tostring(age) .. ")", 5)
             end
         end)
@@ -2919,7 +2919,105 @@ run(function()
         Tooltip = "🛡️"
     })
 end)
-																													
+
+run(function()
+    local chatConnections = {}
+    local TextChatService = game:GetService("TextChatService")
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local LocalPlayer = Players.LocalPlayer
+
+    local keywords = {
+        "hacker",
+        "hax",
+        "hack",
+        "cheater"
+    }
+
+    local function containsKeyword(msg)
+        msg = msg:lower()
+        for _, word in ipairs(keywords) do
+            if msg:find(word) then
+                return true
+            end
+        end
+        return false
+    end
+
+    local function sendChatMessage(msg)
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if channel then
+                channel:SendAsync(msg)
+            elseif TextChatService.ChatInputBarConfiguration then
+                TextChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(msg)
+            end
+        else
+            local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+            if chatEvent and chatEvent:FindFirstChild("SayMessageRequest") then
+                chatEvent.SayMessageRequest:FireServer(msg, "All")
+            end
+        end
+    end
+
+    local function connectNewChatSystem()
+        table.insert(chatConnections, TextChatService.MessageReceived:Connect(function(textChatMessage)
+            local speaker = textChatMessage.TextSource
+            if speaker and speaker.UserId ~= LocalPlayer.UserId then
+                local player = Players:GetPlayerByUserId(speaker.UserId)
+                if player and containsKeyword(textChatMessage.Text) then
+                    sendChatMessage("actually " .. player.Name .. " its called Exploits")
+                end
+            end
+        end))
+    end
+
+    local function connectLegacyChatSystem()
+        local function connectPlayerChat(player)
+            if player ~= LocalPlayer then
+                local conn = player.Chatted:Connect(function(msg)
+                    if containsKeyword(msg) then
+                        sendChatMessage("actually " .. player.Name .. " its called Exploits")
+                    end
+                end)
+                table.insert(chatConnections, conn)
+            end
+        end
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            connectPlayerChat(player)
+        end
+
+        table.insert(chatConnections, Players.PlayerAdded:Connect(connectPlayerChat))
+    end
+
+    local function disconnectAll()
+        for _, conn in ipairs(chatConnections) do
+            if typeof(conn) == "RBXScriptConnection" then
+                conn:Disconnect()
+            end
+        end
+        table.clear(chatConnections)
+    end
+
+    AutoCorrect = vape.Categories.Utility:CreateModule({
+        Name = 'AutoCorrect',
+        Function = function(callback)
+            if callback then
+                if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+                    connectNewChatSystem()
+                else
+                    connectLegacyChatSystem()
+                end
+            else
+                disconnectAll()
+            end
+        end,
+        Default = false,
+        Tooltip = "Corrects someone when they say hack🔥"
+    })
+end)
+																														
 run(function()																																	
 	local FastBreak
 	local Time
