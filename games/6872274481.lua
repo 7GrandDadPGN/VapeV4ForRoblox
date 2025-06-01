@@ -3017,7 +3017,56 @@ run(function()
         Tooltip = "Corrects someone when they say hack🔥"
     })
 end)
-																														
+
+run(function()
+    local speedLoop
+    local pulseLoop
+
+    SpeedBypass = vape.Categories.Blatant:CreateModule({
+        Name = 'SpeedBypass',
+        Function = function(callback)
+            if callback then
+                local Players = game:GetService("Players")
+                local RunService = game:GetService("RunService")
+
+                local player = Players.LocalPlayer
+                local character = player.Character or player.CharacterAdded:Wait()
+                local humanoid = character:WaitForChild("Humanoid")
+                local hrp = character:WaitForChild("HumanoidRootPart")
+
+                local tpwalkEnabled = false
+                local tpwalkSpeed = 0.5
+
+                speedLoop = RunService.RenderStepped:Connect(function()
+                    if tpwalkEnabled and humanoid and humanoid.MoveDirection.Magnitude > 0 then
+                        hrp.CFrame = hrp.CFrame + humanoid.MoveDirection * tpwalkSpeed
+                    end
+                end)
+
+                pulseLoop = task.spawn(function()
+                    while callback do
+                        tpwalkEnabled = true
+                        task.wait(0.3)
+                        tpwalkEnabled = false
+                        task.wait(2.7)
+                    end
+                end)
+            else
+                if speedLoop then
+                    speedLoop:Disconnect()
+                    speedLoop = nil
+                end
+                if pulseLoop then
+                    task.cancel(pulseLoop)
+                    pulseLoop = nil
+                end
+            end
+        end,
+        Default = false,
+        Tooltip = ""
+    })
+end)
+																															
 run(function()																																	
 	local FastBreak
 	local Time
