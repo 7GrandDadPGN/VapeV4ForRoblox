@@ -27,7 +27,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/7GrandDadPGN/VapeV4Fo
 Half of the time its usually the scripting utility at fault, please make sure the utility meets certain quality standards such as.
 1. Supporting file functions & the debug library.
 2. Not implementing lua generated / half baked versions of such functions resulting in unintended behavior.
-3. Maintaing the same behavior across all usages of said functions.
+3. Maintaining the same behavior across all usages of said functions.
 ### User Issues
 If its not the supposed utility at fault, please try some troubleshooting steps.
 1. Deleting the newvape folder (WITH THE GAME CLOSED).
