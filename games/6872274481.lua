@@ -289,6 +289,10 @@ local function getSpeed()
 		multi += math.max((v.moveSpeedMultiplier or 0) - 1, 0)
 	end
 
+	if entitylib.isAlive and lplr.Character:FindFirstChild('elk') then
+		multi += 0.6
+	end
+
 	if multi > 0 and increase then
 		multi += 0.16 + (0.02 * math.round(multi))
 	end
