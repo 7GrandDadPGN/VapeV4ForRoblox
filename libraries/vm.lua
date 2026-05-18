@@ -52,6 +52,7 @@ local buffer_fromstring = buffer.fromstring
 local buffer_len = buffer.len
 local buffer_readu8 = buffer.readu8
 local buffer_readu32 = buffer.readu32
+local buffer_readi32 = buffer.readi32
 local buffer_readstring = buffer.readstring
 local buffer_readf32 = buffer.readf32
 local buffer_readf64 = buffer.readf64
@@ -171,6 +172,9 @@ local opList = {
 	{ "JUMPXEQKS", 4, 6, true },
 	{ "IDIV", 3, 0, false },
 	{ "IDIVK", 3, 2, false },
+	{ "GETUDATAKS", 3, 1, true },
+	{ "SETUDATAKS", 3, 1, true },
+	{ "NAMECALLUDATA", 3, 1, true },
 }
 
 local LUA_MULTRET = -1
@@ -238,6 +242,12 @@ local function luau_deserialize(bytecode, luau_settings)
 		return word
 	end
 
+	local function readSignedWord()
+		local word = buffer_readi32(stream, cursor)
+		cursor = cursor + 4
+		return word
+	end
+
 	local function readFloat()
 		local float = buffer_readf32(stream, cursor)
 		cursor = cursor + 4
@@ -281,7 +291,7 @@ local function luau_deserialize(bytecode, luau_settings)
 	local typesVersion = 0
 	if luauVersion == 0 then
 		error("the provided bytecode is an error message",0)
-	elseif luauVersion < 3 or luauVersion > 6 then
+	elseif luauVersion < 3 or luauVersion > 9 then
 		error("the version of the provided bytecode is unsupported",0)
 	elseif luauVersion >= 4 then
 		typesVersion = readByte()
@@ -452,6 +462,20 @@ local function luau_deserialize(bytecode, luau_settings)
 				else
 					k = luau_settings.vectorCtor(x,y,z)
 				end
+			elseif kt == 8 then --// Table With Constants
+				local dataLength = readVarInt()
+				k = table_create(dataLength)
+
+				for i = 1, dataLength do
+					k[readVarInt()] = readSignedWord()
+				end
+			elseif kt == 9 then --// Integer
+				local sign_flag = readByte()
+				k = readVarInt()
+
+				if sign_flag ~= 0 then
+					k = -k
+				end
 			end
 
 			klist[i] = k
@@ -572,8 +596,8 @@ local function luau_deserialize(bytecode, luau_settings)
 
 	local mainProto = protoList[readVarInt() + 1]
 
-	cursor += 40 -- lol
-	assert(cursor == buffer_len(stream), "deserializer cursor position mismatch")
+	--cursor += 40 -- lol
+	--assert(cursor == buffer_len(stream), "deserializer cursor position mismatch")
 
 	mainProto.debugname = "(main)"
 

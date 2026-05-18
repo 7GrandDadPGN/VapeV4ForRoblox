@@ -30,14 +30,14 @@ end
 
 vape.Place = 5938036553
 if isfile('newvape/games/'..vape.Place..'.lua') then
-	loadstring(readfile('newvape/games/'..vape.Place..'.lua'), 'bedwars')()
+	loadstring(readfile('newvape/games/'..vape.Place..'.lua'), 'frontlines')()
 else
 	if not shared.VapeDeveloper then
 		local suc, res = pcall(function()
 			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/games/'..vape.Place..'.lua', true)
 		end)
 		if suc and res ~= '404: Not Found' then
-			loadstring(downloadFile('newvape/games/'..vape.Place..'.lua'), 'bedwars')()
+			loadstring(downloadFile('newvape/games/'..vape.Place..'.lua'), 'frontlines')()
 		end
 	end
 end

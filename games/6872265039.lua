@@ -11,6 +11,8 @@ local entitylib = vape.Libraries.entity
 local sessioninfo = vape.Libraries.sessioninfo
 local bedwars = {}
 
+lplr:Kick('Bedwars is no longer supported by Vape V4, thank you for 5 years of support ❤️')
+
 local function notif(...)
 	return vape:CreateNotification(...)
 end
@@ -59,7 +61,6 @@ for _, v in vape.Modules do
 		vape:Remove(i)
 	end
 end
-
 run(function()
 	local Sprint
 	local old
