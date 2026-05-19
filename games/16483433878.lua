@@ -299,6 +299,29 @@ run(function()
 end)
 	
 run(function()
+	local PickupTP
+	
+	PickupTP = vape.Categories.Blatant:CreateModule({
+	    Name = 'PickupTP',
+	    Function = function(callback)
+	        if callback then
+	            PickupTP:Toggle()
+	
+	            if entitylib.isAlive then
+	                for _, v in collectionService:GetTagged('Pickup') do
+	                    if not v:GetAttribute('Inactive') then
+	                        entitylib.character.RootPart.CFrame = v.CFrame
+	                        break
+	                    end
+	                end
+	            end
+	        end
+	    end,
+	    Tooltip = 'Teleport to any nearby active pickups.'
+	})
+end)
+	
+run(function()
 	local Speed
 	local Value
 	
