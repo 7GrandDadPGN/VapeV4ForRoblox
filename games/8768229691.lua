@@ -527,8 +527,10 @@ run(function()
 	local connection
 	local rand, old = Random.new()
 	
-	local function velocityFunction(velo, ...)
-		if rand:NextNumber(0, 100) > Chance.Value then return end
+	local function velocityFunction(...)
+		if rand:NextNumber(0, 100) > Chance.Value then return old(...) end
+	
+		local args = table.pack(...)
 		local check = (not Targeting.Enabled) or entitylib.EntityPosition({
 			Range = 50,
 			Part = 'RootPart',
@@ -538,10 +540,10 @@ run(function()
 		if check then
 			local hort, vert = (Horizontal.Value / 100), (Vertical.Value / 100)
 			if hort == 0 and vert == 0 then return end
-			velo = Vector3.new(velo.X * hort, velo.Y * vert, velo.Z * hort)
+			args[1] = Vector3.new(args[1].X * hort, args[1].Y * vert, args[1].Z * hort)
 		end
 	
-		return old(velo, ...)
+		return old(unpack(args, 1, args.n))
 	end
 	
 	Velocity = vape.Categories.Combat:CreateModule({

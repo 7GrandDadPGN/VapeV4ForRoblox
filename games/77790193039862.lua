@@ -95,16 +95,7 @@ run(function()
 
 		if plr == lplr then
 			local hum = {GetState = function() end, Health = 100}
-			local humrootpart = newproxy(true)
-			getmetatable(humrootpart).__index = function(self, key)
-				if key == 'CFrame' then
-					return gameCamera.CFrame
-				elseif key == 'Position' then
-					return gameCamera.CFrame.Position
-				elseif key == 'Size' then
-					return Vector3.new(2, 2, 1)
-				end
-			end
+			local humrootpart = gameCamera.CameraSubject
 
 			local entity = {
 				Connections = {},
@@ -141,6 +132,7 @@ run(function()
 					Head = head,
 					Humanoid = hum,
 					HumanoidRootPart = humrootpart,
+					Hitbox = char.PlayerHitbox,
 					HipHeight = 3,
 					MaxHealth = 100,
 					NPC = plr == nil,
@@ -149,23 +141,16 @@ run(function()
 					TeamCheck = teamfunc
 				}
 
-				if plr == lplr then
-					entitylib.character = entity
-					entitylib.isAlive = true
-					entitylib.Events.LocalAdded:Fire(entity)
-				else
-					entity.Targetable = entitylib.targetCheck(entity)
-
-					for _, v in entitylib.getUpdateConnections(entity) do
-						table.insert(entity.Connections, v:Connect(function()
-							entity.Health = plr.HealthValue.Value
-							entitylib.Events.EntityUpdated:Fire(entity)
-						end))
-					end
-
-					table.insert(entitylib.List, entity)
-					entitylib.Events.EntityAdded:Fire(entity)
+				entity.Targetable = entitylib.targetCheck(entity)
+				for _, v in entitylib.getUpdateConnections(entity) do
+					table.insert(entity.Connections, v:Connect(function()
+						entity.Health = plr.HealthValue.Value
+						entitylib.Events.EntityUpdated:Fire(entity)
+					end))
 				end
+
+				table.insert(entitylib.List, entity)
+				entitylib.Events.EntityAdded:Fire(entity)
 			end
 
 			entitylib.EntityThreads[char] = nil
@@ -178,7 +163,15 @@ run(function()
 	entitylib.start = function()
 		oldstart()
 		if entitylib.Running then
-			entitylib.addEntity(true, lplr)
+			table.insert(entitylib.Connections, gameCamera:GetPropertyChangedSignal('CameraSubject'):Connect(function()
+				if gameCamera.CameraSubject then
+					entitylib.addEntity(true, lplr)
+				end
+			end))
+
+			if gameCamera.CameraSubject then
+				entitylib.addEntity(true, lplr)
+			end
 
 			table.insert(entitylib.Connections, workspace.OtherCharacters.ChildAdded:Connect(function(ent)
 				local plr = playersService:FindFirstChild(ent.Name:sub(1, #ent.Name - 14))
@@ -199,7 +192,7 @@ run(function()
 	entitylib.start()
 end)
 
-for _, v in {'AimAssist', 'Reach', 'SilentAim', 'AntiFall', 'Desync', 'HitBoxes', 'Invisible', 'Jesus', 'MouseTP', 'Phase', 'SpinBot', 'Swim', 'TargetStrafe', 'AnimationPlayer', 'AntiRagdoll', 'ChatSpammer', 'Disabler', 'StateSpoofer', 'Freecam', 'Gravity', 'Parkour', 'SafeWalk', 'MurderMystery'} do
+for _, v in {'AimAssist', 'Reach', 'SilentAim', 'AntiFall', 'Desync', 'Invisible', 'Jesus', 'MouseTP', 'Phase', 'SpinBot', 'Swim', 'TargetStrafe', 'AnimationPlayer', 'AntiRagdoll', 'ChatSpammer', 'Disabler', 'StateSpoofer', 'Freecam', 'Gravity', 'Parkour', 'SafeWalk', 'MurderMystery'} do
 	vape:Remove(v)
 end
 run(function()
@@ -255,6 +248,43 @@ run(function()
 end)
 	
 run(function()
+	local Reach
+	local Value
+	local old
+	
+	Reach = vape.Categories.Combat:CreateModule({
+		Name = 'Reach',
+		Function = function(callback)
+			if callback then
+	            old = debug.getupvalue(oldhit or arena.Client.startHit, 4)
+	            debug.setupvalue(oldhit or arena.Client.startHit, 4, old + Value.Value)
+			else
+	            if old then
+	                debug.setupvalue(oldhit or arena.Client.startHit, 4, old)
+	                old = nil
+	            end
+			end
+		end,
+		Tooltip = 'Extends attack reach'
+	})
+	Value = Reach:CreateSlider({
+		Name = 'Range',
+		Min = 0,
+		Max = 6,
+	    Default = 6,
+		Decimal = 10,
+	    Function = function(val)
+			if Reach.Enabled then
+				debug.setupvalue(oldhit or arena.Client.startHit, 4, old + val)
+			end
+		end,
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
+		end
+	})
+end)
+	
+run(function()
 	local Sprint
 	
 	Sprint = vape.Categories.Combat:CreateModule({
@@ -269,6 +299,77 @@ run(function()
 	    end,
 	    Tooltip = 'Sets your sprinting to true.'
 	})
+end)
+	
+run(function()
+	local Velocity
+	local Horizontal
+	local Vertical
+	local Chance
+	local Targeting
+	local connection
+	local rand, old = Random.new()
+	
+	local function velocityFunction(...)
+		if rand:NextNumber(0, 100) > Chance.Value then return old(...) end
+	
+	    local data = ...
+		local check = (not Targeting.Enabled) or entitylib.EntityPosition({
+			Range = 50,
+			Part = 'RootPart',
+			Players = true
+		})
+	
+		if check and not data.position then
+			local hort, vert = (Horizontal.Value / 100), (Vertical.Value / 100)
+			if hort == 0 and vert == 0 then return end
+			data.vel = Vector3.new(data.vel.X * hort, data.vel.Y * vert, data.vel.Z * hort)
+		end
+	
+		return old(...)
+	end
+	
+	Velocity = vape.Categories.Combat:CreateModule({
+		Name = 'Velocity',
+		Function = function(callback)
+			if callback then
+				connection = getconnections(replicatedStorage.Remotes.ClientStateUpdate.OnClientEvent)[1]
+				if not connection then return end
+	
+				old = hookfunction(connection.Function, function(...)
+					return velocityFunction(...)
+				end)
+			else
+				if old then
+					hookfunction(connection.Function, old)
+				end
+				connection = nil
+			end
+		end,
+		Tooltip = 'Reduces knockback taken'
+	})
+	Horizontal = Velocity:CreateSlider({
+		Name = 'Horizontal',
+		Min = 0,
+		Max = 100,
+		Default = 0,
+		Suffix = '%'
+	})
+	Vertical = Velocity:CreateSlider({
+		Name = 'Vertical',
+		Min = 0,
+		Max = 100,
+		Default = 0,
+		Suffix = '%'
+	})
+	Chance = Velocity:CreateSlider({
+		Name = 'Chance',
+		Min = 0,
+		Max = 100,
+		Default = 100,
+		Suffix = '%'
+	})
+	Targeting = Velocity:CreateToggle({Name = 'Only when targeting'})
 end)
 	
 run(function()
@@ -422,6 +523,54 @@ run(function()
 end)
 	
 run(function()
+	local HitBoxes
+	local Targets
+	local TargetPart
+	local Expand
+	local modified = {}
+	
+	HitBoxes = vape.Categories.Blatant:CreateModule({
+		Name = 'HitBoxes',
+		Function = function(callback)
+			if callback then
+				repeat
+					for _, v in entitylib.List do
+						if v.Targetable then
+							if not Targets.Players.Enabled and v.Player then continue end
+							if not Targets.NPCs.Enabled and v.NPC then continue end
+							local part = v.Hitbox
+							if not modified[part] then
+								modified[part] = part.Size
+							end
+	
+							part.Size = modified[part] + Vector3.new(Expand.Value, Expand.Value, Expand.Value)
+						end
+					end
+	
+					task.wait()
+				until not HitBoxes.Enabled
+			else
+				for i, v in modified do
+					i.Size = v
+				end
+				table.clear(modified)
+			end
+		end,
+		Tooltip = 'Expands entities hitboxes'
+	})
+	Targets = HitBoxes:CreateTargets({Players = true})
+	Expand = HitBoxes:CreateSlider({
+		Name = 'Expand amount',
+		Min = 0,
+		Max = 6,
+		Decimal = 10,
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
+		end
+	})
+end)
+	
+run(function()
 	local Killaura
 	local Targets
 	local AttackRange
@@ -478,7 +627,7 @@ run(function()
 	
 						if #plrs > 0 then
 							local selfpos = entitylib.character.RootPart.Position
-							local localfacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
+							local localfacing = gameCamera.CFrame.LookVector * Vector3.new(1, 0, 1)
 							local reblock = false
 	
 							for _, v in plrs do
@@ -507,9 +656,12 @@ run(function()
 									end
 								end
 	
-								local campos = gameCamera.CameraSubject.Position
-								customvec = CFrame.lookAt(campos, v.RootPart.Position)
-								replicatedStorage.Remotes.HitRequest:FireServer(campos, customvec.LookVector, v.Character, v.Player)
+								local vec = CFrame.lookAt(selfpos, v.RootPart.Position)
+								if angle > math.rad(65) then
+									customvec = vec
+								end
+	
+								replicatedStorage.Remotes.HitRequest:FireServer(selfpos, vec.LookVector, v.Character, v.Player)
 							end
 	
 							if reblock then
@@ -749,6 +901,27 @@ run(function()
 end)
 	
 run(function()
+	local NoSlowdown
+	local old
+	
+	NoSlowdown = vape.Categories.Blatant:CreateModule({
+		Name = 'NoSlowdown',
+		Function = function(callback)
+			if callback then
+				old = debug.getupvalue(arena.MoveFunction, 17)
+				debug.setupvalue(arena.MoveFunction, 17, debug.getupvalue(arena.MoveFunction, 19))
+			else
+				if old then
+					debug.setupvalue(arena.MoveFunction, 17, old)
+					old = nil
+				end
+			end
+		end,
+		Tooltip = 'Prevent you from slowing down when using items.'
+	})
+end)
+	
+run(function()
 	local Speed
 	local Value
 	local AutoJump
@@ -763,7 +936,7 @@ run(function()
 						local onground = debug.getupvalue(arena.MoveFunction, 4)
 						local velocity = debug.getupvalue(arena.TickFunction, 6)
 	
-						debug.setupvalue(arena.TickFunction, 6, Vector3.new(movedir.X, AutoJump.Enabled and onground and movedir.Magnitude > 0 and 30 or velocity.Y, movedir.Z))
+						debug.setupvalue(arena.TickFunction, 6, Vector3.new(movedir.X, AutoJump.Enabled and onground and movedir.Magnitude > 0 and 20 or velocity.Y, movedir.Z))
 					end
 				end))
 	        end
@@ -835,6 +1008,75 @@ run(function()
 		Darker = true,
 		Suffix = function(val)
 			return val == 1 and 'stud' or 'studs'
+		end
+	})
+end)
+	
+run(function()
+	local FastBreak
+	local Value
+	local old
+	
+	FastBreak = vape.Categories.World:CreateModule({
+		Name = 'FastBreak',
+		Function = function(callback)
+			if callback then
+				old = hookfunction(arena.Client.showMiningProgress, function(progress)
+					progress *= Value.Value
+					debug.setstack(3, 5, debug.getstack(3, 5) * Value.Value)
+					return old(progress)
+				end)
+			else
+				if old then
+					hookfunction(arena.Client.showMiningProgress, old)
+					old = nil
+				end
+			end
+		end,
+		Tooltip = 'Break blocks faster when mining.'
+	})
+	Value = FastBreak:CreateSlider({
+		Name = 'Multiplier',
+		Min = 0,
+		Max = 3,
+		Default = 3,
+		Decimal = 10
+	})
+end)
+	
+run(function()
+	local FastPlace
+	local Value
+	local old
+	
+	FastPlace = vape.Categories.World:CreateModule({
+		Name = 'FastPlace',
+		Function = function(callback)
+			if callback then
+				old = debug.getupvalue(arena.Client.startPlaceHold, 7)
+				debug.setupvalue(arena.Client.startPlaceHold, 7, math.max(Value.Value, 0.001))
+			else
+				if old then
+					debug.setupvalue(arena.Client.startPlaceHold, 7, old)
+					old = nil
+				end
+			end
+		end,
+		Tooltip = 'Place blocks faster while holding right click.'
+	})
+	Value = FastPlace:CreateSlider({
+		Name = 'Delay',
+		Min = 0,
+		Max = 0.2,
+	    Default = 0,
+		Decimal = 100,
+	    Function = function(val)
+			if FastPlace.Enabled then
+				debug.setupvalue(arena.Client.startPlaceHold, 7, math.max(val, 0.001))
+			end
+		end,
+		Suffix = function(val)
+			return 'seconds'
 		end
 	})
 end)
