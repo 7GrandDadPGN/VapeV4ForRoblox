@@ -544,14 +544,14 @@ run(function()
 		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
 			pcall(function()
 				for _, v in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnNewMessage.OnClientEvent) do
-					if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessagePostedInChannel') then
+					if v.Function and islclosure(v.Function) and table.find(debug.getconstants(v.Function), 'UpdateMessagePostedInChannel') then
 						whitelist:oldchat(v.Function)
 						break
 					end
 				end
 
 				for _, v in getconnections(replicatedStorage.DefaultChatSystemChatEvents.OnMessageDoneFiltering.OnClientEvent) do
-					if v.Function and table.find(debug.getconstants(v.Function), 'UpdateMessageFiltered') then
+					if v.Function and islclosure(v.Function) and table.find(debug.getconstants(v.Function), 'UpdateMessageFiltered') then
 						whitelist:oldchat(v.Function)
 						break
 					end
@@ -6630,7 +6630,7 @@ run(function()
 				repeat
 					task.wait(0.1)
 					for _, v in getconnections(gameCamera:GetPropertyChangedSignal('CameraType')) do
-						if v.Function then
+						if v.Function and islclosure(v.Function) then
 							module = debug.getupvalue(v.Function, 1)
 						end
 					end
