@@ -493,6 +493,7 @@ run(function()
 				CircleObject.NumSides = 100
 				CircleObject.Transparency = 1 - CircleTransparency.Value
 				CircleObject.Visible = AimAssist.Enabled
+				CircleObject.Thickness = 1
 			else
 				pcall(function()
 					CircleObject.Visible = false
@@ -711,6 +712,7 @@ run(function()
 				CircleObject.NumSides = 100
 				CircleObject.Transparency = 1 - CircleTransparency.Value
 				CircleObject.Visible = SilentAim.Enabled and Mode.Value == 'Mouse'
+				CircleObject.Thickness = 1
 			else
 				pcall(function()
 					CircleObject.Visible = false
