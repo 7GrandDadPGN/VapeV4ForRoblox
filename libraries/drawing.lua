@@ -74,6 +74,10 @@ local classes = {
 	}
 }
 
+if not commchannel then
+	return '1'
+end
+
 commchannel.Event:Connect(function(...)
 	local actor, key = ...
 	local args = {select(3, ...)}
