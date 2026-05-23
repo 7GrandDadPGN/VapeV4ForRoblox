@@ -692,7 +692,7 @@ run(function()
 				old = nil
 			end
 		end,
-		Tooltip = 'Allows you to continuous movement in menus'
+		Tooltip = 'Allows you to have continuous movement in menus'
 	})
 end)
 	
