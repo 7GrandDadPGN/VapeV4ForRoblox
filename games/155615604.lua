@@ -438,11 +438,11 @@ run(function()
 
 	local function resolveOrigin(origin, extra, target)
 		local scanPositions = {}
-		if (extra - origin).Magnitude < 6 then
+		if (extra - origin).Magnitude < 7.5 then
 			table.insert(scanPositions, extra)
 		end
 
-		for i = 3, 6, 3 do
+		for i = 3, 7 do
 			for _, v in positions do
 				table.insert(scanPositions, origin + v * i)
 			end
@@ -479,7 +479,7 @@ run(function()
 			local ray = workspace:Raycast(args[2], (origin - args[2]), rayParams)
 
 			if ray then
-				local neworigin = resolveOrigin(origin, ray.Position + ray.Normal * 0.05, args[2])
+				local neworigin = resolveOrigin(entitylib.character.RootPart.Position, ray.Position + ray.Normal * 0.05, args[2])
 
 				if neworigin then
 					for i, v in debug.getstack(3) do
@@ -539,7 +539,11 @@ run(function()
 				until not SilentAim.Enabled
 			else
 				if old then
-					hookfunction(pl.Bullet, old)
+					if restorefunction then
+						restorefunction(pl.Bullet)
+					else
+						hookfunction(pl.Bullet, old)
+					end
 					old = nil
 				end
 			end
@@ -686,6 +690,32 @@ run(function()
 			end
 		end,
 		Tooltip = 'Prevent people from using invisible animations'
+	})
+end)
+	
+run(function()
+	local AntiKillPlane
+	
+	AntiKillPlane = vape.Categories.Blatant:CreateModule({
+		Name = 'AntiKillPlane',
+		Function = function(callback)
+			if callback then
+				for x = -2048, 2048, 2048 do
+					for z = -2048, 2048, 2048 do
+						local part = Instance.new('Part')
+						part.CanQuery = false
+						part.CanCollide = true
+						part.Anchored = true
+						part.Transparency = 1
+						part.Size = Vector3.new(2048, 10, 2048)
+						part.Position = Vector3.new(x, 170, z)
+						part.Parent = workspace
+						AntiKillPlane:Clean(part)
+					end
+				end
+			end
+		end,
+		Tooltip = 'Add\'s a phyiscal part for the kill plane'
 	})
 end)
 	
@@ -965,6 +995,187 @@ run(function()
 			end
 		end,
 		Tooltip = 'Remove the cooldown from jumping'
+	})
+end)
+	
+run(function()
+	local VehicleFly
+	local Mode
+	local Speed
+	local welds = {}
+	local up, down = 0, 0
+	
+	VehicleFly = vape.Categories.Blatant:CreateModule({
+		Name = 'VehicleFly',
+		Function = function(callback)
+			if callback then
+				up, down = 0, 0
+				for _, v in {'InputBegan', 'InputEnded'} do
+					VehicleFly:Clean(inputService[v]:Connect(function(input)
+						if not inputService:GetFocusedTextBox() then
+							if input.KeyCode == Enum.KeyCode.E then
+								up = v == 'InputBegan' and 1 or 0
+							elseif input.KeyCode == Enum.KeyCode.Q then
+								down = v == 'InputBegan' and -1 or 0
+							end
+						end
+					end))
+				end
+	
+				if Mode.Value == 'Part' then
+					local part = Instance.new('Part')
+					part.Size = Vector3.new(50, 1, 50)
+					part.Anchored = true
+					part.CanQuery = false
+					part.Transparency = 1
+	
+					VehicleFly:Clean(part)
+					repeat
+						local seat = entitylib.isAlive and entitylib.character.Humanoid.SeatPart
+						if seat then
+							part.CFrame = CFrame.new(seat.Position - Vector3.new(0, 2.2 - (up + down), 0))
+							part.Parent = workspace
+						else
+							part.Parent = nil
+						end
+	
+						task.wait(0.05)
+					until not VehicleFly.Enabled
+				else
+					local inCar = false
+					local old
+					VehicleFly:Clean(runService.PreSimulation:Connect(function(dt)
+						local seat = entitylib.isAlive and entitylib.character.Humanoid.SeatPart
+						local root = seat and entitylib.character.RootPart
+	
+						if root then
+							if seat ~= old then
+								inCar = seat:IsDescendantOf(workspace.CarContainer) and seat:IsA('VehicleSeat')
+								if inCar then
+									welds = seat.Parent.Parent.Wheels:QueryDescendants('Rotate')
+									for _, v in welds do
+										v.Enabled = false
+									end
+								end
+	
+								old = seat
+							end
+	
+							if inCar then
+								root.AssemblyLinearVelocity = Vector3.new(0, 2.25, 0)
+								root.CFrame = CFrame.lookAlong(root.Position, gameCamera.CFrame.LookVector) + (entitylib.character.Humanoid.MoveDirection + Vector3.new(0, up + down, 0)) * Speed.Value * dt
+								gameCamera.CameraSubject = entitylib.character.Humanoid
+							end
+						elseif old then
+							for _, v in welds do
+								v.Enabled = true
+							end
+							old = nil
+						end
+					end))
+				end
+			else
+				for _, v in welds do
+					v.Enabled = true
+				end
+				table.clear(welds)
+			end
+		end,
+		Tooltip = 'Allow you to fly with a vehicle'
+	})
+	Mode = VehicleFly:CreateDropdown({
+		Name = 'Mode',
+		List = {'CFrame', 'Part'},
+		Function = function(val)
+			Speed.Object.Visible = val == 'CFrame'
+			if VehicleFly.Enabled then
+				VehicleFly:Toggle()
+				VehicleFly:Toggle()
+			end
+		end
+	})
+	Speed = VehicleFly:CreateSlider({
+		Name = 'Speed',
+		Min = 1,
+		Max = 100,
+		Default = 60,
+		Darker = true
+	})
+end)
+	
+run(function()
+	local VehicleSpeed
+	local Speed
+	local old
+	local seats = {}
+	
+	VehicleSpeed = vape.Categories.Blatant:CreateModule({
+		Name = 'VehicleSpeed',
+		Function = function(callback)
+			if callback then
+				repeat
+					local seat = entitylib.isAlive and entitylib.character.Humanoid.SeatPart
+					if seat then
+						if seat ~= old then
+							if seat:IsDescendantOf(workspace.CarContainer) then
+								seats = seat.Parent.Parent:QueryDescendants('VehicleSeat')
+							end
+	
+							old = seat
+						end
+	
+						for _, v in seats do
+							v.MaxSpeed = Speed.Value
+							v.Torque = 4
+						end
+					end
+	
+					task.wait()
+				until not VehicleSpeed.Enabled
+			else
+				table.clear(seats)
+			end
+		end,
+		Tooltip = 'Increase vehicle speed'
+	})
+	Speed = VehicleSpeed:CreateSlider({
+		Name = 'Speed',
+		Min = 80,
+		Max = 200,
+		Default = 140
+	})
+end)
+	
+run(function()
+	local VehicleWallbang
+	local modified = {}
+	
+	local function Modify(part)
+		if part:IsA('BasePart') then
+			if not modified[part] then
+				modified[part] = part.CanQuery
+			end
+	
+			part.CanQuery = false
+		end
+	end
+	
+	VehicleWallbang = vape.Categories.Blatant:CreateModule({
+		Name = 'VehicleWallbang',
+		Function = function(callback)
+			if callback then
+				VehicleWallbang:Clean(workspace.CarContainer.DescendantAdded:Connect(Modify))
+				for _, part in workspace.CarContainer:QueryDescendants('BasePart') do
+					Modify(part)
+				end
+			else
+				for i, v in modified do
+					i.CanQuery = v
+				end
+				table.clear(modified)
+			end
+		end,
+		Tooltip = 'Allow you to shoot through vehicles.'
 	})
 end)
 	
@@ -1836,6 +2047,117 @@ run(function()
 end)
 	
 run(function()
+	local DamageIndicator
+	local FontOption
+	local ColorV
+	local Size
+	local tent, lent
+	local thealth = 0
+	local indi, indipart, indithread
+	
+	local function createIndicator(damage, pos)
+		if indithread then
+			task.cancel(indithread)
+			indi.Text = math.ceil(tonumber(indi.Text) + damage)
+			indipart.Position = pos
+		else
+			indipart = Instance.new('Part')
+			indipart.Size = Vector3.zero
+			indipart.Position = pos
+			indipart.CanCollide = false
+			indipart.CanQuery = false
+			indipart.Anchored = true
+			indipart.Parent = workspace
+			local billboard = Instance.new('BillboardGui')
+			billboard.Adornee = indipart
+			billboard.Size = UDim2.fromOffset(30, 30)
+			billboard.AlwaysOnTop = true
+			billboard.Parent = indipart
+			indi = Instance.new('TextLabel')
+			indi.BackgroundTransparency = 1
+			indi.TextStrokeTransparency = 0
+			indi.Size = UDim2.fromScale(1, 1)
+			indi.Text = math.ceil(damage)
+			indi.TextColor3 = Color3.fromHSV(ColorV.Hue, ColorV.Sat, ColorV.Value)
+			indi.TextScaled = true
+			indi.Font = Enum.Font[FontOption.Value]
+			indi.Parent = billboard
+		end
+	
+		indithread = task.delay(1, function()
+			indipart:Destroy()
+			indipart = nil
+			indithread = nil
+		end)
+	end
+	
+	DamageIndicator = vape.Legit:CreateModule({
+		Name = 'DamageIndicator',
+		Function = function(callback)
+			if callback then
+				TracerHook:Add('DamageIndicator', function(...)
+					local part = debug.getstack(4, 17)
+					if typeof(part) == 'Instance' then
+						for _, v in entitylib.List do
+							if part:IsDescendantOf(v.Character) and entitylib.isVulnerable(v, true) then
+								tent = v
+								thealth = v.Health
+								break
+							end
+						end
+					end
+				end)
+	
+				DamageIndicator:Clean(entitylib.Events.EntityUpdated:Connect(function(ent)
+					if ent == tent then
+						if ent ~= lent then
+							if indi then
+								indi.Text = '0'
+							end
+	
+							lent = ent
+						end
+	
+						if thealth > ent.Health then
+							createIndicator(thealth - ent.Health, ent.Head.Position + Vector3.new(0, 2, 0))
+						end
+	
+						tent = nil
+					end
+				end))
+			else
+				TracerHook:Remove('DamageIndicator')
+			end
+		end,
+		Tooltip = 'funny'
+	})
+	local fontitems = {'GothamBlack'}
+	for _, v in Enum.Font:GetEnumItems() do
+		if v.Name ~= 'GothamBlack' then
+			table.insert(fontitems, v.Name)
+		end
+	end
+	FontOption = DamageIndicator:CreateDropdown({
+		Name = 'Font',
+		List = fontitems,
+		Function = function(val)
+			if indi then
+				indi.Font = Enum.Font[val]
+			end
+		end
+	})
+	ColorV = DamageIndicator:CreateColorSlider({
+		Name = 'Color',
+		DefaultHue = 0,
+		Function = function(hue, sat, val)
+			if indi then
+				indi.Color = Color3.fromHSV(hue, sat, val)
+			end
+		end
+	})
+end)
+	
+run(function()
 	local HitSound
 	local Value
 	local Volume
@@ -1934,6 +2256,7 @@ end)
 	
 run(function()
 	local Viewmodel
+	local Sway
 	local ForceField
 	local ColorSl
 	local handle
@@ -1960,7 +2283,7 @@ run(function()
 	
 			for _, v in vtool:QueryDescendants('BasePart') do
 				v.Material = ForceField.Enabled and Enum.Material.ForceField or v.Material
-				v.Color = Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value)
+				v.Color = ForceField.Enabled and Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value) or v.Color
 			end
 	
 			for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
@@ -2007,8 +2330,11 @@ run(function()
 				Viewmodel:Clean(runService.RenderStepped:Connect(function(dt)
 					if handle then
 						moveSpring.Target = entitylib.isAlive and entitylib.character.RootPart.AssemblyLinearVelocity * 0.005 or Vector3.zero
-						local cf = (gameCamera.CFrame * CFrame.new(2, -1.5, -3)) + moveSpring:Update(dt)
+						if moveSpring.Target.Magnitude > 0.1 and Sway.Enabled then
+							moveSpring.Target += (gameCamera.CFrame * CFrame.new(math.sin(tick() * 10) * 0.06, 0, 0)).Position - gameCamera.CFrame.Position
+						end
 	
+						local cf = (gameCamera.CFrame * CFrame.new(2, -1.5, -3)) + moveSpring:Update(dt)
 						aimSpring.Target = aimTimer > os.clock() and CFrame.lookAt(cf.Position, aimVec).LookVector or gameCamera.CFrame.LookVector
 						handle.CFrame = CFrame.lookAlong(cf.Position, aimSpring:Update(dt)) * CFrame.new(0, 0, math.max(shootTimer - os.clock(), 0))
 						handle.AssemblyLinearVelocity = Vector3.zero
@@ -2030,6 +2356,10 @@ run(function()
 			end
 		end,
 		Tooltip = 'Custom viewmodel for guns'
+	})
+	Sway = Viewmodel:CreateToggle({
+		Name = 'Sway Effect',
+		Default = true
 	})
 	ForceField = Viewmodel:CreateToggle({
 		Name = 'ForceField Effect',

@@ -2217,9 +2217,10 @@ run(function()
 							if not Targets.NPCs.Enabled and v.NPC then continue end
 							local part = v[TargetPart.Value]
 							if not modified[part] then
-								modified[part] = part.Size
+								modified[part] = {part.Size, part.Massless}
 							end
-							part.Size = modified[part] + Vector3.new(Expand.Value, Expand.Value, Expand.Value)
+							part.Size = modified[part][1] + Vector3.new(Expand.Value, Expand.Value, Expand.Value)
+							part.Massless = true
 						end
 					end
 	
@@ -2227,7 +2228,8 @@ run(function()
 				until not HitBoxes.Enabled
 			else
 				for i, v in modified do
-					i.Size = v
+					i.Size = v[1]
+					i.Massless = v[2]
 				end
 				table.clear(modified)
 			end
