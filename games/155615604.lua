@@ -32,7 +32,10 @@ local sessioninfo = vape.Libraries.sessioninfo
 local getfontsize = vape.Libraries.getfontsize
 
 local pl = {}
+local Spring = {}
+local TracerHook = {Hooks = {}}
 local oldshoot
+local aimTimer, shootTimer, aimVec = os.clock(), os.clock()
 
 local function canClick()
 	local mousepos = (inputService:GetMouseLocation() - guiService:GetGuiInset())
@@ -76,6 +79,13 @@ local function removeTags(str)
 end
 
 run(function()
+	local function getMousePosition()
+		if inputService.TouchEnabled then
+			return gameCamera.ViewportSize / 2
+		end
+		return inputService.GetMouseLocation(inputService)
+	end
+
 	entitylib.getUpdateConnections = function(ent)
 		local hum = ent.Humanoid
 		return {
@@ -101,8 +111,120 @@ run(function()
 		return lplr.Team ~= ent.Player.Team
 	end
 
-	entitylib.isVulnerable = function(ent)
+	entitylib.isVulnerable = function(ent, attackcheck)
+		if attackcheck and lplr.Team == teams.Guards and ent.Player.Team == teams.Inmates and not ent.Character:GetAttribute('Hostile') then
+			return false
+		end
+
 		return ent.Health > 0 and not ent.Character.FindFirstChildWhichIsA(ent.Character, 'ForceField') and (ent.Player.Team ~= teams.Inmates or (ent.Character:GetAttribute('Trespassing') or ent.Character:GetAttribute('Hostile')))
+	end
+
+	entitylib.EntityMouse = function(entitysettings)
+		if entitylib.isAlive then
+			local mouseLocation, sortingTable = entitysettings.MouseOrigin or getMousePosition(), {}
+			local localPosition = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position
+			for _, v in entitylib.List do
+				if not entitysettings.Players and v.Player then continue end
+				if not entitysettings.NPCs and v.NPC then continue end
+				if not v.Targetable then continue end
+				local position, vis = gameCamera.WorldToViewportPoint(gameCamera, v[entitysettings.Part].Position)
+				if not vis then continue end
+				local mag = (mouseLocation - Vector2.new(position.x, position.y)).Magnitude
+				if mag > entitysettings.Range then continue end
+				if entitylib.isVulnerable(v, entitysettings.AttackCheck) then
+					if entitysettings.RangePosition then
+						local pmag = (v[entitysettings.Part].Position - localPosition).Magnitude
+						if pmag > entitysettings.RangePosition then continue end
+					end
+
+					table.insert(sortingTable, {
+						Entity = v,
+						Magnitude = v.Target and -1 or mag
+					})
+				end
+			end
+
+			table.sort(sortingTable, entitysettings.Sort or function(a, b)
+				return a.Magnitude < b.Magnitude
+			end)
+
+			for _, v in sortingTable do
+				if entitysettings.Wallcheck then
+					if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallcheck) then continue end
+				end
+				table.clear(entitysettings)
+				table.clear(sortingTable)
+				return v.Entity
+			end
+			table.clear(sortingTable)
+		end
+		table.clear(entitysettings)
+	end
+
+	entitylib.EntityPosition = function(entitysettings)
+		if entitylib.isAlive then
+			local localPosition, sortingTable = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {}
+			for _, v in entitylib.List do
+				if not entitysettings.Players and v.Player then continue end
+				if not entitysettings.NPCs and v.NPC then continue end
+				if not v.Targetable then continue end
+				local mag = (v[entitysettings.Part].Position - localPosition).Magnitude
+				if mag > entitysettings.Range then continue end
+				if entitylib.isVulnerable(v, entitysettings.AttackCheck) then
+					table.insert(sortingTable, {
+						Entity = v,
+						Magnitude = v.Target and -1 or mag
+					})
+				end
+			end
+
+			table.sort(sortingTable, entitysettings.Sort or function(a, b)
+				return a.Magnitude < b.Magnitude
+			end)
+
+			for _, v in sortingTable do
+				if entitysettings.Wallcheck then
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallcheck) then continue end
+				end
+				table.clear(entitysettings)
+				table.clear(sortingTable)
+				return v.Entity
+			end
+			table.clear(sortingTable)
+		end
+		table.clear(entitysettings)
+	end
+
+	entitylib.AllPosition = function(entitysettings)
+		local returned = {}
+		if entitylib.isAlive then
+			local localPosition, sortingTable = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {}
+			for _, v in entitylib.List do
+				if not entitysettings.Players and v.Player then continue end
+				if not entitysettings.NPCs and v.NPC then continue end
+				if not v.Targetable then continue end
+				local mag = (v[entitysettings.Part].Position - localPosition).Magnitude
+				if mag > entitysettings.Range then continue end
+				if entitylib.isVulnerable(v, entitysettings.AttackCheck) then
+					table.insert(sortingTable, {Entity = v, Magnitude = v.Target and -1 or mag})
+				end
+			end
+
+			table.sort(sortingTable, entitysettings.Sort or function(a, b)
+				return a.Magnitude < b.Magnitude
+			end)
+
+			for _, v in sortingTable do
+				if entitysettings.Wallcheck then
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallcheck) then continue end
+				end
+				table.insert(returned, v.Entity)
+				if #returned >= (entitysettings.Limit or math.huge) then break end
+			end
+			table.clear(sortingTable)
+		end
+		table.clear(entitysettings)
+		return returned
 	end
 
 	entitylib.IgnoreObject.CollisionGroup = 'ClientBullet'
@@ -167,7 +289,79 @@ run(function()
 	end)
 end)
 
-for _, v in {'Reach', 'Invisible', 'Jesus', 'Killaura', 'MurderMystery'} do
+do
+	-- https://github.com/J1ck/roblox-spring/blob/main/src/roblox-spring.luau
+	Spring.__index = Spring
+
+	function Spring.new(Properties)
+		local TypeRefined = Properties or {}
+
+		local self = setmetatable({
+			Target = Vector3.new(),
+			Position = Vector3.new(),
+			Velocity = Vector3.new(),
+
+			Mass = TypeRefined.Mass or 5,
+			Force = TypeRefined.Force or 50,
+			Damping	= TypeRefined.Damping or 4,
+			Speed = TypeRefined.Speed or 4,
+		}, Spring)
+
+		return self
+	end
+
+	function Spring:Update(DeltaTime)
+		local IterationsThisFrame = DeltaTime / ((1 / 60) / 8)
+		local ScaledDeltaTime = DeltaTime * self.Speed / IterationsThisFrame
+
+		for i = 1, math.round(IterationsThisFrame) do
+			local IterationForce = self.Target - self.Position
+			local Acceleration = (IterationForce * self.Force) / self.Mass
+
+			Acceleration -= self.Velocity * self.Damping
+
+			self.Velocity += Acceleration * ScaledDeltaTime
+			self.Position += self.Velocity * ScaledDeltaTime
+		end
+
+		return self.Position
+	end
+end
+
+do
+	local oldtracer
+
+	local function Hook(...)
+		if debug.info(3, 's') ~= 'ReplicatedStorage.Scripts.Replication.ClientReplicator' then
+			for _, v in TracerHook.Hooks do
+				if v(...) then return end
+			end
+		end
+
+		return oldtracer(...)
+	end
+
+	function TracerHook:Add(key, val)
+		self.Hooks[key] = val
+
+		if not oldtracer then
+			oldtracer = hookfunction(pl.GunTracers.createBullet, function(...)
+				return Hook(...)
+			end)
+		end
+	end
+
+	function TracerHook:Remove(key)
+		self.Hooks[key] = nil
+
+		if oldtracer and not next(self.Hooks) then
+			hookfunction(pl.GunTracers.createBullet, oldtracer)
+			oldtracer = nil
+		end
+	end
+end
+
+for _, v in {'Reach', 'Invisible', 'Disabler', 'Jesus', 'Killaura', 'MurderMystery'} do
 	vape:Remove(v)
 end
 local mouseClicked
@@ -221,12 +415,14 @@ run(function()
 	local fireoffset, rand, delayCheck = CFrame.identity, Random.new(), tick()
 	local old
 
-	local function getTarget(origin, obj)
+	local function getTarget(origin, limit, attackcheck)
 		if rand.NextNumber(rand, 0, 100) > (AutoFire.Enabled and 100 or HitChance.Value) then return end
 		local targetPart = (rand.NextNumber(rand, 0, 100) < (AutoFire.Enabled and 100 or HeadshotChance.Value)) and 'Head' or 'RootPart'
 		local ent = entitylib['Entity'..Mode.Value]({
-			Range = Range.Value,
-			Wallcheck = Target.Walls.Enabled and (obj or true) or nil,
+			Range = Mode.Value == 'Position' and math.min(Range.Value, limit) or Range.Value,
+			RangePosition = limit,
+			AttackCheck = attackcheck,
+			Wallcheck = Target.Walls.Enabled and true or nil,
 			Part = targetPart,
 			Origin = origin,
 			Players = Target.Players.Enabled,
@@ -262,11 +458,16 @@ run(function()
 
 	local function Hook(...)
 		local origin, direction = ...
-		local ent, targetPart, origin = getTarget(origin)
+		local gundata = debug.getupvalue(oldshoot or pl.Shoot, 10)
+		local ent, targetPart, origin = getTarget(origin, gundata and gundata.Range or 1000, not gundata or gundata.Behavior ~= 'Taser')
+
+		shootTimer = os.clock() + 0.3
 		if not ent then return old(...) end
 
 		local args = table.pack(...)
 		args[2] = targetPart.Position
+		aimTimer = os.clock() + 0.3
+		aimVec = args[2]
 
 		if Wallbang.Enabled then
 			local ignore = {lplr.Character}
@@ -587,7 +788,8 @@ run(function()
 						local entities = entitylib.AllPosition({
 							Range = Range.Value,
 							Players = true,
-							Part = 'RootPart'
+							Part = 'RootPart',
+							TargetCheck = true
 						})
 	
 						for _, ent in entities do
@@ -695,6 +897,37 @@ run(function()
 end)
 	
 run(function()
+	local Killaura
+	
+	Killaura = vape.Categories.Blatant:CreateModule({
+		Name = 'Killaura',
+		Function = function(callback)
+			if callback then
+				repeat
+					local entities = entitylib.AllPosition({
+						Range = 10,
+						Players = true,
+						Part = 'RootPart',
+						AttackCheck = true
+					})
+	
+					for _, ent in entities do
+						if lplr.Team == teams.Guards and ent.Player.Team == teams.Inmates and not ent.Character:GetAttribute('Hostile') then
+							continue
+						end
+	
+						replicatedStorage.meleeEvent:FireServer(ent.Player, 1, 1)
+					end
+	
+					task.wait(0.05)
+				until not Killaura.Enabled
+			end
+		end,
+		Tooltip = 'Punch hostile enemies around you'
+	})
+end)
+	
+run(function()
 	local NoJumpCooldown
 	local old
 	
@@ -732,36 +965,6 @@ run(function()
 			end
 		end,
 		Tooltip = 'Remove the cooldown from jumping'
-	})
-end)
-	
-run(function()
-	local PunchAura
-	
-	PunchAura = vape.Categories.Blatant:CreateModule({
-		Name = 'PunchAura',
-		Function = function(callback)
-			if callback then
-				repeat
-					local entities = entitylib.AllPosition({
-						Range = 10,
-						Players = true,
-						Part = 'RootPart'
-					})
-	
-					for _, ent in entities do
-						if lplr.Team == teams.Guards and ent.Player.Team == teams.Inmates and not ent.Character:GetAttribute('Hostile') then
-							continue
-						end
-	
-						replicatedStorage.meleeEvent:FireServer(ent.Player, 1, 1)
-					end
-	
-					task.wait(0.05)
-				until not PunchAura.Enabled
-			end
-		end,
-		Tooltip = 'Punch hostile enemies around you'
 	})
 end)
 	
@@ -951,12 +1154,10 @@ run(function()
 			end
 	
 			if ent.Player and ent.Player.Team == teams.Inmates then
-				if ent.Character:GetAttribute('Trespassing') then
-					Strings[ent] = '[Tresspass] '..Strings[ent]
-				end
-	
 				if ent.Character:GetAttribute('Hostile') then
 					Strings[ent] = '[Hostile] '..Strings[ent]
+				elseif ent.Character:GetAttribute('Trespassing') then
+					Strings[ent] = '[Tresspass] '..Strings[ent]
 				end
 			end
 	
@@ -1045,12 +1246,10 @@ run(function()
 				end
 	
 				if ent.Player and ent.Player.Team == teams.Inmates then
-					if ent.Character:GetAttribute('Trespassing') then
-						Strings[ent] = '[Tresspass] '..Strings[ent]
-					end
-	
 					if ent.Character:GetAttribute('Hostile') then
 						Strings[ent] = '[Hostile] '..Strings[ent]
+					elseif ent.Character:GetAttribute('Trespassing') then
+						Strings[ent] = '[Tresspass] '..Strings[ent]
 					end
 				end
 	
@@ -1527,59 +1726,53 @@ run(function()
 	local Fade
 	local DrawingToggle
 	local drawingobjs = {}
-	local old
-	
-	local function Hook(...)
-		if debug.info(3, 's') ~= 'ReplicatedStorage.Scripts.Replication.ClientReplicator' then
-			local origin, dir = ...
-			local velocity = CFrame.lookAt(origin, dir).LookVector * 1000
-	
-			if DrawingToggle.Enabled then
-				local obj = Drawing.new('Line')
-				obj.Thickness = 2
-				obj.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-				drawingobjs[obj] = {origin, origin + velocity, tick()}
-				task.delay(Lifetime.Value, function()
-					drawingobjs[obj] = nil
-					obj.Visible = false
-					obj:Remove()
-				end)
-			else
-				local obj = Instance.new('Part')
-				obj.Size = Vector3.new(0.1, 0.1, velocity.Magnitude)
-				obj.CFrame = CFrame.lookAt(origin + (velocity / 2), origin + velocity)
-				obj.CanCollide = false
-				obj.CanQuery = false
-				obj.Anchored = true
-				obj.Material = Enum.Material[Material.Value]
-				obj.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-				obj.Transparency = 1 - Color.Opacity
-				obj.Parent = workspace
-				if Fade.Enabled then
-					local tween = tweenService:Create(obj, TweenInfo.new(Lifetime.Value), {
-						Transparency = 1
-					})
-					tween.Completed:Connect(function()
-						tween:Destroy()
-					end)
-					tween:Play()
-				end
-	
-				task.delay(Lifetime.Value, obj.Destroy, obj)
-			end
-	
-			return
-		end
-	
-		return old(...)
-	end
 	
 	BulletTracers = vape.Legit:CreateModule({
 		Name = 'BulletTracers',
 		Function = function(callback)
 			if callback then
-				old = hookfunction(pl.GunTracers.createBullet, function(...)
-					return Hook(...)
+				TracerHook:Add('BulletTracers', function(...)
+					local origin, dir = ...
+					if vtool then
+						origin = vtool.Muzzle.Position
+					end
+	
+					local velocity = CFrame.lookAt(origin, dir).LookVector * 1000
+					if DrawingToggle.Enabled then
+						local obj = Drawing.new('Line')
+						obj.Thickness = 2
+						obj.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+						drawingobjs[obj] = {origin, origin + velocity, os.clock()}
+						task.delay(Lifetime.Value, function()
+							drawingobjs[obj] = nil
+							obj.Visible = false
+							obj:Remove()
+						end)
+					else
+						local obj = Instance.new('Part')
+						obj.Size = Vector3.new(0.1, 0.1, velocity.Magnitude)
+						obj.CFrame = CFrame.lookAt(origin + (velocity / 2), origin + velocity)
+						obj.CanCollide = false
+						obj.CanQuery = false
+						obj.Anchored = true
+						obj.Material = Enum.Material[Material.Value]
+						obj.Color = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+						obj.Transparency = 1 - Color.Opacity
+						obj.Parent = workspace
+						if Fade.Enabled then
+							local tween = tweenService:Create(obj, TweenInfo.new(Lifetime.Value), {
+								Transparency = 1
+							})
+							tween.Completed:Connect(function()
+								tween:Destroy()
+							end)
+							tween:Play()
+						end
+	
+						task.delay(Lifetime.Value, obj.Destroy, obj)
+					end
+	
+					return true
 				end)
 	
 				if DrawingToggle.Enabled then
@@ -1592,7 +1785,7 @@ run(function()
 								obj.From = Vector2.new(from.X, from.Y)
 								obj.To = Vector2.new(to.X, to.Y)
 								if Fade.Enabled then
-									obj.Transparency = Color.Opacity * (1 - math.clamp((tick() - data[3]) / Lifetime.Value, 0, 1))
+									obj.Transparency = Color.Opacity * (1 - math.clamp((os.clock() - data[3]) / Lifetime.Value, 0, 1))
 								end
 							else
 								obj.Visible = false
@@ -1601,10 +1794,7 @@ run(function()
 					end))
 				end
 			else
-				if old then
-					hookfunction(pl.GunTracers.createBullet, old)
-					old = nil
-				end
+				TracerHook:Remove('BulletTracers')
 			end
 		end,
 		Tooltip = 'Allow you to customize bullet tracers.'
@@ -1646,8 +1836,63 @@ run(function()
 end)
 	
 run(function()
+	local HitSound
+	local Value
+	local Volume
+	local old, sounds = nil, {}
+	
+	HitSound = vape.Legit:CreateModule({
+		Name = 'HitSound',
+		Function = function(callback)
+			if callback then
+				TracerHook:Add('HitSound', function(...)
+					local part = debug.getstack(4, 17)
+					if typeof(part) == 'Instance' then
+						for _, v in entitylib.List do
+							if part:IsDescendantOf(v.Character) and entitylib.isVulnerable(v, true) then
+								if #sounds > 0 then
+									local obj = Instance.new('Sound')
+									obj.SoundId = sounds[math.random(1, #sounds)]
+									obj.PlayOnRemove = true
+									obj.Volume = Volume.Value
+									obj.Parent = workspace
+									obj:Destroy()
+								end
+	
+								break
+							end
+						end
+					end
+				end)
+			else
+				TracerHook:Remove('HitSound')
+			end
+		end,
+		Tooltip = 'Custom hit sound'
+	})
+	Value = HitSound:CreateTextList({
+		Name = 'Sounds',
+		Placeholder = 'sound id (roblox or file path)',
+		Function = function(list)
+			table.clear(sounds)
+			for i, v in list or {} do
+				sounds[i] = v:find('rbxasset') and v or isfile(v) and getcustomasset(v) or nil
+			end
+		end
+	})
+	Volume = HitSound:CreateSlider({
+		Name = 'Volume',
+		Min = 0,
+		Max = 2,
+		Default = 1,
+		Decimal = 10
+	})
+end)
+	
+run(function()
 	local KillSound
 	local Value
+	local Volume
 	local old, sounds = nil, {}
 	
 	KillSound = vape.Legit:CreateModule({
@@ -1659,7 +1904,7 @@ run(function()
 						local obj = Instance.new('Sound')
 						obj.SoundId = sounds[math.random(1, #sounds)]
 						obj.PlayOnRemove = true
-						obj.Volume = 1
+						obj.Volume = Volume.Value
 						obj.Parent = workspace
 						obj:Destroy()
 					end
@@ -1677,6 +1922,135 @@ run(function()
 				sounds[i] = v:find('rbxasset') and v or isfile(v) and getcustomasset(v) or nil
 			end
 		end
+	})
+	Volume = KillSound:CreateSlider({
+		Name = 'Volume',
+		Min = 0,
+		Max = 2,
+		Default = 1,
+		Decimal = 10
+	})
+end)
+	
+run(function()
+	local Viewmodel
+	local ForceField
+	local ColorSl
+	local handle
+	local old
+	local moveSpring = Spring.new()
+	local aimSpring = Spring.new({Speed = 15})
+	
+	local function ToolAdded(obj)
+		if obj and obj:IsA('Tool') then
+			if old then
+				for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
+					v.LocalTransparencyModifier = 0
+				end
+			end
+	
+			if vtool then
+				vtool:Destroy()
+			end
+	
+			old = obj
+			vtool = obj:Clone()
+			handle = vtool:FindFirstChild('Handle')
+			vtool.Parent = gameCamera
+	
+			for _, v in vtool:QueryDescendants('BasePart') do
+				v.Material = ForceField.Enabled and Enum.Material.ForceField or v.Material
+				v.Color = Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value)
+			end
+	
+			for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
+				v.LocalTransparencyModifier = 1
+			end
+		end
+	end
+	
+	local function EntityAdded(ent)
+		if vtool then
+			vtool:Destroy()
+			vtool = nil
+			handle = nil
+		end
+	
+		Viewmodel:Clean(ent.Character.ChildAdded:Connect(ToolAdded))
+		Viewmodel:Clean(ent.Character.ChildRemoved:Connect(function(obj)
+			if obj == old then
+				if vtool then
+					vtool:Destroy()
+					vtool = nil
+				end
+	
+				for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
+					v.LocalTransparencyModifier = 0
+				end
+	
+				old = nil
+			end
+		end))
+	
+		ToolAdded(ent.Character:FindFirstChildWhichIsA('Tool'))
+	end
+	
+	Viewmodel = vape.Legit:CreateModule({
+		Name = 'Viewmodel',
+		Function = function(callback)
+			if callback then
+				Viewmodel:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
+				if entitylib.isAlive then
+					task.spawn(EntityAdded, entitylib.character)
+				end
+	
+				Viewmodel:Clean(runService.RenderStepped:Connect(function(dt)
+					if handle then
+						moveSpring.Target = entitylib.isAlive and entitylib.character.RootPart.AssemblyLinearVelocity * 0.005 or Vector3.zero
+						local cf = (gameCamera.CFrame * CFrame.new(2, -1.5, -3)) + moveSpring:Update(dt)
+	
+						aimSpring.Target = aimTimer > os.clock() and CFrame.lookAt(cf.Position, aimVec).LookVector or gameCamera.CFrame.LookVector
+						handle.CFrame = CFrame.lookAlong(cf.Position, aimSpring:Update(dt)) * CFrame.new(0, 0, math.max(shootTimer - os.clock(), 0))
+						handle.AssemblyLinearVelocity = Vector3.zero
+					end
+				end))
+			else
+				if old then
+					for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
+						v.LocalTransparencyModifier = 0
+					end
+					old = nil
+				end
+	
+				if vtool then
+					vtool:Destroy()
+					vtool = nil
+					handle = nil
+				end
+			end
+		end,
+		Tooltip = 'Custom viewmodel for guns'
+	})
+	ForceField = Viewmodel:CreateToggle({
+		Name = 'ForceField Effect',
+		Function = function(callback)
+			ColorSl.Object.Visible = callback
+			if callback and Viewmodel.Enabled then
+				Viewmodel:Toggle()
+				Viewmodel:Toggle()
+			end
+		end
+	})
+	ColorSl = Viewmodel:CreateColorSlider({
+		Name = 'Color',
+		Function = function(hue, sat, val)
+			if vtool then
+				for _, v in vtool:QueryDescendants('BasePart') do
+					v.Color = Color3.fromHSV(hue, sat, val)
+				end
+			end
+		end,
+		Visible = false
 	})
 end)
 	
