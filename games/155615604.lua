@@ -304,6 +304,20 @@ run(function()
 		return returned
 	end
 
+	entitylib.getEntityColor = function(ent)
+		if not (ent.Player and vape.Categories.Main.Options['Use team color'].Enabled) then return end
+		if isFriend(ent.Player, true) then
+			return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
+		end
+
+		local color = tostring(ent.Player.TeamColor) ~= 'White' and ent.Player.TeamColor.Color or nil
+		if ent.Player.Team == teams.Inmates and (ent.Character:GetAttribute('Hostile') or ent.Character:GetAttribute('Trespassing')) then
+			return Color3.new(color.R, color.G * 0.5, color.B * 0.5)
+		end
+
+		return color
+	end
+
 	entitylib.Wallcheck = function(origin, position, checkpos)
 		local ray = workspace.Raycast(workspace, position, (origin - position), OriginScanner.Ray)
 		if ray then
@@ -376,6 +390,12 @@ run(function()
 
 	vape:Clean(vapeEvents.Arrested.Event:Connect(function()
 		arrests:Increment()
+	end))
+
+	vape:Clean(entitylib.Events.EntityUpdated:Connect(function(ent)
+		if ent.Player and ent.Player.Team == teams.Inmates then
+			vape.Categories.Friends.ColorUpdate:Fire()
+		end
 	end))
 
 	OriginScanner:UpdateIgnore()
@@ -482,6 +502,7 @@ run(function()
 	local HitChance
 	local HeadshotChance
 	local AutoFire = {Enabled = false}
+	local AutoFireRate
 	local Wallbang
 	local CircleColor
 	local CircleTransparency
@@ -577,12 +598,12 @@ run(function()
 					end
 
 					if AutoFire.Enabled and autofiretimer < os.clock() then
-						autofiretimer = os.clock() + 0.05
+						autofiretimer = os.clock() + (1 / AutoFireRate.Value)
 
 						local tool = lplr.Character:FindFirstChildWhichIsA('Tool')
 						local gundata = debug.getupvalue(oldshoot or pl.Shoot, 10)
 						if gundata and tool and (tool:GetAttribute('Local_CurrentAmmo') or 0) > 0 and not tool:GetAttribute('Local_IsShooting') then
-							local limit = gundata and gundata.Range or 1000
+							local limit = gundata.Range or 1000
 							local ent = entitylib['Entity'..Mode.Value]({
 								Range = Mode.Value == 'Position' and math.min(Range.Value, limit) or Range.Value,
 								RangePosition = limit,
@@ -595,6 +616,7 @@ run(function()
 							})
 
 							if ent and entitylib.character.Humanoid.Health > 0 then
+								autofiretimer = os.clock() + (gundata.FireRate or 1 / AutoFireRate.Value)
 								local obj = {UserInputState = Enum.UserInputState.Begin, UserInputType = Enum.UserInputType.MouseButton1, Position = Vector3.zero}
 								task.spawn(pl.Shoot, obj)
 								obj.UserInputState = Enum.UserInputState.End
@@ -660,7 +682,19 @@ run(function()
 		Suffix = '%'
 	})
 	AutoFire = SilentAim:CreateToggle({
-		Name = 'AutoFire'
+		Name = 'AutoFire',
+		Function = function(callback)
+			AutoFireRate.Object.Visible = callback
+		end
+	})
+	AutoFireRate = SilentAim:CreateSlider({
+		Name = 'Update rate',
+		Min = 1,
+		Max = 120,
+		Default = 60,
+		Visible = false,
+		Darker = true,
+		Suffix = 'hz'
 	})
 	Wallbang = SilentAim:CreateToggle({Name = 'Wallbang'})
 	SilentAim:CreateToggle({
@@ -1122,6 +1156,38 @@ run(function()
 end)
 	
 run(function()
+	local PhaseDisabler
+	local old
+	
+	local function EntityAdded(ent)
+		task.defer(function()
+			old = getconnections(ent.Head:GetPropertyChangedSignal('CanCollide'))[1]
+			if old then
+				old:Disable()
+			end
+		end)
+	end
+	
+	PhaseDisabler = vape.Categories.Blatant:CreateModule({
+		Name = 'PhaseDisabler',
+		Function = function(callback)
+			if callback then
+				PhaseDisabler:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
+				if entitylib.isAlive then
+					task.spawn(EntityAdded, entitylib.character)
+				end
+			else
+				if old then
+					old:Enable()
+					old = nil
+				end
+			end
+		end,
+		Tooltip = 'Fixes phase with Character mode.'
+	})
+end)
+	
+run(function()
 	local VehicleFly
 	local Mode
 	local Speed
@@ -1395,6 +1461,28 @@ run(function()
 			end
 		end,
 		Decimal = 10
+	})
+end)
+	
+run(function()
+	local CameraPhase
+	local old
+	
+	CameraPhase = vape.Categories.Render:CreateModule({
+		Name = 'CameraPhase',
+		Function = function(callback)
+			if callback then
+				local req = require(lplr.PlayerScripts.PlayerModule.CameraModule.ZoomController.Popper)
+				old = debug.getupvalue(debug.getupvalue(req, 3), 7)
+				debug.setconstant(old, 16, 0)
+			else
+				if old then
+					debug.setconstant(old, 16, 0.25)
+					old = nil
+				end
+			end
+		end,
+		Tooltip = 'Allow the camera to phase through walls.'
 	})
 end)
 	
@@ -2057,7 +2145,7 @@ run(function()
 		local backpack = lplr:FindFirstChildWhichIsA('Backpack')
 		if backpack then
 			for _, tool in backpack:GetChildren() do
-				if tool:GetAttribute('FireRate') and (tool:GetAttribute('Local_ReloadSession') or 0) <= 0 and tool.Name ~= 'Taser' and tool.Name ~= 'Sniper' then
+				if tool:GetAttribute('FireRate') and (tool:GetAttribute('Local_ReloadSession') or 0) <= 0 and tool.Name ~= 'Taser' and tool.Name ~= 'M700' then
 					table.insert(items, tool)
 				end
 			end
@@ -2223,6 +2311,45 @@ run(function()
 			if BulletTracers.Enabled then
 				BulletTracers:Toggle()
 				BulletTracers:Toggle()
+			end
+		end
+	})
+end)
+	
+run(function()
+	local Crosshair
+	local Image
+	local old
+	
+	Crosshair = vape.Legit:CreateModule({
+		Name = 'Crosshair',
+		Function = function(callback)
+			if callback then
+				for _, v in getconnections(lplr.CharacterAdded) do
+					if v.Function and debug.info(v.Function, 's'):find('GunController') then
+						old = v.Function
+						break
+					end
+				end
+	
+				if old then
+					debug.setconstant(debug.getupvalue(old, 3), 30, Image.Value:find('rbxasset') and Image.Value or isfile(Image.Value) and getcustomasset(Image.Value) or '')
+				end
+			else
+				if old then
+					debug.setconstant(debug.getupvalue(old, 3), 30, 'rbxassetid://98794608762931')
+					old = nil
+				end
+			end
+		end,
+		Tooltip = 'Change the crosshair icon'
+	})
+	Image = Crosshair:CreateTextBox({
+		Name = 'Image',
+		Placeholder = 'assetid',
+		Function = function()
+			if old then
+				debug.setconstant(debug.getupvalue(old, 3), 30, Image.Value:find('rbxasset') and Image.Value or isfile(Image.Value) and getcustomasset(Image.Value) or '')
 			end
 		end
 	})
