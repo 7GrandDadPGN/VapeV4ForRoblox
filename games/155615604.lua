@@ -450,7 +450,7 @@ do
 end
 
 do
-	local oldtracer
+	local oldtracer, oldtracersniper
 
 	local function Hook(...)
 		if debug.info(3, 's') ~= 'ReplicatedStorage.Scripts.Replication.ClientReplicator' then
@@ -462,6 +462,16 @@ do
 		return oldtracer(...)
 	end
 
+	local function HookSniper(...)
+		if debug.info(3, 's') ~= 'ReplicatedStorage.Scripts.Replication.ClientReplicator' then
+			for _, v in TracerHook.Hooks do
+				if v[2](...) then return end
+			end
+		end
+
+		return oldtracersniper(...)
+	end
+
 	function TracerHook:Add(key, val, priority)
 		table.insert(self.Hooks, {key, val, priority or 0})
 		table.sort(self.Hooks, function(a, b)
@@ -471,6 +481,10 @@ do
 		if not oldtracer then
 			oldtracer = hookfunction(pl.GunTracers.createBullet, function(...)
 				return Hook(...)
+			end)
+
+			oldtracersniper = hookfunction(pl.GunTracers.createSniper, function(...)
+				return HookSniper(...)
 			end)
 		end
 	end
@@ -484,13 +498,21 @@ do
 		end
 
 		if oldtracer and not next(self.Hooks) then
-			hookfunction(pl.GunTracers.createBullet, oldtracer)
+			if restorefunction then
+				restorefunction(pl.GunTracers.createBullet)
+				restorefunction(pl.GunTracers.createSniper)
+			else
+				hookfunction(pl.GunTracers.createBullet, oldtracer)
+				hookfunction(pl.GunTracers.createSniper, oldtracersniper)
+			end
+
 			oldtracer = nil
+			oldtracersniper = nil
 		end
 	end
 end
 
-for _, v in {'Reach', 'Disabler', 'Jesus', 'MurderMystery'} do
+for _, v in {'Reach', 'Jesus', 'MurderMystery'} do
 	vape:Remove(v)
 end
 local mouseClicked
@@ -511,9 +533,6 @@ run(function()
 	local rayParams = RaycastParams.new()
 	rayParams.CollisionGroup = 'ClientBullet'
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
-	local rayParams2 = OverlapParams.new()
-	rayParams2.CollisionGroup = 'ClientBullet'
-	rayParams2.FilterType = Enum.RaycastFilterType.Exclude
 	local fireoffset, rand, delayCheck = CFrame.identity, Random.new(), tick()
 	local old
 
@@ -558,7 +577,6 @@ run(function()
 				table.insert(ignore, v.Character)
 			end
 			rayParams.FilterDescendantsInstances = ignore
-			rayParams2.FilterDescendantsInstances = ignore
 			local ray = workspace:Raycast(args[2], (origin - args[2]), rayParams)
 
 			if ray then
@@ -951,6 +969,10 @@ run(function()
 	
 					task.wait(0.05)
 				until not AutoArrest.Enabled
+			else
+				if cdholder then
+					cdholder.Visible = false
+				end
 			end
 		end,
 		Tooltip = 'Automatically uses handcuffs on nearby entities'
@@ -973,6 +995,7 @@ run(function()
 		Function = function(callback)
 			if callback then
 				cdholder = Instance.new('Frame')
+				cdholder.Visible = false
 				cdholder.BorderSizePixel = 0
 				cdholder.BackgroundTransparency = 0.7
 				cdholder.AnchorPoint = Vector2.new(0.5, 0)
@@ -1032,24 +1055,40 @@ run(function()
 	local Automatic
 	local olddata, old = {}
 	
+	local function Modify()
+		local data = debug.getupvalue(oldshoot or pl.Shoot, 10)
+		if data then
+			if old ~= data then
+				olddata = table.clone(data)
+				old = data
+			end
+	
+			data.SpreadRadius = Spread.Enabled and 0 or olddata.SpreadRadius
+			data.FireRate = (olddata.FireRate or 0) * (FireRate.Value / 100)
+			data.AutoFire = Automatic.Enabled or olddata.AutoFire
+		end
+	end
+	
+	local function EntityAdded(ent)
+		GunModifications:Clean(ent.Character.ChildAdded:Connect(function(tool)
+			if tool:IsA('Tool') and tool:GetAttribute('ToolType') == 'Gun' then
+				task.defer(Modify)
+			end
+		end))
+	end
+	
 	GunModifications = vape.Categories.Blatant:CreateModule({
 		Name = 'GunModifications',
 		Function = function(callback)
 			if callback then
+				GunModifications:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
+				if entitylib.isAlive then
+					task.spawn(EntityAdded, entitylib.character)
+				end
+	
 				repeat
-					local data = debug.getupvalue(oldshoot or pl.Shoot, 10)
-					if data then
-						if old ~= data then
-							olddata = table.clone(data)
-							old = data
-						end
-	
-						data.SpreadRadius = Spread.Enabled and 0 or olddata.SpreadRadius
-						data.FireRate = (olddata.FireRate or 0) * (FireRate.Value / 100)
-						data.AutoFire = Automatic.Enabled or olddata.AutoFire
-					end
-	
-					task.wait(0.016)
+					Modify()
+					task.wait(0.05)
 				until not GunModifications.Enabled
 			else
 				if old then
@@ -1152,38 +1191,6 @@ run(function()
 			end
 		end,
 		Tooltip = 'Remove the cooldown from jumping'
-	})
-end)
-	
-run(function()
-	local PhaseDisabler
-	local old
-	
-	local function EntityAdded(ent)
-		task.defer(function()
-			old = getconnections(ent.Head:GetPropertyChangedSignal('CanCollide'))[1]
-			if old then
-				old:Disable()
-			end
-		end)
-	end
-	
-	PhaseDisabler = vape.Categories.Blatant:CreateModule({
-		Name = 'PhaseDisabler',
-		Function = function(callback)
-			if callback then
-				PhaseDisabler:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
-				if entitylib.isAlive then
-					task.spawn(EntityAdded, entitylib.character)
-				end
-			else
-				if old then
-					old:Enable()
-					old = nil
-				end
-			end
-		end,
-		Tooltip = 'Fixes phase with Character mode.'
 	})
 end)
 	
@@ -1948,6 +1955,7 @@ end)
 	
 run(function()
 	local AutoDetonate
+	local SafeCheck
 	local localc4
 	local ticks = 0
 	local rayParams = RaycastParams.new()
@@ -1987,7 +1995,12 @@ run(function()
 							if ent then
 								rayParams.FilterDescendantsInstances = {ent.Character, lplr.Character, localc4}
 	
+								local rootdiff = (entitylib.character.RootPart.Position - localc4.Position)
 								local ray = workspace:Raycast(localc4.Position, (ent.RootPart.Position - localc4.Position), rayParams)
+								if SafeCheck.Enabled and not ray then
+									ray = not (workspace:Raycast(localc4.Position, rootdiff, rayParams) or rootdiff.Magnitude > 40)
+								end
+	
 								if not ray then
 									ticks += 1
 									if ticks > 3 then
@@ -2020,6 +2033,9 @@ run(function()
 			end
 		end,
 		Tooltip = 'Automatically detonate when enemies are nearby.'
+	})
+	SafeCheck = AutoDetonate:CreateToggle({
+		Name = 'Safety Check'
 	})
 end)
 	
@@ -2077,11 +2093,15 @@ end)
 	
 run(function()
 	local AutoPickup
+	local PrisonerList
+	local GuardList
+	local Lists = {}
 	local items = {}
+	local sortedpickups = {Guard = {}, Prisoner = {}}
 	
 	local function AddPickup(obj)
-		if obj:IsA('Model') and obj.Name ~= 'TouchGiver' and obj.Name ~= 'Model' and obj:GetAttribute('ToolName') then
-			table.insert(items, obj)
+		if obj:IsA('Model') and obj.Name ~= 'Model' and obj:GetAttribute('ToolName') then
+			table.insert(items, {obj, obj.Name == 'TouchGiver'})
 		end
 	end
 	
@@ -2093,11 +2113,17 @@ run(function()
 					task.spawn(AddPickup, obj)
 				end
 	
+				for _, obj in workspace:QueryDescendants('Model > .TouchGiver') do
+					task.spawn(AddPickup, obj)
+				end
+	
 				AutoPickup:Clean(workspace.ChildAdded:Connect(AddPickup))
 				AutoPickup:Clean(workspace.ChildRemoved:Connect(function(obj)
-					local index = table.find(items, obj)
-					if index then
-						table.remove(items, index)
+					for index, entry in items do
+						if entry[1] == obj then
+							table.remove(items, index)
+							break
+						end
 					end
 				end))
 	
@@ -2108,9 +2134,24 @@ run(function()
 	
 						if backpack then
 							for _, v in items do
-								if v.PrimaryPart and (v.PrimaryPart.Position - localpos).Magnitude < 12 then
-									if not backpack:FindFirstChild(v:GetAttribute('ToolName')) then
-										replicatedStorage.Remotes.GiverPressed:FireServer(v)
+								if v[1].PrimaryPart and (v[1].PrimaryPart.Position - localpos).Magnitude < 12 then
+									local toolname = v[1]:GetAttribute('ToolName')
+									if v[2] then
+										local found = false
+										for _, entry in sortedpickups[lplr.Team == teams.Guards and 'Guard' or 'Prisoner'] do
+											if not backpack:FindFirstChild(entry) then
+												found = toolname ~= entry
+												break
+											end
+										end
+	
+										if found then
+											continue
+										end
+									end
+	
+									if not backpack:FindFirstChild(toolname) then
+										replicatedStorage.Remotes.GiverPressed:FireServer(v[1])
 									end
 								end
 							end
@@ -2124,6 +2165,32 @@ run(function()
 			end
 		end,
 		Tooltip = 'Automatically grab item pickups'
+	})
+	PrisonerList = AutoPickup:CreateTextList({
+		Name = 'Prisoner Pickups',
+		Default = {'1/AK-47', '2/Remington 870'},
+		Placeholder = 'priority/item',
+		Function = function(list)
+			table.clear(sortedpickups.Prisoner)
+			for _, entry in list do
+				local tab = entry:split('/')
+				local ind = tonumber(tab[1])
+				sortedpickups.Prisoner[ind or 999] = tab[2]
+			end
+		end
+	})
+	GuardList = AutoPickup:CreateTextList({
+		Name = 'Guard Pickups',
+		Default = {'1/MP5', '2/Remington 870'},
+		Placeholder = 'priority/item',
+		Function = function(list)
+			table.clear(sortedpickups.Guard)
+			for _, entry in list do
+				local tab = entry:split('/')
+				local ind = tonumber(tab[1])
+				sortedpickups.Guard[ind or 999] = tab[2]
+			end
+		end
 	})
 end)
 	
@@ -2196,6 +2263,41 @@ run(function()
 	HotSwap = AutoReload:CreateToggle({
 		Name = 'Auto Swap',
 		Tooltip = 'Automatically swap weapons when reloading'
+	})
+end)
+	
+run(function()
+	local Disabler
+	local old
+	
+	local function EntityAdded(ent)
+		task.defer(function()
+			old = getconnections(ent.Head:GetPropertyChangedSignal('CanCollide'))[1]
+			if old then
+				old:Disable()
+			end
+		end)
+	end
+	
+	Disabler = vape.Categories.Utility:CreateModule({
+		Name = 'Disabler',
+		Function = function(callback)
+			if callback then
+				Disabler:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
+				if entitylib.isAlive then
+					task.spawn(EntityAdded, entitylib.character)
+				end
+			else
+				if old then
+					old:Enable()
+					old = nil
+				end
+			end
+		end,
+		Tooltip = 'Fixes phase with Character mode.',
+		ExtraText = function()
+			return 'Phase'
+		end
 	})
 end)
 	
@@ -2568,6 +2670,9 @@ end)
 	
 run(function()
 	local Viewmodel
+	local Depth
+	local Horizontal
+	local Vertical
 	local Sway
 	local ForceField
 	local ColorSl
@@ -2646,7 +2751,7 @@ run(function()
 							moveSpring.Target += (gameCamera.CFrame * CFrame.new(math.sin(tick() * 10) * 0.06, 0, 0)).Position - gameCamera.CFrame.Position
 						end
 	
-						local cf = (gameCamera.CFrame * CFrame.new(2, -1.5, -3)) + moveSpring:Update(dt)
+						local cf = (gameCamera.CFrame * CFrame.new(Horizontal.Value, Vertical.Value, -Depth.Value)) + moveSpring:Update(dt)
 						aimSpring.Target = aimTimer > os.clock() and CFrame.lookAt(cf.Position, aimVec).LookVector or gameCamera.CFrame.LookVector
 						handle.CFrame = CFrame.lookAlong(cf.Position, aimSpring:Update(dt)) * CFrame.new(0, 0, math.max(shootTimer - os.clock(), 0))
 						handle.AssemblyLinearVelocity = Vector3.zero
@@ -2668,6 +2773,27 @@ run(function()
 			end
 		end,
 		Tooltip = 'Custom viewmodel for guns'
+	})
+	Depth = Viewmodel:CreateSlider({
+		Name = 'Depth',
+		Min = 0,
+		Max = 3,
+		Default = 3,
+		Decimal = 10
+	})
+	Horizontal = Viewmodel:CreateSlider({
+		Name = 'Horizontal',
+		Min = 0,
+		Max = 2,
+		Default = 2,
+		Decimal = 10
+	})
+	Vertical = Viewmodel:CreateSlider({
+		Name = 'Vertical',
+		Min = -1.5,
+		Max = 2,
+		Default = -1.5,
+		Decimal = 10
 	})
 	Sway = Viewmodel:CreateToggle({
 		Name = 'Sway Effect',

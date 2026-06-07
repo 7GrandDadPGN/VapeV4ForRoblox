@@ -426,7 +426,7 @@ run(function()
 					if ent then
 						local item = jb.ItemSystemController:GetLocalEquipped()
 						if item and ((self.Tip.CFrame.Position - ent.RootPart.Position).Magnitude / (item.Config.BulletSpeed or 1000)) < item.BulletEmitter.LifeSpan then
-							ProjectileRaycast.FilterDescendantsInstances = {gameCamera, ent.Character}
+							ProjectileRaycast.FilterDescendantsInstances = {gameCamera, ent.Character, workspace.Vehicles}
 							ProjectileRaycast.CollisionGroup = ent.RootPart.CollisionGroup
 							local calc = prediction.SolveTrajectory(self.Tip.CFrame.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), ent.RootPart.Position, Instant.Enabled and Vector3.zero or ent.RootPart.Velocity, workspace.Gravity, ent.HipHeight, nil, ProjectileRaycast)
 							if calc then
@@ -450,6 +450,7 @@ run(function()
 							rawset(item.BulletEmitter, 'LastUpdate', tick() - (item.BulletEmitter.LifeSpan - 0.1))
 						end
 					end
+	
 					task.wait()
 				until not SilentAim.Enabled
 			else
@@ -643,7 +644,7 @@ run(function()
 						local item = jb.ItemSystemController:GetLocalEquipped()
 						if item and item.BulletEmitter and item.Model then
 							for _, car in getVehiclesNear() do
-								if not AutoPop.Enabled then break end
+								if not (AutoPop.Enabled and item.Model) then break end
 								jb:FireServer('PopTires', car, item.Model.Name)
 								task.wait(0.1)
 							end
