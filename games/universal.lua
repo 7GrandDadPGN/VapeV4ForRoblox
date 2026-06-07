@@ -510,7 +510,7 @@ run(function()
 								local plr = msg.TextSource and playersService:GetPlayerByUserId(msg.TextSource.UserId)
 
 								if plr then
-									if not (data and data:IsA('TextChatMessageProperties')) then
+									if not (data and data:IsA('TextChatMessageProperties') and data.PrefixText ~= '') then
 										data = Instance.new('TextChatMessageProperties')
 										data.PrefixText = msg.PrefixText
 										data.Text = msg.Text
