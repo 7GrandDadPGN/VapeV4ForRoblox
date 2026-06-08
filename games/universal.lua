@@ -234,6 +234,7 @@ entitylib = loadstring(downloadFile('newvape/libraries/entity.lua'), 'entitylibr
 local whitelist = {
 	alreadychecked = {},
 	customtags = {},
+	tagcallback = {},
 	data = {WhitelistedUsers = {}},
 	hashes = setmetatable({}, {
 		__index = function(_, v)
@@ -395,29 +396,54 @@ run(function()
 				return v.level, v.attackable or whitelist.localprio >= v.level, v.tags
 			end
 		end
+
 		return 0, true
 	end
 
 	function whitelist:isingame()
 		for _, v in playersService:GetPlayers() do
-			if self:get(v) ~= 0 then return true end
+			if self:get(v) ~= 0 then
+				return true
+			end
 		end
+
 		return false
 	end
 
 	function whitelist:tag(plr, text, rich)
 		local plrtag, newtag = select(3, self:get(plr)) or self.customtags[plr.Name] or {}, ''
-		if not text then return plrtag end
-		for _, v in plrtag do
-			newtag = newtag..(rich and '<font color="#'..v.color:ToHex()..'">['..v.text..']</font>' or '['..removeTags(v.text)..']')..' '
+		for _, v in self.tagcallback do
+			v(plr, plrtag, rich)
 		end
+
+		if not text then
+			return plrtag
+		end
+
+		for _, v in plrtag do
+			newtag = newtag..(rich and v.color and '<font color="#'..v.color:ToHex()..'">['..v.text..']</font>' or '['..removeTags(v.text)..']')..' '
+		end
+
 		return newtag
 	end
 
-	function whitelist:getplayer(arg)
-		if arg == 'default' and self.localprio == 0 then return true end
-		if arg == 'private' and self.localprio == 1 then return true end
-		if arg and lplr.Name:lower():sub(1, arg:len()) == arg:lower() then return true end
+	function whitelist:getplayer(arg, plr)
+		if arg == 'default' and self.localprio == 0 then
+			return true
+		end
+
+		if arg == 'private' and self.localprio == 1 then
+			return true
+		end
+
+		if arg == 'others' and plr ~= lplr then
+			return true
+		end
+
+		if arg and lplr.Name:lower():sub(1, arg:len()) == arg:lower() then
+			return true
+		end
+
 		return false
 	end
 
@@ -442,7 +468,7 @@ run(function()
 			local args = msg:split(' ')
 			table.remove(args, 1)
 
-			if self:getplayer(args[1]) then
+			if self:getplayer(args[1], plr) then
 				table.remove(args, 1)
 				for cmd, func in self.commands do
 					if msg:sub(1, cmd:len() + 1):lower() == ';'..cmd:lower() then
@@ -552,6 +578,93 @@ run(function()
 		end
 	end
 
+	function whitelist:announce(text)
+		local container = Instance.new('TextButton')
+		container.Size = UDim2.new(1, -24, 0, 60)
+		container.Position = UDim2.new(0.5, 0, 0, -60)
+		container.AnchorPoint = Vector2.new(0.5, 0)
+		container.BackgroundTransparency = 1
+		container.Text = ''
+		container.Parent = vape.gui
+		local constraint = Instance.new('UISizeConstraint')
+		constraint.MinSize = Vector2.new(24, 60)
+		constraint.MaxSize = Vector2.new(600, math.huge)
+		constraint.Parent = container
+		local bkg = Instance.new('ImageLabel')
+		bkg.Size = UDim2.fromScale(1, 1)
+		bkg.Position = UDim2.fromScale(0.5, 0.5)
+		bkg.AnchorPoint = Vector2.new(0.5, 0.5)
+		bkg.BackgroundTransparency = 1
+		bkg.Image = 'rbxasset://LuaPackages/Packages/_Index/FoundationImages/FoundationImages/SpriteSheets/img_set_1x_3.png'
+		bkg.ImageRectOffset = Vector2.new(490, 196)
+		bkg.ImageRectSize = Vector2.new(21, 21)
+		bkg.ScaleType = Enum.ScaleType.Slice
+		bkg.SliceCenter = Rect.new(10, 10, 11, 11)
+		bkg.ImageColor3 = Color3.fromRGB(39, 41, 48)
+		bkg.Parent = container
+		local holder = Instance.new('Frame')
+		holder.Size = UDim2.fromScale(1, 1)
+		holder.BackgroundTransparency = 1
+		holder.ClipsDescendants = true
+		holder.Parent = bkg
+		local listlayout = Instance.new('UIListLayout')
+		listlayout.Padding = UDim.new(0, 12)
+		listlayout.FillDirection = Enum.FillDirection.Horizontal
+		listlayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		listlayout.SortOrder = Enum.SortOrder.LayoutOrder
+		listlayout.Parent = holder
+		local padding = Instance.new('UIPadding')
+		padding.PaddingBottom = UDim.new(0, 12)
+		padding.PaddingLeft = UDim.new(0, 12)
+		padding.PaddingRight = UDim.new(0, 12)
+		padding.PaddingTop = UDim.new(0, 12)
+		padding.Parent = holder
+		local mainframe = Instance.fromExisting(holder)
+		mainframe.ClipsDescendants = false
+		mainframe.Parent = holder
+		local listlayout2 = Instance.fromExisting(listlayout)
+		listlayout2.Parent = mainframe
+		local textframe = Instance.new('Frame')
+		textframe.Size = UDim2.new(1, -48, 0, 22)
+		textframe.BackgroundTransparency = 1
+		textframe.LayoutOrder = 2
+		textframe.Parent = mainframe
+		local textlabel = Instance.new('TextLabel')
+		textlabel.Size = UDim2.new(1, 0, 0, 22)
+		textlabel.BackgroundTransparency = 1
+		textlabel.Text = text
+		textlabel.TextSize = 20
+		textlabel.TextColor3 = Color3.fromRGB(247, 247, 248)
+		textlabel.TextXAlignment = Enum.TextXAlignment.Left
+		textlabel.FontFace = Font.fromName('BuilderSans', Enum.FontWeight.Bold)
+		textlabel.Parent = textframe
+		local iconframe = Instance.new('Frame')
+		iconframe.Size = UDim2.fromOffset(36, 36)
+		iconframe.BackgroundTransparency = 1
+		iconframe.Parent = mainframe
+		local icon = Instance.new('ImageLabel')
+		icon.Size = UDim2.fromOffset(36, 36)
+		icon.Image = getcustomasset('newvape/assets/new/vape.png')
+		icon.BackgroundTransparency = 1
+		icon.Parent = iconframe
+		constraint.MaxSize = Vector2.new(math.max(getfontsize(text, 20, textlabel.FontFace).X + 80, 600), math.huge)
+
+		tween:Tween(container, TweenInfo.new(0.3), {
+			Position = UDim2.new(0.5, 0, 0, 20)
+		})
+
+		task.delay(20, function()
+			if vape.Loaded ~= nil then
+				tween:Tween(container, TweenInfo.new(0.3), {
+					Position = UDim2.new(0.5, 0, 0, -60)
+				})
+
+				task.wait(0.3)
+				container:Destroy()
+			end
+		end)
+	end
+
 	function whitelist:update(first)
 		local suc = pcall(function()
 			local _, subbed = pcall(function()
@@ -606,10 +719,7 @@ run(function()
 					targets = targets == 'all' and {tostring(lplr.UserId)} or targets:split(',')
 
 					if table.find(targets, tostring(lplr.UserId)) then
-						local hint = Instance.new('Hint')
-						hint.Text = 'VAPE ANNOUNCEMENT: '..whitelist.data.Announcement.text
-						hint.Parent = workspace
-						game:GetService('Debris'):AddItem(hint, 20)
+						whitelist:announce(whitelist.data.Announcement.text)
 					end
 				end
 				whitelist.olddata = whitelist.textdata
@@ -2190,6 +2300,7 @@ run(function()
 			if callback then
 				animationTrickery()
 	
+				oldcf = nil
 				local bindKey = httpService:GenerateGUID(true)
 				runService:BindToRenderStep(bindKey, 0, function()
 					if entitylib.isAlive and oldcf then
@@ -4631,6 +4742,7 @@ run(function()
 	local Targets
 	local Color
 	local Background
+	local Stroke
 	local DisplayName
 	local Health
 	local Distance
@@ -4674,6 +4786,7 @@ run(function()
 			nametag.AnchorPoint = Vector2.new(0.5, 1)
 			nametag.BackgroundColor3 = Color3.new()
 			nametag.BackgroundTransparency = Background.Value
+			nametag.TextStrokeTransparency = Stroke.Value
 			nametag.BorderSizePixel = 0
 			nametag.Visible = false
 			nametag.Text = Strings[ent]
@@ -4967,6 +5080,19 @@ run(function()
 			end
 		end,
 		Default = 0.5,
+		Min = 0,
+		Max = 1,
+		Decimal = 10
+	})
+	Stroke = NameTags:CreateSlider({
+		Name = 'Stroke Transparency',
+		Function = function()
+			if NameTags.Enabled then
+				NameTags:Toggle()
+				NameTags:Toggle()
+			end
+		end,
+		Default = 1,
 		Min = 0,
 		Max = 1,
 		Decimal = 10

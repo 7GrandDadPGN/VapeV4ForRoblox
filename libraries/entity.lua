@@ -233,7 +233,7 @@ entitylib.getEntity = function(char)
 	end
 end
 
-entitylib.addEntity = function(char, plr, teamfunc)
+entitylib.addEntity = function(char, plr, teamfunc, spawntime)
 	if not char then return end
 	entitylib.EntityThreads[char] = task.spawn(function()
 		local hum = waitForChildOfType(char, 'Humanoid', 10)
@@ -253,6 +253,7 @@ entitylib.addEntity = function(char, plr, teamfunc)
 				NPC = plr == nil,
 				Player = plr,
 				RootPart = humrootpart,
+				SpawnTime = spawntime or 0,
 				TeamCheck = teamfunc
 			}
 
@@ -329,9 +330,9 @@ entitylib.removeEntity = function(char, localcheck)
 	end
 end
 
-entitylib.refreshEntity = function(char, plr)
+entitylib.refreshEntity = function(char, plr, spawntime)
 	entitylib.removeEntity(char)
-	entitylib.addEntity(char, plr)
+	entitylib.addEntity(char, plr, nil, spawntime)
 end
 
 entitylib.addPlayer = function(plr)
@@ -340,7 +341,7 @@ entitylib.addPlayer = function(plr)
 	end
 	entitylib.PlayerConnections[plr] = {
 		plr.CharacterAdded:Connect(function(char)
-			entitylib.refreshEntity(char, plr)
+			entitylib.refreshEntity(char, plr, os.clock() + 0.4)
 		end),
 		plr.CharacterRemoving:Connect(function(char)
 			entitylib.removeEntity(char, plr == lplr)
