@@ -34,8 +34,18 @@ local getfontsize = vape.Libraries.getfontsize
 local pl = {}
 local Spring = {}
 local TracerHook = {Hooks = {}}
-local oldshoot
+local oldshoot, oldequip
 local aimTimer, shootTimer, aimVec = os.clock(), os.clock()
+
+local function checkPoint(pos, params)
+	for _, v in workspace:GetPartBoundsInRadius(pos, 0, params) do
+		if v.CanCollide and (v:GetClosestPointOnSurface(pos) - pos).Magnitude <= 0 then
+			return false
+		end
+	end
+
+	return true
+end
 
 local function canClick()
 	local mousepos = (inputService:GetMouseLocation() - guiService:GetGuiInset())
@@ -81,9 +91,9 @@ end
 local OriginScanner = {}
 run(function()
 	local rayParams = RaycastParams.new()
+	local rayParams2 = OverlapParams.new()
 	rayParams.CollisionGroup = 'ClientBullet'
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
-	local rayParams2 = OverlapParams.new()
 	rayParams2.CollisionGroup = 'ClientBullet'
 	rayParams2.FilterType = Enum.RaycastFilterType.Exclude
 	OriginScanner.Ray = rayParams
@@ -134,7 +144,7 @@ run(function()
 		for _, pos in scanPositions do
 			local ray = workspace:Raycast(target, (pos - target), rayParams)
 
-			if not ray and #workspace:GetPartBoundsInBox(CFrame.new(pos), Vector3.one * 0.1, rayParams2) <= 0 then
+			if not ray and checkPoint(pos, rayParams2) then
 				return pos
 			end
 		end
@@ -147,6 +157,32 @@ run(function()
 		end
 		rayParams.FilterDescendantsInstances = ignore
 		rayParams2.FilterDescendantsInstances = ignore
+	end
+end)
+
+local CheatFlags = {Flags = {}, Flagged = {}}
+run(function()
+	function CheatFlags:Flag(plr, flagtype, limit)
+		if CheatFlags.Flagged[plr.UserId] then
+			return
+		end
+
+		if not CheatFlags.Flags[plr.UserId] then
+			CheatFlags.Flags[plr.UserId] = {}
+		end
+
+		local flags = CheatFlags.Flags[plr.UserId]
+		flags[flagtype] = (flags[flagtype] or 0) + 1
+
+		if flags[flagtype] > limit then
+			CheatFlags.Flagged[plr.UserId] = true
+			vapeEvents.CheatFlagged:Fire(plr, flagtype)
+		end
+	end
+
+	function CheatFlags:Clear()
+		table.clear(CheatFlags.Flags)
+		table.clear(CheatFlags.Flagged)
 	end
 end)
 
@@ -193,7 +229,7 @@ run(function()
 			return false
 		end
 
-		return ent.Health > 0 and not ent.Character.FindFirstChildWhichIsA(ent.Character, 'ForceField') and (ent.Player.Team ~= teams.Inmates or (ent.Character:GetAttribute('Trespassing') or ent.Character:GetAttribute('Hostile')))
+		return ent.Health > 0 and ent.SpawnTime < os.clock() and not ent.Character.FindFirstChildWhichIsA(ent.Character, 'ForceField') and (ent.Player.Team ~= teams.Inmates or (ent.Character:GetAttribute('Trespassing') or ent.Character:GetAttribute('Hostile')))
 	end
 
 	entitylib.EntityMouse = function(entitysettings)
@@ -321,7 +357,7 @@ run(function()
 	entitylib.Wallcheck = function(origin, position, checkpos)
 		local ray = workspace.Raycast(workspace, position, (origin - position), OriginScanner.Ray)
 		if ray then
-			return not checkpos or not OriginScanner:Scan(checkpos, position, ray.Position + ray.Normal * 0.05)
+			return not checkpos or not OriginScanner:Scan(checkpos, position, ray.Position + ray.Normal * 0.01)
 		end
 
 		return false
@@ -349,6 +385,13 @@ run(function()
 				break
 			end
 		end
+
+		for _, v in getconnections(lplr.CharacterAdded) do
+			if v.Function and debug.info(v.Function, 's'):find('GunController') then
+				pl.Equip = debug.getupvalue(v.Function, 3)
+				break
+			end
+		end
 	end
 
 	getShootFunction()
@@ -366,6 +409,16 @@ run(function()
 	local kills = sessioninfo:AddItem('Kills')
 	local deaths = sessioninfo:AddItem('Deaths')
 	local arrests = sessioninfo:AddItem('Arrests')
+	local cheaters = sessioninfo:AddItem('Cheater List', '', function()
+		local text = ''
+		for _, plr in playersService:GetPlayers() do
+			if CheatFlags.Flagged[plr.UserId] then
+				text = text..'\n'..(plr.DisplayName and plr.DisplayName..' ('..plr.Name..')' or plr.Name)
+			end
+		end
+
+		return text
+	end, false)
 
 	vape:Clean(replicatedStorage.Killfeed.ChildAdded:Connect(function(obj)
 		local names = {}
@@ -397,6 +450,25 @@ run(function()
 			vape.Categories.Friends.ColorUpdate:Fire()
 		end
 	end))
+
+	table.insert(whitelist.tagcallback, function(plr, plrtag, rich)
+		if plr then
+			local ent = entitylib.getEntity(plr)
+			if ent then
+				if CheatFlags.Flagged[plr.UserId] then
+					table.insert(plrtag, {text = rich and '⚠️' or 'Cheater'})
+				end
+
+				if plr.Team == teams.Inmates then
+					if ent.Character:GetAttribute('Hostile') then
+						table.insert(plrtag, {text = rich and '💢' or 'Hostile'})
+					elseif ent.Character:GetAttribute('Trespassing') then
+						table.insert(plrtag, {text = rich and '🔗' or 'Trespassing'})
+					end
+				end
+			end
+		end
+	end)
 
 	OriginScanner:UpdateIgnore()
 	for _, v in {'EntityAdded', 'LocalAdded'} do
@@ -563,7 +635,6 @@ run(function()
 		local gundata = debug.getupvalue(oldshoot or pl.Shoot, 10)
 		local ent, targetPart, origin = getTarget(origin, gundata and gundata.Range or 1000, not gundata or gundata.Behavior ~= 'Taser')
 
-		shootTimer = os.clock() + 0.3
 		if not ent then return old(...) end
 
 		local args = table.pack(...)
@@ -580,7 +651,7 @@ run(function()
 			local ray = workspace:Raycast(args[2], (origin - args[2]), rayParams)
 
 			if ray then
-				local neworigin = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.05)
+				local neworigin = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.01)
 
 				if neworigin then
 					for i, v in debug.getstack(3) do
@@ -622,10 +693,11 @@ run(function()
 						local gundata = debug.getupvalue(oldshoot or pl.Shoot, 10)
 						if gundata and tool and (tool:GetAttribute('Local_CurrentAmmo') or 0) > 0 and not tool:GetAttribute('Local_IsShooting') then
 							local limit = gundata.Range or 1000
+							local taser = gundata and gundata.Behavior == 'Taser'
 							local ent = entitylib['Entity'..Mode.Value]({
 								Range = Mode.Value == 'Position' and math.min(Range.Value, limit) or Range.Value,
 								RangePosition = limit,
-								AttackCheck = not gundata or gundata.Behavior ~= 'Taser',
+								AttackCheck = not taser,
 								Wallcheck = Target.Walls.Enabled and true or nil,
 								Wallbang = Wallbang.Enabled and entitylib.isAlive and entitylib.character.RootPart.Position or nil,
 								Part = 'Head',
@@ -634,10 +706,12 @@ run(function()
 							})
 
 							if ent and entitylib.character.Humanoid.Health > 0 then
-								autofiretimer = os.clock() + (gundata.FireRate or 1 / AutoFireRate.Value)
-								local obj = {UserInputState = Enum.UserInputState.Begin, UserInputType = Enum.UserInputType.MouseButton1, Position = Vector3.zero}
-								task.spawn(pl.Shoot, obj)
-								obj.UserInputState = Enum.UserInputState.End
+								if not (taser and ent.Character:GetAttribute('Tased')) then
+									autofiretimer = os.clock() + (gundata.FireRate or 1 / AutoFireRate.Value)
+									local obj = {UserInputState = Enum.UserInputState.Begin, UserInputType = Enum.UserInputType.MouseButton1, Position = Vector3.zero}
+									task.spawn(pl.Shoot, obj)
+									obj.UserInputState = Enum.UserInputState.End
+								end
 							end
 						end
 					end
@@ -776,23 +850,86 @@ end)
 	
 run(function()
 	local AntiInvisible
+	local threads = {}
+	local whitelist = {
+		-- default roblox animations
+		['http://www.roblox.com/asset/?id=125750702'] = true,
+		['http://www.roblox.com/asset/?id=128777973'] = true,
+		['http://www.roblox.com/asset/?id=128853357'] = true,
+		['http://www.roblox.com/asset/?id=129423030'] = true,
+		['http://www.roblox.com/asset/?id=129423131'] = true,
+		['http://www.roblox.com/asset/?id=129967390'] = true,
+		['http://www.roblox.com/asset/?id=129967478'] = true,
+		['http://www.roblox.com/asset/?id=178130996'] = true,
+		['http://www.roblox.com/asset/?id=180426354'] = true,
+		['http://www.roblox.com/asset/?id=180435571'] = true,
+		['http://www.roblox.com/asset/?id=180435792'] = true,
+		['http://www.roblox.com/asset/?id=180436148'] = true,
+		['http://www.roblox.com/asset/?id=180436334'] = true,
+		['http://www.roblox.com/asset/?id=182393478'] = true,
+		['http://www.roblox.com/asset/?id=182435998'] = true,
+		['http://www.roblox.com/asset/?id=182436842'] = true,
+		['http://www.roblox.com/asset/?id=182436935'] = true,
+		['http://www.roblox.com/asset/?id=182491037'] = true,
+		['http://www.roblox.com/asset/?id=182491065'] = true,
+		['http://www.roblox.com/asset/?id=182491248'] = true,
+		['http://www.roblox.com/asset/?id=182491277'] = true,
+		['http://www.roblox.com/asset/?id=182491368'] = true,
+		['http://www.roblox.com/asset/?id=182491423'] = true,
+		-- game animations
+		['rbxassetid://279227693'] = true,
+		['rbxassetid://279229192'] = true,
+		['rbxassetid://287112271'] = true,
+		['rbxassetid://388723916'] = true,
+		['rbxassetid://388726667'] = true,
+		['rbxassetid://389472570'] = true,
+		['rbxassetid://405194080'] = true,
+		['rbxassetid://405212265'] = true,
+		['rbxassetid://481088553'] = true,
+		['rbxassetid://481089053'] = true,
+		['rbxassetid://484200742'] = true,
+		['rbxassetid://484926359'] = true,
+		['rbxassetid://83690472549256'] = true,
+		['rbxassetid://107176344504758'] = true,
+		['rbxassetid://111090572475133'] = true,
+		['rbxassetid://113267949064300'] = true,
+		['rbxassetid://131326339350805'] = true
+	}
+	
+	local function AnimationAdded(anim, plr)
+		if not whitelist[anim.Animation.AnimationId] and plr then
+			if threads[anim] then
+				task.cancel(threads[anim])
+			end
+	
+			CheatFlags:Flag(plr, 'invalid animation', 1)
+			threads[anim] = task.spawn(function()
+				repeat
+					anim:AdjustWeight(0, 0)
+					task.wait()
+				until not (anim.IsPlaying and AntiInvisible.Enabled)
+	
+				threads[anim] = nil
+			end)
+		end
+	end
 	
 	local function EntityAdded(ent)
 		local animator = ent.Humanoid:WaitForChild('Animator', 5)
 	
 		if animator and AntiInvisible.Enabled then
 			AntiInvisible:Clean(animator.AnimationPlayed:Connect(function(anim)
-				if anim.Animation.AnimationId:find('215384594') then
-					anim:AdjustWeight(0)
-				end
+				AnimationAdded(anim, ent.Player)
 			end))
 	
 			for _, anim in animator:GetPlayingAnimationTracks() do
-				if anim.Animation.AnimationId:find('215384594') then
-					anim:AdjustWeight(0)
-				end
+				task.spawn(AnimationAdded, anim, ent.Player)
 			end
 		end
+	end
+	
+	for _, v in replicatedStorage:QueryDescendants('Animation') do
+		whitelist[v.AnimationId] = true
 	end
 	
 	AntiInvisible = vape.Categories.Blatant:CreateModule({
@@ -803,6 +940,11 @@ run(function()
 				for _, v in entitylib.List do
 					task.spawn(EntityAdded, v)
 				end
+			else
+				for _, v in threads do
+					task.cancel(v)
+				end
+				table.clear(threads)
 			end
 		end,
 		Tooltip = 'Prevent people from using invisible animations'
@@ -1054,10 +1196,11 @@ run(function()
 	local FireRate
 	local Automatic
 	local olddata, old = {}
+	local oldhook
 	
 	local function Modify()
 		local data = debug.getupvalue(oldshoot or pl.Shoot, 10)
-		if data then
+		if data and GunModifications.Enabled then
 			if old ~= data then
 				olddata = table.clone(data)
 				old = data
@@ -1069,28 +1212,25 @@ run(function()
 		end
 	end
 	
-	local function EntityAdded(ent)
-		GunModifications:Clean(ent.Character.ChildAdded:Connect(function(tool)
-			if tool:IsA('Tool') and tool:GetAttribute('ToolType') == 'Gun' then
-				task.defer(Modify)
-			end
-		end))
-	end
 	
 	GunModifications = vape.Categories.Blatant:CreateModule({
 		Name = 'GunModifications',
 		Function = function(callback)
 			if callback then
-				GunModifications:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
-				if entitylib.isAlive then
-					task.spawn(EntityAdded, entitylib.character)
+				oldequip = hookfunction(pl.Equip, function(...)
+					local res = table.pack(oldequip(...))
+					Modify()
+					return unpack(res, 1, res.n)
+				end)
+			else
+				if oldequip then
+					if restorefunction then
+						restorefunction(pl.Equip)
+					else
+						oldequip = nil
+					end
 				end
 	
-				repeat
-					Modify()
-					task.wait(0.05)
-				until not GunModifications.Enabled
-			else
 				if old then
 					for i, v in olddata do
 						old[i] = v
@@ -1106,10 +1246,17 @@ run(function()
 		Min = 1,
 		Max = 100,
 		Default = 100,
-		Suffix = '%'
+		Suffix = '%',
+		Function = Modify
 	})
-	Spread = GunModifications:CreateToggle({Name = 'No Spread'})
-	Automatic = GunModifications:CreateToggle({Name = 'Full Automatic'})
+	Spread = GunModifications:CreateToggle({
+		Name = 'No Spread',
+		Function = Modify
+	})
+	Automatic = GunModifications:CreateToggle({
+		Name = 'Full Automatic',
+		Function = Modify
+	})
 end)
 	
 run(function()
@@ -1512,448 +1659,6 @@ run(function()
 end)
 	
 run(function()
-	local NameTags
-	local Targets
-	local Color
-	local Background
-	local DisplayName
-	local Health
-	local Distance
-	local DrawingToggle
-	local Scale
-	local FontOption
-	local Teammates
-	local DistanceCheck
-	local DistanceLimit
-	local Strings, Sizes, Reference = {}, {}, {}
-	local Folder = Instance.new('Folder')
-	Folder.Parent = vape.gui
-	local methodused
-	
-	local Added = {
-		Normal = function(ent)
-			if not Targets.Players.Enabled and ent.Player then return end
-			if not Targets.NPCs.Enabled and ent.NPC then return end
-			if Teammates.Enabled and (not ent.Targetable) and (not ent.Friend) then return end
-			if vape.ThreadFix then
-				setthreadidentity(8)
-			end
-	
-			Strings[ent] = ent.Player and whitelist:tag(ent.Player, true, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
-	
-			if Health.Enabled then
-				local healthColor = Color3.fromHSV(math.clamp(ent.Health / ent.MaxHealth, 0, 1) / 2.5, 0.89, 0.75)
-				Strings[ent] = Strings[ent]..' <font color="rgb('..tostring(math.floor(healthColor.R * 255))..','..tostring(math.floor(healthColor.G * 255))..','..tostring(math.floor(healthColor.B * 255))..')">'..math.round(ent.Health)..'</font>'
-			end
-	
-			if Distance.Enabled then
-				Strings[ent] = '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">%s</font><font color="rgb(85, 255, 85)">]</font> '..Strings[ent]
-			end
-	
-			if ent.Player and ent.Player.Team == teams.Inmates then
-				if ent.Character:GetAttribute('Hostile') then
-					Strings[ent] = '[💢] '..Strings[ent]
-				elseif ent.Character:GetAttribute('Trespassing') then
-					Strings[ent] = '[🔗] '..Strings[ent]
-				end
-			end
-	
-			local nametag = Instance.new('TextLabel')
-			nametag.TextSize = 14 * Scale.Value
-			nametag.FontFace = FontOption.Value
-			local size = getfontsize(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
-			nametag.Name = ent.Player and ent.Player.Name or ent.Character.Name
-			nametag.Size = UDim2.fromOffset(size.X + 8, size.Y + 7)
-			nametag.AnchorPoint = Vector2.new(0.5, 1)
-			nametag.BackgroundColor3 = Color3.new()
-			nametag.BackgroundTransparency = Background.Value
-			nametag.BorderSizePixel = 0
-			nametag.Visible = false
-			nametag.Text = Strings[ent]
-			nametag.TextColor3 = entitylib.getEntityColor(ent) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-			nametag.RichText = true
-			nametag.Parent = Folder
-			Reference[ent] = nametag
-		end,
-		Drawing = function(ent)
-			if not Targets.Players.Enabled and ent.Player then return end
-			if not Targets.NPCs.Enabled and ent.NPC then return end
-			if Teammates.Enabled and (not ent.Targetable) and (not ent.Friend) then return end
-	
-			local nametag = {}
-			nametag.BG = Drawing.new('Square')
-			nametag.BG.Filled = true
-			nametag.BG.Transparency = 1 - Background.Value
-			nametag.BG.Color = Color3.new()
-			nametag.BG.ZIndex = 1
-			nametag.Text = Drawing.new('Text')
-			nametag.Text.Size = 15 * Scale.Value
-			nametag.Text.Font = 0
-			nametag.Text.ZIndex = 2
-			Strings[ent] = ent.Player and whitelist:tag(ent.Player, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
-	
-			if Health.Enabled then
-				Strings[ent] = Strings[ent]..' '..math.round(ent.Health)
-			end
-	
-			if Distance.Enabled then
-				Strings[ent] = '[%s] '..Strings[ent]
-			end
-	
-			if ent.Player and ent.Player.Team == teams.Inmates then
-				if ent.Character:GetAttribute('Hostile') then
-					Strings[ent] = '[Hostile] '..Strings[ent]
-				elseif ent.Character:GetAttribute('Trespassing') then
-					Strings[ent] = '[Tresspass] '..Strings[ent]
-				end
-			end
-	
-			nametag.Text.Text = Strings[ent]
-			nametag.Text.Color = entitylib.getEntityColor(ent) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-			nametag.BG.Size = Vector2.new(nametag.Text.TextBounds.X + 8, nametag.Text.TextBounds.Y + 7)
-			Reference[ent] = nametag
-		end
-	}
-	
-	local Removed = {
-		Normal = function(ent)
-			local v = Reference[ent]
-			if v then
-				if vape.ThreadFix then
-					setthreadidentity(8)
-				end
-				Reference[ent] = nil
-				Strings[ent] = nil
-				Sizes[ent] = nil
-				v:Destroy()
-			end
-		end,
-		Drawing = function(ent)
-			local v = Reference[ent]
-			if v then
-				if vape.ThreadFix then
-					setthreadidentity(8)
-				end
-				Reference[ent] = nil
-				Strings[ent] = nil
-				Sizes[ent] = nil
-				for _, obj in v do
-					pcall(function()
-						obj.Visible = false
-						obj:Remove()
-					end)
-				end
-			end
-		end
-	}
-	
-	local Updated = {
-		Normal = function(ent)
-			local nametag = Reference[ent]
-			if nametag then
-				if vape.ThreadFix then
-					setthreadidentity(8)
-				end
-				Sizes[ent] = nil
-				Strings[ent] = ent.Player and whitelist:tag(ent.Player, true, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
-	
-				if Health.Enabled then
-					local color = Color3.fromHSV(math.clamp(ent.Health / ent.MaxHealth, 0, 1) / 2.5, 0.89, 0.75)
-					Strings[ent] = Strings[ent]..' <font color="rgb('..tostring(math.floor(color.R * 255))..','..tostring(math.floor(color.G * 255))..','..tostring(math.floor(color.B * 255))..')">'..math.round(ent.Health)..'</font>'
-				end
-	
-				if Distance.Enabled then
-					Strings[ent] = '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">%s</font><font color="rgb(85, 255, 85)">]</font> '..Strings[ent]
-				end
-	
-				if ent.Player and ent.Player.Team == teams.Inmates then
-					if ent.Character:GetAttribute('Hostile') then
-						Strings[ent] = '[💢] '..Strings[ent]
-					elseif ent.Character:GetAttribute('Trespassing') then
-						Strings[ent] = '[🔗] '..Strings[ent]
-					end
-				end
-	
-				local size = getfontsize(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
-				nametag.Size = UDim2.fromOffset(size.X + 8, size.Y + 7)
-				nametag.Text = Strings[ent]
-			end
-		end,
-		Drawing = function(ent)
-			local nametag = Reference[ent]
-			if nametag then
-				if vape.ThreadFix then
-					setthreadidentity(8)
-				end
-				Sizes[ent] = nil
-				Strings[ent] = ent.Player and whitelist:tag(ent.Player, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
-	
-				if Health.Enabled then
-					Strings[ent] = Strings[ent]..' '..math.round(ent.Health)
-				end
-	
-				if ent.Player and ent.Player.Team == teams.Inmates then
-					if ent.Character:GetAttribute('Hostile') then
-						Strings[ent] = '[Hostile] '..Strings[ent]
-					elseif ent.Character:GetAttribute('Trespassing') then
-						Strings[ent] = '[Tresspass] '..Strings[ent]
-					end
-				end
-	
-				if Distance.Enabled then
-					Strings[ent] = '[%s] '..Strings[ent]
-					nametag.Text.Text = entitylib.isAlive and string.format(Strings[ent], math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude)) or Strings[ent]
-				else
-					nametag.Text.Text = Strings[ent]
-				end
-	
-				nametag.BG.Size = Vector2.new(nametag.Text.TextBounds.X + 8, nametag.Text.TextBounds.Y + 7)
-				nametag.Text.Color = entitylib.getEntityColor(ent) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-			end
-		end
-	}
-	
-	local ColorFunc = {
-		Normal = function(hue, sat, val)
-			local color = Color3.fromHSV(hue, sat, val)
-			for i, v in Reference do
-				v.TextColor3 = entitylib.getEntityColor(i) or color
-			end
-		end,
-		Drawing = function(hue, sat, val)
-			local color = Color3.fromHSV(hue, sat, val)
-			for i, v in Reference do
-				v.Text.Color = entitylib.getEntityColor(i) or color
-			end
-		end
-	}
-	
-	local Loop = {
-		Normal = function()
-			for ent, nametag in Reference do
-				if DistanceCheck.Enabled then
-					local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude or math.huge
-					if distance < DistanceLimit.ValueMin or distance > DistanceLimit.ValueMax then
-						nametag.Visible = false
-						continue
-					end
-				end
-	
-				local headPos, headVis = gameCamera:WorldToViewportPoint(ent.RootPart.Position + Vector3.new(0, ent.HipHeight + 1, 0))
-				nametag.Visible = headVis
-				if not headVis then
-					continue
-				end
-	
-				if Distance.Enabled then
-					local mag = entitylib.isAlive and math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude) or 0
-					if Sizes[ent] ~= mag then
-						nametag.Text = string.format(Strings[ent], mag)
-						local ize = getfontsize(removeTags(nametag.Text), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
-						nametag.Size = UDim2.fromOffset(ize.X + 8, ize.Y + 7)
-						Sizes[ent] = mag
-					end
-				end
-				nametag.Position = UDim2.fromOffset(headPos.X, headPos.Y)
-			end
-		end,
-		Drawing = function()
-			for ent, nametag in Reference do
-				if DistanceCheck.Enabled then
-					local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude or math.huge
-					if distance < DistanceLimit.ValueMin or distance > DistanceLimit.ValueMax then
-						nametag.Text.Visible = false
-						nametag.BG.Visible = false
-						continue
-					end
-				end
-	
-				local headPos, headVis = gameCamera:WorldToViewportPoint(ent.RootPart.Position + Vector3.new(0, ent.HipHeight + 1, 0))
-				nametag.Text.Visible = headVis
-				nametag.BG.Visible = headVis
-				if not headVis then
-					continue
-				end
-	
-				if Distance.Enabled then
-					local mag = entitylib.isAlive and math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude) or 0
-					if Sizes[ent] ~= mag then
-						nametag.Text.Text = string.format(Strings[ent], mag)
-						nametag.BG.Size = Vector2.new(nametag.Text.TextBounds.X + 8, nametag.Text.TextBounds.Y + 7)
-						Sizes[ent] = mag
-					end
-				end
-				nametag.BG.Position = Vector2.new(headPos.X - (nametag.BG.Size.X / 2), headPos.Y - nametag.BG.Size.Y)
-				nametag.Text.Position = nametag.BG.Position + Vector2.new(4, 3)
-			end
-		end
-	}
-	
-	NameTags = vape.Categories.Render:CreateModule({
-		Name = 'NameTags',
-		Function = function(callback)
-			if callback then
-				methodused = DrawingToggle.Enabled and 'Drawing' or 'Normal'
-				if Removed[methodused] then
-					NameTags:Clean(entitylib.Events.EntityRemoved:Connect(Removed[methodused]))
-				end
-				if Added[methodused] then
-					for _, v in entitylib.List do
-						if Reference[v] then
-							Removed[methodused](v)
-						end
-						Added[methodused](v)
-					end
-					NameTags:Clean(entitylib.Events.EntityAdded:Connect(function(ent)
-						if Reference[ent] then
-							Removed[methodused](ent)
-						end
-						Added[methodused](ent)
-					end))
-				end
-				if Updated[methodused] then
-					NameTags:Clean(entitylib.Events.EntityUpdated:Connect(Updated[methodused]))
-					for _, v in entitylib.List do
-						Updated[methodused](v)
-					end
-				end
-				if ColorFunc[methodused] then
-					NameTags:Clean(vape.Categories.Friends.ColorUpdate.Event:Connect(function()
-						ColorFunc[methodused](Color.Hue, Color.Sat, Color.Value)
-					end))
-				end
-				if Loop[methodused] then
-					NameTags:Clean(runService.RenderStepped:Connect(Loop[methodused]))
-				end
-			else
-				if Removed[methodused] then
-					for i in Reference do
-						Removed[methodused](i)
-					end
-				end
-			end
-		end,
-		Tooltip = 'Renders nametags on entities through walls.'
-	})
-	Targets = NameTags:CreateTargets({
-		Players = true,
-		Function = function()
-			if NameTags.Enabled then
-				NameTags:Toggle()
-				NameTags:Toggle()
-			end
-		end
-	})
-	FontOption = NameTags:CreateFont({
-		Name = 'Font',
-		Blacklist = 'Arial',
-		Function = function()
-			if NameTags.Enabled then
-				NameTags:Toggle()
-				NameTags:Toggle()
-			end
-		end
-	})
-	Color = NameTags:CreateColorSlider({
-		Name = 'Player Color',
-		Function = function(hue, sat, val)
-			if NameTags.Enabled and ColorFunc[methodused] then
-				ColorFunc[methodused](hue, sat, val)
-			end
-		end
-	})
-	Scale = NameTags:CreateSlider({
-		Name = 'Scale',
-		Function = function()
-			if NameTags.Enabled then
-				NameTags:Toggle()
-				NameTags:Toggle()
-			end
-		end,
-		Default = 1,
-		Min = 0.1,
-		Max = 1.5,
-		Decimal = 10
-	})
-	Background = NameTags:CreateSlider({
-		Name = 'Transparency',
-		Function = function()
-			if NameTags.Enabled then
-				NameTags:Toggle()
-				NameTags:Toggle()
-			end
-		end,
-		Default = 0.5,
-		Min = 0,
-		Max = 1,
-		Decimal = 10
-	})
-	Health = NameTags:CreateToggle({
-		Name = 'Health',
-		Function = function()
-			if NameTags.Enabled then
-				NameTags:Toggle()
-				NameTags:Toggle()
-			end
-		end
-	})
-	Distance = NameTags:CreateToggle({
-		Name = 'Distance',
-		Function = function()
-			if NameTags.Enabled then
-				NameTags:Toggle()
-				NameTags:Toggle()
-			end
-		end
-	})
-	DisplayName = NameTags:CreateToggle({
-		Name = 'Use Displayname',
-		Function = function()
-			if NameTags.Enabled then
-				NameTags:Toggle()
-				NameTags:Toggle()
-			end
-		end,
-		Default = true
-	})
-	Teammates = NameTags:CreateToggle({
-		Name = 'Priority Only',
-		Function = function()
-			if NameTags.Enabled then
-				NameTags:Toggle()
-				NameTags:Toggle()
-			end
-		end,
-		Default = true,
-		Tooltip = 'Hides teammates & non targetable entities'
-	})
-	DrawingToggle = NameTags:CreateToggle({
-		Name = 'Drawing',
-		Function = function()
-			if NameTags.Enabled then
-				NameTags:Toggle()
-				NameTags:Toggle()
-			end
-		end
-	})
-	DistanceCheck = NameTags:CreateToggle({
-		Name = 'Distance Check',
-		Function = function(callback)
-			DistanceLimit.Object.Visible = callback
-		end
-	})
-	DistanceLimit = NameTags:CreateTwoSlider({
-		Name = 'Player Distance',
-		Min = 0,
-		Max = 256,
-		DefaultMin = 0,
-		DefaultMax = 64,
-		Darker = true,
-		Visible = false
-	})
-end)
-	
-run(function()
 	local AutoDetonate
 	local SafeCheck
 	local localc4
@@ -2267,6 +1972,61 @@ run(function()
 end)
 	
 run(function()
+	local CheatDetector
+	local overlap = OverlapParams.new()
+	overlap.CollisionGroup = 'Players'
+	overlap.FilterDescendantsInstances = {workspace.CarContainer, workspace.Doors}
+	overlap.FilterType = Enum.RaycastFilterType.Exclude
+	local caroverlap = OverlapParams.new()
+	caroverlap.FilterDescendantsInstances = {workspace.CarContainer}
+	caroverlap.FilterType = Enum.RaycastFilterType.Include
+	caroverlap.MaxParts = 1
+	
+	CheatDetector = vape.Categories.Utility:CreateModule({
+		Name = 'CheatDetector',
+		Function = function(callback)
+			if callback then
+				CheatDetector:Clean(vapeEvents.CheatFlagged.Event:Connect(function(plr, flagname)
+					notif('CheatDetector', 'This player may be cheating! ('..flagname..'): '..plr.Name, 60, 'warning')
+					local ent = entitylib.getEntity(plr)
+					if ent then
+						entitylib.Events.EntityUpdated:Fire(ent)
+					end
+				end))
+	
+				repeat
+					for _, ent in entitylib.List do
+						if ent.Health > 0 and ent.Player then
+							if not checkPoint(ent.Head.Position, overlap) then
+								CheatFlags:Flag(ent.Player, 'phase/noclip', 20)
+							end
+	
+							local velo = ent.RootPart.AssemblyLinearVelocity
+							if not ent.Humanoid.SeatPart then
+								if (velo * Vector3.new(1, 0, 1)).Magnitude > 26 then
+									if #workspace:GetPartBoundsInRadius(ent.RootPart.Position, 10, caroverlap) <= 0 then
+										CheatFlags:Flag(ent.Player, 'speed', 20)
+									end
+								end
+	
+								if velo.Y > 50 then
+									CheatFlags:Flag(ent.Player, 'highjump', 20)
+								end
+							end
+						end
+					end
+	
+					task.wait(0.05)
+				until not CheatDetector.Enabled
+			else
+				CheatFlags:Clear()
+			end
+		end,
+		Tooltip = 'Alerts for any possible cheaters.'
+	})
+end)
+	
+run(function()
 	local Disabler
 	local old
 	
@@ -2427,21 +2187,9 @@ run(function()
 		Name = 'Crosshair',
 		Function = function(callback)
 			if callback then
-				for _, v in getconnections(lplr.CharacterAdded) do
-					if v.Function and debug.info(v.Function, 's'):find('GunController') then
-						old = v.Function
-						break
-					end
-				end
-	
-				if old then
-					debug.setconstant(debug.getupvalue(old, 3), 30, Image.Value:find('rbxasset') and Image.Value or isfile(Image.Value) and getcustomasset(Image.Value) or '')
-				end
+				debug.setconstant(oldequip or pl.Equip, 30, Image.Value:find('rbxasset') and Image.Value or isfile(Image.Value) and getcustomasset(Image.Value) or '')
 			else
-				if old then
-					debug.setconstant(debug.getupvalue(old, 3), 30, 'rbxassetid://98794608762931')
-					old = nil
-				end
+				debug.setconstant(oldequip or pl.Equip, 30, 'rbxassetid://98794608762931')
 			end
 		end,
 		Tooltip = 'Change the crosshair icon'
@@ -2450,8 +2198,8 @@ run(function()
 		Name = 'Image',
 		Placeholder = 'assetid',
 		Function = function()
-			if old then
-				debug.setconstant(debug.getupvalue(old, 3), 30, Image.Value:find('rbxasset') and Image.Value or isfile(Image.Value) and getcustomasset(Image.Value) or '')
+			if Crosshair.Enabled then
+				debug.setconstant(oldequip or pl.Equip, 30, Image.Value:find('rbxasset') and Image.Value or isfile(Image.Value) and getcustomasset(Image.Value) or '')
 			end
 		end
 	})
@@ -2575,24 +2323,30 @@ run(function()
 	local HitSound
 	local Value
 	local Volume
+	local PitchShift
 	local old, sounds = nil, {}
 	
 	HitSound = vape.Legit:CreateModule({
 		Name = 'HitSound',
 		Function = function(callback)
 			if callback then
+				local played
 				TracerHook:Add('HitSound', function(...)
 					local part = debug.getstack(4, 17)
 					if typeof(part) == 'Instance' then
 						for _, v in entitylib.List do
 							if part:IsDescendantOf(v.Character) and entitylib.isVulnerable(v, true) then
-								if #sounds > 0 then
+								if #sounds > 0 and not played then
 									local obj = Instance.new('Sound')
 									obj.SoundId = sounds[math.random(1, #sounds)]
 									obj.PlayOnRemove = true
+									obj.PlaybackSpeed = PitchShift.Enabled and 1 + ((0.5 - math.random()) / 10) or 1
 									obj.Volume = Volume.Value
 									obj.Parent = workspace
 									obj:Destroy()
+									played = task.defer(function()
+										played = nil
+									end)
 								end
 	
 								break
@@ -2623,12 +2377,16 @@ run(function()
 		Default = 1,
 		Decimal = 10
 	})
+	PitchShift = HitSound:CreateToggle({
+		Name = 'Pitch Shift'
+	})
 end)
 	
 run(function()
 	local KillSound
 	local Value
 	local Volume
+	local PitchShift
 	local old, sounds = nil, {}
 	
 	KillSound = vape.Legit:CreateModule({
@@ -2640,6 +2398,7 @@ run(function()
 						local obj = Instance.new('Sound')
 						obj.SoundId = sounds[math.random(1, #sounds)]
 						obj.PlayOnRemove = true
+						obj.PlaybackSpeed = PitchShift.Enabled and 1 + ((0.5 - math.random()) / 10) or 1
 						obj.Volume = Volume.Value
 						obj.Parent = workspace
 						obj:Destroy()
@@ -2665,6 +2424,9 @@ run(function()
 		Max = 2,
 		Default = 1,
 		Decimal = 10
+	})
+	PitchShift = KillSound:CreateToggle({
+		Name = 'Pitch Shift'
 	})
 end)
 	
@@ -2739,6 +2501,10 @@ run(function()
 		Name = 'Viewmodel',
 		Function = function(callback)
 			if callback then
+				TracerHook:Add('Viewmodel', function(...)
+					shootTimer = os.clock() + 0.3
+				end, 0)
+	
 				Viewmodel:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
 				if entitylib.isAlive then
 					task.spawn(EntityAdded, entitylib.character)
@@ -2753,11 +2519,13 @@ run(function()
 	
 						local cf = (gameCamera.CFrame * CFrame.new(Horizontal.Value, Vertical.Value, -Depth.Value)) + moveSpring:Update(dt)
 						aimSpring.Target = aimTimer > os.clock() and CFrame.lookAt(cf.Position, aimVec).LookVector or gameCamera.CFrame.LookVector
-						handle.CFrame = CFrame.lookAlong(cf.Position, aimSpring:Update(dt)) * CFrame.new(0, 0, math.max(shootTimer - os.clock(), 0))
+						handle.CFrame = CFrame.lookAlong(cf.Position, aimSpring:Update(dt)) * (CFrame.Angles(math.rad(math.max(shootTimer - os.clock(), 0) * 10), 0, 0) * CFrame.new(0, 0, math.max(shootTimer - os.clock(), 0)))
 						handle.AssemblyLinearVelocity = Vector3.zero
 					end
 				end))
 			else
+				TracerHook:Remove('Viewmodel')
+	
 				if old then
 					for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
 						v.LocalTransparencyModifier = 0
