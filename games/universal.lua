@@ -411,7 +411,7 @@ run(function()
 	end
 
 	function whitelist:tag(plr, text, rich)
-		local plrtag, newtag = select(3, self:get(plr)) or self.customtags[plr.Name] or {}, ''
+		local plrtag, newtag = table.clone(select(3, self:get(plr)) or self.customtags[plr.Name] or {}), ''
 		for _, v in self.tagcallback do
 			v(plr, plrtag, rich)
 		end
