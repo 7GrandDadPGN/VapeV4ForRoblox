@@ -16,6 +16,7 @@ local inputService = cloneref(game:GetService('UserInputService'))
 local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
 local replicatedFirst = cloneref(game:GetService('ReplicatedFirst'))
 local collectionService = cloneref(game:GetService('CollectionService'))
+local marketplaceService = cloneref(game:GetService('MarketplaceService'))
 local tweenService = cloneref(game:GetService('TweenService'))
 local runService = cloneref(game:GetService('RunService'))
 local guiService = cloneref(game:GetService('GuiService'))
@@ -36,6 +37,7 @@ local Spring = {}
 local TracerHook = {Hooks = {}}
 local oldshoot, oldequip
 local aimTimer, shootTimer, aimVec = os.clock(), os.clock()
+local gamepasses = {}
 
 local function checkPoint(pos, params)
 	for _, v in workspace:GetPartBoundsInRadius(pos, 0, params) do
@@ -88,7 +90,7 @@ local function removeTags(str)
 	return (str:gsub('<[^<>]->', ''))
 end
 
-local OriginScanner = {}
+local OriginScanner = {Cache = {}}
 run(function()
 	local rayParams = RaycastParams.new()
 	local rayParams2 = OverlapParams.new()
@@ -127,25 +129,62 @@ run(function()
 		Vector3.new(0, -1, 0)
 	}
 
-	function OriginScanner:Scan(origin, target, ...)
+	function OriginScanner:Scan(origin, target, extra, part)
 		local scanPositions = {}
-		for _, v in {...} do
-			if (origin - v).Magnitude < 7.5 then
-				table.insert(scanPositions, v)
+		local hitboxPositions = {}
+		local returnHitbox
+		local diff = CFrame.lookAt(origin * Vector3.new(1, 0, 1), target * Vector3.new(1, 0, 1)).LookVector
+
+		if OriginScanner.Cache[part] then
+			return table.unpack(OriginScanner.Cache[part])
+		end
+
+		if extra then
+			if (origin - extra).Magnitude < 7.5 then
+				table.insert(scanPositions, extra)
+			else
+				table.insert(hitboxPositions, target)
+				for _, v in Enum.NormalId:GetEnumItems() do
+					local vec = Vector3.fromNormalId(v)
+
+					if (vec * Vector3.new(1, 0, 1)):Dot(-diff) > -0.5 then
+						local pos = target + vec * 6
+
+						if checkPoint(pos, rayParams2) then
+							table.insert(hitboxPositions, pos)
+						end
+					end
+				end
 			end
 		end
 
-		for i = 5, 7 do
+		if #scanPositions <= 0 then
 			for _, v in positions do
-				table.insert(scanPositions, origin + v * i)
+				if (v * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
+					table.insert(scanPositions, origin + v * 6)
+				end
 			end
 		end
 
-		for _, pos in scanPositions do
-			local ray = workspace:Raycast(target, (pos - target), rayParams)
+		if #hitboxPositions > 0 then
+			for _, hitbox in hitboxPositions do
+				for _, pos in scanPositions do
+					local ray = workspace:Raycast(hitbox, (pos - hitbox), rayParams)
 
-			if not ray and checkPoint(pos, rayParams2) then
-				return pos
+					if not ray and checkPoint(pos, rayParams2) then
+						OriginScanner.Cache[part] = {pos, hitbox}
+						return pos, hitbox
+					end
+				end
+			end
+		else
+			for _, pos in scanPositions do
+				local ray = workspace:Raycast(target, (pos - target), rayParams)
+
+				if not ray and checkPoint(pos, rayParams2) then
+					OriginScanner.Cache[part] = {pos}
+					return pos
+				end
 			end
 		end
 	end
@@ -155,6 +194,7 @@ run(function()
 		for _, v in entitylib.List do
 			table.insert(ignore, v.Character)
 		end
+
 		rayParams.FilterDescendantsInstances = ignore
 		rayParams2.FilterDescendantsInstances = ignore
 	end
@@ -263,7 +303,7 @@ run(function()
 
 			for _, v in sortingTable do
 				if entitysettings.Wallcheck then
-					if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang) then continue end
+					if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
 				end
 				table.clear(entitysettings)
 				table.clear(sortingTable)
@@ -297,7 +337,7 @@ run(function()
 
 			for _, v in sortingTable do
 				if entitysettings.Wallcheck then
-					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang) then continue end
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
 				end
 				table.clear(entitysettings)
 				table.clear(sortingTable)
@@ -329,7 +369,7 @@ run(function()
 
 			for _, v in sortingTable do
 				if entitysettings.Wallcheck then
-					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang) then continue end
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
 				end
 				table.insert(returned, v.Entity)
 				if #returned >= (entitysettings.Limit or math.huge) then break end
@@ -354,10 +394,10 @@ run(function()
 		return color
 	end
 
-	entitylib.Wallcheck = function(origin, position, checkpos)
+	entitylib.Wallcheck = function(origin, position, checkpos, part)
 		local ray = workspace.Raycast(workspace, position, (origin - position), OriginScanner.Ray)
 		if ray then
-			return not checkpos or not OriginScanner:Scan(checkpos, position, ray.Position + ray.Normal * 0.01)
+			return not checkpos or not OriginScanner:Scan(checkpos, position, ray.Position + ray.Normal * 0.01, part)
 		end
 
 		return false
@@ -413,7 +453,7 @@ run(function()
 		local text = ''
 		for _, plr in playersService:GetPlayers() do
 			if CheatFlags.Flagged[plr.UserId] then
-				text = text..'\n'..(plr.DisplayName and plr.DisplayName..' ('..plr.Name..')' or plr.Name)
+				text = text..'\n'..(plr.DisplayName ~= plr.Name and plr.DisplayName..' ('..plr.Name..')' or plr.Name)
 			end
 		end
 
@@ -470,12 +510,24 @@ run(function()
 		end
 	end)
 
+	task.spawn(function()
+		gamepasses = {
+			['Riot Police'] = marketplaceService:UserOwnsGamePassAsync(lplr.UserId, 643697197),
+			Mafia = marketplaceService:UserOwnsGamePassAsync(lplr.UserId, 1443271),
+			Sniper = marketplaceService:UserOwnsGamePassAsync(lplr.UserId, 699360089)
+		}
+	end)
+
 	OriginScanner:UpdateIgnore()
 	for _, v in {'EntityAdded', 'LocalAdded'} do
 		vape:Clean(entitylib.Events[v]:Connect(function()
 			OriginScanner:UpdateIgnore()
 		end))
 	end
+
+	vape:Clean(runService.RenderStepped:Connect(function()
+		table.clear(OriginScanner.Cache)
+	end))
 
 	vape:Clean(function()
 		table.clear(pl)
@@ -651,7 +703,7 @@ run(function()
 			local ray = workspace:Raycast(args[2], (origin - args[2]), rayParams)
 
 			if ray then
-				local neworigin = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.01)
+				local neworigin, hitbox = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.01, targetPart)
 
 				if neworigin then
 					for i, v in debug.getstack(3) do
@@ -661,6 +713,9 @@ run(function()
 					end
 
 					args[1] = neworigin
+					if hitbox then
+						return targetPart, hitbox
+					end
 				end
 			end
 		end
@@ -1060,6 +1115,7 @@ run(function()
 	local Range
 	local HandCheck
 	local CooldownBar
+	local toggles = {}
 	local cooldown = os.clock()
 	local cdholder, cdframe, cdlabel
 	
@@ -1084,6 +1140,11 @@ run(function()
 	
 						for _, ent in entities do
 							if not ent.Character:GetAttribute('Arrested') then
+								local toggle = ent.Player.Team and toggles[ent.Player.Team.Name]
+								if toggle and not toggle.Enabled then
+									continue
+								end
+	
 								if ent.Player.Team == teams.Inmates and ent.Character:GetAttribute('Hostile') and not ent.Character:GetAttribute('Tased') then
 									continue
 								end
@@ -1170,6 +1231,13 @@ run(function()
 		end,
 		Tooltip = 'Show the cooldown for arresting'
 	})
+	
+	for _, v in {'Inmates', 'Criminals'} do
+		toggles[v] = AutoArrest:CreateToggle({
+			Name = 'Arrest '..v,
+			Default = true
+		})
+	end
 end)
 	
 run(function()
@@ -1745,161 +1813,6 @@ run(function()
 end)
 	
 run(function()
-	local AutoHeal
-	local healItems = {
-		Breakfast = true,
-		Lunch = true,
-		Dinner = true
-	}
-	
-	AutoHeal = vape.Categories.Utility:CreateModule({
-		Name = 'AutoHeal',
-		Function = function(callback)
-			if callback then
-				repeat
-					local ent = entitylib.isAlive and entitylib.character
-					if ent and ent.Humanoid.Health <= 85 then
-						local healTool
-						local backpack = lplr:FindFirstChildWhichIsA('Backpack')
-						if backpack then
-							for _, v in backpack:GetChildren() do
-								if healItems[v.Name] then
-									healTool = v
-								end
-							end
-	
-							if healTool and (os.clock() - (healTool:GetAttribute('Client_LastConsumedAt') or 0)) >= 3 then
-								local equipped = ent.Character:FindFirstChildWhichIsA('Tool')
-								if equipped then
-									equipped.Parent = backpack
-								end
-	
-								healTool.Parent = ent.Character
-								healTool:SetAttribute('Quantity', healTool:GetAttribute('Quantity') - 1)
-								healTool:SetAttribute('Client_LastConsumedAt', os.clock())
-								notif('AutoHeal', 'Quantity: '..healTool:GetAttribute('Quantity'), 3)
-								replicatedStorage.Remotes.EatFood:FireServer()
-								healTool.Parent = backpack
-	
-								if equipped then
-									equipped.Parent = ent.Character
-								end
-							end
-						end
-					end
-	
-					task.wait(0.05)
-				until not AutoHeal.Enabled
-			end
-		end,
-		Tooltip = 'Automatically heal damage with consumables.'
-	})
-end)
-	
-run(function()
-	local AutoPickup
-	local PrisonerList
-	local GuardList
-	local Lists = {}
-	local items = {}
-	local sortedpickups = {Guard = {}, Prisoner = {}}
-	
-	local function AddPickup(obj)
-		if obj:IsA('Model') and obj.Name ~= 'Model' and obj:GetAttribute('ToolName') then
-			table.insert(items, {obj, obj.Name == 'TouchGiver'})
-		end
-	end
-	
-	AutoPickup = vape.Categories.Utility:CreateModule({
-		Name = 'AutoPickup',
-		Function = function(callback)
-			if callback then
-				for _, obj in workspace:GetChildren() do
-					task.spawn(AddPickup, obj)
-				end
-	
-				for _, obj in workspace:QueryDescendants('Model > .TouchGiver') do
-					task.spawn(AddPickup, obj)
-				end
-	
-				AutoPickup:Clean(workspace.ChildAdded:Connect(AddPickup))
-				AutoPickup:Clean(workspace.ChildRemoved:Connect(function(obj)
-					for index, entry in items do
-						if entry[1] == obj then
-							table.remove(items, index)
-							break
-						end
-					end
-				end))
-	
-				repeat
-					if entitylib.isAlive then
-						local localpos = entitylib.character.RootPart.Position
-						local backpack = lplr:FindFirstChildWhichIsA('Backpack')
-	
-						if backpack then
-							for _, v in items do
-								if v[1].PrimaryPart and (v[1].PrimaryPart.Position - localpos).Magnitude < 12 then
-									local toolname = v[1]:GetAttribute('ToolName')
-									if v[2] then
-										local found = false
-										for _, entry in sortedpickups[lplr.Team == teams.Guards and 'Guard' or 'Prisoner'] do
-											if not backpack:FindFirstChild(entry) then
-												found = toolname ~= entry
-												break
-											end
-										end
-	
-										if found then
-											continue
-										end
-									end
-	
-									if not backpack:FindFirstChild(toolname) then
-										replicatedStorage.Remotes.GiverPressed:FireServer(v[1])
-									end
-								end
-							end
-						end
-					end
-	
-					task.wait(0.1)
-				until not AutoPickup.Enabled
-			else
-				table.clear(items)
-			end
-		end,
-		Tooltip = 'Automatically grab item pickups'
-	})
-	PrisonerList = AutoPickup:CreateTextList({
-		Name = 'Prisoner Pickups',
-		Default = {'1/AK-47', '2/Remington 870'},
-		Placeholder = 'priority/item',
-		Function = function(list)
-			table.clear(sortedpickups.Prisoner)
-			for _, entry in list do
-				local tab = entry:split('/')
-				local ind = tonumber(tab[1])
-				sortedpickups.Prisoner[ind or 999] = tab[2]
-			end
-		end
-	})
-	GuardList = AutoPickup:CreateTextList({
-		Name = 'Guard Pickups',
-		Default = {'1/MP5', '2/Remington 870'},
-		Placeholder = 'priority/item',
-		Function = function(list)
-			table.clear(sortedpickups.Guard)
-			for _, entry in list do
-				local tab = entry:split('/')
-				local ind = tonumber(tab[1])
-				sortedpickups.Guard[ind or 999] = tab[2]
-			end
-		end
-	})
-end)
-	
-run(function()
 	local AutoReload
 	local HotSwap
 	local priority = {
@@ -1982,12 +1895,26 @@ run(function()
 	caroverlap.FilterType = Enum.RaycastFilterType.Include
 	caroverlap.MaxParts = 1
 	
+	local whiteliststates = {
+		[Enum.HumanoidStateType.Running] = true,
+		[Enum.HumanoidStateType.Jumping] = true,
+		[Enum.HumanoidStateType.Freefall] = true,
+		[Enum.HumanoidStateType.Landed] = true,
+		[Enum.HumanoidStateType.FallingDown] = true,
+		[Enum.HumanoidStateType.Climbing] = true,
+		[Enum.HumanoidStateType.Seated] = true,
+		[Enum.HumanoidStateType.Ragdoll] = true,
+		[Enum.HumanoidStateType.Dead] = true,
+		[Enum.HumanoidStateType.None] = true
+	}
+	
 	CheatDetector = vape.Categories.Utility:CreateModule({
 		Name = 'CheatDetector',
 		Function = function(callback)
 			if callback then
 				CheatDetector:Clean(vapeEvents.CheatFlagged.Event:Connect(function(plr, flagname)
 					notif('CheatDetector', 'This player may be cheating! ('..flagname..'): '..plr.Name, 60, 'warning')
+	
 					local ent = entitylib.getEntity(plr)
 					if ent then
 						entitylib.Events.EntityUpdated:Fire(ent)
@@ -1999,6 +1926,10 @@ run(function()
 						if ent.Health > 0 and ent.Player then
 							if not checkPoint(ent.Head.Position, overlap) then
 								CheatFlags:Flag(ent.Player, 'phase/noclip', 20)
+							end
+	
+							if not whiteliststates[ent.Humanoid:GetState()] then
+								CheatFlags:Flag(ent.Player, 'invalid state '..ent.Humanoid:GetState().Name, 1)
 							end
 	
 							local velo = ent.RootPart.AssemblyLinearVelocity
@@ -2059,6 +1990,195 @@ run(function()
 			return 'Phase'
 		end
 	})
+end)
+	
+run(function()
+	local AutoArmor
+	local pickups = {}
+	
+	AutoArmor = vape.Categories.Inventory:CreateModule({
+		Name = 'AutoArmor',
+		Function = function(callback)
+			if callback then
+				pickups = workspace.Prison_ITEMS.clothes:GetChildren()
+	
+				AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildAdded:Connect(function(obj)
+					table.insert(pickups, obj)
+				end))
+	
+				AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildRemoved:Connect(function(obj)
+					local index = table.find(pickups, obj)
+					if index then
+						table.remove(pickups, index)
+					end
+				end))
+	
+				repeat
+					if entitylib.isAlive and entitylib.character.Humanoid.MaxHealth <= 100 then
+						local localpos = entitylib.character.RootPart.Position
+	
+						for _, v in pickups do
+							if (v:GetPivot().Position - localpos).Magnitude < 10 and gamepasses[v:GetAttribute('RequiredGamepass')] and AutoArmor.Enabled then
+								if v.Name == 'Light Vest' and gamepasses[lplr.Team == teams.Criminals and 'Mafia' or 'Riot Police'] then
+									continue
+								end
+	
+								replicatedStorage.Remotes.InteractWithItem:InvokeServer(v:FindFirstChildWhichIsA('BasePart'))
+							end
+						end
+					end
+	
+					task.wait(0.05)
+				until not AutoArmor.Enabled
+			else
+				table.clear(pickups)
+			end
+		end,
+		Tooltip = 'Automatically equip armor from the wall.'
+	})
+end)
+	
+run(function()
+	local AutoHeal
+	local healItems = {
+		Breakfast = true,
+		Lunch = true,
+		Dinner = true
+	}
+	
+	AutoHeal = vape.Categories.Inventory:CreateModule({
+		Name = 'AutoHeal',
+		Function = function(callback)
+			if callback then
+				repeat
+					local ent = entitylib.isAlive and entitylib.character
+					if ent and ent.Humanoid.Health <= 85 then
+						local healTool
+						local backpack = lplr:FindFirstChildWhichIsA('Backpack')
+						if backpack then
+							for _, v in backpack:GetChildren() do
+								if healItems[v.Name] then
+									healTool = v
+								end
+							end
+	
+							if healTool and (os.clock() - (healTool:GetAttribute('Client_LastConsumedAt') or 0)) >= 3 then
+								local equipped = ent.Character:FindFirstChildWhichIsA('Tool')
+								if equipped then
+									equipped.Parent = backpack
+								end
+	
+								healTool.Parent = ent.Character
+								healTool:SetAttribute('Quantity', healTool:GetAttribute('Quantity') - 1)
+								healTool:SetAttribute('Client_LastConsumedAt', os.clock())
+								notif('AutoHeal', 'Quantity: '..healTool:GetAttribute('Quantity'), 3)
+								replicatedStorage.Remotes.EatFood:FireServer()
+								healTool.Parent = backpack
+	
+								if equipped then
+									equipped.Parent = ent.Character
+								end
+							end
+						end
+					end
+	
+					task.wait(0.05)
+				until not AutoHeal.Enabled
+			end
+		end,
+		Tooltip = 'Automatically heal damage with consumables.'
+	})
+end)
+	
+run(function()
+	local AutoPickup
+	local Lists = {}
+	local items = {}
+	local sortedpickups = {Guard = {}, Prisoner = {}, Criminal = {}}
+	
+	local function AddPickup(obj)
+		if obj:IsA('Model') and obj.Name ~= 'Model' and obj:GetAttribute('ToolName') then
+			table.insert(items, {obj, obj.Name == 'TouchGiver'})
+		end
+	end
+	
+	AutoPickup = vape.Categories.Inventory:CreateModule({
+		Name = 'AutoPickup',
+		Function = function(callback)
+			if callback then
+				for _, obj in workspace:GetChildren() do
+					task.spawn(AddPickup, obj)
+				end
+	
+				for _, obj in workspace:QueryDescendants('Model > .TouchGiver') do
+					task.spawn(AddPickup, obj)
+				end
+	
+				AutoPickup:Clean(workspace.ChildAdded:Connect(AddPickup))
+				AutoPickup:Clean(workspace.ChildRemoved:Connect(function(obj)
+					for index, entry in items do
+						if entry[1] == obj then
+							table.remove(items, index)
+							break
+						end
+					end
+				end))
+	
+				repeat
+					if entitylib.isAlive then
+						local localpos = entitylib.character.RootPart.Position
+						local backpack = lplr:FindFirstChildWhichIsA('Backpack')
+	
+						if backpack then
+							for _, v in items do
+								if v[1].PrimaryPart and (v[1].PrimaryPart.Position - localpos).Magnitude < 12 then
+									local toolname = v[1]:GetAttribute('ToolName')
+									if v[2] then
+										local found = false
+										for _, entry in sortedpickups[lplr.Team == teams.Guards and 'Guard' or (lplr.Team == teams.Criminals and 'Criminal' or 'Prisoner')] do
+											if not backpack:FindFirstChild(entry) then
+												found = toolname ~= entry
+												break
+											end
+										end
+	
+										if found then
+											continue
+										end
+									end
+	
+									if not backpack:FindFirstChild(toolname) then
+										replicatedStorage.Remotes.GiverPressed:FireServer(v[1])
+									end
+								end
+							end
+						end
+					end
+	
+					task.wait(0.05)
+				until not AutoPickup.Enabled
+			else
+				table.clear(items)
+			end
+		end,
+		Tooltip = 'Automatically grab item pickups'
+	})
+	
+	for _, v in {'Prisoner', 'Guard', 'Criminal'} do
+		AutoPickup:CreateTextList({
+			Name = v..' Pickups',
+			Default = {v == 'Criminal' and '1/AK-47' or '1/MP5', '2/Remington 870'},
+			Placeholder = 'priority/item',
+			Function = function(list)
+				table.clear(sortedpickups[v])
+				for _, entry in list do
+					local tab = entry:split('/')
+					local ind = tonumber(tab[1])
+					sortedpickups[v][ind or 999] = tab[2]
+				end
+			end
+		})
+	end
 end)
 	
 run(function()
