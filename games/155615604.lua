@@ -17,6 +17,7 @@ local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
 local replicatedFirst = cloneref(game:GetService('ReplicatedFirst'))
 local collectionService = cloneref(game:GetService('CollectionService'))
 local marketplaceService = cloneref(game:GetService('MarketplaceService'))
+local textChatService = cloneref(game:GetService('TextChatService'))
 local tweenService = cloneref(game:GetService('TweenService'))
 local runService = cloneref(game:GetService('RunService'))
 local guiService = cloneref(game:GetService('GuiService'))
@@ -37,6 +38,8 @@ local Spring = {}
 local TracerHook = {Hooks = {}}
 local oldshoot, oldequip
 local aimTimer, shootTimer, aimVec = os.clock(), os.clock()
+local arrestCooldown = os.clock()
+local tempTargets = {}
 local gamepasses = {}
 
 local function checkPoint(pos, params)
@@ -78,7 +81,7 @@ local function isFriend(plr, recolor)
 end
 
 local function isTarget(plr)
-	return table.find(vape.Categories.Targets.ListEnabled, plr.Name) and true
+	return (table.find(vape.Categories.Targets.ListEnabled, plr.Name) or tempTargets[plr.Name]) and true
 end
 
 local function notif(...)
@@ -241,6 +244,7 @@ run(function()
 			hum:GetPropertyChangedSignal('MaxHealth'),
 			ent.Character:GetAttributeChangedSignal('Trespassing'),
 			ent.Character:GetAttributeChangedSignal('Hostile'),
+			ent.Player:GetAttributeChangedSignal('InnocentKills'),
 			{
 				Connect = function()
 					ent.Friend = ent.Player and isFriend(ent.Player) or nil
@@ -269,7 +273,7 @@ run(function()
 			return false
 		end
 
-		return ent.Health > 0 and ent.SpawnTime < os.clock() and not ent.Character.FindFirstChildWhichIsA(ent.Character, 'ForceField') and (ent.Player.Team ~= teams.Inmates or (ent.Character:GetAttribute('Trespassing') or ent.Character:GetAttribute('Hostile')))
+		return ent.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and ent.SpawnTime < os.clock() and not ent.Character.FindFirstChildWhichIsA(ent.Character, 'ForceField') and (ent.Player.Team ~= teams.Inmates or (ent.Character:GetAttribute('Trespassing') or ent.Character:GetAttribute('Hostile')))
 	end
 
 	entitylib.EntityMouse = function(entitysettings)
@@ -422,6 +426,7 @@ run(function()
 				pl.Shoot = debug.getupvalue(v.Function, 2)
 				pl.Reload = debug.getupvalue(pl.Shoot, 2)
 				pl.Bullet = debug.getupvalue(pl.Shoot, 16)
+				pl.PlaySound = debug.getupvalue(pl.Reload, 3)
 				break
 			end
 		end
@@ -432,14 +437,20 @@ run(function()
 				break
 			end
 		end
+
+		for _, v in getconnections(lplr:GetAttributeChangedSignal('BackpackEnabled')) do
+			pl.SwitchUpdate = debug.getupvalue(debug.getupvalue(v.Function, 10), 5)
+			pl.SwitchTable = debug.getupvalue(debug.getupvalue(v.Function, 8), 2)
+			break
+		end
 	end
 
 	getShootFunction()
-	if not pl.Bullet then
+	if not (pl.Bullet and pl.SwitchTable) then
 		repeat
 			getShootFunction()
 			task.wait()
-		until pl.Bullet or vape.Loaded == nil
+		until pl.Bullet and pl.SwitchTable or vape.Loaded == nil
 
 		if vape.Loaded == nil then
 			table.clear(pl)
@@ -449,6 +460,7 @@ run(function()
 	local kills = sessioninfo:AddItem('Kills')
 	local deaths = sessioninfo:AddItem('Deaths')
 	local arrests = sessioninfo:AddItem('Arrests')
+	local cheaterkicked = sessioninfo:AddItem('Cheaters Kicked')
 	local cheaters = sessioninfo:AddItem('Cheater List', '', function()
 		local text = ''
 		for _, plr in playersService:GetPlayers() do
@@ -485,6 +497,13 @@ run(function()
 		arrests:Increment()
 	end))
 
+	vape:Clean(replicatedStorage.Remotes.MessageReceived.OnClientEvent:Connect(function(msg)
+		if msg:find('kicked') then 
+			cheaterkicked:Increment()
+			vapeEvents.CheaterKicked:Fire(msg:sub(1, msg:find(' ')))
+		end
+	end))
+
 	vape:Clean(entitylib.Events.EntityUpdated:Connect(function(ent)
 		if ent.Player and ent.Player.Team == teams.Inmates then
 			vape.Categories.Friends.ColorUpdate:Fire()
@@ -504,6 +523,14 @@ run(function()
 						table.insert(plrtag, {text = rich and '💢' or 'Hostile'})
 					elseif ent.Character:GetAttribute('Trespassing') then
 						table.insert(plrtag, {text = rich and '🔗' or 'Trespassing'})
+					end
+				elseif plr.Team == teams.Guards then 
+					local count = plr:GetAttribute('InnocentKills') or 0
+					if count > 0 then 
+						table.insert(plrtag, {
+							text = count, 
+							color = Color3.fromHSV(math.clamp(1 - (count / 2), 0, 1) / 2.5, 0.89, 0.75)
+						})
 					end
 				end
 			end
@@ -574,7 +601,7 @@ do
 end
 
 do
-	local oldtracer, oldtracersniper
+	local oldtracer, oldtracertaser, oldtracersniper
 
 	local function Hook(...)
 		if debug.info(3, 's') ~= 'ReplicatedStorage.Scripts.Replication.ClientReplicator' then
@@ -584,6 +611,16 @@ do
 		end
 
 		return oldtracer(...)
+	end
+
+	local function HookTaser(...)
+		if debug.info(3, 's') ~= 'ReplicatedStorage.Scripts.Replication.ClientReplicator' then
+			for _, v in TracerHook.Hooks do
+				if v[2](...) then return end
+			end
+		end
+
+		return oldtracertaser(...)
 	end
 
 	local function HookSniper(...)
@@ -607,6 +644,10 @@ do
 				return Hook(...)
 			end)
 
+			oldtracertaser = hookfunction(pl.GunTracers.createTaser, function(...)
+				return HookTaser(...)
+			end)
+
 			oldtracersniper = hookfunction(pl.GunTracers.createSniper, function(...)
 				return HookSniper(...)
 			end)
@@ -624,13 +665,16 @@ do
 		if oldtracer and not next(self.Hooks) then
 			if restorefunction then
 				restorefunction(pl.GunTracers.createBullet)
+				restorefunction(pl.GunTracers.createTaser)
 				restorefunction(pl.GunTracers.createSniper)
 			else
 				hookfunction(pl.GunTracers.createBullet, oldtracer)
+				hookfunction(pl.GunTracers.createTaser, oldtracertaser)
 				hookfunction(pl.GunTracers.createSniper, oldtracersniper)
 			end
 
 			oldtracer = nil
+			oldtracertaser = nil
 			oldtracersniper = nil
 		end
 	end
@@ -649,6 +693,7 @@ run(function()
 	local HeadshotChance
 	local AutoFire = {Enabled = false}
 	local AutoFireRate
+	local AutoFireTaser
 	local Wallbang
 	local CircleColor
 	local CircleTransparency
@@ -746,7 +791,8 @@ run(function()
 
 						local tool = lplr.Character:FindFirstChildWhichIsA('Tool')
 						local gundata = debug.getupvalue(oldshoot or pl.Shoot, 10)
-						if gundata and tool and (tool:GetAttribute('Local_CurrentAmmo') or 0) > 0 and not tool:GetAttribute('Local_IsShooting') then
+						local ammo = tool and tool:GetAttribute('Local_CurrentAmmo') or 0
+						if gundata and ammo > 0 and not tool:GetAttribute('Local_IsShooting') then
 							local limit = gundata.Range or 1000
 							local taser = gundata and gundata.Behavior == 'Taser'
 							local ent = entitylib['Entity'..Mode.Value]({
@@ -761,8 +807,8 @@ run(function()
 							})
 
 							if ent and entitylib.character.Humanoid.Health > 0 then
-								if not (taser and ent.Character:GetAttribute('Tased')) then
-									autofiretimer = os.clock() + (gundata.FireRate or 1 / AutoFireRate.Value)
+								if not ((taser or AutoFireTaser.Enabled) and (ent.Character:GetAttribute('Tased') or ent.Character:GetAttribute('Arrested'))) then
+									autofiretimer = os.clock() + (ammo > 1 and gundata.FireRate or 1 / AutoFireRate.Value)
 									local obj = {UserInputState = Enum.UserInputState.Begin, UserInputType = Enum.UserInputType.MouseButton1, Position = Vector3.zero}
 									task.spawn(pl.Shoot, obj)
 									obj.UserInputState = Enum.UserInputState.End
@@ -832,6 +878,7 @@ run(function()
 		Name = 'AutoFire',
 		Function = function(callback)
 			AutoFireRate.Object.Visible = callback
+			AutoFireTaser.Object.Visible = callback
 		end
 	})
 	AutoFireRate = SilentAim:CreateSlider({
@@ -842,6 +889,11 @@ run(function()
 		Visible = false,
 		Darker = true,
 		Suffix = 'hz'
+	})
+	AutoFireTaser = SilentAim:CreateToggle({
+		Name = 'Ignore Tased',
+		Visible = false,
+		Darker = true
 	})
 	Wallbang = SilentAim:CreateToggle({Name = 'Wallbang'})
 	SilentAim:CreateToggle({
@@ -1116,7 +1168,6 @@ run(function()
 	local HandCheck
 	local CooldownBar
 	local toggles = {}
-	local cooldown = os.clock()
 	local cdholder, cdframe, cdlabel
 	
 	AutoArrest = vape.Categories.Blatant:CreateModule({
@@ -1124,7 +1175,7 @@ run(function()
 		Function = function(callback)
 			if callback then
 				repeat
-					local check = cooldown < os.clock()
+					local check = arrestCooldown < os.clock()
 					if HandCheck.Enabled then
 						local tool = entitylib.isAlive and lplr.Character:FindFirstChildWhichIsA('Tool')
 						check = check and tool and tool.Name == 'Handcuffs'
@@ -1150,7 +1201,7 @@ run(function()
 								end
 	
 								if replicatedStorage.Remotes.ArrestPlayer:InvokeServer(ent.Player, 1) then
-									cooldown = os.clock() + 7
+									arrestCooldown = os.clock() + 7
 									vapeEvents.Arrested:Fire()
 									notif('AutoArrest', 'Arrested '..(ent.Player.Name), 7)
 								end
@@ -1161,10 +1212,10 @@ run(function()
 					end
 	
 					if cdholder then
-						cdholder.Visible = cooldown > os.clock()
+						cdholder.Visible = arrestCooldown > os.clock()
 	
 						if cdholder.Visible then
-							local diff = (cooldown - os.clock())
+							local diff = (arrestCooldown - os.clock())
 							cdframe.Size = UDim2.new(math.clamp(diff / 7, 0, 1), -2, 1, -2)
 							cdlabel.Text = (math.round(diff * 10) / 10)..'s'
 						end
@@ -1259,6 +1310,67 @@ run(function()
 end)
 	
 run(function()
+	local AutoTaser
+	local Range
+	local VelocityCheck
+	local cooldown = 0
+	
+	AutoTaser = vape.Categories.Blatant:CreateModule({
+		Name = 'AutoTaser',
+		Function = function(callback)
+			if callback then
+				repeat
+					local backpack = lplr:FindFirstChildWhichIsA('Backpack')
+					local taser = backpack and backpack:FindFirstChild('Taser')
+	
+					if taser and (taser:GetAttribute('CurrentAmmo') or 1) > 0 and cooldown < os.clock() and (arrestCooldown - os.clock()) < 3 then
+						if not VelocityCheck.Enabled or entitylib.isAlive and entitylib.character.RootPart.AssemblyLinearVelocity.Magnitude < 40 then
+							local entities = entitylib.AllPosition({
+								Range = Range.Value,
+								AttackCheck = false,
+								Wallcheck = true,
+								Part = 'Head',
+								Origin = entitylib.isAlive and entitylib.character.Head.Position or Vector3.zero,
+								Players = true
+							})
+	
+							for _, ent in entities do 
+								if not (ent.Character:GetAttribute('Tased') or ent.Character:GetAttribute('Arrested')) then
+									cooldown = os.clock() + 2
+									local equipped = lplr.Character:FindFirstChildWhichIsA('Tool')
+									if equipped then 
+										equipped.Parent = backpack
+									end
+	
+									taser.Parent = lplr.Character
+									break
+								end
+							end
+						end
+					end
+	
+					task.wait(0.05)
+				until not AutoTaser.Enabled
+			end
+		end,
+		Tooltip = 'Only works with silentaim autofire with position mode.'
+	})
+	Range = AutoTaser:CreateSlider({
+		Name = 'Range',
+		Min = 1,
+		Max = 52,
+		Default = 52,
+		Suffix = function(val)
+			return val == 1 and 'stud' or 'studs'
+		end
+	})
+	VelocityCheck = AutoTaser:CreateToggle({
+		Name = 'Velocity Check',
+		Default = true
+	})
+end)
+	
+run(function()
 	local GunModifications
 	local Spread
 	local FireRate
@@ -1290,6 +1402,8 @@ run(function()
 					Modify()
 					return unpack(res, 1, res.n)
 				end)
+	
+				Modify()
 			else
 				if oldequip then
 					if restorefunction then
@@ -1304,6 +1418,7 @@ run(function()
 						old[i] = v
 					end
 					table.clear(olddata)
+					old = nil
 				end
 			end
 		end,
@@ -1329,35 +1444,104 @@ end)
 	
 run(function()
 	local Killaura
-	local Range
+	local Targets
+	local AttackRange
+	local AngleSlider
+	local Max
+	local Mouse
+	local BoxSwingColor
+	local BoxAttackColor
+	local ParticleTexture
+	local ParticleColor1
+	local ParticleColor2
+	local ParticleSize
+	local Face
+	local Overlay = OverlapParams.new()
+	Overlay.FilterType = Enum.RaycastFilterType.Include
+	local Particles, Boxes, AttackDelay = {}, {}, tick()
+	
+	local function getAttackData()
+		if Mouse.Enabled then
+			if not inputService:IsMouseButtonPressed(0) then return false end
+		end
+	
+		return true
+	end
 	
 	Killaura = vape.Categories.Blatant:CreateModule({
 		Name = 'Killaura',
 		Function = function(callback)
 			if callback then
 				repeat
-					local entities = entitylib.AllPosition({
-						Range = Range.Value,
-						Players = true,
-						Part = 'RootPart',
-						AttackCheck = true
-					})
+					local canAttack = getAttackData()
+					local attacked = {}
+					if canAttack then
+						local plrs = entitylib.AllPosition({
+							Range = AttackRange.Value,
+							Wallcheck = Targets.Walls.Enabled or nil,
+							Part = 'RootPart',
+							Players = Targets.Players.Enabled,
+							NPCs = Targets.NPCs.Enabled,
+							Limit = Max.Value,
+							AttackCheck = true
+						})
 	
-					for _, ent in entities do
-						if lplr.Team == teams.Guards and ent.Player.Team == teams.Inmates and not ent.Character:GetAttribute('Hostile') then
-							continue
+						if #plrs > 0 then
+							local selfpos = entitylib.character.RootPart.Position
+							local localfacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
+	
+							for _, v in plrs do
+								local delta = (v.RootPart.Position - selfpos)
+								local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
+								if angle > (math.rad(AngleSlider.Value) / 2) then continue end
+								if lplr.Team == teams.Guards and v.Player.Team == teams.Inmates and not v.Character:GetAttribute('Hostile') then
+									continue
+								end
+	
+								table.insert(attacked, {
+									Entity = v,
+									Check = BoxAttackColor
+								})
+								targetinfo.Targets[v] = tick() + 1
+								replicatedStorage.meleeEvent:FireServer(v.Player, 1, 1)
+							end
 						end
+					end
 	
-						replicatedStorage.meleeEvent:FireServer(ent.Player, 1, 1)
+					for i, v in Boxes do
+						v.Adornee = attacked[i] and attacked[i].Entity.RootPart or nil
+						if v.Adornee then
+							v.Color3 = Color3.fromHSV(attacked[i].Check.Hue, attacked[i].Check.Sat, attacked[i].Check.Value)
+							v.Transparency = 1 - attacked[i].Check.Opacity
+						end
+					end
+	
+					for i, v in Particles do
+						v.Position = attacked[i] and attacked[i].Entity.RootPart.Position or Vector3.new(9e9, 9e9, 9e9)
+						v.Parent = attacked[i] and gameCamera or nil
+					end
+	
+					if Face.Enabled and attacked[1] then
+						local vec = attacked[1].Entity.RootPart.Position * Vector3.new(1, 0, 1)
+						entitylib.character.RootPart.CFrame = CFrame.lookAt(entitylib.character.RootPart.Position, Vector3.new(vec.X, entitylib.character.RootPart.Position.Y + 0.01, vec.Z))
 					end
 	
 					task.wait(0.05)
 				until not Killaura.Enabled
+			else
+				for _, v in Boxes do
+					v.Adornee = nil
+				end
+	
+				for _, v in Particles do
+					v.Parent = nil
+				end
 			end
 		end,
-		Tooltip = 'Punch hostile enemies around you'
+		Tooltip = 'Attack players around you\nwithout aiming at them.'
 	})
-	Range = Killaura:CreateSlider({
+	Targets = Killaura:CreateTargets({Players = true})
+	AttackRange = Killaura:CreateSlider({
 		Name = 'Attack range',
 		Min = 1,
 		Max = 12,
@@ -1366,6 +1550,150 @@ run(function()
 			return val == 1 and 'stud' or 'studs'
 		end
 	})
+	AngleSlider = Killaura:CreateSlider({
+		Name = 'Max angle',
+		Min = 1,
+		Max = 360,
+		Default = 360
+	})
+	Max = Killaura:CreateSlider({
+		Name = 'Max targets',
+		Min = 1,
+		Max = 10,
+		Default = 10
+	})
+	Mouse = Killaura:CreateToggle({Name = 'Require mouse down'})
+	Killaura:CreateToggle({
+		Name = 'Show target',
+		Function = function(callback)
+			BoxSwingColor.Object.Visible = callback
+			BoxAttackColor.Object.Visible = callback
+			if callback then
+				for i = 1, 10 do
+					local box = Instance.new('BoxHandleAdornment')
+					box.Adornee = nil
+					box.AlwaysOnTop = true
+					box.Size = Vector3.new(3, 5, 3)
+					box.CFrame = CFrame.new(0, -0.5, 0)
+					box.ZIndex = 0
+					box.Parent = vape.gui
+					Boxes[i] = box
+				end
+			else
+				for _, v in Boxes do
+					v:Destroy()
+				end
+				table.clear(Boxes)
+			end
+		end
+	})
+	BoxSwingColor = Killaura:CreateColorSlider({
+		Name = 'Target Color',
+		Darker = true,
+		DefaultHue = 0.6,
+		DefaultOpacity = 0.5,
+		Visible = false
+	})
+	BoxAttackColor = Killaura:CreateColorSlider({
+		Name = 'Attack Color',
+		Darker = true,
+		DefaultOpacity = 0.5,
+		Visible = false
+	})
+	Killaura:CreateToggle({
+		Name = 'Target particles',
+		Function = function(callback)
+			ParticleTexture.Object.Visible = callback
+			ParticleColor1.Object.Visible = callback
+			ParticleColor2.Object.Visible = callback
+			ParticleSize.Object.Visible = callback
+			if callback then
+				for i = 1, 10 do
+					local part = Instance.new('Part')
+					part.Size = Vector3.new(2, 4, 2)
+					part.Anchored = true
+					part.CanCollide = false
+					part.Transparency = 1
+					part.CanQuery = false
+					part.Parent = Killaura.Enabled and gameCamera or nil
+					local particles = Instance.new('ParticleEmitter')
+					particles.Brightness = 1.5
+					particles.Size = NumberSequence.new(ParticleSize.Value)
+					particles.Shape = Enum.ParticleEmitterShape.Sphere
+					particles.Texture = ParticleTexture.Value
+					particles.Transparency = NumberSequence.new(0)
+					particles.Lifetime = NumberRange.new(0.4)
+					particles.Speed = NumberRange.new(16)
+					particles.Rate = 128
+					particles.Drag = 16
+					particles.ShapePartial = 1
+					particles.Color = ColorSequence.new({
+						ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
+						ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
+					})
+					particles.Parent = part
+					Particles[i] = part
+				end
+			else
+				for _, v in Particles do
+					v:Destroy()
+				end
+				table.clear(Particles)
+			end
+		end
+	})
+	ParticleTexture = Killaura:CreateTextBox({
+		Name = 'Texture',
+		Default = 'rbxassetid://14736249347',
+		Function = function()
+			for _, v in Particles do
+				v.ParticleEmitter.Texture = ParticleTexture.Value
+			end
+		end,
+		Darker = true,
+		Visible = false
+	})
+	ParticleColor1 = Killaura:CreateColorSlider({
+		Name = 'Color Begin',
+		Function = function(hue, sat, val)
+			for _, v in Particles do
+				v.ParticleEmitter.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
+					ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
+				})
+			end
+		end,
+		Darker = true,
+		Visible = false
+	})
+	ParticleColor2 = Killaura:CreateColorSlider({
+		Name = 'Color End',
+		Function = function(hue, sat, val)
+			for _, v in Particles do
+				v.ParticleEmitter.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
+					ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, val))
+				})
+			end
+		end,
+		Darker = true,
+		Visible = false
+	})
+	ParticleSize = Killaura:CreateSlider({
+		Name = 'Size',
+		Min = 0,
+		Max = 1,
+		Default = 0.2,
+		Decimal = 100,
+		Function = function(val)
+			for _, v in Particles do
+				v.ParticleEmitter.Size = NumberSequence.new(val)
+			end
+		end,
+		Darker = true,
+		Visible = false
+	})
+	Face = Killaura:CreateToggle({Name = 'Face target'})
 end)
 	
 run(function()
@@ -1815,6 +2143,7 @@ end)
 run(function()
 	local AutoReload
 	local HotSwap
+	local thread, oldplaysound
 	local priority = {
 		M4A1 = 1,
 		['AK-47'] = 1,
@@ -1847,32 +2176,52 @@ run(function()
 		Name = 'AutoReload',
 		Function = function(callback)
 			if callback then
-				oldshoot = hookfunction(pl.Shoot, function(...)
-					local args = table.pack(oldshoot(...))
-					local tool = debug.getupvalue(oldshoot, 1)
-					if tool and tool:GetAttribute('Local_CurrentAmmo') <= 0 then
-						task.spawn(pl.Reload)
+				TracerHook:Add('AutoReload', function(...)
+					if thread then
+						return
+					end
 	
-						if HotSwap.Enabled then
-							local wep = getWeapon()
+					thread = task.defer(function()
+						thread = nil
 	
-							if wep then
-								tool.Parent = lplr.Backpack
-								wep.Parent = lplr.Character
+						local tool = debug.getupvalue(pl.Shoot, 1)
+						if tool and tool:GetAttribute('Local_CurrentAmmo') <= 0 then
+							task.spawn(pl.Reload)
+	
+							if HotSwap.Enabled then
+								local wep = getWeapon()
+	
+								if wep then
+									tool.Parent = lplr.Backpack
+									wep.Parent = lplr.Character
+								end
 							end
 						end
-					end
+					end)
+				end)
 	
-					return unpack(args, 1, args.n)
+				-- reimplementation of playsound to get rid of the bad error
+				oldplaysound = hookfunction(pl.PlaySound, function(sound)
+					local soundobj = debug.getupvalue(pl.Shoot, 1)
+					soundobj = soundobj and soundobj:FindFirstChild('Handle')
+					soundobj = soundobj and soundobj:FindFirstChild(sound)
+	
+					if soundobj then
+						local clone = soundobj:Clone()
+						clone.Parent = soundobj.Parent
+						clone:Play()
+						task.delay(5, clone.Destroy, clone)
+					end
 				end)
 			else
-				if oldshoot then
+				TracerHook:Remove('AutoReload')
+				if oldplaysound then
 					if restorefunction then
-						restorefunction(pl.Shoot)
+						restorefunction(pl.PlaySound)
 					else
-						hookfunction(pl.Shoot, oldshoot)
+						hookfunction(pl.PlaySound, oldplaysound)
 					end
-					oldshoot = nil
+					oldplaysound = nil
 				end
 			end
 		end,
@@ -1885,7 +2234,61 @@ run(function()
 end)
 	
 run(function()
+	local AutoToxic
+	local Toggles, Lists, said, dead = {}, {}, {}
+	
+	local function sendMessage(name, obj, default)
+		local tab = Lists[name].ListEnabled
+		local custommsg = #tab > 0 and tab[math.random(1, #tab)] or default
+		if not custommsg then return end
+		if #tab > 1 and custommsg == said[name] then
+			repeat 
+				task.wait() 
+				custommsg = tab[math.random(1, #tab)] 
+			until custommsg ~= said[name]
+		end
+		said[name] = custommsg
+	
+		custommsg = custommsg and custommsg:gsub('<obj>', obj or '') or ''
+		if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+			textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync(custommsg)
+		else
+			replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(custommsg, 'All')
+		end
+	end
+	
+	AutoToxic = vape.Categories.Utility:CreateModule({
+		Name = 'AutoToxic',
+		Function = function(callback)
+			if callback then
+				AutoToxic:Clean(vapeEvents.CheaterKicked.Event:Connect(function(plr)
+					sendMessage('Kicked', plr, 'skill issue cheat | <obj>')
+				end))
+			end
+		end,
+		Tooltip = 'Says a message after a certain action'
+	})
+	for _, v in {'Kicked'} do
+		Toggles[v] = AutoToxic:CreateToggle({
+			Name = v..' ',
+			Function = function(callback)
+				if Lists[v] then
+					Lists[v].Object.Visible = callback
+				end
+			end,
+			Default = true
+		})
+		Lists[v] = AutoToxic:CreateTextList({
+			Name = v,
+			Darker = true,
+			Visible = false
+		})
+	end
+end)
+	
+run(function()
 	local CheatDetector
+	local AddTarget
 	local overlap = OverlapParams.new()
 	overlap.CollisionGroup = 'Players'
 	overlap.FilterDescendantsInstances = {workspace.CarContainer, workspace.Doors}
@@ -1901,6 +2304,7 @@ run(function()
 		[Enum.HumanoidStateType.Freefall] = true,
 		[Enum.HumanoidStateType.Landed] = true,
 		[Enum.HumanoidStateType.FallingDown] = true,
+		[Enum.HumanoidStateType.GettingUp] = true,
 		[Enum.HumanoidStateType.Climbing] = true,
 		[Enum.HumanoidStateType.Seated] = true,
 		[Enum.HumanoidStateType.Ragdoll] = true,
@@ -1914,10 +2318,16 @@ run(function()
 			if callback then
 				CheatDetector:Clean(vapeEvents.CheatFlagged.Event:Connect(function(plr, flagname)
 					notif('CheatDetector', 'This player may be cheating! ('..flagname..'): '..plr.Name, 60, 'warning')
+					if AddTarget.Enabled then
+						tempTargets[plr.Name] = true
+					end
 	
 					local ent = entitylib.getEntity(plr)
 					if ent then
 						entitylib.Events.EntityUpdated:Fire(ent)
+						if AddTarget.Enabled then
+							ent.Target = true
+						end
 					end
 				end))
 	
@@ -1935,7 +2345,7 @@ run(function()
 							local velo = ent.RootPart.AssemblyLinearVelocity
 							if not ent.Humanoid.SeatPart then
 								if (velo * Vector3.new(1, 0, 1)).Magnitude > 26 then
-									if #workspace:GetPartBoundsInRadius(ent.RootPart.Position, 10, caroverlap) <= 0 then
+									if #workspace:GetPartBoundsInRadius(ent.RootPart.Position, 30, caroverlap) <= 0 then
 										CheatFlags:Flag(ent.Player, 'speed', 20)
 									end
 								end
@@ -1954,6 +2364,11 @@ run(function()
 			end
 		end,
 		Tooltip = 'Alerts for any possible cheaters.'
+	})
+	AddTarget = CheatDetector:CreateToggle({
+		Name = 'Temporary Target',
+		Tooltip = 'Add temporary priority for cheaters.',
+		Default = true
 	})
 end)
 	
@@ -2087,6 +2502,57 @@ run(function()
 			end
 		end,
 		Tooltip = 'Automatically heal damage with consumables.'
+	})
+end)
+	
+run(function()
+	local AutoHotbar
+	local SortList = {}
+	
+	local function DoSorting()
+		table.sort(pl.SwitchTable, function(a, b)
+			return (SortList[a.Tool.name] or 999 + a.Slot) < (SortList[b.Tool.name] or 999 + b.Slot)
+		end)
+	
+		task.spawn(pl.SwitchUpdate)
+	end
+	
+	local function EntityAdded()
+		local backpack = lplr:FindFirstChildWhichIsA('Backpack')
+		if backpack then
+			AutoHotbar:Clean(backpack.ChildAdded:Connect(function(tool)
+				if SortList[tool.Name] then
+					task.defer(DoSorting)
+				end
+			end))
+		end
+	
+		DoSorting()
+	end
+	
+	AutoHotbar = vape.Categories.Inventory:CreateModule({
+		Name = 'AutoHotbar',
+		Function = function(callback)
+			if callback then
+				AutoHotbar:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
+				if entitylib.isAlive then
+					task.spawn(EntityAdded)
+				end
+			end
+		end,
+		Tooltip = 'Automatically sort hotbar entries'
+	})
+	AutoHotbar:CreateTextList({
+		Name = 'Sort Order',
+		Default = {'1/AK-47', '1/MP5', '1/M4A1', '2/Remington 870', '2/M700', '3/M9', '3/Revolver', '4/Taser'},
+		Function = function(list)
+			table.clear(SortList)
+			for _, entry in list do
+				local tab = entry:split('/')
+				local ind = tonumber(tab[1])
+				SortList[tab[2]] = ind or 999
+			end
+		end
 	})
 end)
 	
@@ -2633,8 +3099,12 @@ run(function()
 				Viewmodel:Clean(runService.RenderStepped:Connect(function(dt)
 					if handle then
 						moveSpring.Target = entitylib.isAlive and entitylib.character.RootPart.AssemblyLinearVelocity * 0.005 or Vector3.zero
-						if moveSpring.Target.Magnitude > 0.1 and Sway.Enabled then
-							moveSpring.Target += (gameCamera.CFrame * CFrame.new(math.sin(tick() * 10) * 0.06, 0, 0)).Position - gameCamera.CFrame.Position
+						if Sway.Enabled then
+							if moveSpring.Target.Magnitude > 0.1 then
+								moveSpring.Target += (gameCamera.CFrame * CFrame.new(math.sin(tick() * 10) * 0.06, 0, 0)).Position - gameCamera.CFrame.Position
+							else
+								moveSpring.Target += (gameCamera.CFrame * CFrame.new(0, math.sin(tick()) * 0.04, 0)).Position - gameCamera.CFrame.Position
+							end
 						end
 	
 						local cf = (gameCamera.CFrame * CFrame.new(Horizontal.Value, Vertical.Value, -Depth.Value)) + moveSpring:Update(dt)
