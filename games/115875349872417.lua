@@ -170,10 +170,10 @@ local function notif(...)
 end
 
 if not select(1, ...) then
-	if run_on_actor and getactorstates then
+	if run_on_actor then
 		local oldreload = shared.vapereload
 		vape.Load = function()
-			task.delay(0, function()
+			task.delay(0.1, function()
 				vape:Uninject()
 			end)
 		end
@@ -192,13 +192,17 @@ if not select(1, ...) then
 				executionString = 'shared.vapereload = true\n'..executionString
 			end
 
-			for _, v in getactorstates() do
-				if type(v) == 'thread' then
-					run_on_actor(v, executionString)
-				else
-					v:Execute(executionString)
+			if getactorstates then
+				for _, v in getactorstates() do
+					if type(v) ~= 'thread' then
+						v:Execute(executionString)
+						return
+					end
 				end
+			end
 
+			for i, v in getactors() do
+				run_on_actor(v, executionString)
 				return
 			end
 
