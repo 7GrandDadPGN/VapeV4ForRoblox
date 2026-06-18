@@ -498,7 +498,7 @@ run(function()
 	end))
 
 	vape:Clean(replicatedStorage.Remotes.MessageReceived.OnClientEvent:Connect(function(msg)
-		if msg:find('kicked') then 
+		if msg:find('kicked') then
 			cheaterkicked:Increment()
 			vapeEvents.CheaterKicked:Fire(msg:sub(1, msg:find(' ')))
 		end
@@ -524,11 +524,11 @@ run(function()
 					elseif ent.Character:GetAttribute('Trespassing') then
 						table.insert(plrtag, {text = rich and '🔗' or 'Trespassing'})
 					end
-				elseif plr.Team == teams.Guards then 
+				elseif plr.Team == teams.Guards then
 					local count = plr:GetAttribute('InnocentKills') or 0
-					if count > 0 then 
+					if count > 0 then
 						table.insert(plrtag, {
-							text = count, 
+							text = tostring(count),
 							color = Color3.fromHSV(math.clamp(1 - (count / 2), 0, 1) / 2.5, 0.89, 0.75)
 						})
 					end
