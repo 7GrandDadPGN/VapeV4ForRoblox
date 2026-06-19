@@ -347,14 +347,12 @@ entitylib.addPlayer = function(plr)
 			entitylib.removeEntity(char, plr == lplr)
 		end),
 		plr:GetPropertyChangedSignal('Team'):Connect(function()
-			for _, v in entitylib.List do
-				if v.Targetable ~= entitylib.targetCheck(v) then
-					entitylib.refreshEntity(v.Character, v.Player)
-				end
-			end
-
 			if plr == lplr then
-				entitylib.start()
+				for _, v in entitylib.List do
+					if v.Targetable ~= entitylib.targetCheck(v) then
+						entitylib.refreshEntity(v.Character, v.Player)
+					end
+				end
 			else
 				entitylib.refreshEntity(plr.Character, plr)
 			end
