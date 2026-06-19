@@ -55,10 +55,12 @@ local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
+local whitelist = vape.Libraries.whitelist
 local drawingactor = loadstring(downloadFile('newvape/libraries/drawing.lua'), 'drawing')(...)
-local redline = {}
+local redline = {Teams = {}}
 local starttime = os.clock()
 local TargetStrafeVector
+local latestHash = '58d1d478b3ef55b0753de656b072893cc59c899a05ea55662ae4625da6be1892e259f9c6012db937d8f7450531cc162e'
 
 local function searchForPacket(func)
 	for _, v in debug.getconstants(func) do
@@ -67,84 +69,6 @@ local function searchForPacket(func)
 		end
 	end
 end
-
-local dumplist = {
-	Constants = {
-		ShootFunction = function(constants, func, inst)
-			for _, const in constants do
-				if const == 'ViewportPointToRay' then
-					redline.ShootFunction = require(inst)[debug.info(func, 'n')]
-					break
-				end
-			end
-		end,
-		ActionController = function(constants, func, inst)
-			for _, const in constants do
-				if const == 'getAction FAILED FOR : ' then
-					redline.ActionController = inst.Name
-					redline.ActionFunction = require(inst)[debug.info(func, 'n')]
-					break
-				end
-			end
-		end,
-		IndicatorController = function(constants, func, inst)
-			for _, const in constants do
-				if const == 'INVALID crosshair_name : ' then
-					redline.IndicatorController = inst.Name
-					break
-				end
-			end
-		end,
-		ReplicateFunction = function(constants, func, inst)
-			for _, const in constants do
-				if const == 'Message cannot be empty' then
-					redline.ReplicateFunction = require(inst)[debug.info(func, 'n')]
-					break
-				end
-			end
-		end,
-		MoveController = function(constants, func, inst)
-			for _, const in constants do
-				if const == 'getMoveDirection' then
-					local found = {}
-					for _, const2 in constants do
-						if tostring(const2):find('_') then
-							table.insert(found, const2)
-						end
-					end
-
-					redline.MoveController = found[1]
-					redline.VelocityName = found[2]
-					break
-				end
-			end
-		end
-	},
-	Protos = {
-		AttackPacket = function(protos, func, inst)
-			for _, proto in protos do
-				if debug.info(proto, 'n') == 'redlinerMelee' then
-					redline.AttackPacket = searchForPacket(debug.getproto(debug.getproto(proto, 1), 1))
-					break
-				end
-			end
-		end,
-		IndicatorTable = function(protos, func, inst)
-			for _, proto in protos do
-				if debug.info(proto, 'n') == 'removeShotIndicator' then
-					for _, const in debug.getconstants(proto) do
-						if tostring(const):find('_') then
-							redline.IndicatorTable = const
-							break
-						end
-					end
-
-					break
-				end
-			end
-		end
-	}
-}
 
 local function getIndicators()
 	return redline[redline.IndicatorController] and redline[redline.IndicatorController][redline.IndicatorTable] or {}
@@ -167,6 +91,38 @@ end
 
 local function notif(...)
 	return vape:CreateNotification(...)
+end
+
+local function warningRoutine(hash)
+	local path = 'newvape/profiles/agreementhash.txt'
+	if (isfile(path) and readfile(path) or '') ~= hash then
+		local box = Instance.new('TextLabel')
+		box.Size = UDim2.fromScale(1, 1)
+		box.BackgroundColor3 = Color3.new()
+		box.BackgroundTransparency = 0.5
+		box.Text = '⚠️WARNING⚠️\nThe game\'s update hash is not the same as the current script hash, this ⚠️MAY⚠️ mean the game developer has added detections.\nBy clicking OK, you agree to all risks of using this product.\n\n- 7GrandDad'
+		box.TextColor3 = Color3.new(1, 1, 1)
+		box.TextScaled = true
+		box.Font = Enum.Font.Arial
+		box.Parent = vape.gui
+		local button = Instance.new('TextButton')
+		button.AnchorPoint = Vector2.new(0.5, 0.5)
+		button.Size = UDim2.fromScale(0.2, 0.05)
+		button.Position = UDim2.fromScale(0.5, 0.95)
+		button.BackgroundColor3 = Color3.new()
+		button.Text = 'OK'
+		button.TextColor3 = Color3.new(1, 1, 1)
+		button.TextScaled = true
+		button.Font = Enum.Font.Arial
+		button.Parent = box
+
+		button.MouseButton1Click:Connect(function()
+			writefile(path, hash)
+			box:Destroy()
+		end)
+
+		box.Destroying:Wait()
+	end
 end
 
 if not select(1, ...) then
@@ -201,12 +157,12 @@ if not select(1, ...) then
 				end
 			end
 
-			for i, v in getactors() do
+			for _, v in getactors() do
 				run_on_actor(v, executionString)
 				return
 			end
 
-			notif('Vape', 'Failed to find actor', 10, 'alert')
+			lplr:Kick('Failed to find actor, Executor: '..identifyexecutor())
 		end)
 	else
 		vape.Load = function()
@@ -308,6 +264,63 @@ run(function()
 			entitylib.EntityThreads[char] = nil
 		end)
 	end
+
+	if game.PlaceId == 126691165749976 then
+		entitylib.targetCheck = function(ent)
+			if ent.NPC then return true end
+			if isFriend(ent.Player) then return false end
+			if not select(2, whitelist:get(ent.Player)) then return false end
+			if vape.Categories.Main.Options['Teams by server'].Enabled then
+				if not redline.Teams[tostring(lplr.UserId)] then return true end
+				return redline.Teams[tostring(ent.Player.UserId)] ~= redline.Teams[tostring(lplr.UserId)]
+			end
+
+			return true
+		end
+
+		local function updatePlayer(plr)
+			plr = playersService:GetPlayerByUserId(tonumber(plr.Name))
+
+			if plr and entitylib.Running then
+				if plr == lplr then
+					for _, v in entitylib.List do
+						if v.Targetable ~= entitylib.targetCheck(v) then
+							entitylib.refreshEntity(v.Character, v.Player)
+						end
+					end
+				else
+					local ent = entitylib.getEntity(plr)
+					if ent and ent.Targetable ~= entitylib.targetCheck(ent) then
+						entitylib.refreshEntity(ent.Character, plr)
+					end
+				end
+			end
+		end
+
+		local function processPlayer(plr)
+			if tonumber(plr.Name) then
+				redline.Teams[plr.Name] = plr:GetAttribute('team_id')
+				task.spawn(updatePlayer, plr)
+
+				vape:Clean(plr:GetAttributeChangedSignal('team_id'):Connect(function()
+					redline.Teams[plr.Name] = plr:GetAttribute('team_id')
+					task.spawn(updatePlayer, plr)
+				end))
+			end
+		end
+
+		local function processMatch(match)
+			if match and match.Name == 'Match' then
+				vape:Clean(match.DescendantAdded:Connect(processPlayer))
+				for _, v in match:GetDescendants() do
+					processPlayer(v)
+				end
+			end
+		end
+
+		vape:Clean(replicatedStorage.ReadOnly.ChildAdded:Connect(processMatch))
+		task.spawn(processMatch, replicatedStorage.ReadOnly:FindFirstChild('Match'))
+	end
 end)
 entitylib.start()
 
@@ -315,6 +328,14 @@ run(function()
 	local root
 	for _, v in getloadedmodules() do
 		if v:GetFullName() == 'Start.Client.ClientRoot' then
+			if getscripthash(v) ~= latestHash then
+				warningRoutine(getscripthash(v))
+
+				if vape.Loaded == nil then
+					return
+				end
+			end
+
 			root = require(v)
 			if not rawget(root, 'loaded') then
 				repeat
@@ -334,12 +355,91 @@ run(function()
 		AttackCast = require(replicatedStorage.Assets.ModuleScripts.Attack.Hitbox),
 		Packets = require(replicatedStorage.Assets.ModuleScripts.Packets),
 		Packet = debug.getupvalue(getrawmetatable(require(replicatedStorage.Assets.ModuleScripts.Packets.Packet)).__call, 2),
-		Util = require(replicatedStorage.Assets.SharedClasses.Util)
+		Util = require(replicatedStorage.Assets.SharedClasses.Util),
+		Teams = redline.Teams
 	}, {
 		__index = function(self, ind)
 			return rawget(classList, ind)
 		end
 	})
+
+	local dumplist = {
+		Constants = {
+			ShootFunction = function(constants, func, inst)
+				for _, const in constants do
+					if const == 'ViewportPointToRay' then
+						redline.ShootFunction = require(inst)[debug.info(func, 'n')]
+						break
+					end
+				end
+			end,
+			ActionController = function(constants, func, inst)
+				for _, const in constants do
+					if const == 'getAction FAILED FOR : ' then
+						redline.ActionController = inst.Name
+						redline.ActionFunction = require(inst)[debug.info(func, 'n')]
+						break
+					end
+				end
+			end,
+			IndicatorController = function(constants, func, inst)
+				for _, const in constants do
+					if const == 'INVALID crosshair_name : ' then
+						redline.IndicatorController = inst.Name
+						break
+					end
+				end
+			end,
+			ReplicateFunction = function(constants, func, inst)
+				for _, const in constants do
+					if const == 'Message cannot be empty' then
+						redline.ReplicateFunction = require(inst)[debug.info(func, 'n')]
+						break
+					end
+				end
+			end,
+			MoveController = function(constants, func, inst)
+				for _, const in constants do
+					if const == 'getMoveDirection' then
+						local found = {}
+						for _, const2 in constants do
+							if tostring(const2):find('_') then
+								table.insert(found, const2)
+							end
+						end
+
+						redline.MoveController = found[1]
+						redline.VelocityName = found[2]
+						break
+					end
+				end
+			end
+		},
+		Protos = {
+			AttackPacket = function(protos, func, inst)
+				for _, proto in protos do
+					if debug.info(proto, 'n') == 'redlinerMelee' then
+						redline.AttackPacket = searchForPacket(debug.getproto(debug.getproto(proto, 1), 1))
+						break
+					end
+				end
+			end,
+			IndicatorTable = function(protos, func, inst)
+				for _, proto in protos do
+					if debug.info(proto, 'n') == 'removeShotIndicator' then
+						for _, const in debug.getconstants(proto) do
+							if tostring(const):find('_') then
+								redline.IndicatorTable = const
+								break
+							end
+						end
+
+						break
+					end
+				end
+			end
+		}
+	}
 
 	for _, v in getscripts() do
 		if v:GetFullName():sub(1, 5) == 'Start' and v:IsA('ModuleScript') then
