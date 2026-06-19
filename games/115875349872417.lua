@@ -148,7 +148,12 @@ if not select(1, ...) then
 				executionString = 'shared.vapereload = true\n'..executionString
 			end
 
-			if getactorstates then
+			if getactorthreads and run_on_thread then
+				for _, v in getactorthreads() do
+					run_on_thread(v, executionString)
+					return
+				end
+			elseif getactorstates then
 				for _, v in getactorstates() do
 					if type(v) ~= 'thread' then
 						v:Execute(executionString)
@@ -157,7 +162,7 @@ if not select(1, ...) then
 				end
 			end
 
-			for _, v in getactors() do
+			for _, v in (getdeletedactors or getactors)() do
 				run_on_actor(v, executionString)
 				return
 			end
