@@ -62,9 +62,9 @@ local starttime = os.clock()
 local TargetStrafeVector
 local latestHash = '58d1d478b3ef55b0753de656b072893cc59c899a05ea55662ae4625da6be1892e259f9c6012db937d8f7450531cc162e'
 
-local function searchForPacket(func)
+local function searchForPacket(func, unreliable)
 	for _, v in debug.getconstants(func) do
-		if rawget(redline.Packets, v) then
+		if rawget(unreliable and redline.Packets.unreliablePackets or redline.Packets, v) then
 			return v
 		end
 	end
@@ -354,10 +354,16 @@ run(function()
 		end
 	end
 
+	if not root then
+		lplr:Kick('Failed to find root class, please contact 7GrandDad on discord.')
+		return
+	end
+
 	local classList = rawget(root, 'Classes') or {}
 	redline = setmetatable({
 		AttackBox = require(replicatedStorage.Assets.ModuleScripts.Attack),
 		AttackCast = require(replicatedStorage.Assets.ModuleScripts.Attack.Hitbox),
+		CEnum = require(replicatedStorage.Assets.ModuleScripts.CEnum),
 		Packets = require(replicatedStorage.Assets.ModuleScripts.Packets),
 		Packet = debug.getupvalue(getrawmetatable(require(replicatedStorage.Assets.ModuleScripts.Packets.Packet)).__call, 2),
 		Util = require(replicatedStorage.Assets.SharedClasses.Util),
@@ -418,6 +424,21 @@ run(function()
 						break
 					end
 				end
+			end,
+			ActionEventPacket = function(constants, func, inst)
+				local found
+				for _, const in constants do
+					if const == 'OnClientEvent' then
+						found = true
+					elseif const == 'onKill' and found then
+						redline.ActionEventPacket = searchForPacket(func, true)
+						if redline.ActionEventPacket then
+							redline.ActionEventPacket = redline.Packets.unreliablePackets[redline.ActionEventPacket]
+						end
+
+						break
+					end
+				end
 			end
 		},
 		Protos = {
@@ -425,6 +446,10 @@ run(function()
 				for _, proto in protos do
 					if debug.info(proto, 'n') == 'redlinerMelee' then
 						redline.AttackPacket = searchForPacket(debug.getproto(debug.getproto(proto, 1), 1))
+						if redline.AttackPacket then
+							redline.AttackPacket = redline.Packets[redline.AttackPacket].Name
+						end
+
 						break
 					end
 				end
@@ -473,10 +498,8 @@ run(function()
 		end
 	end
 
-	if redline.AttackPacket then
-		redline.AttackPacket = rawget(rawget(redline.Packets, redline.AttackPacket), 'Name')
-	end
-
+	local kills = sessioninfo:AddItem('Kills')
+	local deaths = sessioninfo:AddItem('Deaths')
 	local games = sessioninfo:AddItem('Games')
 	local wins = sessioninfo:AddItem('Wins')
 
@@ -484,6 +507,28 @@ run(function()
 		task.delay(1, function()
 			games:Increment()
 		end)
+	end
+
+	if redline.ActionEventPacket then
+		vape:Clean(redline.ActionEventPacket.OnClientEvent:Connect(function(data)
+			if type(data) == 'table' then
+				task.spawn(function()
+					local attacker = data.agent and (playersService:GetPlayerFromCharacter(data.agent) or playersService:FindFirstChild(data.agent.Name))
+					local victim = data.victim and (playersService:GetPlayerFromCharacter(data.victim) or playersService:FindFirstChild(data.victim.Name))
+
+					if data.action == 'killed' then
+						if attacker == lplr then
+							vapeEvents.PlayerKill:Fire()
+							kills:Increment()
+						elseif victim == lplr then
+							deaths:Increment()
+						end
+					elseif data.action == 'hit' and attacker == lplr then
+						vapeEvents.Hit:Fire()
+					end
+				end)
+			end
+		end))
 	end
 
 	vape:Clean(vapeEvents.MatchEnded.Event:Connect(function(won)
@@ -984,7 +1029,7 @@ run(function()
 	local Targets
 	local AttackRange
 	local AngleSlider
-	local BoxSwingColor
+	local AutoSwing
 	local BoxAttackColor
 	local ParticleTexture
 	local ParticleColor1
@@ -1074,9 +1119,11 @@ run(function()
 							})
 	
 							targetinfo.Targets[ent] = tick() + 1
-							task.spawn(function()
-								redline.ActionFunction(redline[redline.ActionController], 'MELEE').Pressed:Fire()
-							end)
+							if AutoSwing.Enabled then
+								task.spawn(function()
+									redline.ActionFunction(redline[redline.ActionController], 'MELEE').Pressed:Fire()
+								end)
+							end
 						end
 					end
 	
@@ -1125,10 +1172,13 @@ run(function()
 		Max = 360,
 		Default = 360
 	})
+	AutoSwing = Killaura:CreateToggle({
+		Name = 'Auto Swing',
+		Default = true
+	})
 	Killaura:CreateToggle({
 		Name = 'Show target',
 		Function = function(callback)
-			BoxSwingColor.Object.Visible = callback
 			BoxAttackColor.Object.Visible = callback
 			if callback then
 				for i = 1, 10 do
@@ -1148,13 +1198,6 @@ run(function()
 				table.clear(Boxes)
 			end
 		end
-	})
-	BoxSwingColor = Killaura:CreateColorSlider({
-		Name = 'Target Color',
-		Darker = true,
-		DefaultHue = 0.6,
-		DefaultOpacity = 0.5,
-		Visible = false
 	})
 	BoxAttackColor = Killaura:CreateColorSlider({
 		Name = 'Attack Color',
@@ -1510,6 +1553,51 @@ run(function()
 end)
 	
 run(function()
+	local AutoQueue
+	local Mode
+	
+	AutoQueue = vape.Categories.Utility:CreateModule({
+		Name = 'AutoQueue',
+		Function = function(callback)
+			if game.PlaceId == 94987506187454 then
+				if callback then
+					repeat
+						if redline.MenuManager.current_session then
+							local client = redline.MenuManager.current_session.midframe_renderer._client
+	
+							if client:canQueue() then
+								client:enqueue({redline.CEnum.Queues[Mode.Value] or 1})
+							end
+						end
+	
+						task.wait(0.1)
+					until not AutoQueue.Enabled
+				else
+					if redline.MenuManager.current_session then
+						local client = redline.MenuManager.current_session.midframe_renderer._client
+						local state = client:getQueueState()
+	
+						if state.is_queued then
+							client:dequeue()
+						end
+					end
+				end
+			end
+		end,
+		Tooltip = 'Automatically queue for a new match in the lobby.'
+	})
+	local queueList = {}
+	for i in redline.CEnum.Queues do
+		table.insert(queueList, i)
+	end
+	Mode = AutoQueue:CreateDropdown({
+		Name = 'Mode',
+		List = queueList,
+		Default = 'Duels1v1'
+	})
+end)
+	
+run(function()
 	local AutoToxic
 	local GG
 	local Toggles, Lists, said, dead = {}, {}, {}
@@ -1602,6 +1690,102 @@ run(function()
 		Min = 0,
 		Max = 192,
 		Default = 192
+	})
+end)
+	
+run(function()
+	local HitSound
+	local Value
+	local Volume
+	local PitchShift
+	local old, sounds = nil, {}
+	
+	HitSound = vape.Legit:CreateModule({
+		Name = 'HitSound',
+		Function = function(callback)
+			if callback then
+				HitSound:Clean(vapeEvents.Hit.Event:Connect(function()
+					if #sounds > 0 then
+						local obj = Instance.new('Sound')
+						obj.SoundId = sounds[math.random(1, #sounds)]
+						obj.PlayOnRemove = true
+						obj.PlaybackSpeed = PitchShift.Enabled and 1 + ((0.5 - math.random()) / 10) or 1
+						obj.Volume = Volume.Value
+						obj.Parent = workspace
+						obj:Destroy()
+					end
+				end))
+			end
+		end,
+		Tooltip = 'Custom hit sound'
+	})
+	Value = HitSound:CreateTextList({
+		Name = 'Sounds',
+		Placeholder = 'sound id (roblox or file path)',
+		Function = function(list)
+			table.clear(sounds)
+			for i, v in list or {} do
+				sounds[i] = v:find('rbxasset') and v or isfile(v) and getcustomasset(v) or nil
+			end
+		end
+	})
+	Volume = HitSound:CreateSlider({
+		Name = 'Volume',
+		Min = 0,
+		Max = 2,
+		Default = 1,
+		Decimal = 10
+	})
+	PitchShift = HitSound:CreateToggle({
+		Name = 'Pitch Shift'
+	})
+end)
+	
+run(function()
+	local KillSound
+	local Value
+	local Volume
+	local PitchShift
+	local old, sounds = nil, {}
+	
+	KillSound = vape.Legit:CreateModule({
+		Name = 'KillSound',
+		Function = function(callback)
+			if callback then
+				KillSound:Clean(vapeEvents.PlayerKill.Event:Connect(function()
+					if #sounds > 0 then
+						local obj = Instance.new('Sound')
+						obj.SoundId = sounds[math.random(1, #sounds)]
+						obj.PlayOnRemove = true
+						obj.PlaybackSpeed = PitchShift.Enabled and 1 + ((0.5 - math.random()) / 10) or 1
+						obj.Volume = Volume.Value
+						obj.Parent = workspace
+						obj:Destroy()
+					end
+				end))
+			end
+		end,
+		Tooltip = 'Custom kill sound'
+	})
+	Value = KillSound:CreateTextList({
+		Name = 'Sounds',
+		Placeholder = 'sound id (roblox or file path)',
+		Function = function(list)
+			table.clear(sounds)
+			for i, v in list or {} do
+				sounds[i] = v:find('rbxasset') and v or isfile(v) and getcustomasset(v) or nil
+			end
+		end
+	})
+	Volume = KillSound:CreateSlider({
+		Name = 'Volume',
+		Min = 0,
+		Max = 2,
+		Default = 1,
+		Decimal = 10
+	})
+	PitchShift = KillSound:CreateToggle({
+		Name = 'Pitch Shift'
 	})
 end)
 	
