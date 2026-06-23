@@ -1,0 +1,5 @@
+{
+    "DEV_PATH": "",
+    "PROD_PATH": "./VapeCompiled",
+    "SRC_PATH": "./src"
+}
