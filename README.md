@@ -12,7 +12,7 @@
 </h2>
 
 ## Contacts
-[Discord](https://discord.gg/5gJqhQmrdS)
+[Discord](https://discord.gg/VZEQJxMSnG)
 <br/>
 [Youtube](https://youtube.com/c/7GrandDadVape)
 
