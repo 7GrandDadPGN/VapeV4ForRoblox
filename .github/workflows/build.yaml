@@ -1,0 +1,55 @@
+on:
+  push:
+    branches:
+      - main
+
+env:
+  NODE_VERSION: '24.15.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone source files
+      uses: actions/checkout@v6
+
+    - name: Clone destination files
+      uses: actions/checkout@v6
+      with:
+        repository: 7GrandDadPGN/VapeCompiled
+        token: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+        path: "./VapeCompiled"
+
+    - name: Clone bundler
+      uses: actions/checkout@v6
+      with:
+        repository: 7GrandDadPGN/VapeBundler
+        path: "./VapeBundler"
+
+    - name: Copy bundler configuration
+      run: |-
+        mv ./.github/workflows/workflowConfig.json ./VapeBundler/config.json
+
+    - name: Install node packages
+      run: |-
+        cd ./VapeBundler
+        npm i
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v6
+
+    - name: Run Bundler
+      run: |-
+        node ./VapeBundler/index.js prod
+
+    - name: Setup git commit
+      run: |-
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "username@users.noreply.github.com"
+
+    - name: Push commit
+      run: |-
+        cd ./VapeCompiled
+        git add .
+        git commit -m "Updated Vape"
+        git push origin
