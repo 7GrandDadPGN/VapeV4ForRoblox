@@ -200,6 +200,7 @@ end)
 for _, v in {'AimAssist', 'Reach', 'SilentAim', 'AntiFall', 'Desync', 'Invisible', 'Jesus', 'MouseTP', 'Phase', 'SpinBot', 'Swim', 'TargetStrafe', 'AnimationPlayer', 'AntiRagdoll', 'ChatSpammer', 'Disabler', 'StateSpoofer', 'Freecam', 'Gravity', 'Parkour', 'SafeWalk', 'MurderMystery'} do
 	vape:Remove(v)
 end
+
 run(function()
 	local AutoClicker
 	local CPS
@@ -251,7 +252,7 @@ run(function()
 		DefaultMax = 7
 	})
 end)
-	
+
 run(function()
 	local Reach
 	local Value
@@ -288,7 +289,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Sprint
 	
@@ -305,7 +306,7 @@ run(function()
 		Tooltip = 'Sets your sprinting to true.'
 	})
 end)
-	
+
 run(function()
 	local Velocity
 	local Horizontal
@@ -376,7 +377,7 @@ run(function()
 	})
 	Targeting = Velocity:CreateToggle({Name = 'Only when targeting'})
 end)
-	
+
 run(function()
 	local AutoBlock
 	
@@ -408,7 +409,7 @@ run(function()
 		Tooltip = 'Automatically unblock and reblock before hitting'
 	})
 end)
-	
+
 local Fly
 local LongJump
 run(function()
@@ -480,7 +481,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local HighJump
 	local Value
@@ -526,7 +527,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local HitBoxes
 	local Targets
@@ -574,7 +575,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Killaura
 	local Targets
@@ -857,7 +858,7 @@ run(function()
 	})
 	Face = Killaura:CreateToggle({Name = 'Face target'})
 end)
-	
+
 run(function()
 	local Value
 	local AutoDisable
@@ -904,7 +905,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local NoSlowdown
 	local old
@@ -925,7 +926,7 @@ run(function()
 		Tooltip = 'Prevent you from slowing down when using items.'
 	})
 end)
-	
+
 run(function()
 	local Speed
 	local Value
@@ -961,7 +962,7 @@ run(function()
 		Name = 'AutoJump'
 	})
 end)
-	
+
 run(function()
 	local Value
 	local rayCheck = RaycastParams.new()
@@ -1016,7 +1017,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local FastBreak
 	local Value
@@ -1048,7 +1049,7 @@ run(function()
 		Decimal = 10
 	})
 end)
-	
+
 run(function()
 	local FastPlace
 	local Value
@@ -1085,4 +1086,3 @@ run(function()
 		end
 	})
 end)
-	

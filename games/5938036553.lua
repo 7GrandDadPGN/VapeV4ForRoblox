@@ -406,6 +406,7 @@ for i, v in {'Reach', 'Health', 'TriggerBot', 'AntiFall', 'AntiRagdoll', 'Invisi
 	vape:Remove(v)
 end
 
+
 run(function()
 	local AimAssist
 	local FOV
@@ -540,7 +541,7 @@ run(function()
 	})
 	
 end)
-	
+
 run(function()
 	local SilentAim
 	local Target
@@ -757,7 +758,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local Sprint
 	
@@ -784,7 +785,7 @@ run(function()
 		Tooltip = 'Holds the sprint button'
 	})
 end)
-	
+
 run(function()
 	local GrenadeTP
 	local Range
@@ -831,7 +832,7 @@ run(function()
 		Default = 1000
 	})
 end)
-	
+
 run(function()
 	local Reload
 	local Recoil
@@ -890,7 +891,7 @@ run(function()
 	FireRate = GunModifications:CreateToggle({Name = 'Fire rate'})
 	Automatic = GunModifications:CreateToggle({Name = 'Full Automatic'})
 end)
-	
+
 run(function()
 	local Killaura
 	local Targets
@@ -1179,7 +1180,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local Phase
 	
@@ -1208,7 +1209,7 @@ run(function()
 		Tooltip = 'Lets you Phase/Clip through walls.'
 	})
 end)
-	
+
 run(function()
 	local SpinBot
 	local Speed
@@ -1275,7 +1276,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local GrenadeESP
 	local Background
@@ -1364,7 +1365,7 @@ run(function()
 		Darker = true
 	})
 end)
-	
+
 run(function()
 	local NoHurtCam
 	
@@ -1380,7 +1381,7 @@ run(function()
 		Tooltip = 'Removes camera flash after taking damage'
 	})
 end)
-	
+
 run(function()
 	local ThirdPerson
 	local Distance
@@ -1454,7 +1455,7 @@ run(function()
 		Default = 8
 	})
 end)
-	
+
 run(function()
 	local AutoRespawn
 	
@@ -1472,7 +1473,7 @@ run(function()
 		Tooltip = 'Automatically respawns after death'
 	})
 end)
-	
+
 run(function()
 	local ChatSpammer
 	local Lines
@@ -1508,7 +1509,7 @@ run(function()
 		List = {'Random', 'Order'}
 	})
 end)
-	
+
 run(function()
 	local PickupRange
 	local Range
@@ -1544,7 +1545,7 @@ run(function()
 		Default = 20
 	})
 end)
-	
+
 run(function()
 	local BulletTracers
 	local Material
@@ -1649,4 +1650,3 @@ run(function()
 		end
 	})
 end)
-	

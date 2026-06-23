@@ -404,6 +404,7 @@ end)
 for _, v in {'Reach', 'TriggerBot', 'Disabler', 'SilentAim', 'AutoRejoin', 'Rejoin', 'ServerHop', 'MurderMystery'} do
 	vape:Remove(v)
 end
+
 run(function()
 	local AutoClicker
 	local CPS
@@ -476,7 +477,7 @@ run(function()
 		Darker = true
 	})
 end)
-	
+
 run(function()
 	local Sprint
 	local old
@@ -517,7 +518,7 @@ run(function()
 		Tooltip = 'Sets your sprinting to true.'
 	})
 end)
-	
+
 run(function()
 	local Velocity
 	local Horizontal
@@ -588,7 +589,7 @@ run(function()
 	})
 	Targeting = Velocity:CreateToggle({Name = 'Only when targeting'})
 end)
-	
+
 run(function()
 	local AntiFall
 	local Mode
@@ -674,7 +675,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local InvMove
 	local old
@@ -695,7 +696,7 @@ run(function()
 		Tooltip = 'Allows you to have continuous movement in menus'
 	})
 end)
-	
+
 run(function()
 	local Killaura
 	local Targets
@@ -1037,7 +1038,7 @@ run(function()
 		Tooltip = 'Only attacks when the sword is held'
 	})
 end)
-	
+
 run(function()
 	local NoFall
 	local rayCheck = RaycastParams.new()
@@ -1068,7 +1069,7 @@ run(function()
 		Tooltip = 'Prevents taking fall damage.'
 	})
 end)
-	
+
 run(function()
 	local old, oldcheck
 	
@@ -1106,7 +1107,7 @@ run(function()
 		Tooltip = 'Prevents slowing down when using items.'
 	})
 end)
-	
+
 run(function()
 	local TargetPart
 	local FOV
@@ -1169,7 +1170,7 @@ run(function()
 		Default = 1000
 	})
 end)
-	
+
 run(function()
 	local ProjectileAura
 	local Targets
@@ -1247,7 +1248,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Scaffold
 	local Expand
@@ -1394,7 +1395,7 @@ run(function()
 	})
 	LimitItem = Scaffold:CreateToggle({Name = 'Limit to items'})
 end)
-	
+
 run(function()
 	local ChestSteal
 	local Range
@@ -1444,143 +1445,7 @@ run(function()
 	})
 	Open = ChestSteal:CreateToggle({Name = 'GUI Check'})
 end)
-	
-run(function()
-	local AutoBuy
-	local Sword
-	local Armor
-	local Pickaxe
-	local Upgrades
-	local UpgradeObjects = {}
-	local Functions = {}
-	
-	local function buyCheck(currencytable)
-		for _, v in Functions do
-			v(currencytable)
-		end
-	end
-	
-	local function buyUpgrade(name, upgrade, currencytable)
-		local currentitem
-		for shopIndex, shopItem in upgrade.Items do
-			if shopItem.ItemType == name then
-				currentitem = shopIndex
-			end
-		end
-	
-		if not currentitem then return end
-	
-		for i = currentitem + 1, #upgrade.Items do
-			local nextitem = upgrade.Items[i]
-			if nextitem and currencytable[nextitem.CurrencyType] >= nextitem.Price then
-				skywars.Remotes[remotes.purchaseItemUpgrade]:fire('Blacksmith', upgrade.ItemIndex)
-				currencytable[nextitem.CurrencyType] -= nextitem.Price
-			end
-		end
-	end
-	
-	local function buyTeamUpgrade(upgrade, currencytable)
-		local currentitem = skywars.Store:getState().TeamUpgrades[upgrade.Name] or 0
-		for i = currentitem + 1, #upgrade.Tiers do
-			local nextitem = upgrade.Tiers[i]
-			if nextitem and currencytable[nextitem.CurrencyType] >= nextitem.Price then
-				skywars.Remotes[remotes.purchaseTeamUpgrade]:fire('Merchant', upgrade.ItemIndex)
-				currencytable[nextitem.CurrencyType] -= nextitem.Price
-			end
-		end
-	end
-	
-	AutoBuy = vape.Categories.Inventory:CreateModule({
-		Name = 'AutoBuy',
-		Function = function(callback)
-			if callback then
-				AutoBuy:Clean(vapeEvents.CurrencyChange.Event:Connect(buyCheck))
-				buyCheck(table.clone(skywars.Store:getState().GameCurrency.Quantities))
-			end
-		end,
-		Tooltip = 'Automatically buys items when you go near the shop'
-	})
-	Sword = AutoBuy:CreateToggle({
-		Name = 'Buy Sword',
-		Function = function(callback)
-			Functions[2] = callback and function(currencytable, shop, upgrades)
-				buyUpgrade(store.tools.sword and store.tools.sword.Name, skywars.Shop.Blacksmith.ItemUpgrades[2], currencytable)
-			end or nil
-		end,
-		Default = true
-	})
-	Armor = AutoBuy:CreateToggle({
-		Name = 'Buy Armor',
-		Function = function(callback)
-			Functions[1] = callback and function(currencytable, shop, upgrades)
-				if lplr.Character then
-					for _, v in lplr.Character:GetChildren() do
-						if v:GetAttribute('Armour') and v.Name:find('Chestplate') then
-							buyUpgrade(v.Name, skywars.Shop.Blacksmith.ItemUpgrades[1], currencytable)
-							break
-						end
-					end
-				end
-			end or nil
-		end,
-		Default = true
-	})
-	Pickaxe = AutoBuy:CreateToggle({
-		Name = 'Buy Pickaxe',
-		Function = function(callback)
-			Functions[3] = callback and function(currencytable, shop, upgrades)
-				buyUpgrade(store.tools.pickaxe and store.tools.pickaxe.Name, skywars.Shop.Blacksmith.ItemUpgrades[3], currencytable)
-			end or nil
-		end,
-		Default = true
-	})
-	Upgrades = AutoBuy:CreateToggle({
-		Name = 'Buy Upgrades',
-		Function = function(callback)
-			for i, v in UpgradeObjects do
-				v.Object.Visible = callback
-			end
-		end,
-		Default = true
-	})
-	for i, v in skywars.Shop.Merchant.TeamUpgrades do
-		table.insert(UpgradeObjects, AutoBuy:CreateToggle({
-			Name = 'Buy '..v.Name,
-			Function = function(callback)
-				Functions[4 + i] = callback and function(currencytable, shop, upgrades)
-					buyTeamUpgrade(v, currencytable)
-				end or nil
-			end,
-			Darker = true,
-			Default = (v.Name == 'Generator' or v.Name == 'Vampyrism')
-		}))
-	end
-end)
-	
-run(function()
-	local AutoConsume
-	
-	local function consumeCheck()
-		if (lplr:GetAttribute('Shield') or 0) <= 0 and getItem('Shield') then
-			skywars.Remotes[remotes.updateActiveItem]:fire('Shield')
-			skywars.Remotes[remotes.usePowerUp]:fire()
-			skywars.Remotes[remotes.updateActiveItem]:fire(store.hand.Name)
-		end
-	end
-	
-	AutoConsume = vape.Categories.Inventory:CreateModule({
-		Name = 'AutoConsume',
-		Function = function(callback)
-			if callback then
-				AutoConsume:Clean(vapeEvents.InventoryAmountChanged.Event:Connect(consumeCheck))
-				AutoConsume:Clean(lplr:GetAttributeChangedSignal('Shield'):Connect(consumeCheck))
-				consumeCheck()
-			end
-		end,
-		Tooltip = 'Automatically uses shield potions.'
-	})
-end)
-	
+
 run(function()
 	local Breaker
 	local Range
@@ -1745,7 +1610,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Viewmodel
 	local oldtool
@@ -1800,4 +1665,3 @@ run(function()
 		Tooltip = 'Replaces the default viewmodel'
 	})
 end)
-	

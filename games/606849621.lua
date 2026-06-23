@@ -367,6 +367,7 @@ end)
 for _, v in {'Reach', 'TriggerBot', 'Disabler', 'AntiFall', 'HitBoxes', 'Killaura', 'MurderMystery'} do
 	vape:Remove(v)
 end
+
 run(function()
 	local ForceHeadshot
 	
@@ -387,7 +388,7 @@ run(function()
 		Tooltip = 'Modifies bullets to always do headshot damage.'
 	})
 end)
-	
+
 run(function()
 	local SilentAim
 	local Target
@@ -543,7 +544,7 @@ run(function()
 	})
 	Instant = SilentAim:CreateToggle({Name = 'Hitscan Bullets'})
 end)
-	
+
 run(function()
 	local AutoArrest
 	
@@ -582,7 +583,7 @@ run(function()
 		Tooltip = 'Automatically uses handcuffs on nearby entities'
 	})
 end)
-	
+
 run(function()
 	local AutoPop
 	local Range
@@ -665,7 +666,7 @@ run(function()
 	})
 	TeamCheck = AutoPop:CreateToggle({Name = 'Team Check'})
 end)
-	
+
 run(function()
 	local AutoPunch
 	
@@ -685,7 +686,7 @@ run(function()
 		Tooltip = 'Always punches people infront of you'
 	})
 end)
-	
+
 run(function()
 	local AutoTaze
 	local HandCheck
@@ -721,11 +722,11 @@ run(function()
 	})
 	HandCheck = AutoTaze:CreateToggle({Name = 'Hand Check'})
 end)
-	
+
 run(function()
 	LazerGodmode = vape.Categories.Blatant:CreateModule({Name = 'LazerGodmode'})
 end)
-	
+
 run(function()
 	vape.Categories.Blatant:CreateModule({
 		Name = 'NoFall',
@@ -735,7 +736,7 @@ run(function()
 		Tooltip = 'Disables ragdoll handling & fall damage'
 	})
 end)
-	
+
 run(function()
 	local nitrotable = debug.getupvalue(jb.VehicleController.NitroShopVisible, 1)
 	local oldnitro
@@ -759,7 +760,7 @@ run(function()
 		Tooltip = 'Infinite boost for the local car'
 	})
 end)
-	
+
 run(function()
 	vape.Categories.Utility:CreateModule({
 		Name = 'InstantAction',
@@ -769,4 +770,3 @@ run(function()
 		Tooltip = 'Allows you to instantly complete ProximityPrompt actions'
 	})
 end)
-	

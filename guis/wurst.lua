@@ -216,6 +216,7 @@ mainapi.Libraries = {
 
 local components
 components = {
+
 	Divider = function(children, text)
 		local divider = Instance.new('Frame')
 		divider.Name = 'Divider'
