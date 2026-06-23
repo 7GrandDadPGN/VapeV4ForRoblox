@@ -17,7 +17,7 @@ Clock = vape.Legit:CreateModule({
 })
 Clock:CreateFont({
 	Name = 'Font',
-	Default = 'Gotham',
+	Blacklist = 'Gotham',
 	Function = function(val)
 		label.FontFace = val
 	end

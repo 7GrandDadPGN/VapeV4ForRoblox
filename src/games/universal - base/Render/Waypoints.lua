@@ -40,7 +40,7 @@ Waypoints = vape.Categories.Render:CreateModule({
 })
 FontOption = Waypoints:CreateFont({
 	Name = 'Font',
-	Default = 'Arial',
+	Blacklist = 'Arial',
 	Function = function()
 		if Waypoints.Enabled then
 			Waypoints:Toggle()

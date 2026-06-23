@@ -16,7 +16,7 @@ Ping = vape.Legit:CreateModule({
 })
 Ping:CreateFont({
 	Name = 'Font',
-	Default = 'Gotham',
+	Blacklist = 'Gotham',
 	Function = function(val)
 		label.FontFace = val
 	end

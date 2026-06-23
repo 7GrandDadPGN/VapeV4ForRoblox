@@ -78,7 +78,7 @@ SessionInfo = vape:CreateOverlay({
 })
 FontOption = SessionInfo:CreateFont({
 	Name = 'Font',
-	Default = 'Arial'
+	Blacklist = 'Arial'
 })
 Hide = SessionInfo:CreateTextList({
 	Name = 'Blacklist',
