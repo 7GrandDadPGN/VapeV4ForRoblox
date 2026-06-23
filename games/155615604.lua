@@ -683,6 +683,7 @@ end
 for _, v in {'Reach', 'Jesus', 'MurderMystery'} do
 	vape:Remove(v)
 end
+
 local mouseClicked
 run(function()
 	local SilentAim
@@ -954,7 +955,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local AntiInvisible
 	local threads = {}
@@ -1057,7 +1058,7 @@ run(function()
 		Tooltip = 'Prevent people from using invisible animations'
 	})
 end)
-	
+
 run(function()
 	local AntiKillPlane
 	
@@ -1083,7 +1084,7 @@ run(function()
 		Tooltip = 'Add\'s a phyiscal part for the kill plane'
 	})
 end)
-	
+
 run(function()
 	local AntiRiotShield
 	
@@ -1113,7 +1114,7 @@ run(function()
 		Tooltip = 'Allow you to shoot through riot shields.'
 	})
 end)
-	
+
 run(function()
 	local AntiTaze
 	local old, connection
@@ -1161,7 +1162,7 @@ run(function()
 		Tooltip = 'Prevent you from getting tazed'
 	})
 end)
-	
+
 run(function()
 	local AutoArrest
 	local Range
@@ -1290,7 +1291,7 @@ run(function()
 		})
 	end
 end)
-	
+
 run(function()
 	local AutoReset
 	
@@ -1308,7 +1309,7 @@ run(function()
 		Tooltip = 'Automatically reset after becoming a criminal.'
 	})
 end)
-	
+
 run(function()
 	local AutoTaser
 	local Range
@@ -1369,7 +1370,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local GunModifications
 	local Spread
@@ -1441,7 +1442,7 @@ run(function()
 		Function = Modify
 	})
 end)
-	
+
 run(function()
 	local Killaura
 	local Targets
@@ -1695,7 +1696,7 @@ run(function()
 	})
 	Face = Killaura:CreateToggle({Name = 'Face target'})
 end)
-	
+
 run(function()
 	local NoJumpCooldown
 	local old
@@ -1736,7 +1737,7 @@ run(function()
 		Tooltip = 'Remove the cooldown from jumping'
 	})
 end)
-	
+
 run(function()
 	local VehicleFly
 	local Mode
@@ -1841,7 +1842,7 @@ run(function()
 		Darker = true
 	})
 end)
-	
+
 run(function()
 	local VehicleSpeed
 	local Speed
@@ -1884,7 +1885,7 @@ run(function()
 		Default = 140
 	})
 end)
-	
+
 run(function()
 	local VehicleWallbang
 	local modified = {}
@@ -1917,7 +1918,7 @@ run(function()
 		Tooltip = 'Allow you to shoot through vehicles.'
 	})
 end)
-	
+
 run(function()
 	local C4ESP
 	local FillColor
@@ -2013,7 +2014,7 @@ run(function()
 		Decimal = 10
 	})
 end)
-	
+
 run(function()
 	local CameraPhase
 	local old
@@ -2035,7 +2036,7 @@ run(function()
 		Tooltip = 'Allow the camera to phase through walls.'
 	})
 end)
-	
+
 run(function()
 	local KillNotifications
 	
@@ -2053,7 +2054,7 @@ run(function()
 		Tooltip = 'Sends a notification of who killed you.'
 	})
 end)
-	
+
 run(function()
 	local AutoDetonate
 	local SafeCheck
@@ -2139,7 +2140,7 @@ run(function()
 		Name = 'Safety Check'
 	})
 end)
-	
+
 run(function()
 	local AutoReload
 	local HotSwap
@@ -2232,7 +2233,7 @@ run(function()
 		Tooltip = 'Automatically swap weapons when reloading'
 	})
 end)
-	
+
 run(function()
 	local AutoToxic
 	local Toggles, Lists, said, dead = {}, {}, {}
@@ -2285,7 +2286,7 @@ run(function()
 		})
 	end
 end)
-	
+
 run(function()
 	local CheatDetector
 	local AddTarget
@@ -2371,7 +2372,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local Disabler
 	local old
@@ -2406,247 +2407,7 @@ run(function()
 		end
 	})
 end)
-	
-run(function()
-	local AutoArmor
-	local pickups = {}
-	
-	AutoArmor = vape.Categories.Inventory:CreateModule({
-		Name = 'AutoArmor',
-		Function = function(callback)
-			if callback then
-				pickups = workspace.Prison_ITEMS.clothes:GetChildren()
-	
-				AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildAdded:Connect(function(obj)
-					table.insert(pickups, obj)
-				end))
-	
-				AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildRemoved:Connect(function(obj)
-					local index = table.find(pickups, obj)
-					if index then
-						table.remove(pickups, index)
-					end
-				end))
-	
-				repeat
-					if entitylib.isAlive and entitylib.character.Humanoid.MaxHealth <= 100 then
-						local localpos = entitylib.character.RootPart.Position
-	
-						for _, v in pickups do
-							if (v:GetPivot().Position - localpos).Magnitude < 10 and gamepasses[v:GetAttribute('RequiredGamepass')] and AutoArmor.Enabled then
-								if v.Name == 'Light Vest' and gamepasses[lplr.Team == teams.Criminals and 'Mafia' or 'Riot Police'] then
-									continue
-								end
-	
-								replicatedStorage.Remotes.InteractWithItem:InvokeServer(v:FindFirstChildWhichIsA('BasePart'))
-							end
-						end
-					end
-	
-					task.wait(0.05)
-				until not AutoArmor.Enabled
-			else
-				table.clear(pickups)
-			end
-		end,
-		Tooltip = 'Automatically equip armor from the wall.'
-	})
-end)
-	
-run(function()
-	local AutoHeal
-	local healItems = {
-		Breakfast = true,
-		Lunch = true,
-		Dinner = true
-	}
-	
-	AutoHeal = vape.Categories.Inventory:CreateModule({
-		Name = 'AutoHeal',
-		Function = function(callback)
-			if callback then
-				repeat
-					local ent = entitylib.isAlive and entitylib.character
-					if ent and ent.Humanoid.Health <= 85 then
-						local healTool
-						local backpack = lplr:FindFirstChildWhichIsA('Backpack')
-						if backpack then
-							for _, v in backpack:GetChildren() do
-								if healItems[v.Name] then
-									healTool = v
-								end
-							end
-	
-							if healTool and (os.clock() - (healTool:GetAttribute('Client_LastConsumedAt') or 0)) >= 3 then
-								local equipped = ent.Character:FindFirstChildWhichIsA('Tool')
-								if equipped then
-									equipped.Parent = backpack
-								end
-	
-								healTool.Parent = ent.Character
-								healTool:SetAttribute('Quantity', healTool:GetAttribute('Quantity') - 1)
-								healTool:SetAttribute('Client_LastConsumedAt', os.clock())
-								notif('AutoHeal', 'Quantity: '..healTool:GetAttribute('Quantity'), 3)
-								replicatedStorage.Remotes.EatFood:FireServer()
-								healTool.Parent = backpack
-	
-								if equipped then
-									equipped.Parent = ent.Character
-								end
-							end
-						end
-					end
-	
-					task.wait(0.05)
-				until not AutoHeal.Enabled
-			end
-		end,
-		Tooltip = 'Automatically heal damage with consumables.'
-	})
-end)
-	
-run(function()
-	local AutoHotbar
-	local SortList = {}
-	
-	local function DoSorting()
-		table.sort(pl.SwitchTable, function(a, b)
-			return (SortList[a.Tool.name] or 999 + a.Slot) < (SortList[b.Tool.name] or 999 + b.Slot)
-		end)
-	
-		task.spawn(pl.SwitchUpdate)
-	end
-	
-	local function EntityAdded()
-		local backpack = lplr:FindFirstChildWhichIsA('Backpack')
-		if backpack then
-			AutoHotbar:Clean(backpack.ChildAdded:Connect(function(tool)
-				if SortList[tool.Name] then
-					task.defer(DoSorting)
-				end
-			end))
-		end
-	
-		DoSorting()
-	end
-	
-	AutoHotbar = vape.Categories.Inventory:CreateModule({
-		Name = 'AutoHotbar',
-		Function = function(callback)
-			if callback then
-				AutoHotbar:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
-				if entitylib.isAlive then
-					task.spawn(EntityAdded)
-				end
-			end
-		end,
-		Tooltip = 'Automatically sort hotbar entries'
-	})
-	AutoHotbar:CreateTextList({
-		Name = 'Sort Order',
-		Default = {'1/AK-47', '1/MP5', '1/M4A1', '2/Remington 870', '2/M700', '3/M9', '3/Revolver', '4/Taser'},
-		Function = function(list)
-			table.clear(SortList)
-			for _, entry in list do
-				local tab = entry:split('/')
-				local ind = tonumber(tab[1])
-				SortList[tab[2]] = ind or 999
-			end
-		end
-	})
-end)
-	
-run(function()
-	local AutoPickup
-	local Lists = {}
-	local items = {}
-	local sortedpickups = {Guard = {}, Prisoner = {}, Criminal = {}}
-	
-	local function AddPickup(obj)
-		if obj:IsA('Model') and obj.Name ~= 'Model' and obj:GetAttribute('ToolName') then
-			table.insert(items, {obj, obj.Name == 'TouchGiver'})
-		end
-	end
-	
-	AutoPickup = vape.Categories.Inventory:CreateModule({
-		Name = 'AutoPickup',
-		Function = function(callback)
-			if callback then
-				for _, obj in workspace:GetChildren() do
-					task.spawn(AddPickup, obj)
-				end
-	
-				for _, obj in workspace:QueryDescendants('Model > .TouchGiver') do
-					task.spawn(AddPickup, obj)
-				end
-	
-				AutoPickup:Clean(workspace.ChildAdded:Connect(AddPickup))
-				AutoPickup:Clean(workspace.ChildRemoved:Connect(function(obj)
-					for index, entry in items do
-						if entry[1] == obj then
-							table.remove(items, index)
-							break
-						end
-					end
-				end))
-	
-				repeat
-					if entitylib.isAlive then
-						local localpos = entitylib.character.RootPart.Position
-						local backpack = lplr:FindFirstChildWhichIsA('Backpack')
-	
-						if backpack then
-							for _, v in items do
-								if v[1].PrimaryPart and (v[1].PrimaryPart.Position - localpos).Magnitude < 12 then
-									local toolname = v[1]:GetAttribute('ToolName')
-									if v[2] then
-										local found = false
-										for _, entry in sortedpickups[lplr.Team == teams.Guards and 'Guard' or (lplr.Team == teams.Criminals and 'Criminal' or 'Prisoner')] do
-											if not backpack:FindFirstChild(entry) then
-												found = toolname ~= entry
-												break
-											end
-										end
-	
-										if found then
-											continue
-										end
-									end
-	
-									if not backpack:FindFirstChild(toolname) then
-										replicatedStorage.Remotes.GiverPressed:FireServer(v[1])
-									end
-								end
-							end
-						end
-					end
-	
-					task.wait(0.05)
-				until not AutoPickup.Enabled
-			else
-				table.clear(items)
-			end
-		end,
-		Tooltip = 'Automatically grab item pickups'
-	})
-	
-	for _, v in {'Prisoner', 'Guard', 'Criminal'} do
-		AutoPickup:CreateTextList({
-			Name = v..' Pickups',
-			Default = {v == 'Criminal' and '1/AK-47' or '1/MP5', '2/Remington 870'},
-			Placeholder = 'priority/item',
-			Function = function(list)
-				table.clear(sortedpickups[v])
-				for _, entry in list do
-					local tab = entry:split('/')
-					local ind = tonumber(tab[1])
-					sortedpickups[v][ind or 999] = tab[2]
-				end
-			end
-		})
-	end
-end)
-	
+
 run(function()
 	local BulletTracers
 	local Material
@@ -2763,7 +2524,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Crosshair
 	local Image
@@ -2790,7 +2551,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local DamageIndicator
 	local FontOption
@@ -2904,7 +2665,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local HitSound
 	local Value
@@ -2967,7 +2728,7 @@ run(function()
 		Name = 'Pitch Shift'
 	})
 end)
-	
+
 run(function()
 	local KillSound
 	local Value
@@ -3015,7 +2776,7 @@ run(function()
 		Name = 'Pitch Shift'
 	})
 end)
-	
+
 run(function()
 	local Viewmodel
 	local Depth
@@ -3179,4 +2940,3 @@ run(function()
 		Visible = false
 	})
 end)
-	

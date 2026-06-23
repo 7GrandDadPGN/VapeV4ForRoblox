@@ -854,6 +854,7 @@ run(function()
 	end)
 end)
 entitylib.start()
+
 run(function()
 	local AimAssist
 	local Targets
@@ -1031,7 +1032,7 @@ run(function()
 		Name = 'Show target info'
 	})
 end)
-	
+
 run(function()
 	local AutoClicker
 	local Mode
@@ -1074,7 +1075,7 @@ run(function()
 		DefaultMax = 12
 	})
 end)
-	
+
 run(function()
 	local Reach
 	local Targets
@@ -1163,7 +1164,7 @@ run(function()
 		Suffix = '%'
 	})
 end)
-	
+
 local mouseClicked
 run(function()
 	local SilentAim
@@ -1548,7 +1549,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local TriggerBot
 	local Targets
@@ -1632,7 +1633,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local AntiFall
 	local Method
@@ -1758,7 +1759,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Desync
 	local hook
@@ -1789,7 +1790,7 @@ run(function()
 		Tooltip = 'Prevent the server from replicating your current position to other players.'
 	})
 end)
-	
+
 local Fly
 local LongJump
 run(function()
@@ -2144,7 +2145,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local HighJump
 	local Mode
@@ -2220,7 +2221,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local HitBoxes
 	local Targets
@@ -2271,7 +2272,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Invisible
 	local oldcf
@@ -2347,7 +2348,7 @@ run(function()
 		Tooltip = 'Turns you invisible.'
 	})
 end)
-	
+
 run(function()
 	local Jesus
 	local params = RaycastParams.new()
@@ -2384,7 +2385,7 @@ run(function()
 		Tooltip = 'Allow you to stand on terrain water'
 	})
 end)
-	
+
 run(function()
 	local Killaura
 	local Targets
@@ -2668,7 +2669,7 @@ run(function()
 	})
 	Face = Killaura:CreateToggle({Name = 'Face target'})
 end)
-	
+
 run(function()
 	local Mode
 	local Value
@@ -2731,7 +2732,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local MouseTP
 	local Mode
@@ -2854,7 +2855,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Mode
 	local StudLimit = {Object = {}}
@@ -2999,7 +3000,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local Speed
 	local Mode
@@ -3168,7 +3169,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local Mode
 	local Value
@@ -3275,7 +3276,7 @@ run(function()
 		Darker = true
 	})
 end)
-	
+
 run(function()
 	local SpinBot
 	local Mode
@@ -3342,7 +3343,7 @@ run(function()
 	})
 	ZToggle = SpinBot:CreateToggle({Name = 'Spin Z'})
 end)
-	
+
 run(function()
 	local Swim
 	local terrain = cloneref(workspace:FindFirstChildWhichIsA('Terrain'))
@@ -3378,7 +3379,7 @@ run(function()
 		Tooltip = 'Lets you swim midair'
 	})
 end)
-	
+
 run(function()
 	local TargetStrafe
 	local Targets
@@ -3499,7 +3500,7 @@ run(function()
 		Suffix = '%'
 	})
 end)
-	
+
 run(function()
 	local Timer
 	local Value
@@ -3529,7 +3530,7 @@ run(function()
 		Decimal = 10
 	})
 end)
-	
+
 run(function()
 	local Arrows
 	local Targets
@@ -3669,7 +3670,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local Chams
 	local Targets
@@ -3882,7 +3883,7 @@ run(function()
 		Tooltip = 'Hides teammates & non targetable entities'
 	})
 end)
-	
+
 run(function()
 	local ESP
 	local Targets
@@ -4420,7 +4421,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local Fullbright
 	local Mode
@@ -4482,7 +4483,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local GamingChair = {Enabled = false}
 	local Color
@@ -4707,7 +4708,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Health
 	
@@ -4736,7 +4737,7 @@ run(function()
 		Tooltip = 'Displays your health in the center of your screen.'
 	})
 end)
-	
+
 run(function()
 	local NameTags
 	local Targets
@@ -5042,7 +5043,7 @@ run(function()
 	})
 	FontOption = NameTags:CreateFont({
 		Name = 'Font',
-		Blacklist = 'Arial',
+		Default = 'Arial',
 		Function = function()
 			if NameTags.Enabled then
 				NameTags:Toggle()
@@ -5161,7 +5162,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local PlayerModel
 	local Scale
@@ -5282,7 +5283,7 @@ run(function()
 	})
 	
 end)
-	
+
 run(function()
 	local Radar
 	local Targets
@@ -5456,7 +5457,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local Search
 	local List
@@ -5533,7 +5534,7 @@ run(function()
 		Decimal = 10
 	})
 end)
-	
+
 run(function()
 	local SessionInfo
 	local FontOption
@@ -5615,7 +5616,7 @@ run(function()
 	})
 	FontOption = SessionInfo:CreateFont({
 		Name = 'Font',
-		Blacklist = 'Arial'
+		Default = 'Arial'
 	})
 	Hide = SessionInfo:CreateTextList({
 		Name = 'Blacklist',
@@ -5733,7 +5734,7 @@ run(function()
 		return os.date('!%X', math.floor(os.clock() - value))
 	end)
 end)
-	
+
 run(function()
 	local Tracers
 	local Targets
@@ -5934,7 +5935,7 @@ run(function()
 		Tooltip = 'Hides teammates & non targetable entities'
 	})
 end)
-	
+
 run(function()
 	local Waypoints
 	local FontOption
@@ -5978,7 +5979,7 @@ run(function()
 	})
 	FontOption = Waypoints:CreateFont({
 		Name = 'Font',
-		Blacklist = 'Arial',
+		Default = 'Arial',
 		Function = function()
 			if Waypoints.Enabled then
 				Waypoints:Toggle()
@@ -6041,7 +6042,7 @@ run(function()
 	})
 	
 end)
-	
+
 run(function()
 	local AnimationPlayer
 	local IDBox
@@ -6135,7 +6136,7 @@ run(function()
 		Decimal = 10
 	})
 end)
-	
+
 run(function()
 	local AntiRagdoll
 	
@@ -6155,7 +6156,7 @@ run(function()
 		Tooltip = 'Prevents you from getting knocked down in a ragdoll state'
 	})
 end)
-	
+
 run(function()
 	local AutoRejoin
 	local Sort
@@ -6181,7 +6182,7 @@ run(function()
 		Tooltip = 'Descending - Prefers full servers\nAscending - Prefers empty servers'
 	})
 end)
-	
+
 run(function()
 	local Blink
 	local Type
@@ -6248,7 +6249,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local ChatSpammer
 	local Lines
@@ -6332,7 +6333,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Disabler
 	
@@ -6359,7 +6360,7 @@ run(function()
 		Tooltip = 'Disables GetPropertyChangedSignal detections for movement'
 	})
 end)
-	
+
 run(function()
 	vape.Categories.Utility:CreateModule({
 		Name = 'Panic',
@@ -6375,7 +6376,7 @@ run(function()
 		Tooltip = 'Disables all currently enabled modules'
 	})
 end)
-	
+
 run(function()
 	local Rejoin
 	
@@ -6396,7 +6397,7 @@ run(function()
 		Tooltip = 'Rejoins the server'
 	})
 end)
-	
+
 run(function()
 	local ServerHop
 	local Sort
@@ -6426,7 +6427,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local StaffDetector
 	local Mode
@@ -6568,7 +6569,7 @@ run(function()
 		Placeholder = 'Role Rank'
 	})
 end)
-	
+
 run(function()
 	local StateSpoofer
 	local State
@@ -6610,7 +6611,7 @@ run(function()
 		List = states
 	})
 end)
-	
+
 run(function()
 	local connections = {}
 	
@@ -6632,7 +6633,7 @@ run(function()
 		Tooltip = 'Lets you stay ingame without getting kicked'
 	})
 end)
-	
+
 run(function()
 	local Freecam
 	local Value
@@ -6704,7 +6705,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Gravity
 	local Mode
@@ -6765,7 +6766,7 @@ run(function()
 		Default = 192
 	})
 end)
-	
+
 run(function()
 	local Parkour
 	
@@ -6788,7 +6789,7 @@ run(function()
 		Tooltip = 'Automatically jumps after reaching the edge'
 	})
 end)
-	
+
 run(function()
 	local rayCheck = RaycastParams.new()
 	rayCheck.RespectCanCollide = true
@@ -6831,7 +6832,7 @@ run(function()
 		Tooltip = 'Prevents you from walking off the edge of parts'
 	})
 end)
-	
+
 run(function()
 	local Xray
 	local List
@@ -6871,7 +6872,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local MurderMystery
 	local murderer, sheriff, oldtargetable, oldgetcolor
@@ -6950,7 +6951,7 @@ run(function()
 		Tooltip = 'Automatic murder mystery teaming based on equipped roblox tools.'
 	})
 end)
-	
+
 run(function()
 	local Atmosphere
 	local Toggles = {}
@@ -7099,7 +7100,7 @@ run(function()
 		end
 	end
 end)
-	
+
 run(function()
 	local Breadcrumbs
 	local Texture
@@ -7207,7 +7208,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Cape
 	local Texture
@@ -7289,7 +7290,7 @@ run(function()
 		Name = 'Texture'
 	})
 end)
-	
+
 run(function()
 	local ChinaHat
 	local Material
@@ -7371,7 +7372,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Clock
 	local TwentyFourHour
@@ -7392,7 +7393,7 @@ run(function()
 	})
 	Clock:CreateFont({
 		Name = 'Font',
-		Blacklist = 'Gotham',
+		Default = 'Gotham',
 		Function = function(val)
 			label.FontFace = val
 		end
@@ -7422,7 +7423,7 @@ run(function()
 	corner.CornerRadius = UDim.new(0, 4)
 	corner.Parent = label
 end)
-	
+
 run(function()
 	local Disguise
 	local Mode
@@ -7604,7 +7605,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local FOV
 	local Value
@@ -7631,7 +7632,7 @@ run(function()
 		Max = 120
 	})
 end)
-	
+
 run(function()
 	--[[
 		Grabbing an accurate count of the current framerate
@@ -7667,7 +7668,7 @@ run(function()
 	})
 	FPS:CreateFont({
 		Name = 'Font',
-		Blacklist = 'Gotham',
+		Default = 'Gotham',
 		Function = function(val)
 			label.FontFace = val
 		end
@@ -7694,7 +7695,7 @@ run(function()
 	corner.CornerRadius = UDim.new(0, 4)
 	corner.Parent = label
 end)
-	
+
 run(function()
 	local Keystrokes
 	local Style
@@ -7815,7 +7816,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local Memory
 	local label
@@ -7835,7 +7836,7 @@ run(function()
 	})
 	Memory:CreateFont({
 		Name = 'Font',
-		Blacklist = 'Gotham',
+		Default = 'Gotham',
 		Function = function(val)
 			label.FontFace = val
 		end
@@ -7862,7 +7863,7 @@ run(function()
 	corner.CornerRadius = UDim.new(0, 4)
 	corner.Parent = label
 end)
-	
+
 run(function()
 	local Ping
 	local label
@@ -7882,7 +7883,7 @@ run(function()
 	})
 	Ping:CreateFont({
 		Name = 'Font',
-		Blacklist = 'Gotham',
+		Default = 'Gotham',
 		Function = function(val)
 			label.FontFace = val
 		end
@@ -7909,7 +7910,7 @@ run(function()
 	corner.CornerRadius = UDim.new(0, 4)
 	corner.Parent = label
 end)
-	
+
 run(function()
 	local SongBeats
 	local List
@@ -8041,7 +8042,7 @@ run(function()
 		Suffix = '%'
 	})
 end)
-	
+
 run(function()
 	local Speedmeter
 	local label
@@ -8063,7 +8064,7 @@ run(function()
 	})
 	Speedmeter:CreateFont({
 		Name = 'Font',
-		Blacklist = 'Gotham',
+		Default = 'Gotham',
 		Function = function(val)
 			label.FontFace = val
 		end
@@ -8090,7 +8091,7 @@ run(function()
 	corner.CornerRadius = UDim.new(0, 4)
 	corner.Parent = label
 end)
-	
+
 run(function()
 	local TimeChanger
 	local Value
@@ -8122,4 +8123,3 @@ run(function()
 	})
 	
 end)
-	

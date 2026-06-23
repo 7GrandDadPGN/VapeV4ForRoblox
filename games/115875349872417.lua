@@ -602,6 +602,7 @@ end
 for _, v in {'Reach', 'TriggerBot', 'AntiFall', 'Desync', 'HitBoxes', 'Invisible', 'Jesus', 'MouseTP', 'Spider', 'SpinBot', 'Swim', 'TargetStrafe', 'AntiRagdoll', 'Disabler', 'StateSpoofer', 'Parkour', 'SafeWalk', 'MurderMystery'} do
 	vape:Remove(v)
 end
+
 run(function()
 	local SilentAim
 	local Target
@@ -742,7 +743,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local AlwaysStun
 	local Spoof
@@ -851,7 +852,7 @@ run(function()
 		Suffix = 'sps'
 	})
 end)
-	
+
 run(function()
 	local AntiParry
 	local anims = {
@@ -888,7 +889,7 @@ run(function()
 		Tooltip = 'Ignores all targets with the parrying animation'
 	})
 end)
-	
+
 run(function()
 	local AutoParry
 	
@@ -936,7 +937,7 @@ run(function()
 		Tooltip = 'lol'
 	})
 end)
-	
+
 local Fly
 local LongJump
 run(function()
@@ -993,7 +994,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local HighJump
 	local Value
@@ -1023,7 +1024,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local Killaura
 	local Targets
@@ -1299,7 +1300,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local Mode
 	local Value
@@ -1351,7 +1352,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local Speed
 	local Value
@@ -1417,7 +1418,7 @@ run(function()
 		Visible = false
 	})
 end)
-	
+
 run(function()
 	local TargetStrafe
 	local Targets
@@ -1524,7 +1525,7 @@ run(function()
 		Suffix = '%'
 	})
 end)
-	
+
 run(function()
 	local AutoLeave
 	local Delay
@@ -1551,7 +1552,7 @@ run(function()
 		Suffix = 'seconds'
 	})
 end)
-	
+
 run(function()
 	local AutoQueue
 	local Mode
@@ -1596,7 +1597,7 @@ run(function()
 		Default = 'Duels1v1'
 	})
 end)
-	
+
 run(function()
 	local AutoToxic
 	local GG
@@ -1665,7 +1666,7 @@ run(function()
 		})
 	end
 end)
-	
+
 run(function()
 	local Gravity
 	local Value
@@ -1692,7 +1693,7 @@ run(function()
 		Default = 192
 	})
 end)
-	
+
 run(function()
 	local HitSound
 	local Value
@@ -1740,7 +1741,7 @@ run(function()
 		Name = 'Pitch Shift'
 	})
 end)
-	
+
 run(function()
 	local KillSound
 	local Value
@@ -1788,4 +1789,3 @@ run(function()
 		Name = 'Pitch Shift'
 	})
 end)
-	

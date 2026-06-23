@@ -61,6 +61,7 @@ for _, v in vape.Modules do
 		vape:Remove(i)
 	end
 end
+
 run(function()
 	local Sprint
 	local old
@@ -87,7 +88,7 @@ run(function()
 		Tooltip = 'Sets your sprinting to true.'
 	})
 end)
-	
+
 run(function()
 	local AutoGamble
 	
@@ -124,4 +125,3 @@ run(function()
 		Tooltip = 'Automatically opens lucky crates, piston inspired!'
 	})
 end)
-	

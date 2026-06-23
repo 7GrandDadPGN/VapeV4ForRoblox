@@ -38,6 +38,7 @@ end)
 for _, v in {'AimAssist', 'Reach', 'SilentAim', 'TriggerBot', 'AntiFall', 'HitBoxes', 'Invisible', 'Jesus', 'Killaura', 'TargetStrafe', 'AntiRagdoll', 'Disabler', 'MurderMystery', 'Freecam', 'ChatSpammer', 'SpinBot'} do
 	vape:Remove(v)
 end
+
 run(function()
 	local AutoAction
 	local Attack
@@ -138,7 +139,7 @@ run(function()
 		Tooltip = 'Automatically dodge incoming attack moves.'
 	})
 end)
-	
+
 run(function()
 	local MissCooldown
 	local index = game.PlaceId ~= 16483433878 and 20 or 53
@@ -155,7 +156,7 @@ run(function()
 		Tooltip = 'Remove the cooldown when missing a block or action.'
 	})
 end)
-	
+
 run(function()
 	local AntiHazard
 	local old
@@ -182,7 +183,7 @@ run(function()
 		Tooltip = 'Prevent you from taking damage in the overworld section.'
 	})
 end)
-	
+
 local Fly
 local LongJump
 run(function()
@@ -252,7 +253,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local FlyingAttack
 	
@@ -268,7 +269,7 @@ run(function()
 		Tooltip = 'Allow you to attack flying enemies with onground attacks.'
 	})
 end)
-	
+
 run(function()
 	local Value
 	local AutoDisable
@@ -319,7 +320,7 @@ run(function()
 		Default = true
 	})
 end)
-	
+
 run(function()
 	local PickupTP
 	
@@ -358,7 +359,7 @@ run(function()
 		Tooltip = 'Teleport to any nearby active pickups.'
 	})
 end)
-	
+
 run(function()
 	local Speed
 	local Value
@@ -394,7 +395,7 @@ run(function()
 		end
 	})
 end)
-	
+
 run(function()
 	local SpeedSpin
 	local Value
@@ -428,7 +429,7 @@ run(function()
 		Default = 4
 	})
 end)
-	
+
 run(function()
 	local PickupTracers
 	local Color
@@ -557,7 +558,7 @@ run(function()
 		Tooltip = 'Hides non BUX pickups'
 	})
 end)
-	
+
 run(function()
 	local AutoCamel
 	
@@ -585,7 +586,7 @@ run(function()
 		Tooltip = 'Automatically buy camels'
 	})
 end)
-	
+
 run(function()
 	local AutoCloudGrind
 	
@@ -620,7 +621,7 @@ run(function()
 		Tooltip = 'Automatically grind for SFX Cards from Cloudie (floor 51)'
 	})
 end)
-	
+
 run(function()
 	local AutoFish
 	local KeepList
@@ -666,7 +667,7 @@ run(function()
 		Placeholder = 'item'
 	})
 end)
-	
+
 run(function()
 	local AutoPaint
 	
@@ -710,4 +711,3 @@ run(function()
 		Tooltip = 'Automatically paint canvas photos'
 	})
 end)
-	

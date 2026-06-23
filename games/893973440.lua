@@ -150,6 +150,7 @@ end)
 for _, v in {'AimAssist', 'Reach', 'SilentAim', 'TriggerBot', 'AntiFall', 'Invisible', 'Jesus', 'Killaura', 'AntiRagdoll', 'Disabler', 'MurderMystery'} do
 	vape:Remove(v)
 end
+
 run(function()
 	local NoSlowdown
 	local old
@@ -178,7 +179,7 @@ run(function()
 		Tooltip = 'Prevent slowing down when jumping as the beast'
 	})
 end)
-	
+
 run(function()
 	local PhaseHammer
 	local old
@@ -232,7 +233,7 @@ run(function()
 	})
 	
 end)
-	
+
 run(function()
 	local RestrainBeast
 	
@@ -255,7 +256,7 @@ run(function()
 		Tooltip = 'Force the beast to be unable to hook onto survivors'
 	})
 end)
-	
+
 run(function()
 	local SlowBeast
 	
@@ -278,7 +279,7 @@ run(function()
 		Tooltip = 'Force the beast to be slowed'
 	})
 end)
-	
+
 run(function()
 	local SpamBeast
 	
@@ -301,7 +302,7 @@ run(function()
 		Tooltip = 'Force the beast to use abilities'
 	})
 end)
-	
+
 run(function()
 	local ComputerESP
 	local FillColor
@@ -427,7 +428,7 @@ run(function()
 		Decimal = 10
 	})
 end)
-	
+
 run(function()
 	local AutoComputer
 	local connection, old
@@ -467,4 +468,3 @@ run(function()
 		Tooltip = 'Automatically complete the computer skill check.'
 	})
 end)
-	
