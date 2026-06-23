@@ -311,7 +311,7 @@ Targets = NameTags:CreateTargets({
 })
 FontOption = NameTags:CreateFont({
 	Name = 'Font',
-	Default = 'Arial',
+	Blacklist = 'Arial',
 	Function = function()
 		if NameTags.Enabled then
 			NameTags:Toggle()

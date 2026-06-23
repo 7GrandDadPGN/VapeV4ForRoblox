@@ -15,7 +15,7 @@ ReachDisplay = vape.Legit:CreateModule({
 })
 ReachDisplay:CreateFont({
 	Name = 'Font',
-	Default = 'Gotham',
+	Blacklist = 'Gotham',
 	Function = function(val)
 		label.FontFace = val
 	end

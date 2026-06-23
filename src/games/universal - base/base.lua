@@ -579,6 +579,72 @@ run(function()
 	end
 
 	function whitelist:announce(text)
+		local success, sendToast = pcall(function()
+			local getAppIdHook = getrenv().require(game:GetService('CorePackages').Workspace.Packages._Workspace.AppCommonLib.AppCommonLib.Release.getNumericalApplicationId)
+			local messageBusHook = getrenv().require(game:GetService('CorePackages').Workspace.Packages._Workspace.MessageBus.MessageBus.MessageBus)
+			messageBusHook.getMessageId = function() end
+			hookfunction(getAppIdHook, function()
+				return 0
+			end)
+
+			local localizationService = game:GetService('LocalizationService')
+			local root = game:GetService('CorePackages').Workspace.Packages._Index.NotificationModalsManager.NotificationModalsManager
+			local reactBlox = getrenv().require(root.ReactRoblox)
+			local react = getrenv().require(root.React)
+			local UIBlox = getrenv().require(root.UIBlox)
+			UIBlox.init(getrenv().require(game:GetService('CorePackages').Packages._Index.UIBlox.UIBlox.UIBloxDefaultConfig))
+			local toastDialog = UIBlox.App.Dialog.Toast
+			local localization = getrenv().require(root.InExperienceLocales).Localization
+			local localProvider = getrenv().require(root.Localization).LocalizationProvider
+			local defaultTheme = getrenv().require(root.Style).StyleProviderWithDefaultTheme
+			local renderGui = nil
+
+			local function createToast(content)
+				return react.createElement(localProvider, {
+					localization = localization.new(localizationService.RobloxLocaleId)
+				}, {
+					StyleProvider = react.createElement(defaultTheme, {}, {
+						ToastWrapper = react.createElement('ScreenGui', {
+							IgnoreGuiInset = true,
+							ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+							ResetOnSpawn = false,
+							DisplayOrder = 12
+						}, {
+							Toast = react.createElement(toastDialog, {
+								duration = 20,
+								toastContent = content
+							})
+						})
+					})
+				})
+			end
+
+			return function(content)
+				if not renderGui then
+					local folder = Instance.new('Folder')
+					folder.Name = 'UIBloxToast'
+					folder.Parent = game:GetService('CoreGui')
+					folder.ChildRemoved:Once(function()
+						folder:Destroy()
+						renderGui = nil
+					end)
+
+					renderGui = reactBlox.createRoot(folder)
+				end
+
+				renderGui:render(react.createElement(createToast, content))
+			end
+		end)
+
+		if success then
+			return sendToast({
+				toastTitle = text,
+				iconImage = getcustomasset('newvape/assets/new/vape.png'),
+				swipeUpDismiss = true,
+				onActivated = function() end
+			})
+		end
+
 		local container = Instance.new('TextButton')
 		container.Size = UDim2.new(1, -24, 0, 60)
 		container.Position = UDim2.new(0.5, 0, 0, -60)
