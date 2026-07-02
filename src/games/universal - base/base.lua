@@ -525,10 +525,21 @@ run(function()
 			if getcallbackvalue and restorefunction and hookfunction then
 				local old
 				task.spawn(function()
+					vape:Clean(function()
+						if old then
+							restorefunction(old)
+							old = nil
+						end
+					end)
+
 					repeat
 						local current = getcallbackvalue(textChatService, 'OnIncomingMessage')
 
 						if old ~= current then
+							if old then
+								restorefunction(old)
+							end
+
 							local hook
 							hook = hookfunction(current, function(...)
 								local msg = ...
@@ -553,10 +564,6 @@ run(function()
 
 						task.wait(0.1)
 					until vape.Loaded == nil
-
-					if old then
-						restorefunction(old)
-					end
 				end)
 			end
 		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then

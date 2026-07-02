@@ -190,14 +190,14 @@ run(function()
 		return returned
 	end
 
-	entitylib.getUpdateConnections = function(ent)
-		local healthval = ent.Player:FindFirstChild('health', true)
-		local maxhealthval = ent.Player:FindFirstChild('health_max', true)
+	entitylib.getUpdateConnections = function(entity)
+		local healthval = entity.Player:FindFirstChild('health', true)
+		local maxhealthval = entity.Player:FindFirstChild('health_max', true)
 		local connections = {
 			{
 				Connect = function()
-					ent.Friend = ent.Player and isFriend(ent.Player) or nil
-					ent.Target = ent.Player and isTarget(ent.Player) or nil
+					entity.Friend = entity.Player and isFriend(entity.Player) or nil
+					entity.Target = entity.Player and isTarget(entity.Player) or nil
 					return {Disconnect = function() end}
 				end
 			}
@@ -271,13 +271,13 @@ run(function()
 	end
 
 	if game.PlaceId == 126691165749976 then
-		entitylib.targetCheck = function(ent)
-			if ent.NPC then return true end
-			if isFriend(ent.Player) then return false end
-			if not select(2, whitelist:get(ent.Player)) then return false end
+		entitylib.targetCheck = function(entity)
+			if entity.NPC then return true end
+			if isFriend(entity.Player) then return false end
+			if not select(2, whitelist:get(entity.Player)) then return false end
 			if vape.Categories.Main.Options['Teams by server'].Enabled then
 				if not redline.Teams[tostring(lplr.UserId)] then return true end
-				return redline.Teams[tostring(ent.Player.UserId)] ~= redline.Teams[tostring(lplr.UserId)]
+				return redline.Teams[tostring(entity.Player.UserId)] ~= redline.Teams[tostring(lplr.UserId)]
 			end
 
 			return true
@@ -288,15 +288,17 @@ run(function()
 
 			if plr and entitylib.Running then
 				if plr == lplr then
-					for _, v in entitylib.List do
-						if v.Targetable ~= entitylib.targetCheck(v) then
-							entitylib.refreshEntity(v.Character, v.Player)
+					local cloned = table.clone(entitylib.List)
+					for _, entity in cloned do
+						if entity.Targetable ~= entitylib.targetCheck(entity) then
+							entitylib.refreshEntity(entity.Character, entity.Player)
 						end
 					end
+					table.clear(cloned)
 				else
-					local ent = entitylib.getEntity(plr)
-					if ent and ent.Targetable ~= entitylib.targetCheck(ent) then
-						entitylib.refreshEntity(ent.Character, plr)
+					local entity = entitylib.getEntity(plr)
+					if entity and entity.Targetable ~= entitylib.targetCheck(entity) then
+						entitylib.refreshEntity(entity.Character, plr)
 					end
 				end
 			end
