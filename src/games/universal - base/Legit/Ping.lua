@@ -6,7 +6,7 @@ Ping = vape.Legit:CreateModule({
 	Function = function(callback)
 		if callback then
 			repeat
-				label.Text = math.floor(tonumber(game:GetService('Stats'):FindFirstChild('PerformanceStats').Ping:GetValue()))..' ms'
+				label.Text = math.floor(tonumber(cloneref(game:GetService('Stats')):FindFirstChild('PerformanceStats').Ping:GetValue()))..' ms'
 				task.wait(1)
 			until not Ping.Enabled
 		end
