@@ -12,10 +12,10 @@ ChatSpammer = vape.Categories.Utility:CreateModule({
 		if callback then
 			if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 				if Hide.Enabled and coreGui:FindFirstChild('ExperienceChat') then
-					ChatSpammer:Clean(coreGui.ExperienceChat:FindFirstChild('RCTScrollContentView', true).ChildAdded:Connect(function(msg)
-						if msg.Name:sub(1, 2) == '0-' and msg.ContentText == 'You must wait before sending another message.' then
-							msg.Visible = false
-						end
+					ChatSpammer:Clean(coreGui.ExperienceChat.appLayout.chatWindow.contentFrame.scrollingView.bottomLockedScrollView.scrollView.ChildAdded:Connect(function(msg)
+					    if msg.Name:sub(1, 2) == '0-' and msg.TextMessage.BodyText.Text == '<font color="#d4d4d4">You must wait before sending another message.</font>' then
+					        msg.Visible = false
+					    end
 					end))
 				end
 			elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
