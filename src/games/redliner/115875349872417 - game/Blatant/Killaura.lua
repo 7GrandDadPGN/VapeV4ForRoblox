@@ -58,23 +58,32 @@ local function shouldAttack(ent)
 		end
 	end
 
-	return true
+	local origin = CFrame.lookAt(entitylib.character.RootPart.Position + Vector3.new(0, 2, 0), ent.RootPart.Position)
+	for _, box in redline_boxes do
+		if #castHitbox(box.data, origin) > 0 then
+			return true
+		end
+	end
+
+	return false
 end
 
 Killaura = vape.Categories.Blatant:CreateModule({
 	Name = 'Killaura',
 	Function = function(callback)
 		if callback then
-			HitboxHook:Add('Killaura', function(results)
-				if type(results[1]) == 'table' then
+			SendHook:Add('Killaura', function(args)
+				local self = args[1]
+				if self and rawget(self, 'Name') == redline.AttackPacket and typeof(args[5]) == 'Vector3' then
 					local ent = getTarget()
 
 					if ent then
-						Overlay.FilterDescendantsInstances = collectionService:GetTagged('Hurtbox')
-						local parts = workspace:GetPartBoundsInRadius(ent.RootPart.Position, 6, Overlay)
-
-						for _, v in parts do
-							table.insert(results[1], v)
+						local origin = CFrame.lookAt(entitylib.character.RootPart.Position + Vector3.new(0, 2, 0), ent.RootPart.Position)
+						for _, box in redline_boxes do
+							if #castHitbox(box.data, origin) > 0 then
+								args[5] = origin.LookVector
+								break
+							end
 						end
 					end
 				end
@@ -116,7 +125,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 				task.wait(0.05)
 			until not Killaura.Enabled
 		else
-			HitboxHook:Remove('Killaura')
+			SendHook:Remove('Killaura')
 
 			for _, v in Boxes do
 				v.Adornee = nil

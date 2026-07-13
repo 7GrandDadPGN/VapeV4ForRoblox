@@ -60,7 +60,43 @@ local drawingactor = loadstring(downloadFile('newvape/libraries/drawing.lua'), '
 local redline = {Teams = {}}
 local starttime = os.clock()
 local TargetStrafeVector
-local latestHash = '58d1d478b3ef55b0753de656b072893cc59c899a05ea55662ae4625da6be1892e259f9c6012db937d8f7450531cc162e'
+local latestHash = 'c401462bc7f7f49e53b4a8da2de5b57bc2d7e14df1b773e5ccd1bcddb28db9c843b8902d2c93738a2f042e533d3d4971'
+local redline_boxes = {
+	{
+		boxtype = 'redliner_melee',
+		data = {
+			size = Vector3.new(17.75, 14, 22),
+			offset = CFrame.new(0, 0, -11)
+		}
+	},
+	{
+		boxtype = 'redliner_charged_melee',
+		data = {
+			size = Vector3.new(39, 14, 35),
+			offset = CFrame.new(0, -0.5, -9)
+		}
+	}
+}
+
+local function castHitbox(data, origin)
+	local hit_hurtboxes = {}
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+	params.RespectCanCollide = false
+	params.FilterDescendantsInstances = collectionService:GetTagged('Hurtbox')
+
+	for _, v in params.FilterDescendantsInstances do
+		v.Transparency = 0
+	end
+
+	for _, hit in workspace:GetPartBoundsInBox(origin * data.offset, data.size, params) do
+		if hit:FindFirstAncestorWhichIsA('Model') ~= lplr.Character then
+			table.insert(hit_hurtboxes, hit)
+		end
+	end
+
+	return hit_hurtboxes
+end
 
 local function searchForPacket(func, unreliable)
 	for _, v in debug.getconstants(func) do
@@ -333,6 +369,23 @@ entitylib.start()
 
 run(function()
 	local root
+
+	for i = 1, 3 do
+		local doBreak
+		for _, v in getloadedmodules() do
+			if v:GetFullName() == 'Start.Client.ClientRoot' then
+				doBreak = true
+				break
+			end
+		end
+
+		if doBreak then
+			break
+		end
+
+		task.wait(0.5)
+	end
+
 	for _, v in getloadedmodules() do
 		if v:GetFullName() == 'Start.Client.ClientRoot' then
 			if getscripthash(v) ~= latestHash then
@@ -363,11 +416,9 @@ run(function()
 
 	local classList = rawget(root, 'Classes') or {}
 	redline = setmetatable({
-		AttackBox = require(replicatedStorage.Assets.ModuleScripts.Attack),
-		AttackCast = require(replicatedStorage.Assets.ModuleScripts.Attack.Hitbox),
 		CEnum = require(replicatedStorage.Assets.ModuleScripts.CEnum),
 		Packets = require(replicatedStorage.Assets.ModuleScripts.Packets),
-		Packet = debug.getupvalue(getrawmetatable(require(replicatedStorage.Assets.ModuleScripts.Packets.Packet)).__call, 2),
+		Packet = debug.getupvalue(getrawmetatable(require(replicatedStorage.Assets.ModuleScripts.Packets.Packet)).__call, 3),
 		Util = require(replicatedStorage.Assets.SharedClasses.Util),
 		Teams = redline.Teams
 	}, {
@@ -380,7 +431,7 @@ run(function()
 		Constants = {
 			ShootFunction = function(constants, func, inst)
 				for _, const in constants do
-					if const == 'ViewportPointToRay' then
+					if const == 'ViewportPointToRay' and debug.info(func, 'n'):sub(1, 1) == '_' then
 						redline.ShootFunction = require(inst)[debug.info(func, 'n')]
 						break
 					end
@@ -388,7 +439,7 @@ run(function()
 			end,
 			ActionController = function(constants, func, inst)
 				for _, const in constants do
-					if const == 'getAction FAILED FOR : ' then
+					if const == 'getAction FAILED FOR : ' and debug.info(func, 'n'):sub(1, 1) == '_' then
 						redline.ActionController = inst.Name
 						redline.ActionFunction = require(inst)[debug.info(func, 'n')]
 						break
@@ -399,30 +450,6 @@ run(function()
 				for _, const in constants do
 					if const == 'INVALID crosshair_name : ' then
 						redline.IndicatorController = inst.Name
-						break
-					end
-				end
-			end,
-			ReplicateFunction = function(constants, func, inst)
-				for _, const in constants do
-					if const == 'Message cannot be empty' then
-						redline.ReplicateFunction = require(inst)[debug.info(func, 'n')]
-						break
-					end
-				end
-			end,
-			MoveController = function(constants, func, inst)
-				for _, const in constants do
-					if const == 'getMoveDirection' then
-						local found = {}
-						for _, const2 in constants do
-							if tostring(const2):find('_') then
-								table.insert(found, const2)
-							end
-						end
-
-						redline.MoveController = found[1]
-						redline.VelocityName = found[2]
 						break
 					end
 				end
@@ -447,7 +474,7 @@ run(function()
 			AttackPacket = function(protos, func, inst)
 				for _, proto in protos do
 					if debug.info(proto, 'n') == 'redlinerMelee' then
-						redline.AttackPacket = searchForPacket(debug.getproto(debug.getproto(proto, 1), 1))
+						redline.AttackPacket = searchForPacket(proto)
 						if redline.AttackPacket then
 							redline.AttackPacket = redline.Packets[redline.AttackPacket].Name
 						end
@@ -460,7 +487,7 @@ run(function()
 				for _, proto in protos do
 					if debug.info(proto, 'n') == 'removeShotIndicator' then
 						for _, const in debug.getconstants(proto) do
-							if tostring(const):find('_') then
+							if tostring(const):sub(1, 1) == '_' then
 								redline.IndicatorTable = const
 								break
 							end
@@ -553,35 +580,49 @@ run(function()
 	end))
 end)
 
-local HitboxHook = {Hooks = {}}
+local SendHook = {Hooks = {}}
 do
-	local oldscan
+	local oldsend
 
 	local function Hook(...)
-		local results = table.pack(oldscan(...))
-		for _, v in HitboxHook.Hooks do
-			if v[2](results) then
-				return {}
+		local args = table.pack(...)
+		for _, v in SendHook.Hooks do
+			if v[2](args) then
+				return
 			end
 		end
 
-		return unpack(results, 1, results.n)
+		return oldsend(unpack(args, 1, args.n))
 	end
 
-	function HitboxHook:Add(key, val, priority)
-		table.insert(self.Hooks, {key, val, priority or 0})
-		table.sort(self.Hooks, function(a, b)
-			return a[3] < b[3]
-		end)
-
-		if not oldscan then
-			oldscan = hookfunction(redline.AttackBox.castOnce, function(...)
+	function SendHook:DoHook()
+		if not oldsend and next(self.Hooks) then
+			oldsend = hookfunction(redline.Packet.Fire, function(...)
 				return Hook(...)
 			end)
 		end
 	end
 
-	function HitboxHook:Remove(key)
+	function SendHook:Add(key, val, priority)
+		table.insert(self.Hooks, {key, val, priority or 0})
+		table.sort(self.Hooks, function(a, b)
+			return a[3] < b[3]
+		end)
+
+		if not oldsend then
+			if (os.clock() - starttime) < 2 then
+				task.defer(function()
+					task.delay(2, function()
+						self:DoHook()
+					end)
+				end)
+			else
+				self:DoHook()
+			end
+		end
+	end
+
+	function SendHook:Remove(key)
 		for i, v in self.Hooks do
 			if v[1] == key then
 				table.remove(self.Hooks, i)
@@ -589,14 +630,14 @@ do
 			end
 		end
 
-		if oldscan and not next(self.Hooks) then
+		if oldsend and not next(self.Hooks) then
 			if restorefunction then
-				restorefunction(redline.AttackBox.castOnce)
+				restorefunction(redline.Packet.Fire)
 			else
-				hookfunction(redline.AttackBox.castOnce, oldscan)
+				hookfunction(redline.Packet.Fire, oldsend)
 			end
 
-			oldscan = nil
+			oldsend = nil
 		end
 	end
 end
