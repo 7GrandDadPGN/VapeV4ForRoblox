@@ -5,7 +5,7 @@ AutoQueue = vape.Categories.Utility:CreateModule({
 	Function = function(callback)
 		if callback then
 			AutoQueue:Clean(vapeEvents.MatchEnded.Event:Connect(function(_, obj)
-				task.delay(2, function()
+				task.defer(function()
 					firesignal(obj.Main.requeuebutton.Activated)
 				end)
 			end))
