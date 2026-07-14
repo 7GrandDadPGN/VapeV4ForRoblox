@@ -78,6 +78,27 @@ local redline_boxes = {
 	}
 }
 
+local function addVelocity(velo)
+	if redline[redline.MoveController] and typeof(redline[redline.MoveController][redline.LaunchpadFunction]) == 'function' then
+		local pad = Instance.new('Model')
+		local origin = Instance.new('Part')
+		origin.Name = 'Origin'
+		origin.CFrame = CFrame.new(100, 100, 100)
+		origin.Parent = pad
+		local goal = Instance.new('Part')
+		goal.Name = 'LaunchGoal'
+		goal.CFrame = CFrame.new(100, 100, 100) + (velo.Unit == velo.Unit and velo.Unit or Vector3.zero)
+		goal.Parent = pad
+		redline[redline.MoveController][redline.LaunchpadFunction](redline[redline.MoveController], pad, {
+			base_strength = velo.Magnitude,
+			max_strength = velo.Magnitude
+		})
+
+		pad:Destroy()
+		pad:ClearAllChildren()
+	end
+end
+
 local function castHitbox(data, origin)
 	local hit_hurtboxes = {}
 	local params = OverlapParams.new()
@@ -226,36 +247,13 @@ run(function()
 		return returned
 	end
 
-	entitylib.getUpdateConnections = function(entity)
-		local healthval = entity.Player:FindFirstChild('health', true)
-		local maxhealthval = entity.Player:FindFirstChild('health_max', true)
-		local connections = {
-			{
-				Connect = function()
-					entity.Friend = entity.Player and isFriend(entity.Player) or nil
-					entity.Target = entity.Player and isTarget(entity.Player) or nil
-					return {Disconnect = function() end}
-				end
-			}
-		}
-
-		if healthval and maxhealthval and healthval:IsA('IntValue') and maxhealthval:IsA('IntValue') then
-			table.insert(connections, healthval:GetPropertyChangedSignal('Value'))
-			table.insert(connections, maxhealthval:GetPropertyChangedSignal('Value'))
-		end
-
-		return connections
-	end
-
 	entitylib.addEntity = function(char, plr, teamfunc, spawntime)
 		if not char then return end
 		entitylib.EntityThreads[char] = task.spawn(function()
 			local hum = waitForChildOfType(char, 'Humanoid', 10)
 			local humrootpart = hum and waitForChildOfType(hum, 'RootPart', workspace.StreamingEnabled and 9e9 or 10, true)
 			local head = char:WaitForChild('Head', 10) or humrootpart
-			local healthval = plr:FindFirstChild('health', true)
-			local maxhealthval = plr:FindFirstChild('health_max', true)
-			local check = healthval and maxhealthval and healthval:IsA('IntValue') and maxhealthval:IsA('IntValue')
+			local hitbox = char:FindFirstChild('Head_Hurtbox', true)
 
 			if hum and humrootpart then
 				local entity = {
@@ -263,6 +261,7 @@ run(function()
 					Character = char,
 					Health = hum.Health,
 					Head = head,
+					Hitbox = hitbox or humrootpart,
 					Humanoid = hum,
 					HumanoidRootPart = humrootpart,
 					HipHeight = hum.HipHeight + (humrootpart.Size.Y / 2) + (hum.RigType == Enum.HumanoidRigType.R6 and 2 or 0),
@@ -281,18 +280,8 @@ run(function()
 				else
 					entity.Targetable = entitylib.targetCheck(entity)
 
-					if check then
-						entity.Health = healthval.Value
-						entity.MaxHealth = maxhealthval.Value
-					end
-
 					for _, v in entitylib.getUpdateConnections(entity) do
 						table.insert(entity.Connections, v:Connect(function()
-							if check then
-								entity.Health = healthval.Value
-								entity.MaxHealth = maxhealthval.Value
-							end
-
 							entitylib.Events.EntityUpdated:Fire(entity)
 						end))
 					end
@@ -468,6 +457,24 @@ run(function()
 						break
 					end
 				end
+			end,
+			LaunchpadFunction = function(constants, func, inst)
+				local found
+				for _, const in constants do
+					if const == -0.007 then
+						found = true
+					elseif const == 'augment' and found then
+						local dumpList = {}
+						for _, const in constants do
+							if tostring(const):sub(1, 2) == '_x' then
+								table.insert(dumpList, const)
+							end
+						end
+
+						redline.LaunchpadFunction = dumpList[9]
+						break
+					end
+				end
 			end
 		},
 		Protos = {
@@ -493,6 +500,33 @@ run(function()
 							end
 						end
 
+						break
+					end
+				end
+			end,
+			DashVariables = function(protos, func, inst)
+				for _, proto in protos do
+					local doBreak = false
+					local found = false
+					for _, const in debug.getconstants(proto) do
+						if const == 'onDeath' then
+							found = true
+						elseif const == 'Fire' and found then
+							doBreak = true
+						end
+					end
+
+					if doBreak then
+						local dumpList = {}
+						for _, const in debug.getconstants(proto) do
+							if tostring(const):sub(1, 2) == '_x' then
+								table.insert(dumpList, const)
+							end
+						end
+
+						redline.MoveController = dumpList[3]
+						redline.DashRecoverVariable = dumpList[4]
+						redline.DashVariable = dumpList[5]
 						break
 					end
 				end

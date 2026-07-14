@@ -1,7 +1,4 @@
 local Reach
-local Spoof
-local Add
-local oldsend, oldrepl, oldbuf
 
 Reach = vape.Categories.Combat:CreateModule({
 	Name = 'Reach',

@@ -78,7 +78,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 					local ent = getTarget()
 
 					if ent then
-						local origin = CFrame.lookAt(entitylib.character.RootPart.Position + Vector3.new(0, 2, 0), ent.RootPart.Position)
+						local origin = CFrame.lookAt(entitylib.character.RootPart.Position + Vector3.new(0, 2, 0), ent.Hitbox.Position)
 						for _, box in redline_boxes do
 							if #castHitbox(box.data, origin) > 0 then
 								args[5] = origin.LookVector
@@ -122,7 +122,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 					v.Parent = attacked[i] and gameCamera or nil
 				end
 
-				task.wait(0.05)
+				task.wait(0.016)
 			until not Killaura.Enabled
 		else
 			SendHook:Remove('Killaura')
