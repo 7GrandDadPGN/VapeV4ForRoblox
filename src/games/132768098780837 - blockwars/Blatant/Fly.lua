@@ -5,7 +5,7 @@ run(function()
 	local Platform = Instance.new('Part')
 	Platform.CanQuery = false
 	Platform.Anchored = true
-	Platform.Size = Vector3.one
+	Platform.Size = Vector3.new(4, 1, 4)
 	Platform.Transparency = 1
 	Platform.Parent = nil
 
