@@ -6,6 +6,24 @@ local tent, lent
 local thealth, ttimer = 0, 0
 local indi, indipart, indithread
 
+-- completely skidded from RIVALS
+local function renderStepForLoop(startVal, endVal, increment, callback)
+	while true do
+		if endVal >= startVal then
+			if callback(startVal) then
+				return
+			else
+				local diff = tick()
+				runService.RenderStepped:Wait()
+				startVal = startVal + increment * (tick() - diff) * 60
+			end
+		else
+			callback(endVal)
+			return
+		end
+	end
+end
+
 local function createIndicator(damage, pos)
 	if indithread then
 		task.cancel(indithread)
@@ -21,13 +39,15 @@ local function createIndicator(damage, pos)
 		indipart.Parent = workspace
 		local billboard = Instance.new('BillboardGui')
 		billboard.Adornee = indipart
-		billboard.Size = UDim2.fromOffset(30, 30)
+		billboard.Size = UDim2.new(15, 250, 15, 250)
 		billboard.AlwaysOnTop = true
 		billboard.Parent = indipart
 		indi = Instance.new('TextLabel')
 		indi.BackgroundTransparency = 1
 		indi.TextStrokeTransparency = 0
-		indi.Size = UDim2.fromScale(1, 1)
+		indi.Size = UDim2.fromScale(1, 0.075)
+		indi.Position = UDim2.fromScale(0.5, 0.5)
+		indi.AnchorPoint = Vector2.new(0.5, 0.5)
 		indi.Text = math.ceil(damage)
 		indi.TextColor3 = Color3.fromHSV(ColorV.Hue, ColorV.Sat, ColorV.Value)
 		indi.TextScaled = true
@@ -35,7 +55,24 @@ local function createIndicator(damage, pos)
 		indi.Parent = billboard
 	end
 
-	indithread = task.delay(1, function()
+	if indithread then
+		task.cancel(indithread)
+		indithread = nil
+	end
+
+	-- completely skidded from RIVALS
+	indithread = task.spawn(function()
+		local sign = math.sign(math.random() - 0.5)
+		renderStepForLoop(0, 100, 3, function(value)
+			local percent = value / 100
+			local val0 = tweenService:GetValue(percent, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+			local val1 = tweenService:GetValue(percent, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+			local scale = 1 - 0.5 * val1
+			indi.Position = UDim2.new(0.5 + 0.125 * val0 * sign, 0, 0.5 + 0.125 * val1, 0)
+			indi.Size = UDim2.new(1 * scale, 0, 0.075 * scale * (v197 and 1 or 0.75), 0)
+			indi.Rotation = percent ^ 4 * 260 * sign
+		end)
+
 		indipart:Destroy()
 		indipart = nil
 		indithread = nil

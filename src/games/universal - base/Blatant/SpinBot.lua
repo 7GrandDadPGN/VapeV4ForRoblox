@@ -48,7 +48,8 @@ Mode = SpinBot:CreateDropdown({
 			AngularVelocity = nil
 		end
 		AngularVelocity = val == 'BodyMover' and Instance.new('BodyAngularVelocity') or nil
-	end
+	end,
+	Tooltip = 'CFrame - Directly adjusts your characters angle\nRotVelocity - Sets the rotation velocity so that you spin\nBodyMover - Uses body movers to edit your rotation velocity'
 })
 Value = SpinBot:CreateSlider({
 	Name = 'Speed',

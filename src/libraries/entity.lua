@@ -342,8 +342,9 @@ entitylib.removeEntity = function(char, isLocal)
 end
 
 entitylib.refreshEntity = function(char, plr, spawntime)
+	local entity = entitylib.getEntity(plr)
 	entitylib.removeEntity(char)
-	entitylib.addEntity(char, plr, nil, spawntime)
+	entitylib.addEntity(char, plr, entity and entity.TeamCheck or nil, spawntime)
 end
 
 entitylib.addPlayer = function(plr)

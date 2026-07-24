@@ -49,7 +49,7 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 			end
 		end
 	end,
-	Tooltip = 'Modifications to empower the firearm'
+	Tooltip = 'Apply various modifications to enhance any firearm'
 })
 FireRate = GunModifications:CreateSlider({
 	Name = 'FireRate Multiplier',

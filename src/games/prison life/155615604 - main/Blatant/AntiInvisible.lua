@@ -96,5 +96,5 @@ AntiInvisible = vape.Categories.Blatant:CreateModule({
 			table.clear(threads)
 		end
 	end,
-	Tooltip = 'Prevent people from using invisible animations'
+	Tooltip = 'Prevent people from using animations outside of the game\'s scope'
 })

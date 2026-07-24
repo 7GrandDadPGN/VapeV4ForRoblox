@@ -150,7 +150,10 @@ run(function()
 		end,
 		Tooltip = 'Silently adjusts your aim towards the enemy'
 	})
-	Target = SilentAim:CreateTargets({Players = true})
+	Target = SilentAim:CreateTargets({
+		Players = true,
+		Walls = true
+	})
 	Mode = SilentAim:CreateDropdown({
 		Name = 'Mode',
 		List = {'Mouse', 'Position'},
@@ -194,7 +197,8 @@ run(function()
 		Function = function(callback)
 			AutoFireRate.Object.Visible = callback
 			AutoFireTaser.Object.Visible = callback
-		end
+		end,
+		Tooltip = 'Automatically fires guns when the specified target conditions are met.'
 	})
 	AutoFireRate = SilentAim:CreateSlider({
 		Name = 'Update rate',
@@ -210,7 +214,10 @@ run(function()
 		Visible = false,
 		Darker = true
 	})
-	Wallbang = SilentAim:CreateToggle({Name = 'Wallbang'})
+	Wallbang = SilentAim:CreateToggle({
+		Name = 'Wallbang',
+		Tooltip = 'Allow you to shoot people through walls when specific conditions are met.\n(If the entity has a valid hitbox position exposed or if the shoot position can be moved past walls (eg hugging walls))'
+	})
 	SilentAim:CreateToggle({
 		Name = 'Range Circle',
 		Function = function(callback)

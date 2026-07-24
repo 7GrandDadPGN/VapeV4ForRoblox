@@ -22,11 +22,11 @@ AutoTaser = vape.Categories.Blatant:CreateModule({
 							Players = true
 						})
 
-						for _, ent in entities do 
+						for _, ent in entities do
 							if not (ent.Character:GetAttribute('Tased') or ent.Character:GetAttribute('Arrested')) then
 								cooldown = os.clock() + 2
 								local equipped = lplr.Character:FindFirstChildWhichIsA('Tool')
-								if equipped then 
+								if equipped then
 									equipped.Parent = backpack
 								end
 
@@ -41,7 +41,7 @@ AutoTaser = vape.Categories.Blatant:CreateModule({
 			until not AutoTaser.Enabled
 		end
 	end,
-	Tooltip = 'Only works with silentaim autofire with position mode.'
+	Tooltip = 'Automatically taze people around you. (only works with SilentAim AutoFire with Position Mode enabled)'
 })
 Range = AutoTaser:CreateSlider({
 	Name = 'Range',

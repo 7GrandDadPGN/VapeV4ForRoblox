@@ -86,7 +86,7 @@ Mode = Spider:CreateDropdown({
 			Truss.Parent = Spider.Enabled and gameCamera or nil
 		end
 	end,
-	Tooltip = 'Velocity - Uses smooth movement to boost you upward\nCFrame - Directly adjusts the position upward\nPart - Positions a climbable part infront of you'
+	Tooltip = 'Velocity - Uses smooth movement to boost you upward\nImpulse - Same as velocity while using forces instead\nCFrame - Directly adjusts the position upward\nPart - Positions a climbable part infront of you'
 })
 Value = Spider:CreateSlider({
 	Name = 'Speed',
