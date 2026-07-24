@@ -36,7 +36,7 @@ AutoToxic = vape.Categories.Utility:CreateModule({
 			end))
 		end
 	end,
-	Tooltip = 'Says a message after a certain action'
+	Tooltip = 'Says a message after a cheater gets kicked with CheatDetector enabled.'
 })
 for _, v in {'Kicked'} do
 	Cloned[v] = {}

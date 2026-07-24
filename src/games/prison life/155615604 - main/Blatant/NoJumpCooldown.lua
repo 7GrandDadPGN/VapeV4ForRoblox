@@ -34,5 +34,5 @@ NoJumpCooldown = vape.Categories.Blatant:CreateModule({
 			end
 		end
 	end,
-	Tooltip = 'Remove the cooldown from jumping'
+	Tooltip = 'Remove the stamina cooldown from jumping'
 })

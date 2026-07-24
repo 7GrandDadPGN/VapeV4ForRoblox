@@ -74,10 +74,10 @@ CheatDetector = vape.Categories.Utility:CreateModule({
 			CheatFlags:Clear()
 		end
 	end,
-	Tooltip = 'Alerts for any possible cheaters.'
+	Tooltip = 'Sends alerts for any possible cheaters.'
 })
 AddTarget = CheatDetector:CreateToggle({
 	Name = 'Temporary Target',
-	Tooltip = 'Add temporary priority for cheaters.',
+	Tooltip = 'Add temporary combat module priority for cheaters.',
 	Default = true
 })
