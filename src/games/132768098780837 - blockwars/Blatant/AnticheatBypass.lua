@@ -16,7 +16,7 @@ AnticheatBypass = vape.Categories.Blatant:CreateModule({
 			bypassRoot = Instance.new('Part')
 			bypassRoot.CanCollide = false
 			bypassRoot.CanQuery = false
-			bypassRoot.Size = Vector3.new(2, 2, 2)
+			bypassRoot.Size = Vector3.new(2, 2, 1)
 			bypassRoot.Material = Enum.Material.SmoothPlastic
 			bypassRoot.Transparency = 1
 			bypassRoot.Parent = workspace.CurrentCamera
@@ -55,8 +55,8 @@ AnticheatBypass = vape.Categories.Blatant:CreateModule({
 					united = united == united and diff.Magnitude > 0.1 and united * entitylib.character.Humanoid.WalkSpeed or Vector3.zero
 					bypassRoot.AssemblyLinearVelocity = Vector3.new(united.X, 0, united.Z)
 					bypassRoot.CFrame = CFrame.lookAlong(Vector3.new(bypassRoot.Position.X, root.Position.Y, bypassRoot.Position.Z), root.CFrame.LookVector)
-					if diff.Magnitude > 6 and (os.clock() - tpTimer) > 0.85 then
-						bypassRoot.CFrame += clampVec(diff, entitylib.character.Humanoid.WalkSpeed * 0.75)
+					if diff.Magnitude > 6 and (os.clock() - tpTimer) > 0.75 then
+						bypassRoot.CFrame += clampVec(diff, entitylib.character.Humanoid.WalkSpeed)
 						tpTimer = os.clock()
 					end
 

@@ -1,12 +1,10 @@
 local Killaura
 local Targets
-local CPS
 local SwingRange
 local AttackRange
 local AngleSlider
 local Max
 local Mouse
-local Lunge
 local BoxSwingColor
 local BoxAttackColor
 local ParticleTexture
@@ -14,16 +12,23 @@ local ParticleColor1
 local ParticleColor2
 local ParticleSize
 local Face
-local Overlay = OverlapParams.new()
-Overlay.FilterType = Enum.RaycastFilterType.Include
 local Particles, Boxes, AttackDelay = {}, {}, {}
+
+local function getSword()
+	local inv = getInventory()
+	for _, tool in inv do
+		if tool:GetAttribute('WeaponType') then
+			return tool
+		end
+	end
+end
 
 local function getAttackData()
 	if Mouse.Enabled then
 		if not inputService:IsMouseButtonPressed(0) then return false end
 	end
 
-	local tool = getTool()
+	local tool = getSword()
 	return tool or nil, tool
 end
 
@@ -32,10 +37,11 @@ Killaura = vape.Categories.Blatant:CreateModule({
 	Function = function(callback)
 		if callback then
 			repeat
+				isAttacking = false
 				local tool = getAttackData()
 				local attacked = {}
 
-				if tool and tool:GetAttribute('WeaponType') then
+				if tool then
 					local plrs = entitylib.AllPosition({
 						Range = AttackRange.Value,
 						Wallcheck = Targets.Walls.Enabled or nil,
@@ -47,8 +53,13 @@ Killaura = vape.Categories.Blatant:CreateModule({
 					})
 
 					if #plrs > 0 then
+						isAttacking = true
 						local selfpos = entitylib.character.RootPart.Position
 						local localfacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
+
+						if tool.Parent ~= lplr.Character then
+							entitylib.character.Humanoid:EquipTool(tool)
+						end
 
 						for _, v in plrs do
 							local delta = (v.RootPart.Position - selfpos)
@@ -65,7 +76,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 								continue
 							end
 
-							if (os.clock() - (AttackDelay[v.Character] or 0) < 0.1) then
+							if (os.clock() - (AttackDelay[v.Character] or 0) < 0.03) then
 								continue
 							end
 
@@ -97,6 +108,8 @@ Killaura = vape.Categories.Blatant:CreateModule({
 				task.wait(0.016)
 			until not Killaura.Enabled
 		else
+			isAttacking = false
+
 			for _, v in Boxes do
 				v.Adornee = nil
 			end
@@ -112,17 +125,10 @@ Targets = Killaura:CreateTargets({
 	Players = true,
 	NPCs = true
 })
-CPS = Killaura:CreateTwoSlider({
-	Name = 'Attacks per Second',
-	Min = 1,
-	Max = 20,
-	DefaultMin = 12,
-	DefaultMax = 12
-})
 AttackRange = Killaura:CreateSlider({
 	Name = 'Attack range',
 	Min = 1,
-	Max = 30,
+	Max = 13,
 	Default = 13,
 	Suffix = function(val)
 		return val == 1 and 'stud' or 'studs'
@@ -141,7 +147,6 @@ Max = Killaura:CreateSlider({
 	Default = 10
 })
 Mouse = Killaura:CreateToggle({Name = 'Require mouse down'})
-Lunge = Killaura:CreateToggle({Name = 'Sword lunge only'})
 Killaura:CreateToggle({
 	Name = 'Show target',
 	Function = function(callback)

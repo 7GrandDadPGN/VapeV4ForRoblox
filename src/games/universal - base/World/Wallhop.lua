@@ -1,4 +1,5 @@
 local Wallhop
+local Offset
 local params = OverlapParams.new()
 params.RespectCanCollide = true
 local oldvec
@@ -34,7 +35,7 @@ local function doCheck()
 
 			if doHop and (os.clock() - timeout) > 0.2 then
 				set = table.pack(gameCamera.CFrame:GetComponents())
-				gameCamera.CFrame *= CFrame.Angles(0, math.rad(45), 0)
+				gameCamera.CFrame *= CFrame.Angles(0, math.rad(Offset.Value), 0)
 				timeout = os.clock()
 			end
 		end
@@ -55,4 +56,11 @@ Wallhop = vape.Categories.World:CreateModule({
 		end
 	end,
 	Tooltip = 'Automatically rotates camera for wallhopping.'
+})
+Offset = Wallhop:CreateSlider({
+	Name = 'Offset',
+	Min = -45,
+	Max = 45,
+	Default = 45,
+	Suffix = 'degrees'
 })

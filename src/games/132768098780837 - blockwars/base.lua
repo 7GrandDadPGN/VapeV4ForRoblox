@@ -9,6 +9,7 @@ local playersService = cloneref(game:GetService('Players'))
 local inputService = cloneref(game:GetService('UserInputService'))
 local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
 local collectionService = cloneref(game:GetService('CollectionService'))
+local textChatService = cloneref(game:GetService('TextChatService'))
 local runService = cloneref(game:GetService('RunService'))
 local guiService = cloneref(game:GetService('GuiService'))
 local coreGui = cloneref(game:GetService('CoreGui'))
@@ -27,6 +28,7 @@ local blocks = {}
 local BlockTimes = {}
 local AnticheatBypass
 local bypassRoot
+local isAttacking
 
 local function applySpeed(speed, dt)
 	local root = entitylib.character.RootPart
@@ -87,6 +89,21 @@ local function collection(tags, module, customadd, customremove)
 		module:Clean(cleanFunc)
 	end
 	return objs, cleanFunc
+end
+
+local function getInventory()
+	local inv = {}
+	local backpack = lplr:FindFirstChildWhichIsA('Backpack')
+	if backpack then
+		inv = backpack:GetChildren()
+	end
+
+	local equipped = lplr.Character and lplr.Character:FindFirstChildWhichIsA('Tool')
+	if equipped then
+		table.insert(inv, equipped)
+	end
+
+	return inv
 end
 
 local function getTool()

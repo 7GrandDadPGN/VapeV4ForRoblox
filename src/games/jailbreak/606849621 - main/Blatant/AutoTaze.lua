@@ -1,5 +1,6 @@
 local AutoTaze
 local HandCheck
+local cooldown = 0
 
 AutoTaze = vape.Categories.Blatant:CreateModule({
 	Name = 'AutoTaze',
@@ -15,12 +16,13 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 						Range = 50
 					})
 
-					if ent and isIllegal(ent) and not isArrested(ent.Player.Name) then
+					if ent and isIllegal(ent) and not isArrested(ent.Player.Name) and cooldown < os.clock() then
 						if item then
 							jb:FireServer('TaseReplicate', ent.Head.Position)
 						end
+
 						jb:FireServer('Tase', ent.Humanoid, ent.Head, ent.Head.Position)
-						task.wait(10)
+						cooldown = os.clock() + 10
 					end
 				end
 

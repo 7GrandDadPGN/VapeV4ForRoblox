@@ -49,6 +49,7 @@ local groupService = cloneref(game:GetService('GroupService'))
 local textChatService = cloneref(game:GetService('TextChatService'))
 local contextService = cloneref(game:GetService('ContextActionService'))
 local coreGui = cloneref(game:GetService('CoreGui'))
+local stats = cloneref(game:GetService('Stats'))
 
 local isnetworkowner = identifyexecutor and table.find({'AWP', 'Nihon'}, ({identifyexecutor()})[1]) and isnetworkowner or function()
 	return true
@@ -536,7 +537,7 @@ run(function()
 					repeat
 						local current = getcallbackvalue(textChatService, 'OnIncomingMessage')
 
-						if old ~= current then
+						if old ~= current and current then
 							if old then
 								restorefunction(old)
 							end
