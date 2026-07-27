@@ -14,15 +14,28 @@ local InstantBreak
 local LimitItem
 local customlist, parts = {}, {}
 
-local function attemptBreak(tab, localPosition)
+local function getPick()
+	local inv = getInventory()
+	for _, tool in inv do
+		if tool:GetAttribute('Tier') then
+			return tool
+		end
+	end
+end
+
+local function attemptBreak(tab, localPosition, tool)
 	if not tab then return end
 	for _, v in tab do
-		if ((v:IsA('Model') and v.PrimaryPart or v).Position - localPosition).Magnitude < Range.Value and (v.Name ~= 'SpawnBlock' or v:GetAttribute('TeamId') ~= (lplr.Team and lplr.Team.Name or '')) then
-			if v:IsA('Model') then
+		if (v.Position - localPosition).Magnitude < Range.Value and v:GetAttribute('BedTeamId') ~= (lplr.Team and lplr.Team.Name or '') and (v:GetAttribute('HP') or 10) > 0 then
+			if tool.Parent ~= lplr.Character then
+				entitylib.character.Humanoid:EquipTool(tool)
+			end
+
+			if v:HasTag('BedWarsX_BedSpawn') then
 				local notCovered = false
 				for _, normal in Enum.NormalId:GetEnumItems() do
 					if normal ~= Enum.NormalId.Bottom then
-						if not blocks[v.PrimaryPart.Position // 3 + Vector3.fromNormalId(normal)] then
+						if not blocks[v.Position // 3 + Vector3.fromNormalId(normal)] then
 							notCovered = true
 							break
 						end
@@ -30,14 +43,13 @@ local function attemptBreak(tab, localPosition)
 				end
 
 				if notCovered then
-					local box = v:FindFirstChild('Hitbox')
 					bw.RemoteIndex.Block_AttemptHit:FireServer({
 						camPos = localPosition,
-						hitPos = box:GetClosestPointOnSurface(localPosition),
-						blockInstance = box
+						hitPos = v:GetClosestPointOnSurface(localPosition),
+						blockInstance = v
 					})
 				else
-					local aboveBlock = blocks[v.PrimaryPart.Position // 3 + Vector3.new(0, 1, 0)]
+					local aboveBlock = blocks[v.Position // 3 + Vector3.new(0, 1, 0)]
 
 					if aboveBlock then
 						bw.RemoteIndex.Block_AttemptHit:FireServer({
@@ -65,19 +77,19 @@ Breaker = vape.Categories.Minigames:CreateModule({
 	Name = 'Breaker',
 	Function = function(callback)
 		if callback then
-			local beds = collection('BedWarsX_Bed', Breaker)
+			local beds = collection('BedWarsX_BedSpawn', Breaker)
 			local generators = collection('BedWarsX_Resource', Breaker)
 
 			repeat
 				task.wait(1 / UpdateRate.Value)
 				if not Breaker.Enabled then break end
 
-				local tool = getTool()
-				if entitylib.isAlive and tool and tool:GetAttribute('Tier') then
+				local tool = getPick()
+				if entitylib.isAlive and tool and not isAttacking then
 					local localPosition = bypassRoot and bypassRoot.Position or entitylib.character.RootPart.Position
 
-					if attemptBreak(beds, localPosition) then continue end
-					if attemptBreak(generators, localPosition) then continue end
+					if attemptBreak(beds, localPosition, tool) then continue end
+					if attemptBreak(generators, localPosition, tool) then continue end
 				end
 			until not Breaker.Enabled
 		end

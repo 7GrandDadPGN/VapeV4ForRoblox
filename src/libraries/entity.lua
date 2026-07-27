@@ -371,7 +371,7 @@ entitylib.addPlayer = function(plr)
 				table.clear(cloned)
 			else
 				local entity = entitylib.getEntity(plr)
-				if entity and entity.Targetable ~= entitylib.targetCheck(entity) then
+				if entity then
 					entitylib.refreshEntity(entity.Character, plr)
 				end
 			end

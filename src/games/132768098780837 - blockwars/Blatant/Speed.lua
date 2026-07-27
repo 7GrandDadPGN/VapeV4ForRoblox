@@ -38,8 +38,8 @@ Speed = vape.Categories.Blatant:CreateModule({
 Value = Speed:CreateSlider({
 	Name = 'Speed',
 	Min = 1,
-	Max = 30,
-	Default = 30,
+	Max = 38,
+	Default = 38,
 	Suffix = function(val)
 		return val == 1 and 'stud' or 'studs'
 	end

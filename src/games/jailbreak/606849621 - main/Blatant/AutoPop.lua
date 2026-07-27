@@ -1,6 +1,7 @@
 local AutoPop
 local Range
 local TeamCheck
+local delays = {}
 
 local function getEntitiesInVehicle(car)
 	local entities = {}
@@ -58,15 +59,24 @@ AutoPop = vape.Categories.Blatant:CreateModule({
 					local item = jb.ItemSystemController:GetLocalEquipped()
 					if item and item.BulletEmitter and item.Model then
 						for _, car in getVehiclesNear() do
-							if not (AutoPop.Enabled and item.Model) then break end
+							if (car:GetAttribute('VehicleTireHealth') or 10) <= 0 then
+								continue
+							end
+
+							if (delays[car] or 0) > os.clock() then
+								continue
+							end
+
+							delays[car] = os.clock() + 0.1
 							jb:FireServer('PopTires', car, item.Model.Name)
-							task.wait(0.1)
 						end
 					end
 
 					task.wait(0.016)
 				until not AutoPop.Enabled
 			end)
+		else
+			table.clear(delays)
 		end
 	end,
 	Tooltip = 'Automatically pops vehicles tires around you'

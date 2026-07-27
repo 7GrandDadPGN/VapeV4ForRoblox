@@ -12,7 +12,7 @@ AntiFall = vape.Categories.Blatant:CreateModule({
 	Function = function(callback)
 		if callback then
 			if Method.Value == 'Part' then
-				local debounce = tick()
+				local debounce = os.clock()
 				part = Instance.new('Part')
 				part.Size = Vector3.new(10000, 1, 10000)
 				part.Transparency = 1 - Color.Opacity
@@ -25,9 +25,10 @@ AntiFall = vape.Categories.Blatant:CreateModule({
 
 				AntiFall:Clean(part)
 				AntiFall:Clean(part.Touched:Connect(function(touchedpart)
-					if touchedpart.Parent == lplr.Character and entitylib.isAlive and debounce < tick() then
+					if touchedpart.Parent == lplr.Character and entitylib.isAlive and debounce < os.clock() then
 						local root = entitylib.character.RootPart
-						debounce = tick() + 0.1
+						debounce = os.clock() + 0.1
+
 						if Mode.Value == 'Velocity' then
 							root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, 100, root.AssemblyLinearVelocity.Z)
 						elseif Mode.Value == 'Impulse' then

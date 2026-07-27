@@ -1,4 +1,5 @@
 local AutoArrest
+local cooldown = 0
 
 AutoArrest = vape.Categories.Blatant:CreateModule({
 	Name = 'AutoArrest',
@@ -15,14 +16,13 @@ AutoArrest = vape.Categories.Blatant:CreateModule({
 					})
 
 					for _, ent in plrs do
-						if not AutoArrest.Enabled then break end
 						if ent.Player and isIllegal(ent) then
 							local vehicle = ent.Humanoid.Sit and getVehicle(ent) or nil
 							if vehicle then
 								jb:FireServer('Eject', vehicle)
-							elseif not isArrested(ent.Player.Name) and (localPosition - ent.RootPart.Position).Magnitude < 18.4 then
+							elseif not isArrested(ent.Player.Name) and (localPosition - ent.RootPart.Position).Magnitude < 18.4 and cooldown < os.clock() then
 								jb:FireServer('Arrest', ent.Player.Name)
-								task.wait(0.6)
+								cooldown = os.clock() + 0.5
 							end
 						end
 					end

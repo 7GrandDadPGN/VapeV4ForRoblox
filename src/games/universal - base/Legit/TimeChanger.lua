@@ -21,7 +21,7 @@ Value = TimeChanger:CreateSlider({
 	Max = 24,
 	Default = 12,
 	Function = function(val)
-		if TimeChanger.Enabled then 
+		if TimeChanger.Enabled then
 			lightingService.TimeOfDay = val..':00:00'
 		end
 	end

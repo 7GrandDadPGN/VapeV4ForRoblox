@@ -4,7 +4,7 @@ local FOV
 local FOVValue = {}
 local Volume
 local alreadypicked = {}
-local beattick = tick()
+local beattick = os.clock()
 local oldfov, songobj, songbpm, songtween
 
 local function choosesong()
@@ -41,7 +41,7 @@ local function choosesong()
 	until songobj.IsLoaded or not SongBeats.Enabled
 
 	if SongBeats.Enabled then
-		beattick = tick() + (tonumber(split[3]) or 0)
+		beattick = os.clock() + (tonumber(split[3]) or 0)
 		songbpm = 60 / (tonumber(split[2]) or 50)
 		songobj:Play()
 	end
@@ -54,6 +54,7 @@ SongBeats = vape.Legit:CreateModule({
 			songobj = Instance.new('Sound')
 			songobj.Volume = Volume.Value / 100
 			songobj.Parent = workspace
+			SongBeats:Clean(songobj)
 			oldfov = gameCamera.FieldOfView
 
 			repeat
@@ -61,22 +62,23 @@ SongBeats = vape.Legit:CreateModule({
 					choosesong()
 				end
 
-				if beattick < tick() and SongBeats.Enabled and FOV.Enabled then
-					beattick = tick() + songbpm
+				if beattick < os.clock() and SongBeats.Enabled and FOV.Enabled then
+					beattick = os.clock() + songbpm
+					if songtween then
+						songtween:Cancel()
+					end
+
 					gameCamera.FieldOfView = oldfov - FOVValue.Value
 					songtween = tweenService:Create(gameCamera, TweenInfo.new(math.min(songbpm, 0.2), Enum.EasingStyle.Linear), {
 						FieldOfView = oldfov
 					})
+
 					songtween:Play()
 				end
 
 				task.wait()
 			until not SongBeats.Enabled
 		else
-			if songobj then
-				songobj:Destroy()
-			end
-
 			if songtween then
 				songtween:Cancel()
 			end

@@ -302,7 +302,7 @@ run(function()
 
 		if InfNitro.Enabled and rem == 'UseNitro' then return end
 		if LazerGodmode.Enabled and rem == 'SelfDamage' then return end
-		if rem ~= 'LookAngle' and rem ~= 'AimPosition' then
+		if rem ~= 'LookAngle' and rem ~= 'AimPosition' and shared.VapeDeveloper then
 			local called = getfenv(3)
 			called = called and called.script
 			if called and (not rem) then print(id, 'called with', called:GetFullName()) end
@@ -321,6 +321,7 @@ run(function()
 			notif('Vape', 'Failed to find remote ('..id..')', 10, 'alert')
 			return
 		end
+
 		return hook(remotetable, remotes[id], ...)
 	end
 
