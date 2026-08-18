@@ -131,11 +131,11 @@ end
 function component:Load(data)
 	vape:LoadOptions(self, data.Options)
 
-	if data.Enabled then
+	if self.Button.Enabled ~= data.Enabled then
 		self.Button:Toggle()
 	end
 
-	if data.Pinned then
+	if self.Pinned ~= data.Pinned then
 		self:Pin()
 		self:Update()
 	end
