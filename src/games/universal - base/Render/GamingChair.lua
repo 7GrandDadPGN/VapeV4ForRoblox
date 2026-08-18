@@ -19,6 +19,7 @@ GamingChair = vape.Categories.Render:CreateModule({
 			if vape.ThreadFix then
 				setthreadidentity(8)
 			end
+
 			chair = Instance.new('MeshPart')
 			chair.Color = Color3.fromRGB(21, 21, 21)
 			chair.Size = Vector3.new(2.16, 3.6, 2.3) / Vector3.new(12.37, 20.636, 13.071)
@@ -78,6 +79,7 @@ GamingChair = vape.Categories.Render:CreateModule({
 			chairfan.CanCollide = false
 			chairfan.Parent = chair
 			local trails = {}
+
 			for _, v in wheelpositions do
 				local attachment = Instance.new('Attachment')
 				attachment.Position = v
@@ -98,12 +100,14 @@ GamingChair = vape.Categories.Render:CreateModule({
 				trail.Parent = chairlegs
 				table.insert(trails, trail)
 			end
+
 			GamingChair:Clean(chair)
 			GamingChair:Clean(movingsound)
 			GamingChair:Clean(flyingsound)
 			chairanim = {Stop = function() end}
 			local oldmoving = false
 			local oldflying = false
+
 			repeat
 				if entitylib.isAlive and entitylib.character.Humanoid.Health > 0 then
 					if not chairanim.IsPlaying then
@@ -114,6 +118,7 @@ GamingChair = vape.Categories.Render:CreateModule({
 						chairanim.Looped = true
 						chairanim:Play()
 					end
+
 					chair.CFrame = entitylib.character.RootPart.CFrame * CFrame.Angles(0, math.rad(-90), 0)
 					chairweld.Part1 = entitylib.character.RootPart
 					chairlegs.Velocity = Vector3.zero
@@ -130,6 +135,7 @@ GamingChair = vape.Categories.Render:CreateModule({
 						v.Enabled = not flying and moving
 						v.Color = ColorSequence.new(movingsound.PlaybackSpeed > 1.5 and Color3.new(1, 0.5, 0) or Color3.new())
 					end
+
 					if moving ~= oldmoving then
 						if movingsound.IsPlaying then
 							if not moving then
@@ -142,6 +148,7 @@ GamingChair = vape.Categories.Render:CreateModule({
 						end
 						oldmoving = moving
 					end
+
 					if flying ~= oldflying then
 						if flying then
 							if movingsound.IsPlaying then
@@ -171,13 +178,19 @@ GamingChair = vape.Categories.Render:CreateModule({
 							if flyingsound.IsPlaying then
 								flyingsound:Stop()
 							end
+
 							if not movingsound.IsPlaying and moving then
 								movingsound:Play()
 							end
-							if currenttween then currenttween:Cancel() end
+
+							if currenttween then
+								currenttween:Cancel()
+							end
+
 							tween = tweenService:Create(chairfan, TweenInfo.new(0.15), {
 								Size = Vector3.zero
 							})
+
 							tween.Completed:Connect(function(state)
 								if state == Enum.PlaybackState.Completed then
 									chairfan.Transparency = 1
@@ -188,20 +201,27 @@ GamingChair = vape.Categories.Render:CreateModule({
 									tween:Play()
 								end
 							end)
+
 							tween:Play()
 						end
+
 						oldflying = flying
 					end
 				else
 					chair.Anchored = true
 					chairlegs.Anchored = true
 					chairfan.Anchored = true
-					repeat task.wait() until entitylib.isAlive and entitylib.character.Humanoid.Health > 0
+
+					repeat
+						task.wait()
+					until entitylib.isAlive and entitylib.character.Humanoid.Health > 0
+
 					chair.Anchored = false
 					chairlegs.Anchored = false
 					chairfan.Anchored = false
 					chairanim:Stop()
 				end
+
 				task.wait()
 			until not GamingChair.Enabled
 		else

@@ -1,222 +1,229 @@
-local optionapi = {
+local component = {
+	Index = getTableSize(api.Options),
+	Max = props.Max,
 	Type = 'TwoSlider',
-	ValueMin = optionsettings.DefaultMin or optionsettings.Min,
-	ValueMax = optionsettings.DefaultMax or 10,
-	Max = optionsettings.Max,
-	Index = getTableSize(api.Options)
+	ValueMin = props.DefaultMin or props.Min,
+	ValueMax = props.DefaultMax or 10
 }
 
-local slider = Instance.new('TextButton')
-slider.Name = optionsettings.Name..'Slider'
-slider.Size = UDim2.new(1, 0, 0, 50)
-slider.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
-slider.BorderSizePixel = 0
-slider.AutoButtonColor = false
-slider.Visible = optionsettings.Visible == nil or optionsettings.Visible
-slider.Text = ''
-slider.Parent = children
-addTooltip(slider, optionsettings.Tooltip)
+local twoslider = Instance.new('TextButton')
+twoslider.AutoButtonColor = false
+twoslider.BackgroundColor3 = color.Dark(children.BackgroundColor3, props.Darker and 0.02 or 0)
+twoslider.BorderSizePixel = 0
+twoslider.Size = UDim2.new(1, 0, 0, 50)
+twoslider.Text = ''
+twoslider.Visible = props.Visible == nil or props.Visible
+twoslider.Parent = children
+component.Object = twoslider
+addTooltip(twoslider, props.Tooltip)
 local title = Instance.new('TextLabel')
-title.Name = 'Title'
-title.Size = UDim2.fromOffset(60, 30)
-title.Position = UDim2.fromOffset(10, 2)
 title.BackgroundTransparency = 1
-title.Text = optionsettings.Name
-title.TextXAlignment = Enum.TextXAlignment.Left
+title.FontFace = uipallet.Font
+title.Position = UDim2.fromOffset(10, 2)
+title.Size = UDim2.fromOffset(60, 30)
+title.Text = props.Name
 title.TextColor3 = color.Dark(uipallet.Text, 0.16)
 title.TextSize = 11
-title.FontFace = uipallet.Font
-title.Parent = slider
-local valuebutton = Instance.new('TextButton')
-valuebutton.Name = 'Value'
-valuebutton.Size = UDim2.fromOffset(60, 15)
-valuebutton.Position = UDim2.new(1, -69, 0, 9)
-valuebutton.BackgroundTransparency = 1
-valuebutton.Text = optionapi.ValueMax
-valuebutton.TextXAlignment = Enum.TextXAlignment.Right
-valuebutton.TextColor3 = color.Dark(uipallet.Text, 0.16)
-valuebutton.TextSize = 11
-valuebutton.FontFace = uipallet.Font
-valuebutton.Parent = slider
-local valuebutton2 = valuebutton:Clone()
-valuebutton2.Position = UDim2.new(1, -125, 0, 9)
-valuebutton2.Text = optionapi.ValueMin
-valuebutton2.Parent = slider
-local valuebox = Instance.new('TextBox')
-valuebox.Name = 'Box'
-valuebox.Size = valuebutton.Size
-valuebox.Position = valuebutton.Position
-valuebox.BackgroundTransparency = 1
-valuebox.Visible = false
-valuebox.Text = optionapi.ValueMin
-valuebox.TextXAlignment = Enum.TextXAlignment.Right
-valuebox.TextColor3 = color.Dark(uipallet.Text, 0.16)
-valuebox.TextSize = 11
-valuebox.FontFace = uipallet.Font
-valuebox.ClearTextOnFocus = false
-valuebox.Parent = slider
-local valuebox2 = valuebox:Clone()
-valuebox2.Position = valuebutton2.Position
-valuebox2.Parent = slider
-local bkg = Instance.new('Frame')
-bkg.Name = 'Slider'
-bkg.Size = UDim2.new(1, -20, 0, 2)
-bkg.Position = UDim2.fromOffset(10, 37)
-bkg.BackgroundColor3 = color.Light(uipallet.Main, 0.034)
-bkg.BorderSizePixel = 0
-bkg.Parent = slider
-local fill = bkg:Clone()
-fill.Name = 'Fill'
-fill.Position = UDim2.fromScale(math.clamp(optionapi.ValueMin / optionsettings.Max, 0.04, 0.96), 0)
-fill.Size = UDim2.fromScale(math.clamp(math.clamp(optionapi.ValueMax / optionsettings.Max, 0, 1), 0.04, 0.96) - fill.Position.X.Scale, 1)
-fill.BackgroundColor3 = Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
-fill.Parent = bkg
-local knobholder = Instance.new('Frame')
-knobholder.Name = 'Knob'
-knobholder.Size = UDim2.fromOffset(16, 4)
-knobholder.Position = UDim2.fromScale(0, 0.5)
-knobholder.AnchorPoint = Vector2.new(0.5, 0.5)
-knobholder.BackgroundColor3 = slider.BackgroundColor3
-knobholder.BorderSizePixel = 0
-knobholder.Parent = fill
-local knob = Instance.new('ImageLabel')
-knob.Name = 'Knob'
-knob.Size = UDim2.fromOffset(9, 16)
-knob.Position = UDim2.fromScale(0.5, 0.5)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = twoslider
+local maxvalue = Instance.new('TextButton')
+maxvalue.BackgroundTransparency = 1
+maxvalue.FontFace = uipallet.Font
+maxvalue.Position = UDim2.new(1, -69, 0, 9)
+maxvalue.Size = UDim2.fromOffset(60, 15)
+maxvalue.Text = component.ValueMax
+maxvalue.TextColor3 = color.Dark(uipallet.Text, 0.16)
+maxvalue.TextSize = 11
+maxvalue.TextXAlignment = Enum.TextXAlignment.Right
+maxvalue.Parent = twoslider
+local minvalue = maxvalue:Clone()
+minvalue.Position = UDim2.new(1, -125, 0, 9)
+minvalue.Text = component.ValueMin
+minvalue.Parent = twoslider
+local custommax = Instance.new('TextBox')
+custommax.BackgroundTransparency = 1
+custommax.ClearTextOnFocus = false
+custommax.FontFace = uipallet.Font
+custommax.Position = maxvalue.Position
+custommax.Size = UDim2.fromOffset(60, 15)
+custommax.Text = component.ValueMax
+custommax.TextColor3 = color.Dark(uipallet.Text, 0.16)
+custommax.TextSize = 11
+custommax.TextXAlignment = Enum.TextXAlignment.Right
+custommax.Visible = false
+custommax.Parent = twoslider
+local custommin = custommax:Clone()
+custommin.Position = minvalue.Position
+custommin.Parent = twoslider
+local holder = Instance.new('Frame')
+holder.BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+holder.BorderSizePixel = 0
+holder.Position = UDim2.fromOffset(10, 37)
+holder.Size = UDim2.new(1, -20, 0, 2)
+holder.Parent = twoslider
+local fill = Instance.new('Frame')
+fill.BackgroundColor3 = Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)
+fill.BorderSizePixel = 0
+fill.Position = UDim2.fromScale(math.clamp(component.ValueMin / props.Max, 0.04, 0.96), 0)
+fill.Size = UDim2.fromScale(math.clamp(math.clamp(component.ValueMax / props.Max, 0, 1), 0.04, 0.96) - fill.Position.X.Scale, 1)
+fill.Parent = holder
+local knob = Instance.new('Frame')
 knob.AnchorPoint = Vector2.new(0.5, 0.5)
-knob.BackgroundTransparency = 1
-knob.Image = getcustomasset('newvape/assets/new/range.png')
-knob.ImageColor3 = Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)
-knob.Parent = knobholder
-local knobholdermax = knobholder:Clone()
-knobholdermax.Name = 'KnobMax'
-knobholdermax.Position = UDim2.fromScale(1, 0.5)
-knobholdermax.Parent = fill
-knobholdermax.Knob.Rotation = 180
+knob.BackgroundColor3 = twoslider.BackgroundColor3
+knob.BorderSizePixel = 0
+knob.Position = UDim2.fromScale(0, 0.5)
+knob.Size = UDim2.fromOffset(16, 4)
+knob.Parent = fill
+local knobknob = Instance.new('ImageLabel')
+knobknob.AnchorPoint = Vector2.new(0.5, 0.5)
+knobknob.BackgroundTransparency = 1
+knobknob.Image = getvapeasset('newvape/assets/new/range.png')
+knobknob.ImageColor3 = Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)
+knobknob.Position = UDim2.fromScale(0.5, 0.5)
+knobknob.Size = UDim2.fromOffset(9, 16)
+knobknob.Parent = knob
+local knobmax = knob:Clone()
+knobmax.Position = UDim2.fromScale(1, 0.5)
+knobmax.Parent = fill
+local knobmaxknob = knobmax.ImageLabel
+knobmaxknob.Rotation = 180
 local arrow = Instance.new('ImageLabel')
-arrow.Name = 'Arrow'
-arrow.Size = UDim2.fromOffset(12, 6)
-arrow.Position = UDim2.new(1, -56, 0, 10)
 arrow.BackgroundTransparency = 1
-arrow.Image = getcustomasset('newvape/assets/new/rangearrow.png')
+arrow.Image = getvapeasset('newvape/assets/new/rangeindicator.png')
 arrow.ImageColor3 = color.Light(uipallet.Main, 0.14)
-arrow.Parent = slider
-optionsettings.Function = optionsettings.Function or function() end
-optionsettings.Decimal = optionsettings.Decimal or 1
+arrow.Position = UDim2.new(1, -56, 0, 10)
+arrow.Size = UDim2.fromOffset(12, 6)
+arrow.Parent = twoslider
+props.Function = props.Function or function() end
+props.Decimal = props.Decimal or 1
 local random = Random.new()
 
-function optionapi:Save(tab)
-	tab[optionsettings.Name] = {ValueMin = self.ValueMin, ValueMax = self.ValueMax}
+function component:Color(hue, sat, val, isRainbow)
+	fill.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+	knobknob.ImageColor3 = fill.BackgroundColor3
+	knobmaxknob.ImageColor3 = fill.BackgroundColor3
 end
 
-function optionapi:Load(tab)
-	if self.ValueMin ~= tab.ValueMin then
-		self:SetValue(false, tab.ValueMin)
+function component:GetRandomValue()
+	return random:NextNumber(component.ValueMin, component.ValueMax)
+end
+
+function component:Load(data)
+	if self.ValueMin ~= data.ValueMin then
+		self:SetValue(false, data.ValueMin)
 	end
-	if self.ValueMax ~= tab.ValueMax then
-		self:SetValue(true, tab.ValueMax)
+
+	if self.ValueMax ~= data.ValueMax then
+		self:SetValue(true, data.ValueMax)
 	end
 end
 
-function optionapi:Color(hue, sat, val, rainbowcheck)
-	fill.BackgroundColor3 = rainbowcheck and Color3.fromHSV(mainapi:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
-	knob.ImageColor3 = fill.BackgroundColor3
-	knobholdermax.Knob.ImageColor3 = fill.BackgroundColor3
+function component:Save(data)
+	data[props.Name] = {
+		ValueMin = self.ValueMin,
+		ValueMax = self.ValueMax
+	}
 end
 
-function optionapi:GetRandomValue()
-	return random:NextNumber(optionapi.ValueMin, optionapi.ValueMax)
-end
+function component:SetValue(isMax, value)
+	if not math.isfinite(value) then
+		return
+	end
 
-function optionapi:SetValue(max, value)
-	if tonumber(value) == math.huge or value ~= value then return end
-	self[max and 'ValueMax' or 'ValueMin'] = value
-	valuebutton.Text = self.ValueMax
-	valuebutton2.Text = self.ValueMin
-	local size = math.clamp(math.clamp(self.ValueMin / optionsettings.Max, 0, 1), 0.04, 0.96)
+	self[isMax and 'ValueMax' or 'ValueMin'] = value
+	maxvalue.Text = self.ValueMax
+	minvalue.Text = self.ValueMin
+
+	local size = math.clamp(math.clamp(self.ValueMin / props.Max, 0, 1), 0.04, 0.96)
 	tween:Tween(fill, TweenInfo.new(0.1), {
 		Position = UDim2.fromScale(size, 0),
-		Size = UDim2.fromScale(math.clamp(math.clamp(math.clamp(self.ValueMax / optionsettings.Max, 0.04, 0.96), 0.04, 0.96) - size, 0, 1), 1)
+		Size = UDim2.fromScale(math.clamp(math.clamp(self.ValueMax / props.Max, 0.04, 0.96) - size, 0, 1), 1)
 	})
 end
 
-knobholder.MouseEnter:Connect(function()
-	tween:Tween(knob, uipallet.Tween, {
+knob.MouseEnter:Connect(function()
+	tween:Tween(knobknob, uipallet.Tween, {
 		Size = UDim2.fromOffset(11, 18)
 	})
 end)
-knobholder.MouseLeave:Connect(function()
-	tween:Tween(knob, uipallet.Tween, {
+
+knob.MouseLeave:Connect(function()
+	tween:Tween(knobknob, uipallet.Tween, {
 		Size = UDim2.fromOffset(9, 16)
 	})
 end)
-knobholdermax.MouseEnter:Connect(function()
-	tween:Tween(knobholdermax.Knob, uipallet.Tween, {
+
+knobmax.MouseEnter:Connect(function()
+	tween:Tween(knobmaxknob, uipallet.Tween, {
 		Size = UDim2.fromOffset(11, 18)
 	})
 end)
-knobholdermax.MouseLeave:Connect(function()
-	tween:Tween(knobholdermax.Knob, uipallet.Tween, {
+
+knobmax.MouseLeave:Connect(function()
+	tween:Tween(knobmaxknob, uipallet.Tween, {
 		Size = UDim2.fromOffset(9, 16)
 	})
 end)
-slider.InputBegan:Connect(function(inputObj)
+
+twoslider.InputBegan:Connect(function(input)
 	if
-		(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
-		and (inputObj.Position.Y - slider.AbsolutePosition.Y) > (20 * scale.Scale)
+		(input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch)
+		and (input.Position.Y - twoslider.AbsolutePosition.Y) > (20 * scale.Scale)
 	then
-		local maxCheck = (inputObj.Position.X - knobholdermax.AbsolutePosition.X) > -10
-		local newPosition = math.clamp((inputObj.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1)
-		optionapi:SetValue(maxCheck, math.floor((optionsettings.Min + (optionsettings.Max - optionsettings.Min) * newPosition) * optionsettings.Decimal) / optionsettings.Decimal, newPosition)
+		local maxCheck = (input.Position.X - knobmax.AbsolutePosition.X) > -10
+		local newPosition = math.clamp((input.Position.X - holder.AbsolutePosition.X) / holder.AbsoluteSize.X, 0, 1)
 
-		local changed = inputService.InputChanged:Connect(function(input)
-			if input.UserInputType == (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
-				local newPosition = math.clamp((input.Position.X - bkg.AbsolutePosition.X) / bkg.AbsoluteSize.X, 0, 1)
-				optionapi:SetValue(maxCheck, math.floor((optionsettings.Min + (optionsettings.Max - optionsettings.Min) * newPosition) * optionsettings.Decimal) / optionsettings.Decimal, newPosition)
+		local releaseConnection
+		local moveConnection = inputService.InputChanged:Connect(function(newInput)
+			if newInput.UserInputType == (input.UserInputType == Enum.UserInputType.MouseButton1 and Enum.UserInputType.MouseMovement or Enum.UserInputType.Touch) then
+				local newPosition = math.clamp((newInput.Position.X - holder.AbsolutePosition.X) / holder.AbsoluteSize.X, 0, 1)
+				component:SetValue(maxCheck, math.floor((props.Min + (props.Max - props.Min) * newPosition) * props.Decimal) / props.Decimal, newPosition)
 			end
 		end)
 
-		local ended
-		ended = inputObj.Changed:Connect(function()
-			if inputObj.UserInputState == Enum.UserInputState.End then
-				if changed then
-					changed:Disconnect()
-				end
-				if ended then
-					ended:Disconnect()
-				end
+		releaseConnection = input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				moveConnection:Disconnect()
+				releaseConnection:Disconnect()
 			end
 		end)
-	end
-end)
-valuebutton.MouseButton1Click:Connect(function()
-	valuebutton.Visible = false
-	valuebox.Visible = true
-	valuebox.Text = optionapi.ValueMax
-	valuebox:CaptureFocus()
-end)
-valuebutton2.MouseButton1Click:Connect(function()
-	valuebutton2.Visible = false
-	valuebox2.Visible = true
-	valuebox2.Text = optionapi.ValueMin
-	valuebox2:CaptureFocus()
-end)
-valuebox.FocusLost:Connect(function(enter)
-	valuebutton.Visible = true
-	valuebox.Visible = false
-	if enter and tonumber(valuebox.Text) then
-		optionapi:SetValue(true, tonumber(valuebox.Text))
-	end
-end)
-valuebox2.FocusLost:Connect(function(enter)
-	valuebutton2.Visible = true
-	valuebox2.Visible = false
-	if enter and tonumber(valuebox2.Text) then
-		optionapi:SetValue(false, tonumber(valuebox2.Text))
+
+		component:SetValue(maxCheck, math.floor((props.Min + (props.Max - props.Min) * newPosition) * props.Decimal) / props.Decimal, newPosition)
 	end
 end)
 
-optionapi.Object = slider
-api.Options[optionsettings.Name] = optionapi
+maxvalue.MouseButton1Click:Connect(function()
+	maxvalue.Visible = false
+	custommax.Visible = true
+	custommax.Text = component.ValueMax
+	custommax:CaptureFocus()
+end)
 
-return optionapi
+minvalue.MouseButton1Click:Connect(function()
+	minvalue.Visible = false
+	custommin.Visible = true
+	custommin.Text = component.ValueMin
+	custommin:CaptureFocus()
+end)
+
+custommax.FocusLost:Connect(function(enter)
+	maxvalue.Visible = true
+	custommax.Visible = false
+
+	if enter and tonumber(custommax.Text) then
+		component:SetValue(true, tonumber(custommax.Text))
+	end
+end)
+
+custommin.FocusLost:Connect(function(enter)
+	minvalue.Visible = true
+	custommin.Visible = false
+
+	if enter and tonumber(custommin.Text) then
+		component:SetValue(false, tonumber(custommin.Text))
+	end
+end)
+
+api.Options[props.Name] = component
+
+return component

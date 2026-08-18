@@ -13,7 +13,7 @@ local infostroke
 
 SessionInfo = vape:CreateOverlay({
 	Name = 'Session Info',
-	Icon = getcustomasset('newvape/assets/new/textguiicon.png'),
+	Icon = getvapeasset('newvape/assets/new/textgui.png'),
 	Size = UDim2.fromOffset(16, 12),
 	Position = UDim2.fromOffset(12, 14),
 	Function = function(callback)
@@ -67,7 +67,7 @@ SessionInfo = vape:CreateOverlay({
 					infolabel.Text = table.concat(stuff, '\n')
 					infolabel.FontFace = FontOption.Value
 					infolabel.TextSize = TextSize.Value
-					local size = getfontsize(removeTags(infolabel.Text), infolabel.TextSize, infolabel.FontFace)
+					local size = getfontbounds(removeTags(infolabel.Text), infolabel.TextSize, infolabel.FontFace)
 					infoholder.Size = UDim2.fromOffset(size.X + 16, size.Y + (Title.Enabled and TitleOffset.Enabled and 4 or 16))
 				end
 
@@ -83,9 +83,6 @@ FontOption = SessionInfo:CreateFont({
 Hide = SessionInfo:CreateTextList({
 	Name = 'Blacklist',
 	Tooltip = 'Name of entry to hide.',
-	Icon = getcustomasset('newvape/assets/new/blockedicon.png'),
-	Tab = getcustomasset('newvape/assets/new/blockedtab.png'),
-	TabSize = UDim2.fromOffset(21, 16),
 	Color = Color3.fromRGB(250, 50, 56)
 })
 SessionInfo:CreateColorSlider({

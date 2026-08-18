@@ -1,97 +1,140 @@
-local optionapi = {
-	Type = 'Targets',
-	Index = getTableSize(api.Options)
+local component = {
+	Index = getTableSize(api.Options),
+	Type = 'Targets'
 }
 
-local textlist = Instance.new('TextButton')
-textlist.Name = 'Targets'
-textlist.Size = UDim2.new(1, 0, 0, 50)
-textlist.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
-textlist.BorderSizePixel = 0
-textlist.AutoButtonColor = false
-textlist.Visible = optionsettings.Visible == nil or optionsettings.Visible
-textlist.Text = ''
-textlist.Parent = children
-addTooltip(textlist, optionsettings.Tooltip)
-local bkg = Instance.new('Frame')
-bkg.Name = 'BKG'
-bkg.Size = UDim2.new(1, -20, 1, -9)
-bkg.Position = UDim2.fromOffset(10, 4)
-bkg.BackgroundColor3 = color.Light(uipallet.Main, 0.034)
-bkg.Parent = textlist
-addCorner(bkg, UDim.new(0, 4))
+local targets = Instance.new('TextButton')
+targets.AutoButtonColor = false
+targets.BackgroundColor3 = color.Dark(children.BackgroundColor3, props.Darker and 0.02 or 0)
+targets.BorderSizePixel = 0
+targets.Size = UDim2.new(1, 0, 0, 50)
+targets.Text = ''
+targets.Visible = props.Visible == nil or props.Visible
+targets.Parent = children
+component.Object = targets
+addTooltip(targets, props.Tooltip)
+local holder = Instance.new('Frame')
+holder.BackgroundColor3 = color.Light(uipallet.Main, 0.034)
+holder.Position = UDim2.fromOffset(10, 4)
+holder.Size = UDim2.new(1, -20, 1, -9)
+holder.Parent = targets
+addCorner(holder, UDim.new(0, 4))
 local button = Instance.new('TextButton')
-button.Name = 'TextList'
-button.Size = UDim2.new(1, -2, 1, -2)
-button.Position = UDim2.fromOffset(1, 1)
-button.BackgroundColor3 = uipallet.Main
 button.AutoButtonColor = false
+button.BackgroundColor3 = uipallet.Main
+button.Position = UDim2.fromOffset(1, 1)
+button.Size = UDim2.new(1, -2, 1, -2)
 button.Text = ''
-button.Parent = bkg
-local buttontitle = Instance.new('TextLabel')
-buttontitle.Name = 'Title'
-buttontitle.Size = UDim2.new(1, -5, 0, 15)
-buttontitle.Position = UDim2.fromOffset(5, 6)
-buttontitle.BackgroundTransparency = 1
-buttontitle.Text = 'Target:'
-buttontitle.TextXAlignment = Enum.TextXAlignment.Left
-buttontitle.TextColor3 = color.Dark(uipallet.Text, 0.16)
-buttontitle.TextSize = 15
-buttontitle.TextTruncate = Enum.TextTruncate.AtEnd
-buttontitle.FontFace = uipallet.Font
-buttontitle.Parent = button
-local items = buttontitle:Clone()
-items.Name = 'Items'
+button.Parent = holder
+local title = Instance.new('TextLabel')
+title.BackgroundTransparency = 1
+title.FontFace = uipallet.Font
+title.Position = UDim2.fromOffset(5, 6)
+title.Size = UDim2.new(1, -5, 0, 15)
+title.Text = 'Target:'
+title.TextColor3 = color.Dark(uipallet.Text, 0.16)
+title.TextSize = 15
+title.TextTruncate = Enum.TextTruncate.AtEnd
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = button
+local items = Instance.new('TextLabel')
+items.BackgroundTransparency = 1
+items.FontFace = uipallet.Font
 items.Position = UDim2.fromOffset(5, 21)
+items.Size = UDim2.new(1, -5, 0, 15)
 items.Text = 'Ignore none'
 items.TextColor3 = color.Dark(uipallet.Text, 0.16)
 items.TextSize = 11
+items.TextTruncate = Enum.TextTruncate.AtEnd
+items.TextXAlignment = Enum.TextXAlignment.Left
 items.Parent = button
 addCorner(button, UDim.new(0, 4))
-local tool = Instance.new('Frame')
-tool.Size = UDim2.fromOffset(65, 12)
-tool.Position = UDim2.fromOffset(52, 8)
-tool.BackgroundTransparency = 1
-tool.Parent = button
-local toollist = Instance.new('UIListLayout')
-toollist.FillDirection = Enum.FillDirection.Horizontal
-toollist.Padding = UDim.new(0, 6)
-toollist.Parent = tool
-local window = Instance.new('TextButton')
-window.Name = 'TargetsTextWindow'
-window.Size = UDim2.fromOffset(220, 145)
-window.BackgroundColor3 = uipallet.Main
-window.BorderSizePixel = 0
-window.AutoButtonColor = false
-window.Visible = false
-window.Text = ''
-window.Parent = clickgui
-optionapi.Window = window
-addBlur(window)
-addCorner(window)
+local iconholder = Instance.new('Frame')
+iconholder.BackgroundTransparency = 1
+iconholder.Position = UDim2.fromOffset(52, 8)
+iconholder.Size = UDim2.fromOffset(65, 12)
+iconholder.Parent = button
+local layout = Instance.new('UIListLayout')
+layout.FillDirection = Enum.FillDirection.Horizontal
+layout.Padding = UDim.new(0, 6)
+layout.Parent = iconholder
+local targetswindow = Instance.new('TextButton')
+targetswindow.AutoButtonColor = false
+targetswindow.BackgroundColor3 = uipallet.Main
+targetswindow.BorderSizePixel = 0
+targetswindow.Position = UDim2.fromOffset(456, 139)
+targetswindow.Size = UDim2.fromOffset(220, 145)
+targetswindow.Text = ''
+targetswindow.Visible = false
+targetswindow.Parent = clickgui
+component.Window = targetswindow
+addBlur(targetswindow)
+addCorner(targetswindow)
 local icon = Instance.new('ImageLabel')
-icon.Name = 'Icon'
-icon.Size = UDim2.fromOffset(18, 12)
-icon.Position = UDim2.fromOffset(10, 15)
 icon.BackgroundTransparency = 1
-icon.Image = getcustomasset('newvape/assets/new/targetstab.png')
-icon.Parent = window
-local title = Instance.new('TextLabel')
-title.Name = 'Title'
-title.Size = UDim2.new(1, -36, 0, 20)
-title.Position = UDim2.fromOffset(math.abs(title.Size.X.Offset), 11)
-title.BackgroundTransparency = 1
-title.Text = 'Target settings'
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.TextColor3 = uipallet.Text
-title.TextSize = 13
-title.FontFace = uipallet.Font
-title.Parent = window
-local close = addCloseButton(window)
-optionsettings.Function = optionsettings.Function or function() end
+icon.Image = getvapeasset('newvape/assets/new/aim.png')
+icon.Position = UDim2.fromOffset(10, 15)
+icon.Size = UDim2.fromOffset(18, 12)
+icon.Parent = targetswindow
+local windowtitle = Instance.new('TextLabel')
+windowtitle.BackgroundTransparency = 1
+windowtitle.FontFace = uipallet.Font
+windowtitle.Size = UDim2.new(1, -36, 0, 20)
+windowtitle.Position = UDim2.fromOffset(math.abs(windowtitle.Size.X.Offset), 11)
+windowtitle.Text = 'Target settings'
+windowtitle.TextColor3 = uipallet.Text
+windowtitle.TextSize = 13
+windowtitle.TextXAlignment = Enum.TextXAlignment.Left
+windowtitle.Parent = targetswindow
+local close = addCloseButton(targetswindow)
+props.Function = props.Function or function() end
 
-function optionapi:Save(tab)
-	tab.Targets = {
+function component:Color(hue, sat, val, isRainbow)
+	if targetswindow.Visible then
+		holder.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+	end
+
+	if self.Players.Enabled then
+		tween:Cancel(self.Players.Object.Frame)
+		self.Players.Object.Frame.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+	end
+
+	if self.NPCs.Enabled then
+		tween:Cancel(self.NPCs.Object.Frame)
+		self.NPCs.Object.Frame.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+	end
+
+	if self.Invisible.Enabled then
+		tween:Cancel(self.Invisible.Object.Holder)
+		self.Invisible.Object.Holder.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+	end
+
+	if self.Walls.Enabled then
+		tween:Cancel(self.Walls.Object.Holder)
+		self.Walls.Object.Holder.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+	end
+end
+
+function component:Load(data)
+	if self.Players.Enabled ~= data.Players then
+		self.Players:Toggle()
+	end
+
+	if self.NPCs.Enabled ~= data.NPCs then
+		self.NPCs:Toggle()
+	end
+
+	if self.Invisible.Enabled ~= data.Invisible then
+		self.Invisible:Toggle()
+	end
+
+	if self.Walls.Enabled ~= data.Walls then
+		self.Walls:Toggle()
+	end
+end
+
+function component:Save(data)
+	data.Targets = {
 		Players = self.Players.Enabled,
 		NPCs = self.NPCs.Enabled,
 		Invisible = self.Invisible.Enabled,
@@ -99,135 +142,131 @@ function optionapi:Save(tab)
 	}
 end
 
-function optionapi:Load(tab)
-	if self.Players.Enabled ~= tab.Players then
-		self.Players:Toggle()
-	end
-	if self.NPCs.Enabled ~= tab.NPCs then
-		self.NPCs:Toggle()
-	end
-	if self.Invisible.Enabled ~= tab.Invisible then
-		self.Invisible:Toggle()
-	end
-	if self.Walls.Enabled ~= tab.Walls then
-		self.Walls:Toggle()
-	end
-end
+function component:UpdateText()
+	local newText = {}
 
-function optionapi:Color(hue, sat, val, rainbowcheck)
-	bkg.BackgroundColor3 = rainbowcheck and Color3.fromHSV(mainapi:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
 	if self.Players.Enabled then
-		tween:Cancel(self.Players.Object.Frame)
-		self.Players.Object.Frame.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+		table.insert(newText, 'Players')
 	end
+
 	if self.NPCs.Enabled then
-		tween:Cancel(self.NPCs.Object.Frame)
-		self.NPCs.Object.Frame.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+		table.insert(newText, 'NPCs')
 	end
-	if self.Invisible.Enabled then
-		tween:Cancel(self.Invisible.Object.Knob)
-		self.Invisible.Object.Knob.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-	end
-	if self.Walls.Enabled then
-		tween:Cancel(self.Walls.Object.Knob)
-		self.Walls.Object.Knob.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-	end
+
+	title.Text = 'Target: '..(#newText > 0 and table.concat(newText, ', ') or 'Nothing')
+	title.TextColor3 = #newText > 0 and uipallet.Text or Color3.fromRGB(255, 90, 90)
 end
 
-optionapi.Players = components.TargetsButton({
+component.Players = components.TargetsButton({
 	Position = UDim2.fromOffset(11, 45),
-	Icon = getcustomasset('newvape/assets/new/targetplayers1.png'),
-	IconSize = UDim2.fromOffset(15, 16),
-	IconParent = tool,
-	ToolIcon = getcustomasset('newvape/assets/new/targetplayers2.png'),
-	ToolSize = UDim2.fromOffset(11, 12),
-	Tooltip = 'Players',
-	Function = optionsettings.Function
-}, window, tool)
-optionapi.NPCs = components.TargetsButton({
+	Icon = getvapeasset('newvape/assets/new/players.png'),
+	IconSize = UDim2.fromOffset(16, 16),
+	IconParent = iconholder,
+	Targets = component,
+	Tooltip = 'Target players',
+	Function = props.Function
+}, targetswindow, iconholder)
+
+component.NPCs = components.TargetsButton({
 	Position = UDim2.fromOffset(112, 45),
-	Icon = getcustomasset('newvape/assets/new/targetnpc1.png'),
+	Icon = getvapeasset('newvape/assets/new/npcs.png'),
 	IconSize = UDim2.fromOffset(12, 16),
-	IconParent = tool,
-	ToolIcon = getcustomasset('newvape/assets/new/targetnpc2.png'),
-	ToolSize = UDim2.fromOffset(9, 12),
-	Tooltip = 'NPCs',
-	Function = optionsettings.Function
-}, window, tool)
-optionapi.Invisible = components.Toggle({
+	IconParent = iconholder,
+	Targets = component,
+	Tooltip = 'Target NPCs',
+	Function = props.Function
+}, targetswindow, iconholder)
+
+component.Invisible = components.Toggle({
 	Name = 'Ignore invisible',
 	Function = function()
-		local text = 'none'
-		if optionapi.Invisible.Enabled then
-			text = 'invisible'
+		local newText = {}
+
+		if component.Invisible.Enabled then
+			table.insert(newText, 'invisible')
 		end
-		if optionapi.Walls.Enabled then
-			text = text == 'none' and 'behind walls' or text..', behind walls'
+
+		if component.Walls.Enabled then
+			table.insert(newText, 'behind walls')
 		end
-		items.Text = 'Ignore '..text
-		optionsettings.Function()
+
+		items.Text = 'Ignore '..(#newText > 0 and table.concat(newText, ', ') or 'none')
+		props.Function()
 	end
-}, window, {Options = {}})
-optionapi.Invisible.Object.Position = UDim2.fromOffset(0, 81)
-optionapi.Walls = components.Toggle({
+}, targetswindow, {Options = {}})
+component.Invisible.Object.Position = UDim2.fromOffset(0, 81)
+
+component.Walls = components.Toggle({
 	Name = 'Ignore behind walls',
 	Function = function()
-		local text = 'none'
-		if optionapi.Invisible.Enabled then
-			text = 'invisible'
+		local newText = {}
+
+		if component.Invisible.Enabled then
+			table.insert(newText, 'invisible')
 		end
-		if optionapi.Walls.Enabled then
-			text = text == 'none' and 'behind walls' or text..', behind walls'
+
+		if component.Walls.Enabled then
+			table.insert(newText, 'behind walls')
 		end
-		items.Text = 'Ignore '..text
-		optionsettings.Function()
+
+		items.Text = 'Ignore '..(#newText > 0 and table.concat(newText, ', ') or 'none')
+		props.Function()
 	end
-}, window, {Options = {}})
-optionapi.Walls.Object.Position = UDim2.fromOffset(0, 111)
-if optionsettings.Players then
-	optionapi.Players:Toggle()
+}, targetswindow, {Options = {}})
+component.Walls.Object.Position = UDim2.fromOffset(0, 111)
+
+if props.Players then
+	component.Players:Toggle()
 end
-if optionsettings.NPCs then
-	optionapi.NPCs:Toggle()
+
+if props.NPCs then
+	component.NPCs:Toggle()
 end
-if optionsettings.Invisible then
-	optionapi.Invisible:Toggle()
+
+if props.Invisible then
+	component.Invisible:Toggle()
 end
-if optionsettings.Walls then
-	optionapi.Walls:Toggle()
+
+if props.Walls then
+	component.Walls:Toggle()
 end
 
 close.MouseButton1Click:Connect(function()
-	window.Visible = false
+	targetswindow.Visible = false
 end)
+
 button.MouseButton1Click:Connect(function()
-	window.Visible = not window.Visible
-	tween:Cancel(bkg)
-	bkg.BackgroundColor3 = window.Visible and Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value) or color.Light(uipallet.Main, 0.37)
+	targetswindow.Visible = not targetswindow.Visible
+	tween:Cancel(holder)
+
+	holder.BackgroundColor3 = targetswindow.Visible and Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value) or color.Light(uipallet.Main, 0.37)
 end)
-textlist.MouseEnter:Connect(function()
-	if not optionapi.Window.Visible then
-		tween:Tween(bkg, uipallet.Tween, {
+
+targets.MouseEnter:Connect(function()
+	if not targetswindow.Visible then
+		tween:Tween(holder, uipallet.Tween, {
 			BackgroundColor3 = color.Light(uipallet.Main, 0.37)
 		})
 	end
 end)
-textlist.MouseLeave:Connect(function()
-	if not optionapi.Window.Visible then
-		tween:Tween(bkg, uipallet.Tween, {
+
+targets.MouseLeave:Connect(function()
+	if not targetswindow.Visible then
+		tween:Tween(holder, uipallet.Tween, {
 			BackgroundColor3 = color.Light(uipallet.Main, 0.034)
 		})
 	end
 end)
-textlist:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
-	if mainapi.ThreadFix then
+
+targets:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
+	if vape.ThreadFix then
 		setthreadidentity(8)
 	end
-	local actualPosition = (textlist.AbsolutePosition + Vector2.new(0, 60)) / scale.Scale
-	window.Position = UDim2.fromOffset(actualPosition.X + 220, actualPosition.Y)
+
+	local actualPosition = (targets.AbsolutePosition + Vector2.new(0, 60)) / scale.Scale
+	targetswindow.Position = UDim2.fromOffset(actualPosition.X + 223, actualPosition.Y)
 end)
 
-optionapi.Object = textlist
-api.Options.Targets = optionapi
+api.Options.Targets = component
 
-return optionapi
+return component

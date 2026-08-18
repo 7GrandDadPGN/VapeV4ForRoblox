@@ -40,7 +40,7 @@ local Added = {
 		local nametag = Instance.new('TextLabel')
 		nametag.TextSize = 14 * Scale.Value
 		nametag.FontFace = FontOption.Value
-		local size = getfontsize(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
+		local size = getfontbounds(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 		nametag.Name = ent.Player and ent.Player.Name or ent.Character.Name
 		nametag.Size = UDim2.fromOffset(size.X + 8, size.Y + 7)
 		nametag.AnchorPoint = Vector2.new(0.5, 1)
@@ -138,7 +138,7 @@ local Updated = {
 				Strings[ent] = '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">%s</font><font color="rgb(85, 255, 85)">]</font> '..Strings[ent]
 			end
 
-			local size = getfontsize(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
+			local size = getfontbounds(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 			nametag.Size = UDim2.fromOffset(size.X + 8, size.Y + 7)
 			nametag.Text = Strings[ent]
 		end
@@ -205,7 +205,7 @@ local Loop = {
 				local mag = entitylib.isAlive and math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude) or 0
 				if Sizes[ent] ~= mag then
 					nametag.Text = string.format(Strings[ent], mag)
-					local ize = getfontsize(removeTags(nametag.Text), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
+					local ize = getfontbounds(removeTags(nametag.Text), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 					nametag.Size = UDim2.fromOffset(ize.X + 8, ize.Y + 7)
 					Sizes[ent] = mag
 				end
