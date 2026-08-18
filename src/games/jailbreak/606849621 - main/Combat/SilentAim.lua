@@ -13,6 +13,14 @@ local Hooked
 local ProjectileRaycast = RaycastParams.new()
 ProjectileRaycast.RespectCanCollide = true
 
+local function getMousePosition()
+	if inputService.TouchEnabled then
+		return gameCamera.ViewportSize / 2
+	end
+
+	return inputService:GetMouseLocation()
+end
+
 SilentAim = vape.Categories.Combat:CreateModule({
 	Name = 'SilentAim',
 	Function = function(callback)
@@ -23,7 +31,7 @@ SilentAim = vape.Categories.Combat:CreateModule({
 		if callback then
 			Hooked = jb.GunController.TransformLocalMousePosition
 			jb.GunController.TransformLocalMousePosition = function(self, pos)
-				local ent = entitylib['Entity'..Mode.Value]({
+				local entity = entitylib['Entity'..Mode.Value]({
 					Range = Range.Value,
 					Wallcheck = Target.Walls.Enabled and (obj or true) or nil,
 					Part = 'RootPart',
@@ -32,14 +40,15 @@ SilentAim = vape.Categories.Combat:CreateModule({
 					NPCs = Target.NPCs.Enabled
 				})
 
-				if ent then
+				if entity then
 					local item = jb.ItemSystemController:GetLocalEquipped()
-					if item and ((self.Tip.CFrame.Position - ent.RootPart.Position).Magnitude / (item.Config.BulletSpeed or 1000)) < item.BulletEmitter.LifeSpan then
-						ProjectileRaycast.FilterDescendantsInstances = {gameCamera, ent.Character, workspace.Vehicles}
-						ProjectileRaycast.CollisionGroup = ent.RootPart.CollisionGroup
-						local calc = prediction.SolveTrajectory(self.Tip.CFrame.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), ent.RootPart.Position, Instant.Enabled and Vector3.zero or ent.RootPart.Velocity, workspace.Gravity, ent.HipHeight, nil, ProjectileRaycast)
+					if item and ((self.Tip.CFrame.Position - entity.RootPart.Position).Magnitude / (item.Config.BulletSpeed or 1000)) < item.BulletEmitter.LifeSpan then
+						ProjectileRaycast.FilterDescendantsInstances = {gameCamera, entity.Character, workspace.Vehicles}
+						ProjectileRaycast.CollisionGroup = entity.RootPart.CollisionGroup
+
+						local calc = prediction.SolveTrajectory(self.Tip.CFrame.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), entity.RootPart.Position, Instant.Enabled and Vector3.zero or entity.RootPart.Velocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
 						if calc then
-							targetinfo.Targets[ent] = tick() + 1
+							targetinfo.Targets[entity] = tick() + 1
 							return calc
 						end
 					end
@@ -50,7 +59,7 @@ SilentAim = vape.Categories.Combat:CreateModule({
 
 			repeat
 				if CircleObject then
-					CircleObject.Position = inputService:GetMouseLocation()
+					CircleObject.Position = getMousePosition()
 				end
 
 				if Instant.Enabled then
@@ -68,7 +77,9 @@ SilentAim = vape.Categories.Combat:CreateModule({
 	end,
 	Tooltip = 'Silently adjusts your aim towards the enemy'
 })
-Target = SilentAim:CreateTargets({Players = true})
+Target = SilentAim:CreateTargets({
+	Players = true
+})
 Mode = SilentAim:CreateDropdown({
 	Name = 'Mode',
 	List = {'Mouse', 'Position'},
@@ -150,4 +161,6 @@ CircleFilled = SilentAim:CreateToggle({
 	Darker = true,
 	Visible = false
 })
-Instant = SilentAim:CreateToggle({Name = 'Hitscan Bullets'})
+Instant = SilentAim:CreateToggle({
+	Name = 'Hitscan Bullets'
+})

@@ -138,11 +138,13 @@ run(function()
 		if ent.NPC then return true end
 		if isFriend(ent.Player) then return false end
 		if not select(2, whitelist:get(ent.Player)) then return false end
+
 		if lplr.Team == teamsService.Police then
 			return ent.Player.Team ~= teamsService.Police
 		else
 			return ent.Player.Team == teamsService.Police
 		end
+
 		return true
 	end
 end)
@@ -332,13 +334,14 @@ run(function()
 	local arrests = sessioninfo:AddItem('Arrested')
 	local moneymade = sessioninfo:AddItem('Money Made', 0, toMoney, true)
 	local bounty = sessioninfo:AddItem('Bounty List', '', function()
-		local text, tab = '', workspace.MostWanted:FindFirstChild('Board', true)
-		tab = tab and tab:GetChildren() or {}
+		local text, holder = '', replicatedStorage.Bounty.Res.MostWanted:FindFirstChild('Board', true)
+		holder = holder and holder:GetChildren() or {}
 
-		for i, v in tab do
-			if v:IsA('Frame') then
-				local plrname = v:FindFirstChild('PlayerName', true)
-				local bounty = v:FindFirstChild('Bounty', true)
+		for _, obj in holder do
+			if obj:IsA('Frame') then
+				local plrname = obj:FindFirstChild('PlayerName', true)
+				local bounty = obj:FindFirstChild('Bounty', true)
+
 				if plrname and bounty then
 					text = text..'\n'..(plrname.Text..': '..bounty.Text:gsub(' Bounty', ''))
 				end

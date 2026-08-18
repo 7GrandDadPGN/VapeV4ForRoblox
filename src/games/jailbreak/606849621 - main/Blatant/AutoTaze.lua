@@ -10,19 +10,24 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 				local item = jb.ItemSystemController:GetLocalEquipped()
 				item = item and item.__ClassName == 'Taser' or nil
 				if not HandCheck.Enabled or item then
-					local ent = entitylib.EntityPosition({
+					local entities = entitylib.AllPosition({
 						Players = true,
 						Part = 'RootPart',
 						Range = 50
 					})
 
-					if ent and isIllegal(ent) and not isArrested(ent.Player.Name) and cooldown < os.clock() then
-						if item then
-							jb:FireServer('TaseReplicate', ent.Head.Position)
-						end
+					if cooldown < os.clock() then
+						for _, entity in entities do
+							if isIllegal(entity) and not isArrested(entity.Player.Name) then
+								if item then
+									jb:FireServer('TaseReplicate', entity.Head.Position)
+								end
 
-						jb:FireServer('Tase', ent.Humanoid, ent.Head, ent.Head.Position)
-						cooldown = os.clock() + 10
+								jb:FireServer('Tase', entity.Humanoid, entity.Head, entity.Head.Position)
+								cooldown = os.clock() + 10
+								break
+							end
+						end
 					end
 				end
 

@@ -1,18 +1,20 @@
 local MurderMystery
 local murderer, sheriff, oldtargetable, oldgetcolor
 
-local function itemAdded(v, plr)
-	if v:IsA('Tool') then
-		local check = v:FindFirstChild('IsGun') and 'sheriff' or v:FindFirstChild('KnifeServer') and 'murderer' or nil
-		check = check or v.Name:lower():find('knife') and 'murderer' or v.Name:lower():find('gun') and 'sheriff' or nil
+local function itemAdded(tool, plr)
+	if tool:IsA('Tool') then
+		local check = tool:FindFirstChild('IsGun') and 'sheriff' or tool:FindFirstChild('KnifeServer') and 'murderer' or nil
+		check = check or tool.Name:lower():find('knife') and 'murderer' or tool.Name:lower():find('gun') and 'sheriff' or nil
 
 		if check == 'murderer' and plr ~= murderer then
 			murderer = plr
+
 			if plr.Character then
 				entitylib.refresh()
 			end
 		elseif check == 'sheriff' and plr ~= sheriff then
 			sheriff = plr
+
 			if plr.Character then
 				entitylib.refresh()
 			end
@@ -54,14 +56,20 @@ MurderMystery = vape.Categories.World:CreateModule({
 				return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil
 			end
 
-			entitylib.targetCheck = function(ent)
-				if ent.Player and isFriend(ent.Player) then return false end
-				if murderer == lplr then return true end
-				return murderer == ent.Player or sheriff == ent.Player
+			entitylib.targetCheck = function(entity)
+				if entity.Player and isFriend(entity.Player) then
+					return false
+				end
+
+				if murderer == lplr then
+					return true
+				end
+
+				return murderer == entity.Player or sheriff == entity.Player
 			end
 
-			for _, v in playersService:GetPlayers() do
-				playerAdded(v)
+			for _, plr in playersService:GetPlayers() do
+				playerAdded(plr)
 			end
 
 			MurderMystery:Clean(playersService.PlayerAdded:Connect(playerAdded))

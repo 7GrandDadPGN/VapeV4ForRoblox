@@ -10,23 +10,23 @@ local function createKeystroke(keybutton, pos, pos2, text)
 	end
 
 	local key = Instance.new('Frame')
-	key.Size = keybutton == Enum.KeyCode.Space and UDim2.new(0, 110, 0, 24) or UDim2.new(0, 34, 0, 36)
 	key.BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
 	key.BackgroundTransparency = 1 - Color.Opacity
 	key.Position = pos
+	key.Size = keybutton == Enum.KeyCode.Space and UDim2.new(0, 110, 0, 24) or UDim2.new(0, 34, 0, 36)
 	key.Name = keybutton.Name
 	key.Parent = holder
-	local keytext = Instance.new('TextLabel')
-	keytext.BackgroundTransparency = 1
-	keytext.Size = UDim2.fromScale(1, 1)
-	keytext.Font = Enum.Font.Gotham
-	keytext.Text = text or keybutton.Name
-	keytext.TextXAlignment = Enum.TextXAlignment.Left
-	keytext.TextYAlignment = Enum.TextYAlignment.Top
-	keytext.Position = pos2
-	keytext.TextSize = keybutton == Enum.KeyCode.Space and 18 or 15
-	keytext.TextColor3 = Color3.new(1, 1, 1)
-	keytext.Parent = key
+	local label = Instance.new('TextLabel')
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.Gotham
+	label.Position = pos2
+	label.Size = UDim2.fromScale(1, 1)
+	label.Text = text or keybutton.Name
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextSize = keybutton == Enum.KeyCode.Space and 18 or 15
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Top
+	label.Parent = key
 	local corner = Instance.new('UICorner')
 	corner.CornerRadius = UDim.new(0, 4)
 	corner.Parent = key

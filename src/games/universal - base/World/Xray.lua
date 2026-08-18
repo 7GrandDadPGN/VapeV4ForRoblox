@@ -2,10 +2,10 @@ local Xray
 local List
 local modified = {}
 
-local function modifyPart(v)
-	if v:IsA('BasePart') and not table.find(List.ListEnabled, v.Name) then
-		modified[v] = true
-		v.LocalTransparencyModifier = 0.5
+local function modifyPart(part)
+	if part:IsA('BasePart') and not table.find(List.ListEnabled, part.Name) then
+		modified[part] = true
+		part.LocalTransparencyModifier = 0.5
 	end
 end
 
@@ -14,12 +14,12 @@ Xray = vape.Categories.World:CreateModule({
 	Function = function(callback)
 		if callback then
 			Xray:Clean(workspace.DescendantAdded:Connect(modifyPart))
-			for _, v in workspace:GetDescendants() do
-				modifyPart(v)
+			for _, part in workspace:QueryDescendants('BasePart') do
+				modifyPart(part)
 			end
 		else
-			for i in modified do
-				i.LocalTransparencyModifier = 0
+			for part in modified do
+				part.LocalTransparencyModifier = 0
 			end
 			table.clear(modified)
 		end

@@ -11,7 +11,7 @@ ChinaHat = vape.Legit:CreateModule({
 				setthreadidentity(8)
 			end
 
-			hat = Instance.new('MeshPart')
+			hat = assetService:CreateMeshPartAsync('http://www.roblox.com/asset/?id=1778999')
 			hat.Size = Vector3.new(3, 0.7, 3)
 			hat.Name = 'ChinaHat'
 			hat.Material = Enum.Material[Material.Value]
@@ -19,7 +19,6 @@ ChinaHat = vape.Legit:CreateModule({
 			hat.CanCollide = false
 			hat.CanQuery = false
 			hat.Massless = true
-			hat.MeshId = 'http://www.roblox.com/asset/?id=1778999'
 			hat.Transparency = 1 - Color.Opacity
 			hat.Parent = gameCamera
 			hat.CFrame = entitylib.isAlive and entitylib.character.Head.CFrame + Vector3.new(0, 1, 0) or CFrame.identity
@@ -33,6 +32,7 @@ ChinaHat = vape.Legit:CreateModule({
 				if weld then
 					weld:Destroy()
 				end
+
 				hat.Parent = gameCamera
 				hat.CFrame = char.Head.CFrame + Vector3.new(0, 1, 0)
 				hat.Velocity = Vector3.zero
@@ -42,10 +42,9 @@ ChinaHat = vape.Legit:CreateModule({
 				weld.Parent = hat
 			end))
 
-			repeat
+			ChinaHat:Clean(runService.RenderStepped:Connect(function()
 				hat.LocalTransparencyModifier = ((gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude <= 0.6 and 1 or 0)
-				task.wait()
-			until not ChinaHat.Enabled
+			end))
 		else
 			hat = nil
 		end

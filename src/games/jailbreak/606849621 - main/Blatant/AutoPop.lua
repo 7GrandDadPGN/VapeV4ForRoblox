@@ -59,10 +59,6 @@ AutoPop = vape.Categories.Blatant:CreateModule({
 					local item = jb.ItemSystemController:GetLocalEquipped()
 					if item and item.BulletEmitter and item.Model then
 						for _, car in getVehiclesNear() do
-							if (car:GetAttribute('VehicleTireHealth') or 10) <= 0 then
-								continue
-							end
-
 							if (delays[car] or 0) > os.clock() then
 								continue
 							end

@@ -20,6 +20,7 @@ local function playAnimation(char)
 		anim.Priority = Enum.AnimationPriority[Priority.Value]
 		anim:Play()
 		anim:AdjustSpeed(Speed.Value)
+
 		AnimationPlayer:Clean(anim.Stopped:Connect(function()
 			if currentanim == anim then
 				anim:Play()
@@ -34,15 +35,17 @@ AnimationPlayer = vape.Categories.Utility:CreateModule({
 	Name = 'AnimationPlayer',
 	Function = function(callback)
 		if callback then
-			animobject = Instance.new('Animation')
-			local suc, id = pcall(function()
+			local success, id = pcall(function()
 				return string.match(game:GetObjects('rbxassetid://'..IDBox.Value)[1].AnimationId, '%?id=(%d+)')
 			end)
-			animobject.AnimationId = 'rbxassetid://'..(suc and id or IDBox.Value)
+
+			animobject = Instance.new('Animation')
+			animobject.AnimationId = 'rbxassetid://'..(success and id or IDBox.Value)
 
 			if entitylib.isAlive then
 				playAnimation(entitylib.character)
 			end
+
 			AnimationPlayer:Clean(entitylib.Events.LocalAdded:Connect(playAnimation))
 			AnimationPlayer:Clean(animobject)
 		else

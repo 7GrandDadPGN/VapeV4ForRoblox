@@ -10,8 +10,10 @@ Gravity = vape.Categories.World:CreateModule({
 			if Mode.Value == 'Workspace' then
 				old = workspace.Gravity
 				workspace.Gravity = Value.Value
+
 				Gravity:Clean(workspace:GetPropertyChangedSignal('Gravity'):Connect(function()
 					if changed then return end
+
 					changed = true
 					old = workspace.Gravity
 					workspace.Gravity = Value.Value
@@ -21,6 +23,7 @@ Gravity = vape.Categories.World:CreateModule({
 				Gravity:Clean(runService.PreSimulation:Connect(function(dt)
 					if entitylib.isAlive and entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air then
 						local root = entitylib.character.RootPart
+
 						if Mode.Value == 'Impulse' then
 							root:ApplyImpulse(Vector3.new(0, dt * (workspace.Gravity - Value.Value), 0) * root.AssemblyMass)
 						else

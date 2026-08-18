@@ -9,13 +9,15 @@ rayCheck.RespectCanCollide = true
 local function getWaypointInMouse()
 	local obj, dist, location = nil, math.huge, inputService:GetMouseLocation()
 
-	for _, v in WaypointFolder:GetChildren() do
-		local position, vis = gameCamera:WorldToViewportPoint(v.StudsOffsetWorldSpace)
-		if not vis then continue end
+	for _, tag in WaypointFolder:GetChildren() do
+		local position, vis = gameCamera:WorldToViewportPoint(tag.StudsOffsetWorldSpace)
+		if not vis then
+			continue
+		end
 
 		local mag = (location - Vector2.new(position.x, position.y)).Magnitude
 		if mag < dist then
-			obj, dist = v, mag
+			obj, dist = tag, mag
 		end
 	end
 
@@ -36,12 +38,13 @@ MouseTP = vape.Categories.Blatant:CreateModule({
 				local waypoint = getWaypointInMouse()
 				position = waypoint and waypoint.StudsOffsetWorldSpace
 			else
-				local ent = entitylib.EntityMouse({
+				local entity = entitylib.EntityMouse({
 					Range = math.huge,
 					Part = 'RootPart',
 					Players = true
 				})
-				position = ent and ent.RootPart.Position
+
+				position = entity and entity.RootPart.Position
 			end
 
 			if not position then
@@ -52,6 +55,7 @@ MouseTP = vape.Categories.Blatant:CreateModule({
 
 			if MovementMode.Value ~= 'Lerp' then
 				MouseTP:Toggle()
+
 				if entitylib.isAlive then
 					if MovementMode.Value == 'Motor' then
 						motorMove(entitylib.character.RootPart, CFrame.lookAlong(position, entitylib.character.RootPart.CFrame.LookVector))
@@ -62,7 +66,7 @@ MouseTP = vape.Categories.Blatant:CreateModule({
 			else
 				MouseTP:Clean(runService.Heartbeat:Connect(function()
 					if entitylib.isAlive then
-						entitylib.character.RootPart.Velocity = Vector3.zero
+						entitylib.character.RootPart.AssemblyLinearVelocity = Vector3.zero
 					end
 				end))
 
