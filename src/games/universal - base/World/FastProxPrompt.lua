@@ -46,8 +46,8 @@ FastProxPrompt = vape.Categories.World:CreateModule({
 				thread = nil
 			end
 
-			for i, v in modified do
-				i.HoldDuration = v
+			for prompt, oldDuration in modified do
+				prompt.HoldDuration = oldDuration
 			end
 
 			table.clear(modified)
@@ -73,8 +73,8 @@ Value = FastProxPrompt:CreateSlider({
 	Default = 50,
 	Suffix = '%',
 	Function = function(val)
-		for i, v in modified do
-			i.HoldDuration = v * (val / 100)
+		for prompt, oldDuration in modified do
+			prompt.HoldDuration = oldDuration * (val / 100)
 		end
 	end
 })

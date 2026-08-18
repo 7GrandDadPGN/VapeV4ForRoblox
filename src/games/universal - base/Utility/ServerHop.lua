@@ -20,6 +20,7 @@ ServerHop:CreateButton({
 	Name = 'Rejoin Previous Server',
 	Function = function()
 		notif('ServerHop', shared.vapeserverhopprevious and 'Rejoining previous server...' or 'Cannot find previous server', 5)
+
 		if shared.vapeserverhopprevious then
 			teleportService:TeleportToPlaceInstance(game.PlaceId, shared.vapeserverhopprevious)
 		end

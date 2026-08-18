@@ -2,9 +2,9 @@ vape.Categories.Utility:CreateModule({
 	Name = 'Panic',
 	Function = function(callback)
 		if callback then
-			for _, v in vape.Modules do
-				if v.Enabled then
-					v:Toggle()
+			for _, module in vape.Modules do
+				if module.Enabled then
+					module:Toggle()
 				end
 			end
 		end

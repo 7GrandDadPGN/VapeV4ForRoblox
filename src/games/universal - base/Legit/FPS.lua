@@ -11,7 +11,7 @@ FPS = vape.Legit:CreateModule({
 		if callback then
 			local frames = {}
 			local startClock = os.clock()
-			local updateTick = tick()
+			local updateTick = os.clock()
 
 			FPS:Clean(runService.Heartbeat:Connect(function()
 				local updateClock = os.clock()
@@ -20,8 +20,8 @@ FPS = vape.Legit:CreateModule({
 				end
 
 				frames[1] = updateClock
-				if updateTick < tick() then
-					updateTick = tick() + 1
+				if updateTick < os.clock() then
+					updateTick = os.clock() + 1
 					label.Text = math.floor(os.clock() - startClock >= 1 and #frames or #frames / (os.clock() - startClock))..' FPS'
 				end
 			end))

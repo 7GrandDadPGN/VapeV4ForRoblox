@@ -58,15 +58,15 @@ Cape = vape.Legit:CreateModule({
 				createMotor(entitylib.character)
 			end
 
-			repeat
+			Cape:Clean(runService.RenderStepped:Connect(function()
 				if motor and entitylib.isAlive then
 					local velo = math.min(entitylib.character.RootPart.Velocity.Magnitude, 90)
 					motor.DesiredAngle = math.rad(6) + math.rad(velo) + (velo > 1 and math.abs(math.cos(tick() * 5)) / 3 or 0)
 				end
+
 				capesurface.Enabled = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude > 0.6
 				part.Transparency = (gameCamera.CFrame.Position - gameCamera.Focus.Position).Magnitude > 0.6 and 0 or 1
-				task.wait()
-			until not Cape.Enabled
+			end))
 		else
 			part = nil
 			motor = nil

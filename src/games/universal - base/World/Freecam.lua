@@ -8,9 +8,10 @@ Freecam = vape.Categories.World:CreateModule({
 		if callback then
 			repeat
 				task.wait(0.1)
-				for _, v in getconnections(gameCamera:GetPropertyChangedSignal('CameraType')) do
-					if v.Function then
-						module = debug.getupvalue(v.Function, 1)
+
+				for _, connection in getconnections(gameCamera:GetPropertyChangedSignal('CameraType')) do
+					if connection.Function then
+						module = debug.getupvalue(connection.Function, 1)
 					end
 				end
 			until module or not Freecam.Enabled
@@ -49,6 +50,7 @@ Freecam = vape.Categories.World:CreateModule({
 			pcall(function()
 				contextService:UnbindAction('FreecamKeyboard'..randomkey)
 			end)
+
 			if module and old then
 				module.activeCameraController.GetSubjectPosition = old
 				module = nil

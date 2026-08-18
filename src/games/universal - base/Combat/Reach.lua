@@ -14,28 +14,29 @@ Reach = vape.Categories.Combat:CreateModule({
 			repeat
 				local tool = getTool()
 				tool = tool and tool:FindFirstChildWhichIsA('TouchTransmitter', true)
+
 				if tool then
 					if Mode.Value == 'TouchInterest' then
-						local entites = {}
-						for _, v in entitylib.List do
-							if v.Targetable then
-								if not Targets.Players.Enabled and v.Player then continue end
-								if not Targets.NPCs.Enabled and v.NPC then continue end
-								table.insert(entites, v.Character)
+						local entities = {}
+						for _, entity in entitylib.List do
+							if entity.Targetable then
+								if not Targets.Players.Enabled and entity.Player then continue end
+								if not Targets.NPCs.Enabled and entity.NPC then continue end
+								table.insert(entities, entity.Character)
 							end
 						end
 
-						Overlay.FilterDescendantsInstances = entites
+						Overlay.FilterDescendantsInstances = entities
 						local parts = workspace:GetPartBoundsInBox(tool.Parent.CFrame * CFrame.new(0, 0, Value.Value / 2), tool.Parent.Size + Vector3.new(0, 0, Value.Value), Overlay)
 
-						for _, v in parts do
+						for _, part in parts do
 							if Random.new().NextNumber(Random.new(), 0, 100) > Chance.Value then
 								task.wait(0.2)
 								break
 							end
 
-							firetouchinterest(tool.Parent, v, 1)
-							firetouchinterest(tool.Parent, v, 0)
+							firetouchinterest(tool.Parent, part, 1)
+							firetouchinterest(tool.Parent, part, 0)
 						end
 					else
 						if not modified[tool.Parent] then
@@ -50,9 +51,9 @@ Reach = vape.Categories.Combat:CreateModule({
 				task.wait()
 			until not Reach.Enabled
 		else
-			for i, v in modified do
-				i.Size = v
-				i.Massless = false
+			for part, oldSize in modified do
+				part.Size = oldSize
+				part.Massless = false
 			end
 			table.clear(modified)
 		end

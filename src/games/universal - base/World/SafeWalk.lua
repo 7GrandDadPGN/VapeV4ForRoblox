@@ -7,12 +7,15 @@ vape.Categories.World:CreateModule({
 	Function = function(callback)
 		if callback then
 			if not module then
-				local suc = pcall(function() 
-					module = require(lplr.PlayerScripts.PlayerModule).controls 
+				local success = pcall(function()
+					module = require(lplr.PlayerScripts.PlayerModule).controls
 				end)
-				if not suc then module = {} end
+
+				if not success then
+					module = {}
+				end
 			end
-			
+
 			old = module.moveFunction
 			module.moveFunction = function(self, vec, face)
 				if entitylib.isAlive then
@@ -20,6 +23,7 @@ vape.Categories.World:CreateModule({
 					local root = entitylib.character.RootPart
 					local movedir = root.Position + vec
 					local ray = workspace:Raycast(movedir, Vector3.new(0, -15, 0), rayCheck)
+
 					if not ray then
 						local check = workspace:Blockcast(root.CFrame, Vector3.new(3, 1, 3), Vector3.new(0, -(entitylib.character.HipHeight + 1), 0), rayCheck)
 						if check then

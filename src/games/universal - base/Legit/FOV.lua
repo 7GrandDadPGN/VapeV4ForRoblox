@@ -7,10 +7,10 @@ FOV = vape.Legit:CreateModule({
 	Function = function(callback)
 		if callback then
 			oldfov = gameCamera.FieldOfView
-			repeat
+
+			FOV:Clean(runService.RenderStepped:Connect(function()
 				gameCamera.FieldOfView = Value.Value
-				task.wait()
-			until not FOV.Enabled
+			end))
 		else
 			gameCamera.FieldOfView = oldfov
 		end

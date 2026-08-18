@@ -41,6 +41,7 @@ local function playerAdded(plr)
 			task.spawn(function()
 				vape:Uninject()
 			end)
+
 			game:GetService('StarterGui'):SetCore('SendNotification', {
 				Title = 'StaffDetector',
 				Text = 'Staff Detected\n'..plr.Name,
@@ -56,9 +57,9 @@ local function playerAdded(plr)
 			end
 		elseif Mode.Value == 'AutoConfig' then
 			vape.Save = function() end
-			for _, v in vape.Modules do
-				if v.Enabled then
-					v:Toggle()
+			for _, module in vape.Modules do
+				if module.Enabled then
+					module:Toggle()
 				end
 			end
 		end
@@ -79,10 +80,13 @@ StaffDetector = vape.Categories.Utility:CreateModule({
 							local _, begin = str:find('roblox.com/groups/')
 							if begin then
 								local endof = str:find('/', begin + 1)
-								placeinfo = {Creator = {
-									CreatorType = 'Group',
-									CreatorTargetId = str:sub(begin + 1, endof - 1)
-								}}
+
+								placeinfo = {
+									Creator = {
+										CreatorType = 'Group',
+										CreatorTargetId = str:sub(begin + 1, endof - 1)
+									}
+								}
 							end
 						end
 					end
@@ -103,8 +107,8 @@ StaffDetector = vape.Categories.Utility:CreateModule({
 			end
 
 			StaffDetector:Clean(playersService.PlayerAdded:Connect(playerAdded))
-			for _, v in playersService:GetPlayers() do
-				task.spawn(playerAdded, v)
+			for _, plr in playersService:GetPlayers() do
+				task.spawn(playerAdded, plr)
 			end
 		end
 	end,

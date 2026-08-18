@@ -23,8 +23,8 @@ local function doCheck()
 			local parts = workspace:GetPartBoundsInBox(CFrame.new(root.Position - Vector3.new(0, entitylib.character.HipHeight / 2, 0)), Vector3.new(3, entitylib.character.HipHeight, 3), params)
 			local doHop = false
 
-			for _, v in parts do
-				local pos = v:GetClosestPointOnSurface(root.Position)
+			for _, part in parts do
+				local pos = part:GetClosestPointOnSurface(root.Position)
 				local diff = (root.Position.Y - pos.Y)
 
 				if diff > root.Size.Y / 2 then

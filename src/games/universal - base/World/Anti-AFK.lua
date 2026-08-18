@@ -4,13 +4,13 @@ vape.Categories.World:CreateModule({
 	Name = 'Anti-AFK',
 	Function = function(callback)
 		if callback then
-			for _, v in getconnections(lplr.Idled) do
-				table.insert(connections, v)
-				v:Disable()
+			for _, connection in getconnections(lplr.Idled) do
+				table.insert(connections, connection)
+				connection:Disable()
 			end
 		else
-			for _, v in connections do
-				v:Enable()
+			for _, connection in connections do
+				connection:Enable()
 			end
 			table.clear(connections)
 		end

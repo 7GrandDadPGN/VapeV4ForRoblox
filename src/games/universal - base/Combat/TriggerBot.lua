@@ -2,17 +2,17 @@ local TriggerBot
 local Targets
 local ShootDelay
 local Distance
-local rayCheck, delayCheck = RaycastParams.new(), tick()
+local rayCheck, delayCheck = RaycastParams.new(), os.clock()
 
 local function getTriggerBotTarget()
 	rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
 
 	local ray = workspace:Raycast(gameCamera.CFrame.Position, gameCamera.CFrame.LookVector * Distance.Value, rayCheck)
 	if ray and ray.Instance then
-		for _, v in entitylib.List do
-			if v.Targetable and v.Character and (Targets.Players.Enabled and v.Player or Targets.NPCs.Enabled and v.NPC) then
-				if ray.Instance:IsDescendantOf(v.Character) then
-					return entitylib.isVulnerable(v) and v
+		for _, entity in entitylib.List do
+			if entity.Targetable and entity.Character and (Targets.Players.Enabled and entity.Player or Targets.NPCs.Enabled and entity.NPC) then
+				if ray.Instance:IsDescendantOf(entity.Character) then
+					return entitylib.isVulnerable(entity) and entity
 				end
 			end
 		end
@@ -26,13 +26,14 @@ TriggerBot = vape.Categories.Combat:CreateModule({
 			repeat
 				if mouse1click and (isrbxactive or iswindowactive)() then
 					if getTriggerBotTarget() and canClick() then
-						if delayCheck < tick() then
+						if delayCheck < os.clock() then
 							if mouseClicked then
 								mouse1release()
-								delayCheck = tick() + ShootDelay.Value
+								delayCheck = os.clock() + ShootDelay.Value
 							else
 								mouse1press()
 							end
+
 							mouseClicked = not mouseClicked
 						end
 					else
@@ -51,6 +52,7 @@ TriggerBot = vape.Categories.Combat:CreateModule({
 					mouse1release()
 				end
 			end
+
 			mouseClicked = false
 		end
 	end,
