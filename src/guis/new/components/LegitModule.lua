@@ -113,7 +113,7 @@ if props.Size then
 	modulechildren.BackgroundTransparency = 1
 	modulechildren.Visible = false
 	modulechildren.Parent = scaledgui
-	addDragHandler(modulechildren, window)
+	addDragHandler(modulechildren, api.Window)
 	local objectstroke = Instance.new('UIStroke')
 	objectstroke.Color = Color3.fromRGB(5, 134, 105)
 	objectstroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
