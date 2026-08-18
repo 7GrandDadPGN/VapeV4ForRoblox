@@ -1,91 +1,110 @@
-local optionapi = {
-	Type = 'Toggle',
+local component = {
 	Enabled = false,
-	Index = getTableSize(api.Options)
+	Index = getTableSize(api.Options),
+	Name = props.Name,
+	Type = 'Toggle'
 }
 
-local hovered = false
+local isHover = false
 local toggle = Instance.new('TextButton')
-toggle.Name = optionsettings.Name..'Toggle'
-toggle.Size = UDim2.new(1, 0, 0, 30)
-toggle.BackgroundColor3 = color.Dark(children.BackgroundColor3, optionsettings.Darker and 0.02 or 0)
-toggle.BorderSizePixel = 0
 toggle.AutoButtonColor = false
-toggle.Visible = optionsettings.Visible == nil or optionsettings.Visible
-toggle.Text = '          '..optionsettings.Name
-toggle.TextXAlignment = Enum.TextXAlignment.Left
+toggle.BackgroundColor3 = color.Dark(children.BackgroundColor3, props.Darker and 0.02 or 0)
+toggle.BorderSizePixel = 0
+toggle.FontFace = uipallet.Font
+toggle.Size = UDim2.new(1, 0, 0, 30)
+toggle.Text = '          '..props.Name
 toggle.TextColor3 = color.Dark(uipallet.Text, 0.16)
 toggle.TextSize = 14
-toggle.FontFace = uipallet.Font
+toggle.TextXAlignment = Enum.TextXAlignment.Left
+toggle.Visible = props.Visible == nil or props.Visible
 toggle.Parent = children
-addTooltip(toggle, optionsettings.Tooltip)
-local knobholder = Instance.new('Frame')
-knobholder.Name = 'Knob'
-knobholder.Size = UDim2.fromOffset(22, 12)
-knobholder.Position = UDim2.new(1, -30, 0, 9)
-knobholder.BackgroundColor3 = color.Light(uipallet.Main, 0.14)
-knobholder.Parent = toggle
-addCorner(knobholder, UDim.new(1, 0))
-local knob = knobholder:Clone()
-knob.Size = UDim2.fromOffset(8, 8)
-knob.Position = UDim2.fromOffset(2, 2)
+component.Object = toggle
+addTooltip(toggle, props.Tooltip)
+local holder = Instance.new('Frame')
+holder.BackgroundColor3 = color.Light(uipallet.Main, 0.14)
+holder.Name = 'Holder'
+holder.Position = UDim2.new(1, -30, 0, 9)
+holder.Size = UDim2.fromOffset(22, 12)
+holder.Parent = toggle
+addCorner(holder, UDim.new(1, 0))
+local knob = Instance.new('Frame')
 knob.BackgroundColor3 = uipallet.Main
-knob.Parent = knobholder
-optionsettings.Function = optionsettings.Function or function() end
+knob.Position = UDim2.fromOffset(2, 2)
+knob.Size = UDim2.fromOffset(8, 8)
+knob.Parent = holder
+addCorner(knob, UDim.new(1, 0))
+props.Function = props.Function or function() end
 
-function optionapi:Save(tab)
-	tab[optionsettings.Name] = {Enabled = self.Enabled}
+function component:Color(hue, sat, val, isRainbow)
+	if self.Enabled then
+		tween:Cancel(holder)
+		holder.BackgroundColor3 = isRainbow and Color3.fromHSV(vape:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+	end
 end
 
-function optionapi:Load(tab)
-	if self.Enabled ~= tab.Enabled then
+function component:Load(data)
+	if self.Enabled ~= data.Enabled then
 		self:Toggle()
 	end
-end
 
-function optionapi:Color(hue, sat, val, rainbowcheck)
-	if self.Enabled then
-		tween:Cancel(knobholder)
-		knobholder.BackgroundColor3 = rainbowcheck and Color3.fromHSV(mainapi:Color((hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(hue, sat, val)
+	if self.Bind and data.Bind then
+		self.Bind:Load(data.Bind)
 	end
 end
 
-function optionapi:Toggle()
+function component:Save(data)
+	data[props.Name] = {
+		Enabled = self.Enabled
+	}
+
+	if self.Bind then
+		self.Bind:Save(data[props.Name])
+	end
+end
+
+function component:Toggle()
+	local isRainbow = vape.GUIColor.Rainbow and vape.RainbowMode.Value ~= 'Retro'
 	self.Enabled = not self.Enabled
-	local rainbowcheck = mainapi.GUIColor.Rainbow and mainapi.RainbowMode.Value ~= 'Retro'
-	tween:Tween(knobholder, uipallet.Tween, {
-		BackgroundColor3 = self.Enabled and (rainbowcheck and Color3.fromHSV(mainapi:Color((mainapi.GUIColor.Hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value)) or (hovered and color.Light(uipallet.Main, 0.37) or color.Light(uipallet.Main, 0.14))
+
+	tween:Tween(holder, uipallet.Tween, {
+		BackgroundColor3 = self.Enabled and (isRainbow and Color3.fromHSV(vape:Color((vape.GUIColor.Hue - (self.Index * 0.075)) % 1)) or Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)) or (isHover and color.Light(uipallet.Main, 0.37) or color.Light(uipallet.Main, 0.14))
 	})
+
 	tween:Tween(knob, uipallet.Tween, {
 		Position = UDim2.fromOffset(self.Enabled and 12 or 2, 2)
 	})
-	optionsettings.Function(self.Enabled)
+
+	props.Function(self.Enabled)
 end
 
 toggle.MouseEnter:Connect(function()
-	hovered = true
-	if not optionapi.Enabled then
-		tween:Tween(knobholder, uipallet.Tween, {
+	isHover = true
+
+	if not component.Enabled then
+		tween:Tween(holder, uipallet.Tween, {
 			BackgroundColor3 = color.Light(uipallet.Main, 0.37)
 		})
 	end
 end)
+
 toggle.MouseLeave:Connect(function()
-	hovered = false
-	if not optionapi.Enabled then
-		tween:Tween(knobholder, uipallet.Tween, {
+	isHover = false
+
+	if not component.Enabled then
+		tween:Tween(holder, uipallet.Tween, {
 			BackgroundColor3 = color.Light(uipallet.Main, 0.14)
 		})
 	end
 end)
+
 toggle.MouseButton1Click:Connect(function()
-	optionapi:Toggle()
+	component:Toggle()
 end)
 
-if optionsettings.Default then
-	optionapi:Toggle()
+if props.Default then
+	component:Toggle()
 end
-optionapi.Object = toggle
-api.Options[optionsettings.Name] = optionapi
 
-return optionapi
+api.Options[props.Name] = component
+
+return component

@@ -35,7 +35,7 @@ local function choosesong()
 		return
 	end
 
-	songobj.SoundId = assetfunction(split[1])
+	songobj.SoundId = getcustomasset(split[1])
 	repeat
 		task.wait()
 	until songobj.IsLoaded or not SongBeats.Enabled

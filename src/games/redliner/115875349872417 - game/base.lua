@@ -60,7 +60,7 @@ local drawingactor = loadstring(downloadFile('newvape/libraries/drawing.lua'), '
 local redline = {Teams = {}}
 local starttime = os.clock()
 local TargetStrafeVector
-local latestHash = 'c401462bc7f7f49e53b4a8da2de5b57bc2d7e14df1b773e5ccd1bcddb28db9c843b8902d2c93738a2f042e533d3d4971'
+local latestHash = '6695e8a1441b69e101c57ae114be5c609c8d8ee57fab161515b98de0b808d555bb115dcf270596be45df7360cc9bdd48'
 local redline_boxes = {
 	{
 		boxtype = 'redliner_melee',
@@ -300,7 +300,7 @@ run(function()
 			if entity.NPC then return true end
 			if isFriend(entity.Player) then return false end
 			if not select(2, whitelist:get(entity.Player)) then return false end
-			if vape.Categories.Main.Options['Teams by server'].Enabled then
+			if vape.Settings.Modules.Options['Teams by server'].Enabled then
 				if not redline.Teams[tostring(lplr.UserId)] then return true end
 				return redline.Teams[tostring(entity.Player.UserId)] ~= redline.Teams[tostring(lplr.UserId)]
 			end

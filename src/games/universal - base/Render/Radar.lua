@@ -43,7 +43,7 @@ end
 
 Radar = vape:CreateOverlay({
 	Name = 'Radar',
-	Icon = getcustomasset('newvape/assets/new/radaricon.png'),
+	Icon = getvapeasset('newvape/assets/new/radar.png'),
 	Size = UDim2.fromOffset(14, 14),
 	Position = UDim2.fromOffset(12, 13),
 	Function = function(callback)

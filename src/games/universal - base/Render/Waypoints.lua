@@ -13,7 +13,7 @@ Waypoints = vape.Categories.Render:CreateModule({
 		if callback then
 			for _, v in List.ListEnabled do
 				local split = v:split('/')
-				local tagSize = getfontsize(removeTags(split[2]), 14 * Scale.Value, FontOption.Value, Vector2.new(100000, 100000))
+				local tagSize = getfontbounds(removeTags(split[2]), 14 * Scale.Value, FontOption.Value, Vector2.new(100000, 100000))
 				local billboard = Instance.new('BillboardGui')
 				billboard.Size = UDim2.fromOffset(tagSize.X + 8, tagSize.Y + 7)
 				billboard.StudsOffsetWorldSpace = Vector3.new(unpack(split[1]:split(',')))

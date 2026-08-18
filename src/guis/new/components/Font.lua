@@ -1,46 +1,52 @@
 local fonts = {
-	optionsettings.Blacklist,
+	props.Default,
 	'Custom'
 }
+
 for _, v in Enum.Font:GetEnumItems() do
 	if not table.find(fonts, v.Name) then
 		table.insert(fonts, v.Name)
 	end
 end
 
-local optionapi = {Value = Font.fromEnum(Enum.Font[fonts[1]])}
+local component = {
+	Value = Font.fromEnum(Enum.Font[fonts[1]])
+}
 local fontdropdown
 local fontbox
-optionsettings.Function = optionsettings.Function or function() end
+props.Function = props.Function or function() end
 
 fontdropdown = components.Dropdown({
-	Name = optionsettings.Name,
+	Name = props.Name,
 	List = fonts,
 	Function = function(val)
 		fontbox.Object.Visible = val == 'Custom' and fontdropdown.Object.Visible
 		if val ~= 'Custom' then
-			optionapi.Value = Font.fromEnum(Enum.Font[val])
-			optionsettings.Function(optionapi.Value)
+			component.Value = Font.fromEnum(Enum.Font[val])
+			props.Function(component.Value)
 		else
 			pcall(function()
-				optionapi.Value = Font.fromId(tonumber(fontbox.Value))
+				component.Value = Font.fromId(tonumber(fontbox.Value))
 			end)
-			optionsettings.Function(optionapi.Value)
+
+			props.Function(component.Value)
 		end
 	end,
-	Darker = optionsettings.Darker,
-	Visible = optionsettings.Visible
+	Darker = props.Darker,
+	Visible = props.Visible
 }, children, api)
-optionapi.Object = fontdropdown.Object
+component.Object = fontdropdown.Object
+
 fontbox = components.TextBox({
-	Name = optionsettings.Name..' Asset',
+	Name = props.Name..' Asset',
 	Placeholder = 'font (rbxasset)',
 	Function = function()
 		if fontdropdown.Value == 'Custom' then
 			pcall(function()
-				optionapi.Value = Font.fromId(tonumber(fontbox.Value))
+				component.Value = Font.fromId(tonumber(fontbox.Value))
 			end)
-			optionsettings.Function(optionapi.Value)
+
+			props.Function(component.Value)
 		end
 	end,
 	Visible = false,
@@ -51,4 +57,4 @@ fontdropdown.Object:GetPropertyChangedSignal('Visible'):Connect(function()
 	fontbox.Object.Visible = fontdropdown.Object.Visible and fontdropdown.Value == 'Custom'
 end)
 
-return optionapi
+return component

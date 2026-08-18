@@ -44,15 +44,24 @@ if not shared.VapeDeveloper then
 	local _, subbed = pcall(function()
 		return game:HttpGet('https://github.com/7GrandDadPGN/VapeCompiled')
 	end)
+
+	local assetVer = '1'
 	local commit = subbed:find('currentOid')
 	commit = commit and subbed:sub(commit + 13, commit + 52) or nil
 	commit = commit and #commit == 40 and commit or 'main'
+
 	if commit == 'main' or (isfile('newvape/profiles/commit.txt') and readfile('newvape/profiles/commit.txt') or '') ~= commit then
 		wipeFolder('newvape')
 		wipeFolder('newvape/games')
 		wipeFolder('newvape/guis')
 		wipeFolder('newvape/libraries')
 	end
+
+	if (isfile('newvape/profiles/asset.txt') and readfile('newvape/profiles/asset.txt') or '') ~= assetVer then
+		wipeFolder('newvape/assets')
+	end
+
+	writefile('newvape/profiles/asset.txt', assetVer)
 	writefile('newvape/profiles/commit.txt', commit)
 end
 

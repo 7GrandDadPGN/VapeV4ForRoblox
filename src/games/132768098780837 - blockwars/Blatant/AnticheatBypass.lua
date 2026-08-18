@@ -34,11 +34,15 @@ AnticheatBypass = vape.Categories.Blatant:CreateModule({
 				runService:UnbindFromRenderStep(bindKey)
 			end)
 
-			for _, connection in {entitylib.Events.LocalAdded, replicatedStorage.GameEvents.BedWarsRemotes.AntiCheat_Strike.OnClientEvent} do
-				AnticheatBypass:Clean(connection:Connect(function()
+			AnticheatBypass:Clean(entitylib.Events.LocalAdded:Connect(function()
+				oldcf = nil
+			end))
+
+			AnticheatBypass:Clean(runService.PreAnimation:Connect(function()
+				if entitylib.isAlive and oldcf and entitylib.character.RootPart.Position ~= oldcf.Position then
 					oldcf = nil
-				end))
-			end
+				end
+			end))
 
 			local tpTimer = 0
 			local fallTimer = 0
