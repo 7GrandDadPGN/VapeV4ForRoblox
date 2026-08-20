@@ -5,7 +5,7 @@ local Color
 local Scale
 local Background
 WaypointFolder = Instance.new('Folder')
-WaypointFolder.Parent = vape.gui
+WaypointFolder.Parent = vape.holder
 
 Waypoints = vape.Categories.Render:CreateModule({
 	Name = 'Waypoints',

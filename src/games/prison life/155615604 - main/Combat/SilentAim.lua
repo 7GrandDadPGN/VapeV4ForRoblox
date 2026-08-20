@@ -14,16 +14,23 @@ run(function()
 	local CircleTransparency
 	local CircleFilled
 	local CircleObject
-	local rayParams = RaycastParams.new()
-	rayParams.CollisionGroup = 'ClientBullet'
-	rayParams.FilterType = Enum.RaycastFilterType.Exclude
-	local fireoffset, rand, delayCheck = CFrame.identity, Random.new(), tick()
+	local rand = Random.new()
 	local old
 
+	local function getMousePosition()
+		if inputService.TouchEnabled then
+			return gameCamera.ViewportSize / 2
+		end
+		return inputService.GetMouseLocation(inputService)
+	end
+
 	local function getTarget(origin, limit, attackcheck)
-		if rand.NextNumber(rand, 0, 100) > (AutoFire.Enabled and 100 or HitChance.Value) then return end
+		if rand.NextNumber(rand, 0, 100) > (AutoFire.Enabled and 100 or HitChance.Value) then
+			return
+		end
+
 		local targetPart = (rand.NextNumber(rand, 0, 100) < (AutoFire.Enabled and 100 or HeadshotChance.Value)) and 'Head' or 'RootPart'
-		local ent = entitylib['Entity'..Mode.Value]({
+		local entity = entitylib['Entity'..Mode.Value]({
 			Range = Mode.Value == 'Position' and math.min(Range.Value, limit) or Range.Value,
 			RangePosition = limit,
 			AttackCheck = attackcheck,
@@ -35,19 +42,21 @@ run(function()
 			NPCs = Target.NPCs.Enabled
 		})
 
-		if ent then
-			targetinfo.Targets[ent] = tick() + 1
+		if entity then
+			targetinfo.Targets[entity] = tick() + 1
 		end
 
-		return ent, ent and ent[targetPart], origin
+		return entity, entity and entity[targetPart], origin
 	end
 
 	local function Hook(...)
 		local origin, direction = ...
 		local gundata = debug.getupvalue(oldshoot or pl.Shoot, 10)
-		local ent, targetPart, origin = getTarget(origin, gundata and gundata.Range or 1000, not gundata or gundata.Behavior ~= 'Taser')
+		local entity, targetPart, origin = getTarget(origin, gundata and gundata.Range or 1000, not gundata or gundata.Behavior ~= 'Taser')
 
-		if not ent then return old(...) end
+		if not entity then
+			return old(...)
+		end
 
 		local args = table.pack(...)
 		args[2] = targetPart.Position
@@ -55,20 +64,15 @@ run(function()
 		aimVec = args[2]
 
 		if Wallbang.Enabled then
-			local ignore = {lplr.Character}
-			for _, v in entitylib.List do
-				table.insert(ignore, v.Character)
-			end
-			rayParams.FilterDescendantsInstances = ignore
-			local ray = workspace:Raycast(args[2], (origin - args[2]), rayParams)
+			local ray = workspace:Raycast(args[2], (origin - args[2]), OriginScanner.Ray)
 
 			if ray then
 				local neworigin, hitbox = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.01, targetPart)
 
 				if neworigin then
-					for i, v in debug.getstack(3) do
-						if v == origin then
-							debug.setstack(3, i, neworigin)
+					for index, value in debug.getstack(3) do
+						if value == origin then
+							debug.setstack(3, index, neworigin)
 						end
 					end
 
@@ -95,14 +99,14 @@ run(function()
 					return Hook(...)
 				end)
 
-				local autofiretimer = os.clock()
+				local fireDelay = os.clock()
 				repeat
 					if CircleObject then
-						CircleObject.Position = inputService:GetMouseLocation()
+						CircleObject.Position = getMousePosition()
 					end
 
-					if AutoFire.Enabled and autofiretimer < os.clock() then
-						autofiretimer = os.clock() + (1 / AutoFireRate.Value)
+					if AutoFire.Enabled and fireDelay < os.clock() then
+						fireDelay = os.clock() + (1 / AutoFireRate.Value)
 
 						local tool = lplr.Character:FindFirstChildWhichIsA('Tool')
 						local gundata = debug.getupvalue(oldshoot or pl.Shoot, 10)
@@ -110,7 +114,7 @@ run(function()
 						if gundata and ammo > 0 and not tool:GetAttribute('Local_IsShooting') then
 							local limit = gundata.Range or 1000
 							local taser = gundata and gundata.Behavior == 'Taser'
-							local ent = entitylib['Entity'..Mode.Value]({
+							local entity = entitylib['Entity'..Mode.Value]({
 								Range = Mode.Value == 'Position' and math.min(Range.Value, limit) or Range.Value,
 								RangePosition = limit,
 								AttackCheck = not taser,
@@ -121,9 +125,9 @@ run(function()
 								Players = Target.Players.Enabled
 							})
 
-							if ent and entitylib.character.Humanoid.Health > 0 then
-								if not ((taser or AutoFireTaser.Enabled) and (ent.Character:GetAttribute('Tased') or ent.Character:GetAttribute('Arrested'))) then
-									autofiretimer = os.clock() + (ammo > 1 and gundata.FireRate or 1 / AutoFireRate.Value)
+							if entity and entitylib.character.Humanoid.Health > 0 then
+								if not ((taser or AutoFireTaser.Enabled) and (entity.Character:GetAttribute('Tased') or entity.Character:GetAttribute('Arrested'))) then
+									fireDelay = os.clock() + (ammo > 1 and gundata.FireRate or 1 / AutoFireRate.Value)
 									local obj = {UserInputState = Enum.UserInputState.Begin, UserInputType = Enum.UserInputType.MouseButton1, Position = Vector3.zero}
 									task.spawn(pl.Shoot, obj)
 									obj.UserInputState = Enum.UserInputState.End
@@ -141,6 +145,7 @@ run(function()
 					else
 						hookfunction(pl.Bullet, old)
 					end
+
 					old = nil
 				end
 			end

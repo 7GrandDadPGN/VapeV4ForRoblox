@@ -49,8 +49,7 @@ AutoReload = vape.Categories.Utility:CreateModule({
 							local wep = getWeapon()
 
 							if wep then
-								tool.Parent = lplr.Backpack
-								wep.Parent = lplr.Character
+								entitylib.character.Humanoid:EquipTool(wep)
 							end
 						end
 					end

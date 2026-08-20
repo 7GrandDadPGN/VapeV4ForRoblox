@@ -9,7 +9,7 @@ local Teammates
 local Walls
 local Reference = {}
 local Folder = Instance.new('Folder')
-Folder.Parent = vape.gui
+Folder.Parent = vape.holder
 
 local function Added(ent)
 	if not Targets.Players.Enabled and ent.Player then return end

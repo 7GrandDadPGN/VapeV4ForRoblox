@@ -203,17 +203,18 @@ local frictionTable, oldfrict, entitylib = {}, {}
 local function updateVelocity()
 	if getTableSize(frictionTable) > 0 then
 		if entitylib.isAlive then
-			for _, v in entitylib.character.Character:GetChildren() do
-				if v:IsA('BasePart') and v.Name ~= 'HumanoidRootPart' and not oldfrict[v] then
-					oldfrict[v] = v.CustomPhysicalProperties or 'none'
-					v.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.2, 0.5, 1, 1)
+			for _, part in entitylib.character.Character:GetChildren() do
+				if part:IsA('BasePart') and part.Name ~= 'HumanoidRootPart' and not oldfrict[part] then
+					oldfrict[part] = part.CustomPhysicalProperties or 'none'
+					part.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.2, 0.5, 1, 1)
 				end
 			end
 		end
 	else
-		for i, v in oldfrict do
-			i.CustomPhysicalProperties = v ~= 'none' and v or nil
+		for part, data in oldfrict do
+			part.CustomPhysicalProperties = data ~= 'none' and data or nil
 		end
+
 		table.clear(oldfrict)
 	end
 end
@@ -239,8 +240,8 @@ local whitelist = {
 	tagcallback = {},
 	data = {WhitelistedUsers = {}},
 	hashes = setmetatable({}, {
-		__index = function(_, v)
-			return hash and hash.sha512(v..'SelfReport') or ''
+		__index = function(_, data)
+			return hash and hash.sha512(data..'SelfReport') or ''
 		end
 	}),
 	hooked = false,
@@ -313,8 +314,8 @@ SpeedMethods = {
 		root.CFrame += dest
 	end,
 	TP = function(options, moveDirection)
-		if options.TPTiming < tick() then
-			options.TPTiming = tick() + options.TPFrequency.Value
+		if options.TPTiming < os.clock() then
+			options.TPTiming = os.clock() + options.TPFrequency.Value
 			SpeedMethods.CFrame(options, moveDirection, 1)
 		end
 	end,
@@ -325,10 +326,11 @@ SpeedMethods = {
 	Pulse = function(options, moveDirection)
 		local root = entitylib.character.RootPart
 		local dt = math.max(options.Value.Value - entitylib.character.Humanoid.WalkSpeed, 0)
-		dt = dt * (1 - math.min((tick() % (options.PulseLength.Value + options.PulseDelay.Value)) / options.PulseLength.Value, 1))
+		dt = dt * (1 - math.min((os.clock() % (options.PulseLength.Value + options.PulseDelay.Value)) / options.PulseLength.Value, 1))
 		root.AssemblyLinearVelocity = (moveDirection * (entitylib.character.Humanoid.WalkSpeed + dt)) + Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
 	end
 }
+
 for name in SpeedMethods do
 	if not table.find(SpeedMethodList, name) then
 		table.insert(SpeedMethodList, name)
@@ -336,15 +338,15 @@ for name in SpeedMethods do
 end
 
 run(function()
-	entitylib.getUpdateConnections = function(ent)
-		local hum = ent.Humanoid
+	entitylib.getUpdateConnections = function(entity)
+		local hum = entity.Humanoid
 		return {
 			hum:GetPropertyChangedSignal('Health'),
 			hum:GetPropertyChangedSignal('MaxHealth'),
 			{
 				Connect = function()
-					ent.Friend = ent.Player and isFriend(ent.Player) or nil
-					ent.Target = ent.Player and isTarget(ent.Player) or nil
+					entity.Friend = entity.Player and isFriend(entity.Player) or nil
+					entity.Target = entity.Player and isTarget(entity.Player) or nil
 					return {
 						Disconnect = function() end
 					}
@@ -353,29 +355,29 @@ run(function()
 		}
 	end
 
-	entitylib.targetCheck = function(ent)
-		if ent.TeamCheck then
-			return ent:TeamCheck()
+	entitylib.targetCheck = function(entity)
+		if entity.TeamCheck then
+			return entity:TeamCheck()
 		end
-		if ent.NPC then return true end
-		if isFriend(ent.Player) then return false end
-		if not select(2, whitelist:get(ent.Player)) then return false end
+		if entity.NPC then return true end
+		if isFriend(entity.Player) then return false end
+		if not select(2, whitelist:get(entity.Player)) then return false end
 		if vape.Settings.Modules.Options['Teams by server'].Enabled then
 			if not lplr.Team then return true end
-			if not ent.Player.Team then return true end
-			if ent.Player.Team ~= lplr.Team then return true end
-			return #ent.Player.Team:GetPlayers() == #playersService:GetPlayers()
+			if not entity.Player.Team then return true end
+			if entity.Player.Team ~= lplr.Team then return true end
+			return #entity.Player.Team:GetPlayers() == #playersService:GetPlayers()
 		end
 		return true
 	end
 
-	entitylib.getEntityColor = function(ent)
-		ent = ent.Player
-		if not (ent and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
-		if isFriend(ent, true) then
+	entitylib.getEntityColor = function(entity)
+		entity = entity.Player
+		if not (entity and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
+		if isFriend(entity, true) then
 			return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
 		end
-		return tostring(ent.TeamColor) ~= 'White' and ent.TeamColor.Color or nil
+		return tostring(entity.TeamColor) ~= 'White' and entity.TeamColor.Color or nil
 	end
 
 	vape:Clean(function()
@@ -831,10 +833,10 @@ run(function()
 				terrain:Clear()
 			end
 
-			for _, v in workspace:GetChildren() do
-				if v ~= terrain and not v:IsDescendantOf(lplr.Character) and not v:IsA('Camera') then
-					v:Destroy()
-					v:ClearAllChildren()
+			for _, obj in workspace:GetChildren() do
+				if obj ~= terrain and not obj:IsDescendantOf(lplr.Character) and not obj:IsA('Camera') then
+					obj:Destroy()
+					obj:ClearAllChildren()
 				end
 			end
 		end,
@@ -892,9 +894,10 @@ run(function()
 		end,
 		trip = function()
 			if entitylib.isAlive then
-				if entitylib.character.RootPart.Velocity.Magnitude < 15 then
-					entitylib.character.RootPart.Velocity = entitylib.character.RootPart.CFrame.LookVector * 15
+				if entitylib.character.RootPart.AssemblyLinearVelocity.Magnitude < 15 then
+					entitylib.character.RootPart.AssemblyLinearVelocity = entitylib.character.RootPart.CFrame.LookVector * 15
 				end
+
 				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
 			end
 		end,
@@ -917,7 +920,10 @@ run(function()
 
 	task.spawn(function()
 		repeat
-			if whitelist:update(whitelist.loaded) then return end
+			if whitelist:update(whitelist.loaded) then
+				return
+			end
+
 			task.wait(10)
 		until vape.Loaded == nil
 	end)

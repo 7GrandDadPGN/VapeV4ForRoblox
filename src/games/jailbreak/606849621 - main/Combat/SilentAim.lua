@@ -4,12 +4,13 @@ local Mode
 local Range
 local HitChance
 local HeadshotChance
+local Wallbang
 local CircleColor
 local CircleTransparency
 local CircleFilled
 local CircleObject
 local Instant
-local Hooked
+local old
 local ProjectileRaycast = RaycastParams.new()
 ProjectileRaycast.RespectCanCollide = true
 
@@ -21,6 +22,74 @@ local function getMousePosition()
 	return inputService:GetMouseLocation()
 end
 
+local function getTarget(origin, limit, attackcheck)
+	local targetPart = 'RootPart'
+	local entity = entitylib['Entity'..Mode.Value]({
+		Range = Mode.Value == 'Position' and math.min(Range.Value, limit) or Range.Value,
+		RangePosition = limit,
+		Wallcheck = Target.Walls.Enabled and true or nil,
+		Wallbang = Wallbang.Enabled and entitylib.character.RootPart.Position or nil,
+		Part = targetPart,
+		Origin = origin.Position,
+		Players = Target.Players.Enabled,
+		NPCs = Target.NPCs.Enabled
+	})
+
+	if entity then
+		targetinfo.Targets[entity] = tick() + 1
+	end
+
+	return entity, entity and entity[targetPart], origin
+end
+
+local function Hook(...)
+	local item = ...
+
+	if item.Local then
+		OriginScanner:UpdateIgnore(item.Model)
+		local entity, targetPart, origin = getTarget(item.Tip.CFrame, (item.Config.BulletSpeed or 1000) * item.BulletEmitter.LifeSpan)
+
+		if entity then
+			local oldTip
+			if Wallbang.Enabled then
+				local ray = workspace:Raycast(targetPart.Position, (origin.Position - targetPart.Position), OriginScanner.Ray)
+
+				if ray then
+					local neworigin, hitbox = OriginScanner:Scan(entitylib.character.RootPart.Position, targetPart.Position, ray.Position + ray.Normal * 0.01, targetPart)
+
+					if neworigin then
+						oldTip = item.Tip.CFrame
+						origin = CFrame.lookAt(neworigin, targetPart.Position)
+						item.Tip.CFrame = origin
+					end
+				end
+			end
+
+			ProjectileRaycast.FilterDescendantsInstances = {gameCamera, entity.Character, workspace.Vehicles}
+			ProjectileRaycast.CollisionGroup = entity.RootPart.CollisionGroup
+
+			local trajectory = prediction.SolveTrajectory(origin.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), entity.RootPart.Position, Instant.Enabled and Vector3.zero or entity.RootPart.Velocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
+			if trajectory then
+				targetinfo.Targets[entity] = tick() + 1
+
+				if Instant.Enabled then
+					item.BulletEmitter.LastUpdate = tick() - (item.BulletEmitter.LifeSpan - 0.1)
+				end
+
+				item.TipDirection = CFrame.lookAt(origin.Position, trajectory).LookVector
+			end
+
+			if oldTip then
+				local call = table.pack(old(...))
+				item.Tip.CFrame = oldTip
+				return unpack(call, 1, call.n)
+			end
+		end
+	end
+
+	return old(...)
+end
+
 SilentAim = vape.Categories.Combat:CreateModule({
 	Name = 'SilentAim',
 	Function = function(callback)
@@ -29,50 +98,22 @@ SilentAim = vape.Categories.Combat:CreateModule({
 		end
 
 		if callback then
-			Hooked = jb.GunController.TransformLocalMousePosition
-			jb.GunController.TransformLocalMousePosition = function(self, pos)
-				local entity = entitylib['Entity'..Mode.Value]({
-					Range = Range.Value,
-					Wallcheck = Target.Walls.Enabled and (obj or true) or nil,
-					Part = 'RootPart',
-					Origin = entitylib.isAlive and entitylib.character.RootPart.Position or nil,
-					Players = Target.Players.Enabled,
-					NPCs = Target.NPCs.Enabled
-				})
-
-				if entity then
-					local item = jb.ItemSystemController:GetLocalEquipped()
-					if item and ((self.Tip.CFrame.Position - entity.RootPart.Position).Magnitude / (item.Config.BulletSpeed or 1000)) < item.BulletEmitter.LifeSpan then
-						ProjectileRaycast.FilterDescendantsInstances = {gameCamera, entity.Character, workspace.Vehicles}
-						ProjectileRaycast.CollisionGroup = entity.RootPart.CollisionGroup
-
-						local calc = prediction.SolveTrajectory(self.Tip.CFrame.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), entity.RootPart.Position, Instant.Enabled and Vector3.zero or entity.RootPart.Velocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
-						if calc then
-							targetinfo.Targets[entity] = tick() + 1
-							return calc
-						end
-					end
-				end
-
-				return pos
-			end
+			old = hookfunction(jb.GunController.ShootOther, function(...)
+				return Hook(...)
+			end)
 
 			repeat
 				if CircleObject then
 					CircleObject.Position = getMousePosition()
 				end
 
-				if Instant.Enabled then
-					local item = jb.ItemSystemController:GetLocalEquipped()
-					if item and item.BulletEmitter then
-						rawset(item.BulletEmitter, 'LastUpdate', tick() - (item.BulletEmitter.LifeSpan - 0.1))
-					end
-				end
-
 				task.wait()
 			until not SilentAim.Enabled
 		else
-			jb.GunController.TransformLocalMousePosition = Hooked
+			if old then
+				restorefunction(jb.GunController.ShootOther)
+				old = nil
+			end
 		end
 	end,
 	Tooltip = 'Silently adjusts your aim towards the enemy'
@@ -103,6 +144,14 @@ Range = SilentAim:CreateSlider({
 	Suffix = function(val)
 		return val == 1 and 'stud' or 'studs'
 	end
+})
+Wallbang = SilentAim:CreateToggle({
+	Name = 'Wallbang',
+	Tooltip = 'Allow you to shoot people through walls when specific conditions are met.\n(If the entity has a valid hitbox position exposed or if the shoot position can be moved past walls (eg hugging walls))'
+})
+Instant = SilentAim:CreateToggle({
+	Name = 'Hitscan Bullets',
+	Tooltip = 'Instantly teleport bullets to the destination'
 })
 SilentAim:CreateToggle({
 	Name = 'Range Circle',
@@ -160,7 +209,4 @@ CircleFilled = SilentAim:CreateToggle({
 	end,
 	Darker = true,
 	Visible = false
-})
-Instant = SilentAim:CreateToggle({
-	Name = 'Hitscan Bullets'
 })

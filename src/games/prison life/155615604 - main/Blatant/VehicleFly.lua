@@ -52,8 +52,8 @@ VehicleFly = vape.Categories.Blatant:CreateModule({
 							inCar = seat:IsDescendantOf(workspace.CarContainer) and seat:IsA('VehicleSeat')
 							if inCar then
 								welds = seat.Parent.Parent.Wheels:QueryDescendants('Rotate')
-								for _, v in welds do
-									v.Enabled = false
+								for _, weld in welds do
+									weld.Enabled = false
 								end
 							end
 
@@ -66,16 +66,16 @@ VehicleFly = vape.Categories.Blatant:CreateModule({
 							gameCamera.CameraSubject = entitylib.character.Humanoid
 						end
 					elseif old then
-						for _, v in welds do
-							v.Enabled = true
+						for _, weld in welds do
+							weld.Enabled = true
 						end
 						old = nil
 					end
 				end))
 			end
 		else
-			for _, v in welds do
-				v.Enabled = true
+			for _, weld in welds do
+				weld.Enabled = true
 			end
 			table.clear(welds)
 		end

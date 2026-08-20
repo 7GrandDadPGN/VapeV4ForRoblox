@@ -36,6 +36,7 @@ local function getTriggerBotTarget()
 			if vEntity then
 				local origin = entitylib.character.Head.Position
 				local hitCheck = workspace:Raycast(origin, (ray.Position - origin), rayCheck)
+
 				if hitCheck and hitCheck.Instance:IsDescendantOf(vEntity.Character) and (ray.Position - origin).Magnitude <= data.Range then
 					return vEntity
 				end

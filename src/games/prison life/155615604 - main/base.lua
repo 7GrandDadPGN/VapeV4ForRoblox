@@ -135,7 +135,6 @@ run(function()
 	function OriginScanner:Scan(origin, target, extra, part)
 		local scanPositions = {}
 		local hitboxPositions = {}
-		local returnHitbox
 		local diff = CFrame.lookAt(origin * Vector3.new(1, 0, 1), target * Vector3.new(1, 0, 1)).LookVector
 
 		if OriginScanner.Cache[part] then
@@ -147,8 +146,8 @@ run(function()
 				table.insert(scanPositions, extra)
 			else
 				table.insert(hitboxPositions, target)
-				for _, v in Enum.NormalId:GetEnumItems() do
-					local vec = Vector3.fromNormalId(v)
+				for _, normal in Enum.NormalId:GetEnumItems() do
+					local vec = Vector3.fromNormalId(normal)
 
 					if (vec * Vector3.new(1, 0, 1)):Dot(-diff) > -0.5 then
 						local pos = target + vec * 6
@@ -162,9 +161,9 @@ run(function()
 		end
 
 		if #scanPositions <= 0 then
-			for _, v in positions do
-				if (v * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
-					table.insert(scanPositions, origin + v * 6)
+			for _, offset in positions do
+				if (offset * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
+					table.insert(scanPositions, origin + offset * 6)
 				end
 			end
 		end
@@ -193,13 +192,13 @@ run(function()
 	end
 
 	function OriginScanner:UpdateIgnore()
-		local ignore = {lplr.Character}
+		local ignoreList = {lplr.Character}
 		for _, entity in entitylib.List do
-			table.insert(ignore, entity.Character)
+			table.insert(ignoreList, entity.Character)
 		end
 
-		rayParams.FilterDescendantsInstances = ignore
-		overlapParams.FilterDescendantsInstances = ignore
+		rayParams.FilterDescendantsInstances = ignoreList
+		overlapParams.FilterDescendantsInstances = ignoreList
 	end
 end)
 
@@ -387,24 +386,27 @@ run(function()
 		return returned
 	end
 
-	entitylib.getEntityColor = function(ent)
-		if not (ent.Player and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
-		if isFriend(ent.Player, true) then
+	entitylib.getEntityColor = function(entity)
+		if not (entity.Player and vape.Settings.Modules.Options['Use team color'].Enabled) then
+			return
+		end
+
+		if isFriend(entity.Player, true) then
 			return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
 		end
 
-		local color = tostring(ent.Player.TeamColor) ~= 'White' and ent.Player.TeamColor.Color or nil
-		if ent.Player.Team == teams.Inmates and (ent.Character:GetAttribute('Hostile') or ent.Character:GetAttribute('Trespassing')) then
+		local color = tostring(entity.Player.TeamColor) ~= 'White' and entity.Player.TeamColor.Color or nil
+		if entity.Player.Team == teams.Inmates and (entity.Character:GetAttribute('Hostile') or entity.Character:GetAttribute('Trespassing')) then
 			return Color3.new(color.R, color.G * 0.5, color.B * 0.5)
 		end
 
 		return color
 	end
 
-	entitylib.Wallcheck = function(origin, position, checkpos, part)
+	entitylib.Wallcheck = function(origin, position, checkPosition, part)
 		local ray = workspace.Raycast(workspace, position, (origin - position), OriginScanner.Ray)
 		if ray then
-			return not checkpos or not OriginScanner:Scan(checkpos, position, ray.Position + ray.Normal * 0.01, part)
+			return not checkPosition or not OriginScanner:Scan(checkPosition, position, ray.Position + ray.Normal * 0.01, part)
 		end
 
 		return false
@@ -424,9 +426,9 @@ run(function()
 	end
 
 	local function getShootFunction()
-		for _, v in getconnections(gui.InputBegan) do
-			if v.Function then
-				pl.Shoot = debug.getupvalue(v.Function, 2)
+		for _, connection in getconnections(gui.InputBegan) do
+			if connection.Function then
+				pl.Shoot = debug.getupvalue(connection.Function, 2)
 				pl.Reload = debug.getupvalue(pl.Shoot, 2)
 				pl.Bullet = debug.getupvalue(pl.Shoot, 16)
 				pl.PlaySound = debug.getupvalue(pl.Reload, 3)
@@ -434,16 +436,16 @@ run(function()
 			end
 		end
 
-		for _, v in getconnections(lplr.CharacterAdded) do
-			if v.Function and debug.info(v.Function, 's'):find('GunController') then
-				pl.Equip = debug.getupvalue(v.Function, 3)
+		for _, connection in getconnections(lplr.CharacterAdded) do
+			if connection.Function and debug.info(connection.Function, 's'):find('GunController') then
+				pl.Equip = debug.getupvalue(connection.Function, 3)
 				break
 			end
 		end
 
-		for _, v in getconnections(lplr:GetAttributeChangedSignal('BackpackEnabled')) do
-			pl.SwitchUpdate = debug.getupvalue(debug.getupvalue(v.Function, 10), 5)
-			pl.SwitchTable = debug.getupvalue(debug.getupvalue(v.Function, 8), 2)
+		for _, connection in getconnections(lplr:GetAttributeChangedSignal('BackpackEnabled')) do
+			pl.SwitchUpdate = debug.getupvalue(debug.getupvalue(connection.Function, 10), 5)
+			pl.SwitchTable = debug.getupvalue(debug.getupvalue(connection.Function, 8), 2)
 			break
 		end
 	end
@@ -552,8 +554,8 @@ run(function()
 	end)
 
 	OriginScanner:UpdateIgnore()
-	for _, v in {'EntityAdded', 'LocalAdded'} do
-		vape:Clean(entitylib.Events[v]:Connect(function()
+	for _, event in {'EntityAdded', 'LocalAdded'} do
+		vape:Clean(entitylib.Events[event]:Connect(function()
 			OriginScanner:UpdateIgnore()
 		end))
 	end

@@ -22,15 +22,10 @@ AutoTaser = vape.Categories.Blatant:CreateModule({
 							Players = true
 						})
 
-						for _, ent in entities do
-							if not (ent.Character:GetAttribute('Tased') or ent.Character:GetAttribute('Arrested')) then
+						for _, entity in entities do
+							if not (entity.Character:GetAttribute('Tased') or entity.Character:GetAttribute('Arrested')) then
 								cooldown = os.clock() + 2
-								local equipped = lplr.Character:FindFirstChildWhichIsA('Tool')
-								if equipped then
-									equipped.Parent = backpack
-								end
-
-								taser.Parent = lplr.Character
+								entitylib.character.Humanoid:EquipTool(taser)
 								break
 							end
 						end

@@ -342,20 +342,6 @@ if inputService.TouchEnabled then
 end
 
 vape.Modules[props.Name] = component
-
-local sorting = {}
-for _, module in vape.Modules do
-	sorting[module.Category] = sorting[module.Category] or {}
-	table.insert(sorting[module.Category], module.Name)
-end
-
-for _, sort in sorting do
-	table.sort(sort)
-	for index, name in sort do
-		vape.Modules[name].Index = index
-		vape.Modules[name].Object.LayoutOrder = index
-		vape.Modules[name].Children.LayoutOrder = index
-	end
-end
+vape:SortCategories()
 
 return component
