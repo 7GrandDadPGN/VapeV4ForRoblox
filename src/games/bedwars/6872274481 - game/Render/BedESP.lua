@@ -1,7 +1,7 @@
 local BedESP
 local Reference = {}
 local Folder = Instance.new('Folder')
-Folder.Parent = vape.gui
+Folder.Parent = vape.holder
 
 local function Added(bed)
 	if not BedESP.Enabled then return end

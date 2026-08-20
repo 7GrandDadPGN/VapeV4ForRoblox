@@ -81,8 +81,8 @@ Killaura = vape.Categories.Blatant:CreateModule({
 										frontlines.Main.globals.ctrl_states.trigger = true
 										frontlines.Main.globals.ctrl_ts.trigger = time()
 										frontlines.Main.exe_set(frontlines.Main.exe_set_t.FPV_SOL_MELEE_SOL_HIT, gun, part, Vector3.zero)
-										if vape.ThreadFix then 
-											setthreadidentity(8) 
+										if vape.ThreadFix then
+											setthreadidentity(8)
 										end
 									end
 								end
@@ -111,11 +111,11 @@ Killaura = vape.Categories.Blatant:CreateModule({
 				task.wait()
 			until not Killaura.Enabled
 		else
-			for i, v in Boxes do 
-				v.Adornee = nil 
+			for i, v in Boxes do
+				v.Adornee = nil
 			end
-			for i, v in Particles do 
-				v.Parent = nil 
+			for i, v in Particles do
+				v.Parent = nil
 			end
 		end
 	end,
@@ -127,8 +127,8 @@ SwingRange = Killaura:CreateSlider({
 	Min = 1,
 	Max = 8,
 	Default = 8,
-	Suffix = function(val) 
-		return val == 1 and 'stud' or 'studs' 
+	Suffix = function(val)
+		return val == 1 and 'stud' or 'studs'
 	end
 })
 AttackRange = Killaura:CreateSlider({
@@ -136,8 +136,8 @@ AttackRange = Killaura:CreateSlider({
 	Min = 1,
 	Max = 8,
 	Default = 8,
-	Suffix = function(val) 
-		return val == 1 and 'stud' or 'studs' 
+	Suffix = function(val)
+		return val == 1 and 'stud' or 'studs'
 	end
 })
 Angle = Killaura:CreateSlider({
@@ -167,12 +167,12 @@ Box = Killaura:CreateToggle({
 				box.Size = Vector3.new(3, 5, 3)
 				box.CFrame = CFrame.new(0, -0.5, 0)
 				box.ZIndex = 0
-				box.Parent = vape.gui
+				box.Parent = vape.holder
 				Boxes[i] = box
 			end
 		else
-			for i, v in Boxes do 
-				v:Destroy() 
+			for i, v in Boxes do
+				v:Destroy()
 			end
 			table.clear(Boxes)
 		end
@@ -219,15 +219,15 @@ Particle = Killaura:CreateToggle({
 				particles.Shape = Enum.ParticleEmitterShape.Sphere
 				particles.ShapePartial = 1
 				particles.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
 					ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
 				})
 				particles.Parent = part
 				Particles[i] = part
 			end
 		else
-			for i, v in Particles do 
-				v:Destroy() 
+			for i, v in Particles do
+				v:Destroy()
 			end
 			table.clear(Particles)
 		end
@@ -249,7 +249,7 @@ ParticleColor1 = Killaura:CreateColorSlider({
 	Function = function(hue, sat, val)
 		for i, v in Particles do
 			v.ParticleEmitter.Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)), 
+				ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
 				ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
 			})
 		end
@@ -262,7 +262,7 @@ ParticleColor2 = Killaura:CreateColorSlider({
 	Function = function(hue, sat, val)
 		for i, v in Particles do
 			v.ParticleEmitter.Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)), 
+				ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
 				ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, val))
 			})
 		end

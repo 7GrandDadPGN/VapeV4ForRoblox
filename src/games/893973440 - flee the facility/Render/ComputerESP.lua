@@ -5,7 +5,7 @@ local FillTransparency
 local OutlineTransparency
 local Reference = {}
 local Folder = Instance.new('Folder')
-Folder.Parent = vape.gui
+Folder.Parent = vape.holder
 
 local function Added(computer)
 	local screen = computer:FindFirstChild('Screen')

@@ -3,12 +3,12 @@ local Background
 local Color = {}
 local Reference = {}
 local Folder = Instance.new('Folder')
-Folder.Parent = vape.gui
+Folder.Parent = vape.holder
 local old
 
 local function addESP(v)
-	if vape.ThreadFix then 
-		setthreadidentity(8) 
+	if vape.ThreadFix then
+		setthreadidentity(8)
 	end
 	if not v.model or v.model.Name ~= 'frag' then return end
 	local billboard = Instance.new('BillboardGui')
@@ -32,8 +32,8 @@ local function addESP(v)
 	uicorner.Parent = image
 	Reference[v.model] = billboard
 	v.model.Destroying:Connect(function()
-		if vape.ThreadFix then 
-			setthreadidentity(8) 
+		if vape.ThreadFix then
+			setthreadidentity(8)
 		end
 		if Reference[v.model] then
 			Reference[v.model]:Destroy()
@@ -62,8 +62,8 @@ GrenadeESP = vape.Categories.Render:CreateModule({
 Background = GrenadeESP:CreateToggle({
 	Name = 'Background',
 	Function = function(callback)
-		if Color.Object then 
-			Color.Object.Visible = callback 
+		if Color.Object then
+			Color.Object.Visible = callback
 		end
 		for i, v in Reference do
 			v.ImageLabel.BackgroundTransparency = 1 - (callback and Color.Opacity or 0)
