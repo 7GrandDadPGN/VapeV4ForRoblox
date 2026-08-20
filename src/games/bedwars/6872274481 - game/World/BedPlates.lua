@@ -3,7 +3,7 @@ local Background
 local Color = {}
 local Reference = {}
 local Folder = Instance.new('Folder')
-Folder.Parent = vape.gui
+Folder.Parent = vape.holder
 
 local function scanSide(self, start, tab)
 	for _, side in sides do

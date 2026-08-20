@@ -3,7 +3,7 @@ local Background
 local Color = {}
 local Reference = {}
 local Folder = Instance.new('Folder')
-Folder.Parent = vape.gui
+Folder.Parent = vape.holder
 
 local ESPKits = {
 	alchemist = {'alchemist_ingedients', 'wild_flower'},

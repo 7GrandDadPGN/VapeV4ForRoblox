@@ -4,7 +4,7 @@ local Background
 local Color = {}
 local Reference = {}
 local Folder = Instance.new('Folder')
-Folder.Parent = vape.gui
+Folder.Parent = vape.holder
 
 local function nearStorageItem(item)
 	for _, v in List.ListEnabled do
