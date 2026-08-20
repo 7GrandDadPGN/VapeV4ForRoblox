@@ -5,8 +5,8 @@ AntiRiotShield = vape.Categories.Blatant:CreateModule({
 	Function = function(callback)
 		if callback then
 			repeat
-				for _, ent in entitylib.List do
-					local shield = ent.Character:FindFirstChild('RiotShieldPart')
+				for _, entity in entitylib.List do
+					local shield = entity.Character:FindFirstChild('RiotShieldPart')
 					if shield then
 						shield.CanQuery = false
 					end
@@ -15,8 +15,8 @@ AntiRiotShield = vape.Categories.Blatant:CreateModule({
 				task.wait(0.05)
 			until not AntiRiotShield.Enabled
 		else
-			for _, ent in entitylib.List do
-				local shield = ent.Character:FindFirstChild('RiotShieldPart')
+			for _, entity in entitylib.List do
+				local shield = entity.Character:FindFirstChild('RiotShieldPart')
 				if shield then
 					shield.CanQuery = true
 				end

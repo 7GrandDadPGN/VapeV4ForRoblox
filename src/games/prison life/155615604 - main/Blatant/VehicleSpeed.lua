@@ -18,9 +18,9 @@ VehicleSpeed = vape.Categories.Blatant:CreateModule({
 						old = seat
 					end
 
-					for _, v in seats do
-						v.MaxSpeed = Speed.Value
-						v.Torque = 4
+					for _, seat in seats do
+						seat.MaxSpeed = Speed.Value
+						seat.Torque = 4
 					end
 				end
 

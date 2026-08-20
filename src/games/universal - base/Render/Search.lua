@@ -4,7 +4,7 @@ local Color
 local FillTransparency
 local Reference = {}
 local Folder = Instance.new('Folder')
-Folder.Parent = vape.gui
+Folder.Parent = vape.holder
 
 local function Add(v)
 	if not table.find(List.ListEnabled, v.Name) then return end

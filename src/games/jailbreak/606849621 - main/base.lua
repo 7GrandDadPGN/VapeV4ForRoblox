@@ -108,7 +108,107 @@ local function notif(...)
 	return vape:CreateNotification(...)
 end
 
+local OriginScanner = {Cache = {}}
 run(function()
+	local rayParams = RaycastParams.new()
+	local overlapParams = OverlapParams.new()
+	rayParams.RespectCanCollide = true
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude
+	overlapParams.RespectCanCollide = true
+	overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+	OriginScanner.Ray = rayParams
+
+	local positions = {
+		Vector3.new(0, 1, 0),
+		Vector3.new(1, 0, 0),
+		Vector3.new(0.7, -0.5, -0.5),
+		Vector3.new(-0.1, -0.8, -0.8),
+		Vector3.new(-0.8, -0.5, -0.5),
+		Vector3.new(-1, 0, 0),
+		Vector3.new(-0.8, 0.4, 0.4),
+		Vector3.new(0, 0.7, 0.7),
+		Vector3.new(0.7, 0.5, 0.5),
+		Vector3.new(1, 0, 0),
+		Vector3.new(0.7, 0, -0.8),
+		Vector3.new(-0.1, 0, -1),
+		Vector3.new(-0.8, 0, -0.8),
+		Vector3.new(-1, 0, 0),
+		Vector3.new(-0.8, 0, 0.7),
+		Vector3.new(0, 0, 1),
+		Vector3.new(0.7, 0, 0.7),
+		Vector3.new(1, 0, 0),
+		Vector3.new(0.7, 0.4, -0.5),
+		Vector3.new(-0.1, 0.7, -0.8),
+		Vector3.new(-0.8, 0.4, -0.5),
+		Vector3.new(-1, -0.1, 0),
+		Vector3.new(-0.8, -0.5, 0.4),
+		Vector3.new(0, -0.8, 0.7),
+		Vector3.new(0.7, -0.6, 0.5),
+		Vector3.new(0, -1, 0)
+	}
+
+	local function checkPoint(pos, params)
+		for _, v in workspace:GetPartBoundsInRadius(pos, 0, params) do
+			if v.CanCollide and (v:GetClosestPointOnSurface(pos) - pos).Magnitude <= 0 then
+				return false
+			end
+		end
+
+		return true
+	end
+
+	function OriginScanner:Scan(origin, target, extra, part)
+		local scanPositions = {}
+		local diff = CFrame.lookAt(origin * Vector3.new(1, 0, 1), target * Vector3.new(1, 0, 1)).LookVector
+
+		if OriginScanner.Cache[part] then
+			return table.unpack(OriginScanner.Cache[part])
+		end
+
+		if extra then
+			if (origin - extra).Magnitude < 14 then
+				table.insert(scanPositions, extra)
+			end
+		end
+
+		if #scanPositions <= 0 then
+			for _, v in positions do
+				if (v * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
+					table.insert(scanPositions, origin + v * 14)
+				end
+			end
+		end
+
+		for _, pos in scanPositions do
+			local ray = workspace:Raycast(target, (pos - target), rayParams)
+
+			if not ray and checkPoint(pos, overlapParams) then
+				OriginScanner.Cache[part] = {pos}
+				return pos
+			end
+		end
+	end
+
+	function OriginScanner:UpdateIgnore(model)
+		local ignore = {lplr.Character, workspace.Items, model}
+		for _, entity in entitylib.List do
+			table.insert(ignore, entity.Character)
+		end
+
+		rayParams.FilterDescendantsInstances = ignore
+		overlapParams.FilterDescendantsInstances = ignore
+	end
+end)
+
+run(function()
+	local function getMousePosition()
+		if inputService.TouchEnabled then
+			return gameCamera.ViewportSize / 2
+		end
+
+		return inputService:GetMouseLocation()
+	end
+
 	entitylib.getUpdateConnections = function(ent)
 		local hum = ent.Humanoid
 		return {
@@ -146,6 +246,126 @@ run(function()
 		end
 
 		return true
+	end
+
+	entitylib.EntityMouse = function(entitysettings)
+		if entitylib.isAlive then
+			local mouseLocation, sortingTable = entitysettings.MouseOrigin or getMousePosition(), {}
+			local localPosition = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position
+			for _, entity in entitylib.List do
+				if not entitysettings.Players and entity.Player then continue end
+				if not entitysettings.NPCs and entity.NPC then continue end
+				if not entity.Targetable then continue end
+				local position, vis = gameCamera.WorldToViewportPoint(gameCamera, entity[entitysettings.Part].Position)
+				if not vis then continue end
+				local mag = (mouseLocation - Vector2.new(position.x, position.y)).Magnitude
+				if mag > entitysettings.Range then continue end
+				if entitylib.isVulnerable(entity, entitysettings.AttackCheck) then
+					if entitysettings.RangePosition then
+						local pmag = (entity[entitysettings.Part].Position - localPosition).Magnitude
+						if pmag > entitysettings.RangePosition then continue end
+					end
+
+					table.insert(sortingTable, {
+						Entity = entity,
+						Magnitude = entity.Target and -1 or mag
+					})
+				end
+			end
+
+			table.sort(sortingTable, entitysettings.Sort or function(a, b)
+				return a.Magnitude < b.Magnitude
+			end)
+
+			for _, v in sortingTable do
+				if entitysettings.Wallcheck then
+					if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
+				end
+				table.clear(entitysettings)
+				table.clear(sortingTable)
+				return v.Entity
+			end
+			table.clear(sortingTable)
+		end
+		table.clear(entitysettings)
+	end
+
+	entitylib.EntityPosition = function(entitysettings)
+		if entitylib.isAlive then
+			local localPosition, sortingTable = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {}
+			for _, entity in entitylib.List do
+				if not entitysettings.Players and entity.Player then continue end
+				if not entitysettings.NPCs and entity.NPC then continue end
+				if not entity.Targetable then continue end
+				local mag = (entity[entitysettings.Part].Position - localPosition).Magnitude
+				if mag > entitysettings.Range then continue end
+				if entitylib.isVulnerable(entity, entitysettings.AttackCheck) then
+					table.insert(sortingTable, {
+						Entity = entity,
+						Magnitude = entity.Target and -1 or mag
+					})
+				end
+			end
+
+			table.sort(sortingTable, entitysettings.Sort or function(a, b)
+				return a.Magnitude < b.Magnitude
+			end)
+
+			for _, v in sortingTable do
+				if entitysettings.Wallcheck then
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
+				end
+				table.clear(entitysettings)
+				table.clear(sortingTable)
+				return v.Entity
+			end
+			table.clear(sortingTable)
+		end
+		table.clear(entitysettings)
+	end
+
+	entitylib.AllPosition = function(entitysettings)
+		local returned = {}
+		if entitylib.isAlive then
+			local localPosition, sortingTable = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {}
+			for _, entity in entitylib.List do
+				if not entitysettings.Players and entity.Player then continue end
+				if not entitysettings.NPCs and entity.NPC then continue end
+				if not entity.Targetable then continue end
+				local mag = (entity[entitysettings.Part].Position - localPosition).Magnitude
+				if mag > entitysettings.Range then continue end
+				if entitylib.isVulnerable(entity, entitysettings.AttackCheck) then
+					table.insert(sortingTable, {
+						Entity = entity,
+						Magnitude = entity.Target and -1 or mag
+					})
+				end
+			end
+
+			table.sort(sortingTable, entitysettings.Sort or function(a, b)
+				return a.Magnitude < b.Magnitude
+			end)
+
+			for _, v in sortingTable do
+				if entitysettings.Wallcheck then
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
+				end
+				table.insert(returned, v.Entity)
+				if #returned >= (entitysettings.Limit or math.huge) then break end
+			end
+			table.clear(sortingTable)
+		end
+		table.clear(entitysettings)
+		return returned
+	end
+
+	entitylib.Wallcheck = function(origin, position, checkpos, part)
+		local ray = workspace.Raycast(workspace, position, (origin - position), OriginScanner.Ray)
+		if ray then
+			return not checkpos or not OriginScanner:Scan(checkpos, position, ray.Position + ray.Normal * 0.01, part)
+		end
+
+		return false
 	end
 end)
 entitylib.start()
@@ -252,6 +472,7 @@ run(function()
 		CargoController = require(replicatedStorage.Game.Robbery.RobberyPassengerTrain),
 		FallingController = require(replicatedStorage.Game.Falling),
 		GunController = require(replicatedStorage.Game.Item.Gun),
+		GunUtils = require(replicatedStorage.Game.GunShop.GunUtils),
 		HotbarItemSystem = require(replicatedStorage.Hotbar.HotbarItemSystem),
 		InventoryItemSystem = require(replicatedStorage.Inventory.InventoryItemSystem),
 		ItemSystemController = require(replicatedStorage.Game.ItemSystem.ItemSystem),
@@ -361,6 +582,10 @@ run(function()
 			return cashhook(amount, text, ...)
 		end)
 	end
+
+	vape:Clean(runService.RenderStepped:Connect(function()
+		table.clear(OriginScanner.Cache)
+	end))
 
 	vape:Clean(function()
 		table.clear(remotes)

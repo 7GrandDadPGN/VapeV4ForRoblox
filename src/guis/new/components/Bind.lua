@@ -1,5 +1,5 @@
 local component = {
-	Hold = false,
+	Hold = props.Hold or false,
 	Keys = {},
 	Triggered = createSignal(),
 	Type = 'Bind'

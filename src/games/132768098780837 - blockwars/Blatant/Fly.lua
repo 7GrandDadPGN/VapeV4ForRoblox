@@ -1,7 +1,8 @@
 local Fly
 run(function()
 	local Value
-	local Keys
+	local DownKey
+	local down = 0
 	local Platform = Instance.new('Part')
 	Platform.CanQuery = false
 	Platform.Anchored = true
@@ -28,19 +29,10 @@ run(function()
 					end
 				end))
 
-				up, down = 0, 0
-				for _, v in {'InputBegan', 'InputEnded'} do
-					Fly:Clean(inputService[v]:Connect(function(input)
-						if not inputService:GetFocusedTextBox() then
-							local divided = Keys.Value:split('/')
-							if input.KeyCode == Enum.KeyCode[divided[1]] then
-								up = v == 'InputBegan' and 1 or 0
-							elseif input.KeyCode == Enum.KeyCode[divided[2]] then
-								down = v == 'InputBegan' and -1 or 0
-							end
-						end
-					end))
-				end
+				down = 0
+				Fly:Clean(DownKey.Triggered:Connect(function(isDown)
+					down = isDown and -1 or 0
+				end))
 
 				if inputService.TouchEnabled then
 					pcall(function()
@@ -57,10 +49,11 @@ run(function()
 		end,
 		Tooltip = 'Makes you go zoom.'
 	})
-	Keys = Fly:CreateDropdown({
-		Name = 'Keys',
-		List = {'Space/LeftControl', 'Space/LeftShift', 'E/Q', 'Space/Q', 'ButtonA/ButtonL2'},
-		Tooltip = 'The key combination for going up & down'
+	DownKey = Fly:CreateBind({
+		Name = 'Down Key',
+		Default = {'LeftControl'},
+		Hold = true,
+		Tooltip = 'Keybind to fly downwards'
 	})
 	Value = Fly:CreateSlider({
 		Name = 'Speed',

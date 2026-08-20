@@ -1,12 +1,13 @@
 local Fly
 local LongJump
 run(function()
-	local Options = {TPTiming = tick()}
+	local Options = {TPTiming = os.clock()}
 	local Mode
 	local FloatMode
 	local State
 	local MoveMethod
-	local Keys
+	local UpKey
+	local DownKey
 	local VerticalValue
 	local BounceLength
 	local BounceDelay
@@ -24,11 +25,12 @@ run(function()
 	local Functions
 	Functions = {
 		Velocity = function()
-			entitylib.character.RootPart.Velocity = (entitylib.character.RootPart.Velocity * Vector3.new(1, 0, 1)) + Vector3.new(0, 2.25 + ((up + down) * VerticalValue.Value), 0)
+			entitylib.character.RootPart.AssemblyLinearVelocity = (entitylib.character.RootPart.AssemblyLinearVelocity * Vector3.new(1, 0, 1)) + Vector3.new(0, 2.25 + ((up + down) * VerticalValue.Value), 0)
 		end,
 		Impulse = function(options, moveDirection)
 			local root = entitylib.character.RootPart
 			local diff = (Vector3.new(0, 2.25 + ((up + down) * VerticalValue.Value), 0) - root.AssemblyLinearVelocity) * Vector3.new(0, 1, 0)
+
 			if diff.Magnitude > 2 then
 				root:ApplyImpulse(diff * root.AssemblyMass)
 			end
@@ -38,6 +40,7 @@ run(function()
 			if not YLevel then
 				YLevel = root.Position.Y
 			end
+
 			YLevel = YLevel + ((up + down) * VerticalValue.Value * dt)
 			if WallCheck.Enabled then
 				rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
@@ -47,19 +50,21 @@ run(function()
 					YLevel = ray.Position.Y + entitylib.character.HipHeight
 				end
 			end
+
 			root.Velocity *= Vector3.new(1, 0, 1)
 			root.CFrame += Vector3.new(0, YLevel - root.Position.Y, 0)
 		end,
 		Bounce = function()
 			Functions.Velocity()
-			entitylib.character.RootPart.Velocity += Vector3.new(0, ((tick() % BounceDelay.Value) / BounceDelay.Value > 0.5 and 1 or -1) * BounceLength.Value, 0)
+			entitylib.character.RootPart.Velocity += Vector3.new(0, ((os.clock() % BounceDelay.Value) / BounceDelay.Value > 0.5 and 1 or -1) * BounceLength.Value, 0)
 		end,
 		Floor = function()
 			Platform.CFrame = down ~= 0 and CFrame.identity or entitylib.character.RootPart.CFrame + Vector3.new(0, -(entitylib.character.HipHeight + 0.5), 0)
 		end,
 		TP = function(dt)
 			Functions.CFrame(dt)
-			if tick() % (FloatTPAir.Value + FloatTPGround.Value) > FloatTPAir.Value then
+
+			if os.clock() % (FloatTPAir.Value + FloatTPGround.Value) > FloatTPAir.Value then
 				OldYLevel = OldYLevel or YLevel
 				rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
 				rayCheck.CollisionGroup = entitylib.character.RootPart.CollisionGroup
@@ -79,6 +84,7 @@ run(function()
 			if not YLevel then
 				YLevel = root.Position.Y
 			end
+
 			YLevel = YLevel + ((up + down) * VerticalValue.Value * dt)
 			if root.Position.Y < YLevel then
 				entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
@@ -121,7 +127,6 @@ run(function()
 				for _, v in {'InputBegan', 'InputEnded'} do
 					Fly:Clean(inputService[v]:Connect(function(input)
 						if not inputService:GetFocusedTextBox() then
-							local divided = Keys.Value:split('/')
 							if input.KeyCode == Enum.KeyCode.W then
 								w = v == 'InputBegan' and -1 or 0
 							elseif input.KeyCode == Enum.KeyCode.S then
@@ -130,14 +135,18 @@ run(function()
 								a = v == 'InputBegan' and -1 or 0
 							elseif input.KeyCode == Enum.KeyCode.D then
 								d = v == 'InputBegan' and 1 or 0
-							elseif input.KeyCode == Enum.KeyCode[divided[1]] then
-								up = v == 'InputBegan' and 1 or 0
-							elseif input.KeyCode == Enum.KeyCode[divided[2]] then
-								down = v == 'InputBegan' and -1 or 0
 							end
 						end
 					end))
 				end
+
+				Fly:Clean(UpKey.Triggered:Connect(function(isDown)
+					up = isDown and 1 or 0
+				end))
+
+				Fly:Clean(DownKey.Triggered:Connect(function(isDown)
+					down = isDown and -1 or 0
+				end))
 
 				if inputService.TouchEnabled then
 					pcall(function()
@@ -224,10 +233,17 @@ run(function()
 		List = {'MoveDirection', 'Direct'},
 		Tooltip = 'MoveDirection - Uses the games input vector for movement\nDirect - Directly calculate our own input vector'
 	})
-	Keys = Fly:CreateDropdown({
-		Name = 'Keys',
-		List = {'Space/LeftControl', 'Space/LeftShift', 'E/Q', 'Space/Q', 'ButtonA/ButtonL2'},
-		Tooltip = 'The key combination for going up & down'
+	UpKey = Fly:CreateBind({
+		Name = 'Up Key',
+		Default = {'Space'},
+		Hold = true,
+		Tooltip = 'Keybind to fly upwards'
+	})
+	DownKey = Fly:CreateBind({
+		Name = 'Down Key',
+		Default = {'LeftControl'},
+		Hold = true,
+		Tooltip = 'Keybind to fly downwards'
 	})
 	Options.Value = Fly:CreateSlider({
 		Name = 'Speed',

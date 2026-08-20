@@ -127,7 +127,7 @@ Options = {
 		Darker = true,
 		Visible = false
 	}),
-	TPTiming = tick(),
+	TPTiming = os.clock(),
 	rayCheck = RaycastParams.new()
 }
 Options.rayCheck.RespectCanCollide = true
