@@ -106,7 +106,7 @@ run(function()
 					if entitylib.isAlive then
 						if PlatformStanding.Enabled then
 							entitylib.character.Humanoid.PlatformStand = true
-							entitylib.character.RootPart.RotVelocity = Vector3.zero
+							entitylib.character.RootPart.AssemblyAngularVelocity = Vector3.zero
 							entitylib.character.RootPart.CFrame = CFrame.lookAlong(entitylib.character.RootPart.CFrame.Position, gameCamera.CFrame.LookVector)
 						end
 

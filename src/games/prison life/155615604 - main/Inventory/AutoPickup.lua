@@ -1,5 +1,4 @@
 local AutoPickup
-local Lists = {}
 local items = {}
 local pickupList = {Guard = {}, Prisoner = {}, Criminal = {}}
 
@@ -74,17 +73,18 @@ AutoPickup = vape.Categories.Inventory:CreateModule({
 	Tooltip = 'Automatically grab item pickups'
 })
 
-for _, v in {'Prisoner', 'Guard', 'Criminal'} do
+for _, team in {'Prisoner', 'Guard', 'Criminal'} do
 	AutoPickup:CreateTextList({
-		Name = v..' Pickups',
-		Default = {v == 'Criminal' and '1/AK-47' or '1/MP5', '2/Remington 870'},
+		Name = team..' Pickups',
+		Default = {team == 'Criminal' and '1/AK-47' or '1/MP5', '2/Remington 870'},
 		Placeholder = 'priority/item',
 		Function = function(list)
-			table.clear(pickupList[v])
+			table.clear(pickupList[team])
+
 			for _, entry in list do
-				local tab = entry:split('/')
-				local ind = tonumber(tab[1])
-				pickupList[v][ind or 999] = tab[2]
+				local data = entry:split('/')
+				local index = tonumber(data[1])
+				pickupList[team][index or 999] = data[2]
 			end
 		end
 	})
