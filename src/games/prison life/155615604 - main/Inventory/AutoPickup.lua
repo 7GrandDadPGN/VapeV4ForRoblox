@@ -1,11 +1,14 @@
 local AutoPickup
 local Lists = {}
 local items = {}
-local sortedpickups = {Guard = {}, Prisoner = {}, Criminal = {}}
+local pickupList = {Guard = {}, Prisoner = {}, Criminal = {}}
 
-local function AddPickup(obj)
-	if obj:IsA('Model') and obj.Name ~= 'Model' and obj:GetAttribute('ToolName') then
-		table.insert(items, {obj, obj.Name == 'TouchGiver'})
+local function AddPickup(pickup)
+	if pickup:IsA('Model') and pickup.Name ~= 'Model' and pickup:GetAttribute('ToolName') then
+		table.insert(items, {
+			pickup,
+			pickup.Name == 'TouchGiver'
+		})
 	end
 end
 
@@ -13,18 +16,18 @@ AutoPickup = vape.Categories.Inventory:CreateModule({
 	Name = 'AutoPickup',
 	Function = function(callback)
 		if callback then
-			for _, obj in workspace:GetChildren() do
-				task.spawn(AddPickup, obj)
+			for _, pickup in workspace:GetChildren() do
+				task.spawn(AddPickup, pickup)
 			end
 
-			for _, obj in workspace:QueryDescendants('Model > .TouchGiver') do
-				task.spawn(AddPickup, obj)
+			for _, pickup in workspace:QueryDescendants('Model > .TouchGiver') do
+				task.spawn(AddPickup, pickup)
 			end
 
 			AutoPickup:Clean(workspace.ChildAdded:Connect(AddPickup))
-			AutoPickup:Clean(workspace.ChildRemoved:Connect(function(obj)
-				for index, entry in items do
-					if entry[1] == obj then
+			AutoPickup:Clean(workspace.ChildRemoved:Connect(function(pickup)
+				for index, data in items do
+					if data[1] == pickup then
 						table.remove(items, index)
 						break
 					end
@@ -37,14 +40,14 @@ AutoPickup = vape.Categories.Inventory:CreateModule({
 					local backpack = lplr:FindFirstChildWhichIsA('Backpack')
 
 					if backpack then
-						for _, v in items do
-							if v[1].PrimaryPart and (v[1].PrimaryPart.Position - localpos).Magnitude < 12 then
-								local toolname = v[1]:GetAttribute('ToolName')
-								if v[2] then
+						for _, pickup in items do
+							if pickup[1].PrimaryPart and (pickup[1].PrimaryPart.Position - localpos).Magnitude < 12 then
+								local tool = pickup[1]:GetAttribute('ToolName')
+								if pickup[2] then
 									local found = false
-									for _, entry in sortedpickups[lplr.Team == teams.Guards and 'Guard' or (lplr.Team == teams.Criminals and 'Criminal' or 'Prisoner')] do
+									for _, entry in pickupList[lplr.Team == teams.Guards and 'Guard' or (lplr.Team == teams.Criminals and 'Criminal' or 'Prisoner')] do
 										if not backpack:FindFirstChild(entry) then
-											found = toolname ~= entry
+											found = tool ~= entry
 											break
 										end
 									end
@@ -54,8 +57,8 @@ AutoPickup = vape.Categories.Inventory:CreateModule({
 									end
 								end
 
-								if not backpack:FindFirstChild(toolname) then
-									replicatedStorage.Remotes.GiverPressed:FireServer(v[1])
+								if not backpack:FindFirstChild(tool) then
+									replicatedStorage.Remotes.GiverPressed:FireServer(pickup[1])
 								end
 							end
 						end
@@ -77,11 +80,11 @@ for _, v in {'Prisoner', 'Guard', 'Criminal'} do
 		Default = {v == 'Criminal' and '1/AK-47' or '1/MP5', '2/Remington 870'},
 		Placeholder = 'priority/item',
 		Function = function(list)
-			table.clear(sortedpickups[v])
+			table.clear(pickupList[v])
 			for _, entry in list do
 				local tab = entry:split('/')
 				local ind = tonumber(tab[1])
-				sortedpickups[v][ind or 999] = tab[2]
+				pickupList[v][ind or 999] = tab[2]
 			end
 		end
 	})

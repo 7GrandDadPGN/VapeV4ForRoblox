@@ -1,7 +1,7 @@
 local AutoPop
 local Range
 local TeamCheck
-local delays = {}
+local hitDelays = {}
 
 local function getEntitiesInVehicle(car)
 	local entities = {}
@@ -10,9 +10,9 @@ local function getEntitiesInVehicle(car)
 		if (seat.Name == 'Seat' or seat.Name == 'Passenger') then
 			seat = seat:FindFirstChild('PlayerName')
 			if seat then
-				for _, ent in entitylib.List do
-					if ent.Player and ent.Player.Name == seat.Value then
-						table.insert(entities, ent)
+				for _, entity in entitylib.List do
+					if entity.Player and entity.Player.Name == seat.Value then
+						table.insert(entities, entity)
 					end
 				end
 			end
@@ -23,31 +23,33 @@ local function getEntitiesInVehicle(car)
 end
 
 local function getVehiclesNear()
-	local allowed = {}
+	local vehicles = {}
 
 	if entitylib.isAlive then
 		local localPosition = entitylib.character.HumanoidRootPart.Position
-		for _, car in collectionService:GetTagged('Vehicle') do
-			if car.PrimaryPart and (car.PrimaryPart.Position - localPosition).Magnitude <= Range.Value then
-				local entities = getEntitiesInVehicle(car)
-				local check = #entities > 0
+
+		for _, vehicle in collectionService:GetTagged('Vehicle') do
+			if vehicle.PrimaryPart and (vehicle.PrimaryPart.Position - localPosition).Magnitude <= Range.Value then
+				local entities = getEntitiesInVehicle(vehicle)
+				local canAttack = #entities > 0
+
 				if TeamCheck.Enabled then
-					for _, ent in entities do
-						if not ent.Targetable then
-							check = false
+					for _, entity in entities do
+						if not entity.Targetable then
+							canAttack = false
 							break
 						end
 					end
 				end
 
-				if check then
-					table.insert(allowed, car)
+				if canAttack then
+					table.insert(vehicles, vehicle)
 				end
 			end
 		end
 	end
 
-	return allowed
+	return vehicles
 end
 
 AutoPop = vape.Categories.Blatant:CreateModule({
@@ -57,14 +59,14 @@ AutoPop = vape.Categories.Blatant:CreateModule({
 			task.spawn(function()
 				repeat
 					local item = jb.ItemSystemController:GetLocalEquipped()
-					if item and item.BulletEmitter and item.Model then
+					if item and item.BulletEmitter then
 						for _, car in getVehiclesNear() do
-							if (delays[car] or 0) > os.clock() then
+							if (hitDelays[car] or 0) > os.clock() then
 								continue
 							end
 
-							delays[car] = os.clock() + 0.1
-							jb:FireServer('PopTires', car, item.Model.Name)
+							hitDelays[car] = os.clock() + 0.1
+							jb:FireServer('PopTires', car, item.__ClassName)
 						end
 					end
 
@@ -72,7 +74,7 @@ AutoPop = vape.Categories.Blatant:CreateModule({
 				until not AutoPop.Enabled
 			end)
 		else
-			table.clear(delays)
+			table.clear(hitDelays)
 		end
 	end,
 	Tooltip = 'Automatically pops vehicles tires around you'
@@ -81,6 +83,11 @@ Range = AutoPop:CreateSlider({
 	Name = 'Range',
 	Min = 1,
 	Max = 600,
-	Default = 600
+	Default = 600,
+	Suffix = function(val)
+		return val == 1 and 'stud' or 'studs'
+	end
 })
-TeamCheck = AutoPop:CreateToggle({Name = 'Team Check'})
+TeamCheck = AutoPop:CreateToggle({
+	Name = 'Priority Only'
+})

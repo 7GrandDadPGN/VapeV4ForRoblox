@@ -10,15 +10,15 @@ AutoDetonate = vape.Categories.Utility:CreateModule({
 	Name = 'AutoDetonate',
 	Function = function(callback)
 		if callback then
-			AutoDetonate:Clean(collectionService:GetInstanceAddedSignal('C4'):Connect(function(obj)
-				if obj:GetAttribute('UserId') == lplr.UserId then
-					localc4 = obj
+			AutoDetonate:Clean(collectionService:GetInstanceAddedSignal('C4'):Connect(function(c4)
+				if c4:GetAttribute('UserId') == lplr.UserId then
+					localc4 = c4
 				end
 			end))
 
-			for _, obj in collectionService:GetTagged('C4') do
-				if obj:GetAttribute('UserId') == lplr.UserId then
-					localc4 = obj
+			for _, c4 in collectionService:GetTagged('C4') do
+				if c4:GetAttribute('UserId') == lplr.UserId then
+					localc4 = c4
 				end
 			end
 
@@ -50,6 +50,7 @@ AutoDetonate = vape.Categories.Utility:CreateModule({
 								if ticks > 3 then
 									local lastEquip = lplr.Character:FindFirstChildWhichIsA('Tool')
 									entitylib.character.Humanoid:EquipTool(tool)
+
 									task.spawn(function()
 										replicatedStorage.Remotes.C4.ActivateC4:InvokeServer()
 									end)

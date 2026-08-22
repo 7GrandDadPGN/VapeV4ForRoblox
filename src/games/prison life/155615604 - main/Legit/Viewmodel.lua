@@ -10,11 +10,11 @@ local old
 local moveSpring = Spring.new()
 local aimSpring = Spring.new({Speed = 15})
 
-local function ToolAdded(obj)
-	if obj and obj:IsA('Tool') then
+local function ToolAdded(tool)
+	if tool and tool:IsA('Tool') then
 		if old then
-			for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
-				v.LocalTransparencyModifier = 0
+			for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do
+				inst.LocalTransparencyModifier = 0
 			end
 		end
 
@@ -22,46 +22,46 @@ local function ToolAdded(obj)
 			vtool:Destroy()
 		end
 
-		old = obj
-		vtool = obj:Clone()
+		old = tool
+		vtool = tool:Clone()
 		handle = vtool:FindFirstChild('Handle')
 		vtool.Parent = gameCamera
 
-		for _, v in vtool:QueryDescendants('BasePart') do
-			v.Material = ForceField.Enabled and Enum.Material.ForceField or v.Material
-			v.Color = ForceField.Enabled and Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value) or v.Color
+		for _, inst in vtool:QueryDescendants('BasePart') do
+			inst.Material = ForceField.Enabled and Enum.Material.ForceField or inst.Material
+			inst.Color = ForceField.Enabled and Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value) or inst.Color
 		end
 
-		for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
-			v.LocalTransparencyModifier = 1
+		for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do
+			inst.LocalTransparencyModifier = 1
 		end
 	end
 end
 
-local function EntityAdded(ent)
+local function EntityAdded(entity)
 	if vtool then
 		vtool:Destroy()
 		vtool = nil
 		handle = nil
 	end
 
-	Viewmodel:Clean(ent.Character.ChildAdded:Connect(ToolAdded))
-	Viewmodel:Clean(ent.Character.ChildRemoved:Connect(function(obj)
-		if obj == old then
+	Viewmodel:Clean(entity.Character.ChildAdded:Connect(ToolAdded))
+	Viewmodel:Clean(entity.Character.ChildRemoved:Connect(function(tool)
+		if tool == old then
 			if vtool then
 				vtool:Destroy()
 				vtool = nil
 			end
 
-			for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
-				v.LocalTransparencyModifier = 0
+			for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do
+				inst.LocalTransparencyModifier = 0
 			end
 
 			old = nil
 		end
 	end))
 
-	ToolAdded(ent.Character:FindFirstChildWhichIsA('Tool'))
+	ToolAdded(entity.Character:FindFirstChildWhichIsA('Tool'))
 end
 
 Viewmodel = vape.Legit:CreateModule({
@@ -80,6 +80,7 @@ Viewmodel = vape.Legit:CreateModule({
 			Viewmodel:Clean(runService.RenderStepped:Connect(function(dt)
 				if handle then
 					moveSpring.Target = entitylib.isAlive and entitylib.character.RootPart.AssemblyLinearVelocity * 0.005 or Vector3.zero
+
 					if Sway.Enabled then
 						if moveSpring.Target.Magnitude > 0.1 then
 							moveSpring.Target += (gameCamera.CFrame * CFrame.new(math.sin(tick() * 10) * 0.06, 0, 0)).Position - gameCamera.CFrame.Position
@@ -98,9 +99,10 @@ Viewmodel = vape.Legit:CreateModule({
 			TracerHook:Remove('Viewmodel')
 
 			if old then
-				for _, v in old:QueryDescendants('BasePart, Texture, Decal') do
-					v.LocalTransparencyModifier = 0
+				for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do
+					inst.LocalTransparencyModifier = 0
 				end
+
 				old = nil
 			end
 
@@ -141,7 +143,7 @@ Sway = Viewmodel:CreateToggle({
 ForceField = Viewmodel:CreateToggle({
 	Name = 'ForceField Effect',
 	Function = function(callback)
-		ColorSl.Object.Visible = callback
+		ColorSl.toolect.Visible = callback
 		if callback and Viewmodel.Enabled then
 			Viewmodel:Toggle()
 			Viewmodel:Toggle()

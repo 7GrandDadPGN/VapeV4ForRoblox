@@ -9,7 +9,6 @@ local CircleColor
 local CircleTransparency
 local CircleFilled
 local CircleObject
-local Instant
 local old
 local ProjectileRaycast = RaycastParams.new()
 ProjectileRaycast.RespectCanCollide = true
@@ -68,14 +67,9 @@ local function Hook(...)
 			ProjectileRaycast.FilterDescendantsInstances = {gameCamera, entity.Character, workspace.Vehicles}
 			ProjectileRaycast.CollisionGroup = entity.RootPart.CollisionGroup
 
-			local trajectory = prediction.SolveTrajectory(origin.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), entity.RootPart.Position, Instant.Enabled and Vector3.zero or entity.RootPart.Velocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
+			local trajectory = prediction.SolveTrajectory(origin.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), entity.RootPart.Position, oldBulletUpdate and Vector3.zero or entity.RootPart.AssemblyLinearVelocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
 			if trajectory then
 				targetinfo.Targets[entity] = tick() + 1
-
-				if Instant.Enabled then
-					item.BulletEmitter.LastUpdate = tick() - (item.BulletEmitter.LifeSpan - 0.1)
-				end
-
 				item.TipDirection = CFrame.lookAt(origin.Position, trajectory).LookVector
 			end
 
@@ -148,10 +142,6 @@ Range = SilentAim:CreateSlider({
 Wallbang = SilentAim:CreateToggle({
 	Name = 'Wallbang',
 	Tooltip = 'Allow you to shoot people through walls when specific conditions are met.\n(If the entity has a valid hitbox position exposed or if the shoot position can be moved past walls (eg hugging walls))'
-})
-Instant = SilentAim:CreateToggle({
-	Name = 'Hitscan Bullets',
-	Tooltip = 'Instantly teleport bullets to the destination'
 })
 SilentAim:CreateToggle({
 	Name = 'Range Circle',

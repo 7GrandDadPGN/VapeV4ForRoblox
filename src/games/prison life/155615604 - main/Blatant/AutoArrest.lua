@@ -4,6 +4,7 @@ local HandCheck
 local CooldownBar
 local toggles = {}
 local cdholder, cdframe, cdlabel
+local arrestCooldown = 0
 
 AutoArrest = vape.Categories.Blatant:CreateModule({
 	Name = 'AutoArrest',
@@ -109,9 +110,9 @@ CooldownBar = AutoArrest:CreateToggle({
 			cdlabel.Font = Enum.Font.Arial
 			cdlabel.Parent = cdholder
 		else
-			if cdframe then
-				cdframe:Destroy()
-				cdframe = nil
+			if cdholder then
+				cdholder:Destroy()
+				cdholder = nil
 			end
 		end
 	end,

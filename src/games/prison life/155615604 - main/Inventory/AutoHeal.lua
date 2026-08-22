@@ -15,9 +15,9 @@ AutoHeal = vape.Categories.Inventory:CreateModule({
 					local healTool
 					local backpack = lplr:FindFirstChildWhichIsA('Backpack')
 					if backpack then
-						for _, v in backpack:GetChildren() do
-							if healItems[v.Name] then
-								healTool = v
+						for _, tool in backpack:GetChildren() do
+							if healItems[tool.Name] then
+								healTool = tool
 							end
 						end
 
