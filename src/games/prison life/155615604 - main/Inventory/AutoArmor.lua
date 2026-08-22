@@ -7,12 +7,12 @@ AutoArmor = vape.Categories.Inventory:CreateModule({
 		if callback then
 			pickups = workspace.Prison_ITEMS.clothes:GetChildren()
 
-			AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildAdded:Connect(function(obj)
-				table.insert(pickups, obj)
+			AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildAdded:Connect(function(pickup)
+				table.insert(pickups, pickup)
 			end))
 
-			AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildRemoved:Connect(function(obj)
-				local index = table.find(pickups, obj)
+			AutoArmor:Clean(workspace.Prison_ITEMS.clothes.ChildRemoved:Connect(function(pickup)
+				local index = table.find(pickups, pickup)
 				if index then
 					table.remove(pickups, index)
 				end
@@ -22,13 +22,13 @@ AutoArmor = vape.Categories.Inventory:CreateModule({
 				if entitylib.isAlive and entitylib.character.Humanoid.MaxHealth <= 100 then
 					local localpos = entitylib.character.RootPart.Position
 
-					for _, v in pickups do
-						if (v:GetPivot().Position - localpos).Magnitude < 10 and gamepasses[v:GetAttribute('RequiredGamepass')] and AutoArmor.Enabled then
-							if v.Name == 'Light Vest' and gamepasses[lplr.Team == teams.Criminals and 'Mafia' or 'Riot Police'] then
+					for _, pickup in pickups do
+						if (pickup:GetPivot().Position - localpos).Magnitude < 10 and gamepasses[pickup:GetAttribute('RequiredGamepass')] and AutoArmor.Enabled then
+							if pickup.Name == 'Light Vest' and gamepasses[lplr.Team == teams.Criminals and 'Mafia' or 'Riot Police'] then
 								continue
 							end
 
-							replicatedStorage.Remotes.InteractWithItem:InvokeServer(v:FindFirstChildWhichIsA('BasePart'))
+							replicatedStorage.Remotes.InteractWithItem:InvokeServer(pickup:FindFirstChildWhichIsA('BasePart'))
 						end
 					end
 				end

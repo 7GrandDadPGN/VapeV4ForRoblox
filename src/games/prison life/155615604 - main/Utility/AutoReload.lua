@@ -46,10 +46,10 @@ AutoReload = vape.Categories.Utility:CreateModule({
 						task.spawn(pl.Reload)
 
 						if HotSwap.Enabled then
-							local wep = getWeapon()
+							local weapon = getWeapon()
 
-							if wep then
-								entitylib.character.Humanoid:EquipTool(wep)
+							if weapon then
+								entitylib.character.Humanoid:EquipTool(weapon)
 							end
 						end
 					end
@@ -58,14 +58,15 @@ AutoReload = vape.Categories.Utility:CreateModule({
 
 			-- reimplementation of playsound to get rid of the bad error
 			oldplaysound = hookfunction(pl.PlaySound, function(sound)
-				local soundobj = debug.getupvalue(pl.Shoot, 1)
-				soundobj = soundobj and soundobj:FindFirstChild('Handle')
-				soundobj = soundobj and soundobj:FindFirstChild(sound)
+				local sound = debug.getupvalue(pl.Shoot, 1)
+				sound = sound and sound:FindFirstChild('Handle')
+				sound = sound and sound:FindFirstChild(sound)
 
-				if soundobj then
-					local clone = soundobj:Clone()
-					clone.Parent = soundobj.Parent
+				if sound then
+					local clone = sound:Clone()
+					clone.Parent = sound.Parent
 					clone:Play()
+
 					task.delay(5, clone.Destroy, clone)
 				end
 			end)
@@ -77,6 +78,7 @@ AutoReload = vape.Categories.Utility:CreateModule({
 				else
 					hookfunction(pl.PlaySound, oldplaysound)
 				end
+
 				oldplaysound = nil
 			end
 		end

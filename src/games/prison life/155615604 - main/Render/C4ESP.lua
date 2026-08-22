@@ -7,9 +7,9 @@ local Reference = {}
 local Folder = Instance.new('Folder')
 Folder.Parent = vape.holder
 
-local function Added(obj)
+local function Added(c4)
 	local cham = Instance.new('Highlight')
-	cham.Adornee = obj
+	cham.Adornee = c4
 	cham.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 	cham.FillColor = Color3.fromHSV(FillColor.Hue, FillColor.Sat, FillColor.Value)
 	cham.OutlineColor = Color3.fromHSV(OutlineColor.Hue, OutlineColor.Sat, OutlineColor.Value)
@@ -17,17 +17,17 @@ local function Added(obj)
 	cham.OutlineTransparency = OutlineTransparency.Value
 	cham.Parent = Folder
 
-	Reference[obj] = cham
+	Reference[c4] = cham
 end
 
-local function Removed(obj)
-	if Reference[obj] then
+local function Removed(c4)
+	if Reference[c4] then
 		if vape.ThreadFix then
 			setthreadidentity(8)
 		end
 
-		Reference[obj]:Destroy()
-		Reference[obj] = nil
+		Reference[c4]:Destroy()
+		Reference[c4] = nil
 	end
 end
 
@@ -38,12 +38,12 @@ C4ESP = vape.Categories.Render:CreateModule({
 			C4ESP:Clean(collectionService:GetInstanceAddedSignal('C4'):Connect(Added))
 			C4ESP:Clean(collectionService:GetInstanceRemovedSignal('C4'):Connect(Removed))
 
-			for _, obj in collectionService:GetTagged('C4') do
-				task.spawn(Added, obj)
+			for _, c4 in collectionService:GetTagged('C4') do
+				task.spawn(Added, c4)
 			end
 		else
-			for _, v in Reference do
-				v:Destroy()
+			for _, cham in Reference do
+				cham:Destroy()
 			end
 			table.clear(Reference)
 		end
@@ -53,8 +53,8 @@ C4ESP = vape.Categories.Render:CreateModule({
 FillColor = C4ESP:CreateColorSlider({
 	Name = 'Color',
 	Function = function(hue, sat, val)
-		for _, v in Reference do
-			v.FillColor = Color3.fromHSV(hue, sat, val)
+		for _, cham in Reference do
+			cham.FillColor = Color3.fromHSV(hue, sat, val)
 		end
 	end
 })
@@ -62,8 +62,8 @@ OutlineColor = C4ESP:CreateColorSlider({
 	Name = 'Outline Color',
 	DefaultSat = 0,
 	Function = function(hue, sat, val)
-		for _, v in Reference do
-			v.OutlineColor = Color3.fromHSV(hue, sat, val)
+		for _, cham in Reference do
+			cham.OutlineColor = Color3.fromHSV(hue, sat, val)
 		end
 	end
 })
@@ -73,8 +73,8 @@ FillTransparency = C4ESP:CreateSlider({
 	Max = 1,
 	Default = 0.5,
 	Function = function(val)
-		for _, v in Reference do
-			v.FillTransparency = val
+		for _, cham in Reference do
+			cham.FillTransparency = val
 		end
 	end,
 	Decimal = 10
@@ -85,8 +85,8 @@ OutlineTransparency = C4ESP:CreateSlider({
 	Max = 1,
 	Default = 0.5,
 	Function = function(val)
-		for _, v in Reference do
-			v.OutlineTransparency = val
+		for _, cham in Reference do
+			cham.OutlineTransparency = val
 		end
 	end,
 	Decimal = 10

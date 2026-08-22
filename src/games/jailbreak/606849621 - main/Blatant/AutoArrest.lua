@@ -1,29 +1,68 @@
 local AutoArrest
+local Range
+local AutoEquip
 local cooldown = 0
+local ejectCooldown = 0
+
+local function equipTool(tool)
+	local obj = jb.InventoryItemBinder:Get(tool)
+	if obj then
+		obj:AttemptSelect()
+	end
+end
 
 AutoArrest = vape.Categories.Blatant:CreateModule({
 	Name = 'AutoArrest',
 	Function = function(callback)
 		if callback then
 			repeat
-				local item = jb.ItemSystemController:GetLocalEquipped()
-				if item and item.__ClassName == 'Handcuffs' then
-					local localPosition = entitylib.character.Humanoid.HumanoidUnloadServerPosition.Value
-					local plrs = entitylib.AllPosition({
+				local cuffs = InvTracker.Inventories[lplr].Handcuffs
+
+				if lplr.Team == teamsService.Police and cuffs then
+					local serverPos = entitylib.character.Humanoid:FindFirstChild('HumanoidUnloadServerPosition')
+					local vehicle
+					local target
+
+					local entities = entitylib.AllPosition({
 						Players = true,
 						Part = 'RootPart',
-						Range = 50
+						Range = Range.Value,
+						Origin = serverPos and serverPos.Value or nil
 					})
 
-					for _, ent in plrs do
-						if ent.Player and isIllegal(ent) then
-							local vehicle = ent.Humanoid.Sit and getVehicle(ent) or nil
+					for _, entity in entities do
+						if entity.Player and isIllegal(entity) then
+							if entity.Character:GetAttribute('InVehicle') then
+								if not vehicle and ejectCooldown < os.clock() then
+									vehicle = getVehicle(entity)
+								end
+							elseif not entity.Character:GetAttribute('HasHandcuffs') and not target and cooldown < os.clock() then
+								target = entity.Player.Name
+							end
+						end
+					end
+
+					if vehicle or target then
+						local lastEquipped = jb.ItemSystemController:GetLocalEquipped()
+						if AutoEquip.Enabled and not (lastEquipped and lastEquipped.__ClassName == 'Handcuffs') then
+							equipTool(cuffs)
+						end
+
+						local equipped = jb.ItemSystemController:GetLocalEquipped()
+						if equipped and equipped.__ClassName == 'Handcuffs' then
 							if vehicle then
 								jb:FireServer('Eject', vehicle)
-							elseif not isArrested(ent.Player.Name) and (localPosition - ent.RootPart.Position).Magnitude < 18.4 and cooldown < os.clock() then
-								jb:FireServer('Arrest', ent.Player.Name)
+								ejectCooldown = os.clock() + 0.2
+							end
+
+							if target then
+								jb:FireServer('Arrest', target)
 								cooldown = os.clock() + 0.5
 							end
+						end
+
+						if AutoEquip.Enabled and lastEquipped ~= equipped then
+							equipTool(lastEquipped and lastEquipped.inventoryItemValue or cuffs)
 						end
 					end
 				end
@@ -33,4 +72,17 @@ AutoArrest = vape.Categories.Blatant:CreateModule({
 		end
 	end,
 	Tooltip = 'Automatically uses handcuffs on nearby entities'
+})
+Range = AutoArrest:CreateSlider({
+	Name = 'Range',
+	Min = 1,
+	Max = 16,
+	Default = 16,
+	Suffix = function(val)
+		return val == 1 and 'stud' or 'studs'
+	end
+})
+AutoEquip = AutoArrest:CreateToggle({
+	Name = 'AutoEquip',
+	Tooltip = 'Automatically equip the handcuffs for performing actions (RISKY)'
 })

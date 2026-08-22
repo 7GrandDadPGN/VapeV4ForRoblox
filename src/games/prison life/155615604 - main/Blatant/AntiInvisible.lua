@@ -51,7 +51,7 @@ local function AnimationAdded(anim, plr)
 			task.cancel(threads[anim])
 		end
 
-		CheatFlags:Flag(plr, 'invalid animation', 1)
+		Cheats:Flag(plr, 'invalid animation', 1)
 		threads[anim] = task.spawn(function()
 			repeat
 				anim:AdjustWeight(0, 0)

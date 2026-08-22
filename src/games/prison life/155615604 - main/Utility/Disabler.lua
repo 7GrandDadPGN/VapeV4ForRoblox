@@ -1,9 +1,9 @@
 local Disabler
 local old
 
-local function EntityAdded(ent)
+local function EntityAdded(entity)
 	task.defer(function()
-		old = getconnections(ent.Head:GetPropertyChangedSignal('CanCollide'))[1]
+		old = getconnections(entity.Head:GetPropertyChangedSignal('CanCollide'))[1]
 		if old then
 			old:Disable()
 		end

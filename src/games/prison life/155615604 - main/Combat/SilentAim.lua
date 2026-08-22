@@ -21,6 +21,7 @@ run(function()
 		if inputService.TouchEnabled then
 			return gameCamera.ViewportSize / 2
 		end
+
 		return inputService.GetMouseLocation(inputService)
 	end
 
@@ -67,18 +68,18 @@ run(function()
 			local ray = workspace:Raycast(args[2], (origin - args[2]), OriginScanner.Ray)
 
 			if ray then
-				local neworigin, hitbox = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.01, targetPart)
+				local newOrigin, hit = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.01, targetPart)
 
-				if neworigin then
+				if newOrigin then
 					for index, value in debug.getstack(3) do
 						if value == origin then
-							debug.setstack(3, index, neworigin)
+							debug.setstack(3, index, newOrigin)
 						end
 					end
 
-					args[1] = neworigin
-					if hitbox then
-						return targetPart, hitbox
+					args[1] = newOrigin
+					if hit then
+						return targetPart, hit
 					end
 				end
 			end

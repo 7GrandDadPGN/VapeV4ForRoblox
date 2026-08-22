@@ -6,6 +6,7 @@ rayParams.FilterType = Enum.RaycastFilterType.Exclude
 
 local function getTriggerBotTarget()
 	rayParams.FilterDescendantsInstances = {lplr.Character}
+
 	if entitylib.isAlive then
 		local tool = debug.getupvalue(oldshoot or pl.Shoot, 1)
 		local data = debug.getupvalue(oldshoot or pl.Shoot, 10)

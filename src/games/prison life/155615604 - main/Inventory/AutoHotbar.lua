@@ -40,9 +40,9 @@ AutoHotbar:CreateTextList({
 	Function = function(list)
 		table.clear(SortList)
 		for _, entry in list do
-			local tab = entry:split('/')
-			local ind = tonumber(tab[1])
-			SortList[tab[2]] = ind or 999
+			local data = entry:split('/')
+			local priority = tonumber(data[1]) or 999
+			SortList[data[2]] = priority
 		end
 	end
 })
