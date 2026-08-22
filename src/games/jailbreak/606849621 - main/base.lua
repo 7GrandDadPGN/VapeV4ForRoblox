@@ -22,6 +22,12 @@ end
 local cloneref = cloneref or function(obj)
 	return obj
 end
+local vapeEvents = setmetatable({}, {
+	__index = function(self, index)
+		self[index] = Instance.new('BindableEvent')
+		return self[index]
+	end
+})
 
 local playersService = cloneref(game:GetService('Players'))
 local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
@@ -29,9 +35,10 @@ local runService = cloneref(game:GetService('RunService'))
 local inputService = cloneref(game:GetService('UserInputService'))
 local textService = cloneref(game:GetService('TextService'))
 local tweenService = cloneref(game:GetService('TweenService'))
-local teamsService = cloneref(game:GetService('Teams'))
 local collectionService = cloneref(game:GetService('CollectionService'))
 local contextService = cloneref(game:GetService('ContextActionService'))
+local httpService = cloneref(game:GetService('HttpService'))
+local teams = cloneref(game:GetService('Teams'))
 
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
@@ -77,18 +84,22 @@ local function isFriend(plr, recolor)
 	return nil
 end
 
-local function isIllegal(entity)
-	if entity.Player and entity.Player.Team == teamsService.Prisoner then
+local function isIllegal(entity, teamCheck)
+	if entity.Character:GetAttribute('HasHandcuffs') then
+		return false
+	end
+
+	if entity.Player and entity.Player.Team == teams.Prisoner then
 		for tool in InvTracker.Inventories[entity.Player] do
 			if tool ~= 'MansionInvite' and tool ~= 'Donut' then
 				return true
 			end
 		end
 
-		return entity.Illegal
+		return entity.InVehicle
 	end
 
-	return true
+	return not teamCheck
 end
 
 local function isTarget(plr)
@@ -149,23 +160,23 @@ run(function()
 	end
 
 	function OriginScanner:Scan(origin, target, extra, part)
+		if self.Cache[part] then
+			return table.unpack(self.Cache[part])
+		end
+
+		if extra and (origin - extra).Magnitude < 14 then
+			self.Cache[part] = {extra}
+			return extra
+		end
+
 		local scanPositions = {}
 		local diff = CFrame.lookAt(origin * Vector3.new(1, 0, 1), target * Vector3.new(1, 0, 1)).LookVector
+		for _, offset in positions do
+			if (offset * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
+				local pos = origin + offset * 14
 
-		if OriginScanner.Cache[part] then
-			return table.unpack(OriginScanner.Cache[part])
-		end
-
-		if extra then
-			if (origin - extra).Magnitude < 14 then
-				table.insert(scanPositions, extra)
-			end
-		end
-
-		if #scanPositions <= 0 then
-			for _, offset in positions do
-				if (offset * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
-					table.insert(scanPositions, origin + offset * 14)
+				if checkPoint(pos, overlapParams) then
+					table.insert(scanPositions, pos)
 				end
 			end
 		end
@@ -173,8 +184,8 @@ run(function()
 		for _, pos in scanPositions do
 			local ray = workspace:Raycast(target, (pos - target), rayParams)
 
-			if not ray and checkPoint(target, overlapParams) then
-				OriginScanner.Cache[part] = {pos}
+			if not ray then
+				self.Cache[part] = {pos}
 				return pos
 			end
 		end
@@ -199,9 +210,25 @@ run(function()
 			self.Connections[inventory] = {
 				inventory.ChildAdded:Connect(function(tool)
 					self.Inventories[plr][tool.Name] = tool
+
+					if plr == lplr then
+						vapeEvents.ItemAdded:Fire(tool)
+					else
+						local entity = entitylib.getEntity(plr)
+						if entity then
+							entitylib.Events.EntityUpdated:Fire(entity)
+						end
+					end
 				end),
 				inventory.ChildRemoved:Connect(function(tool)
 					self.Inventories[plr][tool.Name] = nil
+
+					if plr ~= lplr then
+						local entity = entitylib.getEntity(plr)
+						if entity then
+							entitylib.Events.EntityUpdated:Fire(entity)
+						end
+					end
 				end),
 				inventory.Destroying:Once(function()
 					for _, connection in self.Connections[inventory] do
@@ -240,6 +267,34 @@ run(function()
 	end)
 end)
 
+local BountyTracker = {Data = {}, List = {}}
+run(function()
+	function BountyTracker:UpdateData(data, update)
+		table.clear(self.Data)
+		table.clear(self.List)
+
+		for _, entry in data do
+			self.Data[entry.Name] = entry.Bounty
+			table.insert(self.List, {entry.Name, entry.Bounty})
+		end
+
+		table.sort(self.List, function(a, b)
+			return a[2] > b[2]
+		end)
+
+		if update then
+			for _, entity in entitylib.List do
+				entitylib.Events.EntityUpdated:Fire(entity)
+			end
+		end
+	end
+
+	BountyTracker:UpdateData(httpService:JSONDecode(replicatedStorage.BountyData.Value))
+	vape:Clean(replicatedStorage.BountyData:GetPropertyChangedSignal('Value'):Connect(function()
+		BountyTracker:UpdateData(httpService:JSONDecode(replicatedStorage.BountyData.Value), true)
+	end))
+end)
+
 run(function()
 	local function getMousePosition()
 		if inputService.TouchEnabled then
@@ -251,7 +306,8 @@ run(function()
 
 	entitylib.getUpdateConnections = function(entity)
 		local hum = entity.Humanoid
-		entity.Illegal = entity.Character:GetAttribute('InVehicle')
+		entity.InVehicle = not entity.Character:GetAttribute('HasHandcuffs') and (entity.Character:GetAttribute('InVehicle') or entity.InVehicle)
+		entity.Illegal = isIllegal(entity, true)
 
 		return {
 			hum:GetPropertyChangedSignal('Health'),
@@ -274,10 +330,10 @@ run(function()
 		if isFriend(entity.Player) then return false end
 		if not select(2, whitelist:get(entity.Player)) then return false end
 
-		if lplr.Team == teamsService.Police then
-			return entity.Player.Team ~= teamsService.Police
+		if lplr.Team == teams.Police then
+			return entity.Player.Team ~= teams.Police
 		else
-			return entity.Player.Team == teamsService.Police
+			return entity.Player.Team == teams.Police
 		end
 
 		return true
@@ -532,15 +588,14 @@ run(function()
 		replicatedStorage.Game.TrainSystem.LocomotiveFront,
 		replicatedStorage.Game.ItemSystem.ItemSystem,
 		replicatedStorage.Game.CashBuyUI,
+		replicatedStorage.Game.GunShop.GunShopUI,
 		replicatedStorage.Game.Item.Taser,
 		replicatedStorage.Game.Item.Donut,
 		replicatedStorage.Game.Item.Gun,
 		replicatedStorage.Game.Falling,
 		lplr.PlayerScripts.LocalScript
 	}, {
-		Action = 'Pickup',
-		Action3 = 'StartRob',
-		Action2 = 'EndRob',
+		Action3 = 'Pickup',
 		AttemptArrest = 'Arrest',
 		attemptPunch = 'Punch',
 		AttemptVehicleEject = 'Eject',
@@ -550,6 +605,8 @@ run(function()
 		CalculateDelta = 'UseNitro',
 		Draw = 'TaseReplicate',
 		Gun = 'PopTires',
+		GunShopUI = 'UnequipItem',
+		GunShopUI1 = 'EquipItem',
 		LocalScript2 = 'LookAngle',
 		LocalScript = 'SelfDamage',
 		onPressed = 'FlipVehicle',
@@ -598,21 +655,10 @@ run(function()
 	local arrests = sessioninfo:AddItem('Arrested')
 	local moneymade = sessioninfo:AddItem('Money Made', 0, toMoney, true)
 	local bounty = sessioninfo:AddItem('Bounty List', '', function()
-		local board = workspace:FindFirstChild('BountyBoard', true)
-		board = board and board:FindFirstChild('MostWanted', true)
-		board = board and board:FindFirstChild('Board', true)
-
 		local text = ''
 
-		for _, obj in (board and board:GetChildren() or {}) do
-			if obj:IsA('Frame') then
-				local plrname = obj:FindFirstChild('NameText', true)
-				local bounty = obj:FindFirstChild('BountyText', true)
-
-				if plrname and bounty then
-					text = text..'\n'..(plrname.Text..': '..bounty.Text:gsub(' Bounty', ''))
-				end
-			end
+		for _, data in BountyTracker.List do
+			text = text..'\n'..data[1]..': '..toMoney(tostring(data[2]))
 		end
 
 		return text
@@ -635,16 +681,31 @@ run(function()
 		end)
 	end
 
+	table.insert(whitelist.tagcallback, function(plr, plrtag, rich)
+		if plr then
+			local entity = entitylib.getEntity(plr)
+			if entity then
+				if plr.Team == teams.Prisoner and entity.Illegal then
+					table.insert(plrtag, {text = rich and '💢' or 'Hostile'})
+				end
+
+				if BountyTracker.Data[plr.Name] then
+					table.insert(plrtag, {
+						text = toMoney(tostring(BountyTracker.Data[plr.Name])),
+						color = Color3.fromHSV(0.4, 0.89, 0.75)
+					})
+				end
+			end
+		end
+	end)
+
 	vape:Clean(runService.RenderStepped:Connect(function()
 		table.clear(OriginScanner.Cache)
 	end))
 
 	vape:Clean(entitylib.Events.EntityUpdated:Connect(function(entity)
-		entity.Illegal = entity.Illegal or entity.Character:GetAttribute('InVehicle')
-
-		if entity.Character:GetAttribute('HasHandcuffs') then
-			entity.Illegal = false
-		end
+		entity.InVehicle = not entity.Character:GetAttribute('HasHandcuffs') and (entity.Character:GetAttribute('InVehicle') or entity.InVehicle)
+		entity.Illegal = isIllegal(entity, true)
 	end))
 
 	vape:Clean(function()

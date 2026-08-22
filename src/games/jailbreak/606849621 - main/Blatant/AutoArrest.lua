@@ -18,7 +18,7 @@ AutoArrest = vape.Categories.Blatant:CreateModule({
 			repeat
 				local cuffs = InvTracker.Inventories[lplr].Handcuffs
 
-				if lplr.Team == teamsService.Police and cuffs then
+				if lplr.Team == teams.Police and cuffs then
 					local serverPos = entitylib.character.Humanoid:FindFirstChild('HumanoidUnloadServerPosition')
 					local vehicle
 					local target

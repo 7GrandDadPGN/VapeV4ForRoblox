@@ -137,59 +137,53 @@ run(function()
 	}
 
 	function OriginScanner:Scan(origin, target, extra, part)
-		local scanPositions = {}
+		if self.Cache[part] then
+			return table.unpack(self.Cache[part])
+		end
+
+		local scanPositions = {origin}
 		local hitboxPositions = {}
+		local isTargetVisible = checkPoint(target, overlapParams)
+
+		if extra and (origin - extra).Magnitude < 7.5 and isTargetVisible then
+			self.Cache[part] = {extra}
+			return extra
+		end
+
+		if isTargetVisible then
+			table.insert(hitboxPositions, target)
+		end
+
 		local diff = CFrame.lookAt(origin * Vector3.new(1, 0, 1), target * Vector3.new(1, 0, 1)).LookVector
+		for _, normal in Enum.NormalId:GetEnumItems() do
+			local offset = Vector3.fromNormalId(normal)
 
-		if OriginScanner.Cache[part] then
-			return table.unpack(OriginScanner.Cache[part])
-		end
+			if (offset * Vector3.new(1, 0, 1)):Dot(-diff) > -0.5 then
+				local pos = target + offset * 6
 
-		if extra then
-			if (origin - extra).Magnitude < 7.5 then
-				table.insert(scanPositions, extra)
-			else
-				table.insert(hitboxPositions, target)
-				for _, normal in Enum.NormalId:GetEnumItems() do
-					local vec = Vector3.fromNormalId(normal)
-
-					if (vec * Vector3.new(1, 0, 1)):Dot(-diff) > -0.5 then
-						local pos = target + vec * 6
-
-						if checkPoint(pos, overlapParams) then
-							table.insert(hitboxPositions, pos)
-						end
-					end
+				if checkPoint(pos, overlapParams) then
+					table.insert(hitboxPositions, pos)
 				end
 			end
 		end
 
-		if #scanPositions <= 0 then
-			for _, offset in positions do
-				if (offset * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
-					table.insert(scanPositions, origin + offset * 6)
+		for _, offset in positions do
+			if (offset * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
+				local pos = origin + offset * 6
+
+				if checkPoint(pos, overlapParams) then
+					table.insert(scanPositions, pos)
 				end
 			end
 		end
 
-		if #hitboxPositions > 0 then
-			for _, hitbox in hitboxPositions do
-				for _, pos in scanPositions do
-					local ray = workspace:Raycast(hitbox, (pos - hitbox), rayParams)
-
-					if not ray and checkPoint(hitbox, overlapParams) then
-						OriginScanner.Cache[part] = {pos, hitbox}
-						return pos, hitbox
-					end
-				end
-			end
-		else
+		for _, hitbox in hitboxPositions do
 			for _, pos in scanPositions do
-				local ray = workspace:Raycast(target, (pos - target), rayParams)
+				local ray = workspace:Raycast(hitbox, (pos - hitbox), rayParams)
 
-				if not ray and checkPoint(target, overlapParams) then
-					OriginScanner.Cache[part] = {pos}
-					return pos
+				if not ray then
+					self.Cache[part] = {pos, hitbox}
+					return pos, hitbox
 				end
 			end
 		end
@@ -481,7 +475,7 @@ run(function()
 		return text
 	end, false)
 
-		table.insert(whitelist.tagcallback, function(plr, plrtag, rich)
+	table.insert(whitelist.tagcallback, function(plr, plrtag, rich)
 		if plr then
 			local entity = entitylib.getEntity(plr)
 			if entity then
