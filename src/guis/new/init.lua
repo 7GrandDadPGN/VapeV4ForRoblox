@@ -543,7 +543,7 @@ vape.SettingToggleNotifications = notifpane:CreateToggle({
 vape.GUIColor = vape.Categories.Main.Settings:CreateGUISlider({
 	Name = 'GUI Theme',
 	Function = function(h, s, v)
-		vape:UpdateGUI(h, s, v, true)
+		vape:UpdateGUI()
 	end
 })
 
@@ -574,7 +574,7 @@ end))
 
 local cursorConnection
 vape:Clean(clickgui:GetPropertyChangedSignal('Visible'):Connect(function()
-	vape:UpdateGUI(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value, true)
+	vape:UpdateGUI()
 
 	if clickgui.Visible and inputService.MouseEnabled then
 		if cursorConnection then

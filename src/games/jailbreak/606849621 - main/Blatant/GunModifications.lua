@@ -1,7 +1,47 @@
 local GunModifications
+local Recoil
+local Spread
+local Automatic
+local VehicleWallbang
 local Headshot
 local Hitscan
 local oldhit
+local olddata = {}
+
+local function ModifyGun(gun)
+	if gun and gun.LastReplicateMousePosition then
+		if not olddata[gun.Config] then
+			olddata[gun.Config] = table.clone(gun.Config)
+		end
+
+		gun.Config.CamShakeMagnitude = Recoil.Enabled and 0 or olddata[gun.Config].CamShakeMagnitude
+		gun.Config.FireAuto = Automatic.Enabled or olddata[gun.Config].FireAuto
+
+		if gun.Config.BulletSpread then
+			gun.Config.BulletSpread = Spread.Enabled and 0 or olddata[gun.Config].BulletSpread
+		end
+
+		local vehicleIndex = table.find(gun.BulletEmitter.IgnoreList, workspace.Vehicles)
+		if vehicleIndex then
+			if not VehicleWallbang.Enabled then
+				table.remove(gun.BulletEmitter.IgnoreList, vehicleIndex)
+			end
+		else
+			if VehicleWallbang.Enabled then
+				table.insert(gun.BulletEmitter.IgnoreList, workspace.Vehicles)
+			end
+		end
+	end
+end
+
+local function ApplyMods()
+	if GunModifications.Enabled then
+		local equipped = jb.ItemSystemController:GetLocalEquipped()
+		if equipped then
+			task.spawn(ModifyGun, equipped)
+		end
+	end
+end
 
 GunModifications = vape.Categories.Blatant:CreateModule({
 	Name = 'GunModifications',
@@ -11,7 +51,7 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 				oldBulletUpdate = hookfunction(jb.BulletEmitter.Update, function(...)
 					local self = ...
 					if self.Local then
-						self.LastUpdate = tick() - (self.LifeSpan - 0.1)
+						self.LastUpdate = tick() - self.LifeSpan
 					end
 
 					return oldBulletUpdate(...)
@@ -25,6 +65,15 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 					return oldhit(...)
 				end)
 			end
+
+			GunModifications:Clean(jb.ItemSystemController.OnLocalItemEquipped:Connect(function(item)
+				task.spawn(ModifyGun, item)
+			end))
+
+			local equipped = jb.ItemSystemController:GetLocalEquipped()
+			if equipped then
+				task.spawn(ModifyGun, equipped)
+			end
 		else
 			if oldBulletUpdate then
 				restorefunction(jb.BulletEmitter.Update)
@@ -35,9 +84,34 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 				restorefunction(jb.GunController.BulletEmitterOnLocalHitPlayer)
 				oldhit = nil
 			end
+
+			for config, data in olddata do
+				for i, v in data do
+					config[i] = v
+				end
+			end
+
+			table.clear(olddata)
 		end
 	end,
 	Tooltip = 'Apply various modifications to enhance any firearm'
+})
+Recoil = GunModifications:CreateToggle({
+	Name = 'No Recoil',
+	Function = ApplyMods
+})
+Spread = GunModifications:CreateToggle({
+	Name = 'No Spread',
+	Function = ApplyMods
+})
+Automatic = GunModifications:CreateToggle({
+	Name = 'Full Automatic',
+	Function = ApplyMods
+})
+VehicleWallbang = GunModifications:CreateToggle({
+	Name = 'Vehicle Wallbang',
+	Function = ApplyMods,
+	Tooltip = 'Allow you to shoot through vehicles.'
 })
 Headshot = GunModifications:CreateToggle({
 	Name = 'Always Headshot',

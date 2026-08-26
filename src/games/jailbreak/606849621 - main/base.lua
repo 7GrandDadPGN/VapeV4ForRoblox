@@ -52,10 +52,21 @@ local sessioninfo = vape.Libraries.sessioninfo
 local vm = loadstring(downloadFile('newvape/libraries/vm.lua'), 'vm')()
 
 local jb = {}
+local Spring = {}
 local InfNitro = {Enabled = false}
 local LazerGodmode = {Enabled = false}
 local InvTracker = {Inventories = {}, Connections = {}}
 local oldBulletUpdate
+local aimTimer, shootTimer, aimVec = os.clock(), os.clock()
+
+local function getTableSize(dict)
+	local size = 0
+	for _ in dict do
+		size += 1
+	end
+
+	return size
+end
 
 local function getVehicle(entity)
 	if entity.Player then
@@ -108,6 +119,26 @@ end
 
 local function notif(...)
 	return vape:CreateNotification(...)
+end
+
+local frictionTable, oldfrict = {}, {}
+local function updateVelocity()
+	if getTableSize(frictionTable) > 0 then
+		if entitylib.isAlive then
+			for _, part in entitylib.character.Character:GetChildren() do
+				if part:IsA('BasePart') and part.Name ~= 'HumanoidRootPart' and not oldfrict[part] then
+					oldfrict[part] = part.CustomPhysicalProperties or 'none'
+					part.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.2, 0.5, 1, 1)
+				end
+			end
+		end
+	else
+		for part, data in oldfrict do
+			part.CustomPhysicalProperties = data ~= 'none' and data or nil
+		end
+
+		table.clear(oldfrict)
+	end
 end
 
 local OriginScanner = {Cache = {}}
@@ -191,8 +222,8 @@ run(function()
 		end
 	end
 
-	function OriginScanner:UpdateIgnore(model)
-		local ignore = {lplr.Character, workspace.Items, model}
+	function OriginScanner:UpdateIgnore(data)
+		local ignore = {lplr.Character, workspace.Items, unpack(data)}
 		for _, entity in entitylib.List do
 			table.insert(ignore, entity.Character)
 		end
@@ -558,6 +589,7 @@ run(function()
 	end
 
 	jb = {
+		AlexChassis = require(replicatedStorage.Module.AlexChassis),
 		Audio = require(replicatedStorage.Std.Audio),
 		BulletEmitter = require(replicatedStorage.Game.ItemSystem.BulletEmitter),
 		CircleAction = require(replicatedStorage.Module.UI).CircleAction,
@@ -568,7 +600,8 @@ run(function()
 		LightningUtils = require(replicatedStorage.Game.LightningUtils),
 		PlayerUtils = require(replicatedStorage.Game.PlayerUtils),
 		TeamChooseController = require(replicatedStorage.TeamSelect.TeamChooseUI),
-		VehicleController = require(replicatedStorage.Vehicle.VehicleUtils)
+		VehicleController = require(replicatedStorage.Vehicle.VehicleUtils),
+		VehicleSystem = require(replicatedStorage.Game.VehicleSystem)
 	}
 
 	if not jb.VehicleController.toggleLocalLocked or not jb.VehicleController.NitroShopVisible then
@@ -708,11 +741,52 @@ run(function()
 		entity.Illegal = isIllegal(entity, true)
 	end))
 
+	vape:Clean(entitylib.Events.LocalAdded:Connect(updateVelocity))
+
 	vape:Clean(function()
 		table.clear(remotes)
 		table.clear(jb)
 		restorefunction(fireserver)
 	end)
+end)
+
+run(function()
+	-- https://github.com/J1ck/roblox-spring/blob/main/src/roblox-spring.luau
+	Spring.__index = Spring
+
+	function Spring.new(Properties)
+		local TypeRefined = Properties or {}
+
+		local self = setmetatable({
+			Target = Vector3.new(),
+			Position = Vector3.new(),
+			Velocity = Vector3.new(),
+
+			Mass = TypeRefined.Mass or 5,
+			Force = TypeRefined.Force or 50,
+			Damping	= TypeRefined.Damping or 4,
+			Speed = TypeRefined.Speed or 4,
+		}, Spring)
+
+		return self
+	end
+
+	function Spring:Update(DeltaTime)
+		local IterationsThisFrame = DeltaTime / ((1 / 60) / 8)
+		local ScaledDeltaTime = DeltaTime * self.Speed / IterationsThisFrame
+
+		for i = 1, math.round(IterationsThisFrame) do
+			local IterationForce = self.Target - self.Position
+			local Acceleration = (IterationForce * self.Force) / self.Mass
+
+			Acceleration -= self.Velocity * self.Damping
+
+			self.Velocity += Acceleration * ScaledDeltaTime
+			self.Position += self.Velocity * ScaledDeltaTime
+		end
+
+		return self.Position
+	end
 end)
 
 for _, v in {'Reach', 'TriggerBot', 'Disabler', 'AntiFall', 'HitBoxes', 'Killaura', 'MurderMystery'} do

@@ -29,7 +29,7 @@ local function getVehiclesNear()
 		local localPosition = entitylib.character.HumanoidRootPart.Position
 
 		for _, vehicle in collectionService:GetTagged('Vehicle') do
-			if vehicle.PrimaryPart and (vehicle.PrimaryPart.Position - localPosition).Magnitude <= Range.Value then
+			if vehicle.PrimaryPart and (vehicle.PrimaryPart.Position - localPosition).Magnitude <= Range.Value and vehicle:GetAttribute('VehicleHasDriver') then
 				local entities = getEntitiesInVehicle(vehicle)
 				local canAttack = #entities > 0
 
@@ -82,8 +82,8 @@ AutoPop = vape.Categories.Blatant:CreateModule({
 Range = AutoPop:CreateSlider({
 	Name = 'Range',
 	Min = 1,
-	Max = 600,
-	Default = 600,
+	Max = 640,
+	Default = 640,
 	Suffix = function(val)
 		return val == 1 and 'stud' or 'studs'
 	end

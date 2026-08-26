@@ -47,7 +47,7 @@ local function customHealthbar(block, health, maxHealth, changeHealth)
 					Size = UDim2.new(1, 89, 1, 52),
 					Position = UDim2.fromOffset(-48, -31),
 					BackgroundTransparency = 1,
-					Image = getcustomasset('newvape/assets/new/blur.png'),
+					Image = getvapeasset('newvape/assets/new/blur.png'),
 					ScaleType = Enum.ScaleType.Slice,
 					SliceCenter = Rect.new(52, 31, 261, 502)
 				}),

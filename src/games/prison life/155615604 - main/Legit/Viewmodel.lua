@@ -27,9 +27,9 @@ local function ToolAdded(tool)
 		handle = vtool:FindFirstChild('Handle')
 		vtool.Parent = gameCamera
 
-		for _, inst in vtool:QueryDescendants('BasePart') do
-			inst.Material = ForceField.Enabled and Enum.Material.ForceField or inst.Material
-			inst.Color = ForceField.Enabled and Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value) or inst.Color
+		for _, part in vtool:QueryDescendants('BasePart') do
+			part.Material = ForceField.Enabled and Enum.Material.ForceField or inst.Material
+			part.Color = ForceField.Enabled and Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value) or inst.Color
 		end
 
 		for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do
@@ -143,7 +143,7 @@ Sway = Viewmodel:CreateToggle({
 ForceField = Viewmodel:CreateToggle({
 	Name = 'ForceField Effect',
 	Function = function(callback)
-		ColorSl.toolect.Visible = callback
+		ColorSl.Object.Visible = callback
 		if callback and Viewmodel.Enabled then
 			Viewmodel:Toggle()
 			Viewmodel:Toggle()
@@ -154,8 +154,8 @@ ColorSl = Viewmodel:CreateColorSlider({
 	Name = 'Color',
 	Function = function(hue, sat, val)
 		if vtool then
-			for _, v in vtool:QueryDescendants('BasePart') do
-				v.Color = Color3.fromHSV(hue, sat, val)
+			for _, part in vtool:QueryDescendants('BasePart') do
+				part.Color = Color3.fromHSV(hue, sat, val)
 			end
 		end
 	end,

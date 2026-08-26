@@ -703,10 +703,22 @@ function vape:Uninject()
 	shared.VapeIndependent = nil
 end
 
-function vape:UpdateGUI(hue, sat, val, default)
-	if vape.Loaded == nil then return end
-	if not default and vape.GUIColor.Rainbow then return end
+local guiUpdate
+function vape:UpdateGUI()
+	if guiUpdate then
+		return
+	end
 
+	guiUpdate = runService.RenderStepped:Once(function()
+		if vape.Loaded ~= nil then
+			vape:UpdateGUIQueue(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)
+		end
+
+		guiUpdate = nil
+	end)
+end
+
+function vape:UpdateGUIQueue(hue, sat, val)
 	if TextGUI.Button.Enabled then
 		TextGUI:UpdateColor(hue, sat, val, default)
 	end
