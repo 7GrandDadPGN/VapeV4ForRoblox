@@ -42,7 +42,7 @@ AutoHotbar:CreateTextList({
 		for _, entry in list do
 			local data = entry:split('/')
 			local priority = tonumber(data[1]) or 999
-			SortList[data[2]] = priority
+			SortList[data[2] or ''] = priority
 		end
 	end
 })

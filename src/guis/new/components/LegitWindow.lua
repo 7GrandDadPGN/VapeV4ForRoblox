@@ -135,7 +135,7 @@ holder.MouseLeave:Connect(function()
 end)
 
 window:GetPropertyChangedSignal('Visible'):Connect(function()
-	vape:UpdateGUI(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)
+	vape:UpdateGUI()
 	visibleCheck()
 end)
 

@@ -9,6 +9,7 @@ local CircleColor
 local CircleTransparency
 local CircleFilled
 local CircleObject
+local rand = Random.new()
 local old
 local ProjectileRaycast = RaycastParams.new()
 ProjectileRaycast.RespectCanCollide = true
@@ -22,7 +23,11 @@ local function getMousePosition()
 end
 
 local function getTarget(origin, limit, attackcheck)
-	local targetPart = 'RootPart'
+	if rand.NextNumber(rand, 0, 100) > HitChance.Value then
+		return
+	end
+
+	local targetPart = (rand.NextNumber(rand, 0, 100) < HeadshotChance.Value) and 'Head' or 'RootPart'
 	local entity = entitylib['Entity'..Mode.Value]({
 		Range = Mode.Value == 'Position' and math.min(Range.Value, limit) or Range.Value,
 		RangePosition = limit,
@@ -45,7 +50,8 @@ local function Hook(...)
 	local item = ...
 
 	if item.Local then
-		OriginScanner:UpdateIgnore(item.Model)
+		OriginScanner:UpdateIgnore(item.BulletEmitter.IgnoreList)
+		shootTimer = os.clock() + 0.1
 		local entity, targetPart, origin = getTarget(item.Tip.CFrame, (item.Config.BulletSpeed or 1000) * item.BulletEmitter.LifeSpan)
 
 		if entity then
@@ -67,10 +73,12 @@ local function Hook(...)
 			ProjectileRaycast.FilterDescendantsInstances = {gameCamera, entity.Character, workspace.Vehicles}
 			ProjectileRaycast.CollisionGroup = entity.RootPart.CollisionGroup
 
-			local trajectory = prediction.SolveTrajectory(origin.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), entity.RootPart.Position, oldBulletUpdate and Vector3.zero or entity.RootPart.AssemblyLinearVelocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
+			local trajectory = oldBulletUpdate and targetPart.Position or prediction.SolveTrajectory(origin.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), targetPart.Position, entity.RootPart.AssemblyLinearVelocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
 			if trajectory then
 				targetinfo.Targets[entity] = tick() + 1
 				item.TipDirection = CFrame.lookAt(origin.Position, trajectory).LookVector
+				aimTimer = os.clock() + 0.3
+				aimVec = targetPart.Position
 			end
 
 			if oldTip then
@@ -89,6 +97,10 @@ SilentAim = vape.Categories.Combat:CreateModule({
 	Function = function(callback)
 		if CircleObject then
 			CircleObject.Visible = callback and Mode.Value == 'Mouse'
+		end
+
+		if Wallbang.Enabled then
+			debug.setconstant(jb.GunController.ShootCheckConditions, 1, callback and '_Tip' or 'Tip')
 		end
 
 		if callback then
@@ -139,8 +151,27 @@ Range = SilentAim:CreateSlider({
 		return val == 1 and 'stud' or 'studs'
 	end
 })
+HitChance = SilentAim:CreateSlider({
+	Name = 'Hit Chance',
+	Min = 0,
+	Max = 100,
+	Default = 85,
+	Suffix = '%'
+})
+HeadshotChance = SilentAim:CreateSlider({
+	Name = 'Headshot Chance',
+	Min = 0,
+	Max = 100,
+	Default = 65,
+	Suffix = '%'
+})
 Wallbang = SilentAim:CreateToggle({
 	Name = 'Wallbang',
+	Function = function(callback)
+		if SilentAim.Enabled then
+			debug.setconstant(jb.GunController.ShootCheckConditions, 1, callback and '_Tip' or 'Tip')
+		end
+	end,
 	Tooltip = 'Allow you to shoot people through walls when specific conditions are met.\n(If the entity has a valid hitbox position exposed or if the shoot position can be moved past walls (eg hugging walls))'
 })
 SilentAim:CreateToggle({

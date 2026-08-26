@@ -37,7 +37,7 @@ AutoHotbar = vape.Categories.Inventory:CreateModule({
 for _, team in {'Prisoner', 'Police'} do
 	AutoHotbar:CreateTextList({
 		Name = team..' Pickups',
-		Default = team == 'Prisoner' and {'1/AK47', '2/Shotgun', '3/Pistol'} or {'1/AK47', '2/Shotgun', '3/Pistol', '4/Taser', '5/Taser', '6/RoadSpike'},
+		Default = team == 'Prisoner' and {'1/AK47', '2/Shotgun', '3/Pistol'} or {'1/AK47', '2/Shotgun', '3/Pistol', '4/Taser', '5/RoadSpike'},
 		Placeholder = 'priority/item',
 		Function = function(list)
 			table.clear(SortList[team])
@@ -45,7 +45,7 @@ for _, team in {'Prisoner', 'Police'} do
 			for _, entry in list do
 				local data = entry:split('/')
 				local priority = tonumber(data[1]) or 999
-				SortList[team][data[2]] = priority
+				SortList[team][data[2] or ''] = priority
 			end
 		end
 	})

@@ -139,7 +139,6 @@ run(function()
 					return
 				end
 
-				print(args)
 				if Projectile.Enabled then
 					local calc = prediction.SolveTrajectory(origin, ProjectileSpeed.Value, ProjectileGravity.Value, targetPart.Position, targetPart.Velocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
 					if not calc then

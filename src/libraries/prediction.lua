@@ -1,6 +1,7 @@
 --[[
 	Prediction Library
 	Source: https://devforum.roblox.com/t/predict-projectile-ballistics-including-gravity-and-motion/1842434
+	New Solver: https://devforum.roblox.com/t/trajectory-prediction/3350931
 ]]
 local module = {}
 local eps = 1e-9
@@ -186,11 +187,59 @@ function module.solveQuartic(c0, c1, c2, c3, c4)
 	return {s3, s2, s1, s0}
 end
 
+--[[function module.NewTrajectory(
+	origin: Vector3,
+	originVelo: Vector3,
+	gravity: Vector3,
+	targetPos: Vector3,
+	targetVelocity: Vector3,
+	targetAccel: Vector3,
+	projectileSpeed: number,
+	pickLongest: boolean?
+)
+	local p = targetPos-origin
+	local v = targetVelocity-originVelo
+	local a = targetAccel-gravity
+
+	local t = {
+		(a.X^2 + a.Y^2 + a.Z^2)/4,
+		a.X*v.X + a.Y*v.Y + a.Z*v.Z,
+		v.X^2 + p.X*a.X + v.Y^2 + p.Y*a.Y + v.Z^2 + p.Z*a.Z - projectileSpeed^2,
+		2 * (p.X*v.X + p.Y*v.Y + p.Z*v.Z),
+		p.X^2 + p.Y^2 + p.Z^2,
+	}
+
+	local solutions = module.solveQuartic(table.unpack(t))
+	if solutions then
+		local posRoots: {number} = table.create(4)
+		for _, v in solutions do
+			if v > 0 then
+				table.insert(posRoots, v)
+			end
+		end
+
+		if posRoots[1] then
+			local t: number = posRoots[pickLongest and #posRoots or 1]
+			return targetPos + v * t + 0.5 * a * t * t, t
+		end
+	end
+
+	if a.Magnitude < 0.01 and p.Magnitude < projectileSpeed then
+		local t: number = p.Magnitude / projectileSpeed
+		return targetPos + v * t, t
+	end
+end
+
+function module.SolveTrajectory(origin, projectileSpeed, gravity, targetPos, targetVelocity, playerGravity, playerHeight, playerJump, params)
+	return module.NewTrajectory(origin, Vector3.zero, Vector3.new(0, -gravity, 0), targetPos, targetVelocity, Vector3.zero, projectileSpeed)
+end]]
+
 function module.SolveTrajectory(origin, projectileSpeed, gravity, targetPos, targetVelocity, playerGravity, playerHeight, playerJump, params)
 	local disp = targetPos - origin
 	local p, q, r = targetVelocity.X, targetVelocity.Y, targetVelocity.Z
 	local h, j, k = disp.X, disp.Y, disp.Z
 	local l = -.5 * gravity
+
 	--attemped gravity calculation, may return to it in the future.
 	if math.abs(q) > 0.01 and playerGravity and playerGravity > 0 then
 		local estTime = (disp.Magnitude / projectileSpeed)
@@ -227,7 +276,9 @@ function module.SolveTrajectory(origin, projectileSpeed, gravity, targetPos, tar
 				table.insert(posRoots, v)
 			end
 		end
+
 		posRoots[1] = posRoots[1]
+
 		if posRoots[1] then
 			local t = posRoots[1]
 			local d = (h + p*t)/t

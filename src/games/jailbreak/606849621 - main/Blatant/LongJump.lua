@@ -6,21 +6,22 @@ LongJump = vape.Categories.Blatant:CreateModule({
 	Name = 'LongJump',
 	Function = function(callback)
 		if callback then
-			local enableTime = os.clock() + 0.1
+			local exempt = tick() + 0.1
 			LongJump:Clean(runService.PreSimulation:Connect(function(dt)
 				if entitylib.isAlive then
 					local hum = entitylib.character.Humanoid
 					local root = entitylib.character.RootPart
-
 					if hum.FloorMaterial ~= Enum.Material.Air then
-						if enableTime < os.clock() and AutoDisable.Enabled then
+						if exempt < tick() and AutoDisable.Enabled then
 							if LongJump.Enabled then
 								LongJump:Toggle()
 							end
 						else
-							hum:ChangeState(Enum.HumanoidStateType.Jumping)
+							entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 						end
 					end
+
+					if hum.Sit then return end
 
 					local dir = hum.MoveDirection * Value.Value
 					if Mode.Value == 'Velocity' then

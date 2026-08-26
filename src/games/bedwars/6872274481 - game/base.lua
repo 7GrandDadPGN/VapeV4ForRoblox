@@ -29,7 +29,6 @@ local isnetworkowner = identifyexecutor and table.find({'AWP', 'Nihon'}, ({ident
 end
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
-local assetfunction = getcustomasset
 
 local kickThread = task.spawn(lplr.Kick, lplr, 'Bedwars is no longer supported by Vape V4, thank you for 5 years of support ❤️')
 if coroutine.status(kickThread) ~= 'dead' then
@@ -46,7 +45,7 @@ local color = vape.Libraries.color
 local whitelist = vape.Libraries.whitelist
 local prediction = vape.Libraries.prediction
 local getfontbounds = vape.Libraries.getfontbounds
-local getcustomasset = vape.Libraries.getcustomasset
+local getvapeasset = vape.Libraries.getvapeasset
 
 local store = {
 	attackReach = 0,
@@ -78,7 +77,7 @@ local function addBlur(parent)
 	blur.Size = UDim2.new(1, 89, 1, 52)
 	blur.Position = UDim2.fromOffset(-48, -31)
 	blur.BackgroundTransparency = 1
-	blur.Image = getcustomasset('newvape/assets/new/blur.png')
+	blur.Image = getvapeasset('newvape/assets/new/blur.png')
 	blur.ScaleType = Enum.ScaleType.Slice
 	blur.SliceCenter = Rect.new(52, 31, 261, 502)
 	blur.Parent = parent

@@ -11,25 +11,24 @@ local moveSpring = Spring.new()
 local aimSpring = Spring.new({Speed = 15})
 
 local function ToolAdded(tool)
-	if tool and tool:IsA('Tool') then
-		if old then
-			for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do
-				inst.LocalTransparencyModifier = 0
-			end
-		end
-
+	if tool then
 		if vtool then
 			vtool:Destroy()
 		end
 
 		old = tool
 		vtool = tool:Clone()
-		handle = vtool:FindFirstChild('Handle')
+		handle = vtool:FindFirstChild('BoundingBox', true) or vtool:FindFirstChild('Center', true)
 		vtool.Parent = gameCamera
 
+		local motor = vtool:FindFirstChild('Motor6D', true) or vtool:FindFirstChild('Motor', true)
+		if motor then
+			motor:Destroy()
+		end
+
 		for _, part in vtool:QueryDescendants('BasePart') do
-			part.Material = ForceField.Enabled and Enum.Material.ForceField or inst.Material
-			part.Color = ForceField.Enabled and Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value) or inst.Color
+			part.Material = ForceField.Enabled and Enum.Material.ForceField or part.Material
+			part.Color = ForceField.Enabled and Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value) or part.Color
 		end
 
 		for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do
@@ -38,43 +37,28 @@ local function ToolAdded(tool)
 	end
 end
 
-local function EntityAdded(entity)
-	if vtool then
-		vtool:Destroy()
-		vtool = nil
-		handle = nil
-	end
-
-	Viewmodel:Clean(entity.Character.ChildAdded:Connect(ToolAdded))
-	Viewmodel:Clean(entity.Character.ChildRemoved:Connect(function(tool)
-		if tool == old then
-			if vtool then
-				vtool:Destroy()
-				vtool = nil
-			end
-
-			for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do
-				inst.LocalTransparencyModifier = 0
-			end
-
-			old = nil
-		end
-	end))
-
-	ToolAdded(entity.Character:FindFirstChildWhichIsA('Tool'))
-end
-
 Viewmodel = vape.Legit:CreateModule({
 	Name = 'Viewmodel',
 	Function = function(callback)
 		if callback then
-			TracerHook:Add('Viewmodel', function(...)
-				shootTimer = os.clock() + 0.3
-			end, 0)
+			Viewmodel:Clean(jb.ItemSystemController.OnLocalItemEquipped:Connect(function(item)
+				task.spawn(ToolAdded, item.Model)
+			end))
 
-			Viewmodel:Clean(entitylib.Events.LocalAdded:Connect(EntityAdded))
-			if entitylib.isAlive then
-				task.spawn(EntityAdded, entitylib.character)
+			Viewmodel:Clean(jb.ItemSystemController.OnLocalItemUnequipped:Connect(function()
+				task.spawn(function()
+					if vtool then
+						vtool:Destroy()
+						vtool = nil
+					end
+
+					old = nil
+				end)
+			end))
+
+			local equipped = jb.ItemSystemController:GetLocalEquipped()
+			if equipped then
+				task.spawn(ToolAdded, equipped.Model)
 			end
 
 			Viewmodel:Clean(runService.RenderStepped:Connect(function(dt)
@@ -96,8 +80,6 @@ Viewmodel = vape.Legit:CreateModule({
 				end
 			end))
 		else
-			TracerHook:Remove('Viewmodel')
-
 			if old then
 				for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do
 					inst.LocalTransparencyModifier = 0
@@ -118,15 +100,15 @@ Viewmodel = vape.Legit:CreateModule({
 Depth = Viewmodel:CreateSlider({
 	Name = 'Depth',
 	Min = 0,
-	Max = 3,
-	Default = 3,
+	Max = 4,
+	Default = 4,
 	Decimal = 10
 })
 Horizontal = Viewmodel:CreateSlider({
 	Name = 'Horizontal',
 	Min = 0,
-	Max = 2,
-	Default = 2,
+	Max = 2.5,
+	Default = 2.5,
 	Decimal = 10
 })
 Vertical = Viewmodel:CreateSlider({
@@ -154,8 +136,8 @@ ColorSl = Viewmodel:CreateColorSlider({
 	Name = 'Color',
 	Function = function(hue, sat, val)
 		if vtool then
-			for _, part in vtool:QueryDescendants('BasePart') do
-				part.Color = Color3.fromHSV(hue, sat, val)
+			for _, v in vtool:QueryDescendants('BasePart') do
+				v.Color = Color3.fromHSV(hue, sat, val)
 			end
 		end
 	end,

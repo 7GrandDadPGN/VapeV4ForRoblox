@@ -9,8 +9,8 @@ local oldfov, songobj, songbpm, songtween
 
 local function choosesong()
 	local list = List.ListEnabled
-	if #alreadypicked >= #list then 
-		table.clear(alreadypicked) 
+	if #alreadypicked >= #list then
+		table.clear(alreadypicked)
 	end
 
 	if #list <= 0 then
@@ -21,9 +21,9 @@ local function choosesong()
 
 	local chosensong = list[math.random(1, #list)]
 	if #list > 1 and table.find(alreadypicked, chosensong) then
-		repeat 
-			task.wait() 
-			chosensong = list[math.random(1, #list)] 
+		repeat
+			task.wait()
+			chosensong = list[math.random(1, #list)]
 		until not table.find(alreadypicked, chosensong) or not SongBeats.Enabled
 	end
 	if not SongBeats.Enabled then return end
@@ -35,7 +35,7 @@ local function choosesong()
 		return
 	end
 
-	songobj.SoundId = assetfunction(split[1])
+	songobj.SoundId = getcustomasset(split[1])
 	repeat task.wait() until songobj.IsLoaded or not SongBeats.Enabled
 	if SongBeats.Enabled then
 		beattick = tick() + (tonumber(split[3]) or 0)
@@ -104,8 +104,8 @@ FOVValue = SongBeats:CreateSlider({
 Volume = SongBeats:CreateSlider({
 	Name = 'Volume',
 	Function = function(val)
-		if songobj then 
-			songobj.Volume = val / 100 
+		if songobj then
+			songobj.Volume = val / 100
 		end
 	end,
 	Min = 1,

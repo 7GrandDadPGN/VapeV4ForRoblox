@@ -394,7 +394,7 @@ function component:ChangeValue(value, skipGUI)
 	end
 
 	if not skipGUI then
-		vape:UpdateGUI(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)
+		vape:UpdateGUI()
 	end
 end
 
