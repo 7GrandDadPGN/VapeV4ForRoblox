@@ -2,10 +2,12 @@ local GunModifications
 local Recoil
 local Spread
 local Automatic
+local EquipTime
 local VehicleWallbang
 local Headshot
 local Hitscan
 local oldhit
+local oldequip
 local olddata = {}
 
 local function ModifyGun(gun)
@@ -58,11 +60,17 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 				end)
 			end
 
-			if Headshot.Enabled then
+			--[[if Headshot.Enabled then
 				oldhit = hookfunction(jb.GunController.BulletEmitterOnLocalHitPlayer, function(...)
 					local shotData = select(15, ...)
 					shotData.isHeadshot = true
 					return oldhit(...)
+				end)
+			end]]
+
+			if EquipTime.Enabled then
+				oldequip = hookfunction(jb.GunUtils.getShouldAddEquipTime, function()
+					return false
 				end)
 			end
 
@@ -85,6 +93,11 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 				oldhit = nil
 			end
 
+			if oldequip then
+				restorefunction(jb.GunUtils.getShouldAddEquipTime)
+				oldequip = nil
+			end
+
 			for config, data in olddata do
 				for i, v in data do
 					config[i] = v
@@ -104,6 +117,15 @@ Spread = GunModifications:CreateToggle({
 	Name = 'No Spread',
 	Function = ApplyMods
 })
+EquipTime = GunModifications:CreateToggle({
+	Name = 'No Equip Time',
+	Function = function()
+		if GunModifications.Enabled then
+			GunModifications:Toggle()
+			GunModifications:Toggle()
+		end
+	end
+})
 Automatic = GunModifications:CreateToggle({
 	Name = 'Full Automatic',
 	Function = ApplyMods
@@ -113,7 +135,7 @@ VehicleWallbang = GunModifications:CreateToggle({
 	Function = ApplyMods,
 	Tooltip = 'Allow you to shoot through vehicles.'
 })
-Headshot = GunModifications:CreateToggle({
+--[[Headshot = GunModifications:CreateToggle({
 	Name = 'Always Headshot',
 	Function = function()
 		if GunModifications.Enabled then
@@ -122,7 +144,7 @@ Headshot = GunModifications:CreateToggle({
 		end
 	end,
 	Tooltip = 'Force headshot damage when hitting any body part'
-})
+})]]
 Hitscan = GunModifications:CreateToggle({
 	Name = 'Hitscan Bullets',
 	Function = function()

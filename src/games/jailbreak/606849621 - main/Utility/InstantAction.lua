@@ -7,7 +7,7 @@ vape.Categories.Utility:CreateModule({
 		if callback then
 			old = hookfunction(jb.CircleAction.Press, function(...)
 				local action = jb.CircleAction.Spec
-				if action and action.Timed and not (action.ReleaseCallback or await) then
+				if action and action.Timed and not (action.ReleaseCallback or action.ShouldHotwire or await) then
 					local old = action.Timed
 
 					action.Timed = false

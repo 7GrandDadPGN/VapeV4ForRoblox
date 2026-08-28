@@ -3,5 +3,5 @@ vape.Categories.Blatant:CreateModule({
 	Function = function(callback)
 		debug.setconstant(debug.getupvalue(jb.FallingController.Init, 20), 9, callback and 'Archivable' or 'Sit')
 	end,
-	Tooltip = 'Disables ragdoll handling & fall damage'
+	Tooltip = 'Disables ragdoll handling and fall damage'
 })

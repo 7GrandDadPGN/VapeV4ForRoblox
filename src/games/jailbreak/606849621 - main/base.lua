@@ -595,7 +595,9 @@ run(function()
 		CircleAction = require(replicatedStorage.Module.UI).CircleAction,
 		FallingController = require(replicatedStorage.Game.Falling),
 		GunController = require(replicatedStorage.Game.Item.Gun),
+		GunUtils = require(replicatedStorage.Game.GunShop.GunUtils),
 		InventoryItemBinder = require(replicatedStorage.Inventory.InventoryItemBinder),
+		InventoryItemSystem = require(replicatedStorage.Inventory.InventoryItemSystem),
 		ItemSystemController = require(replicatedStorage.Game.ItemSystem.ItemSystem),
 		LightningUtils = require(replicatedStorage.Game.LightningUtils),
 		PlayerUtils = require(replicatedStorage.Game.PlayerUtils),
@@ -631,6 +633,7 @@ run(function()
 		Action3 = 'Pickup',
 		AttemptArrest = 'Arrest',
 		attemptPunch = 'Punch',
+		AttemptPickPocket = 'Pickpocket',
 		AttemptVehicleEject = 'Eject',
 		AttemptVehicleEnter = 'GetIn',
 		BroadcastInputBegan = 'InputBegan',
@@ -714,6 +717,16 @@ run(function()
 		end)
 	end
 
+	for _, connection in getconnections(runService.Heartbeat) do
+		if connection.Function and islclosure(connection.Function) and #debug.getupvalues(connection.Function) > 5 then
+			local upval = debug.getupvalue(connection.Function, 6)
+			if type(upval) == 'function' and debug.info(upval, 'n') == 'WalkSpeedFun' then
+				jb.WalkSpeedFun = upval
+				break
+			end
+		end
+	end
+
 	table.insert(whitelist.tagcallback, function(plr, plrtag, rich)
 		if plr then
 			local entity = entitylib.getEntity(plr)
@@ -737,8 +750,18 @@ run(function()
 	end))
 
 	vape:Clean(entitylib.Events.EntityUpdated:Connect(function(entity)
-		entity.InVehicle = not entity.Character:GetAttribute('HasHandcuffs') and (entity.Character:GetAttribute('InVehicle') or entity.InVehicle)
+		local isInVehicle = entity.Character:GetAttribute('InVehicle')
+		if entity.VehicleState ~= isInVehicle and not isInVehicle then
+			entity.VehicleTimer = os.clock() + 0.3
+		end
+
+		entity.VehicleState = isInVehicle
+		entity.InVehicle = not entity.Character:GetAttribute('HasHandcuffs') and (isInVehicle or entity.InVehicle)
 		entity.Illegal = isIllegal(entity, true)
+
+		if entity.Player and entity.Player.Team == teams.Prisoner then
+			entity.Pickpocket = nil
+		end
 	end))
 
 	vape:Clean(entitylib.Events.LocalAdded:Connect(updateVelocity))

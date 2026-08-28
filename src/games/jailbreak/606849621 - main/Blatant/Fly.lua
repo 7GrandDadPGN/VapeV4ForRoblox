@@ -34,10 +34,17 @@ run(function()
 						local hum = entitylib.character.Humanoid
 						local root = entitylib.character.RootPart
 						if hum.Sit then
-							lplr.Character:SetAttribute('DoNotAllowVehicleExit', true)
-							root.CFrame += Vector3.new(0, (up + down) * VerticalValue.Value * dt, 0)
-							Platform.Position = root.Position - Vector3.new(0, 3, 0)
-							Platform.Parent = gameCamera
+							local packet = jb.VehicleController.GetLocalVehiclePacket()
+							local wheel = packet and packet.EngineThrusters[1]
+
+							if wheel then
+								local suspension = (packet.Model:GetAttribute('GarageSuspensionHeight') or 0) + packet.Height
+								lplr.Character:SetAttribute('DoNotAllowVehicleExit', table.find(UpKey.Keys, 'Space') and true or false)
+								packet.Seat.CFrame += Vector3.new(0, (up + down) * VerticalValue.Value * dt, 0)
+								Platform.Position = wheel.Engine.Position + Vector3.new(0, -suspension, 0)
+								Platform.Parent = gameCamera
+							end
+
 							return
 						else
 							Platform.Parent = nil

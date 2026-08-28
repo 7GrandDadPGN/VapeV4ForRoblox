@@ -772,6 +772,8 @@ vape.Components = setmetatable(components, {
 				end)
 			end
 		end
+
+		rawset(components, index, callback)
 	end
 })
 
