@@ -13,5 +13,5 @@ AutoPunch = vape.Categories.Blatant:CreateModule({
 			until not AutoPunch.Enabled
 		end
 	end,
-	Tooltip = 'Always punches people infront of you'
+	Tooltip = 'Always punches objects and entities infront of you'
 })

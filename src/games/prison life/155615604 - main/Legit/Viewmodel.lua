@@ -28,8 +28,8 @@ local function ToolAdded(tool)
 		vtool.Parent = gameCamera
 
 		for _, part in vtool:QueryDescendants('BasePart') do
-			part.Material = ForceField.Enabled and Enum.Material.ForceField or inst.Material
-			part.Color = ForceField.Enabled and Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value) or inst.Color
+			part.Material = ForceField.Enabled and Enum.Material.ForceField or part.Material
+			part.Color = ForceField.Enabled and Color3.fromHSV(ColorSl.Hue, ColorSl.Sat, ColorSl.Value) or part.Color
 		end
 
 		for _, inst in old:QueryDescendants('BasePart, Texture, Decal') do

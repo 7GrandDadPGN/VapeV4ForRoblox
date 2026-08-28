@@ -31,5 +31,5 @@ LazerGodmode = vape.Categories.Blatant:CreateModule({
 			table.clear(modified)
 		end
 	end,
-	Tooltip = 'Allow you to ignore lazers found in the jewelry store'
+	Tooltip = 'Allow you to ignore specific damage sources'
 })

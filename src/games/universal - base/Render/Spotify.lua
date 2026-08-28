@@ -220,7 +220,7 @@ do
 
 	function SpotifyHandler:Callback(data)
 		if data.player_state then
-			local currentTime = (DateTime.now().UnixTimestampMillis / 1000) - 2
+			local currentTime = (data.timestamp / 1000)
 			local posAsTime = tonumber(data.player_state.position_as_of_timestamp) / 1000
 			local diff = currentTime - (tonumber(data.player_state.timestamp) / 1000)
 			self.playPosition = posAsTime + diff

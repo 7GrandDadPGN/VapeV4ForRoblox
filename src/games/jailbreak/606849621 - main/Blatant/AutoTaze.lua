@@ -30,7 +30,7 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 			repeat
 				local taser = InvTracker.Inventories[lplr].Taser
 
-				if taser then
+				if entitylib.isAlive and taser then
 					local equipped = jb.ItemSystemController:GetLocalEquipped()
 					local isTaser = equipped and equipped.__ClassName == 'Taser'
 
@@ -43,7 +43,7 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 
 						if (taser:GetAttribute('NextUse') or 0) < os.clock() then
 							for _, entity in entities do
-								if isIllegal(entity) and not (entity.Character:GetAttribute('HasHandcuffs') or entity.Character:GetAttribute('InVehicle')) then
+								if isIllegal(entity) and (entity.VehicleTimer or 0) < os.clock() and not (entity.Character:GetAttribute('HasHandcuffs') or entity.Character:GetAttribute('InVehicle') or entity.Head.CanCollide) then
 									drawTaser(equipped and equipped.Tip or entitylib.character.RootPart, entity.RootPart.Position)
 									taser:SetAttribute('LastUsedAt', os.clock())
 									taser:SetAttribute('NextUse', os.clock() + 10)
