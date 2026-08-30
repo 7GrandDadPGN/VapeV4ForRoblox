@@ -5,6 +5,7 @@ local YToggle
 local ZToggle
 local Value
 local AngularVelocity
+local SeatToggle
 
 SpinBot = vape.Categories.Blatant:CreateModule({
 	Name = 'SpinBot',
@@ -12,6 +13,16 @@ SpinBot = vape.Categories.Blatant:CreateModule({
 		if callback then
 			SpinBot:Clean(runService.PreSimulation:Connect(function()
 				if entitylib.isAlive then
+					if SeatToggle.Enabled and entitylib.character.Humanoid.Sit then
+						if Mode.Value == 'RotVelocity' then
+							entitylib.character.Humanoid.AutoRotate = true
+						end
+						if AngularVelocity then
+							AngularVelocity.Parent = nil
+						end
+						return
+					end
+
 					if Mode.Value == 'RotVelocity' then
 						local originalRotVelocity = entitylib.character.RootPart.RotVelocity
 						entitylib.character.Humanoid.AutoRotate = false
@@ -63,3 +74,7 @@ YToggle = SpinBot:CreateToggle({
 	Default = true
 })
 ZToggle = SpinBot:CreateToggle({Name = 'Spin Z'})
+SeatToggle = SpinBot:CreateToggle({
+	Name = 'Seat Check',
+	Tooltip = 'Disables rotation while sitting'
+})
