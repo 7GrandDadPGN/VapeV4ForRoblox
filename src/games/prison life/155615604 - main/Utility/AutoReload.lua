@@ -33,45 +33,41 @@ AutoReload = vape.Categories.Utility:CreateModule({
 	Name = 'AutoReload',
 	Function = function(callback)
 		if callback then
-			TracerHook:Add('AutoReload', function(...)
-				if thread then
-					return
-				end
+			local gui = lplr.PlayerGui.Home.hud.BottomRightFrame.GunFrame.BulletsLabel
+			if gui then
+				AutoReload:Clean(gui:GetPropertyChangedSignal('Text'):Connect(function()
+					if gui.Text ~= '...' then
+						local tool = debug.getupvalue(pl.Shoot, 1)
+						if tool and tool:GetAttribute('Local_CurrentAmmo') <= 0 then
+							task.spawn(pl.Reload)
 
-				thread = task.defer(function()
-					thread = nil
+							if HotSwap.Enabled then
+								local weapon = getWeapon()
 
-					local tool = debug.getupvalue(pl.Shoot, 1)
-					if tool and tool:GetAttribute('Local_CurrentAmmo') <= 0 then
-						task.spawn(pl.Reload)
-
-						if HotSwap.Enabled then
-							local weapon = getWeapon()
-
-							if weapon then
-								entitylib.character.Humanoid:EquipTool(weapon)
+								if weapon then
+									entitylib.character.Humanoid:EquipTool(weapon)
+								end
 							end
 						end
 					end
+				end))
+
+				-- reimplementation of playsound to get rid of the bad error
+				oldplaysound = hookfunction(pl.PlaySound, function(sound)
+					local obj = debug.getupvalue(pl.Shoot, 1)
+					obj = obj and obj:FindFirstChild('Handle')
+					obj = obj and obj:FindFirstChild(sound)
+
+					if obj then
+						local clone = obj:Clone()
+						clone.Parent = obj.Parent
+						clone:Play()
+
+						task.delay(5, clone.Destroy, clone)
+					end
 				end)
-			end)
-
-			-- reimplementation of playsound to get rid of the bad error
-			oldplaysound = hookfunction(pl.PlaySound, function(sound)
-				local sound = debug.getupvalue(pl.Shoot, 1)
-				sound = sound and sound:FindFirstChild('Handle')
-				sound = sound and sound:FindFirstChild(sound)
-
-				if sound then
-					local clone = sound:Clone()
-					clone.Parent = sound.Parent
-					clone:Play()
-
-					task.delay(5, clone.Destroy, clone)
-				end
-			end)
+			end
 		else
-			TracerHook:Remove('AutoReload')
 			if oldplaysound then
 				if restorefunction then
 					restorefunction(pl.PlaySound)

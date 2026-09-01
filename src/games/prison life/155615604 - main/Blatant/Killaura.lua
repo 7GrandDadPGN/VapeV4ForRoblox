@@ -39,7 +39,8 @@ Killaura = vape.Categories.Blatant:CreateModule({
 						Players = Targets.Players.Enabled,
 						NPCs = Targets.NPCs.Enabled,
 						Limit = Max.Value,
-						AttackCheck = true
+						AttackCheck = true,
+						SkipTeam = true
 					})
 
 					if #entities > 0 then
