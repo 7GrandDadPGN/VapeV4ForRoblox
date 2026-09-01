@@ -68,7 +68,7 @@ run(function()
 			local ray = workspace:Raycast(args[2], (origin - args[2]), OriginScanner.Ray)
 
 			if ray then
-				local newOrigin, hit = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.01, targetPart)
+				local newOrigin, hit = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.01, targetPart, entity)
 
 				if newOrigin then
 					for index, value in debug.getstack(3) do

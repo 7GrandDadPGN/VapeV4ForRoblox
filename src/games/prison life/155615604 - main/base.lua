@@ -136,7 +136,7 @@ run(function()
 		Vector3.new(0, -1, 0)
 	}
 
-	function OriginScanner:Scan(origin, target, extra, part)
+	function OriginScanner:Scan(origin, target, extra, part, entity)
 		if self.Cache[part] then
 			return table.unpack(self.Cache[part])
 		end
@@ -159,7 +159,7 @@ run(function()
 			local offset = Vector3.fromNormalId(normal)
 
 			if (offset * Vector3.new(1, 0, 1)):Dot(-diff) > -0.5 then
-				local pos = target + offset * 6
+				local pos = entity.RootPart.Position + offset * 7.4
 
 				if checkPoint(pos, overlapParams) then
 					table.insert(hitboxPositions, pos)
@@ -252,25 +252,25 @@ run(function()
 		}
 	end
 
-	entitylib.targetCheck = function(entity)
+	entitylib.targetCheck = function(entity, skip)
 		if entity.TeamCheck then
 			return entity:TeamCheck()
 		end
 		if entity.NPC then return true end
 		if isFriend(entity.Player) then return false end
 		if not select(2, whitelist:get(entity.Player)) then return false end
-		if vape.Settings.Modules.Options['Teams by server'].Enabled then
+		if vape.Settings.Modules.Options['Teams by server'].Enabled and not skip then
 			return lplr.Team ~= entity.Player.Team and entity.Player.Team ~= teams.Neutral
 		end
 		return true
 	end
 
-	entitylib.isVulnerable = function(entity, attackCheck)
+	entitylib.isVulnerable = function(entity, attackCheck, skipCheck)
 		if attackCheck and lplr.Team == teams.Guards and entity.Player.Team == teams.Inmates and not entity.Character:GetAttribute('Hostile') then
 			return false
 		end
 
-		return entity.Health > 0 and entity.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and entity.SpawnTime < os.clock() and not entity.Character.FindFirstChildWhichIsA(entity.Character, 'ForceField') and (entity.Player.Team ~= teams.Inmates or (entity.Character:GetAttribute('Trespassing') or entity.Character:GetAttribute('Hostile')))
+		return entity.Health > 0 and entity.Humanoid:GetState() ~= Enum.HumanoidStateType.Dead and entity.SpawnTime < os.clock() and not entity.Character.FindFirstChildWhichIsA(entity.Character, 'ForceField') and (entity.Player.Team ~= teams.Inmates or (skipCheck or entity.Character:GetAttribute('Trespassing') or entity.Character:GetAttribute('Hostile')))
 	end
 
 	entitylib.EntityMouse = function(entitysettings)
@@ -304,7 +304,7 @@ run(function()
 
 			for _, v in sortingTable do
 				if entitysettings.Wallcheck then
-					if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
+					if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part], v.Entity) then continue end
 				end
 				table.clear(entitysettings)
 				table.clear(sortingTable)
@@ -338,7 +338,7 @@ run(function()
 
 			for _, v in sortingTable do
 				if entitysettings.Wallcheck then
-					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part], v.Entity) then continue end
 				end
 				table.clear(entitysettings)
 				table.clear(sortingTable)
@@ -356,10 +356,10 @@ run(function()
 			for _, entity in entitylib.List do
 				if not entitysettings.Players and entity.Player then continue end
 				if not entitysettings.NPCs and entity.NPC then continue end
-				if not entity.Targetable then continue end
+				if not (entity.Targetable or entitysettings.SkipTeam and entitylib.targetCheck(entity, true)) then continue end
 				local mag = (entity[entitysettings.Part].Position - localPosition).Magnitude
 				if mag > entitysettings.Range then continue end
-				if entitylib.isVulnerable(entity, entitysettings.AttackCheck) then
+				if entitylib.isVulnerable(entity, entitysettings.AttackCheck, entitysettings.SkipTeam) then
 					table.insert(sortingTable, {
 						Entity = entity,
 						Magnitude = entity.Target and -1 or mag
@@ -373,7 +373,7 @@ run(function()
 
 			for _, v in sortingTable do
 				if entitysettings.Wallcheck then
-					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part], v.Entity) then continue end
 				end
 				table.insert(returned, v.Entity)
 				if #returned >= (entitysettings.Limit or math.huge) then break end
@@ -401,10 +401,10 @@ run(function()
 		return color
 	end
 
-	entitylib.Wallcheck = function(origin, position, checkPosition, part)
+	entitylib.Wallcheck = function(origin, position, checkPosition, part, entity)
 		local ray = workspace.Raycast(workspace, position, (origin - position), OriginScanner.Ray)
 		if ray then
-			return not checkPosition or not OriginScanner:Scan(checkPosition, position, ray.Position + ray.Normal * 0.01, part)
+			return not checkPosition or not OriginScanner:Scan(checkPosition, position, ray.Position + ray.Normal * 0.01, part, entity)
 		end
 
 		return false

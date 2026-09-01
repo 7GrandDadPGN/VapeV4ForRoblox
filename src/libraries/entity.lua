@@ -63,15 +63,23 @@ local function loopClean(tbl)
 	end
 end
 
-local function waitForChildOfType(obj, name, timeout, prop)
-	local checktick = tick() + timeout
-	local returned
+local function waitForChildOfType(obj, name, timeout, prop, namecheck)
+	local expireTime = os.clock() + timeout
+
 	repeat
-		returned = prop and obj[name] or obj:FindFirstChildOfClass(name)
-		if returned or checktick < tick() then break end
+		local result = prop and obj[name] or obj:FindFirstChildOfClass(name)
+		if result and namecheck then
+			if result.Name ~= namecheck then
+				result = nil
+			end
+		end
+
+		if result then
+			return result
+		end
+
 		task.wait()
-	until false
-	return returned
+	until expireTime < os.clock()
 end
 
 entitylib.targetCheck = function(entity)
@@ -245,7 +253,7 @@ entitylib.addEntity = function(char, plr, teamfunc, spawntime)
 
 	entitylib.EntityThreads[char] = task.spawn(function()
 		local hum = waitForChildOfType(char, 'Humanoid', 10)
-		local humrootpart = hum and waitForChildOfType(hum, 'RootPart', workspace.StreamingEnabled and 9e9 or 10, true)
+		local humrootpart = hum and waitForChildOfType(hum, 'RootPart', workspace.StreamingEnabled and math.huge or 10, true, 'HumanoidRootPart')
 		local head = char:WaitForChild('Head', 10) or humrootpart
 
 		if hum and humrootpart then

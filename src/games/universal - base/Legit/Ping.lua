@@ -1,4 +1,5 @@
 local Ping
+local Data
 local label
 
 Ping = vape.Legit:CreateModule({
@@ -6,7 +7,8 @@ Ping = vape.Legit:CreateModule({
 	Function = function(callback)
 		if callback then
 			repeat
-				label.Text = math.floor(tonumber(stats.PerformanceStats.Ping:GetValue()))..' ms'
+				local obj = Data.Enabled and stats.Network.ServerStatsItem['Data Ping'] or stats.PerformanceStats.Ping
+				label.Text = math.floor(tonumber(obj:GetValue()))..' ms'
 				task.wait(1)
 			until not Ping.Enabled
 		end
@@ -29,6 +31,10 @@ Ping:CreateColorSlider({
 		label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
 		label.BackgroundTransparency = 1 - opacity
 	end
+})
+Data = Ping:CreateToggle({
+	Name = 'Data Ping',
+	Default = true
 })
 label = Instance.new('TextLabel')
 label.Size = UDim2.new(0, 100, 0, 41)
