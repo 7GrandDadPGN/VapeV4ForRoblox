@@ -7,7 +7,7 @@ AntiKillPlane = vape.Categories.Blatant:CreateModule({
 			AntiKillPlane:Clean(runService.Heartbeat:Connect(function()
 				if entitylib.isAlive then
 					local root = entitylib.character.RootPart
-					local diff = math.min(root.Position.Y, 179.99) - root.Position.Y
+					local diff = math.clamp(root.Position.Y, -10, 179.99) - root.Position.Y
 					root.CFrame += Vector3.new(0, diff, 0)
 
 					if math.abs(diff) > 0 and root.AssemblyLinearVelocity.Y > 0 then

@@ -440,7 +440,7 @@ run(function()
 			return true
 		end
 
-		if arg == 'others' and plr ~= lplr then
+		if (arg == 'all' or arg == 'others') and plr ~= lplr then
 			return true
 		end
 

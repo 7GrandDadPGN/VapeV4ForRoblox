@@ -9,6 +9,7 @@ run(function()
 	local AutoFire = {Enabled = false}
 	local AutoFireRate
 	local AutoFireTaser
+	local AutoFireSwitch
 	local Wallbang
 	local CircleColor
 	local CircleTransparency
@@ -23,6 +24,22 @@ run(function()
 		end
 
 		return inputService.GetMouseLocation(inputService)
+	end
+
+	local function getShootTool()
+		local tool = lplr.Character:FindFirstChildWhichIsA('Tool')
+		if tool and tool:GetAttribute('FireRate') and (not tool:GetAttribute('Local_IsShooting')) and (tool:GetAttribute('Local_ReloadSession') or 0) <= 0 and (tool:GetAttribute('Local_CurrentAmmo') or 1) > 0 then
+			return tool
+		end
+
+		local backpack = lplr:FindFirstChildWhichIsA('Backpack')
+		if backpack then
+			for _, tool in backpack:GetChildren() do
+				if tool:IsA('Tool') and tool:GetAttribute('FireRate') and (not tool:GetAttribute('Local_IsShooting')) and (tool:GetAttribute('Local_ReloadSession') or 0) <= 0 and tool.Name ~= 'Taser' then
+					return tool
+				end
+			end
+		end
 	end
 
 	local function getTarget(origin, limit, attackcheck)
@@ -65,10 +82,14 @@ run(function()
 		aimVec = args[2]
 
 		if Wallbang.Enabled then
-			local ray = workspace:Raycast(args[2], (origin - args[2]), OriginScanner.Ray)
+			local ray
+			if not OriginScanner.Cache[targetPart] then
+				ray = workspace:Raycast(args[2], (origin - args[2]), OriginScanner.Ray)
+			end
 
-			if ray then
-				local newOrigin, hit = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray.Position + ray.Normal * 0.01, targetPart, entity)
+
+			if OriginScanner.Cache[targetPart] or ray or workspace:Raycast(origin, (args[2] - origin), OriginScanner.Ray) then
+				local newOrigin, hit = OriginScanner:Scan(entitylib.character.RootPart.Position, args[2], ray and ray.Position + ray.Normal * 0.01 or nil, targetPart, entity)
 
 				if newOrigin then
 					for index, value in debug.getstack(3) do
@@ -112,6 +133,15 @@ run(function()
 						local tool = lplr.Character:FindFirstChildWhichIsA('Tool')
 						local gundata = debug.getupvalue(oldshoot or pl.Shoot, 10)
 						local ammo = tool and tool:GetAttribute('Local_CurrentAmmo') or 0
+
+						if AutoFireSwitch.Enabled and entitylib.isAlive then
+							local ideal = getShootTool()
+							if tool and ideal and tool ~= ideal then
+								entitylib.character.Humanoid:EquipTool(ideal)
+								gundata = nil
+							end
+						end
+
 						if gundata and ammo > 0 and not tool:GetAttribute('Local_IsShooting') then
 							local limit = gundata.Range or 1000
 							local taser = gundata and gundata.Behavior == 'Taser'
@@ -128,7 +158,7 @@ run(function()
 
 							if entity and entitylib.character.Humanoid.Health > 0 then
 								if not ((taser or AutoFireTaser.Enabled) and (entity.Character:GetAttribute('Tased') or entity.Character:GetAttribute('Arrested'))) then
-									fireDelay = os.clock() + (ammo > 1 and gundata.FireRate or 1 / AutoFireRate.Value)
+									fireDelay = os.clock() + (AutoFireSwitch.Enabled and 0.05 or ammo > 1 and gundata.FireRate or 1 / AutoFireRate.Value)
 									local obj = {UserInputState = Enum.UserInputState.Begin, UserInputType = Enum.UserInputType.MouseButton1, Position = Vector3.zero}
 									task.spawn(pl.Shoot, obj)
 									obj.UserInputState = Enum.UserInputState.End
@@ -203,6 +233,7 @@ run(function()
 		Function = function(callback)
 			AutoFireRate.Object.Visible = callback
 			AutoFireTaser.Object.Visible = callback
+			AutoFireSwitch.Object.Visible = callback
 		end,
 		Tooltip = 'Automatically fires guns when the specified target conditions are met.'
 	})
@@ -219,6 +250,12 @@ run(function()
 		Name = 'Ignore Tased',
 		Visible = false,
 		Darker = true
+	})
+	AutoFireSwitch = SilentAim:CreateToggle({
+		Name = 'Auto Switch',
+		Visible = false,
+		Darker = true,
+		Tooltip = 'Spam switch guns while shooting to get fast damage, only good with multiple tools.'
 	})
 	Wallbang = SilentAim:CreateToggle({
 		Name = 'Wallbang',
