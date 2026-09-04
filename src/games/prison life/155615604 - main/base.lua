@@ -36,6 +36,7 @@ local getfontbounds = vape.Libraries.getfontbounds
 local pl = {}
 local Spring = {}
 local TracerHook = {Hooks = {}}
+local VehicleWallbang = {Enabled = false}
 local oldshoot, oldequip
 local aimTimer, shootTimer, aimVec = os.clock(), os.clock()
 local arrestCooldown = os.clock()
@@ -141,19 +142,17 @@ run(function()
 			return table.unpack(self.Cache[part])
 		end
 
-		local scanPositions = {origin}
 		local hitboxPositions = {}
-		local isTargetVisible = checkPoint(target, overlapParams)
+		if checkPoint(target, overlapParams) then
+			if extra and (origin - extra).Magnitude < 7.5 then
+				self.Cache[part] = {extra}
+				return extra
+			end
 
-		if extra and (origin - extra).Magnitude < 7.5 and isTargetVisible then
-			self.Cache[part] = {extra}
-			return extra
-		end
-
-		if isTargetVisible then
 			table.insert(hitboxPositions, target)
 		end
 
+		local scanPositions = {origin}
 		local diff = CFrame.lookAt(origin * Vector3.new(1, 0, 1), target * Vector3.new(1, 0, 1)).LookVector
 		for _, normal in Enum.NormalId:GetEnumItems() do
 			local offset = Vector3.fromNormalId(normal)
@@ -190,7 +189,7 @@ run(function()
 	end
 
 	function OriginScanner:UpdateIgnore()
-		local ignoreList = {lplr.Character}
+		local ignoreList = VehicleWallbang.Enabled and {lplr.Character, workspace.CarContainer} or {lplr.Character}
 		for _, entity in entitylib.List do
 			table.insert(ignoreList, entity.Character)
 		end
@@ -259,7 +258,7 @@ run(function()
 		if entity.NPC then return true end
 		if isFriend(entity.Player) then return false end
 		if not select(2, whitelist:get(entity.Player)) then return false end
-		if vape.Settings.Modules.Options['Teams by server'].Enabled and not skip then
+		if vape.Settings.Modules.Options['Teams by server'].Enabled and (not skip or lplr.Team == teams.Guards) then
 			return lplr.Team ~= entity.Player.Team and entity.Player.Team ~= teams.Neutral
 		end
 		return true
@@ -403,8 +402,8 @@ run(function()
 
 	entitylib.Wallcheck = function(origin, position, checkPosition, part, entity)
 		local ray = workspace.Raycast(workspace, position, (origin - position), OriginScanner.Ray)
-		if ray then
-			return not checkPosition or not OriginScanner:Scan(checkPosition, position, ray.Position + ray.Normal * 0.01, part, entity)
+		if ray or workspace.Raycast(workspace, origin, (position - origin), OriginScanner.Ray) then
+			return not checkPosition or not OriginScanner:Scan(checkPosition, position, ray and ray.Position + ray.Normal * 0.01 or nil, part, entity)
 		end
 
 		return false
@@ -436,6 +435,7 @@ run(function()
 
 		for _, connection in getconnections(lplr.CharacterAdded) do
 			if connection.Function and debug.info(connection.Function, 's'):find('GunController') then
+				pl.ShootParams = debug.getupvalue(connection.Function, 2)
 				pl.Equip = debug.getupvalue(connection.Function, 3)
 				break
 			end

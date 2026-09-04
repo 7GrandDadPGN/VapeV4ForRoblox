@@ -1,5 +1,7 @@
 local CheatDetector
 local AddTarget
+local Teleport
+local positions = {}
 local overlap = OverlapParams.new()
 overlap.CollisionGroup = 'Players'
 overlap.FilterDescendantsInstances = {workspace.CarContainer, workspace.Doors}
@@ -42,9 +44,16 @@ CheatDetector = vape.Categories.Utility:CreateModule({
 				end
 			end))
 
+			CheatDetector:Clean(entitylib.Events.EntityRemoved:Connect(function(entity)
+				positions[entity] = nil
+			end))
+
+			local lastDelta = 0
 			repeat
 				for _, entity in entitylib.List do
 					if entity.Health > 0 and entity.Player then
+						local playerPos = entity.RootPart.Position
+
 						if not checkPoint(entity.Head.Position, overlap) then
 							Cheats:Flag(entity.Player, 'phase/noclip', 20)
 						end
@@ -56,8 +65,14 @@ CheatDetector = vape.Categories.Utility:CreateModule({
 						local velo = entity.RootPart.AssemblyLinearVelocity
 						if not entity.Humanoid.SeatPart then
 							if (velo * Vector3.new(1, 0, 1)).Magnitude > 26 then
-								if #workspace:GetPartBoundsInRadius(entity.RootPart.Position, 30, caroverlap) <= 0 then
+								if #workspace:GetPartBoundsInRadius(playerPos, 30, caroverlap) <= 0 then
 									Cheats:Flag(entity.Player, 'speed', 20)
+								end
+							end
+
+							if Teleport.Enabled and positions[entity] and ((playerPos - positions[entity]) * Vector3.new(1, 0, 1)).Magnitude > 20 and lastDelta < 0.1 then
+								if #workspace:GetPartBoundsInRadius(playerPos, 30, caroverlap) <= 0 then
+									Cheats:Flag(entity.Player, 'teleport', 1)
 								end
 							end
 
@@ -65,12 +80,15 @@ CheatDetector = vape.Categories.Utility:CreateModule({
 								Cheats:Flag(entity.Player, 'highjump', 20)
 							end
 						end
+
+						positions[entity] = playerPos
 					end
 				end
 
-				task.wait(0.05)
+				lastDelta = task.wait(0.05)
 			until not CheatDetector.Enabled
 		else
+			table.clear(positions)
 			Cheats:Clear()
 		end
 	end,
@@ -79,5 +97,10 @@ CheatDetector = vape.Categories.Utility:CreateModule({
 AddTarget = CheatDetector:CreateToggle({
 	Name = 'Temporary Target',
 	Tooltip = 'Add temporary combat module priority for cheaters.',
+	Default = true
+})
+Teleport = CheatDetector:CreateToggle({
+	Name = 'Teleport',
+	Tooltip = 'Detect people teleporting (EXPERIMENTAL)',
 	Default = true
 })

@@ -1,4 +1,5 @@
 local Freecam
+local Mode
 local Value
 local randomkey, module, old = httpService:GenerateGUID(false)
 
@@ -6,6 +7,24 @@ Freecam = vape.Categories.World:CreateModule({
 	Name = 'Freecam',
 	Function = function(callback)
 		if callback then
+			if Mode.Value == 'Roblox' then
+				if not lplr.PlayerGui:FindFirstChild('Freecam') then
+					local gui = Instance.new('ScreenGui')
+					gui.ResetOnSpawn = false
+					gui.Name = 'Freecam'
+					gui.Parent = lplr.PlayerGui
+				end
+
+				local fcScript = coreGui.RobloxGui.Modules.Server.FreeCamera.FreeCamera
+				getrenv().require(fcScript)
+				fcScript:SetAttribute('FreecamEnabled', true)
+
+				Freecam:Clean(function()
+					fcScript:SetAttribute('FreecamEnabled', false)
+				end)
+				return
+			end
+
 			repeat
 				task.wait(0.1)
 
@@ -60,11 +79,26 @@ Freecam = vape.Categories.World:CreateModule({
 	end,
 	Tooltip = 'Lets you fly and clip through walls freely\nwithout moving your player server-sided.'
 })
+Mode = Freecam:CreateDropdown({
+	Name = 'Mode',
+	List = {'Classic', 'Roblox'},
+	Function = function(val)
+		if Freecam.Enabled then
+			Freecam:Toggle()
+			Freecam:Toggle()
+		end
+
+		if Value then
+			Value.Object.Visible = val == 'Classic'
+		end
+	end
+})
 Value = Freecam:CreateSlider({
 	Name = 'Speed',
 	Min = 1,
 	Max = 150,
 	Default = 50,
+	Darker = true,
 	Suffix = function(val)
 		return val == 1 and 'stud' or 'studs'
 	end

@@ -13,15 +13,23 @@ SpinBot = vape.Categories.Blatant:CreateModule({
 			SpinBot:Clean(runService.PreSimulation:Connect(function()
 				if entitylib.isAlive then
 					if Mode.Value == 'RotVelocity' then
-						local originalRotVelocity = entitylib.character.RootPart.RotVelocity
+						if entitylib.character.Humanoid.Sit then
+							return
+						end
+
+						local original = entitylib.character.RootPart.AssemblyAngularVelocity
 						entitylib.character.Humanoid.AutoRotate = false
-						entitylib.character.RootPart.RotVelocity = Vector3.new(XToggle.Enabled and Value.Value or originalRotVelocity.X, YToggle.Enabled and Value.Value or originalRotVelocity.Y, ZToggle.Enabled and Value.Value or originalRotVelocity.Z)
+						entitylib.character.RootPart.AssemblyAngularVelocity = Vector3.new(XToggle.Enabled and Value.Value or original.X, YToggle.Enabled and Value.Value or original.Y, ZToggle.Enabled and Value.Value or original.Z)
 					elseif Mode.Value == 'CFrame' then
-						local val = math.rad((tick() * (20 * Value.Value)) % 360)
+						if entitylib.character.Humanoid.Sit then
+							return
+						end
+
+						local val = math.rad((os.clock() * (20 * Value.Value)) % 360)
 						local x, y, z = entitylib.character.RootPart.CFrame:ToOrientation()
 						entitylib.character.RootPart.CFrame = CFrame.new(entitylib.character.RootPart.Position) * CFrame.Angles(XToggle.Enabled and val or x, YToggle.Enabled and val or y, ZToggle.Enabled and val or z)
 					elseif AngularVelocity then
-						AngularVelocity.Parent = entitylib.isAlive and entitylib.character.RootPart
+						AngularVelocity.Parent = entitylib.isAlive and not entitylib.character.Humanoid.Sit and entitylib.character.RootPart or nil
 						AngularVelocity.MaxTorque = Vector3.new(XToggle.Enabled and math.huge or 0, YToggle.Enabled and math.huge or 0, ZToggle.Enabled and math.huge or 0)
 						AngularVelocity.AngularVelocity = Vector3.new(Value.Value, Value.Value, Value.Value)
 					end
@@ -47,6 +55,7 @@ Mode = SpinBot:CreateDropdown({
 			AngularVelocity:Destroy()
 			AngularVelocity = nil
 		end
+
 		AngularVelocity = val == 'BodyMover' and Instance.new('BodyAngularVelocity') or nil
 	end,
 	Tooltip = 'CFrame - Directly adjusts your characters angle\nRotVelocity - Sets the rotation velocity so that you spin\nBodyMover - Uses body movers to edit your rotation velocity'
@@ -57,9 +66,13 @@ Value = SpinBot:CreateSlider({
 	Max = 100,
 	Default = 40
 })
-XToggle = SpinBot:CreateToggle({Name = 'Spin X'})
+XToggle = SpinBot:CreateToggle({
+	Name = 'Spin X'
+})
 YToggle = SpinBot:CreateToggle({
 	Name = 'Spin Y',
 	Default = true
 })
-ZToggle = SpinBot:CreateToggle({Name = 'Spin Z'})
+ZToggle = SpinBot:CreateToggle({
+	Name = 'Spin Z'
+})

@@ -5,7 +5,7 @@ rayParams.CollisionGroup = 'ClientBullet'
 rayParams.FilterType = Enum.RaycastFilterType.Exclude
 
 local function getTriggerBotTarget()
-	rayParams.FilterDescendantsInstances = {lplr.Character}
+	rayParams.FilterDescendantsInstances = VehicleWallbang.Enabled and {lplr.Character, workspace.CarContainer} or {lplr.Character}
 
 	if entitylib.isAlive then
 		local tool = debug.getupvalue(oldshoot or pl.Shoot, 1)

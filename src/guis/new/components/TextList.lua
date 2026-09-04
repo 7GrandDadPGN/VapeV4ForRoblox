@@ -274,15 +274,17 @@ add.MouseLeave:Connect(function()
 end)
 
 add.MouseButton1Click:Connect(function()
-	if not table.find(component.List, textbox.Text) then
-		component:ChangeValue(textbox.Text)
+	local newText = props.TextFunction and props.TextFunction(textbox.Text) or textbox.Text
+	if not table.find(component.List, newText) then
+		component:ChangeValue(newText)
 		textbox.Text = ''
 	end
 end)
 
 textbox.FocusLost:Connect(function(enter)
-	if enter and not table.find(component.List, textbox.Text) then
-		component:ChangeValue(textbox.Text)
+	local newText = props.TextFunction and props.TextFunction(textbox.Text) or textbox.Text
+	if enter and not table.find(component.List, newText) then
+		component:ChangeValue(newText)
 		textbox.Text = ''
 	end
 end)

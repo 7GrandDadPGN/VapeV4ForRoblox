@@ -1,10 +1,10 @@
-local AutoTaser
+local AutoTaze
 local Range
 local VelocityCheck
 local cooldown = 0
 
-AutoTaser = vape.Categories.Blatant:CreateModule({
-	Name = 'AutoTaser',
+AutoTaze = vape.Categories.Blatant:CreateModule({
+	Name = 'AutoTaze',
 	Function = function(callback)
 		if callback then
 			repeat
@@ -33,12 +33,12 @@ AutoTaser = vape.Categories.Blatant:CreateModule({
 				end
 
 				task.wait(0.05)
-			until not AutoTaser.Enabled
+			until not AutoTaze.Enabled
 		end
 	end,
 	Tooltip = 'Automatically taze people around you. (only works with SilentAim AutoFire with Position Mode enabled)'
 })
-Range = AutoTaser:CreateSlider({
+Range = AutoTaze:CreateSlider({
 	Name = 'Range',
 	Min = 1,
 	Max = 52,
@@ -47,7 +47,7 @@ Range = AutoTaser:CreateSlider({
 		return val == 1 and 'stud' or 'studs'
 	end
 })
-VelocityCheck = AutoTaser:CreateToggle({
+VelocityCheck = AutoTaze:CreateToggle({
 	Name = 'Velocity Check',
 	Default = true
 })
