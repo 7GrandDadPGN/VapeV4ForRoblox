@@ -650,10 +650,13 @@ function vape:SortCategories()
 
 	for _, sort in sorting do
 		table.sort(sort)
-		for index, name in sort do
-			self.Modules[name].Index = index
+
+		local index = 2
+		for _, name in sort do
+			self.Modules[name].Index = index / 2
 			self.Modules[name].Object.LayoutOrder = index
-			self.Modules[name].Children.LayoutOrder = index
+			self.Modules[name].Children.LayoutOrder = index + 1
+			index += 2
 		end
 	end
 end

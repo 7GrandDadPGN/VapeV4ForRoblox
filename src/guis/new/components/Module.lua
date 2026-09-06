@@ -131,6 +131,10 @@ function component:Load(data)
 
 	if self.Enabled ~= (data.Enabled and not self.Bind.Hold) then
 		self:Toggle(true)
+
+		if self.Bind.Mobile then
+			self.Bind.Mobile.BackgroundColor3 = self.Enabled and Color3.new(0, 0.7, 0) or Color3.new()
+		end
 	end
 
 	if self.Visible ~= data.Visible then
