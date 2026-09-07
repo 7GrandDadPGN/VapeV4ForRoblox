@@ -6,10 +6,10 @@ local overlap = OverlapParams.new()
 overlap.CollisionGroup = 'Players'
 overlap.FilterDescendantsInstances = {workspace.CarContainer, workspace.Doors}
 overlap.FilterType = Enum.RaycastFilterType.Exclude
-local caroverlap = OverlapParams.new()
-caroverlap.FilterDescendantsInstances = {workspace.CarContainer}
-caroverlap.FilterType = Enum.RaycastFilterType.Include
-caroverlap.MaxParts = 1
+local carOverlap = OverlapParams.new()
+carOverlap.FilterDescendantsInstances = {workspace.CarContainer}
+carOverlap.FilterType = Enum.RaycastFilterType.Include
+carOverlap.MaxParts = 1
 
 local whiteliststates = {
 	[Enum.HumanoidStateType.Running] = true,
@@ -51,7 +51,7 @@ CheatDetector = vape.Categories.Utility:CreateModule({
 			local lastDelta = 0
 			repeat
 				for _, entity in entitylib.List do
-					if entity.Health > 0 and entity.Player then
+					if entity.Health > 0 and entity.Player and not Cheats.Flagged[entity.Player.UserId] then
 						local playerPos = entity.RootPart.Position
 
 						if not checkPoint(entity.Head.Position, overlap) then
@@ -65,23 +65,31 @@ CheatDetector = vape.Categories.Utility:CreateModule({
 						local velo = entity.RootPart.AssemblyLinearVelocity
 						if not entity.Humanoid.SeatPart then
 							if (velo * Vector3.new(1, 0, 1)).Magnitude > 26 then
-								if #workspace:GetPartBoundsInRadius(playerPos, 30, caroverlap) <= 0 then
+								if #workspace:GetPartBoundsInRadius(playerPos, 30, carOverlap) <= 0 then
 									Cheats:Flag(entity.Player, 'speed', 20)
 								end
 							end
 
-							if Teleport.Enabled and positions[entity] and ((playerPos - positions[entity]) * Vector3.new(1, 0, 1)).Magnitude > 20 and lastDelta < 0.1 then
-								if #workspace:GetPartBoundsInRadius(playerPos, 30, caroverlap) <= 0 then
-									Cheats:Flag(entity.Player, 'teleport', 1)
+							if positions[entity] then
+								if Teleport.Enabled and ((playerPos - positions[entity][1]) * Vector3.new(1, 0, 1)).Magnitude > 50 and #workspace:GetPartBoundsInRadius(playerPos, 30, carOverlap) <= 0 then
+									local canFlag = entity.Player.Team ~= teams.Inmates or (os.clock() - entity.SpawnTime) > 0.1
+
+									if canFlag then
+										Cheats:Flag(entity.Player, 'teleport', 1)
+									end
 								end
 							end
 
 							if velo.Y > 50 then
 								Cheats:Flag(entity.Player, 'highjump', 20)
 							end
-						end
 
-						positions[entity] = playerPos
+							if not positions[entity] or (os.clock() - positions[entity][2]) > 0.2 then
+								positions[entity] = {playerPos, os.clock()}
+							end
+						else
+							positions[entity] = {playerPos, os.clock()}
+						end
 					end
 				end
 

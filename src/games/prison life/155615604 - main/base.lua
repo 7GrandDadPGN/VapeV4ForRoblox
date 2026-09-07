@@ -181,7 +181,7 @@ run(function()
 				local ray = workspace:Raycast(hitbox, (pos - hitbox), rayParams)
 
 				if not ray then
-					self.Cache[part] = {pos, hitbox}
+					self.Cache[part] = {pos, hitbox ~= target and hitbox or nil}
 					return pos, hitbox
 				end
 			end

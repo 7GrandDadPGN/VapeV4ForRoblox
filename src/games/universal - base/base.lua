@@ -162,14 +162,16 @@ local function serverHop(pointer, filter)
 	if not table.find(visited, game.JobId) then
 		table.insert(visited, game.JobId)
 	end
+
 	if not pointer then
 		notif('Vape', 'Searching for an available server.', 2)
 	end
 
-	local suc, httpdata = pcall(function()
+	local success, httpdata = pcall(function()
 		return cacheExpire < tick() and game:HttpGet('https://games.roblox.com/v1/games/'..game.PlaceId..'/servers/Public?sortOrder='..(filter == 'Ascending' and 1 or 2)..'&excludeFullGames=true&limit=100'..(pointer and '&cursor='..pointer or '')) or cache
 	end)
-	local data = suc and httpService:JSONDecode(httpdata) or nil
+
+	local data = success and httpService:JSONDecode(httpdata) or nil
 	if data and data.data then
 		for _, v in data.data do
 			if tonumber(v.playing) < playersService.MaxPlayers and not table.find(visited, v.id) and not table.find(attempted, v.id) then
