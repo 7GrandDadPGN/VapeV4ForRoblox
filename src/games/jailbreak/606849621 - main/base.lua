@@ -187,21 +187,35 @@ run(function()
 			end
 		end
 
-		return true
+		local _, occu = workspace.Terrain:ReadVoxels(Region3.new(pos - Vector3.one * 0.1, pos + Vector3.one * 0.1):ExpandToGrid(4), 4)
+		return occu[1][1][1] == 0
 	end
 
-	function OriginScanner:Scan(origin, target, extra, part)
+	function OriginScanner:Scan(origin, target, extra, part, entity)
 		if self.Cache[part] then
 			return table.unpack(self.Cache[part])
 		end
 
+		local hitboxPositions = {target}
 		if extra and (origin - extra).Magnitude < 14 then
 			self.Cache[part] = {extra}
 			return extra
 		end
 
-		local scanPositions = {}
+		local scanPositions = {origin}
 		local diff = CFrame.lookAt(origin * Vector3.new(1, 0, 1), target * Vector3.new(1, 0, 1)).LookVector
+		for _, normal in Enum.NormalId:GetEnumItems() do
+			local offset = Vector3.fromNormalId(normal)
+
+			if (offset * Vector3.new(1, 0, 1)):Dot(-diff) > -0.5 then
+				local pos = entity.RootPart.Position + offset * 20
+
+				if checkPoint(pos, overlapParams) then
+					table.insert(hitboxPositions, pos)
+				end
+			end
+		end
+
 		for _, offset in positions do
 			if (offset * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
 				local pos = origin + offset * 14
@@ -212,12 +226,14 @@ run(function()
 			end
 		end
 
-		for _, pos in scanPositions do
-			local ray = workspace:Raycast(target, (pos - target), rayParams)
+		for _, hitbox in hitboxPositions do
+			for _, pos in scanPositions do
+				local ray = workspace:Raycast(hitbox, (pos - hitbox), rayParams)
 
-			if not ray then
-				self.Cache[part] = {pos}
-				return pos
+				if not ray then
+					self.Cache[part] = {pos, hitbox ~= target and hitbox or nil}
+					return pos, hitbox
+				end
 			end
 		end
 	end
@@ -401,7 +417,7 @@ run(function()
 
 			for _, v in sortingTable do
 				if entitysettings.Wallcheck then
-					if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
+					if entitylib.Wallcheck(entitysettings.Origin, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part], v.Entity) then continue end
 				end
 				table.clear(entitysettings)
 				table.clear(sortingTable)
@@ -435,7 +451,7 @@ run(function()
 
 			for _, v in sortingTable do
 				if entitysettings.Wallcheck then
-					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part], v.Entity) then continue end
 				end
 				table.clear(entitysettings)
 				table.clear(sortingTable)
@@ -470,7 +486,7 @@ run(function()
 
 			for _, v in sortingTable do
 				if entitysettings.Wallcheck then
-					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part]) then continue end
+					if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallbang, v.Entity[entitysettings.Part], v.Entity) then continue end
 				end
 				table.insert(returned, v.Entity)
 				if #returned >= (entitysettings.Limit or math.huge) then break end
@@ -481,10 +497,10 @@ run(function()
 		return returned
 	end
 
-	entitylib.Wallcheck = function(origin, position, checkpos, part)
+	entitylib.Wallcheck = function(origin, position, checkPosition, part, entity)
 		local ray = workspace.Raycast(workspace, position, (origin - position), OriginScanner.Ray)
 		if ray then
-			return not checkpos or not OriginScanner:Scan(checkpos, position, ray.Position + ray.Normal * 0.01, part)
+			return not checkPosition or not OriginScanner:Scan(checkPosition, position, ray and ray.Position + ray.Normal * 0.01 or nil, part, entity)
 		end
 
 		return false

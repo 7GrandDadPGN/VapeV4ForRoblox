@@ -1,5 +1,10 @@
 local modified = {}
 local overlapCheck = OverlapParams.new()
+local whitelist = {
+	BarbedWire = true,
+	Part = true,
+	Lavatouch = true
+}
 
 LazerGodmode = vape.Categories.Blatant:CreateModule({
 	Name = 'LazerGodmode',
@@ -11,8 +16,10 @@ LazerGodmode = vape.Categories.Blatant:CreateModule({
 
 					local parts = workspace:GetPartBoundsInRadius(entitylib.character.RootPart.Position, 10, overlapCheck)
 					for _, part in parts do
-						modified[part] = true
-						part.CanTouch = false
+						if whitelist[part.Name] then
+							modified[part] = true
+							part.CanTouch = false
+						end
 					end
 
 					for part in modified do

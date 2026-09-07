@@ -56,16 +56,37 @@ local function Hook(...)
 
 		if entity then
 			local oldTip
+			local aimSpot = targetPart.Position
+
 			if Wallbang.Enabled then
 				local ray = workspace:Raycast(targetPart.Position, (origin.Position - targetPart.Position), OriginScanner.Ray)
 
 				if ray then
-					local neworigin, hitbox = OriginScanner:Scan(entitylib.character.RootPart.Position, targetPart.Position, ray.Position + ray.Normal * 0.01, targetPart)
+					local newOrigin, hit = OriginScanner:Scan(entitylib.character.RootPart.Position, targetPart.Position, ray.Position + ray.Normal * 0.01, targetPart, entity)
 
-					if neworigin then
+					if newOrigin then
 						oldTip = item.Tip.CFrame
-						origin = CFrame.lookAt(neworigin, targetPart.Position)
+						origin = CFrame.lookAt(newOrigin, targetPart.Position)
 						item.Tip.CFrame = origin
+
+						if hit then
+							local part = Instance.new('Part')
+							part.Anchored = true
+							part.CanCollide = false
+							part.Position = hit
+							part.Size = Vector3.one * 1
+							part.Transparency = 1
+							part.Parent = entity.Character
+							task.spawn(function()
+								for i = 1, 2 do
+									runService.Heartbeat:Wait()
+								end
+
+								part:Destroy()
+							end)
+
+							aimSpot = hit
+						end
 					end
 				end
 			end
@@ -73,12 +94,12 @@ local function Hook(...)
 			ProjectileRaycast.FilterDescendantsInstances = {gameCamera, entity.Character, workspace.Vehicles}
 			ProjectileRaycast.CollisionGroup = entity.RootPart.CollisionGroup
 
-			local trajectory = oldBulletUpdate and targetPart.Position or prediction.SolveTrajectory(origin.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), targetPart.Position, entity.RootPart.AssemblyLinearVelocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
+			local trajectory = oldBulletUpdate and aimSpot or prediction.SolveTrajectory(origin.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), targetPart.Position, entity.RootPart.AssemblyLinearVelocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
 			if trajectory then
 				targetinfo.Targets[entity] = tick() + 1
 				item.TipDirection = CFrame.lookAt(origin.Position, trajectory).LookVector
 				aimTimer = os.clock() + 0.3
-				aimVec = targetPart.Position
+				aimVec = aimSpot
 			end
 
 			if oldTip then
