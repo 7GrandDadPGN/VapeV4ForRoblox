@@ -33,11 +33,9 @@ if isfile('newvape/games/'..vape.Place..'.lua') then
 	loadstring(readfile('newvape/games/'..vape.Place..'.lua'), 'redliner')(...)
 else
 	if not shared.VapeDeveloper then
-		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeCompiled/'..readfile('newvape/profiles/commit.txt')..'/games/'..vape.Place..'.lua', true)
-		end)
-		if suc and res ~= '404: Not Found' then
-			loadstring(downloadFile('newvape/games/'..vape.Place..'.lua'), 'redliner')(...)
+		local success, result = pcall(downloadFile, 'newvape/games/'..vape.Place..'.lua')
+		if success and result then
+			loadstring(result, 'redliner')(...)
 		end
 	end
 end

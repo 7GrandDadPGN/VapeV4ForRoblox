@@ -177,7 +177,8 @@ run(function()
 							})
 
 							if entity and entitylib.character.Humanoid.Health > 0 then
-								local canFire = not tool:GetAttribute('Local_IsShooting') and (tool:GetAttribute('Local_CurrentAmmo') or 0) > 0
+								local ammo = (tool:GetAttribute('Local_CurrentAmmo') or 0)
+								local canFire = not tool:GetAttribute('Local_IsShooting') and ammo > 0
 								if AutoFireSwitch.Enabled then
 									local ideal = getShootTool((entity.Head.Position - entitylib.character.Head.Position).Magnitude)
 									if ideal and tool ~= ideal then
