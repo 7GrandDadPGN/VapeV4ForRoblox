@@ -1,6 +1,6 @@
 local AutoPickup
 local items = {}
-local pickupList = {Guard = {}, Prisoner = {}, Criminal = {}}
+local PickupList = {}
 
 local function AddPickup(pickup)
 	if pickup:IsA('Model') and pickup.Name ~= 'Model' and pickup:GetAttribute('ToolName') then
@@ -9,6 +9,11 @@ local function AddPickup(pickup)
 			pickup.Name == 'TouchGiver'
 		})
 	end
+end
+
+local function hasTool(name, backpack)
+	local tool = lplr.Character:FindFirstChildWhichIsA('Tool')
+	return backpack:FindFirstChild(name) or tool and tool.Name == name and tool
 end
 
 AutoPickup = vape.Categories.Inventory:CreateModule({
@@ -42,23 +47,15 @@ AutoPickup = vape.Categories.Inventory:CreateModule({
 						for _, pickup in items do
 							if pickup[1].PrimaryPart and (pickup[1].PrimaryPart.Position - localpos).Magnitude < 12 then
 								local tool = pickup[1]:GetAttribute('ToolName')
-								if pickup[2] then
-									local found = false
-									for _, entry in pickupList[lplr.Team == teams.Guards and 'Guard' or (lplr.Team == teams.Criminals and 'Criminal' or 'Prisoner')] do
-										if not backpack:FindFirstChild(entry) then
-											found = tool ~= entry
-											break
-										end
-									end
-
-									if found then
-										continue
-									end
+								if hasTool(tool, backpack) then
+									continue
 								end
 
-								if not backpack:FindFirstChild(tool) then
-									replicatedStorage.Remotes.GiverPressed:FireServer(pickup[1])
+								if pickup[2] and not table.find(PickupList[lplr.Team == teams.Guards and 'Guard' or (lplr.Team == teams.Criminals and 'Criminal' or 'Prisoner')].ListEnabled, tool) then
+									continue
 								end
+
+								replicatedStorage.Remotes.GiverPressed:FireServer(pickup[1])
 							end
 						end
 					end
@@ -74,18 +71,9 @@ AutoPickup = vape.Categories.Inventory:CreateModule({
 })
 
 for _, team in {'Prisoner', 'Guard', 'Criminal'} do
-	AutoPickup:CreateTextList({
-		Name = team..' Pickups',
-		Default = {team == 'Criminal' and '1/AK-47' or '1/MP5', '2/Remington 870'},
-		Placeholder = 'priority/item',
-		Function = function(list)
-			table.clear(pickupList[team])
-
-			for _, entry in list do
-				local data = entry:split('/')
-				local index = tonumber(data[1])
-				pickupList[team][index or 999] = data[2]
-			end
-		end
+	PickupList[team] = AutoPickup:CreateTextList({
+		Name = team,
+		Default = {team == 'Criminal' and 'AK-47' or 'MP5', 'Remington 870'},
+		Placeholder = 'item'
 	})
 end

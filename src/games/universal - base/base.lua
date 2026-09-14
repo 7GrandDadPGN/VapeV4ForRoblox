@@ -146,17 +146,8 @@ local function removeTags(str)
 	return (str:gsub('<[^<>]->', ''))
 end
 
-local function rakNetCheck(module)
-	if not (raknet and raknet.add_send_hook and pcall(raknet.add_send_hook, function() end)) then
-		notif(module, 'This feature requires raknet! (risky feature, please do not use on mains.)', 10, 'warning')
-		return false
-	end
-
-	return true
-end
-
 local visited, attempted, tpSwitch = {}, {}, false
-local cacheExpire, cache = tick()
+local cacheExpire, cache = os.clock()
 local function serverHop(pointer, filter)
 	visited = shared.vapeserverhoplist and shared.vapeserverhoplist:split('/') or {}
 	if not table.find(visited, game.JobId) then
@@ -168,14 +159,14 @@ local function serverHop(pointer, filter)
 	end
 
 	local success, httpdata = pcall(function()
-		return cacheExpire < tick() and game:HttpGet('https://games.roblox.com/v1/games/'..game.PlaceId..'/servers/Public?sortOrder='..(filter == 'Ascending' and 1 or 2)..'&excludeFullGames=true&limit=100'..(pointer and '&cursor='..pointer or '')) or cache
+		return cacheExpire < os.clock() and game:HttpGet('https://games.roblox.com/v1/games/'..game.PlaceId..'/servers/Public?sortOrder='..(filter == 'Ascending' and 1 or 2)..'&excludeFullGames=true&limit=100'..(pointer and '&cursor='..pointer or '')) or cache
 	end)
 
 	local data = success and httpService:JSONDecode(httpdata) or nil
 	if data and data.data then
 		for _, v in data.data do
 			if tonumber(v.playing) < playersService.MaxPlayers and not table.find(visited, v.id) and not table.find(attempted, v.id) then
-				cacheExpire, cache = tick() + 60, httpdata
+				cacheExpire, cache = os.clock() + 60, httpdata
 				table.insert(attempted, v.id)
 
 				notif('Vape', 'Found! Teleporting.', 5)

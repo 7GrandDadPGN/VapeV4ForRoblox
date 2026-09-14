@@ -18,7 +18,7 @@ Swim = vape.Categories.Blatant:CreateModule({
 						local pos = root.Position - Vector3.new(0, 1, 0)
 						local newpos = Region3.new(pos - factor, pos + factor):ExpandToGrid(4)
 						terrain:ReplaceMaterial(lastpos, 4, Enum.Material.Water, Enum.Material.Air)
-						terrain:FillRegion(newpos, 4, Enum.Material.Water)
+						terrain:ReplaceMaterial(newpos, 4, Enum.Material.Air, Enum.Material.Water)
 						lastpos = newpos
 					end
 				end

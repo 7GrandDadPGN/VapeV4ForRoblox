@@ -72,6 +72,10 @@ run(function()
 		FindPartOnRayWithIgnoreList = {
 			Hook = workspace.FindPartOnRayWithIgnoreList,
 			Function = function(args)
+				if typeof(args[1]) ~= 'Ray' then
+					return
+				end
+
 				local entity, targetPart, origin = getTarget(args[1].Origin, {args[2]})
 				if not entity then
 					return
@@ -92,6 +96,10 @@ run(function()
 		Raycast = {
 			Hook = workspace.Raycast,
 			Function = function(args)
+				if typeof(args[1]) ~= 'Vector3' or typeof(args[2]) ~= 'Vector3' or args[3] and typeof(args[3]) ~= 'RaycastParams' then
+					return
+				end
+
 				if RayMethod.Value ~= 'All' and args[3] and args[3].FilterType ~= Enum.RaycastFilterType[RayMethod.Value] then
 					return
 				end
@@ -111,6 +119,10 @@ run(function()
 		ScreenPointToRay = {
 			Hook = Instance.new('Camera').ScreenPointToRay,
 			Function = function(args)
+				if args[3] and type(args[3]) ~= 'number' then
+					return
+				end
+
 				local entity, targetPart, origin = getTarget(gameCamera.CFrame.Position)
 				if not entity then
 					return
@@ -134,6 +146,10 @@ run(function()
 		Ray = {
 			Hook = Ray.new,
 			Function = function(args)
+				if typeof(args[1]) ~= 'Vector3' or typeof(args[2]) ~= 'Vector3' then
+					return
+				end
+
 				local entity, targetPart, origin = getTarget(args[1])
 				if not entity then
 					return
@@ -164,7 +180,7 @@ run(function()
 		end
 
 		local caller = getcallingscript()
-		if caller then
+		if typeof(caller) == 'Instance' and caller then
 			if table.find(IgnoredScripts.ListEnabled, tostring(caller)) then
 				return oldnamecall(...)
 			end
@@ -205,7 +221,7 @@ run(function()
 						end
 
 						local caller = getcallingscript()
-						if caller then
+						if typeof(caller) == 'Instance' and caller then
 							if table.find(IgnoredScripts.ListEnabled, tostring(caller)) then
 								return oldnamecall(...)
 							end

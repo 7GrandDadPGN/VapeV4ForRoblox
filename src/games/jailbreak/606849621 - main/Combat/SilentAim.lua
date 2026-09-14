@@ -161,7 +161,7 @@ Mode = SilentAim:CreateDropdown({
 Range = SilentAim:CreateSlider({
 	Name = 'Range',
 	Min = 1,
-	Max = 1000,
+	Max = 1500,
 	Default = 150,
 	Function = function(val)
 		if CircleObject then
