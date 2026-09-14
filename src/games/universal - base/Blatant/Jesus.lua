@@ -10,8 +10,9 @@ Jesus = vape.Categories.Blatant:CreateModule({
 			params.FilterDescendantsInstances = {terrain}
 			local Platform = Instance.new('Part')
 			Platform.CanQuery = false
+			Platform.CanTouch = false
 			Platform.Anchored = true
-			Platform.Size = Vector3.one
+			Platform.Size = Vector3.new(3, 1, 3)
 			Platform.Transparency = 1
 			Platform.Parent = gameCamera
 

@@ -34,7 +34,7 @@ Search = vape.Categories.Render:CreateModule({
 				end
 			end))
 
-			for _, v in workspace:GetDescendants() do
+			for _, v in workspace:QueryDescendants('BasePart, Model') do
 				Add(v)
 			end
 		else

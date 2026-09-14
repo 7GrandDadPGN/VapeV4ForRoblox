@@ -57,33 +57,38 @@ MouseTP = vape.Categories.Blatant:CreateModule({
 				MouseTP:Toggle()
 
 				if entitylib.isAlive then
+					local root = entitylib.character.RootPart
+					local Invisible = vape.Modules.Invisible
+					if Invisible and Invisible.Enabled then
+						runService.PreSimulation:Wait()
+					end
+
 					if MovementMode.Value == 'Motor' then
-						motorMove(entitylib.character.RootPart, CFrame.lookAlong(position, entitylib.character.RootPart.CFrame.LookVector))
+						motorMove(root, CFrame.lookAlong(position, root.CFrame.LookVector))
 					else
-						entitylib.character.RootPart.CFrame = CFrame.lookAlong(position, entitylib.character.RootPart.CFrame.LookVector)
+						root.CFrame = CFrame.lookAlong(position, root.CFrame.LookVector)
 					end
 				end
 			else
-				MouseTP:Clean(runService.Heartbeat:Connect(function()
+				local updateClock = 0
+				MouseTP:Clean(runService.PreSimulation:Connect(function()
 					if entitylib.isAlive then
 						entitylib.character.RootPart.AssemblyLinearVelocity = Vector3.zero
-					end
-				end))
 
-				repeat
-					if entitylib.isAlive then
-						local direction = CFrame.lookAt(entitylib.character.RootPart.Position, position).LookVector * math.min((entitylib.character.RootPart.Position - position).Magnitude, Length.Value)
-						entitylib.character.RootPart.CFrame += direction
-						if (entitylib.character.RootPart.Position - position).Magnitude < 3 and MouseTP.Enabled then
-							MouseTP:Toggle()
+						if (os.clock() - updateClock) > Delay.Value then
+							local direction = CFrame.lookAt(entitylib.character.RootPart.Position, position).LookVector * math.min((entitylib.character.RootPart.Position - position).Magnitude, Length.Value)
+							entitylib.character.RootPart.CFrame += direction
+							updateClock = os.clock()
+
+							if (entitylib.character.RootPart.Position - position).Magnitude < 3 and MouseTP.Enabled then
+								MouseTP:Toggle()
+							end
 						end
-					elseif MouseTP.Enabled then
+					else
 						MouseTP:Toggle()
 						notif('MouseTP', 'Character missing', 5, 'warning')
 					end
-
-					task.wait(Delay.Value)
-				until not MouseTP.Enabled
+				end))
 			end
 		end
 	end,

@@ -1,7 +1,7 @@
 local AutoPickup
 local Lists = {}
 local Regions = {}
-local pickupList = {Police = {}, Prisoner = {}}
+local PickupList = {}
 local overlapParams = OverlapParams.new()
 overlapParams.FilterType = Enum.RaycastFilterType.Include
 overlapParams.MaxParts = 1
@@ -34,7 +34,7 @@ AutoPickup = vape.Categories.Inventory:CreateModule({
 				if entitylib.isAlive then
 					local parts = workspace:GetPartsInPart(entitylib.character.RootPart, overlapParams)
 					if #parts > 0 then
-						for _, entry in pickupList[lplr.Team == teams.Police and 'Police' or 'Prisoner'] do
+						for _, entry in PickupList[lplr.Team == teams.Police and 'Police' or 'Prisoner'].ListEnabled do
 							if not InvTracker.Inventories[lplr][entry] and doesPlayerOwn(entry) then
 								jb:FireServer('EquipItem', entry, nil)
 							end
@@ -54,16 +54,9 @@ AutoPickup = vape.Categories.Inventory:CreateModule({
 })
 
 for _, team in {'Prisoner', 'Police'} do
-	AutoPickup:CreateTextList({
-		Name = team..' Pickups',
+	PickupList[team] = AutoPickup:CreateTextList({
+		Name = team,
 		Default = team == 'Prisoner' and {'AK47', 'Shotgun', 'Pistol'} or {'AK47', 'Shotgun'},
-		Placeholder = 'item',
-		Function = function(list)
-			table.clear(pickupList[team])
-
-			for _, entry in list do
-				table.insert(pickupList[team], entry)
-			end
-		end
+		Placeholder = 'item'
 	})
 end

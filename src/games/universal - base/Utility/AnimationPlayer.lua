@@ -100,5 +100,6 @@ Speed = AnimationPlayer:CreateSlider({
 })
 NoFetch = AnimationPlayer:CreateToggle({
 	Name = 'No Fetch',
-	Tooltip = 'Do not attempt to fetch the asset with GetObjects'
+	Tooltip = 'Do not attempt to fetch the asset with GetObjects',
+	Default = true
 })

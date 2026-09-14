@@ -7,14 +7,14 @@ local function animationTrickery()
 	if entitylib.isAlive then
 		local isR15 = entitylib.character.Humanoid.RigType == Enum.HumanoidRigType.R15
 		local anim = Instance.new('Animation')
-		anim.AnimationId = 'rbxassetid://'..(isR15 and '18537363391' or '215384594')
+		anim.AnimationId = 'rbxassetid://'..(isR15 and '18665825805' or '215384594')
 		animtrack = entitylib.character.Humanoid.Animator:LoadAnimation(anim)
 		animtrack.Priority = Enum.AnimationPriority.Action4
 		animtrack:Play(0, 0.001, 0)
 		anim:Destroy()
 
 		task.delay(0, function()
-			animtrack.TimePosition = isR15 and 0.77 or 0.38
+			animtrack.TimePosition = isR15 and 1.95 or 0.4
 		end)
 	end
 end

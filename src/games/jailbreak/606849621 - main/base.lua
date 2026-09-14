@@ -505,6 +505,28 @@ run(function()
 
 		return false
 	end
+
+	local oldstart = entitylib.start
+	local function customEntity(ent)
+		local plr = playersService:GetPlayerFromCharacter(ent.Parent)
+		if not plr then
+			entitylib.addEntity(ent.Parent)
+		end
+	end
+
+	entitylib.start = function()
+		oldstart()
+		if entitylib.Running then
+			for _, ent in collectionService:GetTagged('Humanoid') do
+				customEntity(ent)
+			end
+
+			table.insert(entitylib.Connections, collectionService:GetInstanceAddedSignal('Humanoid'):Connect(customEntity))
+			table.insert(entitylib.Connections, collectionService:GetInstanceRemovedSignal('Humanoid'):Connect(function(ent)
+				entitylib.removeEntity(ent.Parent)
+			end))
+		end
+	end
 end)
 entitylib.start()
 
