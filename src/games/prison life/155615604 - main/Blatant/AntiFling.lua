@@ -2,7 +2,7 @@ local AntiFling
 local modified = {}
 
 local function Modify(part)
-	if part:IsA('BasePart') and part.CollisionGroup == 'Vehicles' then
+	if part:IsA('BasePart') and part.CollisionGroup ~= 'Wheels' then
 		if not modified[part] then
 			modified[part] = part.CanCollide
 		end
