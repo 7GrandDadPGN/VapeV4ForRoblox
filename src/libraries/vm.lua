@@ -175,6 +175,11 @@ local opList = {
 	{ "GETUDATAKS", 3, 1, true },
 	{ "SETUDATAKS", 3, 1, true },
 	{ "NAMECALLUDATA", 3, 1, true },
+	{ "NEWCLASSMEMBER", 3, 0, true },
+	{ "CALLFB", 3, 0, true },
+	{ "CMPPROTO", 4, 0, false },
+	{ "FASTPCALL", 3, 0, false },
+	{ "NEWCLASS", 3, 0, true }
 }
 
 local LUA_MULTRET = -1
@@ -291,7 +296,7 @@ local function luau_deserialize(bytecode, luau_settings)
 	local typesVersion = 0
 	if luauVersion == 0 then
 		error("the provided bytecode is an error message",0)
-	elseif luauVersion < 3 or luauVersion > 9 then
+	elseif luauVersion < 3 or luauVersion > 14 then
 		error("the version of the provided bytecode is unsupported",0)
 	elseif luauVersion >= 4 then
 		typesVersion = readByte()
@@ -399,6 +404,12 @@ local function luau_deserialize(bytecode, luau_settings)
 	end
 
 	local function readProto(bytecodeid)
+		local protoSize = 0
+		if luauVersion >= 12 then
+			protoSize = readVarInt()
+		end
+
+		local protoStartOffset = cursor
 		local maxstacksize = readByte()
 		local numparams = readByte()
 		local nups = readByte()
@@ -545,10 +556,24 @@ local function luau_deserialize(bytecode, luau_settings)
 				readVarInt()
 				readByte()
 			end
+
 			local sizeupvalues = readVarInt()
 			for i = 1, sizeupvalues do
 				readVarInt()
 			end
+		end
+
+		if luauVersion >= 11 then
+			local feedbackVecSize = readVarInt()
+
+			for i = 1, feedbackVecSize do
+				local slotType = readByte()
+				local pc = readVarInt()
+			end
+		end
+
+		if luauVersion >= 12 then
+			cursor = protoStartOffset + protoSize
 		end
 
 		return {
