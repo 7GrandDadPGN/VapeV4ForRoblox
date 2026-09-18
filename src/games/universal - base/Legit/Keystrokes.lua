@@ -47,11 +47,11 @@ local function updateKey(inputType)
 
 		local pressed = inputType.UserInputState == Enum.UserInputState.Begin
 		key.Pressed = pressed
-		key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {
+		key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.05, Enum.EasingStyle.Linear), {
 			BackgroundColor3 = pressed and Color3.new(1, 1, 1) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value),
 			BackgroundTransparency = pressed and 0 or 1 - Color.Opacity
 		})
-		key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {
+		key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.05, Enum.EasingStyle.Linear), {
 			TextColor3 = pressed and Color3.new() or Color3.new(1, 1, 1)
 		})
 		key.Tween:Play()
@@ -92,7 +92,7 @@ Style = Keystrokes:CreateDropdown({
 Color = Keystrokes:CreateColorSlider({
 	Name = 'Color',
 	DefaultValue = 0,
-	DefaultOpacity = 0.5,
+	DefaultOpacity = 0.4,
 	Function = function(hue, sat, val, opacity)
 		for _, v in keys do
 			if not v.Pressed then

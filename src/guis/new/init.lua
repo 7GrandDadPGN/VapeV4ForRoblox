@@ -123,6 +123,7 @@ do
 		Size = UDim2.fromOffset(17, 16),
 		Placeholder = 'Roblox username',
 		Color = Color3.fromRGB(5, 134, 105),
+		Player = true,
 		Function = function()
 			friends.Update:Fire()
 			friends.ColorUpdate:Fire(friendscolor.Hue, friendscolor.Sat, friendscolor.Value)
@@ -188,6 +189,7 @@ targets = vape:CreateCategoryList({
 	Icon = getvapeasset('newvape/assets/new/friends.png'),
 	Size = UDim2.fromOffset(17, 16),
 	Placeholder = 'Roblox username',
+	Player = true,
 	Function = function()
 		targets.Update:Fire()
 	end
@@ -656,6 +658,10 @@ end))
 vape:Clean(inputService.InputBegan:Connect(function(input)
 	if vape.CurrentTooltip and input.KeyCode == Enum.KeyCode.LeftShift then
 		vape.CurrentTooltip()
+	end
+
+	if vape.Autocomplete and input.KeyCode == Enum.KeyCode.Tab then
+		vape.Autocomplete()
 	end
 
 	if not inputService:GetFocusedTextBox() and input.KeyCode ~= Enum.KeyCode.Unknown then

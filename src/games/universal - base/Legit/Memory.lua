@@ -24,7 +24,7 @@ Memory:CreateFont({
 Memory:CreateColorSlider({
 	Name = 'Color',
 	DefaultValue = 0,
-	DefaultOpacity = 0.5,
+	DefaultOpacity = 0.4,
 	Function = function(hue, sat, val, opacity)
 		label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
 		label.BackgroundTransparency = 1 - opacity
@@ -32,7 +32,7 @@ Memory:CreateColorSlider({
 })
 label = Instance.new('TextLabel')
 label.Size = UDim2.new(0, 100, 0, 41)
-label.BackgroundTransparency = 0.5
+label.BackgroundTransparency = 0.6
 label.TextSize = 15
 label.Font = Enum.Font.Gotham
 label.Text = '0 MB'

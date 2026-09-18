@@ -115,6 +115,20 @@ textbox.TextColor3 = Color3.new(1, 1, 1)
 textbox.TextSize = 13
 textbox.TextXAlignment = Enum.TextXAlignment.Left
 textbox.Parent = boxholder
+local autocomplete
+if props.Player then
+	textbox.ZIndex = 2
+	autocomplete = Instance.new('TextLabel')
+	autocomplete.BackgroundTransparency = 1
+	autocomplete.FontFace = uipallet.Font
+	autocomplete.Position = UDim2.fromOffset(10, 0)
+	autocomplete.Size = UDim2.new(1, -35, 1, 0)
+	autocomplete.Text = ''
+	autocomplete.TextColor3 = Color3.new(0.6, 0.6, 0.6)
+	autocomplete.TextSize = 13
+	autocomplete.TextXAlignment = Enum.TextXAlignment.Left
+	autocomplete.Parent = boxholder
+end
 local add = Instance.new('ImageButton')
 add.BackgroundTransparency = 1
 add.Image = getvapeasset('newvape/assets/new/add.png')
@@ -281,12 +295,32 @@ add.MouseButton1Click:Connect(function()
 	end
 end)
 
+if autocomplete then
+	textbox:GetPropertyChangedSignal('Text'):Connect(function()
+		local plr = getPlayerFromText(textbox.Text)
+		autocomplete.Text = plr and textbox.Text..(plr:sub(#textbox.Text + 1, #plr)) or ''
+	end)
+
+	textbox.Focused:Connect(function()
+		vape.Autocomplete = function()
+			local newText = getPlayerFromText(textbox.Text) or textbox.Text
+			task.spawn(function()
+				textbox:GetPropertyChangedSignal('Text'):Wait()
+				textbox.Text = newText
+				textbox.CursorPosition = #newText + 1
+			end)
+		end
+	end)
+end
+
 textbox.FocusLost:Connect(function(enter)
 	local newText = props.TextFunction and props.TextFunction(textbox.Text) or textbox.Text
 	if enter and not table.find(component.List, newText) then
 		component:ChangeValue(newText)
 		textbox.Text = ''
 	end
+
+	vape.Autocomplete = nil
 end)
 
 textbox.MouseEnter:Connect(function()
