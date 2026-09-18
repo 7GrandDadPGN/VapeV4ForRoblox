@@ -40,7 +40,7 @@ FPS:CreateFont({
 FPS:CreateColorSlider({
 	Name = 'Color',
 	DefaultValue = 0,
-	DefaultOpacity = 0.5,
+	DefaultOpacity = 0.4,
 	Function = function(hue, sat, val, opacity)
 		label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
 		label.BackgroundTransparency = 1 - opacity
@@ -48,7 +48,7 @@ FPS:CreateColorSlider({
 })
 label = Instance.new('TextLabel')
 label.Size = UDim2.fromScale(1, 1)
-label.BackgroundTransparency = 0.5
+label.BackgroundTransparency = 0.6
 label.TextSize = 15
 label.Font = Enum.Font.Gotham
 label.Text = 'inf FPS'
