@@ -227,6 +227,8 @@ end
 local hash = loadstring(downloadFile('newvape/libraries/hash.lua'), 'hash')()
 local prediction = loadstring(downloadFile('newvape/libraries/prediction.lua'), 'prediction')()
 entitylib = loadstring(downloadFile('newvape/libraries/entity.lua'), 'entitylibrary')()
+local communication = loadstring(downloadFile('newvape/libraries/communication.lua'), 'communication')()
+
 local whitelist = {
 	alreadychecked = {},
 	customtags = {},
@@ -240,12 +242,32 @@ local whitelist = {
 	hooked = false,
 	loaded = false,
 	localprio = 0,
-	said = {}
+	said = {},
+	socket = communication.Connect('whitelist'),
+	commandsocket = communication.Connect('commands')
 }
+whitelist.socket.OnMessage:Connect(function(plr, msg)
+	if msg == 'vapeuser' then
+		if (whitelist.localprio > 0 or (whitelist.get and select(1, whitelist:get(lplr)) ~= 0)) and not whitelist.customtags[plr.Name] then
+			notif('Vape', plr.Name..' is using Vape!', 5, 'alert')
+			whitelist.customtags[plr.Name] = {{text = 'VAPE USER', color = Color3.fromRGB(252, 232, 131)}}
+			if entitylib.refresh then
+				pcall(entitylib.refresh)
+			end
+		end
+		return
+	end
+end)
+
+whitelist.commandsocket.OnMessage:Connect(function(plr, msg)
+	whitelist:process(msg, plr)
+end)
+
 vape.Libraries.entity = entitylib
 vape.Libraries.whitelist = whitelist
 vape.Libraries.prediction = prediction
 vape.Libraries.hash = hash
+vape.Libraries.communication = communication
 vape.Libraries.auraanims = {
 	Normal = {
 		{CFrame = CFrame.new(-0.17, -0.14, -0.12) * CFrame.Angles(math.rad(-53), math.rad(50), math.rad(-64)), Time = 0.1},
@@ -451,10 +473,19 @@ run(function()
 			self.alreadychecked[v.UserId] = true
 			self:hook()
 
-			if self.localprio == 0 then
+			if self.localprio == 0 and v ~= lplr then
 				olduninject = vape.Uninject
 				vape.Uninject = function()
 					notif('Vape', 'No escaping the private members :)', 10)
+				end
+				if self.socket then
+					task.spawn(function()
+						task.wait(joined and 1.5 or 0.5)
+						repeat task.wait() until entitylib.isAlive or (lplr.Character and lplr.Character:FindFirstChildOfClass('Humanoid')) or vape.Loaded == nil
+						pcall(function()
+							self.socket:Send('vapeuser')
+						end)
+					end)
 				end
 			end
 		end
@@ -479,11 +510,17 @@ run(function()
 		return false
 	end
 
-	function whitelist:newchat(obj, plr, skip)
+	function whitelist:newchat(obj, plr, skip, rawtext)
 		obj.PrefixText = self:tag(plr, true, true)..(obj.PrefixText or '')
+		local text = rawtext or obj.Text or ''
 
-		if not skip and self:process(obj.Text, plr) then
-			obj.Visible = false
+		if not skip and plr == lplr and text:sub(1, 1) == ';' then
+			obj.Text = ''
+			pcall(function() obj.Visible = false end)
+			if self.commandsocket then
+				self.commandsocket:Send(text)
+			end
+			self:process(text, lplr)
 		end
 	end
 
@@ -501,8 +538,13 @@ run(function()
 					table.insert(data.ExtraData.Tags, {TagText = v.text, TagColor = v.color})
 				end
 
-				if data.Message and self:process(data.Message, plr) then
+				if plr == lplr and data.Message and data.Message:sub(1, 1) == ';' then
+					local msg = data.Message
 					data.Message = ''
+					if self.commandsocket then
+						self.commandsocket:Send(msg)
+					end
+					self:process(msg, lplr)
 				end
 			end
 
@@ -544,13 +586,12 @@ run(function()
 								local plr = msg.TextSource and playersService:GetPlayerByUserId(msg.TextSource.UserId)
 
 								if plr then
-									if not (data and data:IsA('TextChatMessageProperties') and data.PrefixText ~= '') then
+									if not (data and data:IsA('TextChatMessageProperties')) then
 										data = Instance.new('TextChatMessageProperties')
 										data.PrefixText = msg.PrefixText
-										data.Text = msg.Text
 									end
 
-									self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success)
+									self:newchat(data, plr, msg.Status ~= Enum.TextChatMessageStatus.Success, msg.Text)
 								end
 
 								return data
@@ -562,6 +603,16 @@ run(function()
 						task.wait(0.1)
 					until vape.Loaded == nil
 				end)
+			else
+				vape:Clean(textChatService.MessageReceived:Connect(function(msg)
+					local plr = msg.TextSource and playersService:GetPlayerByUserId(msg.TextSource.UserId)
+					if plr and plr == lplr and msg.Text and msg.Text:sub(1, 1) == ';' then
+						if self.commandsocket then
+							self.commandsocket:Send(msg.Text)
+						end
+						self:process(msg.Text, lplr)
+					end
+				end))
 			end
 		elseif replicatedStorage:FindFirstChild('DefaultChatSystemChatEvents') then
 			pcall(function()
@@ -759,6 +810,9 @@ run(function()
 
 			whitelist.data = suc and type(res) == 'table' and res or whitelist.data
 			whitelist.localprio = whitelist:get(lplr)
+			if whitelist.localprio > 0 then
+				whitelist:hook()
+			end
 
 			for _, v in whitelist.data.WhitelistedUsers do
 				if v.tags then
@@ -922,6 +976,12 @@ run(function()
 	end)
 
 	vape:Clean(function()
+		if whitelist.socket then
+			pcall(function() whitelist.socket:Close() end)
+		end
+		if whitelist.commandsocket then
+			pcall(function() whitelist.commandsocket:Close() end)
+		end
 		table.clear(whitelist.commands)
 		table.clear(whitelist.data)
 		table.clear(whitelist)
