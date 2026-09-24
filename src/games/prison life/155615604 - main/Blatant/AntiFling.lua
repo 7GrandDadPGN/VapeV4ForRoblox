@@ -17,7 +17,7 @@ local function Modify(part)
 			prox.Parent = part
 
 			prox.Triggered:Connect(function()
-				if entitylib.isAlive then
+				if entitylib.isAlive and not entitylib.character.Humanoid.SeatPart then
 					part:Sit(entitylib.character.Humanoid)
 				end
 			end)
