@@ -639,6 +639,7 @@ run(function()
 		ItemSystemController = require(replicatedStorage.Game.ItemSystem.ItemSystem),
 		LightningUtils = require(replicatedStorage.Game.LightningUtils),
 		PlayerUtils = require(replicatedStorage.Game.PlayerUtils),
+		PlasmaController = require(replicatedStorage.Game.Item.PlasmaGun),
 		TeamChooseController = require(replicatedStorage.TeamSelect.TeamChooseUI),
 		VehicleController = require(replicatedStorage.Vehicle.VehicleUtils),
 		VehicleSystem = require(replicatedStorage.Game.VehicleSystem)

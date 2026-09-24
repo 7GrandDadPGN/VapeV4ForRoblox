@@ -6,25 +6,32 @@ local Group
 local Role
 
 local function getRole(plr, id)
-	local suc, res
+	local success, role
 	for _ = 1, 3 do
-		suc, res = pcall(function()
+		success, role = pcall(function()
 			return plr:GetRankInGroup(id)
 		end)
-		if suc then break end
+
+		if success then
+			break
+		end
 	end
-	return suc and res or 0
+
+	return success and role or 0
 end
 
 local function getLowestStaffRole(roles)
-	local highest = math.huge
-	for _, v in roles do
-		local low = v.Name:lower()
-		if (low:find('admin') or low:find('mod') or low:find('dev')) and v.Rank < highest then
-			highest = v.Rank
+	local modRole = math.huge
+
+	for _, role in roles do
+		local name = role.Name:lower()
+
+		if (name:find('admin') or name:find('mod') or name:find('dev')) and role.Rank < modRole then
+			modRole = role.Rank
 		end
 	end
-	return highest
+
+	return modRole
 end
 
 local function playerAdded(plr)
@@ -117,9 +124,9 @@ StaffDetector = vape.Categories.Utility:CreateModule({
 Mode = StaffDetector:CreateDropdown({
 	Name = 'Mode',
 	List = {'Uninject', 'ServerHop', 'Profile', 'AutoConfig', 'Notify'},
-	Function = function(val)
+	Function = function(value)
 		if Profile.Object then
-			Profile.Object.Visible = val == 'Profile'
+			Profile.Object.Visible = value == 'Profile'
 		end
 	end
 })

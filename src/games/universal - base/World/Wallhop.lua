@@ -1,7 +1,9 @@
 local Wallhop
 local Offset
+local FPSCap
 local params = OverlapParams.new()
 params.RespectCanCollide = true
+local oldfps
 local oldvec
 local timeout = os.clock()
 local set
@@ -46,12 +48,22 @@ Wallhop = vape.Categories.World:CreateModule({
 	Name = 'Wallhop',
 	Function = function(callback)
 		if callback then
+			if FPSCap.Enabled then
+				oldfps = getfpscap()
+				setfpscap(60)
+			end
+
 			if workspace.AuthorityMode == Enum.AuthorityMode.Server then
 				Wallhop:Clean(runService:BindToSimulation(doCheck))
 			else
 				Wallhop:Clean(runService.RenderStepped:Connect(doCheck))
 			end
 		else
+			if oldfps then
+				setfpscap(oldfps)
+				oldfps = nil
+			end
+
 			set = nil
 		end
 	end,
@@ -63,4 +75,14 @@ Offset = Wallhop:CreateSlider({
 	Max = 45,
 	Default = 45,
 	Suffix = 'degrees'
+})
+FPSCap = Wallhop:CreateToggle({
+	Name = 'FPS Cap',
+	Function = function(callback)
+		if Wallhop.Enabled then
+			Wallhop:Toggle()
+			Wallhop:Toggle()
+		end
+	end,
+	Tootip = 'Set the FPS to 60 while the module is enabled.'
 })

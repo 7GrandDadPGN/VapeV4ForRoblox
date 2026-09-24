@@ -22,17 +22,23 @@ Freecam = vape.Categories.World:CreateModule({
 				Freecam:Clean(function()
 					fcScript:SetAttribute('FreecamEnabled', false)
 				end)
+
 				return
 			end
 
 			repeat
-				task.wait(0.1)
-
 				for _, connection in getconnections(gameCamera:GetPropertyChangedSignal('CameraType')) do
 					if connection.Function then
 						module = debug.getupvalue(connection.Function, 1)
+						break
 					end
 				end
+
+				if module or not Freecam.Enabled then
+					break
+				end
+
+				task.wait(0.1)
 			until module or not Freecam.Enabled
 
 			if module and module.activeCameraController and Freecam.Enabled then

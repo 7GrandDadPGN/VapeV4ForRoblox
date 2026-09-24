@@ -460,6 +460,16 @@ function vape:UpdateTextGUI(afterload)
 			end)
 		end
 
+		local firstIndex
+		local lastIndex
+
+		for index, label in Labels do
+			if label.Enabled then
+				firstIndex = firstIndex or index
+				lastIndex = index
+			end
+		end
+
 		for index, label in Labels do
 			if label.Color then
 				local topLabel = findValidLabel(Labels, index, -1)
@@ -467,11 +477,11 @@ function vape:UpdateTextGUI(afterload)
 				local top = (not topLabel or (topLabel.Size.X.Offset < label.Size.X.Offset)) and 4 or 0
 				local bottom = (not bottomLabel or (bottomLabel.Size.X.Offset < label.Size.X.Offset)) and 4 or 0
 
-				label.Color.Parent.Line.Visible = index ~= 1
-				label.Color.UICorner.TopLeftRadius = isRight and UDim.new() or UDim.new(0, index == 1 and 4 or 0)
-				label.Color.UICorner.TopRightRadius = isRight and UDim.new(0, index == 1 and 4 or 0) or UDim.new()
-				label.Color.UICorner.BottomLeftRadius = isRight and UDim.new() or UDim.new(0, index == #Labels and 4 or 0)
-				label.Color.UICorner.BottomRightRadius = isRight and UDim.new(0, index == #Labels and 4 or 0) or UDim.new()
+				label.Color.Parent.Line.Visible = index ~= firstIndex
+				label.Color.UICorner.TopLeftRadius = isRight and UDim.new() or UDim.new(0, index == firstIndex and 4 or 0)
+				label.Color.UICorner.TopRightRadius = isRight and UDim.new(0, index == firstIndex and 4 or 0) or UDim.new()
+				label.Color.UICorner.BottomLeftRadius = isRight and UDim.new() or UDim.new(0, index == lastIndex and 4 or 0)
+				label.Color.UICorner.BottomRightRadius = isRight and UDim.new(0, index == lastIndex and 4 or 0) or UDim.new()
 
 				label.Background.UICorner.TopLeftRadius = UDim.new(0, top)
 				label.Background.UICorner.TopRightRadius = UDim.new(0, top)

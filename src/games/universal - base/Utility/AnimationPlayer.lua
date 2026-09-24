@@ -41,7 +41,12 @@ AnimationPlayer = vape.Categories.Utility:CreateModule({
 					return
 				end
 
-				return string.match(game:GetObjects('rbxassetid://'..IDBox.Value)[1].AnimationId, '%?id=(%d+)')
+				local info = marketplaceService:GetProductInfo(tonumber(IDBox.Value))
+				if not info or info.AssetTypeId ~= 24 then
+					return string.match(game:GetObjects('rbxassetid://'..IDBox.Value)[1].AnimationId, '%?id=(%d+)')
+				else
+					return IDBox.Value
+				end
 			end)
 
 			anim = Instance.new('Animation')

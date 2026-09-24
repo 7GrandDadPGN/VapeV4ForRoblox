@@ -3,16 +3,12 @@ local connections = {}
 vape.Categories.World:CreateModule({
 	Name = 'Anti-AFK',
 	Function = function(callback)
-		if callback then
-			for _, connection in getconnections(lplr.Idled) do
-				table.insert(connections, connection)
+		for _, connection in getconnections(lplr.Idled) do
+			if callback then
 				connection:Disable()
-			end
-		else
-			for _, connection in connections do
+			else
 				connection:Enable()
 			end
-			table.clear(connections)
 		end
 	end,
 	Tooltip = 'Lets you stay ingame without getting kicked'

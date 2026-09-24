@@ -21,6 +21,7 @@ Xray = vape.Categories.World:CreateModule({
 			for part in modified do
 				part.LocalTransparencyModifier = 0
 			end
+
 			table.clear(modified)
 		end
 	end,

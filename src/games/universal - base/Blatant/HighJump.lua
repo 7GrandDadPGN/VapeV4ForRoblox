@@ -14,7 +14,7 @@ local function jump()
 			root.AssemblyLinearVelocity = Vector3.new(root.AssemblyLinearVelocity.X, Value.Value, root.AssemblyLinearVelocity.Z)
 		elseif Mode.Value == 'Impulse' then
 			entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-			task.delay(0, function()
+			runService.Heartbeat:Once(function()
 				root:ApplyImpulse(Vector3.new(0, Value.Value - root.AssemblyLinearVelocity.Y, 0) * root.AssemblyMass)
 			end)
 		else
