@@ -14,7 +14,6 @@ Jesus = vape.Categories.Blatant:CreateModule({
 			Platform.Anchored = true
 			Platform.Size = Vector3.new(3, 1, 3)
 			Platform.Transparency = 1
-			Platform.Parent = gameCamera
 
 			Jesus:Clean(Platform)
 			Jesus:Clean(runService.PreSimulation:Connect(function()
@@ -24,8 +23,9 @@ Jesus = vape.Categories.Blatant:CreateModule({
 
 					if ray and ray.Material == Enum.Material.Water then
 						Platform.CFrame = CFrame.new(ray.Position)
+						Platform.Parent = workspace
 					else
-						Platform.CFrame = CFrame.new(10000, 10000, 10000)
+						Platform.Parent = nil
 					end
 				end
 			end))

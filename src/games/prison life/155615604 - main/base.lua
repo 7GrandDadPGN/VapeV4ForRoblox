@@ -38,8 +38,9 @@ local Spring = {}
 local TracerHook = {Hooks = {}}
 local VehicleWallbang = {Enabled = false}
 local oldshoot, oldequip
-local aimTimer, shootTimer, aimVec = os.clock(), os.clock()
-local arrestCooldown = os.clock()
+local aimTimer, shootTimer, aimVec = 0, 0
+local arrestCooldown = 0
+local teamCooldown = 0
 local tempTargets = {}
 local gamepasses = {}
 
@@ -91,6 +92,13 @@ end
 
 local function notif(...)
 	return vape:CreateNotification(...)
+end
+
+local function pickTeam(button)
+	if teamCooldown < os.clock() then
+		firesignal(button.MouseButton1Click)
+		teamCooldown = os.clock() + 0.1
+	end
 end
 
 local function removeTags(str)

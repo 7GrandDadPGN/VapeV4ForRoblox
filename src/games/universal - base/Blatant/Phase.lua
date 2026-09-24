@@ -3,7 +3,6 @@ local StudLimit = {Object = {}}
 local rayCheck = RaycastParams.new()
 rayCheck.RespectCanCollide = true
 local overlapCheck = OverlapParams.new()
-overlapCheck.MaxParts = 9e9
 local modified, fflag = {}
 local teleported
 
@@ -44,8 +43,8 @@ local Functions = {
 		end
 	end,
 	Character = function()
-		for _, part in lplr.Character:GetDescendants() do
-			if part:IsA('BasePart') and part.CanCollide and (not Spider.Enabled or SpiderShift) then
+		for _, part in lplr.Character:QueryDescendants('BasePart') do
+			if part.CanCollide and (not Spider.Enabled or SpiderShift) then
 				modified[part] = true
 				part.CanCollide = Spider.Enabled and not SpiderShift
 			end

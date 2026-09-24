@@ -8,7 +8,7 @@ AutoTeam = vape.Categories.Utility:CreateModule({
 			if gui then
 				for _, holder in gui:GetChildren() do
 					if holder.Button.AutoButtonColor then
-						firesignal(holder.Button.MouseButton1Click)
+						pickTeam(holder.Button)
 						break
 					end
 				end

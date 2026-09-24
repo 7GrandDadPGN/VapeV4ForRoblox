@@ -51,12 +51,12 @@ run(function()
 				end
 			end
 
-			root.Velocity *= Vector3.new(1, 0, 1)
+			root.AssemblyLinearVelocity *= Vector3.new(1, 0, 1)
 			root.CFrame += Vector3.new(0, YLevel - root.Position.Y, 0)
 		end,
 		Bounce = function()
 			Functions.Velocity()
-			entitylib.character.RootPart.Velocity += Vector3.new(0, ((os.clock() % BounceDelay.Value) / BounceDelay.Value > 0.5 and 1 or -1) * BounceLength.Value, 0)
+			entitylib.character.RootPart.AssemblyLinearVelocity += Vector3.new(0, ((os.clock() % BounceDelay.Value) / BounceDelay.Value > 0.5 and 1 or -1) * BounceLength.Value, 0)
 		end,
 		Floor = function()
 			Platform.CFrame = down ~= 0 and CFrame.identity or entitylib.character.RootPart.CFrame + Vector3.new(0, -(entitylib.character.HipHeight + 0.5), 0)

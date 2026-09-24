@@ -50,6 +50,7 @@ SessionInfo = vape:CreateOverlay({
 						repeat
 							local oldkey = key
 							key, val = next(stuff, key)
+
 							if val == false then
 								table.remove(stuff, key)
 								key = oldkey
@@ -64,6 +65,7 @@ SessionInfo = vape:CreateOverlay({
 					if not Title.Enabled then
 						table.remove(stuff, 1)
 					end
+
 					infolabel.Text = table.concat(stuff, '\n')
 					infolabel.FontFace = FontOption.Value
 					infolabel.TextSize = TextSize.Value
