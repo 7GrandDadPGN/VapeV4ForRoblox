@@ -1,6 +1,8 @@
 local VehicleSpeed
 local Value
+local Boat
 local old
+local oldboat
 
 VehicleSpeed = vape.Categories.Blatant:CreateModule({
 	Name = 'VehicleSpeed',
@@ -11,10 +13,23 @@ VehicleSpeed = vape.Categories.Blatant:CreateModule({
 				self.GarageEngineSpeed = Value.Value
 				return old(...)
 			end)
+
+			if Boat.Enabled then
+				oldboat = hookfunction(jb.Boat.UpdatePhysics, function(...)
+					local self = ...
+					self.SpringAccelp *= math.max(Value.Value / 10, 1)
+					return oldboat(...)
+				end)
+			end
 		else
 			if old then
 				restorefunction(jb.AlexChassis.Update)
 				old = nil
+			end
+
+			if oldboat then
+				restorefunction(jb.Boat.UpdatePhysics)
+				oldboat = nil
 			end
 		end
 	end,
@@ -25,4 +40,15 @@ Value = VehicleSpeed:CreateSlider({
 	Min = 0,
 	Max = 30,
 	Default = 30
+})
+Boat = VehicleSpeed:CreateToggle({
+	Name = 'Modify Boats',
+	Default = true,
+	Function = function()
+		if VehicleSpeed.Enabled then
+			VehicleSpeed:Toggle()
+			VehicleSpeed:Toggle()
+		end
+	end,
+	Tooltip = 'Allow you to adjust the speed of boats'
 })

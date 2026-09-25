@@ -404,6 +404,10 @@ run(function()
 						if pmag > entitysettings.RangePosition then continue end
 					end
 
+					if entitysettings.Arrest then
+						if entity.Character:GetAttribute('HasHandcuffs') then continue end
+					end
+
 					table.insert(sortingTable, {
 						Entity = entity,
 						Magnitude = entity.Target and -1 or mag
@@ -438,6 +442,10 @@ run(function()
 				local mag = (entity[entitysettings.Part].Position - localPosition).Magnitude
 				if mag > entitysettings.Range then continue end
 				if entitylib.isVulnerable(entity, entitysettings.AttackCheck) then
+					if entitysettings.Arrest then
+						if entity.Character:GetAttribute('HasHandcuffs') then continue end
+					end
+
 					table.insert(sortingTable, {
 						Entity = entity,
 						Magnitude = entity.Target and -1 or mag
@@ -473,6 +481,10 @@ run(function()
 				local mag = (entity[entitysettings.Part].Position - localPosition).Magnitude
 				if mag > entitysettings.Range then continue end
 				if entitylib.isVulnerable(entity, entitysettings.AttackCheck) then
+					if entitysettings.Arrest then
+						if entity.Character:GetAttribute('HasHandcuffs') then continue end
+					end
+
 					table.insert(sortingTable, {
 						Entity = entity,
 						Magnitude = entity.Target and -1 or mag
@@ -629,6 +641,7 @@ run(function()
 	jb = {
 		AlexChassis = require(replicatedStorage.Module.AlexChassis),
 		Audio = require(replicatedStorage.Std.Audio),
+		Boat = require(replicatedStorage.Game.Boat.Boat),
 		BulletEmitter = require(replicatedStorage.Game.ItemSystem.BulletEmitter),
 		CircleAction = require(replicatedStorage.Module.UI).CircleAction,
 		FallingController = require(replicatedStorage.Game.Falling),
