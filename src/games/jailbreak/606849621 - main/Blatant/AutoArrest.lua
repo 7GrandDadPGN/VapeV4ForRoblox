@@ -25,12 +25,13 @@ AutoArrest = vape.Categories.Blatant:CreateModule({
 						Players = true,
 						Part = 'RootPart',
 						Range = Range.Value,
-						Origin = serverPos and serverPos.Value or nil
+						Origin = serverPos and serverPos.Value or nil,
+						Arrest = true
 					})
 
 					for _, entity in entities do
 						if entity.Player and isIllegal(entity) then
-							if not entity.Character:GetAttribute('InVehicle') and not entity.Character:GetAttribute('HasHandcuffs') and not target and cooldown < os.clock() then
+							if not entity.Character:GetAttribute('InVehicle') and not target and cooldown < os.clock() then
 								target = entity.Player.Name
 							end
 						end

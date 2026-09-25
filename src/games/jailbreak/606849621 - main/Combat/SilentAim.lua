@@ -5,6 +5,7 @@ local Range
 local HitChance
 local HeadshotChance
 local Wallbang
+local IgnoreArrest
 local CircleColor
 local CircleTransparency
 local CircleFilled
@@ -37,7 +38,8 @@ local function getTarget(origin, limit, attackcheck)
 		Part = targetPart,
 		Origin = origin.Position,
 		Players = Target.Players.Enabled,
-		NPCs = Target.NPCs.Enabled
+		NPCs = Target.NPCs.Enabled,
+		Arrest = IgnoreArrest.Enabled
 	})
 
 	if entity then
@@ -222,6 +224,10 @@ Wallbang = SilentAim:CreateToggle({
 		end
 	end,
 	Tooltip = 'Allow you to shoot people through walls when specific conditions are met.\n(If the entity has a valid hitbox position exposed or if the shoot position can be moved past walls (eg hugging walls))'
+})
+IgnoreArrest = SilentAim:CreateToggle({
+	Name = 'Ignore arrested',
+	Tooltip = 'Prevent SilentAim from targeting people that have already been arrested.'
 })
 SilentAim:CreateToggle({
 	Name = 'Range Circle',

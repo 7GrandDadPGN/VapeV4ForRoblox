@@ -39,12 +39,13 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 						local entities = entitylib.AllPosition({
 							Players = true,
 							Part = 'RootPart',
-							Range = Range.Value
+							Range = Range.Value,
+							Arrest = true
 						})
 
 						if (taser:GetAttribute('NextUse') or 0) < os.clock() then
 							for _, entity in entities do
-								if isIllegal(entity) and (entity.VehicleTimer or 0) < os.clock() and not (entity.Character:GetAttribute('HasHandcuffs') or (VehicleCheck.Enabled and entity.Character:GetAttribute('InVehicle')) or entity.Head.CanCollide) then
+								if isIllegal(entity) and (entity.VehicleTimer or 0) < os.clock() and not ((VehicleCheck.Enabled and entity.Character:GetAttribute('InVehicle')) or entity.Head.CanCollide) then
 									drawTaser(equipped and equipped.Tip or entitylib.character.RootPart, entity.RootPart.Position)
 									taser:SetAttribute('LastUsedAt', os.clock())
 									taser:SetAttribute('NextUse', os.clock() + 10)
