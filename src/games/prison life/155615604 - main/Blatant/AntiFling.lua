@@ -1,6 +1,18 @@
 local AntiFling
 local modified = {}
 
+local function LocalAdded(entity)
+	for _, prompt in workspace.CarContainer:QueryDescendants('ProximityPrompt') do
+		prompt.Enabled = not entity.Humanoid.SeatPart and not prompt.Parent.Occupant
+	end
+
+	AntiFling:Clean(entity.Humanoid:GetPropertyChangedSignal('SeatPart'):Connect(function()
+		for _, prompt in workspace.CarContainer:QueryDescendants('ProximityPrompt') do
+			prompt.Enabled = not entity.Humanoid.SeatPart and not prompt.Parent.Occupant
+		end
+	end))
+end
+
 local function Modify(part)
 	if part:IsA('BasePart') and part.CollisionGroup ~= 'Wheels' then
 		if not modified[part] then
@@ -41,8 +53,14 @@ AntiFling = vape.Categories.Blatant:CreateModule({
 	Function = function(callback)
 		if callback then
 			AntiFling:Clean(workspace.CarContainer.DescendantAdded:Connect(Modify))
+			AntiFling:Clean(entitylib.Events.LocalAdded:Connect(LocalAdded))
+
 			for _, part in workspace.CarContainer:QueryDescendants('BasePart') do
 				Modify(part)
+			end
+
+			if entitylib.isAlive then
+				LocalAdded(entitylib.character)
 			end
 		else
 			for part, value in modified do

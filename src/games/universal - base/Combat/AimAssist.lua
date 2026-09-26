@@ -8,6 +8,8 @@ local CircleTransparency
 local CircleFilled
 local CircleObject
 local RightClick
+local KeyToggle
+local Key
 local ShowTarget
 local moveConst = Vector2.new(1, 0.77) * math.rad(0.5)
 
@@ -26,15 +28,25 @@ AimAssist = vape.Categories.Combat:CreateModule({
 		end
 
 		if callback then
-			local ent
-			local rightClicked = not RightClick.Enabled or inputService:IsMouseButtonPressed(1)
+			local entity
+			local rightClicked = inputService:IsMouseButtonPressed(1)
+			local pressed = false
+
 			AimAssist:Clean(runService.RenderStepped:Connect(function(dt)
 				if CircleObject then
 					CircleObject.Position = inputService:GetMouseLocation()
 				end
 
-				if rightClicked and not vape.gui.ScaledGui.ClickGui.Visible then
-					ent = entitylib.EntityMouse({
+				if not vape.gui.ScaledGui.ClickGui.Visible and inputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+					if RightClick.Enabled and not rightClicked then
+						return
+					end
+
+					if KeyToggle.Enabled and not pressed then
+						return
+					end
+
+					entity = entitylib.EntityMouse({
 						Range = FOV.Value,
 						Part = Part.Value,
 						Players = Targets.Players.Enabled,
@@ -43,13 +55,13 @@ AimAssist = vape.Categories.Combat:CreateModule({
 						Origin = gameCamera.CFrame.Position
 					})
 
-					if ent then
+					if entity then
 						local facing = gameCamera.CFrame.LookVector
-						local new = (ent[Part.Value].Position - gameCamera.CFrame.Position).Unit
+						local new = (entity[Part.Value].Position - gameCamera.CFrame.Position).Unit
 						new = new == new and new or Vector3.zero
 
 						if ShowTarget.Enabled then
-							targetinfo.Targets[ent] = tick() + 1
+							targetinfo.Targets[entity] = tick() + 1
 						end
 
 						if new ~= Vector3.zero then
@@ -64,20 +76,21 @@ AimAssist = vape.Categories.Combat:CreateModule({
 				end
 			end))
 
-			if RightClick.Enabled then
-				AimAssist:Clean(inputService.InputBegan:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton2 then
-						ent = nil
-						rightClicked = true
-					end
-				end))
+			AimAssist:Clean(Key.Triggered:Connect(function(isDown)
+				pressed = KeyToggle.Enabled and isDown
+			end))
 
-				AimAssist:Clean(inputService.InputEnded:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton2 then
-						rightClicked = false
-					end
-				end))
-			end
+			AimAssist:Clean(inputService.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton2 then
+					rightClicked = true
+				end
+			end))
+
+			AimAssist:Clean(inputService.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton2 then
+					rightClicked = false
+				end
+			end))
 		end
 	end,
 	Tooltip = 'Smoothly aims to closest valid target'
@@ -163,12 +176,21 @@ CircleFilled = AimAssist:CreateToggle({
 })
 RightClick = AimAssist:CreateToggle({
 	Name = 'Require right click',
-	Function = function()
-		if AimAssist.Enabled then
-			AimAssist:Toggle()
-			AimAssist:Toggle()
-		end
-	end
+	Tooltip = 'Only activate when holding down right click'
+})
+KeyToggle = AimAssist:CreateToggle({
+	Name = 'Require key',
+	Function = function(callback)
+		Key.Object.Visible = callback
+	end,
+	Tooltip = 'Only activate when holding down a certain key'
+})
+Key = AimAssist:CreateBind({
+	Name = 'Hold Key',
+	Default = {'G'},
+	Hold = true,
+	Darker = true,
+	Visible = false
 })
 ShowTarget = AimAssist:CreateToggle({
 	Name = 'Show target info'
