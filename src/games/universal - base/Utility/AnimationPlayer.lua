@@ -6,10 +6,10 @@ local NoFetch
 local track, anim
 
 local function playAnimation(char)
-	local animcheck = track
-	if animcheck then
+	local oldTrack = track
+	if oldTrack then
 		track = nil
-		animcheck:Stop()
+		oldTrack:Stop()
 	end
 
 	local success, result = pcall(function()
@@ -17,13 +17,13 @@ local function playAnimation(char)
 	end)
 
 	if success then
-		local currentanim = track
+		local comp = track
 		track.Priority = Enum.AnimationPriority[Priority.Value]
 		track:Play()
 		track:AdjustSpeed(Speed.Value)
 
 		AnimationPlayer:Clean(track.Stopped:Connect(function()
-			if currentanim == track then
+			if comp == track then
 				track:Play()
 			end
 		end))

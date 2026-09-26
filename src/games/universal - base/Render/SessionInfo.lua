@@ -18,10 +18,10 @@ SessionInfo = vape:CreateOverlay({
 	Position = UDim2.fromOffset(12, 14),
 	Function = function(callback)
 		if callback then
-			local teleportedServers
+			local teleported
 			SessionInfo:Clean(playersService.LocalPlayer.OnTeleport:Connect(function()
-				if not teleportedServers then
-					teleportedServers = true
+				if not teleported then
+					teleported = true
 					queue_on_teleport("shared.vapesessioninfo = '"..httpService:JSONEncode(vape.Libraries.sessioninfo.Objects).."'")
 				end
 			end))

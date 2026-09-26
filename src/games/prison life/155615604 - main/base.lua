@@ -106,7 +106,7 @@ local function removeTags(str)
 	return (str:gsub('<[^<>]->', ''))
 end
 
-local OriginScanner = {Cache = {}}
+local OriginScanner = {Cache = {}, Offset = 0}
 run(function()
 	local rayParams = RaycastParams.new()
 	local overlapParams = OverlapParams.new()
@@ -176,7 +176,7 @@ run(function()
 
 		for _, offset in positions do
 			if (offset * Vector3.new(1, 0, 1)):Dot(diff) > -0.5 then
-				local pos = origin + offset * 6
+				local pos = origin + offset * (7 - math.min(self.Offset, 1))
 
 				if checkPoint(pos, overlapParams) then
 					table.insert(scanPositions, pos)
@@ -205,6 +205,29 @@ run(function()
 		rayParams.FilterDescendantsInstances = ignoreList
 		overlapParams.FilterDescendantsInstances = ignoreList
 	end
+
+	local localPositions = {}
+	vape:Clean(task.spawn(function()
+		repeat
+			if entitylib.isAlive then
+				repeat
+					local _, obj = next(localPositions)
+					if obj and (os.clock() - obj[2]) > 0.1 then
+						table.remove(localPositions, 1)
+					else
+						break
+					end
+				until false
+
+				table.insert(localPositions, {entitylib.character.RootPart.Position, os.clock()})
+				OriginScanner.Offset = (entitylib.character.RootPart.Position - (localPositions[1] and localPositions[1][1] or entitylib.character.RootPart.Position)).Magnitude
+			else
+				table.clear(localPositions)
+			end
+
+			task.wait()
+		until false
+	end))
 end)
 
 local Cheats = {Flags = {}, Flagged = {}}

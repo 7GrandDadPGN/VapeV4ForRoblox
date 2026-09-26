@@ -21,13 +21,13 @@ vape.Categories.World:CreateModule({
 				if entitylib.isAlive then
 					rayCheck.FilterDescendantsInstances = {lplr.Character, gameCamera}
 					local root = entitylib.character.RootPart
-					local movedir = root.Position + vec
-					local ray = workspace:Raycast(movedir, Vector3.new(0, -15, 0), rayCheck)
+					local newPos = root.Position + vec
+					local ray = workspace:Raycast(newPos, Vector3.new(0, -15, 0), rayCheck)
 
 					if not ray then
 						local check = workspace:Blockcast(root.CFrame, Vector3.new(3, 1, 3), Vector3.new(0, -(entitylib.character.HipHeight + 1), 0), rayCheck)
 						if check then
-							vec = (check.Instance:GetClosestPointOnSurface(movedir) - root.Position) * Vector3.new(1, 0, 1)
+							vec = (check.Instance:GetClosestPointOnSurface(newPos) - root.Position) * Vector3.new(1, 0, 1)
 						end
 					end
 				end

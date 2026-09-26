@@ -3,7 +3,7 @@ local Disabler
 local function LocalAdded(char)
 	for _, prop in {'CFrame', 'Velocity'} do
 		for _, connection in getconnections(char.RootPart:GetPropertyChangedSignal(prop)) do
-			hookfunction(connection.Function, function() end)
+			connection:Disable()
 		end
 	end
 end
