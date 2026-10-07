@@ -52,7 +52,7 @@ local assetService = cloneref(game:GetService('AssetService'))
 local coreGui = cloneref(game:GetService('CoreGui'))
 local stats = cloneref(game:GetService('Stats'))
 
-local gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
+local gameCamera = cloneref(workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera') or Instance.new('Camera'))
 local lplr = playersService.LocalPlayer
 
 local vape = shared.vape
@@ -378,7 +378,7 @@ run(function()
 	vape:Clean(vape.Categories.Targets.Update.Event:Connect(function() entitylib.refresh() end))
 	vape:Clean(entitylib.Events.LocalAdded:Connect(updateVelocity))
 	vape:Clean(workspace:GetPropertyChangedSignal('CurrentCamera'):Connect(function()
-		gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
+		gameCamera = cloneref(workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera') or Instance.new('Camera'))
 	end))
 end)
 
