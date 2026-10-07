@@ -55,7 +55,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 								continue
 							end
 
-							targetinfo.Targets[entity] = tick() + 1
+							targetinfo.Targets[entity] = os.clock() + 1
 							table.insert(attacked, {
 								Entity = entity,
 								Check = BoxAttackColor

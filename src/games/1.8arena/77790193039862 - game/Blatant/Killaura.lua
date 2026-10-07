@@ -66,7 +66,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 								Entity = v,
 								Check = BoxAttackColor
 							})
-							targetinfo.Targets[v] = tick() + 1
+							targetinfo.Targets[v] = os.clock() + 1
 
 							if debug.getupvalue(blockfunc, 6) then
 								arena.Client.endBlockEvent:FireServer()

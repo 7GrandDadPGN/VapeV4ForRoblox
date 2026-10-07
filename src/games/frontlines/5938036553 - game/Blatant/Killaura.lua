@@ -61,7 +61,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 							local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
 							if angle > (math.rad(Angle.Value) / 2) then continue end
 							table.insert(attacked, {Entity = v, Check = delta.Magnitude > AttackRange.Value and BoxSwingColor or BoxAttackColor})
-							targetinfo.Targets[v] = tick() + 1
+							targetinfo.Targets[v] = os.clock() + 1
 
 							if delta.Magnitude > AttackRange.Value then continue end
 							didattack = knifecheck

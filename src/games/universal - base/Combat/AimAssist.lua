@@ -61,7 +61,7 @@ AimAssist = vape.Categories.Combat:CreateModule({
 						new = new == new and new or Vector3.zero
 
 						if ShowTarget.Enabled then
-							targetinfo.Targets[entity] = tick() + 1
+							targetinfo.Targets[entity] = os.clock() + 1
 						end
 
 						if new ~= Vector3.zero then

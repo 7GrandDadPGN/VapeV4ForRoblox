@@ -19,7 +19,7 @@ local function aimFunction(...)
 			local calc = prediction.SolveTrajectory(offsetpos.Position, 200, math.abs(skywars.Gravity), plr[TargetPart.Value].Position, plr[TargetPart.Value].Velocity, workspace.Gravity, plr.HipHeight, nil, rayCheck)
 
 			if calc then
-				targetinfo.Targets[plr] = tick() + 1
+				targetinfo.Targets[plr] = os.clock() + 1
 				return CFrame.new(offsetpos.Position, calc).LookVector
 			end
 		end

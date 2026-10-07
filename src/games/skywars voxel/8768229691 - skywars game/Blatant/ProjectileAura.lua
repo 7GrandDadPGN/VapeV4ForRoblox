@@ -39,7 +39,7 @@ ProjectileAura = vape.Categories.Blatant:CreateModule({
 							local calc = prediction.SolveTrajectory(offsetpos.Position, 200, math.abs(skywars.Gravity), ent.RootPart.Position, ent.RootPart.Velocity, workspace.Gravity, ent.HipHeight, nil, rayCheck)
 
 							if calc then
-								targetinfo.Targets[ent] = tick() + 1
+								targetinfo.Targets[ent] = os.clock() + 1
 								FireDelays[item] = tick() + 0.5
 								skywars.Remotes[remotes.updateActiveItem]:fire(item.Name)
 								skywars.Remotes[remotes.chargeBow]:fire(CFrame.new(offsetpos.Position, calc).LookVector, 1)

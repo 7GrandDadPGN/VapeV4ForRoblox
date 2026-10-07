@@ -43,7 +43,7 @@ local function getTarget(origin, limit, attackcheck)
 	})
 
 	if entity then
-		targetinfo.Targets[entity] = tick() + 1
+		targetinfo.Targets[entity] = os.clock() + 1
 	end
 
 	return entity, entity and entity[targetPart], origin
@@ -99,7 +99,7 @@ local function Hook(...)
 
 			local trajectory = oldBulletUpdate and aimSpot or prediction.SolveTrajectory(origin.Position, item.Config.BulletSpeed or 1000, math.abs(item.BulletEmitter.GravityVector.Y), targetPart.Position, entity.RootPart.AssemblyLinearVelocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
 			if trajectory then
-				targetinfo.Targets[entity] = tick() + 1
+				targetinfo.Targets[entity] = os.clock() + 1
 				item.TipDirection = CFrame.lookAt(origin.Position, trajectory).LookVector
 				aimTimer = os.clock() + 0.3
 				aimVec = aimSpot
@@ -124,7 +124,7 @@ local function HookPlasma(...)
 		local entity, targetPart, origin = getTarget(item.Tip.CFrame, item.Config.Range)
 
 		if entity then
-			targetinfo.Targets[entity] = tick() + 1
+			targetinfo.Targets[entity] = os.clock() + 1
 			item.TipDirection = CFrame.lookAt(origin.Position, targetPart.Position).LookVector
 			aimTimer = os.clock() + 0.3
 			aimVec = targetPart.Position

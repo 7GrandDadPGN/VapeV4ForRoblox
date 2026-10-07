@@ -18,7 +18,7 @@ local function aimFunction(...)
         local calc = prediction.SolveTrajectory(offsetpos.Position, 180, 60, plr[TargetPart.Value].Position, plr[TargetPart.Value].Velocity, workspace.Gravity, plr.HipHeight, nil, rayCheck)
 
         if calc then
-            targetinfo.Targets[plr] = tick() + 1
+            targetinfo.Targets[plr] = os.clock() + 1
             return offsetpos.Position + CFrame.new(offsetpos.Position, calc).LookVector * 100
         end
     end
