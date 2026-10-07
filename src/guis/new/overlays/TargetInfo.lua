@@ -196,13 +196,13 @@ function targetinfo:Update()
 
 	local cloned = table.clone(self.Targets)
 	for index, expire in cloned do
-		if expire < tick() then
+		if expire < os.clock() then
 			self.Targets[index] = nil
 		end
 	end
 	table.clear(cloned)
 
-	local entity, highest = nil, tick()
+	local entity, highest = nil, os.clock()
 	for index, level in self.Targets do
 		if level > highest then
 			entity = index
