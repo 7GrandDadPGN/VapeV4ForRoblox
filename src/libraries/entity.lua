@@ -43,7 +43,7 @@ end
 local playersService = cloneref(game:GetService('Players'))
 local inputService = cloneref(game:GetService('UserInputService'))
 local lplr = playersService.LocalPlayer
-local gameCamera = cloneref(workspace.CurrentCamera or Instance.new('Camera'))
+local gameCamera = cloneref(workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera') or Instance.new('Camera'))
 
 local function getMousePosition()
 	if inputService.TouchEnabled then
