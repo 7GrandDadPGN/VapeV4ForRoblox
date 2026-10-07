@@ -43,7 +43,7 @@ end
 local playersService = cloneref(game:GetService('Players'))
 local inputService = cloneref(game:GetService('UserInputService'))
 local lplr = playersService.LocalPlayer
-local gameCamera = workspace.CurrentCamera
+local gameCamera = cloneref(workspace.CurrentCamera or Instance.new('Camera'))
 
 local function getMousePosition()
 	if inputService.TouchEnabled then
@@ -67,7 +67,7 @@ local function waitForChildOfType(obj, name, timeout, prop, namecheck)
 	local expireTime = os.clock() + timeout
 
 	repeat
-		local result = prop and obj[name] or obj:FindFirstChildOfClass(name)
+		local result = prop and obj[name] or obj:FindFirstChildWhichIsA(name)
 		if result and namecheck then
 			if result.Name ~= namecheck then
 				result = nil
@@ -75,7 +75,7 @@ local function waitForChildOfType(obj, name, timeout, prop, namecheck)
 		end
 
 		if result then
-			return result
+			return cloneref(result)
 		end
 
 		task.wait()
@@ -254,7 +254,7 @@ entitylib.addEntity = function(char, plr, teamfunc, spawntime)
 	entitylib.EntityThreads[char] = task.spawn(function()
 		local hum = waitForChildOfType(char, 'Humanoid', 10)
 		local humrootpart = hum and waitForChildOfType(hum, 'RootPart', workspace.StreamingEnabled and math.huge or 10, true, 'HumanoidRootPart')
-		local head = char:WaitForChild('Head', 10) or humrootpart
+		local head = cloneref(char:WaitForChild('Head', 10) or humrootpart or workspace)
 
 		if hum and humrootpart then
 			local entity = {
@@ -413,7 +413,7 @@ entitylib.start = function()
 			entitylib.removePlayer(player)
 		end),
 		workspace:GetPropertyChangedSignal('CurrentCamera'):Connect(function()
-			gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
+			gameCamera = cloneref(workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera') or Instance.new('Camera'))
 		end)
 	}
 
