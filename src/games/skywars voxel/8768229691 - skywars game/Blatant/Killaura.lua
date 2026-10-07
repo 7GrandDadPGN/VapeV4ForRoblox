@@ -94,7 +94,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 							local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
 							if angle > (math.rad(AngleCheck.Value) / 2) then continue end
 							table.insert(attacked, v)
-							targetinfo.Targets[v] = tick() + 1
+							targetinfo.Targets[v] = os.clock() + 1
 
 							if not Swing.Enabled then
 								skywars.MeleeController:playAnimation(lplr.Character, tool)

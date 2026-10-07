@@ -92,7 +92,7 @@ run(function()
 		})
 
 		if entity then
-			targetinfo.Targets[entity] = tick() + 1
+			targetinfo.Targets[entity] = os.clock() + 1
 		end
 
 		return entity, entity and entity[targetPart], origin

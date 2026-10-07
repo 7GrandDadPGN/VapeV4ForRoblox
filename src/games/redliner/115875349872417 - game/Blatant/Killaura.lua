@@ -100,7 +100,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 							Check = BoxAttackColor
 						})
 
-						targetinfo.Targets[ent] = tick() + 1
+						targetinfo.Targets[ent] = os.clock() + 1
 						if AutoSwing.Enabled then
 							task.spawn(function()
 								redline.ActionFunction(redline[redline.ActionController], 'MELEE').Pressed:Fire()

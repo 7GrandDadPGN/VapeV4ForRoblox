@@ -70,7 +70,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 								Entity = v,
 								Check = delta.Magnitude > AttackRange.Value and BoxSwingColor or BoxAttackColor
 							})
-							targetinfo.Targets[v] = tick() + 1
+							targetinfo.Targets[v] = os.clock() + 1
 
 							if (os.clock() - (BlockTimes[v.Character] or 0)) < 0.3 then
 								continue
