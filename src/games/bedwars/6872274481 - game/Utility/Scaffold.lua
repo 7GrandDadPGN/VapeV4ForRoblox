@@ -87,7 +87,7 @@ Scaffold = vape.Categories.Utility:CreateModule({
 
 					if label then
 						amount = amount or 0
-						label.Text = amount..' <font color="rgb(170, 170, 170)">(Scaffold)</font>'
+						label.Text = amount..' <font color="#aaaaaa">(Scaffold)</font>'
 						label.TextColor3 = Color3.fromHSV((amount / 128) / 2.8, 0.86, 1)
 					end
 

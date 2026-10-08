@@ -6,19 +6,19 @@ local Reference = {}
 local Folder = Instance.new('Folder')
 Folder.Parent = vape.holder
 
-local function Add(v)
-	if not table.find(List.ListEnabled, v.Name) then return end
-	if v:IsA('BasePart') or v:IsA('Model') then
-		local size = v:IsA('Model') and v:GetExtentsSize() or v.Size
+local function Add(obj)
+	if not table.find(List.ListEnabled, obj.Name) then return end
+	if obj:IsA('BasePart') or obj:IsA('Model') then
+		local size = obj:IsA('Model') and obj:GetExtentsSize() or obj.Size
 		local box = Instance.new('BoxHandleAdornment')
 		box.AlwaysOnTop = true
-		box.Adornee = v
+		box.Adornee = obj
 		box.Size = size.Magnitude > 0.4 and size or Vector3.one
 		box.ZIndex = 0
 		box.Transparency = FillTransparency.Value
 		box.Color3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
 		box.Parent = Folder
-		Reference[v] = box
+		Reference[obj] = box
 	end
 end
 
@@ -27,15 +27,15 @@ Search = vape.Categories.Render:CreateModule({
 	Function = function(callback)
 		if callback then
 			Search:Clean(workspace.DescendantAdded:Connect(Add))
-			Search:Clean(workspace.DescendantRemoving:Connect(function(v)
-				if Reference[v] then
-					Reference[v]:Destroy()
-					Reference[v] = nil
+			Search:Clean(workspace.DescendantRemoving:Connect(function(obj)
+				if Reference[obj] then
+					Reference[obj]:Destroy()
+					Reference[obj] = nil
 				end
 			end))
 
-			for _, v in workspace:QueryDescendants('BasePart, Model') do
-				Add(v)
+			for _, obj in workspace:QueryDescendants('BasePart, Model') do
+				Add(obj)
 			end
 		else
 			Folder:ClearAllChildren()

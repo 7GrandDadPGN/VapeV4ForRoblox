@@ -6,10 +6,10 @@ local Clamp
 local Reference = {}
 local bkg
 
-local function Added(ent)
-	if not Targets.Players.Enabled and ent.Player then return end
-	if not Targets.NPCs.Enabled and ent.NPC then return end
-	if (not ent.Targetable) and (not ent.Friend) then return end
+local function Added(entity)
+	if not Targets.Players.Enabled and entity.Player then return end
+	if not Targets.NPCs.Enabled and entity.NPC then return end
+	if (not entity.Targetable) and (not entity.Friend) then return end
 	if vape.ThreadFix then
 		setthreadidentity(8)
 	end
@@ -17,7 +17,7 @@ local function Added(ent)
 	local dot = Instance.new('Frame')
 	dot.Size = UDim2.fromOffset(4, 4)
 	dot.AnchorPoint = Vector2.new(0.5, 0.5)
-	dot.BackgroundColor3 = entitylib.getEntityColor(ent) or Color3.fromHSV(PlayerColor.Hue, PlayerColor.Sat, PlayerColor.Value)
+	dot.BackgroundColor3 = entitylib.getEntityColor(entity) or Color3.fromHSV(PlayerColor.Hue, PlayerColor.Sat, PlayerColor.Value)
 	dot.Parent = bkg
 	local corner = Instance.new('UICorner')
 	corner.CornerRadius = UDim.new(DotStyle.Value == 'Circles' and 1 or 0, 0)
@@ -27,16 +27,16 @@ local function Added(ent)
 	stroke.Thickness = 1
 	stroke.Transparency = 0.8
 	stroke.Parent = dot
-	Reference[ent] = dot
+	Reference[entity] = dot
 end
 
-local function Removed(ent)
-	local v = Reference[ent]
+local function Removed(entity)
+	local v = Reference[entity]
 	if v then
 		if vape.ThreadFix then
 			setthreadidentity(8)
 		end
-		Reference[ent] = nil
+		Reference[entity] = nil
 		v:Destroy()
 	end
 end
@@ -49,34 +49,34 @@ Radar = vape:CreateOverlay({
 	Function = function(callback)
 		if callback then
 			Radar:Clean(entitylib.Events.EntityRemoved:Connect(Removed))
-			for _, v in entitylib.List do
-				if Reference[v] then
-					Removed(v)
+			for _, entity in entitylib.List do
+				if Reference[entity] then
+					Removed(entity)
 				end
-				Added(v)
+				Added(entity)
 			end
-			Radar:Clean(entitylib.Events.EntityAdded:Connect(function(ent)
-				if Reference[ent] then
-					Removed(ent)
+			Radar:Clean(entitylib.Events.EntityAdded:Connect(function(entity)
+				if Reference[entity] then
+					Removed(entity)
 				end
-				Added(ent)
+				Added(entity)
 			end))
 			Radar:Clean(vape.Categories.Friends.ColorUpdate.Event:Connect(function()
-				for ent, dot in Reference do
-					dot.BackgroundColor3 = entitylib.getEntityColor(ent) or Color3.fromHSV(PlayerColor.Hue, PlayerColor.Sat, PlayerColor.Value)
+				for entity, dot in Reference do
+					dot.BackgroundColor3 = entitylib.getEntityColor(entity) or Color3.fromHSV(PlayerColor.Hue, PlayerColor.Sat, PlayerColor.Value)
 				end
 			end))
 			Radar:Clean(runService.RenderStepped:Connect(function()
-				for ent, dot in Reference do
+				for entity, dot in Reference do
 					if entitylib.isAlive then
-						local dt = CFrame.lookAlong(entitylib.character.RootPart.Position, gameCamera.CFrame.LookVector * Vector3.new(1, 0, 1)):PointToObjectSpace(ent.RootPart.Position)
+						local dt = CFrame.lookAlong(entitylib.character.RootPart.Position, gameCamera.CFrame.LookVector * Vector3.new(1, 0, 1)):PointToObjectSpace(entity.RootPart.Position)
 						dot.Position = UDim2.fromOffset(Clamp.Enabled and math.clamp(108 + dt.X, 2, 214) or 108 + dt.X, Clamp.Enabled and math.clamp(108 + dt.Z, 8, 214) or 108 + dt.Z)
 					end
 				end
 			end))
 		else
-			for ent in Reference do
-				Removed(ent)
+			for entity in Reference do
+				Removed(entity)
 			end
 		end
 	end

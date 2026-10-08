@@ -20,10 +20,10 @@ local function ESPWorldToViewport(pos)
 end
 
 local ESPAdded = {
-	Drawing2D = function(ent)
-		if not Targets.Players.Enabled and ent.Player then return end
-		if not Targets.NPCs.Enabled and ent.NPC then return end
-		if Teammates.Enabled and (not ent.Targetable) and (not ent.Friend) then return end
+	Drawing2D = function(entity)
+		if not Targets.Players.Enabled and entity.Player then return end
+		if not Targets.NPCs.Enabled and entity.NPC then return end
+		if Teammates.Enabled and (not entity.Targetable) and (not entity.Friend) then return end
 		if vape.ThreadFix then
 			setthreadidentity(8)
 		end
@@ -33,7 +33,7 @@ local ESPAdded = {
 		EntityESP.Main.ZIndex = 2
 		EntityESP.Main.Filled = false
 		EntityESP.Main.Thickness = 1
-		EntityESP.Main.Color = entitylib.getEntityColor(ent) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+		EntityESP.Main.Color = entitylib.getEntityColor(entity) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
 
 		if BoundingBox.Enabled then
 			EntityESP.Border = Drawing.new('Square')
@@ -54,14 +54,14 @@ local ESPAdded = {
 			EntityESP.HealthLine = Drawing.new('Line')
 			EntityESP.HealthLine.Thickness = 1
 			EntityESP.HealthLine.ZIndex = 2
-			EntityESP.HealthLine.Color = Color3.fromHSV(math.clamp(ent.Health / ent.MaxHealth, 0, 1) / 2.5, 0.89, 0.75)
+			EntityESP.HealthLine.Color = Color3.fromHSV(math.clamp(entity.Health / entity.MaxHealth, 0, 1) / 2.5, 0.89, 0.75)
 			EntityESP.HealthBorder = Drawing.new('Line')
 			EntityESP.HealthBorder.Thickness = 3
 			EntityESP.HealthBorder.Transparency = 0.35
 			EntityESP.HealthBorder.ZIndex = 1
 			EntityESP.HealthBorder.Color = Color3.new()
 		end
-		
+
 		if Name.Enabled then
 			if Background.Enabled then
 				EntityESP.TextBKG = Drawing.new('Square')
@@ -71,9 +71,10 @@ local ESPAdded = {
 				EntityESP.TextBKG.Filled = true
 				EntityESP.TextBKG.Color = Color3.new()
 			end
+
 			EntityESP.Drop = Drawing.new('Text')
 			EntityESP.Drop.Color = Color3.new()
-			EntityESP.Drop.Text = ent.Player and whitelist:tag(ent.Player, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
+			EntityESP.Drop.Text = entity.Player and whitelist:tag(entity.Player, true)..(DisplayName.Enabled and entity.Player.DisplayName or entity.Player.Name) or entity.Character.Name
 			EntityESP.Drop.ZIndex = 1
 			EntityESP.Drop.Center = true
 			EntityESP.Drop.Size = 20
@@ -84,15 +85,17 @@ local ESPAdded = {
 			EntityESP.Text.Center = true
 			EntityESP.Text.Size = 20
 		end
-		Reference[ent] = EntityESP
+
+		Reference[entity] = EntityESP
 	end,
-	Drawing3D = function(ent)
-		if not Targets.Players.Enabled and ent.Player then return end
-		if not Targets.NPCs.Enabled and ent.NPC then return end
-		if Teammates.Enabled and (not ent.Targetable) and (not ent.Friend) then return end
+	Drawing3D = function(entity)
+		if not Targets.Players.Enabled and entity.Player then return end
+		if not Targets.NPCs.Enabled and entity.NPC then return end
+		if Teammates.Enabled and (not entity.Targetable) and (not entity.Friend) then return end
 		if vape.ThreadFix then
 			setthreadidentity(8)
 		end
+
 		local EntityESP = {}
 		EntityESP.Line1 = Drawing.new('Line')
 		EntityESP.Line2 = Drawing.new('Line')
@@ -107,21 +110,22 @@ local ESPAdded = {
 		EntityESP.Line11 = Drawing.new('Line')
 		EntityESP.Line12 = Drawing.new('Line')
 
-		local color = entitylib.getEntityColor(ent) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+		local color = entitylib.getEntityColor(entity) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
 		for _, v in EntityESP do
 			v.Thickness = 1
 			v.Color = color
 		end
 
-		Reference[ent] = EntityESP
+		Reference[entity] = EntityESP
 	end,
-	DrawingSkeleton = function(ent)
-		if not Targets.Players.Enabled and ent.Player then return end
-		if not Targets.NPCs.Enabled and ent.NPC then return end
-		if Teammates.Enabled and (not ent.Targetable) and (not ent.Friend) then return end
+	DrawingSkeleton = function(entity)
+		if not Targets.Players.Enabled and entity.Player then return end
+		if not Targets.NPCs.Enabled and entity.NPC then return end
+		if Teammates.Enabled and (not entity.Targetable) and (not entity.Friend) then return end
 		if vape.ThreadFix then
 			setthreadidentity(8)
 		end
+
 		local EntityESP = {}
 		EntityESP.Head = Drawing.new('Line')
 		EntityESP.HeadFacing = Drawing.new('Line')
@@ -133,24 +137,25 @@ local ESPAdded = {
 		EntityESP.LeftLeg = Drawing.new('Line')
 		EntityESP.RightLeg = Drawing.new('Line')
 
-		local color = entitylib.getEntityColor(ent) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+		local color = entitylib.getEntityColor(entity) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
 		for _, v in EntityESP do
 			v.Thickness = 2
 			v.Color = color
 		end
 
-		Reference[ent] = EntityESP
+		Reference[entity] = EntityESP
 	end
 }
 
 local ESPRemoved = {
-	Drawing2D = function(ent)
-		local EntityESP = Reference[ent]
+	Drawing2D = function(entity)
+		local EntityESP = Reference[entity]
 		if EntityESP then
 			if vape.ThreadFix then
 				setthreadidentity(8)
 			end
-			Reference[ent] = nil
+
+			Reference[entity] = nil
 			for _, v in EntityESP do
 				pcall(function()
 					v.Visible = false
@@ -164,19 +169,19 @@ ESPRemoved.Drawing3D = ESPRemoved.Drawing2D
 ESPRemoved.DrawingSkeleton = ESPRemoved.Drawing2D
 
 local ESPUpdated = {
-	Drawing2D = function(ent)
-		local EntityESP = Reference[ent]
+	Drawing2D = function(entity)
+		local EntityESP = Reference[entity]
 		if EntityESP then
 			if vape.ThreadFix then
 				setthreadidentity(8)
 			end
-			
+
 			if EntityESP.HealthLine then
-				EntityESP.HealthLine.Color = Color3.fromHSV(math.clamp(ent.Health / ent.MaxHealth, 0, 1) / 2.5, 0.89, 0.75)
+				EntityESP.HealthLine.Color = Color3.fromHSV(math.clamp(entity.Health / entity.MaxHealth, 0, 1) / 2.5, 0.89, 0.75)
 			end
 
 			if EntityESP.Text then
-				EntityESP.Text.Text = ent.Player and whitelist:tag(ent.Player, true)..(DisplayName.Enabled and ent.Player.DisplayName or ent.Player.Name) or ent.Character.Name
+				EntityESP.Text.Text = entity.Player and whitelist:tag(entity.Player, true)..(DisplayName.Enabled and entity.Player.DisplayName or entity.Player.Name) or entity.Character.Name
 				EntityESP.Drop.Text = EntityESP.Text.Text
 			end
 		end
@@ -186,8 +191,9 @@ local ESPUpdated = {
 local ColorFunc = {
 	Drawing2D = function(hue, sat, val)
 		local color = Color3.fromHSV(hue, sat, val)
-		for i, v in Reference do
-			v.Main.Color = entitylib.getEntityColor(i) or color
+		for entity, v in Reference do
+			v.Main.Color = entitylib.getEntityColor(entity) or color
+
 			if v.Text then
 				v.Text.Color = v.Main.Color
 			end
@@ -195,8 +201,9 @@ local ColorFunc = {
 	end,
 	Drawing3D = function(hue, sat, val)
 		local color = Color3.fromHSV(hue, sat, val)
-		for i, v in Reference do
-			local playercolor = entitylib.getEntityColor(i) or color
+		for entity, v in Reference do
+			local playercolor = entitylib.getEntityColor(entity) or color
+
 			for _, v2 in v do
 				v2.Color = playercolor
 			end
@@ -207,9 +214,9 @@ ColorFunc.DrawingSkeleton = ColorFunc.Drawing3D
 
 local ESPLoop = {
 	Drawing2D = function()
-		for ent, EntityESP in Reference do
+		for entity, EntityESP in Reference do
 			if Distance.Enabled then
-				local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude or math.huge
+				local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - entity.RootPart.Position).Magnitude or math.huge
 				if distance < DistanceLimit.ValueMin or distance > DistanceLimit.ValueMax then
 					for _, obj in EntityESP do
 						obj.Visible = false
@@ -218,14 +225,14 @@ local ESPLoop = {
 				end
 			end
 
-			local rootPos, rootVis = gameCamera:WorldToViewportPoint(ent.RootPart.Position)
+			local rootPos, rootVis = gameCamera:WorldToViewportPoint(entity.RootPart.Position)
 			for _, obj in EntityESP do
 				obj.Visible = rootVis
 			end
 			if not rootVis then continue end
 
-			local topPos = gameCamera:WorldToViewportPoint((CFrame.lookAlong(ent.RootPart.Position, gameCamera.CFrame.LookVector) * CFrame.new(2, ent.HipHeight, 0)).p)
-			local bottomPos = gameCamera:WorldToViewportPoint((CFrame.lookAlong(ent.RootPart.Position, gameCamera.CFrame.LookVector) * CFrame.new(-2, -ent.HipHeight - 1, 0)).p)
+			local topPos = gameCamera:WorldToViewportPoint((CFrame.lookAlong(entity.RootPart.Position, gameCamera.CFrame.LookVector) * CFrame.new(2, entity.HipHeight, 0)).Position)
+			local bottomPos = gameCamera:WorldToViewportPoint((CFrame.lookAlong(entity.RootPart.Position, gameCamera.CFrame.LookVector) * CFrame.new(-2, -entity.HipHeight - 1, 0)).Position)
 			local sizex, sizey = topPos.X - bottomPos.X, topPos.Y - bottomPos.Y
 			local posx, posy = (rootPos.X - sizex / 2),  ((rootPos.Y - sizey / 2))
 			EntityESP.Main.Position = Vector2.new(posx, posy) // 1
@@ -238,8 +245,8 @@ local ESPLoop = {
 			end
 
 			if EntityESP.HealthLine then
-				local healthposy = sizey * math.clamp(ent.Health / ent.MaxHealth, 0, 1)
-				EntityESP.HealthLine.Visible = ent.Health > 0
+				local healthposy = sizey * math.clamp(entity.Health / entity.MaxHealth, 0, 1)
+				EntityESP.HealthLine.Visible = entity.Health > 0
 				EntityESP.HealthLine.From = Vector2.new(posx - 6, posy + (sizey - (sizey - healthposy))) // 1
 				EntityESP.HealthLine.To = Vector2.new(posx - 6, posy) // 1
 				EntityESP.HealthBorder.From = Vector2.new(posx - 6, posy + 1) // 1
@@ -257,9 +264,9 @@ local ESPLoop = {
 		end
 	end,
 	Drawing3D = function()
-		for ent, EntityESP in Reference do
+		for entity, EntityESP in Reference do
 			if Distance.Enabled then
-				local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude or math.huge
+				local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - entity.RootPart.Position).Magnitude or math.huge
 				if distance < DistanceLimit.ValueMin or distance > DistanceLimit.ValueMax then
 					for _, obj in EntityESP do
 						obj.Visible = false
@@ -268,20 +275,20 @@ local ESPLoop = {
 				end
 			end
 
-			local _, rootVis = gameCamera:WorldToViewportPoint(ent.RootPart.Position)
+			local _, rootVis = gameCamera:WorldToViewportPoint(entity.RootPart.Position)
 			for _, obj in EntityESP do
 				obj.Visible = rootVis
 			end
 			if not rootVis then continue end
 
-			local point1 = ESPWorldToViewport(ent.RootPart.Position + Vector3.new(1.5, ent.HipHeight, 1.5))
-			local point2 = ESPWorldToViewport(ent.RootPart.Position + Vector3.new(1.5, -ent.HipHeight, 1.5))
-			local point3 = ESPWorldToViewport(ent.RootPart.Position + Vector3.new(-1.5, ent.HipHeight, 1.5))
-			local point4 = ESPWorldToViewport(ent.RootPart.Position + Vector3.new(-1.5, -ent.HipHeight, 1.5))
-			local point5 = ESPWorldToViewport(ent.RootPart.Position + Vector3.new(1.5, ent.HipHeight, -1.5))
-			local point6 = ESPWorldToViewport(ent.RootPart.Position + Vector3.new(1.5, -ent.HipHeight, -1.5))
-			local point7 = ESPWorldToViewport(ent.RootPart.Position + Vector3.new(-1.5, ent.HipHeight, -1.5))
-			local point8 = ESPWorldToViewport(ent.RootPart.Position + Vector3.new(-1.5, -ent.HipHeight, -1.5))
+			local point1 = ESPWorldToViewport(entity.RootPart.Position + Vector3.new(1.5, entity.HipHeight, 1.5))
+			local point2 = ESPWorldToViewport(entity.RootPart.Position + Vector3.new(1.5, -entity.HipHeight, 1.5))
+			local point3 = ESPWorldToViewport(entity.RootPart.Position + Vector3.new(-1.5, entity.HipHeight, 1.5))
+			local point4 = ESPWorldToViewport(entity.RootPart.Position + Vector3.new(-1.5, -entity.HipHeight, 1.5))
+			local point5 = ESPWorldToViewport(entity.RootPart.Position + Vector3.new(1.5, entity.HipHeight, -1.5))
+			local point6 = ESPWorldToViewport(entity.RootPart.Position + Vector3.new(1.5, -entity.HipHeight, -1.5))
+			local point7 = ESPWorldToViewport(entity.RootPart.Position + Vector3.new(-1.5, entity.HipHeight, -1.5))
+			local point8 = ESPWorldToViewport(entity.RootPart.Position + Vector3.new(-1.5, -entity.HipHeight, -1.5))
 			EntityESP.Line1.From = point1
 			EntityESP.Line1.To = point2
 			EntityESP.Line2.From = point3
@@ -309,9 +316,9 @@ local ESPLoop = {
 		end
 	end,
 	DrawingSkeleton = function()
-		for ent, EntityESP in Reference do
+		for entity, EntityESP in Reference do
 			if Distance.Enabled then
-				local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude or math.huge
+				local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - entity.RootPart.Position).Magnitude or math.huge
 				if distance < DistanceLimit.ValueMin or distance > DistanceLimit.ValueMax then
 					for _, obj in EntityESP do
 						obj.Visible = false
@@ -320,27 +327,27 @@ local ESPLoop = {
 				end
 			end
 
-			local _, rootVis = gameCamera:WorldToViewportPoint(ent.RootPart.Position)
+			local _, rootVis = gameCamera:WorldToViewportPoint(entity.RootPart.Position)
 			for _, obj in EntityESP do
 				obj.Visible = rootVis
 			end
 			if not rootVis then continue end
-			
-			local rigcheck = ent.Humanoid.RigType == Enum.HumanoidRigType.R6
+
+			local rigcheck = entity.Humanoid.RigType == Enum.HumanoidRigType.R6
 			pcall(function()
 				local offset = rigcheck and CFrame.new(0, -0.8, 0) or CFrame.identity
-				local head = ESPWorldToViewport((ent.Head.CFrame).p)
-				local headfront = ESPWorldToViewport((ent.Head.CFrame * CFrame.new(0, 0, -0.5)).p)
-				local toplefttorso = ESPWorldToViewport((ent.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(-1.5, 0.8, 0)).p)
-				local toprighttorso = ESPWorldToViewport((ent.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(1.5, 0.8, 0)).p)
-				local toptorso = ESPWorldToViewport((ent.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(0, 0.8, 0)).p)
-				local bottomtorso = ESPWorldToViewport((ent.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(0, -0.8, 0)).p)
-				local bottomlefttorso = ESPWorldToViewport((ent.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(-0.5, -0.8, 0)).p)
-				local bottomrighttorso = ESPWorldToViewport((ent.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(0.5, -0.8, 0)).p)
-				local leftarm = ESPWorldToViewport((ent.Character[(rigcheck and 'Left Arm' or 'LeftHand')].CFrame * offset).p)
-				local rightarm = ESPWorldToViewport((ent.Character[(rigcheck and 'Right Arm' or 'RightHand')].CFrame * offset).p)
-				local leftleg = ESPWorldToViewport((ent.Character[(rigcheck and 'Left Leg' or 'LeftFoot')].CFrame * offset).p)
-				local rightleg = ESPWorldToViewport((ent.Character[(rigcheck and 'Right Leg' or 'RightFoot')].CFrame * offset).p)
+				local head = ESPWorldToViewport((entity.Head.CFrame).Position)
+				local headfront = ESPWorldToViewport((entity.Head.CFrame * CFrame.new(0, 0, -0.5)).Position)
+				local toplefttorso = ESPWorldToViewport((entity.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(-1.5, 0.8, 0)).Position)
+				local toprighttorso = ESPWorldToViewport((entity.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(1.5, 0.8, 0)).Position)
+				local toptorso = ESPWorldToViewport((entity.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(0, 0.8, 0)).Position)
+				local bottomtorso = ESPWorldToViewport((entity.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(0, -0.8, 0)).Position)
+				local bottomlefttorso = ESPWorldToViewport((entity.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(-0.5, -0.8, 0)).Position)
+				local bottomrighttorso = ESPWorldToViewport((entity.Character[(rigcheck and 'Torso' or 'UpperTorso')].CFrame * CFrame.new(0.5, -0.8, 0)).Position)
+				local leftarm = ESPWorldToViewport((entity.Character[(rigcheck and 'Left Arm' or 'LeftHand')].CFrame * offset).Position)
+				local rightarm = ESPWorldToViewport((entity.Character[(rigcheck and 'Right Arm' or 'RightHand')].CFrame * offset).Position)
+				local leftleg = ESPWorldToViewport((entity.Character[(rigcheck and 'Left Leg' or 'LeftFoot')].CFrame * offset).Position)
+				local rightleg = ESPWorldToViewport((entity.Character[(rigcheck and 'Right Leg' or 'RightFoot')].CFrame * offset).Position)
 				EntityESP.Head.From = toptorso
 				EntityESP.Head.To = head
 				EntityESP.HeadFacing.From = head
@@ -373,23 +380,23 @@ ESP = vape.Categories.Render:CreateModule({
 				ESP:Clean(entitylib.Events.EntityRemoved:Connect(ESPRemoved[methodused]))
 			end
 			if ESPAdded[methodused] then
-				for _, v in entitylib.List do
-					if Reference[v] then
-						ESPRemoved[methodused](v)
+				for _, entity in entitylib.List do
+					if Reference[entity] then
+						ESPRemoved[methodused](entity)
 					end
-					ESPAdded[methodused](v)
+					ESPAdded[methodused](entity)
 				end
-				ESP:Clean(entitylib.Events.EntityAdded:Connect(function(ent)
-					if Reference[ent] then
-						ESPRemoved[methodused](ent)
+				ESP:Clean(entitylib.Events.EntityAdded:Connect(function(entity)
+					if Reference[entity] then
+						ESPRemoved[methodused](entity)
 					end
-					ESPAdded[methodused](ent)
+					ESPAdded[methodused](entity)
 				end))
 			end
 			if ESPUpdated[methodused] then
 				ESP:Clean(entitylib.Events.EntityUpdated:Connect(ESPUpdated[methodused]))
-				for _, v in entitylib.List do
-					ESPUpdated[methodused](v)
+				for _, entity in entitylib.List do
+					ESPUpdated[methodused](entity)
 				end
 			end
 			if ColorFunc[methodused] then
@@ -402,8 +409,8 @@ ESP = vape.Categories.Render:CreateModule({
 			end
 		else
 			if ESPRemoved[methodused] then
-				for i in Reference do
-					ESPRemoved[methodused](i)
+				for entity in Reference do
+					ESPRemoved[methodused](entity)
 				end
 			end
 		end

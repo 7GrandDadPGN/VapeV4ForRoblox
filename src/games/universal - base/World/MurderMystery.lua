@@ -23,20 +23,20 @@ local function itemAdded(tool, plr)
 end
 
 local function playerAdded(plr)
-	MurderMystery:Clean(plr.DescendantAdded:Connect(function(v)
-		itemAdded(v, plr)
+	MurderMystery:Clean(plr.DescendantAdded:Connect(function(tool)
+		itemAdded(tool, plr)
 	end))
 
 	local pack = plr:FindFirstChildWhichIsA('Backpack')
 	if pack then
-		for _, v in pack:GetChildren() do
-			itemAdded(v, plr)
+		for _, tool in pack:GetChildren() do
+			itemAdded(tool, plr)
 		end
 	end
 
 	if plr.Character then
-		for _, v in plr.Character:GetChildren() do
-			itemAdded(v, plr)
+		for _, tool in plr.Character:GetChildren() do
+			itemAdded(tool, plr)
 		end
 	end
 end
@@ -47,13 +47,13 @@ MurderMystery = vape.Categories.World:CreateModule({
 		if callback then
 			oldtargetable, oldgetcolor = entitylib.targetCheck, entitylib.getEntityColor
 
-			entitylib.getEntityColor = function(ent)
-				ent = ent.Player
-				if not (ent and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
-				if isFriend(ent, true) then
+			entitylib.getEntityColor = function(entity)
+				entity = entity.Player
+				if not (entity and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
+				if isFriend(entity, true) then
 					return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
 				end
-				return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil
+				return murderer == entity and Color3.new(1, 0.3, 0.3) or sheriff == entity and Color3.new(0, 0.5, 1) or nil
 			end
 
 			entitylib.targetCheck = function(entity)

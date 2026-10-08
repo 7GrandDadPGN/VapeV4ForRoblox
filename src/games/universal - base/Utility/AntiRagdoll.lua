@@ -8,8 +8,8 @@ AntiRagdoll = vape.Categories.Utility:CreateModule({
 		end
 
 		if callback then
-			AntiRagdoll:Clean(entitylib.Events.LocalAdded:Connect(function(char)
-				char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+			AntiRagdoll:Clean(entitylib.Events.LocalAdded:Connect(function(entity)
+				entity.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
 			end))
 		end
 	end,
