@@ -3,7 +3,7 @@ local AutoTeam
 AutoTeam = vape.Categories.Utility:CreateModule({
 	Name = 'AutoTeam',
 	Function = function(callback)
-		if callback then
+		if callback and lplr.Team == teams.Neutral then
 			local gui = lplr.PlayerGui:FindFirstChild('TeamsFrame', true)
 			if gui then
 				for _, holder in gui:GetChildren() do

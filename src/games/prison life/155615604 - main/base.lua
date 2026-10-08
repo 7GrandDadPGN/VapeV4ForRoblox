@@ -37,7 +37,6 @@ local pl = {}
 local Spring = {}
 local TracerHook = {Hooks = {}}
 local VehicleWallbang = {Enabled = false}
-local KickExploit = {Enabled = false}
 local oldshoot, oldequip
 local aimTimer, shootTimer, aimVec = 0, 0
 local arrestCooldown = 0

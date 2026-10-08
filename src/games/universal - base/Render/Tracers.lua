@@ -11,10 +11,10 @@ local DistanceLimit
 local Behind
 local Reference = {}
 
-local function Added(ent)
-	if not Targets.Players.Enabled and ent.Player then return end
-	if not Targets.NPCs.Enabled and ent.NPC then return end
-	if Teammates.Enabled and (not ent.Targetable) and (not ent.Friend) then return end
+local function Added(entity)
+	if not Targets.Players.Enabled and entity.Player then return end
+	if not Targets.NPCs.Enabled and entity.NPC then return end
+	if Teammates.Enabled and (not entity.Targetable) and (not entity.Friend) then return end
 	if vape.ThreadFix then
 		setthreadidentity(8)
 	end
@@ -22,17 +22,17 @@ local function Added(ent)
 	local EntityTracer = Drawing.new('Line')
 	EntityTracer.Thickness = 1
 	EntityTracer.Transparency = 1 - Transparency.Value
-	EntityTracer.Color = entitylib.getEntityColor(ent) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-	Reference[ent] = EntityTracer
+	EntityTracer.Color = entitylib.getEntityColor(entity) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
+	Reference[entity] = EntityTracer
 end
 
-local function Removed(ent)
-	local v = Reference[ent]
+local function Removed(entity)
+	local v = Reference[entity]
 	if v then
 		if vape.ThreadFix then
 			setthreadidentity(8)
 		end
-		Reference[ent] = nil
+		Reference[entity] = nil
 		pcall(function()
 			v.Visible = false
 			v:Remove()
@@ -43,8 +43,8 @@ end
 local function ColorFunc(hue, sat, val)
 	if DistanceColor.Enabled then return end
 	local tracerColor = Color3.fromHSV(hue, sat, val)
-	for ent, EntityTracer in Reference do
-		EntityTracer.Color = entitylib.getEntityColor(ent) or tracerColor
+	for entity, EntityTracer in Reference do
+		EntityTracer.Color = entitylib.getEntityColor(entity) or tracerColor
 	end
 end
 
@@ -52,8 +52,8 @@ local function Loop()
 	local screenSize = vape.gui.AbsoluteSize
 	local startVector = StartPosition.Value == 'Mouse' and inputService:GetMouseLocation() or Vector2.new(screenSize.X / 2, (StartPosition.Value == 'Middle' and screenSize.Y / 2 or screenSize.Y))
 
-	for ent, EntityTracer in Reference do
-		local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude
+	for entity, EntityTracer in Reference do
+		local distance = entitylib.isAlive and (entitylib.character.RootPart.Position - entity.RootPart.Position).Magnitude
 		if Distance.Enabled and distance then
 			if distance < DistanceLimit.ValueMin or distance > DistanceLimit.ValueMax then
 				EntityTracer.Visible = false
@@ -61,7 +61,7 @@ local function Loop()
 			end
 		end
 
-		local pos = ent[EndPosition.Value == 'Torso' and 'RootPart' or 'Head'].Position
+		local pos = entity[EndPosition.Value == 'Torso' and 'RootPart' or 'Head'].Position
 		local rootPos, rootVis = gameCamera:WorldToViewportPoint(pos)
 		if not rootVis and Behind.Enabled then
 			local tempPos = gameCamera.CFrame:PointToObjectSpace(pos)
@@ -74,6 +74,7 @@ local function Loop()
 		EntityTracer.Visible = rootVis
 		EntityTracer.From = startVector
 		EntityTracer.To = endVector
+
 		if DistanceColor.Enabled and distance then
 			EntityTracer.Color = Color3.fromHSV(math.min((distance / 128) / 2.8, 0.4), 0.89, 0.75)
 		end
@@ -85,25 +86,25 @@ Tracers = vape.Categories.Render:CreateModule({
 	Function = function(callback)
 		if callback then
 			Tracers:Clean(entitylib.Events.EntityRemoved:Connect(Removed))
-			for _, v in entitylib.List do
-				if Reference[v] then
-					Removed(v)
+			for _, entity in entitylib.List do
+				if Reference[entity] then
+					Removed(entity)
 				end
-				Added(v)
+				Added(entity)
 			end
-			Tracers:Clean(entitylib.Events.EntityAdded:Connect(function(ent)
-				if Reference[ent] then
-					Removed(ent)
+			Tracers:Clean(entitylib.Events.EntityAdded:Connect(function(entity)
+				if Reference[entity] then
+					Removed(entity)
 				end
-				Added(ent)
+				Added(entity)
 			end))
 			Tracers:Clean(vape.Categories.Friends.ColorUpdate.Event:Connect(function()
 				ColorFunc(Color.Hue, Color.Sat, Color.Value)
 			end))
 			Tracers:Clean(runService.RenderStepped:Connect(Loop))
 		else
-			for i in Reference do
-				Removed(i)
+			for entity in Reference do
+				Removed(entity)
 			end
 		end
 	end,

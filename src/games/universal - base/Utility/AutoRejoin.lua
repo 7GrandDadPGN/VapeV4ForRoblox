@@ -6,8 +6,8 @@ AutoRejoin = vape.Categories.Utility:CreateModule({
 	Function = function(callback)
 		if callback then
 			local rejoinCheck
-			AutoRejoin:Clean(guiService.ErrorMessageChanged:Connect(function(str)
-				if (not rejoinCheck or guiService:GetErrorCode() ~= Enum.ConnectionError.DisconnectLuaKick) and guiService:GetErrorCode() ~= Enum.ConnectionError.DisconnectConnectionLost and not str:lower():find('ban') then
+			AutoRejoin:Clean(guiService.ErrorMessageChanged:Connect(function(kickStr)
+				if (not rejoinCheck or guiService:GetErrorCode() ~= Enum.ConnectionError.DisconnectLuaKick) and guiService:GetErrorCode() ~= Enum.ConnectionError.DisconnectConnectionLost and not kickStr:lower():find('ban') then
 					rejoinCheck = true
 					serverHop(nil, Sort.Value)
 				end

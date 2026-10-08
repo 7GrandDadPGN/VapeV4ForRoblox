@@ -1,8 +1,14 @@
 local VehicleFly
 local Mode
 local Speed
+local CameraMove
 local welds = {}
 local up, down = 0, 0
+
+local function getMoveVecFromCamera(cf, moveVec)
+	local yaw = select(2, cf:ToEulerAnglesYXZ())
+	return CFrame.fromEulerAnglesYXZ(0, yaw, 0):VectorToObjectSpace(moveVec)
+end
 
 VehicleFly = vape.Categories.Blatant:CreateModule({
 	Name = 'VehicleFly',
@@ -51,9 +57,9 @@ VehicleFly = vape.Categories.Blatant:CreateModule({
 						if seat ~= old then
 							inCar = seat:IsDescendantOf(workspace.CarContainer) and seat:IsA('VehicleSeat')
 							if inCar then
-								welds = seat.Parent.Parent.Wheels:QueryDescendants('Rotate')
-								for _, weld in welds do
-									weld.Enabled = false
+								table.clear(welds)
+								for _, weld in seat.Parent.Parent.Wheels:QueryDescendants('Rotate') do
+									welds[weld] = root.CFrame:ToObjectSpace(weld.Part0.CFrame)
 								end
 							end
 
@@ -62,21 +68,23 @@ VehicleFly = vape.Categories.Blatant:CreateModule({
 
 						if inCar then
 							root.AssemblyLinearVelocity = Vector3.new(0, 2.25, 0)
-							root.CFrame = CFrame.lookAlong(root.Position, gameCamera.CFrame.LookVector) + (entitylib.character.Humanoid.MoveDirection + Vector3.new(0, up + down, 0)) * Speed.Value * dt
+							if CameraMove.Enabled then
+								local moveVec = getMoveVecFromCamera(gameCamera.CFrame, entitylib.character.Humanoid.MoveDirection)
+								root.CFrame = CFrame.lookAlong(root.Position, gameCamera.CFrame.LookVector) * CFrame.new(Vector3.new(moveVec.X, up + down, moveVec.Z) * Speed.Value * dt)
+							else
+								root.CFrame = CFrame.lookAlong(root.Position, gameCamera.CFrame.LookVector) + (entitylib.character.Humanoid.MoveDirection + Vector3.new(0, up + down, 0)) * Speed.Value * dt
+							end
+
+							for weld, offset in welds do
+								weld.Part0.CFrame = root.CFrame * offset
+							end
+
 							gameCamera.CameraSubject = entitylib.character.Humanoid
 						end
-					elseif old then
-						for _, weld in welds do
-							weld.Enabled = true
-						end
-						old = nil
 					end
 				end))
 			end
 		else
-			for _, weld in welds do
-				weld.Enabled = true
-			end
 			table.clear(welds)
 		end
 	end,
@@ -99,4 +107,9 @@ Speed = VehicleFly:CreateSlider({
 	Max = 100,
 	Default = 60,
 	Darker = true
+})
+CameraMove = VehicleFly:CreateToggle({
+	Name = 'Camera Move',
+	Default = true,
+	Tooltip = 'Move based on the camera look direction.'
 })

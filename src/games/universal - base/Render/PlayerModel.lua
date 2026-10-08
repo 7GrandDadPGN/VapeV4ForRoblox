@@ -6,12 +6,12 @@ local Texture
 local Rots = {}
 local models = {}
 
-local function addMesh(ent)
+local function addMesh(entity)
 	if vape.ThreadFix then
 		setthreadidentity(8)
 	end
 
-	local root = ent.RootPart
+	local root = entity.RootPart
 	local part = Instance.new('Part')
 	part.Size = Vector3.new(3, 3, 3)
 	part.CFrame = root.CFrame * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value))
@@ -31,10 +31,10 @@ local function addMesh(ent)
 	models[root] = part
 end
 
-local function removeMesh(ent)
-	if models[ent.RootPart] then
-		models[ent.RootPart]:Destroy()
-		models[ent.RootPart] = nil
+local function removeMesh(entity)
+	if models[entity.RootPart] then
+		models[entity.RootPart]:Destroy()
+		models[entity.RootPart] = nil
 	end
 end
 
@@ -49,6 +49,7 @@ PlayerModel = vape.Categories.Render:CreateModule({
 					task.spawn(addMesh, entitylib.character)
 				end
 			end
+
 			PlayerModel:Clean(entitylib.Events.EntityAdded:Connect(addMesh))
 			PlayerModel:Clean(entitylib.Events.EntityRemoved:Connect(removeMesh))
 			for _, ent in entitylib.List do
