@@ -6,13 +6,15 @@ LogSpammer = vape.Categories.Utility:CreateModule({
 	Name = 'LogSpammer',
 	Function = function(callback)
 		if callback then
+			local useSignal = true
+
 			repeat
 				if entitylib.isAlive then
 					local animator = entitylib.character.Humanoid:FindFirstChildWhichIsA('Animator')
 
 					if animator then
-						if replicatesignal then
-							replicatesignal(animator.OnCombinedUpdate, ('http=507770677'..utf8.char(rand:NextInteger(1, 65535))..Message.Value):sub(1, 256), true, 0, 0.0001, 0, 0, Enum.AnimationPriority.Core, true, 255)
+						if replicatesignal and useSignal then
+							useSignal = pcall(replicatesignal, animator.OnCombinedUpdate, ('http=507770677'..utf8.char(rand:NextInteger(1, 65535))..Message.Value):sub(1, 256), true, 0, 0.0001, 0, 0, Enum.AnimationPriority.Core, true, 255)
 						else
 							local anim = Instance.new('Animation')
 							anim.AnimationId = ('http=507770677'..utf8.char(rand:NextInteger(1, 65535))..Message.Value):sub(1, 256)
