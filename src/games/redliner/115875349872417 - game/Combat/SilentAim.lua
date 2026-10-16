@@ -29,6 +29,10 @@ end
 SilentAim = vape.Categories.Combat:CreateModule({
 	Name = 'SilentAim',
 	Function = function(callback)
+		if CircleObject then
+			CircleObject.Visible = callback
+		end
+
 		if callback then
 			old = hookfunction(redline.ShootFunction, function(...)
 				return Hook(...)
