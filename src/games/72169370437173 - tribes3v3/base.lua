@@ -5,6 +5,13 @@ local cloneref = cloneref or function(obj)
 	return obj
 end
 
+local vapeEvents = setmetatable({}, {
+	__index = function(self, index)
+		self[index] = Instance.new('BindableEvent')
+		return self[index]
+	end
+})
+
 local playersService = cloneref(game:GetService('Players'))
 local inputService = cloneref(game:GetService('UserInputService'))
 local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
@@ -52,46 +59,15 @@ run(function()
 	end
 
 	entitylib.addPlayer = function(plr)
-		if plr.Character then
-			entitylib.refreshEntity(plr.Character, plr)
-		end
 
-		entitylib.PlayerConnections[plr] = {
-			plr.CharacterAdded:Connect(function(char)
-				entitylib.refreshEntity(char, plr, os.clock() + 0.4)
-			end),
-			plr.CharacterRemoving:Connect(function(char)
-				entitylib.removeEntity(char, plr == lplr)
-			end),
-			plr:GetAttributeChangedSignal('Team'):Connect(function()
-				if plr == lplr then
-					local cloned = table.clone(entitylib.List)
-					for _, entity in cloned do
-						if entity.Targetable ~= entitylib.targetCheck(entity) then
-							entitylib.refreshEntity(entity.Character, entity.Player)
-						end
-					end
-
-					table.clear(cloned)
-				else
-					local entity = entitylib.getEntity(plr)
-					if entity then
-						entitylib.refreshEntity(entity.Character, plr)
-					end
-				end
-			end)
-		}
 	end
 
 	local oldstart = entitylib.start
 	local function customEntity(entity)
-		if playersService:GetPlayerFromCharacter(entity) then
-			return
-		end
-
-		entitylib.addEntity(entity, nil, function(self)
+		local plr = playersService:GetPlayerFromCharacter(entity)
+		entitylib.addEntity(entity, plr, not plr and function(self)
 			return lplr:GetAttribute('Team') ~= self.Character:GetAttribute('Team')
-		end)
+		end or nil)
 	end
 
 	entitylib.start = function()
@@ -114,10 +90,45 @@ run(function()
 	tribes = {
 		Combat = require(replicatedStorage.Shared.Combat),
 		CombatController = require(lplr.PlayerScripts.Combat.Controller),
+		Economy = require(lplr.PlayerScripts.UI.Economy),
 		Weapons = require(replicatedStorage.Shared.Weapons),
 		Util = require(lplr.PlayerScripts.Combat.Util)
 	}
 
 	tribes.State = debug.getupvalue(tribes.CombatController.State, 2)
 	tribes.SetSpeed = debug.getupvalue(debug.getupvalue(tribes.CombatController.Equip, 11), 15)
+
+	local kills = sessioninfo:AddItem('Kills')
+	local deaths = sessioninfo:AddItem('Deaths')
+	local games = sessioninfo:AddItem('Games')
+	local wins = sessioninfo:AddItem('Wins')
+
+	if not workspace:FindFirstChild('Lobby') then
+		task.delay(1, function()
+			games:Increment()
+		end)
+	end
+
+	vape:Clean(replicatedStorage.Remotes.HitConfirm.OnClientEvent:Connect(function(data)
+		if data and data.killed then
+			kills:Increment()
+		end
+	end))
+
+	vape:Clean(replicatedStorage.Remotes.MatchEvent.OnClientEvent:Connect(function(event, data)
+		if event == 'MatchEnd' then
+			local didWin = data and data.winnerTeam == lplr:GetAttribute('Team')
+			if didWin then
+				wins:Increment()
+			end
+
+			vapeEvents.MatchEnded:Fire(didWin)
+		elseif event == 'Elimination' and data and data.victimId == 'p'..lplr.UserId then
+			deaths:Increment()
+		end
+	end))
 end)
+
+for _, v in {'Reach', 'TriggerBot', 'Jesus', 'AutoRejoin', 'Disabler', 'MurderMystery', 'Parkour', 'Wallhop'} do
+	vape:Remove(v)
+end

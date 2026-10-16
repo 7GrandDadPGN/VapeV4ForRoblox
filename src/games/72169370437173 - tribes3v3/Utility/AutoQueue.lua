@@ -4,12 +4,10 @@ AutoQueue = vape.Categories.Utility:CreateModule({
 	Name = 'AutoQueue',
 	Function = function(callback)
 		if callback then
-			AutoQueue:Clean(replicatedStorage.Remotes.MatchEvent.OnClientEvent:Connect(function(event)
-				if event == 'MatchEnd' then
-					task.spawn(function()
-						replicatedStorage.Remotes.QueueAction:InvokeServer('PlayAgain')
-					end)
-				end
+			AutoQueue:Clean(vapeEvents.MatchEnded.Event:Connect(function()
+				task.spawn(function()
+					replicatedStorage.Remotes.QueueAction:InvokeServer('PlayAgain')
+				end)
 			end))
 		end
 	end,
