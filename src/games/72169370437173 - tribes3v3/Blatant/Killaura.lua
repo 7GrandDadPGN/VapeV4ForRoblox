@@ -13,7 +13,27 @@ local ParticleTexture
 local ParticleColor1
 local ParticleColor2
 local ParticleSize
-local Particles, Boxes, AttackDelay, AnimDelay = {}, {}, os.clock(), os.clock()
+local Particles, Boxes, AttackDelay, AnimDelay, BlockDelay = {}, {}, os.clock(), os.clock(), os.clock()
+
+local function block(didAttack, tool)
+	if not didAttack and BlockDelay > os.clock() then
+		return
+	end
+
+	BlockDelay = os.clock() + 0.05
+	local handler = tribes.State.handler
+	if handler.tuning.block then
+		if handler.blocking then
+			handler.ctx.send('Block', {tool = tool, on = true})
+		else
+			handler:SetBlock(true)
+		end
+
+		if vape.ThreadFix then
+			setthreadidentity(8)
+		end
+	end
+end
 
 local function getAttackData()
 	if Mouse.Enabled then
@@ -34,6 +54,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 				local attacked = {}
 
 				if tool then
+					local didAttack = false
 					local entities = entitylib.AllPosition({
 						Range = AttackRange.Value,
 						Wallcheck = Targets.Walls.Enabled or nil,
@@ -93,23 +114,22 @@ Killaura = vape.Categories.Blatant:CreateModule({
 									})
 								end
 
+								didAttack = true
 								handler.ctx.send('Swing', {
 									dir = CFrame.lookAt(localPos, attacked[1].Entity.RootPart.Position).LookVector,
 									tool = tool,
 									hits = targets
 								})
 
-								if handler.blocking then
-									handler.ctx.send('Block', {tool = tool, on = true})
-								elseif AutoBlock.Enabled then
-									handler:SetBlock(true)
-								end
-
 								if vape.ThreadFix then
 									setthreadidentity(8)
 								end
 							end
 						end
+					end
+
+					if AutoBlock.Enabled then
+						block(didAttack, tool)
 					end
 				end
 
