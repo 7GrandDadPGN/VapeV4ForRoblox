@@ -269,25 +269,18 @@ function module.SolveTrajectory(origin, projectileSpeed, gravity, targetPos, tar
 		2*j*q + 2*h*p + 2*k*r,
 		j*j + h*h + k*k
 	)
+
+	local t = gravity < 20 and (disp.Magnitude / projectileSpeed) or nil
 	if solutions then
-		local posRoots = table.create(2)
 		for _, v in solutions do --filter out the negative roots
 			if v > 0 then
-				table.insert(posRoots, v)
+				t = v
+				break
 			end
 		end
+	end
 
-		posRoots[1] = posRoots[1]
-
-		if posRoots[1] then
-			local t = posRoots[1]
-			local d = (h + p*t)/t
-			local e = (j + q*t - l*t*t)/t
-			local f = (k + r*t)/t
-			return origin + Vector3.new(d, e, f)
-		end
-	elseif gravity == 0 then
-		local t = (disp.Magnitude / projectileSpeed)
+	if t then
 		local d = (h + p*t)/t
 		local e = (j + q*t - l*t*t)/t
 		local f = (k + r*t)/t

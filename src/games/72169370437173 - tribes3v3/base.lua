@@ -88,6 +88,7 @@ entitylib.start()
 
 run(function()
 	tribes = {
+		Bow = require(lplr.PlayerScripts.Combat.Handlers.Bow),
 		Combat = require(replicatedStorage.Shared.Combat),
 		CombatController = require(lplr.PlayerScripts.Combat.Controller),
 		Economy = require(lplr.PlayerScripts.UI.Economy),
