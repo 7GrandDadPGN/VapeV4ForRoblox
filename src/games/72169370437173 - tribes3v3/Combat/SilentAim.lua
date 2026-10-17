@@ -9,16 +9,16 @@ local CircleObject
 local old
 
 local function Hook(...)
-	local tuning
+	local handler
 
 	for _, obj in debug.getstack(3) do
 		if type(obj) == 'table' and rawget(obj, 'tuning') then
-			tuning = obj
+			handler = obj
 			break
 		end
 	end
 
-	if tuning then
+	if handler then
 		local entity = entitylib.EntityMouse({
 			Range = Range.Value,
 			Part = 'RootPart',
@@ -29,16 +29,22 @@ local function Hook(...)
 		if entity then
 			local targetPart = entity.RootPart
 			local origin = ... or gameCamera.CFrame.Position
-			local projSpeed = tuning.tuning.speed or (tuning.tuning.speedMax or 200)
+			local projSpeed = handler.tuning.speed or (handler.tuning.speedMax or 200)
 
-			if tuning.drawSound then
-				projSpeed = select(2, tribes.Combat.DrawnShot(tuning.tuning, debug.getstack(3, 4)))
+			if handler.drawStart then
+				projSpeed = select(2, tribes.Combat.DrawnShot(handler.tuning, debug.getstack(3, 4)))
 			end
 
-			local calc = prediction.SolveTrajectory(origin, projSpeed, math.abs(tuning.tuning.gravity or 60), targetPart.Position, entity.RootPart.AssemblyLinearVelocity)
+			local calc = prediction.SolveTrajectory(origin, projSpeed, math.abs(handler.tuning.gravity or (handler.spreadNow and 0 or 60)), targetPart.Position, entity.RootPart.AssemblyLinearVelocity)
 			if calc then
+				local lookDir = CFrame.lookAt(origin, calc).LookVector
 				targetinfo.Targets[entity] = os.clock() + 1
-				return CFrame.lookAt(origin, calc).LookVector
+
+				if handler.lastThrow then
+					return (lookDir - Vector3.new(0, ((handler.kind == 'Bomb') and 0.16) or (((handler.kind == 'Sling') and 0.05) or (((handler.kind ~= 'Javelin') and 0.01) or 0.04)), 0)).Unit
+				end
+
+				return lookDir
 			end
 		end
 	end

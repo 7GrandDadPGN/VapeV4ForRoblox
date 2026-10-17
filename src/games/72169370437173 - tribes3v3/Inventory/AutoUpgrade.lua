@@ -5,7 +5,7 @@ AutoUpgrade = vape.Categories.Inventory:CreateModule({
 	Function = function(callback)
 		if callback then
 			repeat
-				if lplr.Character and (not lplr.Character:GetAttribute('MatchId') or lplr.Character:GetAttribute('MatchId') == '') then
+				if (not lplr:GetAttribute('MatchId') or lplr:GetAttribute('MatchId') == '') then
 					local item = tribes.Economy.ReadyList()[1]
 					if item then
 						tribes.Economy.Upgrade(item)
