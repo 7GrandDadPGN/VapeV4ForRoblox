@@ -31,6 +31,7 @@ local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
 
 local tribes = {}
+local isMatch = false
 
 local function isFriend(plr, recolor)
 	if vape.Categories.Friends.Options['Use friends'].Enabled then
@@ -45,6 +46,10 @@ end
 
 local function isTarget(plr)
 	return table.find(vape.Categories.Targets.ListEnabled, plr.Name) and true
+end
+
+local function notif(...)
+	return vape:CreateNotification(...)
 end
 
 run(function()
@@ -73,13 +78,13 @@ run(function()
 	entitylib.start = function()
 		oldstart()
 		if entitylib.Running then
-			for _, ent in collectionService:GetTagged('Combatant') do
-				customEntity(ent)
+			for _, entity in collectionService:GetTagged('Combatant') do
+				customEntity(entity)
 			end
 
 			table.insert(entitylib.Connections, collectionService:GetInstanceAddedSignal('Combatant'):Connect(customEntity))
-			table.insert(entitylib.Connections, collectionService:GetInstanceRemovedSignal('Combatant'):Connect(function(ent)
-				entitylib.removeEntity(ent)
+			table.insert(entitylib.Connections, collectionService:GetInstanceRemovedSignal('Combatant'):Connect(function(entity)
+				entitylib.removeEntity(entity)
 			end))
 		end
 	end
@@ -88,10 +93,11 @@ entitylib.start()
 
 run(function()
 	tribes = {
-		Bow = require(lplr.PlayerScripts.Combat.Handlers.Bow),
+		Camera = require(replicatedStorage.Shared.Camera),
 		Combat = require(replicatedStorage.Shared.Combat),
 		CombatController = require(lplr.PlayerScripts.Combat.Controller),
 		Economy = require(lplr.PlayerScripts.UI.Economy),
+		Melee = require(lplr.PlayerScripts.Combat.Handlers.Melee),
 		Weapons = require(replicatedStorage.Shared.Weapons),
 		Util = require(lplr.PlayerScripts.Combat.Util)
 	}
@@ -103,33 +109,55 @@ run(function()
 	local deaths = sessioninfo:AddItem('Deaths')
 	local games = sessioninfo:AddItem('Games')
 	local wins = sessioninfo:AddItem('Wins')
+	local winstreaks = sessioninfo:AddItem('Winstreaks', '', function()
+		local streaks = {}
 
-	if not workspace:FindFirstChild('Lobby') then
+		for _, plr in playersService:GetPlayers() do
+			if plr ~= lplr and (plr:GetAttribute('Streak') or 0) > 0 then
+				table.insert(streaks, plr.Name..': '..plr:GetAttribute('Streak'))
+			end
+		end
+
+		if #streaks > 0 then
+			table.sort(streaks, function(a, b)
+				return (tonumber(a:split(': ')[2]) or 0) > (tonumber(b:split(': ')[2]) or 0)
+			end)
+
+			return '\n'..table.concat(streaks, '\n')
+		end
+
+		return 'None'
+	end, false)
+	isMatch = not workspace:FindFirstChild('Lobby')
+
+	if isMatch then
 		task.delay(1, function()
 			games:Increment()
 		end)
 	end
 
 	vape:Clean(replicatedStorage.Remotes.HitConfirm.OnClientEvent:Connect(function(data)
-		if data and data.killed then
+		if data and data.killed and isMatch then
 			kills:Increment()
 		end
 	end))
 
 	vape:Clean(replicatedStorage.Remotes.MatchEvent.OnClientEvent:Connect(function(event, data)
-		if event == 'MatchEnd' then
-			local didWin = data and data.winnerTeam == lplr:GetAttribute('Team')
-			if didWin then
-				wins:Increment()
-			end
+		if isMatch then
+			if event == 'MatchEnd' then
+				local didWin = data and data.winnerTeam == lplr:GetAttribute('Team')
+				if didWin then
+					wins:Increment()
+				end
 
-			vapeEvents.MatchEnded:Fire(didWin)
-		elseif event == 'Elimination' and data and data.victimId == 'p'..lplr.UserId then
-			deaths:Increment()
+				vapeEvents.MatchEnded:Fire(didWin)
+			elseif event == 'Elimination' and data and data.victimId == 'p'..lplr.UserId then
+				deaths:Increment()
+			end
 		end
 	end))
 end)
 
-for _, v in {'Reach', 'TriggerBot', 'Jesus', 'AutoRejoin', 'Disabler', 'MurderMystery', 'Parkour', 'Wallhop'} do
+for _, v in {'AutoClicker', 'TriggerBot', 'Jesus', 'AutoRejoin', 'Disabler', 'MurderMystery', 'Parkour', 'Wallhop'} do
 	vape:Remove(v)
 end

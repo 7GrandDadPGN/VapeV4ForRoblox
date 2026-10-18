@@ -44,6 +44,20 @@ local function Hook(...)
 					return (lookDir - Vector3.new(0, ((handler.kind == 'Bomb') and 0.16) or (((handler.kind == 'Sling') and 0.05) or (((handler.kind ~= 'Javelin') and 0.01) or 0.04)), 0)).Unit
 				end
 
+				if handler.lastShot and handler.kind ~= 'Blunderbuss' then
+					local spread
+					if handler.kind == 'Crossbow' then
+						spread = 0
+					elseif handler:Aimed() then
+						spread = handler.tuning.spreadAim or 0
+					else
+						spread = handler.tuning.spreadHip or 0
+					end
+
+					local spreadDir = tribes.Combat.SpreadDir(lookDir, spread, handler:Seed(tribes.State.shotId + 1), 0)
+					return (CFrame.lookAt(Vector3.zero, lookDir) * CFrame.lookAt(Vector3.zero, lookDir):ToObjectSpace(CFrame.lookAt(Vector3.zero, spreadDir)):Inverse()).LookVector
+				end
+
 				return lookDir
 			end
 		end
