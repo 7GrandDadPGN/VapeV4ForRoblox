@@ -49,6 +49,7 @@ local whitelist = vape.Libraries.whitelist
 local prediction = vape.Libraries.prediction
 local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
+local getfontbounds = vape.Libraries.getfontbounds
 local vm = loadstring(downloadFile('newvape/libraries/vm.lua'), 'vm')()
 
 local jb = {}
