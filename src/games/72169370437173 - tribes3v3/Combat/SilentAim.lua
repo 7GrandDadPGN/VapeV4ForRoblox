@@ -40,11 +40,11 @@ local function Hook(...)
 				local lookDir = CFrame.lookAt(origin, calc).LookVector
 				targetinfo.Targets[entity] = os.clock() + 1
 
-				if handler.lastThrow then
+				if handler.maxCharges then
 					return (lookDir - Vector3.new(0, ((handler.kind == 'Bomb') and 0.16) or (((handler.kind == 'Sling') and 0.05) or (((handler.kind ~= 'Javelin') and 0.01) or 0.04)), 0)).Unit
 				end
 
-				if handler.lastShot and handler.kind ~= 'Blunderbuss' then
+				if handler.spreadNow and handler.kind ~= 'Blunderbuss' then
 					local spread
 					if handler.kind == 'Crossbow' then
 						spread = 0
