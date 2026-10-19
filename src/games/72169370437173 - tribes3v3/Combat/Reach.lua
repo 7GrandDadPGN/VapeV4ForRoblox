@@ -1,4 +1,5 @@
 local Value
+local Arc
 local old
 
 Reach = vape.Categories.Combat:CreateModule({
@@ -8,6 +9,7 @@ Reach = vape.Categories.Combat:CreateModule({
 			old = hookfunction(tribes.Melee.Detect, function(...)
 				local pack = table.pack(...)
 				pack[2] += Value.Value
+				pack[3] += Arc.Value
 
 				return old(unpack(pack, 1, pack.n))
 			end)
@@ -27,5 +29,14 @@ Value = Reach:CreateSlider({
 	Default = 4,
 	Suffix = function(val)
 		return val == 1 and 'stud' or 'studs'
+	end
+})
+Arc = Reach:CreateSlider({
+	Name = 'Arc',
+	Min = 0,
+	Max = 60,
+	Default = 60,
+	Suffix = function(val)
+		return val == 1 and 'degree' or 'degrees'
 	end
 })
