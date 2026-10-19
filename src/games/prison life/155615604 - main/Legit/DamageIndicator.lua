@@ -92,7 +92,6 @@ DamageIndicator = vape.Legit:CreateModule({
 								thealth = v.Health
 							end
 
-							print(tent)
 							tent = v
 							ttimer = os.clock() + 0.5
 							break

@@ -245,18 +245,35 @@ function module.SolveTrajectory(origin, projectileSpeed, gravity, targetPos, tar
 		local estTime = (disp.Magnitude / projectileSpeed)
 		local origq = q
 		local origj = j
-		for i = 1, 100 do
-			q -= (.5 * playerGravity) * estTime
-			local velo = targetVelocity * 0.016
-			local ray = workspace.Raycast(workspace, Vector3.new(targetPos.X, targetPos.Y, targetPos.Z), Vector3.new(velo.X, (q * estTime) - playerHeight, velo.Z), params)
-			if ray then
-				local newTarget = ray.Position + Vector3.new(0, playerHeight, 0)
-				estTime -= math.sqrt(((targetPos - newTarget).Magnitude * 2) / playerGravity)
-				targetPos = newTarget
-				j = (targetPos - origin).Y
-				q = 0
-				break
+		local playerY = targetPos.Y
+
+		for i = 1, 2 do
+			if q > 0 then
+				local fallTime = q / playerGravity
+
+				if estTime > fallTime then
+					estTime -= fallTime
+					playerY += (q * q) / (playerGravity * 2)
+					q = 0
+				else
+					playerY += (q - (.5 * playerGravity) * estTime) * estTime
+					j = (playerY - origin.Y)
+					q = 0
+					break
+				end
 			else
+				q -= (.5 * playerGravity) * estTime
+				local ray = workspace.Raycast(workspace, Vector3.new(targetPos.X, playerY, targetPos.Z), Vector3.new(p, (q * estTime) - playerHeight, r), params)
+				if ray then
+					playerY = ray.Position.Y + playerHeight
+					j = (playerY - origin.Y)
+					q = 0
+				else
+					playerY += q * estTime
+					j = (playerY - origin.Y)
+					q = 0
+				end
+
 				break
 			end
 		end
