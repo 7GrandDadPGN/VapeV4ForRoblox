@@ -29,6 +29,7 @@ local whitelist = vape.Libraries.whitelist
 local prediction = vape.Libraries.prediction
 local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
+local getfontbounds = vape.Libraries.getfontbounds
 
 local tribes = {}
 local isMatch = false
@@ -50,6 +51,11 @@ end
 
 local function notif(...)
 	return vape:CreateNotification(...)
+end
+
+local function removeTags(str)
+	str = str:gsub('<br%s*/>', '\n')
+	return (str:gsub('<[^<>]->', ''))
 end
 
 run(function()
@@ -99,7 +105,10 @@ run(function()
 		Economy = require(lplr.PlayerScripts.UI.Economy),
 		Melee = require(lplr.PlayerScripts.Combat.Handlers.Melee),
 		Weapons = require(replicatedStorage.Shared.Weapons),
-		Util = require(lplr.PlayerScripts.Combat.Util)
+		Util = require(lplr.PlayerScripts.Combat.Util),
+		UIState = require(lplr.PlayerScripts.UI.State),
+		WeaponIcon = debug.getupvalue(require(lplr.PlayerScripts.UI.WeaponIcon).Init, 5),
+		WeaponRedraw = debug.getupvalue(debug.getupvalue(debug.getupvalue(require(lplr.PlayerScripts.UI.WeaponIcon).Init, 5), 3), 8)
 	}
 
 	tribes.State = debug.getupvalue(tribes.CombatController.State, 2)

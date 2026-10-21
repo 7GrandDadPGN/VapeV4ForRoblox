@@ -183,7 +183,7 @@ Targets = Chams:CreateTargets({
 			Chams:Toggle()
 		end
 	end
-	})
+})
 Mode = Chams:CreateDropdown({
 	Name = 'Mode',
 	List = {'Highlight', 'BoxHandles', 'ViewportFrame'},
