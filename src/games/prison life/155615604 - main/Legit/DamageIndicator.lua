@@ -2,7 +2,7 @@ local DamageIndicator
 local FontOption
 local ColorV
 local Size
-local tent, lent
+local tentity, lentity
 local thealth, ttimer = 0, 0
 local indi, indipart, indithread
 
@@ -88,11 +88,11 @@ DamageIndicator = vape.Legit:CreateModule({
 				if typeof(part) == 'Instance' then
 					for _, v in entitylib.List do
 						if part:IsDescendantOf(v.Character) and entitylib.isVulnerable(v, true) then
-							if ttimer <= os.clock() or v ~= tent then
+							if ttimer <= os.clock() or v ~= tentity then
 								thealth = v.Health
 							end
 
-							tent = v
+							tentity = v
 							ttimer = os.clock() + 0.5
 							break
 						end
@@ -100,19 +100,19 @@ DamageIndicator = vape.Legit:CreateModule({
 				end
 			end)
 
-			DamageIndicator:Clean(entitylib.Events.EntityUpdated:Connect(function(ent)
-				if ent == tent and ttimer > os.clock() then
-					if ent ~= lent then
+			DamageIndicator:Clean(entitylib.Events.EntityUpdated:Connect(function(entity)
+				if entity == tentity and ttimer > os.clock() then
+					if entity ~= lentity then
 						if indi then
 							indi.Text = '0'
 						end
 
-						lent = ent
+						lentity = entity
 					end
 
-					if thealth > ent.Health then
-						createIndicator(thealth - ent.Health, ent.Head.Position + Vector3.new(0, 2, 0))
-						thealth = ent.Health
+					if thealth > entity.Health then
+						createIndicator(thealth - entity.Health, entity.Head.Position + Vector3.new(0, 2, 0))
+						thealth = entity.Health
 					end
 				end
 			end))

@@ -1,5 +1,6 @@
 local SilentAim
 local Target
+local Part
 local Range
 local HitChance
 local CircleColor
@@ -23,14 +24,14 @@ local function Hook(...)
 	if handler then
 		local entity = entitylib.EntityMouse({
 			Range = Range.Value,
-			Part = 'RootPart',
+			Part = Part.Value,
 			Players = Target.Players.Enabled,
 			NPCs = Target.NPCs.Enabled,
 			Wallcheck = Target.Walls.Enabled and true or nil
 		})
 
 		if entity then
-			local targetPart = entity.RootPart
+			local targetPart = entity[Part.Value]
 			local origin = ... or gameCamera.CFrame.Position
 			local projSpeed = handler.tuning.speed or (handler.tuning.speedMax or 200)
 			local gravity = handler.tuning.gravity or (handler.spreadNow and 0 or 60)
@@ -124,6 +125,11 @@ SilentAim = vape.Categories.Combat:CreateModule({
 Target = SilentAim:CreateTargets({
 	Players = true,
 	NPCs = true
+})
+Part = SilentAim:CreateDropdown({
+	Name = 'Part',
+	List = {'RootPart', 'Head'},
+	Tooltip = 'RootPart - Default\nHead - More damage, but harder to hit.'
 })
 Range = SilentAim:CreateSlider({
 	Name = 'Range',
