@@ -1,7 +1,5 @@
 local Killaura
 local Targets
-local CPS
-local SwingRange
 local AttackRange
 local AngleSlider
 local Max
@@ -14,6 +12,7 @@ local ParticleColor1
 local ParticleColor2
 local ParticleSize
 local Particles, Boxes, AttackDelay = {}, {}, os.clock()
+local rand = Random.new()
 
 local function getAttackData()
 	if Mouse.Enabled then
@@ -77,11 +76,12 @@ Killaura = vape.Categories.Blatant:CreateModule({
 								entitylib.character.RootPart.CFrame = CFrame.lookAlong(localPos, delta * Vector3.new(1, 0, 1))
 							end
 
+							handler.lastSwing = os.clock()
 							if AttackDelay < os.clock() and (AutoBlock.Enabled or not tribes.State.handler.blocking) then
 								local targets = {}
-								handler.lastSwing = os.clock()
+								local cooldown = handler:Cooldown()
 
-								AttackDelay = os.clock() + handler:Cooldown()
+								AttackDelay = os.clock() + cooldown
 								for _, data in attacked do
 									table.insert(targets, data.Entity.Character)
 								end
@@ -93,6 +93,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 								local oneHanded = handler:OneHanded()
 								local comboTable = oneHanded and (handler.tuning.oneHanded.combo or {1}) or (handler.tuning.combo or {1})
 								local animTable = oneHanded and handler.preset.oneSwings or handler.preset.swings or {}
+								local hitDelay = handler.preset.hitDelay or 0.1
 								handler.combo = (handler.combo % #comboTable) + 1
 								local finisher = (#comboTable > 2) and (handler.combo == #comboTable)
 								tribes.Util.PlayAnim(handler.ctx.animator, animTable[((handler.combo - 1) % math.max(1, #animTable)) + 1], (handler.preset.swingSpeed or 1) * (finisher and 0.95 or 1), 0.05)
@@ -100,14 +101,15 @@ Killaura = vape.Categories.Blatant:CreateModule({
 								handler.ctx.emit('Swing', {
 									step = handler.combo,
 									finisher = finisher,
-									hitDelay = handler.preset.hitDelay or 0.1,
+									hitDelay = hitDelay,
 									oneHanded = oneHanded
 								})
 
 								handler.ctx.send('Swing', {
 									dir = sanitizeAngle(CFrame.lookAt(localPos + Vector3.new(0, 1.5, 0), attacked[1].Entity.RootPart.Position)),
 									tool = tool,
-									hits = targets
+									hits = targets,
+									k = math.floor((cooldown + hitDelay + (rand:NextNumber() * 0.03)) * 1000)
 								})
 
 								if AutoBlock.Enabled and handler.tuning.block then

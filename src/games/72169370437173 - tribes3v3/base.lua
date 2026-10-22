@@ -32,6 +32,7 @@ local sessioninfo = vape.Libraries.sessioninfo
 local getfontbounds = vape.Libraries.getfontbounds
 
 local tribes = {}
+local HitboxHook = {Hooks = {}}
 local isMatch = false
 
 local function isFriend(plr, recolor)
@@ -165,6 +166,51 @@ run(function()
 			end
 		end
 	end))
+end)
+
+run(function()
+	local oldhitbox
+
+	local function Hook(...)
+		local args = table.pack(...)
+		for _, v in HitboxHook.Hooks do
+			if v[2](args) then return end
+		end
+
+		return oldhitbox(unpack(args, 1, args.n))
+	end
+
+	function HitboxHook:Add(key, val, priority)
+		table.insert(self.Hooks, {key, val, priority or 0})
+		table.sort(self.Hooks, function(a, b)
+			return a[3] < b[3]
+		end)
+
+		if not oldhitbox then
+			oldhitbox = hookfunction(tribes.Melee.Detect, function(...)
+				return Hook(...)
+			end)
+		end
+	end
+
+	function HitboxHook:Remove(key)
+		for i, v in self.Hooks do
+			if v[1] == key then
+				table.remove(self.Hooks, i)
+				break
+			end
+		end
+
+		if oldhitbox and not next(self.Hooks) then
+			if restorefunction then
+				restorefunction(tribes.Melee.Detect)
+			else
+				hookfunction(tribes.Melee.Detect, oldhitbox)
+			end
+
+			oldhitbox = nil
+		end
+	end
 end)
 
 for _, v in {'AutoClicker', 'TriggerBot', 'Jesus', 'AutoRejoin', 'Disabler', 'MurderMystery', 'Parkour', 'Wallhop'} do

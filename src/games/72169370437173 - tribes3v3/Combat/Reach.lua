@@ -6,18 +6,12 @@ Reach = vape.Categories.Combat:CreateModule({
 	Name = 'Reach',
 	Function = function(callback)
 		if callback then
-			old = hookfunction(tribes.Melee.Detect, function(...)
-				local pack = table.pack(...)
-				pack[2] += Value.Value
-				pack[3] += Arc.Value
-
-				return old(unpack(pack, 1, pack.n))
+			HitboxHook:Add('Reach', function(args)
+				args[2] += Value.Value
+				args[3] = math.min(args[3] + Arc.Value, 90)
 			end)
 		else
-			if old then
-				restorefunction(tribes.Melee.Detect)
-				old = nil
-			end
+			HitboxHook:Remove('Reach')
 		end
 	end,
 	Tooltip = 'Extends attack reach'
