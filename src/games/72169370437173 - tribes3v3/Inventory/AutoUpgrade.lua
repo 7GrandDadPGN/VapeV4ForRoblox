@@ -8,7 +8,7 @@ AutoUpgrade = vape.Categories.Inventory:CreateModule({
 				if (not lplr:GetAttribute('MatchId') or lplr:GetAttribute('MatchId') == '') then
 					local item = tribes.Economy.ReadyList()[1]
 					if item then
-						tribes.Economy.Upgrade(item)
+						tribes.Economy.Upgrade(item, 'card')
 					end
 				end
 
