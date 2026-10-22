@@ -12,7 +12,7 @@ AutoQueue = vape.Categories.Utility:CreateModule({
 				end
 
 				task.delay(Delay.Value, function()
-					replicatedStorage.Remotes.QueueAction:InvokeServer('PlayAgain')
+					replicatedStorage.Remotes.QueueAction:InvokeServer('PlayAgain', 'menu')
 				end)
 			end))
 		end

@@ -109,7 +109,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 									dir = sanitizeAngle(CFrame.lookAt(localPos + Vector3.new(0, 1.5, 0), attacked[1].Entity.RootPart.Position)),
 									tool = tool,
 									hits = targets,
-									k = math.floor((cooldown + hitDelay + (rand:NextNumber() * 0.03)) * 1000)
+									k = math.floor((hitDelay + (rand:NextNumber() * 0.03)) * 1000)
 								})
 
 								if AutoBlock.Enabled and handler.tuning.block then
