@@ -2,6 +2,7 @@ local SilentAura
 local Targets
 local AttackRange
 local AngleSlider
+local AutoBlock
 
 SilentAura = vape.Categories.Combat:CreateModule({
 	Name = 'SilentAura',
@@ -41,6 +42,18 @@ SilentAura = vape.Categories.Combat:CreateModule({
 							break
 						end
 					end
+
+					--[[if AutoBlock.Enabled and tribes.State.handler.tuning.block then
+						if tribes.State.handler:Ready() and #entities > 0 then
+							tribes.State.handler:SetBlock(false)
+							tribes.State.handler:Swing()
+						end
+
+						tribes.State.handler:SetBlock(true)
+						if vape.ThreadFix then
+							setthreadidentity(8)
+						end
+					end]]
 				end
 			end))
 
@@ -73,3 +86,6 @@ AngleSlider = SilentAura:CreateSlider({
 	Max = 360,
 	Default = 90
 })
+--[[AutoBlock = SilentAura:CreateToggle({
+	Name = 'AutoBlock'
+})]]

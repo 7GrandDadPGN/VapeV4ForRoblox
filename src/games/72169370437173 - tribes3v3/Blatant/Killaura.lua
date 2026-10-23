@@ -80,8 +80,9 @@ Killaura = vape.Categories.Blatant:CreateModule({
 							if AttackDelay < os.clock() and (AutoBlock.Enabled or not tribes.State.handler.blocking) then
 								local targets = {}
 								local cooldown = handler:Cooldown()
+								local hitDelay = handler.preset.hitDelay or 0.1
 
-								AttackDelay = os.clock() + cooldown
+								AttackDelay = os.clock() + cooldown + hitDelay
 								for _, data in attacked do
 									table.insert(targets, data.Entity.Character)
 								end
@@ -93,7 +94,6 @@ Killaura = vape.Categories.Blatant:CreateModule({
 								local oneHanded = handler:OneHanded()
 								local comboTable = oneHanded and (handler.tuning.oneHanded.combo or {1}) or (handler.tuning.combo or {1})
 								local animTable = oneHanded and handler.preset.oneSwings or handler.preset.swings or {}
-								local hitDelay = handler.preset.hitDelay or 0.1
 								handler.combo = (handler.combo % #comboTable) + 1
 								local finisher = (#comboTable > 2) and (handler.combo == #comboTable)
 								tribes.Util.PlayAnim(handler.ctx.animator, animTable[((handler.combo - 1) % math.max(1, #animTable)) + 1], (handler.preset.swingSpeed or 1) * (finisher and 0.95 or 1), 0.05)
@@ -109,11 +109,12 @@ Killaura = vape.Categories.Blatant:CreateModule({
 									dir = sanitizeAngle(CFrame.lookAt(localPos + Vector3.new(0, 1.5, 0), attacked[1].Entity.RootPart.Position)),
 									tool = tool,
 									hits = targets,
-									k = math.floor((hitDelay + (rand:NextNumber() * 0.03)) * 1000)
+									k = math.floor((hitDelay + (rand:NextNumber() * 0.03)) * 1000),
+									w = math.floor(os.clock() * 1000) % 9973
 								})
 
 								if AutoBlock.Enabled and handler.tuning.block then
-									tribes.State.handler:SetBlock(true)
+									handler:SetBlock(true)
 								end
 
 								if vape.ThreadFix then
@@ -123,7 +124,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 						end
 					elseif AutoBlock.Enabled and handler.tuning.block then
 						if tribes.Util.CanAct() then
-							tribes.State.handler:SetBlock(true)
+							handler:SetBlock(true)
 						end
 
 						if vape.ThreadFix then
