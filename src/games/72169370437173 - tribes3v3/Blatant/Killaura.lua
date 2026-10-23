@@ -20,7 +20,7 @@ local function getAttackData()
 	end
 
 	if tribes.State.handler and tribes.State.handler.lastSwing then
-		return tribes.State.tool
+		return tribes.State.handler.ctx.tool
 	end
 end
 
