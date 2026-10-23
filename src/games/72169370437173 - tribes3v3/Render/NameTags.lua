@@ -18,10 +18,10 @@ local Folder = Instance.new('Folder')
 Folder.Parent = vape.gui
 local methodused
 
-local function getInventory(entity)
-	local cmpId = entity.Character:GetAttribute('CombatantId')
-	if tribes.UIState.Match then
-		for _, team in tribes.UIState.Match.teams do
+local function getInventory(entity, state)
+	local cmpId = type(entity) == 'string' and entity or entity.Character:GetAttribute('CombatantId')
+	if state or tribes.UIState.Match then
+		for _, team in (state or tribes.UIState.Match).teams do
 			for _, member in team.members do
 				if member.id == cmpId then
 					local items = table.clone(member.loadout.items)
@@ -34,6 +34,24 @@ local function getInventory(entity)
 			end
 		end
 	end
+end
+
+local function deepEq(tab, tab2)
+	if type(tab) ~= 'table' or type(tab2) ~= 'table' then
+		return tab == tab2
+	end
+
+	if #tab ~= #tab2 then
+		return false
+	end
+
+	for i = 1, #tab do
+		if tab[i] ~= tab2[i] then
+			return false
+		end
+	end
+
+	return true
 end
 
 local Added = {
@@ -322,6 +340,32 @@ NameTags = vape.Categories.Render:CreateModule({
 					end
 					Added[methodused](entity)
 				end))
+
+				if Equipment.Enabled then
+					local state = tribes.UIState.Match
+					NameTags:Clean(replicatedStorage.Remotes.MatchState.OnClientEvent:Connect(function(newState)
+						if state then
+							for _, team in state.teams do
+								for _, member in team.members do
+									if not deepEq(getInventory(member.id, state), getInventory(member.id, newState)) then
+										for _, entity in entitylib.List do
+											if entity.Character:GetAttribute('CombatantId') == member.id then
+												if Reference[entity] then
+													Removed[methodused](entity)
+												end
+
+												Added[methodused](entity)
+												break
+											end
+										end
+									end
+								end
+							end
+						end
+
+						state = newState
+					end))
+				end
 			end
 			if Updated[methodused] then
 				NameTags:Clean(entitylib.Events.EntityUpdated:Connect(Updated[methodused]))
