@@ -9,6 +9,7 @@ local CircleFilled
 local CircleObject
 local ProjectileRaycast = RaycastParams.new()
 ProjectileRaycast.RespectCanCollide = true
+local Toggles = {}
 local old
 
 local function Hook(...)
@@ -22,6 +23,14 @@ local function Hook(...)
 	end
 
 	if handler then
+		if type(tribes.Handlers) == 'table' then
+			for index, obj in next, tribes.Handlers do
+				if getmetatable(handler) == obj and not Toggles[index].Enabled then
+					return old(...)
+				end
+			end
+		end
+
 		local entity = entitylib.EntityMouse({
 			Range = Range.Value,
 			Part = Part.Value,
@@ -209,3 +218,15 @@ CircleFilled = SilentAim:CreateToggle({
 	Darker = true,
 	Visible = false
 })
+
+if type(tribes.Handlers) == 'table' then
+	for index in next, tribes.Handlers do
+		if type(index) == 'string' then
+			Toggles[index] = SilentAim:CreateToggle({
+				Name = index,
+				Default = true,
+				Darker = true
+			})
+		end
+	end
+end

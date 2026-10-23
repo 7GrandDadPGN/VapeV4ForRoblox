@@ -20,6 +20,7 @@ local textChatService = cloneref(game:GetService('TextChatService'))
 local runService = cloneref(game:GetService('RunService'))
 local guiService = cloneref(game:GetService('GuiService'))
 local coreGui = cloneref(game:GetService('CoreGui'))
+local vim = cloneref(Instance.new('VirtualInputManager'))
 
 local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
@@ -113,6 +114,7 @@ run(function()
 	}
 
 	tribes.State = debug.getupvalue(tribes.CombatController.State, 2)
+	tribes.Handlers = debug.getupvalue(debug.getupvalue(tribes.CombatController.Equip, 11), 10)
 	tribes.SetSpeed = debug.getupvalue(debug.getupvalue(tribes.CombatController.Equip, 11), 15)
 
 	local kills = sessioninfo:AddItem('Kills')

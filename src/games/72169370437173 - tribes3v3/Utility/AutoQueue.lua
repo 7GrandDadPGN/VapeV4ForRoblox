@@ -12,7 +12,13 @@ AutoQueue = vape.Categories.Utility:CreateModule({
 				end
 
 				task.delay(Delay.Value, function()
-					replicatedStorage.Remotes.QueueAction:InvokeServer('PlayAgain', 'menu')
+					local gui = lplr.PlayerGui:FindFirstChild('TR_Menus')
+					gui = gui and gui:FindFirstChild('MatchEnd', true) or nil
+					gui = gui and gui:FindFirstChild('PlayAgain', true) or nil
+
+					if gui and gui:IsA('TextButton') then
+						firesignal(gui.Activated)
+					end
 				end)
 			end))
 		end
