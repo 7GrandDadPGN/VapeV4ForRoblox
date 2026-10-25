@@ -14,6 +14,14 @@ ProjectileRaycast.RespectCanCollide = true
 local Toggles = {}
 local old
 
+local function getMousePosition()
+	if inputService.TouchEnabled then
+		return gameCamera.ViewportSize / 2
+	end
+
+	return inputService:GetMouseLocation()
+end
+
 local function Hook(...)
 	local handler
 
@@ -112,7 +120,7 @@ SilentAim = vape.Categories.Combat:CreateModule({
 
 			repeat
 				if CircleObject then
-					CircleObject.Position = inputService:GetMouseLocation()
+					CircleObject.Position = getMousePosition()
 				end
 
 				task.wait()
