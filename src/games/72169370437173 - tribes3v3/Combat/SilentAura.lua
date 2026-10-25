@@ -2,13 +2,15 @@ local SilentAura
 local Targets
 local AttackRange
 local AngleSlider
+local AutoSwing
 local AutoBlock
 
 SilentAura = vape.Categories.Combat:CreateModule({
 	Name = 'SilentAura',
 	Function = function(callback)
 		if callback then
-			local old
+			local old, didSwing
+
 			SilentAura:Clean(runService.PostSimulation:Connect(function()
 				if entitylib.isAlive and tribes.State.handler and tribes.State.handler.lastSwing then
 					local localPos = entitylib.character.RootPart.Position
@@ -28,8 +30,14 @@ SilentAura = vape.Categories.Combat:CreateModule({
 							local delta = (cmpPos - localPos)
 							local yaw = select(2, gameCamera.CFrame:ToEulerAnglesYXZ())
 							local angle = math.abs(CFrame.fromEulerAnglesYXZ(0, yaw, 0).LookVector:Angle(delta * Vector3.new(1, 0, 1)))
-							if angle > (math.rad(AngleSlider.Value) / 2) then
+
+							if angle > (math.rad(AngleSlider.Value) / 2) or delta.Y >= 8 then
 								continue
+							end
+
+							if AutoSwing.Enabled and not tribes.State.handler.holding then
+								vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, true, nil, 0)
+								didSwing = true
 							end
 
 							targetinfo.Targets[entity] = os.clock() + 1
@@ -40,6 +48,11 @@ SilentAura = vape.Categories.Combat:CreateModule({
 							end
 
 							break
+						end
+					else
+						if AutoSwing.Enabled and tribes.State.handler.holding and didSwing then
+							vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, false, nil, 0)
+							didSwing = false
 						end
 					end
 
@@ -85,6 +98,9 @@ AngleSlider = SilentAura:CreateSlider({
 	Min = 1,
 	Max = 360,
 	Default = 90
+})
+AutoSwing = SilentAura:CreateToggle({
+	Name = 'Auto swing'
 })
 --[[AutoBlock = SilentAura:CreateToggle({
 	Name = 'AutoBlock'

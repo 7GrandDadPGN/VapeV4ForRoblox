@@ -343,27 +343,29 @@ NameTags = vape.Categories.Render:CreateModule({
 
 				if Equipment.Enabled then
 					local state = tribes.UIState.Match
-					NameTags:Clean(replicatedStorage.Remotes.MatchState.OnClientEvent:Connect(function(newState)
-						if state then
-							for _, team in state.teams do
-								for _, member in team.members do
-									if not deepEq(getInventory(member.id, state), getInventory(member.id, newState)) then
-										for _, entity in entitylib.List do
-											if entity.Character:GetAttribute('CombatantId') == member.id then
-												if Reference[entity] then
-													Removed[methodused](entity)
-												end
+					NameTags:Clean(replicatedStorage.Remotes.MatchState.OnClientEvent:Connect(function(newState, ...)
+						task.defer(function()
+							if state then
+								for _, team in state.teams do
+									for _, member in team.members do
+										if not deepEq(getInventory(member.id, state), getInventory(member.id, newState)) then
+											for _, entity in entitylib.List do
+												if entity.Character:GetAttribute('CombatantId') == member.id then
+													if Reference[entity] then
+														Removed[methodused](entity)
+													end
 
-												Added[methodused](entity)
-												break
+													Added[methodused](entity)
+													break
+												end
 											end
 										end
 									end
 								end
 							end
-						end
 
-						state = newState
+							state = newState
+						end)
 					end))
 				end
 			end
