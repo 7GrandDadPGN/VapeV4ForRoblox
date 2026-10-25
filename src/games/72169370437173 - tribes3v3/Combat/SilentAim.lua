@@ -4,6 +4,7 @@ local Part
 local Range
 local HitChance
 local Prediction
+local PredictionTime
 local CircleColor
 local CircleTransparency
 local CircleFilled
@@ -57,7 +58,7 @@ local function Hook(...)
 				gravity = handler.tuning.throw.gravity or 0
 			end
 
-			local calc = prediction.SolveTrajectory(origin, projSpeed, math.abs(gravity), targetPart.Position, Prediction.Enabled and VelocityTracker:Get(entity.RootPart) or targetPart.AssemblyLinearVelocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
+			local calc = prediction.SolveTrajectory(origin, projSpeed, math.abs(gravity), targetPart.Position + (Part.Value == 'Head' and Vector3.new(0, 0.3, 0) or Vector3.zero), Prediction.Enabled and VelocityTracker:Get(entity.RootPart, PredictionTime.Value) or targetPart.AssemblyLinearVelocity, workspace.Gravity, entity.HipHeight, nil, ProjectileRaycast)
 			if calc then
 				local lookDir = CFrame.lookAt(origin, calc).LookVector
 				targetinfo.Targets[entity] = os.clock() + 1
@@ -163,7 +164,19 @@ HitChance = SilentAim:CreateSlider({
 	Suffix = '%'
 })
 Prediction = SilentAim:CreateToggle({
-	Name = 'Velocity prediction'
+	Name = 'Velocity prediction',
+	Function = function(callback)
+		PredictionTime.Object.Visible = callback
+	end
+})
+PredictionTime = SilentAim:CreateSlider({
+	Name = 'Prediction time',
+	Min = 0,
+	Max = 0.5,
+	Default = 0.15,
+	Decimal = 100,
+	Visible = false,
+	Darker = true
 })
 SilentAim:CreateToggle({
 	Name = 'Range Circle',

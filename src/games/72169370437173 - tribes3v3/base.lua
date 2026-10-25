@@ -37,6 +37,22 @@ local tribes = {}
 local HitboxHook = {Hooks = {}}
 local VelocityTracker = {Entries = setmetatable({}, {__mode = 'k'})}
 local isMatch = false
+local realInput
+
+local function dumpInput()
+	if not realInput then
+		local connection
+		connection = inputService.InputEnded:Connect(function(input)
+			if input.KeyCode == Enum.KeyCode.Return then
+				realInput = input
+				connection:Disconnect()
+			end
+		end)
+
+		vim:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
+		vim:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
+	end
+end
 
 local function isFriend(plr, recolor)
 	if vape.Categories.Friends.Options['Use friends'].Enabled then
@@ -183,7 +199,7 @@ run(function()
 				local entry = VelocityTracker.Entries[entity.RootPart]
 				repeat
 					local _, obj = next(entry)
-					if obj and (os.clock() - obj[2]) > 0.15 then
+					if obj and (os.clock() - obj[2]) > 0.5 then
 						table.remove(entry, 1)
 					else
 						break
@@ -242,17 +258,24 @@ run(function()
 		end
 	end
 
-	function VelocityTracker:Get(root)
+	function VelocityTracker:Get(root, diff)
 		local entry = self.Entries[root]
-		if entry and #entry > 0 then
-			local final = Vector3.zero
+
+		if entry and diff then
+			local final, count = Vector3.zero, 0
+			local ctime = os.clock()
+
 			for _, velo in entry do
-				final += velo[1]
+				if (ctime - velo[2]) <= diff then
+					final += velo[1]
+					count += 1
+				end
 			end
 
-			final /= #entry
-
-			return Vector3.new(final.X, root.AssemblyLinearVelocity.Y, final.Z)
+			if count > 0 then
+				final /= count
+				return Vector3.new(final.X, root.AssemblyLinearVelocity.Y, final.Z)
+			end
 		end
 
 		return root.AssemblyLinearVelocity
