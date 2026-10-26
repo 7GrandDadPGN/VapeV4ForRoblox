@@ -26,12 +26,6 @@ AutoUpgrade = vape.Categories.Inventory:CreateModule({
 						end
 					end
 				end
-				--[[if (not isMatch) and (not lplr:GetAttribute('MatchId') or lplr:GetAttribute('MatchId') == '') then
-					local item = tribes.Economy.ReadyList()[1]
-					if item then
-						tribes.Economy.Upgrade(item, 'collection')
-					end
-				end]]
 
 				task.wait(0.05)
 			until not AutoUpgrade.Enabled
