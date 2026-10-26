@@ -4,8 +4,6 @@ AutoUpgrade = vape.Categories.Inventory:CreateModule({
 	Name = 'AutoUpgrade',
 	Function = function(callback)
 		if callback then
-			dumpInput()
-
 			repeat
 				local gui = lplr.PlayerGui:FindFirstChild('TR_Menus')
 				gui = gui and gui:FindFirstChild('Collection', true) or nil
@@ -18,8 +16,8 @@ AutoUpgrade = vape.Categories.Inventory:CreateModule({
 							if button:IsA('TextButton') then
 								local upgrade = button:FindFirstChild('Upgrade', true)
 
-								if upgrade and upgrade:IsA('TextButton') and upgrade.Visible and realInput then
-									firesignal(upgrade.Activated, realInput, 0)
+								if upgrade and upgrade:IsA('TextButton') and upgrade.Visible then
+									clickButton(upgrade)
 									break
 								end
 							end
