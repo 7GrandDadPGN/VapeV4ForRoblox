@@ -33,6 +33,12 @@ Killaura = vape.Categories.Blatant:CreateModule({
 	Name = 'Killaura',
 	Function = function(callback)
 		if callback then
+			if not shared.VapeDeveloper then
+				notif('Killaura', 'This module is disabled until safety can be ensured, please use SilentAura.', 30, 'alert')
+				Killaura:Toggle()
+				return
+			end
+
 			repeat
 				local tool = getAttackData()
 				local attacked = {}

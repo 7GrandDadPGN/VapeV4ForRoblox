@@ -6,22 +6,23 @@ AutoQueue = vape.Categories.Utility:CreateModule({
 	Name = 'AutoQueue',
 	Function = function(callback)
 		if callback then
-			dumpInput()
-
 			AutoQueue:Clean(vapeEvents.MatchEnded.Event:Connect(function()
-				if Notification.Enabled and Delay.Value > 0 then
-					notif('AutoQueue', 'Playing again in '..string.format('%.1f', Delay.Value)..' seconds!', Delay.Value)
-				end
-
-				task.delay(Delay.Value, function()
+				repeat
 					local button = lplr.PlayerGui:FindFirstChild('TR_Menus')
-					button = button and button:FindFirstChild('MatchEnd', true) or nil
-					button = button and button:FindFirstChild('PlayAgain', true) or nil
+					local holder = button and button:FindFirstChild('MatchEnd', true) or nil
+					button = holder and holder:FindFirstChild('PlayAgain', true) or nil
 
-					if button and button:IsA('TextButton') and realInput then
-						firesignal(button.Activated, realInput, 0)
+					if button and button:IsA('TextButton') and button.Visible and holder.Visible then
+						AutoQueue:Clean(task.delay(Delay.Value, clickButton, button))
+						if Notification.Enabled and Delay.Value > 0 then
+							notif('AutoQueue', 'Playing again in '..string.format('%.1f', Delay.Value)..' seconds!', Delay.Value)
+						end
+
+						break
 					end
-				end)
+
+					task.wait(0.05)
+				until not AutoQueue.Enabled
 			end))
 		end
 	end,

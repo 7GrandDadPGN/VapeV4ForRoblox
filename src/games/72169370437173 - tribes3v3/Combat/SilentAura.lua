@@ -4,6 +4,12 @@ local AttackRange
 local AngleSlider
 local AutoSwing
 local AutoBlock
+local BoxAttackColor
+local ParticleTexture
+local ParticleColor1
+local ParticleColor2
+local ParticleSize
+local Particle, Box = nil, nil
 
 SilentAura = vape.Categories.Combat:CreateModule({
 	Name = 'SilentAura',
@@ -12,6 +18,8 @@ SilentAura = vape.Categories.Combat:CreateModule({
 			local old, didSwing
 
 			SilentAura:Clean(runService.PostSimulation:Connect(function()
+				local attacked
+
 				if entitylib.isAlive and tribes.State.handler and tribes.State.handler.lastSwing then
 					local localPos = entitylib.character.RootPart.Position
 					local localFacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
@@ -36,10 +44,20 @@ SilentAura = vape.Categories.Combat:CreateModule({
 							end
 
 							if AutoSwing.Enabled and not tribes.State.handler.holding then
-								vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, true, nil, 0)
+								local gui = lplr.PlayerGui:FindFirstChild('CombatTouch', true)
+								gui = gui and gui.Enabled and gui:FindFirstChild('Attack', true) or nil
+
+								if gui and gui:IsA('TextButton') and gui.Visible then
+									local cPos = gui.AbsolutePosition + guiService:GetGuiInset()
+									vim:SendTouchEvent(0, 0, cPos.X, cPos.Y)
+								else
+									vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, true, nil, 0)
+								end
+
 								didSwing = true
 							end
 
+							attacked = entity
 							targetinfo.Targets[entity] = os.clock() + 1
 							old = gameCamera.CFrame
 							gameCamera.CFrame = CFrame.lookAlong(old.Position, CFrame.lookAt(localPos, cmpPos).LookVector)
@@ -51,7 +69,16 @@ SilentAura = vape.Categories.Combat:CreateModule({
 						end
 					else
 						if AutoSwing.Enabled and tribes.State.handler.holding and didSwing then
-							vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, false, nil, 0)
+							local gui = lplr.PlayerGui:FindFirstChild('CombatTouch', true)
+							gui = gui and gui.Enabled and gui:FindFirstChild('Attack', true) or nil
+
+							if gui and gui:IsA('TextButton') and gui.Visible then
+								local cPos = gui.AbsolutePosition + guiService:GetGuiInset()
+								vim:SendTouchEvent(0, 2, cPos.X, cPos.Y)
+							else
+								vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, false, nil, 0)
+							end
+
 							didSwing = false
 						end
 					end
@@ -68,14 +95,37 @@ SilentAura = vape.Categories.Combat:CreateModule({
 						end
 					end]]
 				end
+
+				if Box then
+					Box.Adornee = attacked and attacked.RootPart or nil
+					if Box.Adornee then
+						Box.Color3 = Color3.fromHSV(BoxAttackColor.Hue, BoxAttackColor.Sat, BoxAttackColor.Value)
+						Box.Transparency = 1 - BoxAttackColor.Opacity
+					end
+				end
+
+				if Particle then
+					Particle.Position = attacked and attacked.RootPart.Position or Vector3.new(math.huge, math.huge, math.huge)
+					Particle.Parent = attacked and gameCamera or nil
+				end
 			end))
 
 			SilentAura:Clean(runService.Heartbeat:Connect(function()
-				if old then
-					gameCamera.CFrame = old
-					old = nil
-				end
+				--task.defer(function()
+					if old then
+						gameCamera.CFrame = old
+						old = nil
+					end
+				--end)
 			end))
+		else
+			if Box then
+				Box.Adornee = nil
+			end
+
+			if Particle then
+				Particle.Parent = nil
+			end
 		end
 	end,
 	Tooltip = 'Silently adjust your camera towards nearby targets.'
@@ -105,3 +155,117 @@ AutoSwing = SilentAura:CreateToggle({
 --[[AutoBlock = SilentAura:CreateToggle({
 	Name = 'AutoBlock'
 })]]
+SilentAura:CreateToggle({
+	Name = 'Show target',
+	Function = function(callback)
+		BoxAttackColor.Object.Visible = callback
+
+		if callback then
+			Box = Instance.new('BoxHandleAdornment')
+			Box.Adornee = nil
+			Box.AlwaysOnTop = true
+			Box.CFrame = CFrame.new(0, -0.5, 0)
+			Box.Size = Vector3.new(3, 5, 3)
+			Box.ZIndex = 0
+			Box.Parent = vape.holder
+		else
+			Box:Destroy()
+			Box = nil
+		end
+	end
+})
+BoxAttackColor = SilentAura:CreateColorSlider({
+	Name = 'Attack Color',
+	Darker = true,
+	DefaultOpacity = 0.5,
+	Visible = false
+})
+SilentAura:CreateToggle({
+	Name = 'Target particles',
+	Function = function(callback)
+		ParticleTexture.Object.Visible = callback
+		ParticleColor1.Object.Visible = callback
+		ParticleColor2.Object.Visible = callback
+		ParticleSize.Object.Visible = callback
+
+		if callback then
+			Particle = Instance.new('Part')
+			Particle.Size = Vector3.new(2, 4, 2)
+			Particle.Anchored = true
+			Particle.CanCollide = false
+			Particle.Transparency = 1
+			Particle.CanQuery = false
+			Particle.Parent = SilentAura.Enabled and gameCamera or nil
+			local particles = Instance.new('ParticleEmitter')
+			particles.Brightness = 1.5
+			particles.Size = NumberSequence.new(ParticleSize.Value)
+			particles.Shape = Enum.ParticleEmitterShape.Sphere
+			particles.Texture = ParticleTexture.Value
+			particles.Transparency = NumberSequence.new(0)
+			particles.Lifetime = NumberRange.new(0.4)
+			particles.Speed = NumberRange.new(16)
+			particles.Rate = 128
+			particles.Drag = 16
+			particles.ShapePartial = 1
+			particles.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
+				ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
+			})
+			particles.Parent = Particle
+		else
+			Particle:Destroy()
+			Particle = nil
+		end
+	end
+})
+ParticleTexture = SilentAura:CreateTextBox({
+	Name = 'Texture',
+	Default = 'rbxassetid://14736249347',
+	Function = function()
+		if Particle then
+			Particle.ParticleEmitter.Texture = ParticleTexture.Value
+		end
+	end,
+	Darker = true,
+	Visible = false
+})
+ParticleColor1 = SilentAura:CreateColorSlider({
+	Name = 'Color Begin',
+	Function = function(hue, sat, val)
+		if Particle then
+			Particle.ParticleEmitter.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
+				ColorSequenceKeypoint.new(1, Color3.fromHSV(ParticleColor2.Hue, ParticleColor2.Sat, ParticleColor2.Value))
+			})
+		end
+	end,
+	Darker = true,
+	Visible = false
+})
+ParticleColor2 = SilentAura:CreateColorSlider({
+	Name = 'Color End',
+	Function = function(hue, sat, val)
+		if Particle then
+			Particle.ParticleEmitter.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromHSV(ParticleColor1.Hue, ParticleColor1.Sat, ParticleColor1.Value)),
+				ColorSequenceKeypoint.new(1, Color3.fromHSV(hue, sat, val))
+			})
+		end
+	end,
+	Darker = true,
+	Visible = false
+})
+ParticleSize = SilentAura:CreateSlider({
+	Name = 'Size',
+	Min = 0,
+	Max = 1,
+	Default = 0.2,
+	Decimal = 100,
+	Function = function(val)
+		if Particle then
+			Particle.ParticleEmitter.Size = NumberSequence.new(val)
+		end
+	end,
+	Darker = true,
+	Visible = false
+})

@@ -37,20 +37,60 @@ local tribes = {}
 local HitboxHook = {Hooks = {}}
 local VelocityTracker = {Entries = setmetatable({}, {__mode = 'k'})}
 local isMatch = false
-local realInput
+local clickQueue = {}
+local clickThread = nil
 
-local function dumpInput()
-	if not realInput then
-		local connection
-		connection = inputService.InputEnded:Connect(function(input)
-			if input.KeyCode == Enum.KeyCode.Return then
-				realInput = input
-				connection:Disconnect()
-			end
-		end)
+local function clickButton(obj)
+	if not (obj and obj:IsA('TextButton')) then
+		return
+	end
 
-		vim:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
-		vim:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
+	if not table.find(clickQueue, obj) then
+		table.insert(clickQueue, obj)
+
+		if not clickThread then
+			clickThread = task.spawn(function()
+				repeat
+					local i, button = next(clickQueue)
+					if i then
+						if button:IsDescendantOf(lplr.PlayerGui) then
+							local cPos = button.AbsolutePosition + guiService:GetGuiInset()
+							local gui = Instance.new('ScreenGui')
+							gui.IgnoreGuiInset = true
+							gui.DisplayOrder = 10000000
+							gui.Parent = vape.gui.Parent
+							local gbutton = Instance.new('TextButton')
+							gbutton.BackgroundTransparency = 1
+							gbutton.Size = UDim2.fromScale(1, 1)
+							gbutton.Text = ''
+							gbutton.Parent = gui
+
+							gbutton.Activated:Connect(function(...)
+								firesignal(button.Activated, ...)
+							end)
+
+							if inputService.TouchEnabled then
+								vim:SendTouchEvent(0, 0, cPos.X, cPos.Y)
+								vim:SendTouchEvent(0, 2, cPos.X, cPos.Y)
+							else
+								vim:SendMouseButtonEvent(cPos.X, cPos.Y, 0, true, gui, 0)
+								vim:SendMouseButtonEvent(cPos.X, cPos.Y, 0, false, gui, 0)
+							end
+
+							gbutton.Activated:Wait()
+							gui:Destroy()
+							task.wait(0.016)
+						end
+
+						table.remove(clickQueue, i)
+					else
+						break
+					end
+				until false
+
+				clickThread = nil
+			end)
+		end
 	end
 end
 
@@ -212,6 +252,15 @@ run(function()
 			task.wait()
 		until false
 	end))
+
+	vape:Clean(function()
+		table.clear(clickQueue)
+
+		if clickThread then
+			task.cancel(clickThread)
+			clickThread = nil
+		end
+	end)
 end)
 
 run(function()
