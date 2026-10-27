@@ -65,9 +65,11 @@ local function clickButton(obj)
 							gbutton.Text = ''
 							gbutton.Parent = gui
 
-							gbutton.Activated:Connect(function(...)
-								firesignal(button.Activated, ...)
-							end)
+							for _, event in {'MouseButton1Down', 'InputBegan', 'MouseButton1Up', 'Activated', 'MouseButton1Click', 'InputEnded'} do
+								gbutton[event]:Connect(function(...)
+									firesignal(button[event], ...)
+								end)
+							end
 
 							if inputService.TouchEnabled then
 								vim:SendTouchEvent(0, 0, cPos.X, cPos.Y)
@@ -173,9 +175,12 @@ run(function()
 		WeaponRedraw = debug.getupvalue(debug.getupvalue(debug.getupvalue(require(lplr.PlayerScripts.UI.WeaponIcon).Init, 5), 3), 8)
 	}
 
+	local cIndex = debug.getupvalue(tribes.CombatController.Equip, 11)
+	cIndex = type(cIndex) == 'function' and debug.info(cIndex, 'n') == 'refreshEquipped' and 11 or 12
+
 	tribes.State = debug.getupvalue(tribes.CombatController.State, 2)
-	tribes.Handlers = debug.getupvalue(debug.getupvalue(tribes.CombatController.Equip, 11), 10)
-	tribes.SetSpeed = debug.getupvalue(debug.getupvalue(tribes.CombatController.Equip, 11), 15)
+	tribes.Handlers = debug.getupvalue(debug.getupvalue(tribes.CombatController.Equip, cIndex), 10)
+	tribes.SetSpeed = debug.getupvalue(debug.getupvalue(tribes.CombatController.Equip, cIndex), 15)
 
 	local kills = sessioninfo:AddItem('Kills')
 	local deaths = sessioninfo:AddItem('Deaths')
@@ -267,6 +272,11 @@ run(function()
 	local oldhitbox
 
 	local function Hook(...)
+		if setstackhidden then
+			setstackhidden(1, true)
+			setstackhidden(2, true)
+		end
+
 		local args = table.pack(...)
 		for _, v in HitboxHook.Hooks do
 			if v[2](args) then return end

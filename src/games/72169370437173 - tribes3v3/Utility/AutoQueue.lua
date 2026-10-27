@@ -13,7 +13,7 @@ AutoQueue = vape.Categories.Utility:CreateModule({
 					button = holder and holder:FindFirstChild('PlayAgain', true) or nil
 
 					if button and button:IsA('TextButton') and button.Visible and holder.Visible then
-						--AutoQueue:Clean(task.delay(Delay.Value, clickButton, button))
+						AutoQueue:Clean(task.delay(Delay.Value, clickButton, button))
 						if Notification.Enabled and Delay.Value > 0 then
 							notif('AutoQueue', 'Playing again in '..string.format('%.1f', Delay.Value)..' seconds!', Delay.Value)
 						end
