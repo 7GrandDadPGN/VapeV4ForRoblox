@@ -45,6 +45,8 @@ local function clickButton(obj)
 		return
 	end
 
+	if true then return end
+
 	if not table.find(clickQueue, obj) then
 		table.insert(clickQueue, obj)
 
