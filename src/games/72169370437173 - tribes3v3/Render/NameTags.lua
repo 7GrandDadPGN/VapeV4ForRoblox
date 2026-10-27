@@ -114,7 +114,7 @@ local Added = {
 					if setstackhidden then
 						local ffunctions = {debug.info(1, 'f'), debug.info(2, 'f'), debug.info(3, 'f'), debug.info(4, 'f'), debug.info(5, 'f')}
 						for _, func in ffunctions do
-							if isexectuorclosure(func) then
+							if isexecutorclosure(func) then
 								setstackhidden(func, true)
 							end
 						end
