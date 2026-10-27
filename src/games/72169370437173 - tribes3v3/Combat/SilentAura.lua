@@ -10,6 +10,7 @@ local ParticleColor1
 local ParticleColor2
 local ParticleSize
 local Particle, Box = nil, nil
+local gamingThread
 
 SilentAura = vape.Categories.Combat:CreateModule({
 	Name = 'SilentAura',
@@ -17,110 +18,115 @@ SilentAura = vape.Categories.Combat:CreateModule({
 		if callback then
 			local old, didSwing
 
-			if true then return end
-
 			SilentAura:Clean(runService.PostSimulation:Connect(function()
-				local attacked
+				gamingThread = task.defer(function()
+					local attacked
 
-				if entitylib.isAlive and tribes.State.handler and tribes.State.handler.lastSwing then
-					local localPos = entitylib.character.RootPart.Position
-					local localFacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
-					local entities = entitylib.AllPosition({
-						Range = AttackRange.Value,
-						Wallcheck = Targets.Walls.Enabled or nil,
-						Part = 'RootPart',
-						Players = Targets.Players.Enabled,
-						NPCs = Targets.NPCs.Enabled,
-						Limit = 10
-					})
+					if entitylib.isAlive and tribes.State.handler and tribes.State.handler.lastSwing then
+						local localPos = entitylib.character.RootPart.Position
+						local localFacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
+						local entities = entitylib.AllPosition({
+							Range = AttackRange.Value,
+							Wallcheck = Targets.Walls.Enabled or nil,
+							Part = 'RootPart',
+							Players = Targets.Players.Enabled,
+							NPCs = Targets.NPCs.Enabled,
+							Limit = 10
+						})
 
-					if #entities > 0 then
-						for _, entity in entities do
-							local cmpPos = entity.RootPart.Position
-							local delta = (cmpPos - localPos)
-							local yaw = select(2, gameCamera.CFrame:ToEulerAnglesYXZ())
-							local angle = math.abs(CFrame.fromEulerAnglesYXZ(0, yaw, 0).LookVector:Angle(delta * Vector3.new(1, 0, 1)))
+						if #entities > 0 then
+							for _, entity in entities do
+								local cmpPos = entity.RootPart.Position
+								local delta = (cmpPos - localPos)
+								local yaw = select(2, gameCamera.CFrame:ToEulerAnglesYXZ())
+								local angle = math.abs(CFrame.fromEulerAnglesYXZ(0, yaw, 0).LookVector:Angle(delta * Vector3.new(1, 0, 1)))
 
-							if angle > (math.rad(AngleSlider.Value) / 2) or delta.Y >= 8 then
-								continue
+								if angle > (math.rad(AngleSlider.Value) / 2) or delta.Y >= 8 then
+									continue
+								end
+
+								if AutoSwing.Enabled and not tribes.State.handler.holding then
+									local gui = lplr.PlayerGui:FindFirstChild('CombatTouch', true)
+									gui = gui and gui.Enabled and gui:FindFirstChild('Attack', true) or nil
+
+									if gui and gui:IsA('TextButton') and gui.Visible then
+										local cPos = gui.AbsolutePosition + guiService:GetGuiInset()
+										vim:SendTouchEvent(0, 0, cPos.X, cPos.Y)
+									else
+										vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, true, nil, 0)
+									end
+
+									didSwing = true
+								end
+
+								attacked = entity
+								targetinfo.Targets[entity] = os.clock() + 1
+								old = gameCamera.CFrame
+								gameCamera.CFrame = CFrame.lookAlong(old.Position, CFrame.lookAt(localPos, cmpPos).LookVector)
+								if angle > math.rad(100) then
+									entitylib.character.RootPart.CFrame = CFrame.lookAlong(localPos, delta * Vector3.new(1, 0, 1))
+								end
+
+								break
 							end
-
-							if AutoSwing.Enabled and not tribes.State.handler.holding then
+						else
+							if AutoSwing.Enabled and tribes.State.handler.holding and didSwing then
 								local gui = lplr.PlayerGui:FindFirstChild('CombatTouch', true)
 								gui = gui and gui.Enabled and gui:FindFirstChild('Attack', true) or nil
 
 								if gui and gui:IsA('TextButton') and gui.Visible then
 									local cPos = gui.AbsolutePosition + guiService:GetGuiInset()
-									vim:SendTouchEvent(0, 0, cPos.X, cPos.Y)
+									vim:SendTouchEvent(0, 2, cPos.X, cPos.Y)
 								else
-									vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, true, nil, 0)
+									vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, false, nil, 0)
 								end
 
-								didSwing = true
+								didSwing = false
 							end
-
-							attacked = entity
-							targetinfo.Targets[entity] = os.clock() + 1
-							old = gameCamera.CFrame
-							gameCamera.CFrame = CFrame.lookAlong(old.Position, CFrame.lookAt(localPos, cmpPos).LookVector)
-							if angle > math.rad(100) then
-								entitylib.character.RootPart.CFrame = CFrame.lookAlong(localPos, delta * Vector3.new(1, 0, 1))
-							end
-
-							break
 						end
-					else
-						if AutoSwing.Enabled and tribes.State.handler.holding and didSwing then
-							local gui = lplr.PlayerGui:FindFirstChild('CombatTouch', true)
-							gui = gui and gui.Enabled and gui:FindFirstChild('Attack', true) or nil
 
-							if gui and gui:IsA('TextButton') and gui.Visible then
-								local cPos = gui.AbsolutePosition + guiService:GetGuiInset()
-								vim:SendTouchEvent(0, 2, cPos.X, cPos.Y)
-							else
-								vim:SendMouseButtonEvent(gameCamera.ViewportSize.X / 2, gameCamera.ViewportSize.Y / 2, 0, false, nil, 0)
+						--[[if AutoBlock.Enabled and tribes.State.handler.tuning.block then
+							if tribes.State.handler:Ready() and #entities > 0 then
+								tribes.State.handler:SetBlock(false)
+								tribes.State.handler:Swing()
 							end
 
-							didSwing = false
+							tribes.State.handler:SetBlock(true)
+							if vape.ThreadFix then
+								setthreadidentity(8)
+							end
+						end]]
+					end
+
+					if Box then
+						Box.Adornee = attacked and attacked.RootPart or nil
+						if Box.Adornee then
+							Box.Color3 = Color3.fromHSV(BoxAttackColor.Hue, BoxAttackColor.Sat, BoxAttackColor.Value)
+							Box.Transparency = 1 - BoxAttackColor.Opacity
 						end
 					end
 
-					--[[if AutoBlock.Enabled and tribes.State.handler.tuning.block then
-						if tribes.State.handler:Ready() and #entities > 0 then
-							tribes.State.handler:SetBlock(false)
-							tribes.State.handler:Swing()
-						end
-
-						tribes.State.handler:SetBlock(true)
-						if vape.ThreadFix then
-							setthreadidentity(8)
-						end
-					end]]
-				end
-
-				if Box then
-					Box.Adornee = attacked and attacked.RootPart or nil
-					if Box.Adornee then
-						Box.Color3 = Color3.fromHSV(BoxAttackColor.Hue, BoxAttackColor.Sat, BoxAttackColor.Value)
-						Box.Transparency = 1 - BoxAttackColor.Opacity
+					if Particle then
+						Particle.Position = attacked and attacked.RootPart.Position or Vector3.new(math.huge, math.huge, math.huge)
+						Particle.Parent = attacked and gameCamera or nil
 					end
-				end
 
-				if Particle then
-					Particle.Position = attacked and attacked.RootPart.Position or Vector3.new(math.huge, math.huge, math.huge)
-					Particle.Parent = attacked and gameCamera or nil
-				end
+					gamingThread = nil
+				end)
 			end))
 
 			SilentAura:Clean(runService.Heartbeat:Connect(function()
-				--task.defer(function()
-					if old then
-						gameCamera.CFrame = old
-						old = nil
-					end
-				--end)
+				if old then
+					gameCamera.CFrame = old
+					old = nil
+				end
 			end))
 		else
+			if gamingThread then
+				task.cancel(gamingThread)
+				gamingThread = nil
+			end
+
 			if Box then
 				Box.Adornee = nil
 			end
