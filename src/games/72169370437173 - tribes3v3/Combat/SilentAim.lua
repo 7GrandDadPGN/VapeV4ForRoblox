@@ -23,8 +23,10 @@ local function getMousePosition()
 end
 
 local function Hook(...)
-	local handler
+	setstackhidden(1, true)
+	setstackhidden(2, true)
 
+	local handler
 	for _, obj in debug.getstack(3) do
 		if type(obj) == 'table' and rawget(obj, 'tuning') then
 			handler = obj
@@ -114,9 +116,15 @@ SilentAim = vape.Categories.Combat:CreateModule({
 		end
 
 		if callback then
-			--[[old = hookfunction(tribes.Util.AimDirection, function(...)
+			if not setstackhidden then
+				notif('SilentAim', 'setstackhidden only currently.', 10, 'alert')
+				SilentAim:Toggle()
+				return
+			end
+
+			old = hookfunction(tribes.Util.AimDirection, function(...)
 				return Hook(...)
-			end)]]
+			end)
 
 			repeat
 				if CircleObject then

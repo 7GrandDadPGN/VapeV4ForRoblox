@@ -17,7 +17,7 @@ AutoUpgrade = vape.Categories.Inventory:CreateModule({
 								local upgrade = button:FindFirstChild('Upgrade', true)
 
 								if upgrade and upgrade:IsA('TextButton') and upgrade.Visible then
-									--clickButton(upgrade)
+									clickButton(upgrade)
 									break
 								end
 							end
