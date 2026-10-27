@@ -7,7 +7,7 @@ AutoSkip = vape.Categories.Inventory:CreateModule({
 	Name = 'AutoSkip',
 	Function = function(callback)
 		if callback then
-			repeat
+			--[[repeat
 				local bind = contextActionService:GetBoundActionInfo('TR_RankUpKeys')
 				if bind.priorityLevel and RankUp.Enabled then
 					local reveal = lplr.PlayerGui:FindFirstChild('TR_RankUp')
@@ -38,7 +38,7 @@ AutoSkip = vape.Categories.Inventory:CreateModule({
 				end
 
 				task.wait(0.05)
-			until not AutoSkip.Enabled
+			until not AutoSkip.Enabled]]
 		end
 	end,
 	Tooltip = 'Automatically skip through all possible popups'
