@@ -7,14 +7,14 @@ AutoSkip = vape.Categories.Inventory:CreateModule({
 	Name = 'AutoSkip',
 	Function = function(callback)
 		if callback then
-			--[[repeat
+			repeat
 				local bind = contextActionService:GetBoundActionInfo('TR_RankUpKeys')
 				if bind.priorityLevel and RankUp.Enabled then
 					local reveal = lplr.PlayerGui:FindFirstChild('TR_RankUp')
 					local button = reveal and reveal:FindFirstChild('Continue', true) or nil
 
 					if button and button:IsA('TextButton') then
-						clickButton(button)
+						--clickButton(button)
 					end
 				else
 					local bind2 = contextActionService:GetBoundActionInfo('TR_RevealKeys')
@@ -24,21 +24,21 @@ AutoSkip = vape.Categories.Inventory:CreateModule({
 						local button2 = reveal and reveal:FindFirstChild('Continue', true) or nil
 
 						if button1 and button1:IsA('TextButton') and button2 and button2:IsA('TextButton') then
-							clickButton(button1)
-							clickButton(button2)
+							--clickButton(button1)
+							--clickButton(button2)
 						end
 					elseif Replay.Enabled then
 						local reveal = lplr.PlayerGui:FindFirstChild('TR_ReplayHud')
 						local button = reveal and reveal:FindFirstChild('Skip', true) or nil
 
 						if button and button:IsA('TextButton') and button.Visible and reveal.Enabled then
-							clickButton(button)
+							--clickButton(button)
 						end
 					end
 				end
 
 				task.wait(0.05)
-			until not AutoSkip.Enabled]]
+			until not AutoSkip.Enabled
 		end
 	end,
 	Tooltip = 'Automatically skip through all possible popups'

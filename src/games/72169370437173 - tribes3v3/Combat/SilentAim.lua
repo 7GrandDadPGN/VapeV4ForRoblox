@@ -114,9 +114,9 @@ SilentAim = vape.Categories.Combat:CreateModule({
 		end
 
 		if callback then
-			old = hookfunction(tribes.Util.AimDirection, function(...)
+			--[[old = hookfunction(tribes.Util.AimDirection, function(...)
 				return Hook(...)
-			end)
+			end)]]
 
 			repeat
 				if CircleObject then
