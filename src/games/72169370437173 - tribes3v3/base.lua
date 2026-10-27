@@ -37,41 +37,58 @@ local tribes = {}
 local HitboxHook = {Hooks = {}}
 local VelocityTracker = {Entries = setmetatable({}, {__mode = 'k'})}
 local isMatch = false
+local isVolt = identifyexecutor and identifyexecutor() == 'Volt' and trampoline_call and true or false
 local clickQueue = {}
 local clickThread = nil
+
+local function canClickButton(target)
+	if (not target.Visible) and (not guiService.MenuIsOpen) then
+		return false
+	end
+
+	local pos = target.AbsolutePosition + target.AbsoluteSize / 2
+	if gethui and gethui():IsA('BasePlayerGui') then
+		for _, obj in gethui():GetGuiObjectsAtPosition(pos.X, pos.Y) do
+			if obj:IsA('GuiButton') then
+				return obj == target
+			end
+		end
+	end
+
+	for _, obj in coreGui:GetGuiObjectsAtPosition(pos.X, pos.Y) do
+		if obj:IsA('GuiButton') then
+			return obj == target
+		end
+	end
+
+	for _, obj in lplr.PlayerGui:GetGuiObjectsAtPosition(pos.X, pos.Y) do
+		if obj:IsA('GuiButton') then
+			return obj == target
+		end
+	end
+
+	return false
+end
 
 local function clickButton(obj)
 	if not (obj and obj:IsA('TextButton')) then
 		return
 	end
 
-	if true then return end
-
 	if not table.find(clickQueue, obj) then
 		table.insert(clickQueue, obj)
 
 		if not clickThread then
-			clickThread = task.spawn(function()
+			task.spawn(function()
+				clickThread = coroutine.running()
+
 				repeat
 					local i, button = next(clickQueue)
 					if i then
-						if button:IsDescendantOf(lplr.PlayerGui) then
-							local cPos = button.AbsolutePosition + guiService:GetGuiInset()
-							local gui = Instance.new('ScreenGui')
-							gui.IgnoreGuiInset = true
-							gui.DisplayOrder = 10000000
-							gui.Parent = vape.gui.Parent
-							local gbutton = Instance.new('TextButton')
-							gbutton.BackgroundTransparency = 1
-							gbutton.Size = UDim2.fromScale(1, 1)
-							gbutton.Text = ''
-							gbutton.Parent = gui
+						table.remove(clickQueue, i)
 
-							for _, event in {'MouseButton1Down', 'InputBegan', 'MouseButton1Up', 'Activated', 'MouseButton1Click', 'InputEnded'} do
-								gbutton[event]:Connect(function(...)
-									firesignal(button[event], ...)
-								end)
-							end
+						if canClickButton(button) then
+							local cPos = (button.AbsolutePosition + button.AbsoluteSize / 2) + guiService:GetGuiInset()
 
 							if inputService.TouchEnabled then
 								vim:SendTouchEvent(0, 0, cPos.X, cPos.Y)
@@ -81,18 +98,13 @@ local function clickButton(obj)
 								vim:SendMouseButtonEvent(cPos.X, cPos.Y, 0, false, gui, 0)
 							end
 
-							gbutton.Activated:Wait()
-							gui:Destroy()
 							task.wait(0.016)
 						end
-
-						table.remove(clickQueue, i)
 					else
+						clickThread = nil
 						break
 					end
 				until false
-
-				clickThread = nil
 			end)
 		end
 	end
@@ -274,10 +286,12 @@ run(function()
 	local oldhitbox
 
 	local function Hook(...)
-		if setstackhidden then
-			local a, b = debug.info(1, 'f'), debug.info(2, 'f')
-			setstackhidden(a, true)
-			setstackhidden(b, true)
+		if setstackhidden and (not isVolt) then -- volt automatically hides the stack with hookfunction
+			local f1, f2 = debug.info(1, 'f'), debug.info(2, 'f')
+			if f1 and f2 and isexecutorclosure(f1) and isexecutorclosure(f2) then
+				setstackhidden(f1, true)
+				setstackhidden(f2, true)
+			end
 		end
 
 		local args = table.pack(...)

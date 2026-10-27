@@ -23,9 +23,13 @@ local function getMousePosition()
 end
 
 local function Hook(...)
-	local a, b = debug.info(1, 'f'), debug.info(2, 'f')
-	setstackhidden(a, true)
-	setstackhidden(b, true)
+	if setstackhidden and (not isVolt) then -- volt automatically hides the stack with hookfunction
+		local f1, f2 = debug.info(1, 'f'), debug.info(2, 'f')
+		if f1 and f2 and isexecutorclosure(f1) and isexecutorclosure(f2) then
+			setstackhidden(f1, true)
+			setstackhidden(f2, true)
+		end
+	end
 
 	local handler
 	for _, obj in debug.getstack(3) do

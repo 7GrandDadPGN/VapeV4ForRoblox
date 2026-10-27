@@ -10,16 +10,18 @@ AutoSkip = vape.Categories.Inventory:CreateModule({
 			repeat
 				local bind = contextActionService:GetBoundActionInfo('TR_RankUpKeys')
 				if bind.priorityLevel and RankUp.Enabled then
-					local reveal = lplr.PlayerGui:FindFirstChild('TR_RankUp')
-					local button = reveal and reveal:FindFirstChild('Continue', true) or nil
+					local rankupgui = lplr.PlayerGui:FindFirstChild('TR_RankUp')
+					local button = rankupgui and rankupgui:FindFirstChild('Continue', true) or nil
 
 					if button and button:IsA('TextButton') then
 						clickButton(button)
 					end
 				else
-					local bind2 = contextActionService:GetBoundActionInfo('TR_RevealKeys')
-					if bind2.priorityLevel and Drops.Enabled then
-						local reveal = lplr.PlayerGui:FindFirstChild('TR_Reveal')
+					local reveal = lplr.PlayerGui:FindFirstChild('TR_Reveal')
+					reveal = reveal and reveal.Enabled and reveal:FindFirstChild('Canvas') or nil
+					reveal = reveal and reveal.Visible and reveal:FindFirstChild('Reveal') or nil
+
+					if Drops.Enabled and reveal and reveal.Visible then
 						local button1 = reveal and reveal:FindFirstChild('Skip', true) or nil
 						local button2 = reveal and reveal:FindFirstChild('Continue', true) or nil
 
@@ -28,10 +30,10 @@ AutoSkip = vape.Categories.Inventory:CreateModule({
 							clickButton(button2)
 						end
 					elseif Replay.Enabled then
-						local reveal = lplr.PlayerGui:FindFirstChild('TR_ReplayHud')
-						local button = reveal and reveal:FindFirstChild('Skip', true) or nil
+						local replayhud = lplr.PlayerGui:FindFirstChild('TR_ReplayHud')
+						local button = replayhud and replayhud:FindFirstChild('Skip', true) or nil
 
-						if button and button:IsA('TextButton') and button.Visible and reveal.Enabled then
+						if button and button:IsA('TextButton') and button.Visible and replayhud.Enabled then
 							clickButton(button)
 						end
 					end
