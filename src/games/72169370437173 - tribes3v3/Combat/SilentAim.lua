@@ -120,6 +120,8 @@ SilentAim = vape.Categories.Combat:CreateModule({
 			CircleObject.Visible = callback
 		end
 
+		if true then return end
+
 		if callback then
 			if not setstackhidden then
 				notif('SilentAim', 'setstackhidden only currently.', 10, 'alert')
