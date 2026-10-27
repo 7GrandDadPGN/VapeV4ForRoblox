@@ -111,7 +111,7 @@ local Added = {
 					Icon.Size = UDim2.fromOffset(30, 30)
 					Icon.Parent = workspace
 
-					tribes.WeaponIcon(Icon, {id = item, opts = {glow = false, outline = false}})
+					--tribes.WeaponIcon(Icon, {id = item, opts = {glow = false, outline = false}})
 					task.defer(function()
 						Icon.Parent = holder
 					end)

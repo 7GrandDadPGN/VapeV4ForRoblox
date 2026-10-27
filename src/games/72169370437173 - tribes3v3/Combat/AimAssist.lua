@@ -29,7 +29,7 @@ AimAssist = vape.Categories.Combat:CreateModule({
 						if angle >= (math.rad(AngleSlider.Value) / 2) then return end
 						targetinfo.Targets[entity] = os.clock() + 1
 						local lerped = gameCamera.CFrame:Lerp(CFrame.lookAt(gameCamera.CFrame.Position, entity.RootPart.Position), (AimSpeed.Value + (StrafeIncrease.Enabled and (inputService:IsKeyDown(Enum.KeyCode.A) or inputService:IsKeyDown(Enum.KeyCode.D)) and 10 or 0)) * dt).LookVector
-						tribes.Camera.SetLook(math.atan2(-lerped.X, -lerped.Z), Vertical.Enabled and math.asin(lerped.Y) or nil)
+						--tribes.Camera.SetLook(math.atan2(-lerped.X, -lerped.Z), Vertical.Enabled and math.asin(lerped.Y) or nil)
 					end
 				end
 			end))

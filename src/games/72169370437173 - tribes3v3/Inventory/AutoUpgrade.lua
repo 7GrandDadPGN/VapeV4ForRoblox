@@ -4,7 +4,7 @@ AutoUpgrade = vape.Categories.Inventory:CreateModule({
 	Name = 'AutoUpgrade',
 	Function = function(callback)
 		if callback then
-			--[[repeat
+			repeat
 				local gui = lplr.PlayerGui:FindFirstChild('TR_Menus')
 				gui = gui and gui:FindFirstChild('Collection', true) or nil
 
@@ -17,7 +17,7 @@ AutoUpgrade = vape.Categories.Inventory:CreateModule({
 								local upgrade = button:FindFirstChild('Upgrade', true)
 
 								if upgrade and upgrade:IsA('TextButton') and upgrade.Visible then
-									clickButton(upgrade)
+									--clickButton(upgrade)
 									break
 								end
 							end
@@ -26,7 +26,7 @@ AutoUpgrade = vape.Categories.Inventory:CreateModule({
 				end
 
 				task.wait(0.05)
-			until not AutoUpgrade.Enabled]]
+			until not AutoUpgrade.Enabled
 		end
 	end,
 	Tooltip = 'Automatically upgrade all collectable gear.'
