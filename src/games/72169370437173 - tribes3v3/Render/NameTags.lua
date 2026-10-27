@@ -112,7 +112,7 @@ local Added = {
 					Icon.Parent = workspace
 
 					if setstackhidden then
-						setstackhidden(0, true)
+						setstackhidden(debug.info(1, 'f'), true)
 						tribes.WeaponIcon(Icon, {id = item, opts = {glow = false, outline = false}})
 					end
 

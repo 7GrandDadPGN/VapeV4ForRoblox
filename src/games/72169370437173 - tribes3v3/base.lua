@@ -275,8 +275,9 @@ run(function()
 
 	local function Hook(...)
 		if setstackhidden then
-			setstackhidden(0, true)
-			setstackhidden(1, true)
+			local a, b = debug.info(1, 'f'), debug.info(2, 'f')
+			setstackhidden(a, true)
+			setstackhidden(b, true)
 		end
 
 		local args = table.pack(...)

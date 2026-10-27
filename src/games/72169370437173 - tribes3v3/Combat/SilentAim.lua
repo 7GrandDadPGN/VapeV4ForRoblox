@@ -23,8 +23,9 @@ local function getMousePosition()
 end
 
 local function Hook(...)
-	setstackhidden(0, true)
-	setstackhidden(1, true)
+	local a, b = debug.info(1, 'f'), debug.info(2, 'f')
+	setstackhidden(a, true)
+	setstackhidden(b, true)
 
 	local handler
 	for _, obj in debug.getstack(3) do
