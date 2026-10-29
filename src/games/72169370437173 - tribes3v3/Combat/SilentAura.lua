@@ -3,6 +3,7 @@ local Targets
 local AttackRange
 local AngleSlider
 local AutoSwing
+local VerticalReach
 local AutoBlock
 local BoxAttackColor
 local ParticleTexture
@@ -16,11 +17,11 @@ SilentAura = vape.Categories.Combat:CreateModule({
 	Name = 'SilentAura',
 	Function = function(callback)
 		if callback then
-			local old, didSwing
+			local didSwing
 
 			SilentAura:Clean(runService.PostSimulation:Connect(function()
 				gamingThread = task.defer(function()
-					local attacked
+					local attacked, old, oldpos
 
 					if entitylib.isAlive and tribes.State.handler and tribes.State.handler.lastSwing then
 						local localPos = entitylib.character.RootPart.Position
@@ -41,7 +42,7 @@ SilentAura = vape.Categories.Combat:CreateModule({
 								local yaw = select(2, gameCamera.CFrame:ToEulerAnglesYXZ())
 								local angle = math.abs(CFrame.fromEulerAnglesYXZ(0, yaw, 0).LookVector:Angle(delta * Vector3.new(1, 0, 1)))
 
-								if angle > (math.rad(AngleSlider.Value) / 2) or delta.Y >= 8 then
+								if angle > (math.rad(AngleSlider.Value) / 2) or (not VerticalReach.Enabled and math.abs(delta.Y) >= 8) then
 									continue
 								end
 
@@ -65,6 +66,11 @@ SilentAura = vape.Categories.Combat:CreateModule({
 								gameCamera.CFrame = CFrame.lookAlong(old.Position, CFrame.lookAt(localPos, cmpPos).LookVector)
 								if angle > math.rad(100) then
 									entitylib.character.RootPart.CFrame = CFrame.lookAlong(localPos, delta * Vector3.new(1, 0, 1))
+								end
+
+								if VerticalReach.Enabled then
+									oldpos = entitylib.character.RootPart.CFrame
+									entitylib.character.RootPart.CFrame = CFrame.new(cmpPos)
 								end
 
 								break
@@ -111,15 +117,20 @@ SilentAura = vape.Categories.Combat:CreateModule({
 						Particle.Parent = attacked and gameCamera or nil
 					end
 
+					task.wait()
+
+					if old then
+						gameCamera.CFrame = old
+						old = nil
+					end
+
+					if oldpos then
+						entitylib.character.RootPart.CFrame = oldpos
+						oldpos = nil
+					end
+
 					gamingThread = nil
 				end)
-			end))
-
-			SilentAura:Clean(runService.Heartbeat:Connect(function()
-				if old then
-					gameCamera.CFrame = old
-					old = nil
-				end
 			end))
 		else
 			if gamingThread then
@@ -159,6 +170,9 @@ AngleSlider = SilentAura:CreateSlider({
 })
 AutoSwing = SilentAura:CreateToggle({
 	Name = 'Auto swing'
+})
+VerticalReach = SilentAura:CreateToggle({
+	Name = 'Vertical reach'
 })
 --[[AutoBlock = SilentAura:CreateToggle({
 	Name = 'AutoBlock'
