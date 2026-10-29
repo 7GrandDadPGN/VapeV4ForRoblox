@@ -251,12 +251,12 @@ do
 			local diff = currentTime - (tonumber(data.player_state.timestamp) / 1000)
 			self.playPosition = posAsTime + (data.player_state.is_paused and 0 or diff)
 			self.playRate = data.player_state.playback_speed
-			self.playDuration = tonumber(data.player_state.duration) / 1000
+			self.playDuration = tonumber(data.player_state.duration or 1000) / 1000
 
 			if data.player_state.track then
 				self:RequestCache(data.player_state.track.uri)
 				self.track = data.player_state.track.uri
-				title.Text = data.player_state.track.metadata.title
+				title.Text = data.player_state.track.metadata.title or 'Unknown'
 				artist.Text = table.concat(self.Cache[self.track].Artists, ', ')
 			end
 		end
