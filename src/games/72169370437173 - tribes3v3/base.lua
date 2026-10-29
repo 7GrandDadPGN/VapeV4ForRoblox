@@ -37,7 +37,7 @@ local tribes = {}
 local HitboxHook = {Hooks = {}}
 local VelocityTracker = {Entries = setmetatable({}, {__mode = 'k'})}
 local isMatch = false
-local isVolt = identifyexecutor and identifyexecutor() == 'Volt' and trampoline_call and true or false
+local isVolt = false--identifyexecutor and identifyexecutor() == 'Volt' and trampoline_call and true or false
 local clickQueue = {}
 local clickThread = nil
 
