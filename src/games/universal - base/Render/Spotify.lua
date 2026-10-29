@@ -254,9 +254,9 @@ do
 			self.playDuration = tonumber(data.player_state.duration or 1000) / 1000
 
 			if data.player_state.track then
-				self:RequestCache(data.player_state.track.uri)
+				self:RequestCache(data.player_state.track.uri, data.player_state.track)
 				self.track = data.player_state.track.uri
-				title.Text = data.player_state.track.metadata.title or 'Unknown'
+				title.Text = data.player_state.track.metadata.title or self.Cache[self.track].Title
 				artist.Text = table.concat(self.Cache[self.track].Artists, ', ')
 			end
 		end
@@ -355,11 +355,18 @@ do
 		end
 	end
 
-	function SpotifyHandler:RequestCache(id)
+	function SpotifyHandler:RequestCache(id, data)
 		if not self.Cache[id] then
-			self.Cache[id] = {Artists = {'None'}}
+			self.Cache[id] = {Artists = {'None'}, Title = 'Unknown'}
 
-			if self.Data.fetchKey and not id:find('spotify:local') then
+			if id:find('spotify:local') then
+				local lArtist = data.metadata.artist_uri:sub(15)
+				self.Cache[id].Artists = {lArtist ~= '' and lArtist or 'None'}
+				artist.Text = table.concat(self.Cache[id].Artists, ', ')
+				return
+			end
+
+			if self.Data.fetchKey then
 				task.spawn(function()
 					local dataRequest = safeRequest({
 						Url = 'https://api-partner.spotify.com/pathfinder/v2/query',
@@ -395,6 +402,7 @@ do
 							table.clear(self.Cache[id].Artists)
 
 							if track.data.__typename == 'Track' then
+								self.Cache[id].Title = track.data.name
 								for _, artist in track.data.artists.items do
 									table.insert(self.Cache[id].Artists, artist.profile.name)
 								end
@@ -403,6 +411,7 @@ do
 							end
 
 							if self.track == id then
+								title.Text = self.Cache[id].Title
 								artist.Text = table.concat(self.Cache[id].Artists, ', ')
 							end
 						end
@@ -458,15 +467,15 @@ do
 						metadata = {},
 						model = 'web_player',
 						name = 'Web Player (Firefox)',
-						platform_identifier = 'web_player windows 10;firefox 154.0;desktop',
+						platform_identifier = 'web_player windows 10;firefox 158.0;desktop',
 						is_group = false,
 						is_public = false,
 						correlation_id = self.Data.correlationId,
-						client_version = 'harmony:4.78.0-f1c77f179'
+						client_version = 'harmony:4.81.1-1f3d48b7f'
 					},
 					outro_endcontent_snooping = false,
 					connection_id = self.connectionId,
-					client_version = 'harmony:4.78.0-f1c77f179',
+					client_version = 'harmony:4.81.1-1f3d48b7f',
 					volume = 65535
 				}):gsub('"metadata":%[%]', '"metadata":{}')
 			})
@@ -575,7 +584,7 @@ do
 
 		self.Headers = {
 			Cookie = 'sp_dc='..readfile('newvape/profiles/spotify.txt')..';',
-			['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:154.0) Gecko/20100101 Firefox/154.0'
+			['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:158.0) Gecko/20100101 Firefox/158.0'
 		}
 
 		local data = isfile('newvape/profiles/spotifydata.txt') and httpService:JSONDecode(readfile('newvape/profiles/spotifydata.txt')) or {expireTime = 0}
