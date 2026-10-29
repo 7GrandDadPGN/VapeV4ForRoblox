@@ -37,7 +37,6 @@ local tribes = {}
 local HitboxHook = {Hooks = {}}
 local VelocityTracker = {Entries = setmetatable({}, {__mode = 'k'})}
 local isMatch = false
-local isVolt = false--identifyexecutor and identifyexecutor() == 'Volt' and trampoline_call and true or false
 local clickQueue = {}
 local clickThread = nil
 
@@ -219,13 +218,21 @@ run(function()
 
 		return 'None'
 	end, false)
-	isMatch = not workspace:FindFirstChild('Lobby')
 
-	if isMatch then
-		task.delay(1, function()
-			games:Increment()
-		end)
+	local lobbyObj = workspace:FindFirstChild('Lobby')
+	if lobbyObj then
+		vape:Clean(lobbyObj.Destroying:Once(function()
+			isMatch = true
+		end))
+	else
+		isMatch = true
 	end
+
+	vape:Clean(task.delay(1, function()
+		if isMatch then
+			games:Increment()
+		end
+	end))
 
 	vape:Clean(replicatedStorage.Remotes.HitConfirm.OnClientEvent:Connect(function(data)
 		if data and data.killed and isMatch then
@@ -286,7 +293,7 @@ run(function()
 	local oldhitbox
 
 	local function Hook(...)
-		if setstackhidden and (not isVolt) then -- volt automatically hides the stack with hookfunction
+		if setstackhidden then
 			local ffunctions = {debug.info(1, 'f'), debug.info(2, 'f'), debug.info(3, 'f'), debug.info(4, 'f'), debug.info(5, 'f')}
 			for _, func in ffunctions do
 				if isexecutorclosure(func) then
