@@ -64,8 +64,8 @@ holder.Parent = twoslider
 local fill = Instance.new('Frame')
 fill.BackgroundColor3 = Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)
 fill.BorderSizePixel = 0
-fill.Position = UDim2.fromScale(math.clamp(component.ValueMin / props.Max, 0.04, 0.96), 0)
-fill.Size = UDim2.fromScale(math.clamp(math.clamp(component.ValueMax / props.Max, 0, 1), 0.04, 0.96) - fill.Position.X.Scale, 1)
+fill.Position = UDim2.fromScale(math.clamp((component.ValueMin - props.Min) / (props.Max - props.Min), 0.04, 0.96), 0)
+fill.Size = UDim2.fromScale(math.clamp(math.clamp((component.ValueMax - props.Min) / (props.Max - props.Min), 0, 1), 0.04, 0.96) - fill.Position.X.Scale, 1)
 fill.Parent = holder
 local knob = Instance.new('Frame')
 knob.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -134,10 +134,10 @@ function component:SetValue(isMax, value)
 	maxvalue.Text = self.ValueMax
 	minvalue.Text = self.ValueMin
 
-	local size = math.clamp(math.clamp(self.ValueMin / props.Max, 0, 1), 0.04, 0.96)
+	local size = math.clamp(math.clamp((self.ValueMin - props.Min) / (props.Max - props.Min), 0, 1), 0.04, 0.96)
 	tween:Tween(fill, TweenInfo.new(0.1), {
 		Position = UDim2.fromScale(size, 0),
-		Size = UDim2.fromScale(math.clamp(math.clamp(self.ValueMax / props.Max, 0.04, 0.96) - size, 0, 1), 1)
+		Size = UDim2.fromScale(math.clamp(math.clamp((self.ValueMax - props.Min) / (props.Max - props.Min), 0.04, 0.96) - size, 0, 1), 1)
 	})
 end
 

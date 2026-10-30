@@ -1,6 +1,7 @@
 local Disguise
 local Mode
 local IDBox
+local EmoteList
 local cloned = {}
 
 local function itemAdded(obj, manual)
@@ -75,7 +76,7 @@ local function localAdded(char)
 		elseif description then
 			description:Destroy()
 		end
-	else
+	elseif Mode.Value == 'Animation' then
 		local success, data = pcall(function()
 			data = marketplaceService:GetProductInfo(IDBox.Value == '' and 43 or tonumber(IDBox.Value), Enum.InfoType.Bundle)
 		end)
@@ -103,6 +104,19 @@ local function localAdded(char)
 		elseif type(data) == 'table' then
 			table.clear(data)
 		end
+	else
+		local desc = char.Humanoid:WaitForChild('HumanoidDescription', 5)
+		if desc then
+			local emotes, equipped = {}, {}
+			for index, entry in EmoteList.ListEnabled do
+				local split = entry:split('/')
+				emotes['Emote '..tostring(index)] = {tonumber(split[2])}
+				table.insert(equipped, {Name = 'Emote '..tostring(index), Slot = tonumber(split[1]) or 1})
+			end
+
+			desc:SetEmotes(emotes)
+			desc:SetEquippedEmotes(equipped)
+		end
 	end
 end
 
@@ -122,8 +136,10 @@ Disguise = vape.Legit:CreateModule({
 })
 Mode = Disguise:CreateDropdown({
 	Name = 'Mode',
-	List = {'Character', 'Animation'},
-	Function = function()
+	List = {'Character', 'Animation', 'Emotes'},
+	Function = function(val)
+		EmoteList.Object.Visible = val == 'Emotes'
+
 		if Disguise.Enabled then
 			Disguise:Toggle()
 			Disguise:Toggle()
@@ -139,4 +155,16 @@ IDBox = Disguise:CreateTextBox({
 			Disguise:Toggle()
 		end
 	end
+})
+EmoteList = Disguise:CreateTextList({
+	Name = 'Emote List',
+	Placeholder = 'slot/emoteid',
+	Function = function()
+		if Disguise.Enabled then
+			Disguise:Toggle()
+			Disguise:Toggle()
+		end
+	end,
+	Darker = true,
+	Visible = false
 })

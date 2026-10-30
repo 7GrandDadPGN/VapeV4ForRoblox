@@ -109,6 +109,19 @@ local function clickButton(obj)
 	end
 end
 
+local function hideStack()
+	if setstackhidden then
+		local ffunctions = {debug.info(1, 'f'), debug.info(2, 'f'), debug.info(3, 'f'), debug.info(4, 'f'), debug.info(5, 'f')}
+		for _, func in ffunctions do
+			if isexecutorclosure(func) then
+				setstackhidden(func, true)
+			end
+		end
+
+		table.clear(ffunctions)
+	end
+end
+
 local function isFriend(plr, recolor)
 	if vape.Categories.Friends.Options['Use friends'].Enabled then
 		local friend = table.find(vape.Categories.Friends.ListEnabled, plr.Name) and true
@@ -146,6 +159,20 @@ local function safeget(...)
 	end
 
 	return obj
+end
+
+local function argCheck(expected, ...)
+	if select('#', ...) > #expected then
+		return false
+	end
+
+	for index, value in {...} do
+		if not table.find(expected[index], typeof(value)) then
+			return false
+		end
+	end
+
+	return true
 end
 
 run(function()
@@ -206,7 +233,7 @@ run(function()
 	local cIndex = debug.getupvalue(rawget(tribes.CombatController, 'Equip'), 11)
 	cIndex = type(cIndex) == 'function' and debug.info(cIndex, 'n') == 'refreshEquipped' and 11 or 12
 
-	tribes.State = debug.getupvalue(rawget(tribes.CombatController, 'State'), 1)
+	tribes.State = debug.getupvalue(rawget(tribes.CombatController, 'State'), 8)
 	tribes.Handlers = debug.getupvalue(debug.getupvalue(rawget(tribes.CombatController, 'Equip'), cIndex), 10)
 	tribes.SetSpeed = debug.getupvalue(debug.getupvalue(rawget(tribes.CombatController, 'Equip'), cIndex), 15)
 
@@ -308,15 +335,10 @@ run(function()
 	local oldhitbox
 
 	local function Hook(...)
-		if setstackhidden then
-			local ffunctions = {debug.info(1, 'f'), debug.info(2, 'f'), debug.info(3, 'f'), debug.info(4, 'f'), debug.info(5, 'f')}
-			for _, func in ffunctions do
-				if isexecutorclosure(func) then
-					setstackhidden(func, true)
-				end
-			end
+		hideStack()
 
-			table.clear(ffunctions)
+		if not argCheck({{'table'}, {'number'}, {'number'}, {'number'}}, ...) then
+			return oldhitbox(...)
 		end
 
 		local args = table.pack(...)

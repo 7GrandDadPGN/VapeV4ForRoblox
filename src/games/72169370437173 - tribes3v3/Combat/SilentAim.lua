@@ -23,15 +23,10 @@ local function getMousePosition()
 end
 
 local function Hook(...)
-	if setstackhidden then
-		local ffunctions = {debug.info(1, 'f'), debug.info(2, 'f'), debug.info(3, 'f'), debug.info(4, 'f'), debug.info(5, 'f')}
-		for _, func in ffunctions do
-			if isexecutorclosure(func) then
-				setstackhidden(func, true)
-			end
-		end
+	hideStack()
 
-		table.clear(ffunctions)
+	if not argCheck({{'Vector3', 'nil'}}, ...) then
+		return old(...)
 	end
 
 	local handler
@@ -131,8 +126,6 @@ SilentAim = vape.Categories.Combat:CreateModule({
 				SilentAim:Toggle()
 				return
 			end
-
-			if true then return end
 
 			old = hookfunction(rawget(tribes.Util, 'AimDirection'), function(...)
 				return Hook(...)

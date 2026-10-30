@@ -1,7 +1,10 @@
-vape.Categories.Utility:CreateModule({
+local Panic
+
+Panic = vape.Categories.Utility:CreateModule({
 	Name = 'Panic',
 	Function = function(callback)
 		if callback then
+			Panic:Toggle()
 			for _, module in vape.Modules do
 				if module.Enabled then
 					module:Toggle()

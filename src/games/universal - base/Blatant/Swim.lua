@@ -1,6 +1,6 @@
 local Swim
 local terrain = cloneref(workspace:FindFirstChildWhichIsA('Terrain'))
-local lastpos = Region3.new(Vector3.zero, Vector3.zero)
+local lastpos
 
 Swim = vape.Categories.Blatant:CreateModule({
 	Name = 'Swim',
@@ -17,7 +17,10 @@ Swim = vape.Categories.Blatant:CreateModule({
 						local factor = (moving or space) and Vector3.new(6, 6, 6) or Vector3.new(2, 1, 2)
 						local pos = root.Position - Vector3.new(0, 1, 0)
 						local newpos = Region3.new(pos - factor, pos + factor):ExpandToGrid(4)
-						terrain:ReplaceMaterial(lastpos, 4, Enum.Material.Water, Enum.Material.Air)
+						if lastpos then
+							terrain:ReplaceMaterial(lastpos, 4, Enum.Material.Water, Enum.Material.Air)
+						end
+
 						terrain:ReplaceMaterial(newpos, 4, Enum.Material.Air, Enum.Material.Water)
 						lastpos = newpos
 					end
@@ -26,6 +29,7 @@ Swim = vape.Categories.Blatant:CreateModule({
 		else
 			if terrain and lastpos then
 				terrain:ReplaceMaterial(lastpos, 4, Enum.Material.Water, Enum.Material.Air)
+				lastpos = nil
 			end
 		end
 	end,

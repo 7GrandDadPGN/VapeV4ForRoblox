@@ -56,7 +56,7 @@ holder.Parent = slider
 local fill = Instance.new('Frame')
 fill.BackgroundColor3 = Color3.fromHSV(vape.GUIColor.Hue, vape.GUIColor.Sat, vape.GUIColor.Value)
 fill.BorderSizePixel = 0
-fill.Size = UDim2.fromScale(math.clamp((component.Value - props.Min) / props.Max, 0.04, 0.96), 1)
+fill.Size = UDim2.fromScale(math.clamp((component.Value - props.Min) / (props.Max - props.Min), 0.04, 0.96), 1)
 fill.Parent = holder
 local knobholder = Instance.new('Frame')
 knobholder.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -100,7 +100,7 @@ function component:SetValue(value, position, wasReleased)
 	end
 
 	tween:Tween(fill, uipallet.Tween, {
-		Size = UDim2.fromScale(math.clamp(position or math.clamp(value / props.Max, 0, 1), 0.04, 0.96), 1)
+		Size = UDim2.fromScale(math.clamp(position or math.clamp((value - props.Min) / (props.Max - props.Min), 0, 1), 0.04, 0.96), 1)
 	})
 
 	if self.Value ~= value or wasReleased then
