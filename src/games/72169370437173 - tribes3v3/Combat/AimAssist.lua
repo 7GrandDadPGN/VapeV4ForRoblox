@@ -34,9 +34,9 @@ AimAssist = vape.Categories.Combat:CreateModule({
 						local lerped = gameCamera.CFrame:Lerp(CFrame.lookAt(gameCamera.CFrame.Position, entity.RootPart.Position), (AimSpeed.Value + (StrafeIncrease.Enabled and (inputService:IsKeyDown(Enum.KeyCode.A) or inputService:IsKeyDown(Enum.KeyCode.D)) and 10 or 0)) * dt).LookVector
 						local setLook = rawget(tribes.Camera, 'SetLook')
 
-						debug.setupvalue(setLook, 10, ((math.atan2(-lerped.X, -lerped.Z) + math.pi) % math.tau) - math.pi)
+						debug.setupvalue(setLook, 12, ((math.atan2(-lerped.X, -lerped.Z) + math.pi) % math.tau) - math.pi)
 						if Vertical.Enabled then
-							debug.setupvalue(setLook, 11, math.clamp(math.asin(lerped.Y), -1.3962634015954636, 1.361356816555577))
+							debug.setupvalue(setLook, 13, math.clamp(math.asin(lerped.Y), -1.3962634015954636, 1.361356816555577))
 						end
 
 						debug.setupvalue(setLook, 4, debug.getupvalue(setLook, 5))
