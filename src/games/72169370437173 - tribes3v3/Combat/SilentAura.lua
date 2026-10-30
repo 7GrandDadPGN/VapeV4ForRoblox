@@ -22,8 +22,9 @@ SilentAura = vape.Categories.Combat:CreateModule({
 			SilentAura:Clean(runService.PostSimulation:Connect(function()
 				gamingThread = task.defer(function()
 					local attacked, old, oldpos
+					local handler = rawget(tribes.State, 'handler')
 
-					if entitylib.isAlive and tribes.State.handler and tribes.State.handler.lastSwing then
+					if entitylib.isAlive and handler and rawget(handler, 'lastSwing') then
 						local localPos = entitylib.character.RootPart.Position
 						local localFacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
 						local entities = entitylib.AllPosition({
@@ -46,7 +47,7 @@ SilentAura = vape.Categories.Combat:CreateModule({
 									continue
 								end
 
-								if AutoSwing.Enabled and not tribes.State.handler.holding then
+								if AutoSwing.Enabled and not rawget(handler, 'holding') then
 									local gui = lplr.PlayerGui:FindFirstChild('CombatTouch', true)
 									gui = gui and gui.Enabled and gui:FindFirstChild('Attack', true) or nil
 
@@ -76,7 +77,7 @@ SilentAura = vape.Categories.Combat:CreateModule({
 								break
 							end
 						else
-							if AutoSwing.Enabled and tribes.State.handler.holding and didSwing then
+							if AutoSwing.Enabled and rawget(handler, 'holding') and didSwing then
 								local gui = lplr.PlayerGui:FindFirstChild('CombatTouch', true)
 								gui = gui and gui.Enabled and gui:FindFirstChild('Attack', true) or nil
 
@@ -91,13 +92,13 @@ SilentAura = vape.Categories.Combat:CreateModule({
 							end
 						end
 
-						--[[if AutoBlock.Enabled and tribes.State.handler.tuning.block then
-							if tribes.State.handler:Ready() and #entities > 0 then
-								tribes.State.handler:SetBlock(false)
-								tribes.State.handler:Swing()
+						--[[if AutoBlock.Enabled and handler.tuning.block then
+							if handler:Ready() and #entities > 0 then
+								handler:SetBlock(false)
+								handler:Swing()
 							end
 
-							tribes.State.handler:SetBlock(true)
+							handler:SetBlock(true)
 							if vape.ThreadFix then
 								setthreadidentity(8)
 							end

@@ -133,6 +133,21 @@ local function removeTags(str)
 	return (str:gsub('<[^<>]->', ''))
 end
 
+local function safeget(...)
+	local args = {...}
+	local obj = table.remove(args, 1)
+
+	for index, dir in args do
+		obj = rawget(obj, dir)
+
+		if not obj then
+			return nil
+		end
+	end
+
+	return obj
+end
+
 run(function()
 	entitylib.targetCheck = function(entity)
 		if entity.NPC then return lplr:GetAttribute('Team') ~= entity.Character:GetAttribute('Team') end
@@ -184,16 +199,16 @@ run(function()
 		Weapons = require(replicatedStorage.Shared.Weapons),
 		Util = require(lplr.PlayerScripts.Combat.Util),
 		UIState = require(lplr.PlayerScripts.UI.State),
-		WeaponIcon = debug.getupvalue(require(lplr.PlayerScripts.UI.WeaponIcon).Init, 5),
-		WeaponRedraw = debug.getupvalue(debug.getupvalue(debug.getupvalue(require(lplr.PlayerScripts.UI.WeaponIcon).Init, 5), 3), 8)
+		WeaponIcon = debug.getupvalue(rawget(require(lplr.PlayerScripts.UI.WeaponIcon), 'Init'), 5),
+		WeaponRedraw = debug.getupvalue(debug.getupvalue(debug.getupvalue(rawget(require(lplr.PlayerScripts.UI.WeaponIcon), 'Init'), 5), 3), 8)
 	}
 
-	local cIndex = debug.getupvalue(tribes.CombatController.Equip, 11)
+	local cIndex = debug.getupvalue(rawget(tribes.CombatController, 'Equip'), 11)
 	cIndex = type(cIndex) == 'function' and debug.info(cIndex, 'n') == 'refreshEquipped' and 11 or 12
 
-	tribes.State = debug.getupvalue(tribes.CombatController.State, 2)
-	tribes.Handlers = debug.getupvalue(debug.getupvalue(tribes.CombatController.Equip, cIndex), 10)
-	tribes.SetSpeed = debug.getupvalue(debug.getupvalue(tribes.CombatController.Equip, cIndex), 15)
+	tribes.State = debug.getupvalue(rawget(tribes.CombatController, 'State'), 3)
+	tribes.Handlers = debug.getupvalue(debug.getupvalue(rawget(tribes.CombatController, 'Equip'), cIndex), 10)
+	tribes.SetSpeed = debug.getupvalue(debug.getupvalue(rawget(tribes.CombatController, 'Equip'), cIndex), 15)
 
 	local kills = sessioninfo:AddItem('Kills')
 	local deaths = sessioninfo:AddItem('Deaths')
@@ -319,7 +334,7 @@ run(function()
 		end)
 
 		if not oldhitbox then
-			oldhitbox = hookfunction(tribes.Melee.Detect, function(...)
+			oldhitbox = hookfunction(rawget(tribes.Melee, 'Detect'), function(...)
 				return Hook(...)
 			end)
 		end
@@ -335,9 +350,9 @@ run(function()
 
 		if oldhitbox and not next(self.Hooks) then
 			if restorefunction then
-				restorefunction(tribes.Melee.Detect)
+				restorefunction(rawget(tribes.Melee, 'Detect'))
 			else
-				hookfunction(tribes.Melee.Detect, oldhitbox)
+				hookfunction(rawget(tribes.Melee, 'Detect'), oldhitbox)
 			end
 
 			oldhitbox = nil
@@ -368,6 +383,6 @@ run(function()
 	end
 end)
 
-for _, v in {'AutoClicker', 'TriggerBot', 'HitBoxes', 'Jesus', 'AutoRejoin', 'Disabler', 'MurderMystery', 'Parkour', 'Wallhop'} do
+for _, v in {'AutoClicker', 'TriggerBot', 'HitBoxes', 'Killaura', 'Jesus', 'AutoRejoin', 'Disabler', 'MurderMystery', 'Parkour', 'Wallhop'} do
 	vape:Remove(v)
 end

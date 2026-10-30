@@ -6,10 +6,11 @@ SwingSpeed = vape.Categories.Blatant:CreateModule({
 		if callback then
 			local old
 			repeat
-				if tribes.State.handler and tribes.State.handler.lastSwing then
-					if tribes.State.handler.lastSwing ~= old then
-						rawset(tribes.State.handler, 'lastSwing', tribes.State.handler.lastSwing - (tribes.State.handler.preset.hitDelay or 0.1))
-						old = tribes.State.handler.lastSwing
+				local handler = rawget(tribes.State, 'handler')
+				if handler and rawget(handler, 'lastSwing') then
+					if rawget(handler, 'lastSwing') ~= old then
+						rawset(handler, 'lastSwing', rawget(handler, 'lastSwing') - (safeget(handler, 'preset', 'hitDelay') or 0.1))
+						old = rawget(handler, 'lastSwing')
 					end
 				else
 					old = nil
