@@ -3,6 +3,7 @@ local old, oldshake, oldslow
 vape.Categories.Blatant:CreateModule({
 	Name = 'NoRecoil',
 	Function = function(callback)
+		if true then return end
 		if callback then
 			old = hookfunction(rawget(tribes.Util, 'Recoil'), function() end)
 			oldshake = hookfunction(rawget(tribes.Util, 'Shake'), function() end)
