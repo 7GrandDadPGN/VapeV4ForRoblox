@@ -4,6 +4,7 @@ local Scale
 local Mesh
 local Texture
 local Hide
+local Offsets = {}
 local Rots = {}
 local models = {}
 
@@ -21,7 +22,7 @@ local function addMesh(entity)
 	local root = entity.RootPart
 	local part = Instance.new('Part')
 	part.Size = Vector3.new(3, 3, 3)
-	part.CFrame = root.CFrame * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value))
+	part.CFrame = root.CFrame * CFrame.new(Offsets[1].Value, Offsets[2].Value, Offsets[3].Value) * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value))
 	part.CanCollide = false
 	part.CanQuery = false
 	part.Massless = true
@@ -95,6 +96,22 @@ Scale = PlayerModel:CreateSlider({
 		end
 	end
 })
+for _, name in {'Offset X', 'Offset Y', 'Offset Z'} do
+	table.insert(Offsets, PlayerModel:CreateSlider({
+		Name = name,
+		Min = -2,
+		Max = 2,
+		Default = 0,
+		Decimal = 10,
+		Function = function(val)
+			for root, part in models do
+				part.WeldConstraint.Enabled = false
+				part.CFrame = root.CFrame * CFrame.new(Offsets[1].Value, Offsets[2].Value, Offsets[3].Value) * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value))
+				part.WeldConstraint.Enabled = true
+			end
+		end
+	}))
+end
 for _, name in {'Rotation X', 'Rotation Y', 'Rotation Z'} do
 	table.insert(Rots, PlayerModel:CreateSlider({
 		Name = name,
@@ -103,7 +120,7 @@ for _, name in {'Rotation X', 'Rotation Y', 'Rotation Z'} do
 		Function = function(val)
 			for root, part in models do
 				part.WeldConstraint.Enabled = false
-				part.CFrame = root.CFrame * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value))
+				part.CFrame = root.CFrame * CFrame.new(Offsets[1].Value, Offsets[2].Value, Offsets[3].Value) * CFrame.Angles(math.rad(Rots[1].Value), math.rad(Rots[2].Value), math.rad(Rots[3].Value))
 				part.WeldConstraint.Enabled = true
 			end
 		end

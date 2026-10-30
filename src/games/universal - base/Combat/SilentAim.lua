@@ -211,44 +211,67 @@ run(function()
 			end
 
 			if callback then
-				hookmethod = Hooks[Method.Value]
-				didOth = OthHook.Enabled
-
-				if FunctionHook.Enabled or hookmethod.NoNamecall then
-					oldhook = (OthHook.Enabled and oth.hook or hookfunction)(hookmethod.Hook, function(...)
-						if checkcaller() then
-							return oldhook(...)
+				if Method.Value == 'TaskScheduler' then
+					local old
+					SilentAim:Clean(runService.PostSimulation:Connect(function()
+						local entity, targetPart = getTarget(gameCamera.CFrame.Position)
+						if entity then
+							old = gameCamera.CFrame
+							gameCamera.CFrame = CFrame.lookAt(gameCamera.CFrame.Position, targetPart.Position)
 						end
+					end))
 
-						local caller = getcallingscript()
-						if typeof(caller) == 'Instance' and caller then
-							if table.find(IgnoredScripts.ListEnabled, tostring(caller)) then
-								return oldnamecall(...)
-							end
-						end
-
-						if hookmethod.NoNamecall then
-							local args = {...}
-							local data = hookmethod.Function(args)
-							if data then
-								return unpack(data)
-							end
-
-							return oldhook(unpack(args))
-						else
-							local self, args = ..., {select(2, ...)}
-							local data = hookmethod.Function(args)
-							if data then
-								return unpack(data)
-							end
-
-							return oldhook(self, unpack(args))
+					local key = httpService:GenerateGUID(false)
+					runService:BindToRenderStep(key, 0, function()
+						if old then
+							gameCamera.CFrame = old
+							old = nil
 						end
 					end)
-				end
 
-				if not hookmethod.NoNamecall then
-					oldnamecall = OthHook.Enabled and oth.hook(getrawmetatable(game).__namecall, namecallHook) or hookmetamethod(game, '__namecall', namecallHook)
+					SilentAim:Clean(function()
+						runService:UnbindFromRenderStep(key)
+					end)
+				else
+					hookmethod = Hooks[Method.Value]
+					didOth = OthHook.Enabled
+
+					if FunctionHook.Enabled or hookmethod.NoNamecall then
+						oldhook = (OthHook.Enabled and oth.hook or hookfunction)(hookmethod.Hook, function(...)
+							if checkcaller() then
+								return oldhook(...)
+							end
+
+							local caller = getcallingscript()
+							if typeof(caller) == 'Instance' and caller then
+								if table.find(IgnoredScripts.ListEnabled, tostring(caller)) then
+									return oldnamecall(...)
+								end
+							end
+
+							if hookmethod.NoNamecall then
+								local args = {...}
+								local data = hookmethod.Function(args)
+								if data then
+									return unpack(data)
+								end
+
+								return oldhook(unpack(args))
+							else
+								local self, args = ..., {select(2, ...)}
+								local data = hookmethod.Function(args)
+								if data then
+									return unpack(data)
+								end
+
+								return oldhook(self, unpack(args))
+							end
+						end)
+					end
+
+					if not hookmethod.NoNamecall then
+						oldnamecall = OthHook.Enabled and oth.hook(getrawmetatable(game).__namecall, namecallHook) or hookmetamethod(game, '__namecall', namecallHook)
+					end
 				end
 			else
 				if oldhook then
@@ -323,7 +346,7 @@ run(function()
 	})
 	Method = SilentAim:CreateDropdown({
 		Name = 'Method',
-		List = {'FindPartOnRay', 'FindPartOnRayWithIgnoreList', 'FindPartOnRayWithWhitelist', 'ScreenPointToRay', 'ViewportPointToRay', 'Raycast', 'Ray'},
+		List = {'FindPartOnRay', 'FindPartOnRayWithIgnoreList', 'FindPartOnRayWithWhitelist', 'ScreenPointToRay', 'ViewportPointToRay', 'Raycast', 'Ray', 'TaskScheduler'},
 		Function = function(val)
 			if SilentAim.Enabled then
 				SilentAim:Toggle()
