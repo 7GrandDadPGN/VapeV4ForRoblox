@@ -1,6 +1,7 @@
 vape.Categories.Blatant:CreateModule({
 	Name = 'NoSlowdown',
 	Function = function(callback)
+		if true then return end
 		if callback then
 			old = hookfunction(tribes.SetSpeed, function() end)
 			table.clear(rawget(tribes.State, 'speed') or {})
