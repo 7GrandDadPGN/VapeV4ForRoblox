@@ -12,6 +12,7 @@ AimAssist = vape.Categories.Combat:CreateModule({
 	Name = 'AimAssist',
 	Function = function(callback)
 		if callback then
+			if true then return end
 			AimAssist:Clean(runService.Heartbeat:Connect(function(dt)
 				local lastSwing = entitylib.isAlive and rawget(tribes.State, 'handler')
 				lastSwing = lastSwing and rawget(lastSwing, 'lastSwing') or nil
