@@ -3,7 +3,7 @@ vape.Categories.Blatant:CreateModule({
 	Function = function(callback)
 		if callback then
 			old = hookfunction(tribes.SetSpeed, function() end)
-			table.clear(tribes.State.speed)
+			table.clear(rawget(tribes.State, 'speed') or {})
 		else
 			if old then
 				restorefunction(tribes.SetSpeed)

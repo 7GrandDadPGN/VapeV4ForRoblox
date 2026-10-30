@@ -13,7 +13,10 @@ AimAssist = vape.Categories.Combat:CreateModule({
 	Function = function(callback)
 		if callback then
 			AimAssist:Clean(runService.Heartbeat:Connect(function(dt)
-				if entitylib.isAlive and tribes.State.handler and tribes.State.handler.lastSwing and ((not ClickAim.Enabled) or (os.clock() - (tribes.State.handler.lastSwing or 0)) < 0.5) then
+				local lastSwing = entitylib.isAlive and rawget(tribes.State, 'handler')
+				lastSwing = lastSwing and rawget(lastSwing, 'lastSwing') or nil
+
+				if lastSwing and ((not ClickAim.Enabled) or (os.clock() - (lastSwing or 0)) < 0.5) then
 					local entity = entitylib.EntityPosition({
 						Range = Distance.Value,
 						Part = 'RootPart',
@@ -29,13 +32,14 @@ AimAssist = vape.Categories.Combat:CreateModule({
 						if angle >= (math.rad(AngleSlider.Value) / 2) then return end
 						targetinfo.Targets[entity] = os.clock() + 1
 						local lerped = gameCamera.CFrame:Lerp(CFrame.lookAt(gameCamera.CFrame.Position, entity.RootPart.Position), (AimSpeed.Value + (StrafeIncrease.Enabled and (inputService:IsKeyDown(Enum.KeyCode.A) or inputService:IsKeyDown(Enum.KeyCode.D)) and 10 or 0)) * dt).LookVector
+						local setLook = rawget(tribes.Camera, 'SetLook')
 
-						debug.setupvalue(tribes.Camera.SetLook, 2, ((math.atan2(-lerped.X, -lerped.Z) + math.pi) % math.tau) - math.pi)
+						debug.setupvalue(setLook, 2, ((math.atan2(-lerped.X, -lerped.Z) + math.pi) % math.tau) - math.pi)
 						if Vertical.Enabled then
-							debug.setupvalue(tribes.Camera.SetLook, 3, math.clamp(math.asin(lerped.Y), -1.3962634015954636, 1.361356816555577))
+							debug.setupvalue(setLook, 3, math.clamp(math.asin(lerped.Y), -1.3962634015954636, 1.361356816555577))
 						end
 
-						debug.setupvalue(tribes.Camera.SetLook, 4, debug.getupvalue(tribes.Camera.SetLook, 5))
+						debug.setupvalue(setLook, 4, debug.getupvalue(setLook, 5))
 						--tribes.Camera.SetLook(math.atan2(-lerped.X, -lerped.Z), Vertical.Enabled and math.asin(lerped.Y) or nil)
 					end
 				end
