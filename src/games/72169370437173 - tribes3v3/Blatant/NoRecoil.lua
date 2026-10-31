@@ -4,6 +4,7 @@ vape.Categories.Blatant:CreateModule({
 	Name = 'NoRecoil',
 	Function = function(callback)
 		if callback then
+			if true then return end
 			old = hookfunction(rawget(tribes.Util, 'Recoil'), newcclosure(function(...)
 				hideStack()
 				if not argCheck({{'number'}, {'number', 'nil'}, {'number', 'nil'}}, ...) then
