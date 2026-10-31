@@ -233,7 +233,7 @@ run(function()
 	local cIndex = debug.getupvalue(rawget(tribes.CombatController, 'Equip'), 11)
 	cIndex = type(cIndex) == 'function' and debug.info(cIndex, 'n') == 'refreshEquipped' and 11 or 12
 
-	tribes.State = debug.getupvalue(rawget(tribes.CombatController, 'State'), 12)
+	tribes.State = debug.getupvalue(rawget(tribes.CombatController, 'State'), 14)
 	tribes.Handlers = debug.getupvalue(debug.getupvalue(rawget(tribes.CombatController, 'Equip'), cIndex), 10)
 	tribes.SetSpeed = debug.getupvalue(debug.getupvalue(rawget(tribes.CombatController, 'Equip'), cIndex), 15)
 
