@@ -14,6 +14,21 @@ ProjectileRaycast.RespectCanCollide = true
 local Toggles = {}
 local old
 
+local valid = {
+	[lplr.PlayerScripts.Combat.Handlers.Bow:GetFullName()] = {
+		'Fire'
+	},
+	[lplr.PlayerScripts.Combat.Handlers.Gun:GetFullName()] = {
+		'Fire'
+	},
+	[lplr.PlayerScripts.Combat.Handlers.Melee:GetFullName()] = {
+		'Hurl'
+	},
+	[lplr.PlayerScripts.Combat.Handlers.Throw:GetFullName()] = {
+		'Launch'
+	}
+}
+
 local function getMousePosition()
 	if inputService.TouchEnabled then
 		return gameCamera.ViewportSize / 2
@@ -25,7 +40,8 @@ end
 local function Hook(...)
 	hideStack()
 
-	if not argCheck({{'Vector3', 'nil'}}, ...) then
+	local n, s = debug.info(1, 'ns')
+	if not (argCheck({{'Vector3', 'nil'}}, ...) and valid[s] and table.find(valid[s], n)) then
 		return old(...)
 	end
 
@@ -126,8 +142,6 @@ SilentAim = vape.Categories.Combat:CreateModule({
 				SilentAim:Toggle()
 				return
 			end
-
-			if true then return end
 
 			old = hookfunction(rawget(tribes.Util, 'AimDirection'), function(...)
 				return Hook(...)

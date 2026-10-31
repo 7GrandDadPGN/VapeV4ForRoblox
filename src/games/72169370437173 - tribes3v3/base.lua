@@ -333,11 +333,17 @@ end)
 
 run(function()
 	local oldhitbox
+	local cmp = lplr.PlayerScripts.Combat.Handlers.Melee:GetFullName()
 
 	local function Hook(...)
 		hideStack()
 
-		if not argCheck({{'table'}, {'number'}, {'number'}, {'number'}}, ...) then
+		if not debug.validlevel(2) then
+			local n, s = debug.info(1, 'ns')
+			if not (argCheck({{'table'}, {'number'}, {'number'}, {'number'}}, ...) and n == '' and s == cmp) then
+				return oldhitbox(...)
+			end
+		else
 			return oldhitbox(...)
 		end
 
