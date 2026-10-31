@@ -143,6 +143,7 @@ SilentAim = vape.Categories.Combat:CreateModule({
 				return
 			end
 
+			if true then return end
 			old = hookfunction(rawget(tribes.Util, 'AimDirection'), function(...)
 				return Hook(...)
 			end)

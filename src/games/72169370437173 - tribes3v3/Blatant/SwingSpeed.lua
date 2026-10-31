@@ -21,6 +21,7 @@ SwingSpeed = vape.Categories.Blatant:CreateModule({
 	Name = 'SwingSpeed',
 	Function = function(callback)
 		if callback then
+			if true then return end
 			old = hookfunction(rawget(tribes.Melee, 'OneHanded'), function(...)
 				return Hook(...)
 			end)
