@@ -1,5 +1,6 @@
 local AimAssist
 local Targets
+local Mode
 local Part
 local FOV
 local Speed
@@ -14,10 +15,7 @@ local ShowTarget
 local moveConst = Vector2.new(1, 0.77) * math.rad(0.5)
 
 local function wrapAngle(num)
-	num = num % math.pi
-	num -= num >= (math.pi / 2) and math.pi or 0
-	num += num < -(math.pi / 2) and math.pi or 0
-	return num
+	return (num + math.pi % math.tau) - math.pi
 end
 
 AimAssist = vape.Categories.Combat:CreateModule({
@@ -46,19 +44,18 @@ AimAssist = vape.Categories.Combat:CreateModule({
 						return
 					end
 
-					entity = entitylib.EntityMouse({
+					entity = entitylib['Entity'..Mode.Value]({
 						Range = FOV.Value,
 						Part = Part.Value,
 						Players = Targets.Players.Enabled,
 						NPCs = Targets.NPCs.Enabled,
 						Wallcheck = Targets.Walls.Enabled,
-						Origin = gameCamera.CFrame.Position
+						Origin = Mode.Value == 'Mouse' and gameCamera.CFrame.Position or nil
 					})
 
 					if entity then
 						local facing = gameCamera.CFrame.LookVector
-						local new = (entity[Part.Value].Position - gameCamera.CFrame.Position).Unit
-						new = new == new and new or Vector3.zero
+						local new = CFrame.lookAt(gameCamera.CFrame.Position, entity[Part.Value].Position).LookVector
 
 						if ShowTarget.Enabled then
 							targetinfo.Targets[entity] = os.clock() + 1
@@ -95,7 +92,13 @@ AimAssist = vape.Categories.Combat:CreateModule({
 	end,
 	Tooltip = 'Smoothly aims to closest valid target'
 })
-Targets = AimAssist:CreateTargets({Players = true})
+Targets = AimAssist:CreateTargets({
+	Players = true
+})
+Mode = AimAssist:CreateDropdown({
+	Name = 'Mode',
+	List = {'Mouse', 'Position'}
+})
 Part = AimAssist:CreateDropdown({
 	Name = 'Part',
 	List = {'RootPart', 'Head'}
