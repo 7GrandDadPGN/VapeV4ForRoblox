@@ -1,35 +1,35 @@
 local old
 local valid = {
 	[lplr.PlayerScripts.Combat.Handlers.Bow:GetFullName()] = {
-		'StartDraw',
-		'Input'
+		StartDraw = 'Draw',
+		Input = 'Aim'
 	},
 	[lplr.PlayerScripts.Combat.Handlers.Gun:GetFullName()] = {
-		'LocalReload'
+		LocalReload = 'Reload'
 	},
 	[lplr.PlayerScripts.Combat.Handlers.Melee:GetFullName()] = {
-		'SetBlock',
-		'StartCharge',
-		'RaiseParry'
+		SetBlock = 'Block',
+		StartCharge = 'Charge',
+		RaiseParry = 'Parry'
 	},
 	[lplr.PlayerScripts.Combat.Handlers.Throw:GetFullName()] = {
-		'Start',
-		'Input'
+		Start = 'Throw',
+		Input = 'Aim'
 	},
 	[lplr.PlayerScripts.Combat.Handlers.Use:GetFullName()] = {
-		'Activate'
+		Activate = 'Use'
 	}
 }
 
 local function Hook(...)
 	hideStack()
 	local n, s = debug.info(1, 'ns')
-	if not (argCheck({{'string'}, {'number', 'nil'}}, ...) and valid[s] and table.find(valid[s], n)) then
+	if not (argCheck({{'string'}, {'number', 'nil'}}, ...) and valid[s] and valid[s][n]) then
 		return old(...)
 	end
 
-	local speed = select(2, ...)
-	if speed == nil or speed >= 1 then
+	local name, arg = ...
+	if valid[s][n] ~= name or arg == nil or (not math.isfinite(arg) or math.clamp(arg, 0, 1) ~= arg) then
 		return old(...)
 	end
 end
@@ -38,7 +38,6 @@ vape.Categories.Blatant:CreateModule({
 	Name = 'NoSlowdown',
 	Function = function(callback)
 		if callback then
-			if true then return end
 			old = hookfunction(tribes.SetSpeed, function(...)
 				return Hook(...)
 			end)

@@ -1,7 +1,6 @@
 local AutoArrest
 local Range
 local AutoEquip
-local cooldown = 0
 
 local function equipTool(tool)
 	local obj = jb.InventoryItemBinder:Get(tool)
@@ -14,6 +13,8 @@ AutoArrest = vape.Categories.Blatant:CreateModule({
 	Name = 'AutoArrest',
 	Function = function(callback)
 		if callback then
+			local randkey, savetime
+
 			repeat
 				local cuffs = InvTracker.Inventories[lplr].Handcuffs
 
@@ -31,29 +32,37 @@ AutoArrest = vape.Categories.Blatant:CreateModule({
 
 					for _, entity in entities do
 						if entity.Player and isIllegal(entity) then
-							if not entity.Character:GetAttribute('InVehicle') and not target and cooldown < os.clock() then
-								target = entity.Player.Name
+							if not entity.Character:GetAttribute('InVehicle') and not target then
+								target = entity.Player
 							end
 						end
 					end
 
 					if target then
 						local lastEquipped = jb.ItemSystemController:GetLocalEquipped()
-						if AutoEquip.Enabled and not (lastEquipped and lastEquipped.__ClassName == 'Handcuffs') then
+						if AutoEquip.Enabled and not (lastEquipped and lastEquipped.__ClassName == 'Handcuffs') and (not savetime or (os.clock() - savetime) > 0.45) then
 							equipTool(cuffs)
 						end
 
 						local equipped = jb.ItemSystemController:GetLocalEquipped()
 						if equipped and equipped.__ClassName == 'Handcuffs' then
-							if target then
-								jb:FireServer('Arrest', target)
-								cooldown = os.clock() + 0.5
+							if savetime then
+								if (os.clock() - savetime) > 0.5 then
+									jb:FireServer('ArrestEnd', randkey)
+									savetime = nil
+								end
+							else
+								savetime = os.clock()
+								randkey = math.random(1, 1073741824)
+								jb:FireServer('ArrestBegin', target, randkey)
 							end
 						end
 
 						if AutoEquip.Enabled and lastEquipped ~= equipped then
 							equipTool(lastEquipped and lastEquipped.inventoryItemValue or cuffs)
 						end
+					else
+						savetime = nil
 					end
 				end
 

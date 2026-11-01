@@ -24,6 +24,13 @@ local function drawTaser(origin, target)
 	end
 end
 
+local function equipTool(tool)
+	local obj = jb.InventoryItemBinder:Get(tool)
+	if obj then
+		obj:AttemptSelect()
+	end
+end
+
 AutoTaze = vape.Categories.Blatant:CreateModule({
 	Name = 'AutoTaze',
 	Function = function(callback)
@@ -46,18 +53,25 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 						if (taser:GetAttribute('NextUse') or 0) < os.clock() then
 							for _, entity in entities do
 								if isIllegal(entity) and (entity.VehicleTimer or 0) < os.clock() and not ((VehicleCheck.Enabled and entity.Character:GetAttribute('InVehicle')) or entity.Head.CanCollide) then
+									local lastEquipped
+									if not isTaser then
+										lastEquipped = jb.ItemSystemController:GetLocalEquipped()
+										if not (lastEquipped and lastEquipped.__ClassName == 'Taser') then
+											equipTool(taser)
+											equipped = jb.ItemSystemController:GetLocalEquipped()
+										end
+									end
+
 									drawTaser(equipped and equipped.Tip or entitylib.character.RootPart, entity.RootPart.Position)
 									taser:SetAttribute('LastUsedAt', os.clock())
 									taser:SetAttribute('NextUse', os.clock() + 10)
 
-									if isTaser then
-										jb:FireServer('TaseReplicate', entity.RootPart.Position)
-									end
+									jb:FireServer('TaseReplicate', entity.RootPart.Position)
+									jb:FireServer('Tase', entity.RootPart.Position, entity.RootPart, entity.Player)
+									equipped:BroadcastInputBegan({UserInputType = Enum.UserInputType.MouseButton1, KeyCode = Enum.KeyCode.None})
 
-									jb:FireServer('Tase', entity.Humanoid, entity.RootPart, entity.RootPart.Position)
-
-									if isTaser then
-										equipped:BroadcastInputBegan({UserInputType = Enum.UserInputType.MouseButton1, KeyCode = Enum.KeyCode.None})
+									if not isTaser and lastEquipped ~= equipped then
+										equipTool(lastEquipped and lastEquipped.inventoryItemValue or taser)
 									end
 
 									break

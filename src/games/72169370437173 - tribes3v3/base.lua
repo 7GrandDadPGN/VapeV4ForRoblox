@@ -176,6 +176,43 @@ local function argCheck(expected, ...)
 end
 
 run(function()
+	local function waitForChildOfType(obj, name, timeout, prop, namecheck)
+		local expireTime = os.clock() + timeout
+
+		repeat
+			local result = prop and obj[name] or obj:FindFirstChildWhichIsA(name)
+			if result and namecheck then
+				if result.Name ~= namecheck then
+					result = nil
+				end
+			end
+
+			if result then
+				return cloneref(result)
+			end
+
+			task.wait()
+		until expireTime < os.clock()
+	end
+
+	entitylib.getUpdateConnections = function(entity)
+		local hum = entity.Humanoid
+		return {
+			hum:GetPropertyChangedSignal('Health'),
+			hum:GetPropertyChangedSignal('MaxHealth'),
+			entity.Character:GetAttributeChangedSignal('Armor'),
+			{
+				Connect = function()
+					entity.Friend = entity.Player and isFriend(entity.Player) or nil
+					entity.Target = entity.Player and isTarget(entity.Player) or nil
+					return {
+						Disconnect = function() end
+					}
+				end
+			}
+		}
+	end
+
 	entitylib.targetCheck = function(entity)
 		if entity.NPC then return lplr:GetAttribute('Team') ~= entity.Character:GetAttribute('Team') end
 		if isFriend(entity.Player) then return false end
@@ -183,8 +220,63 @@ run(function()
 		return lplr:GetAttribute('Team') ~= entity.Character:GetAttribute('Team')
 	end
 
+	entitylib.isVulnerable = function(entity)
+		return entity.Health > 0 and not entity.Character:GetAttribute('Parrying') and not entity.Character.FindFirstChildWhichIsA(entity.Character, 'ForceField')
+	end
+
 	entitylib.addPlayer = function(plr)
 
+	end
+
+	entitylib.addEntity = function(char, plr, teamfunc, spawntime)
+		if not char then
+			return
+		end
+
+		entitylib.EntityThreads[char] = task.spawn(function()
+			local hum = waitForChildOfType(char, 'Humanoid', 10)
+			local humrootpart = hum and waitForChildOfType(hum, 'RootPart', workspace.StreamingEnabled and math.huge or 10, true, 'HumanoidRootPart')
+			local head = cloneref(char:WaitForChild('Head', 10) or humrootpart or workspace)
+
+			if hum and humrootpart then
+				local entity = {
+					Connections = {},
+					Character = char,
+					Health = hum.Health + (char:GetAttribute('Armor') or 0),
+					Head = head,
+					Humanoid = hum,
+					HumanoidRootPart = humrootpart,
+					HipHeight = hum.HipHeight + (humrootpart.Size.Y / 2) + (hum.RigType == Enum.HumanoidRigType.R6 and 2 or 0),
+					MaxHealth = hum.MaxHealth,
+					NPC = plr == nil,
+					Player = plr,
+					RootPart = humrootpart,
+					SpawnTime = spawntime or 0,
+					TeamCheck = teamfunc
+				}
+
+				if plr == lplr then
+					entitylib.character = entity
+					entitylib.isAlive = true
+					entitylib.Events.LocalAdded:Fire(entity)
+				else
+					entity.Targetable = entitylib.targetCheck(entity)
+
+					for _, connection in entitylib.getUpdateConnections(entity) do
+						table.insert(entity.Connections, connection:Connect(function()
+							entity.Health = hum.Health + (char:GetAttribute('Armor') or 0)
+							entity.MaxHealth = hum.MaxHealth
+							entitylib.Events.EntityUpdated:Fire(entity)
+						end))
+					end
+
+					table.insert(entitylib.List, entity)
+					entitylib.Events.EntityAdded:Fire(entity)
+				end
+			end
+
+			entitylib.EntityThreads[char] = nil
+		end)
 	end
 
 	local oldstart = entitylib.start
@@ -338,21 +430,22 @@ run(function()
 	local function Hook(...)
 		hideStack()
 
-		if not debug.validlevel(2) then
-			local n, s = debug.info(1, 'ns')
-			if not (argCheck({{'table'}, {'number'}, {'number'}, {'number'}}, ...) and n == '' and s == cmp) then
-				return oldhitbox(...)
-			end
-		else
+		local n, s = debug.info(1, 'ns')
+		if not (not debug.validlevel(2) and argCheck({{'table'}, {'number'}, {'number'}, {'number'}}, ...) and n == '' and s == cmp) then
 			return oldhitbox(...)
 		end
 
-		local args = table.pack(...)
-		for _, v in HitboxHook.Hooks do
-			if v[2](args) then return end
+		local self = ...
+		if getrawmetatable(self) == tribes.Melee and type(rawget(self, 'lastSwing')) == 'number' then
+			local args = table.pack(...)
+			for _, v in HitboxHook.Hooks do
+				if v[2](args) then return end
+			end
+
+			return oldhitbox(unpack(args, 1, args.n))
 		end
 
-		return oldhitbox(unpack(args, 1, args.n))
+		return oldhitbox(...)
 	end
 
 	function HitboxHook:Add(key, val, priority)

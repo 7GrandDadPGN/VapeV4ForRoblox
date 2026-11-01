@@ -3,7 +3,8 @@ local cmp = lplr.PlayerScripts.Combat.Handlers.Melee:GetFullName()
 
 local function Hook(...)
 	hideStack()
-	local n, s = debug.info(2, 'ns')
+
+	local n, s = debug.info(1, 'ns')
 	if not (argCheck({{'table'}}, ...) and n == 'Swing' and s == cmp) then
 		return old(...)
 	end
@@ -15,13 +16,14 @@ local function Hook(...)
 			rawset(self, 'lastSwing', rawget(self, 'lastSwing') - (type(cooldown) == 'number' and cooldown or 0.1))
 		end)
 	end
+
+	return old(...)
 end
 
 SwingSpeed = vape.Categories.Blatant:CreateModule({
 	Name = 'SwingSpeed',
 	Function = function(callback)
 		if callback then
-			if true then return end
 			old = hookfunction(rawget(tribes.Melee, 'OneHanded'), function(...)
 				return Hook(...)
 			end)

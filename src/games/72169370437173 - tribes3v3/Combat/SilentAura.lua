@@ -24,7 +24,7 @@ SilentAura = vape.Categories.Combat:CreateModule({
 					local attacked, old, oldpos
 					local handler = rawget(tribes.State, 'handler')
 
-					if entitylib.isAlive and handler and rawget(handler, 'lastSwing') then
+					if entitylib.isAlive and handler and type(rawget(handler, 'lastSwing')) == 'number' then
 						local localPos = entitylib.character.RootPart.Position
 						local localFacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
 						local entities = entitylib.AllPosition({

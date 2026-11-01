@@ -62,6 +62,11 @@ local function Hook(...)
 			end
 		end
 
+		local arg = ...
+		if arg and not (entitylib.isAlive and (arg - entitylib.character.RootPart.Position).Magnitude < 8) then
+			return old(...)
+		end
+
 		local entity = entitylib.EntityMouse({
 			Range = Range.Value,
 			Part = Part.Value,
@@ -143,7 +148,6 @@ SilentAim = vape.Categories.Combat:CreateModule({
 				return
 			end
 
-			if true then return end
 			old = hookfunction(rawget(tribes.Util, 'AimDirection'), function(...)
 				return Hook(...)
 			end)
