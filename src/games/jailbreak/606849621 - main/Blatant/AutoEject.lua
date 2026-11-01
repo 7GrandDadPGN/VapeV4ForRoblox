@@ -1,7 +1,14 @@
 local AutoEject
 local Range
-local Hand
+local AutoEquip
 local cooldown = 0
+
+local function equipTool(tool)
+	local obj = jb.InventoryItemBinder:Get(tool)
+	if obj then
+		obj:AttemptSelect()
+	end
+end
 
 AutoEject = vape.Categories.Blatant:CreateModule({
 	Name = 'AutoEject',
@@ -13,9 +20,9 @@ AutoEject = vape.Categories.Blatant:CreateModule({
 				if entitylib.isAlive and lplr.Team == teams.Police and cuffs then
 					local equipped = jb.ItemSystemController:GetLocalEquipped()
 
-					if not Hand.Enabled or equipped and equipped.__ClassName == 'Handcuffs' then
+					if AutoEquip.Enabled or equipped and equipped.__ClassName == 'Handcuffs' then
 						local serverPos = entitylib.character.Humanoid:FindFirstChild('HumanoidUnloadServerPosition')
-						local vehicle
+						local seat
 
 						local entities = entitylib.AllPosition({
 							Players = true,
@@ -27,16 +34,28 @@ AutoEject = vape.Categories.Blatant:CreateModule({
 						for _, entity in entities do
 							if entity.Player and isIllegal(entity) then
 								if entity.Character:GetAttribute('InVehicle') then
-									if not vehicle and cooldown < os.clock() then
-										vehicle = getVehicle(entity)
+									if not seat and cooldown < os.clock() then
+										seat = getVehicleSeat(entity)
 									end
 								end
 							end
 						end
 
-						if vehicle then
-							jb:FireServer('Eject', vehicle)
-							cooldown = os.clock() + 0.5
+						if seat then
+							local lastEquipped = jb.ItemSystemController:GetLocalEquipped()
+							if AutoEquip.Enabled and not (lastEquipped and lastEquipped.__ClassName == 'Handcuffs') then
+								equipTool(cuffs)
+							end
+
+							equipped = jb.ItemSystemController:GetLocalEquipped()
+							if equipped and equipped.__ClassName == 'Handcuffs' then
+								jb:FireServer('Eject', seat)
+								cooldown = os.clock() + 0.5
+							end
+
+							if AutoEquip.Enabled and lastEquipped ~= equipped then
+								equipTool(lastEquipped and lastEquipped.inventoryItemValue or cuffs)
+							end
 						end
 					end
 				end
@@ -50,13 +69,13 @@ AutoEject = vape.Categories.Blatant:CreateModule({
 Range = AutoEject:CreateSlider({
 	Name = 'Range',
 	Min = 1,
-	Max = 40,
-	Default = 40,
+	Max = 18,
+	Default = 18,
 	Suffix = function(val)
 		return val == 1 and 'stud' or 'studs'
 	end
 })
-Hand = AutoEject:CreateToggle({
-	Name = 'Hand Check',
-	Tooltip = 'Only eject while holding handcuffs'
+AutoEquip = AutoEject:CreateToggle({
+	Name = 'AutoEquip',
+	Tooltip = 'Automatically equip the handcuffs for performing actions (RISKY)'
 })

@@ -43,10 +43,15 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 					local isTaser = equipped and equipped.__ClassName == 'Taser'
 
 					if (not HandCheck.Enabled or isTaser) then
+						if not (equipped and equipped.BulletEmitter) then
+							OriginScanner:UpdateIgnore({})
+						end
+
 						local entities = entitylib.AllPosition({
 							Players = true,
 							Part = 'RootPart',
 							Range = Range.Value,
+							Wallcheck = true,
 							Arrest = true
 						})
 
@@ -62,13 +67,15 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 										end
 									end
 
-									drawTaser(equipped and equipped.Tip or entitylib.character.RootPart, entity.RootPart.Position)
-									taser:SetAttribute('LastUsedAt', os.clock())
-									taser:SetAttribute('NextUse', os.clock() + 10)
+									if equipped and equipped.__ClassName == 'Taser' then
+										drawTaser(equipped and equipped.Tip or entitylib.character.RootPart, entity.RootPart.Position)
+										taser:SetAttribute('LastUsedAt', os.clock())
+										taser:SetAttribute('NextUse', os.clock() + 10)
 
-									jb:FireServer('TaseReplicate', entity.RootPart.Position)
-									jb:FireServer('Tase', entity.RootPart.Position, entity.RootPart, entity.Player)
-									equipped:BroadcastInputBegan({UserInputType = Enum.UserInputType.MouseButton1, KeyCode = Enum.KeyCode.None})
+										jb:FireServer('TaseReplicate', entity.RootPart.Position)
+										jb:FireServer('Tase', entity.RootPart.Position, entity.RootPart, entity.Player)
+										equipped:BroadcastInputBegan({UserInputType = Enum.UserInputType.MouseButton1, KeyCode = Enum.KeyCode.None})
+									end
 
 									if not isTaser and lastEquipped ~= equipped then
 										equipTool(lastEquipped and lastEquipped.inventoryItemValue or taser)
