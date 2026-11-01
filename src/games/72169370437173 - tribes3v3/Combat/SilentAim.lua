@@ -29,6 +29,13 @@ local valid = {
 	}
 }
 
+local validarg = {
+	[lplr.PlayerScripts.Combat.Handlers.Bow:GetFullName()] = 'Muzzle',
+	[lplr.PlayerScripts.Combat.Handlers.Gun:GetFullName()] = 'Muzzle',
+	[lplr.PlayerScripts.Combat.Handlers.Melee:GetFullName()] = 'None',
+	[lplr.PlayerScripts.Combat.Handlers.Throw:GetFullName()] = 'Throw'
+}
+
 local function getMousePosition()
 	if inputService.TouchEnabled then
 		return gameCamera.ViewportSize / 2
@@ -63,8 +70,16 @@ local function Hook(...)
 		end
 
 		local arg = ...
-		if arg and not (entitylib.isAlive and (arg - entitylib.character.RootPart.Position).Magnitude < 8) then
-			return old(...)
+		if arg then
+			if not validarg[s] then
+				return old(...)
+			elseif validarg[s] == 'Muzzle' and arg ~= tribes.Util.ShotOrigin(handler.ctx.tool, 'Muzzle') then
+				return old(...)
+			elseif validarg[s] == 'None' and arg ~= tribes.Util.ShotOrigin(nil) then
+				return old(...)
+			elseif validarg[s] == 'Throw' and arg ~= tribes.Util.ShotOrigin(handler.ctx.tool, 'Tip') and arg ~= tribes.Util.ShotOrigin(nil) then
+				return old(...)
+			end
 		end
 
 		local entity = entitylib.EntityMouse({

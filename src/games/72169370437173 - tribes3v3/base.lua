@@ -436,7 +436,7 @@ run(function()
 		end
 
 		local self = ...
-		if getrawmetatable(self) == tribes.Melee and type(rawget(self, 'lastSwing')) == 'number' then
+		if getrawmetatable(self) == tribes.Melee and self == tribes.State.handler and type(rawget(self, 'lastSwing')) == 'number' then
 			local args = table.pack(...)
 			for _, v in HitboxHook.Hooks do
 				if v[2](args) then return end

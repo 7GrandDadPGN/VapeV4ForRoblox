@@ -10,7 +10,7 @@ local function Hook(...)
 	end
 
 	local self = ...
-	if getrawmetatable(self) == tribes.Melee and type(rawget(self, 'lastSwing')) == 'number' then
+	if getrawmetatable(self) == tribes.Melee and self == tribes.State.handler and type(rawget(self, 'lastSwing')) == 'number' then
 		task.defer(function()
 			local cooldown = safeget(self, 'preset', 'hitDelay')
 			rawset(self, 'lastSwing', rawget(self, 'lastSwing') - (type(cooldown) == 'number' and cooldown or 0.1))

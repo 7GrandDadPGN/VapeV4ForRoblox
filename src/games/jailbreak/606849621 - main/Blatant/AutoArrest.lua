@@ -39,15 +39,16 @@ AutoArrest = vape.Categories.Blatant:CreateModule({
 					end
 
 					if target then
+						local doAction = not savetime or (os.clock() - savetime) > 0.5
 						local lastEquipped = jb.ItemSystemController:GetLocalEquipped()
-						if AutoEquip.Enabled and not (lastEquipped and lastEquipped.__ClassName == 'Handcuffs') and (not savetime or (os.clock() - savetime) > 0.45) then
+						if AutoEquip.Enabled and not (lastEquipped and lastEquipped.__ClassName == 'Handcuffs') and doAction then
 							equipTool(cuffs)
 						end
 
 						local equipped = jb.ItemSystemController:GetLocalEquipped()
 						if equipped and equipped.__ClassName == 'Handcuffs' then
 							if savetime then
-								if (os.clock() - savetime) > 0.5 then
+								if doAction then
 									jb:FireServer('ArrestEnd', randkey)
 									savetime = nil
 								end
