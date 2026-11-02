@@ -47,7 +47,7 @@ end
 local function Hook(...)
 	hideStack()
 
-	local n, s = debug.info(1, 'ns')
+	local n, s = getCaller()
 	if not (argCheck({{'Vector3', 'nil'}}, ...) and valid[s] and table.find(valid[s], n)) then
 		return old(...)
 	end

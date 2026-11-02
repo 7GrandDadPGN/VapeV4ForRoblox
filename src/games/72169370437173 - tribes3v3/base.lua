@@ -109,6 +109,14 @@ local function clickButton(obj)
 	end
 end
 
+local function getCaller()
+	for i = 1, 7 do
+		if debug.validlevel(i) and not isexecutorclosure(debug.info(i, 'f')) then
+			return debug.info(i, 'ns')
+		end
+	end
+end
+
 local function hideStack()
 	if setstackhidden then
 		local ffunctions = {debug.info(1, 'f'), debug.info(2, 'f'), debug.info(3, 'f'), debug.info(4, 'f'), debug.info(5, 'f')}
@@ -430,7 +438,7 @@ run(function()
 	local function Hook(...)
 		hideStack()
 
-		local n, s = debug.info(1, 'ns')
+		local n, s = getCaller()
 		if not (not debug.validlevel(2) and argCheck({{'table'}, {'number'}, {'number'}, {'number'}}, ...) and n == '' and s == cmp) then
 			return oldhitbox(...)
 		end
