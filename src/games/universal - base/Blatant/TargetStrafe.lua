@@ -85,7 +85,7 @@ TargetStrafe = vape.Categories.Blatant:CreateModule({
 			TargetStrafeVector = nil
 		end
 	end,
-	Tooltip = 'Automatically strafes around the opponent'
+	Tooltip = 'Automatically strafes around nearby entities.'
 })
 Targets = TargetStrafe:CreateTargets({
 	Players = true,

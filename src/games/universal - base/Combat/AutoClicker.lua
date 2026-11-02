@@ -24,7 +24,7 @@ AutoClicker = vape.Categories.Combat:CreateModule({
 			until not AutoClicker.Enabled
 		end
 	end,
-	Tooltip = 'Automatically clicks for you'
+	Tooltip = 'Automatically clicks for you.'
 })
 Mode = AutoClicker:CreateDropdown({
 	Name = 'Mode',

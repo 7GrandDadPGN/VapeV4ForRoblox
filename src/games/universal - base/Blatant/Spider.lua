@@ -66,7 +66,7 @@ Spider = vape.Categories.Blatant:CreateModule({
 			SpiderShift = false
 		end
 	end,
-	Tooltip = 'Lets you climb up walls. (Hold shift to use Phase over spider)'
+	Tooltip = 'Lets you climb up obstacles. (Hold Left Shift to use Phase over Spider)'
 })
 Mode = Spider:CreateDropdown({
 	Name = 'Mode',

@@ -45,7 +45,7 @@ SpinBot = vape.Categories.Blatant:CreateModule({
 			end
 		end
 	end,
-	Tooltip = 'Makes your character spin around in circles (does not work in first person)'
+	Tooltip = 'Automatically spins your character around in circles. (Does not work in first person)'
 })
 Mode = SpinBot:CreateDropdown({
 	Name = 'Mode',

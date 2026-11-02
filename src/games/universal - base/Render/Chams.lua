@@ -173,7 +173,7 @@ Chams = vape.Categories.Render:CreateModule({
 			table.clear(Threads)
 		end
 	end,
-	Tooltip = 'Render players through walls'
+	Tooltip = 'Render players through walls.'
 })
 Targets = Chams:CreateTargets({
 	Players = true,

@@ -14,7 +14,7 @@ Timer = vape.Categories.Blatant:CreateModule({
 			end))
 		end
 	end,
-	Tooltip = 'Change the game speed.'
+	Tooltip = 'Modifies game timer'
 })
 Value = Timer:CreateSlider({
 	Name = 'Value',

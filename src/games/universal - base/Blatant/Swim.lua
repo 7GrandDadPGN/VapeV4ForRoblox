@@ -33,5 +33,5 @@ Swim = vape.Categories.Blatant:CreateModule({
 			end
 		end
 	end,
-	Tooltip = 'Lets you swim midair'
+	Tooltip = 'Lets you swim midair.'
 })

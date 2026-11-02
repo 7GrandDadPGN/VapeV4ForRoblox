@@ -110,7 +110,7 @@ Phase = vape.Categories.Blatant:CreateModule({
 			fflag = nil
 		end
 	end,
-	Tooltip = 'Lets you Phase/Clip through walls. (Hold shift to use Phase over spider)'
+	Tooltip = 'Phase/Clip through walls. (Hold Left Shift to use Phase over Spider)'
 })
 Mode = Phase:CreateDropdown({
 	Name = 'Mode',

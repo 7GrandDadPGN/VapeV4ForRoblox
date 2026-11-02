@@ -5,6 +5,7 @@ run(function()
 	local Mode
 	local Method
 	local RayMethod
+	local SchedulerPriority
 	local IgnoredScripts
 	local Range
 	local HitChance
@@ -30,8 +31,8 @@ run(function()
 	local oldnamecall, oldhook, hookmethod
 	local rand = Random.new()
 	local clickDelay = os.clock()
+	local fireOffset = CFrame.new()
 	local didOth
-	local fireOffset
 
 	local function getMousePosition()
 		if inputService.TouchEnabled then
@@ -222,7 +223,7 @@ run(function()
 					end))
 
 					local key = httpService:GenerateGUID(false)
-					runService:BindToRenderStep(key, 0, function()
+					runService:BindToRenderStep(key, SchedulerPriority.Value, function()
 						if old then
 							gameCamera.CFrame = old
 							old = nil
@@ -354,6 +355,8 @@ run(function()
 			end
 
 			RayMethod.Object.Visible = val == 'Raycast'
+			IgnoredScripts.Object.Visible = val ~= 'TaskScheduler'
+			SchedulerPriority.Object.Visible = val == 'TaskScheduler'
 		end,
 		Tooltip = 'FindPartOnRay* - Deprecated methods of raycasting used in old games\nRaycast - The modern raycast method\n*PointToRay - Method to generate a ray from a screen position\nRay - Used in old games'
 	})
@@ -394,6 +397,21 @@ run(function()
 		Max = 100,
 		Default = 65,
 		Suffix = '%'
+	})
+	SchedulerPriority = SilentAim:CreateSlider({
+		Name = 'Scheduler Priority',
+		Min = -5,
+		Max = 5,
+		Default = 0,
+		Function = function()
+			if SilentAim.Enabled then
+				SilentAim:Toggle()
+				SilentAim:Toggle()
+			end
+		end,
+		Darker = true,
+		Visible = false,
+		Tooltip = 'Adjust the RenderStepped priority for TaskScheduler, only adjust this if you know what you are doing!'
 	})
 	AutoFire = SilentAim:CreateToggle({
 		Name = 'AutoFire',

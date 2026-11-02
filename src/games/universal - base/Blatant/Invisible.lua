@@ -69,5 +69,5 @@ Invisible = vape.Categories.Blatant:CreateModule({
 			end
 		end
 	end,
-	Tooltip = 'Turns you invisible.'
+	Tooltip = 'Turns you invisible using animations.'
 })

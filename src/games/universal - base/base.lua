@@ -108,19 +108,31 @@ local function isTarget(plr)
 end
 
 local function canClick()
-	local mousepos = (inputService:GetMouseLocation() - guiService:GetGuiInset())
-	for _, v in lplr.PlayerGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y) do
-		local obj = v:FindFirstAncestorOfClass('ScreenGui')
-		if v.Active and v.Visible and obj and obj.Enabled then
+	local pos = (inputService:GetMouseLocation() - guiService:GetGuiInset())
+
+	if gethui and gethui():IsA('BasePlayerGui') then
+		for _, obj in gethui():GetGuiObjectsAtPosition(pos.X, pos.Y) do
+			local holder = obj:FindFirstAncestorOfClass('ScreenGui')
+			if obj.Active and obj.Visible and holder and holder.Enabled then
+				return false
+			end
+		end
+	end
+
+	for _, obj in coreGui:GetGuiObjectsAtPosition(pos.X, pos.Y) do
+		local holder = obj:FindFirstAncestorOfClass('ScreenGui')
+		if obj.Active and obj.Visible and holder and holder.Enabled then
 			return false
 		end
 	end
-	for _, v in coreGui:GetGuiObjectsAtPosition(mousepos.X, mousepos.Y) do
-		local obj = v:FindFirstAncestorOfClass('ScreenGui')
-		if v.Active and v.Visible and obj and obj.Enabled then
+
+	for _, obj in lplr.PlayerGui:GetGuiObjectsAtPosition(pos.X, pos.Y) do
+		local holder = obj:FindFirstAncestorOfClass('ScreenGui')
+		if obj.Active and obj.Visible and holder and holder.Enabled then
 			return false
 		end
 	end
+
 	return (not vape.gui.ScaledGui.ClickGui.Visible) and (not inputService:GetFocusedTextBox())
 end
 

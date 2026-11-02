@@ -51,7 +51,7 @@ HighJump = vape.Categories.Blatant:CreateModule({
 	ExtraText = function()
 		return Mode.Value
 	end,
-	Tooltip = 'Lets you jump higher'
+	Tooltip = 'Lets you jump higher.'
 })
 Mode = HighJump:CreateDropdown({
 	Name = 'Mode',
