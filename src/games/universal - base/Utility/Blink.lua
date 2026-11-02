@@ -124,7 +124,7 @@ AutoSendLength = Blink:CreateSlider({
 	Decimal = 100,
 	Darker = true,
 	Visible = false,
-	Tooltip = 'Allows you to choke your packets for a custom set time limit.\nAfter the time limit has passed, all packets will be sent.'
+	Tooltip = 'Allows you to choke your packets for a custom set time limit.\nAfter the time limit has passed, all packets will be sent.',
 	Suffix = function(val)
 		return val == 1 and 'second' or 'seconds'
 	end
