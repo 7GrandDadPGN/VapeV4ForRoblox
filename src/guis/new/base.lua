@@ -418,7 +418,7 @@ function vape:CreateNotification(title, text, duration, type)
 		progress.Parent = notification
 
 		if tween.Tween then
-			tween:Tween(notification, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+			tween:Tween(notification, TweenInfo.new(0.326, Enum.EasingStyle.Exponential), {
 				AnchorPoint = Vector2.new(1, 0)
 			}, 'tweenstwo')
 
@@ -429,7 +429,7 @@ function vape:CreateNotification(title, text, duration, type)
 
 		task.delay(duration, function()
 			if tween.Tween then
-				tween:Tween(notification, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+				tween:Tween(notification, TweenInfo.new(0.326, Enum.EasingStyle.Exponential), {
 					AnchorPoint = Vector2.new(0, 0)
 				}, 'tweenstwo')
 			end

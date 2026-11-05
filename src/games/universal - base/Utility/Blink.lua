@@ -51,7 +51,7 @@ local function updateBoxes()
 				end
 
 				local box = boxes[part.Name]
-				box.CFrame = workspace:GetPivot():ToObjectSpace(part.CFrame)
+				box.CFrame = workspace:GetModelCFrame():ToObjectSpace(part.CFrame)
 			end
 		end
 	end
