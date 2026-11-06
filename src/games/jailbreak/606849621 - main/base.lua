@@ -84,6 +84,14 @@ local function getVehicleSeat(entity)
 	end
 end
 
+local function getCachedEntitySeat(entity)
+	if not entity.Seat then
+		entity.Seat = getVehicleSeat(entity)
+	end
+
+	return entity.Seat
+end
+
 local function isFriend(plr, recolor)
 	if vape.Categories.Friends.Options['Use friends'].Enabled then
 		local friend = table.find(vape.Categories.Friends.ListEnabled, plr.Name) and true
@@ -354,7 +362,10 @@ run(function()
 
 	entitylib.getUpdateConnections = function(entity)
 		local hum = entity.Humanoid
-		entity.InVehicle = not entity.Character:GetAttribute('HasHandcuffs') and (entity.Character:GetAttribute('InVehicle') or entity.InVehicle)
+		local isInVehicle = entity.Character:GetAttribute('InVehicle')
+		entity.Seat = isInVehicle and entity.Seat or nil
+		entity.VehicleState = isInVehicle
+		entity.InVehicle = not entity.Character:GetAttribute('HasHandcuffs') and (isInVehicle or entity.InVehicle)
 		entity.Illegal = isIllegal(entity, true)
 
 		return {
@@ -819,6 +830,7 @@ run(function()
 
 	vape:Clean(entitylib.Events.EntityUpdated:Connect(function(entity)
 		local isInVehicle = entity.Character:GetAttribute('InVehicle')
+		entity.Seat = isInVehicle and entity.Seat or nil
 		entity.VehicleState = isInVehicle
 		entity.InVehicle = not entity.Character:GetAttribute('HasHandcuffs') and (isInVehicle or entity.InVehicle)
 		entity.Illegal = isIllegal(entity, true)

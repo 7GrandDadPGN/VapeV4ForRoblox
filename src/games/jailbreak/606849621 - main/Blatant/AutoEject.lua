@@ -32,11 +32,10 @@ AutoEject = vape.Categories.Blatant:CreateModule({
 						})
 
 						for _, entity in entities do
-							if entity.Player and isIllegal(entity) then
-								if entity.Character:GetAttribute('InVehicle') then
-									if not seat and cooldown < os.clock() then
-										seat = getVehicleSeat(entity)
-									end
+							if entity.Player and isIllegal(entity) and entity.VehicleState then
+								if getCachedEntitySeat(entity) and cooldown < os.clock() then
+									seat = entity.Seat
+									break
 								end
 							end
 						end
