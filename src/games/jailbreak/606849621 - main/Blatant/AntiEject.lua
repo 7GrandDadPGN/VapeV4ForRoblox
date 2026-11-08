@@ -9,7 +9,7 @@ AntiEject = vape.Categories.Blatant:CreateModule({
 				if entitylib.isAlive and entitylib.character.Humanoid.Sit and lplr.Team ~= teams.Police then
 					task.defer(function()
 						local packet = jb.VehicleController.GetLocalVehiclePacket()
-						seat = packet and packet.Seat or nil
+						seat = packet and (not packet.Passenger) and packet.Seat or nil
 
 						if seat and seat.AssemblyLinearVelocity.Magnitude < 100 then
 							old = seat.AssemblyLinearVelocity

@@ -806,6 +806,13 @@ run(function()
 		end
 	end
 
+	for _, connection in getconnections(collectionService:GetInstanceAddedSignal('TouchTrigger')) do
+		if connection.Function and not isexecutorclosure(connection.Function) and debug.info(connection.Function, 'n') == 'AddedFun' then
+			jb.DoorTable = debug.getupvalue(connection.Function, 2)
+			break
+		end
+	end
+
 	table.insert(whitelist.tagcallback, function(plr, plrtag, rich)
 		if plr then
 			local entity = entitylib.getEntity(plr)

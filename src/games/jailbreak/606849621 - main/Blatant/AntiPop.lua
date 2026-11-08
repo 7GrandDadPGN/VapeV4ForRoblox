@@ -7,7 +7,7 @@ AntiPop = vape.Categories.Blatant:CreateModule({
 			AntiPop:Clean(runService.PostSimulation:Connect(function()
 				if entitylib.isAlive and entitylib.character.Humanoid.Sit then
 					local packet = jb.VehicleController.GetLocalVehiclePacket()
-					if packet then
+					if packet and not packet.Passenger then
 						packet.Model:SetAttribute('VehicleTiresLastPop', nil)
 					end
 				end

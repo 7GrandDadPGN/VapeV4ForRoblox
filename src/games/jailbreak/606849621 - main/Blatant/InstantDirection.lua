@@ -12,7 +12,7 @@ InstantDirection = vape.Categories.Blatant:CreateModule({
 					if hum.Sit and moveDir.Magnitude > 0 then
 						local packet = jb.VehicleController.GetLocalVehiclePacket()
 
-						if packet then
+						if packet and not packet.Passenger then
 							local horizontal = packet.Seat.AssemblyLinearVelocity * Vector3.new(1, 0, 1)
 							local speed = math.max(horizontal.Magnitude, 1)
 							if (gameCamera.CFrame.LookVector * Vector3.new(1, 0, 1)):Angle(moveDir) > math.rad(140) then

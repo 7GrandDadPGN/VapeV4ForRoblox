@@ -35,7 +35,7 @@ run(function()
 						local root = entitylib.character.RootPart
 						if hum.Sit then
 							local packet = jb.VehicleController.GetLocalVehiclePacket()
-							local wheel = packet and packet.EngineThrusters[1]
+							local wheel = packet and (not packet.Passenger) and packet.EngineThrusters[1]
 
 							if wheel then
 								local suspension = (packet.Model:GetAttribute('GarageSuspensionHeight') or 0) + packet.Height
