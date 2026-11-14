@@ -15,7 +15,7 @@ local ShowTarget
 local moveConst = Vector2.new(1, 0.77) * math.rad(0.5)
 
 local function wrapAngle(num)
-	return (num + math.pi % math.tau) - math.pi
+	return ((num + math.pi) % math.tau) - math.pi
 end
 
 AimAssist = vape.Categories.Combat:CreateModule({
@@ -62,7 +62,7 @@ AimAssist = vape.Categories.Combat:CreateModule({
 						end
 
 						if new ~= Vector3.zero then
-							local diffYaw = wrapAngle(math.atan2(facing.X, facing.Z) - math.atan2(new.X, new.Z))
+							local diffYaw = wrapAngle(math.atan2(facing.X, facing.Z) - wrapAngle(math.atan2(new.X, new.Z)))
 							local diffPitch = math.asin(facing.Y) - math.asin(new.Y)
 							local angle = Vector2.new(diffYaw, diffPitch) // (moveConst * UserSettings():GetService('UserGameSettings').MouseSensitivity)
 

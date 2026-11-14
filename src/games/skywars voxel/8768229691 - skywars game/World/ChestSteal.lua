@@ -44,4 +44,6 @@ Range = ChestSteal:CreateSlider({
 		return val == 1 and 'stud' or 'studs'
 	end
 })
-Open = ChestSteal:CreateToggle({Name = 'GUI Check'})
+Open = ChestSteal:CreateToggle({
+	Name = 'GUI Check'
+})

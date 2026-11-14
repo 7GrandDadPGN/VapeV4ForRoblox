@@ -389,11 +389,16 @@ function vape:UpdateTextGUI(afterload)
 					line2.Position = UDim2.new()
 					line2.Name = 'Line'
 					line2.Parent = bkg
+					local clip = Instance.new('Frame')
+					clip.BackgroundTransparency = 1
+					clip.ClipsDescendants = true
+					clip.Position = isRight and UDim2.new(1, -2, 0, 0) or UDim2.new()
+					clip.Size = UDim2.new(0, 2, 1, 0)
+					clip.Parent = bkg
 					colorline = Instance.new('Frame')
-					colorline.BorderSizePixel = 0
-					colorline.Position = isRight and UDim2.new(1, -4, 0, 0) or UDim2.new()
-					colorline.Size = UDim2.new(0, 4, 1, 0)
-					colorline.Parent = bkg
+					colorline.Position = isRight and UDim2.new(1, -8, 0, 0) or UDim2.new()
+					colorline.Size = UDim2.new(0, 8, 1, 0)
+					colorline.Parent = clip
 					local colorcorner = Instance.new('UICorner')
 					colorcorner.CornerRadius = UDim.new()
 					colorcorner.Parent = colorline
@@ -403,7 +408,7 @@ function vape:UpdateTextGUI(afterload)
 				label.BackgroundTransparency = 1
 				label.BorderSizePixel = 0
 				label.FontFace = FontOption.Value
-				label.Position = UDim2.fromOffset(isRight and 5 or 9, 2)
+				label.Position = UDim2.fromOffset(isRight and 6 or 9, 2)
 				label.Text = name..(module.ExtraText and " <font color='#A8A8A8'>"..module.ExtraText()..'</font>' or '')
 				label.TextSize = 18
 				label.RichText = true
@@ -477,7 +482,7 @@ function vape:UpdateTextGUI(afterload)
 				local top = (not topLabel or (topLabel.Size.X.Offset < label.Size.X.Offset)) and 4 or 0
 				local bottom = (not bottomLabel or (bottomLabel.Size.X.Offset < label.Size.X.Offset)) and 4 or 0
 
-				label.Color.Parent.Line.Visible = index ~= firstIndex
+				label.Color.Parent.Parent.Line.Visible = index ~= firstIndex
 				label.Color.UICorner.TopLeftRadius = isRight and UDim.new() or UDim.new(0, index == firstIndex and 4 or 0)
 				label.Color.UICorner.TopRightRadius = isRight and UDim.new(0, index == firstIndex and 4 or 0) or UDim.new()
 				label.Color.UICorner.BottomLeftRadius = isRight and UDim.new() or UDim.new(0, index == lastIndex and 4 or 0)
