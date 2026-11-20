@@ -67,7 +67,7 @@ FontOption = DropESP:CreateFont({
 Color = DropESP:CreateColorSlider({
 	Name = 'Color',
 	Function = function(hue, sat, val)
-		for _, v in WaypointFolder:GetChildren() do
+		for _, v in DropFolder:GetChildren() do
 			v.TextLabel.TextColor3 = Color3.fromHSV(hue, sat, val)
 		end
 	end
