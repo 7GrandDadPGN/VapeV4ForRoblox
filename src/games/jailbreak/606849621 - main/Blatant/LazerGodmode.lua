@@ -3,7 +3,8 @@ local overlapCheck = OverlapParams.new()
 local whitelist = {
 	BarbedWire = true,
 	Part = true,
-	Lavatouch = true
+	Lavatouch = true,
+	Light = true
 }
 
 LazerGodmode = vape.Categories.Blatant:CreateModule({

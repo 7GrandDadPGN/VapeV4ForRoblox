@@ -18,7 +18,7 @@ run(function()
 						if state == Enum.HumanoidStateType.Climbing or bt.Variables.transitioning then return end
 
 						local movevec = entitylib.character.Humanoid.MoveDirection * Value.Value
-                    	root.AssemblyLinearVelocity = Vector3.new(movevec.X, 1 + ((up + down) * VerticalValue.Value), movevec.Z)
+						root.AssemblyLinearVelocity = Vector3.new(movevec.X, 1 + ((up + down) * VerticalValue.Value), movevec.Z)
 					end
 				end))
 

@@ -23,7 +23,7 @@ LongJump = vape.Categories.Blatant:CreateModule({
 					if state == Enum.HumanoidStateType.Climbing or bt.Variables.transitioning then return end
 
 					local movevec = entitylib.character.Humanoid.MoveDirection * Value.Value
-                    root.AssemblyLinearVelocity = Vector3.new(movevec.X, root.AssemblyLinearVelocity.Y, movevec.Z)
+					root.AssemblyLinearVelocity = Vector3.new(movevec.X, root.AssemblyLinearVelocity.Y, movevec.Z)
 				end
 			end))
 		end

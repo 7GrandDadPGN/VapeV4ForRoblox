@@ -21,9 +21,9 @@ Value = FastPlace:CreateSlider({
 	Name = 'Delay',
 	Min = 0,
 	Max = 0.2,
-    Default = 0,
+	Default = 0,
 	Decimal = 100,
-    Function = function(val)
+	Function = function(val)
 		if FastPlace.Enabled then
 			debug.setupvalue(arena.Client.startPlaceHold, 7, math.max(val, 0.001))
 		end

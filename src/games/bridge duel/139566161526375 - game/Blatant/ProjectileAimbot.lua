@@ -6,22 +6,22 @@ rayCheck.FilterType = Enum.RaycastFilterType.Exclude
 
 local function aimFunction(...)
 	local plr = entitylib.EntityMouse({
-        Range = FOV.Value,
-        Part = 'RootPart',
-        Players = true
-    })
+		Range = FOV.Value,
+		Part = 'RootPart',
+		Players = true
+	})
 
-    if plr then
-        rayCheck.FilterDescendantsInstances = {plr.Character, gameCamera}
-        rayCheck.CollisionGroup = plr[TargetPart.Value].CollisionGroup
-        local offsetpos = entitylib.character.Head.CFrame
-        local calc = prediction.SolveTrajectory(offsetpos.Position, 180, 60, plr[TargetPart.Value].Position, plr[TargetPart.Value].Velocity, workspace.Gravity, plr.HipHeight, nil, rayCheck)
+	if plr then
+		rayCheck.FilterDescendantsInstances = {plr.Character, gameCamera}
+		rayCheck.CollisionGroup = plr[TargetPart.Value].CollisionGroup
+		local offsetpos = entitylib.character.Head.CFrame
+		local calc = prediction.SolveTrajectory(offsetpos.Position, 180, 60, plr[TargetPart.Value].Position, plr[TargetPart.Value].Velocity, workspace.Gravity, plr.HipHeight, nil, rayCheck)
 
-        if calc then
-            targetinfo.Targets[plr] = os.clock() + 1
-            return offsetpos.Position + CFrame.new(offsetpos.Position, calc).LookVector * 100
-        end
-    end
+		if calc then
+			targetinfo.Targets[plr] = os.clock() + 1
+			return offsetpos.Position + CFrame.new(offsetpos.Position, calc).LookVector * 100
+		end
+	end
 
 	return old(...)
 end
@@ -34,7 +34,7 @@ local ProjectileAimbot = vape.Categories.Blatant:CreateModule({
 				return aimFunction(...)
 			end)
 		else
-            hookfunction(debug.getupvalue(bd.BowClient.Start, 11), old)
+			hookfunction(debug.getupvalue(bd.BowClient.Start, 11), old)
 			old = nil
 		end
 	end,

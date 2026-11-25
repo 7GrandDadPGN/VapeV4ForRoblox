@@ -620,7 +620,7 @@ run(function()
 	end
 
 	function Spring:Update(DeltaTime)
-		local IterationsThisFrame = DeltaTime / ((1 / 60) / 8)
+		local IterationsThisFrame = 8
 		local ScaledDeltaTime = DeltaTime * self.Speed / IterationsThisFrame
 
 		for i = 1, math.round(IterationsThisFrame) do

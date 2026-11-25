@@ -4,11 +4,39 @@ local Spread
 local Automatic
 local EquipTime
 local VehicleWallbang
-local Headshot
+local FireRate
 local Hitscan
 local oldhit
 local oldequip
+local olddecrement
 local olddata = {}
+
+local function FireRateHook(...)
+	local res = table.pack(olddecrement(...))
+	local self = ...
+
+	if not self.IsReloading and self.Config.IgnoreVerifyFireFreq and (1 / self.Config.FireFreq) > 0.25 then
+		task.delay(0.25, function()
+			local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
+
+			if obj and not self.Destroyed then
+				local fireState = self.Config.FireAuto and self.IsShooting
+
+				obj:AttemptSelect()
+				obj:AttemptSelect()
+
+				if fireState then
+					local equipped = jb.ItemSystemController:GetLocalEquipped()
+					if equipped.BulletEmitter then
+						equipped.IsShooting = true
+					end
+				end
+			end
+		end)
+	end
+
+	return unpack(res, 1, res.n)
+end
 
 local function ModifyGun(gun)
 	if gun and gun.LastReplicateMousePosition then
@@ -60,13 +88,11 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 				end)
 			end
 
-			--[[if Headshot.Enabled then
-				oldhit = hookfunction(jb.GunController.BulletEmitterOnLocalHitPlayer, function(...)
-					local shotData = select(15, ...)
-					shotData.isHeadshot = true
-					return oldhit(...)
+			if FireRate.Enabled then
+				olddecrement = hookfunction(jb.GunController.DecrementAmmo, function(...)
+					return FireRateHook(...)
 				end)
-			end]]
+			end
 
 			if EquipTime.Enabled then
 				oldequip = hookfunction(jb.GunUtils.getShouldAddEquipTime, function()
@@ -96,6 +122,11 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 			if oldequip then
 				restorefunction(jb.GunUtils.getShouldAddEquipTime)
 				oldequip = nil
+			end
+
+			if olddecrement then
+				restorefunction(jb.GunController.DecrementAmmo)
+				olddecrement = nil
 			end
 
 			for config, data in olddata do
@@ -135,16 +166,16 @@ VehicleWallbang = GunModifications:CreateToggle({
 	Function = ApplyMods,
 	Tooltip = 'Allow you to shoot through vehicles.'
 })
---[[Headshot = GunModifications:CreateToggle({
-	Name = 'Always Headshot',
+FireRate = GunModifications:CreateToggle({
+	Name = 'Fire Rate',
 	Function = function()
 		if GunModifications.Enabled then
 			GunModifications:Toggle()
 			GunModifications:Toggle()
 		end
 	end,
-	Tooltip = 'Force headshot damage when hitting any body part'
-})]]
+	Tooltip = 'Decrease fire cooldown on shotgun.'
+})
 Hitscan = GunModifications:CreateToggle({
 	Name = 'Hitscan Bullets',
 	Function = function()

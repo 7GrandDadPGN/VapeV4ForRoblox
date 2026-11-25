@@ -2,13 +2,6 @@ local AutoPickpocket
 local Range
 local cooldown = 0
 
-local function equipTool(tool)
-	local obj = jb.InventoryItemBinder:Get(tool)
-	if obj then
-		obj:AttemptSelect()
-	end
-end
-
 AutoPickpocket = vape.Categories.Blatant:CreateModule({
 	Name = 'AutoPickpocket',
 	Function = function(callback)

@@ -59,6 +59,7 @@ local LazerGodmode = {Enabled = false}
 local InvTracker = {Inventories = {}, Connections = {}}
 local oldBulletUpdate
 local aimTimer, shootTimer, aimVec = os.clock(), os.clock()
+local getInCallback
 
 local function getTableSize(dict)
 	local size = 0
@@ -366,7 +367,20 @@ run(function()
 		entity.Seat = isInVehicle and entity.Seat or nil
 		entity.VehicleState = isInVehicle
 		entity.InVehicle = not entity.Character:GetAttribute('HasHandcuffs') and (isInVehicle or entity.InVehicle)
+		entity.Tazed = entity.Character:FindFirstChild('RagdollNeck') and true or false
 		entity.Illegal = isIllegal(entity, true)
+
+		table.insert(entity.Connections, entity.Character.ChildAdded:Connect(function(obj)
+			if obj.Name == 'RagdollNeck' then
+				entity.Tazed = true
+			end
+		end))
+
+		table.insert(entity.Connections, entity.Character.ChildRemoved:Connect(function(obj)
+			if obj.Name == 'RagdollNeck' then
+				entity.Tazed = false
+			end
+		end))
 
 		return {
 			hum:GetPropertyChangedSignal('Health'),
@@ -704,7 +718,8 @@ run(function()
 		replicatedStorage.Game.Item.Donut,
 		replicatedStorage.Game.Item.Gun,
 		replicatedStorage.Game.Falling,
-		lplr.PlayerScripts.LocalScript
+		lplr.PlayerScripts.LocalScript,
+		replicatedStorage.Game.Paraglide
 	}, {
 		Action3 = 'Pickup',
 		beginArrestHold = 'ArrestBegin',
@@ -740,6 +755,7 @@ run(function()
 
 		if InfNitro.Enabled and remote == 'UseNitro' then return end
 		if LazerGodmode.Enabled and remote == 'SelfDamage' then return end
+		if remote == 'GetIn' and getInCallback then getInCallback() end
 		if remote ~= 'LookAngle' and remote ~= 'AimPosition' and shared.VapeDeveloper then
 			local called = getfenv(3)
 			called = called and called.script
@@ -890,7 +906,7 @@ run(function()
 	end
 
 	function Spring:Update(DeltaTime)
-		local IterationsThisFrame = DeltaTime / ((1 / 60) / 8)
+		local IterationsThisFrame = 8
 		local ScaledDeltaTime = DeltaTime * self.Speed / IterationsThisFrame
 
 		for i = 1, math.round(IterationsThisFrame) do

@@ -1,7 +1,6 @@
 local AutoTaze
 local Range
 local HandCheck
-local VehicleCheck
 local CooldownBar
 local cdholder, cdframe, cdlabel
 
@@ -50,14 +49,16 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 						local entities = entitylib.AllPosition({
 							Players = true,
 							Part = 'RootPart',
-							Range = Range.Value,
+							Range = Range.ValueMax,
 							Wallcheck = true,
 							Arrest = true
 						})
 
 						if (taser:GetAttribute('NextUse') or 0) < os.clock() then
+							local localPos = entitylib.character.RootPart.Position
+
 							for _, entity in entities do
-								if isIllegal(entity) and (entity.VehicleTimer or 0) < os.clock() and not ((VehicleCheck.Enabled and entity.Character:GetAttribute('InVehicle')) or entity.Head.CanCollide) then
+								if isIllegal(entity) and (not (entity.VehicleState or entity.Tazed)) and (entity.VehicleTimer or 0) < os.clock() and (entity.RootPart.Position - localPos).Magnitude > Range.ValueMin then
 									local lastEquipped
 									if not isTaser then
 										lastEquipped = jb.ItemSystemController:GetLocalEquipped()
@@ -111,22 +112,18 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 	end,
 	Tooltip = 'Immobilizes entities around you'
 })
-Range = AutoTaze:CreateSlider({
-	Name = 'Range',
+Range = AutoTaze:CreateTwoSlider({
+	Name = 'Taze Range',
 	Min = 0,
 	Max = 75,
-	Default = 75,
+	DefaultMin = 20,
+	DefaultMax = 75,
 	Suffix = function(val)
 		return val == 1 and 'stud' or 'studs'
 	end
 })
 HandCheck = AutoTaze:CreateToggle({
 	Name = 'Hand Check'
-})
-VehicleCheck = AutoTaze:CreateToggle({
-	Name = 'Vehicle Check',
-	Tooltip = 'Avoid tazing players in vehicles (RECOMMENDED)',
-	Default = true
 })
 CooldownBar = AutoTaze:CreateToggle({
 	Name = 'Cooldown Bar',

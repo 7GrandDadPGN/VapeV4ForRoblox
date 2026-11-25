@@ -338,7 +338,7 @@ function vape:UpdateTextGUI(afterload)
 		if LabelCustom.Visible then
 			local size = getfontbounds(LabelCustom.ContentText, LabelCustom.TextSize, LabelCustom.FontFace)
 			LabelCustom.Size = UDim2.fromOffset(size.X, size.Y)
-			LabelCustom.Position = UDim2.new(isRight and 1 / Scale.Scale or 0, isRight and -size.X or 0, 0, (Logo.Visible and 32 or 8))
+			LabelCustom.Position = UDim2.new(isRight and 1 / Scale.Scale or 0, isRight and -size.X or 0, 0, (Logo.Visible and 34 or 8))
 		end
 
 		local Previous = {}
@@ -405,6 +405,7 @@ function vape:UpdateTextGUI(afterload)
 				end
 
 				local label = Instance.new('TextLabel')
+				label.AutoLocalize = false
 				label.BackgroundTransparency = 1
 				label.BorderSizePixel = 0
 				label.FontFace = FontOption.Value
@@ -417,7 +418,7 @@ function vape:UpdateTextGUI(afterload)
 				label.Size = UDim2.fromOffset(size.X, size.Y)
 
 				if Shadow.Enabled then
-					local shadowlabel = label:Clone()
+					local shadowlabel = Instance.fromExisting(label)
 					shadowlabel.Position = UDim2.fromOffset(label.Position.X.Offset + 1, label.Position.Y.Offset + 1)
 					shadowlabel.Text = label.ContentText
 					shadowlabel.TextColor3 = Color3.new()
@@ -504,7 +505,7 @@ end
 function TextGUI:UpdateColor(hue, sat, val, default)
 	LogoGradient.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, sat, val)),
-		ColorSequenceKeypoint.new(1, Gradient.Enabled and Color3.fromHSV(vape:Color((hue - 0.075) % 1)) or Color3.fromHSV(hue, sat, val))
+		ColorSequenceKeypoint.new(1, Gradient.Enabled and Color3.fromHSV(vape:Color((hue - 0.05) % 1)) or Color3.fromHSV(hue, sat, val))
 	})
 	LogoGradient2.Color = Gradient.Enabled and GradientV4.Enabled and LogoGradient.Color or ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),

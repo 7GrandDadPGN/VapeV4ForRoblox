@@ -378,6 +378,7 @@ function vape:CreateNotification(title, text, duration, type)
 		icon.Position = UDim2.fromOffset(-1, -1)
 		icon.Parent = iconshadow
 		local label = Instance.new('TextLabel')
+		label.AutoLocalize = false
 		label.BackgroundTransparency = 1
 		label.FontFace = uipallet.FontSemiBold
 		label.Position = UDim2.fromOffset(46, 16)
@@ -390,7 +391,7 @@ function vape:CreateNotification(title, text, duration, type)
 		label.TextYAlignment = Enum.TextYAlignment.Top
 		label.ZIndex = 5
 		label.Parent = notification
-		local textshadow = label:Clone()
+		local textshadow = Instance.fromExisting(label)
 		textshadow.FontFace = uipallet.Font
 		textshadow.Position = UDim2.fromOffset(47, 44)
 		textshadow.RichText = false
@@ -399,7 +400,7 @@ function vape:CreateNotification(title, text, duration, type)
 		textshadow.TextTransparency = 0.5
 		textshadow.Parent = notification
 		notification.Size = UDim2.fromOffset(math.max(getfontbounds(textshadow.Text, 14, uipallet.Font).X + 80, 266), 75)
-		local textlabel = textshadow:Clone()
+		local textlabel = Instance.fromExisting(textshadow)
 		textlabel.Position = UDim2.fromOffset(-1, -1)
 		textlabel.RichText = true
 		textlabel.Text = text

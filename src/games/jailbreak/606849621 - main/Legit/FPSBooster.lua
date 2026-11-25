@@ -27,6 +27,10 @@ FPSBooster = vape.Legit:CreateModule({
 				end
 			})
 
+			for _, obj in lplr.PlayerGui:QueryDescendants('GuiBase2d') do
+				obj.AutoLocalize = false
+			end
+
 			for _, obj in collectionService:GetTagged('DestructibleSpawn') do
 				addInstance(obj)
 			end
