@@ -38,6 +38,8 @@ LazerGodmode = vape.Categories.Blatant:CreateModule({
 
 			table.clear(modified)
 		end
+
+		debug.setconstant(jb.Turret.Update, 33, callback and '_Target' or 'Target')
 	end,
 	Tooltip = 'Allow you to ignore specific damage sources'
 })

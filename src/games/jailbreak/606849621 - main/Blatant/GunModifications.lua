@@ -5,18 +5,20 @@ local Automatic
 local EquipTime
 local VehicleWallbang
 local FireRate
+local DoubleTap
 local Hitscan
 local oldhit
 local oldequip
 local olddecrement
 local olddata = {}
+local lastShot = os.clock()
 
 local function FireRateHook(...)
 	local res = table.pack(olddecrement(...))
 	local self = ...
 
 	if not self.IsReloading and self.Config.IgnoreVerifyFireFreq and (1 / self.Config.FireFreq) > 0.25 then
-		task.delay(0.25, function()
+		local function doBypass()
 			local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
 
 			if obj and not self.Destroyed then
@@ -32,7 +34,16 @@ local function FireRateHook(...)
 					end
 				end
 			end
-		end)
+		end
+
+		if DoubleTap.Enabled then
+			if (os.clock() - lastShot) >= 0.5 then
+				task.defer(doBypass)
+				lastShot = os.clock()
+			end
+		else
+			task.delay(0.25, doBypass)
+		end
 	end
 
 	return unpack(res, 1, res.n)
@@ -49,6 +60,10 @@ local function ModifyGun(gun)
 
 		if gun.Config.BulletSpread then
 			gun.Config.BulletSpread = Spread.Enabled and 0 or olddata[gun.Config].BulletSpread
+		end
+
+		if gun.__ClassName == 'PlasmaPistol' and FireRate.Enabled then
+			gun.Config.FireFreq = olddata[gun.Config].FireFreq * 5
 		end
 
 		local vehicleIndex = table.find(gun.BulletEmitter.IgnoreList, workspace.Vehicles)
@@ -168,13 +183,20 @@ VehicleWallbang = GunModifications:CreateToggle({
 })
 FireRate = GunModifications:CreateToggle({
 	Name = 'Fire Rate',
-	Function = function()
+	Function = function(callback)
+		DoubleTap.Object.Visible = callback
 		if GunModifications.Enabled then
 			GunModifications:Toggle()
 			GunModifications:Toggle()
 		end
 	end,
-	Tooltip = 'Decrease fire cooldown on shotgun.'
+	Tooltip = 'Decrease fire cooldown on shotgun & plasma pistol.'
+})
+DoubleTap = GunModifications:CreateToggle({
+	Name = 'Double Tap',
+	Tooltip = 'Change Fire Rate into a two shot burst fire.',
+	Visible = false,
+	Darker = true
 })
 Hitscan = GunModifications:CreateToggle({
 	Name = 'Hitscan Bullets',

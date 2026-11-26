@@ -692,6 +692,7 @@ run(function()
 		PlayerUtils = require(replicatedStorage.Game.PlayerUtils),
 		PlasmaController = require(replicatedStorage.Game.Item.PlasmaGun),
 		TeamChooseController = require(replicatedStorage.TeamSelect.TeamChooseUI),
+		Turret = require(replicatedStorage.Turret2.Turret),
 		VehicleController = require(replicatedStorage.Vehicle.VehicleUtils),
 		VehicleSystem = require(replicatedStorage.Game.VehicleSystem)
 	}
@@ -756,7 +757,7 @@ run(function()
 		if InfNitro.Enabled and remote == 'UseNitro' then return end
 		if LazerGodmode.Enabled and remote == 'SelfDamage' then return end
 		if remote == 'GetIn' and getInCallback then getInCallback() end
-		if remote ~= 'LookAngle' and remote ~= 'AimPosition' and shared.VapeDeveloper then
+		if remote ~= 'LookAngle' and shared.VapeDeveloper then
 			local called = getfenv(3)
 			called = called and called.script
 			if called and (not remote) then
