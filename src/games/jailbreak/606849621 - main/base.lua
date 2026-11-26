@@ -693,6 +693,7 @@ run(function()
 		PlasmaController = require(replicatedStorage.Game.Item.PlasmaGun),
 		TeamChooseController = require(replicatedStorage.TeamSelect.TeamChooseUI),
 		Turret = require(replicatedStorage.Turret2.Turret),
+		UI = require(replicatedStorage.Module.UI),
 		VehicleController = require(replicatedStorage.Vehicle.VehicleUtils),
 		VehicleSystem = require(replicatedStorage.Game.VehicleSystem)
 	}

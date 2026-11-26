@@ -43,6 +43,7 @@ Disabler = vape.Categories.Blatant:CreateModule({
 	Function = function(callback)
 		if callback then
 			local cd = os.clock()
+			local extraCd = os.clock()
 
 			if Speed.Enabled then
 				getInCallback = function()
@@ -69,6 +70,14 @@ Disabler = vape.Categories.Blatant:CreateModule({
 				repeat
 					if entitylib.isAlive then
 						local newState = cd > os.clock() or vape.Modules.Fly.Enabled
+
+						if not isnetworkowner(entitylib.character.RootPart) and extraCd < os.clock() then
+							if newState then
+								jb:FireServer('Heartbeat')
+								jb:FireServer('StartRagdolling')
+								extraCd = os.clock() + 0.1
+							end
+						end
 
 						if state ~= newState then
 							if newState then
