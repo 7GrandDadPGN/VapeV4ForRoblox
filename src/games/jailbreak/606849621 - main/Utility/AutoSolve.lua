@@ -5,6 +5,7 @@ local PowerplantFlow
 local directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 local old
 local state
+local solvethread
 
 local function addVaultPuzzle(door)
 	local light = door:WaitForChild('InnerModel', 10):WaitForChild('LightPtr', 10).Value
@@ -19,6 +20,17 @@ local function addVaultPuzzle(door)
 			end
 		end))
 	end
+end
+
+local function deepClone(original)
+	local clone = table.clone(original)
+	for key, val in original do
+		if type(val) == 'table' then
+			clone[key] = deepClone(val)
+		end
+	end
+
+	return clone
 end
 
 local function solveCasinoKeypad()
@@ -135,6 +147,64 @@ local function solvePuzzleFlow(grid)
 	if walk(1) then
 		return grid
 	end
+
+	return nil
+end
+
+local function doPuzzleFlow(solved, grid, state)
+	if solvethread then
+		task.cancel(solvethread)
+		solvethread = nil
+	end
+
+	solvethread = task.spawn(function()
+		local found = {}
+
+		for row = 1, #grid do
+			for column = 1, #grid[1] do
+				local color = grid[row][column]
+				if color >= 0 and not table.find(found, color) then
+					table.insert(found, color)
+
+					local curRow, curCol = row, column
+					local visited = {}
+					for i = 1, 50 do
+						visited[curRow..'|'..curCol] = true
+						local found = false
+						for _, direction in directions do
+							local nextRow = curRow + direction[1]
+							local nextColumn = curCol + direction[2]
+
+							if solved[nextRow] and solved[nextRow][nextColumn] == color and not visited[nextRow..'|'..nextColumn] then
+								if not state.IsOpen then
+									solvethread = nil
+									return
+								end
+
+								found = true
+								grid[nextRow][nextColumn] = color
+								curRow = nextRow
+								curCol = nextColumn
+								task.spawn(state.Draw, state)
+								task.wait(0.1)
+								break
+							end
+						end
+
+						if not found then
+							if i > 2 then
+								task.spawn(pcall, state.OnConnection)
+							end
+
+							break
+						end
+					end
+				end
+			end
+		end
+
+		solvethread = nil
+	end)
 end
 
 AutoSolve = vape.Categories.Utility:CreateModule({
@@ -166,16 +236,20 @@ AutoSolve = vape.Categories.Utility:CreateModule({
 				if type(state) == 'table' and rawget(state, 'SetGrid') then
 					old = hookfunction(state.SetGrid, function(...)
 						task.defer(function()
-							if solvePuzzleFlow(state.Grid) then
-								task.spawn(pcall, state.OnConnection)
+							local clone = deepClone(state.Grid)
+							if solvePuzzleFlow(clone) then
+								doPuzzleFlow(clone, state.Grid, state)
 							end
 						end)
 
 						return old(...)
 					end)
 
-					if state.IsOpen and solvePuzzleFlow(state.Grid) then
-						task.spawn(pcall, state.OnConnection)
+					if state.IsOpen then
+						local clone = deepClone(state.Grid)
+						if solvePuzzleFlow(clone) then
+							doPuzzleFlow(clone, state.Grid, state)
+						end
 					end
 				else
 					state = nil
@@ -186,6 +260,11 @@ AutoSolve = vape.Categories.Utility:CreateModule({
 				restorefunction(state.SetGrid)
 				old = nil
 				state = nil
+			end
+
+			if solvethread then
+				task.cancel(solvethread)
+				solvethread = nil
 			end
 		end
 	end,
