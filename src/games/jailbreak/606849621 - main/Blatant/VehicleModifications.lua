@@ -3,8 +3,7 @@ local InstantDirection
 local ModifySpeed
 local Value
 local Boat
-local old
-local oldboat
+local old, oldboat
 
 VehicleModifications = vape.Categories.Blatant:CreateModule({
 	Name = 'VehicleModifications',

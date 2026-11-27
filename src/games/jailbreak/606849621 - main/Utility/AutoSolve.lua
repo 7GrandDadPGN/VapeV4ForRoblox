@@ -1,6 +1,10 @@
 local AutoSolve
 local CasinoKeypad
 local CasinoVault
+local PowerplantFlow
+local directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+local old
+local state
 
 local function addVaultPuzzle(door)
 	local light = door:WaitForChild('InnerModel', 10):WaitForChild('LightPtr', 10).Value
@@ -8,7 +12,8 @@ local function addVaultPuzzle(door)
 
 	if light and base and AutoSolve.Enabled then
 		AutoSolve:Clean(light:GetPropertyChangedSignal('Color'):Connect(function()
-			if light.Color ~= Color3.new(1, 0, 0) and entitylib.isAlive and (entitylib.character.RootPart.Position - base.Position).Magnitude < 12 then
+			local spec = jb.UI.CircleAction.Spec
+			if light.Color ~= Color3.new(1, 0, 0) and spec and spec.Part == base then
 				task.spawn(jb.UI.CircleAction.Press)
 				task.spawn(jb.UI.CircleAction.Release)
 			end
@@ -58,6 +63,80 @@ local function solveCasinoKeypad()
 	end
 end
 
+local function solvePuzzleFlow(grid)
+	local rows = #grid
+	local columns = #grid[1]
+	local endpoints = {}
+
+	for row = 1, rows do
+		for column = 1, columns do
+			local color = grid[row][column]
+			if color >= 0 then
+				endpoints[color] = endpoints[color] or {}
+				table.insert(endpoints[color], {row, column})
+			end
+		end
+	end
+
+	local colors = {}
+	for color, cells in endpoints do
+		if #cells ~= 2 then
+			return nil
+		end
+
+		table.insert(colors, color)
+	end
+
+	local function walk(index, row, column)
+		if index > #colors then
+			return true
+		end
+
+		local color = colors[index]
+		local start = endpoints[color][1]
+		local finish = endpoints[color][2]
+		row = row or start[1]
+		column = column or start[2]
+
+		if row == finish[1] and column == finish[2] then
+			return walk(index + 1)
+		end
+
+		for _, direction in directions do
+			local nextRow = row + direction[1]
+			local nextColumn = column + direction[2]
+			if nextRow < 1 or nextRow > rows or nextColumn < 1 or nextColumn > columns then
+				continue
+			end
+
+			if nextRow == finish[1] and nextColumn == finish[2] then
+				if walk(index + 1) then
+					return true
+				end
+
+				continue
+			end
+
+			if grid[nextRow][nextColumn] ~= -1 then
+				continue
+			end
+
+			grid[nextRow][nextColumn] = color
+			if walk(index, nextRow, nextColumn) then
+				return true
+			end
+
+			grid[nextRow][nextColumn] = -1
+		end
+
+		return false
+	end
+
+	if walk(1) then
+		return grid
+	end
+end
+
 AutoSolve = vape.Categories.Utility:CreateModule({
 	Name = 'AutoSolve',
 	Function = function(callback)
@@ -79,6 +158,34 @@ AutoSolve = vape.Categories.Utility:CreateModule({
 				for _, obj in collectionService:GetTagged('VaultDoorPuzzle') do
 					task.spawn(addVaultPuzzle, obj)
 				end
+			end
+
+			if PowerplantFlow.Enabled then
+				state = debug.getupvalue(jb.PuzzleFlow.Init, 3)
+
+				if type(state) == 'table' and rawget(state, 'SetGrid') then
+					old = hookfunction(state.SetGrid, function(...)
+						task.defer(function()
+							if solvePuzzleFlow(state.Grid) then
+								task.spawn(pcall, state.OnConnection)
+							end
+						end)
+
+						return old(...)
+					end)
+
+					if state.IsOpen and solvePuzzleFlow(state.Grid) then
+						task.spawn(pcall, state.OnConnection)
+					end
+				else
+					state = nil
+				end
+			end
+		else
+			if old then
+				restorefunction(state.SetGrid)
+				old = nil
+				state = nil
 			end
 		end
 	end,
@@ -105,4 +212,15 @@ CasinoVault = AutoSolve:CreateToggle({
 	end,
 	Default = true,
 	Tooltip = 'Automatically complete the crack minigame at the casino vault doors.'
+})
+PowerplantFlow = AutoSolve:CreateToggle({
+	Name = 'Powerplant Flow',
+	Function = function()
+		if AutoSolve.Enabled then
+			AutoSolve:Toggle()
+			AutoSolve:Toggle()
+		end
+	end,
+	Default = true,
+	Tooltip = 'Automatically complete the puzzle flow minigame at the powerplant entrance.\n(big thanks to Stonifam for the solver implementation)'
 })

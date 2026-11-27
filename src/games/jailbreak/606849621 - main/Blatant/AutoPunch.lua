@@ -9,7 +9,7 @@ AutoPunch = vape.Categories.Blatant:CreateModule({
 					jb:FireServer('Punch')
 				end
 
-				task.wait(0.3)
+				task.wait(0.1)
 			until not AutoPunch.Enabled
 		end
 	end,

@@ -677,6 +677,7 @@ run(function()
 	end
 
 	jb = {
+		ActionButtonService = require(replicatedStorage.ActionButton.ActionButtonService),
 		AlexChassis = require(replicatedStorage.Module.AlexChassis),
 		Audio = require(replicatedStorage.Std.Audio),
 		Boat = require(replicatedStorage.Game.Boat.Boat),
@@ -689,8 +690,9 @@ run(function()
 		InventoryItemSystem = require(replicatedStorage.Inventory.InventoryItemSystem),
 		ItemSystemController = require(replicatedStorage.Game.ItemSystem.ItemSystem),
 		LightningUtils = require(replicatedStorage.Game.LightningUtils),
-		PlayerUtils = require(replicatedStorage.Game.PlayerUtils),
 		PlasmaController = require(replicatedStorage.Game.Item.PlasmaGun),
+		PlayerUtils = require(replicatedStorage.Game.PlayerUtils),
+		PuzzleFlow = require(replicatedStorage.Game.Robbery.PuzzleFlow),
 		TeamChooseController = require(replicatedStorage.TeamSelect.TeamChooseUI),
 		Turret = require(replicatedStorage.Turret2.Turret),
 		UI = require(replicatedStorage.Module.UI),
