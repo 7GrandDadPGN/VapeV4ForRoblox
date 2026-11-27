@@ -3,7 +3,7 @@ local CasinoKeypad
 local CasinoVault
 local PowerplantFlow
 local directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
-local old
+local old, oldclose
 local state
 local solvethread
 
@@ -115,8 +115,7 @@ local function solvePuzzleFlow(grid)
 		end
 
 		for _, direction in directions do
-			local nextRow = row + direction[1]
-			local nextColumn = column + direction[2]
+			local nextRow, nextColumn = row + direction[1], column + direction[2]
 			if nextRow < 1 or nextRow > rows or nextColumn < 1 or nextColumn > columns then
 				continue
 			end
@@ -147,8 +146,6 @@ local function solvePuzzleFlow(grid)
 	if walk(1) then
 		return grid
 	end
-
-	return nil
 end
 
 local function doPuzzleFlow(solved, grid, state)
@@ -158,40 +155,38 @@ local function doPuzzleFlow(solved, grid, state)
 	end
 
 	solvethread = task.spawn(function()
-		local found = {}
+		notif('AutoSolve', 'Solving flow puzzle...', 5)
+		local path = {}
 
 		for row = 1, #grid do
 			for column = 1, #grid[1] do
 				local color = grid[row][column]
-				if color >= 0 and not table.find(found, color) then
-					table.insert(found, color)
 
+				if color >= 0 and not table.find(path, color) then
 					local curRow, curCol = row, column
 					local visited = {}
+					table.insert(path, color)
+
 					for i = 1, 50 do
+						local nextStep = false
 						visited[curRow..'|'..curCol] = true
-						local found = false
+
 						for _, direction in directions do
 							local nextRow = curRow + direction[1]
 							local nextColumn = curCol + direction[2]
 
 							if solved[nextRow] and solved[nextRow][nextColumn] == color and not visited[nextRow..'|'..nextColumn] then
-								if not state.IsOpen then
-									solvethread = nil
-									return
-								end
-
-								found = true
+								nextStep = true
 								grid[nextRow][nextColumn] = color
 								curRow = nextRow
 								curCol = nextColumn
 								task.spawn(state.Draw, state)
-								task.wait(0.1)
+								task.wait(0.08)
 								break
 							end
 						end
 
-						if not found then
+						if not nextStep then
 							if i > 2 then
 								task.spawn(pcall, state.OnConnection)
 							end
@@ -245,6 +240,15 @@ AutoSolve = vape.Categories.Utility:CreateModule({
 						return old(...)
 					end)
 
+					oldclose = hookfunction(state.Hide, function(...)
+						if solvethread then
+							task.cancel(solvethread)
+							solvethread = nil
+						end
+
+						return oldclose(...)
+					end)
+
 					if state.IsOpen then
 						local clone = deepClone(state.Grid)
 						if solvePuzzleFlow(clone) then
@@ -259,9 +263,14 @@ AutoSolve = vape.Categories.Utility:CreateModule({
 			if old then
 				restorefunction(state.SetGrid)
 				old = nil
-				state = nil
 			end
 
+			if oldclose then
+				restorefunction(state.Hide)
+				oldclose = nil
+			end
+
+			state = nil
 			if solvethread then
 				task.cancel(solvethread)
 				solvethread = nil

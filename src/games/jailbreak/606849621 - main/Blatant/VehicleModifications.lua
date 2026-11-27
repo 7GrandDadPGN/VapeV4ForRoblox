@@ -1,9 +1,10 @@
 local VehicleModifications
 local InstantDirection
+local BoatAnywhere
 local ModifySpeed
 local Value
 local Boat
-local old, oldboat
+local old, oldboat, oldboatc
 
 VehicleModifications = vape.Categories.Blatant:CreateModule({
 	Name = 'VehicleModifications',
@@ -33,6 +34,12 @@ VehicleModifications = vape.Categories.Blatant:CreateModule({
 				end))
 			end
 
+			if BoatAnywhere.Enabled then
+				debug.setconstant(jb.Boat.UpdatePhysics, 10, 'Name')
+				debug.setconstant(debug.getupvalue(debug.getupvalue(jb.JetSki.MountPlayer, 3), 7), 16, 'Name')
+				oldboatc = true
+			end
+
 			if ModifySpeed.Enabled then
 				old = hookfunction(jb.AlexChassis.Update, function(...)
 					local self = ...
@@ -58,6 +65,12 @@ VehicleModifications = vape.Categories.Blatant:CreateModule({
 				restorefunction(jb.Boat.UpdatePhysics)
 				oldboat = nil
 			end
+
+			if oldboatc then
+				debug.setconstant(jb.Boat.UpdatePhysics, 10, 'TouchingSurface')
+				debug.setconstant(debug.getupvalue(debug.getupvalue(jb.JetSki.MountPlayer, 3), 7), 16, 'TouchingSurface')
+				oldboatc = nil
+			end
 		end
 	end,
 	Tooltip = 'Apply various driving enhancements.'
@@ -71,6 +84,16 @@ InstantDirection = VehicleModifications:CreateToggle({
 		end
 	end,
 	Tooltip = 'Allow you to instantly turn towards the camera with vehicles.'
+})
+BoatAnywhere = VehicleModifications:CreateToggle({
+	Name = 'Onground Boat',
+	Function = function(callback)
+		if VehicleModifications.Enabled then
+			VehicleModifications:Toggle()
+			VehicleModifications:Toggle()
+		end
+	end,
+	Tooltip = 'Allow you to drive the boat / jetski on anything.'
 })
 ModifySpeed = VehicleModifications:CreateToggle({
 	Name = 'Modify Speed',

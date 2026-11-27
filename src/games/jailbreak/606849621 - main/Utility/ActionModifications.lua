@@ -3,6 +3,10 @@ local Instant
 local NoWall
 local old, oldindex
 local await
+local blacklist = {
+	['Break In'] = true,
+	['Place TNT'] = true
+}
 
 ActionModifications = vape.Categories.Utility:CreateModule({
 	Name = 'ActionModifications',
@@ -11,7 +15,7 @@ ActionModifications = vape.Categories.Utility:CreateModule({
 			if Instant.Enabled then
 				old = hookfunction(jb.CircleAction.Press, function(...)
 					local action = jb.CircleAction.Spec
-					if action and action.Timed and not (action.ReleaseCallback or action.ShouldArrest or action.ShouldBreakout or action.ShouldHotwire or action.Name == 'Break In' or await) then
+					if action and action.Timed and not (action.ReleaseCallback or action.ShouldArrest or action.ShouldBreakout or action.ShouldHotwire or blacklist[action.Name] or await) then
 						local old = action.Timed
 
 						action.Timed = false

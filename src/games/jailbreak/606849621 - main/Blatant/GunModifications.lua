@@ -6,8 +6,8 @@ local EquipTime
 local VehicleWallbang
 local FireRate
 local DoubleTap
+local Drop
 local Hitscan
-local oldhit
 local oldequip
 local olddecrement
 local olddata = {}
@@ -17,7 +17,7 @@ local function FireRateHook(...)
 	local res = table.pack(olddecrement(...))
 	local self = ...
 
-	if not self.IsReloading and self.Config.IgnoreVerifyFireFreq and (1 / self.Config.FireFreq) > 0.25 then
+	if FireRate.Enabled and not self.IsReloading and self.Config.IgnoreVerifyFireFreq and (1 / self.Config.FireFreq) > 0.25 then
 		local function doBypass()
 			local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
 
@@ -29,7 +29,7 @@ local function FireRateHook(...)
 
 				if fireState then
 					local equipped = jb.ItemSystemController:GetLocalEquipped()
-					if equipped.BulletEmitter then
+					if equipped and equipped.BulletEmitter then
 						equipped.IsShooting = true
 					end
 				end
@@ -43,6 +43,13 @@ local function FireRateHook(...)
 			end
 		else
 			task.delay(0.25, doBypass)
+		end
+	end
+
+	if Drop.Enabled and self.IsReloading then
+		local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
+		if obj then
+			obj:AttemptDrop()
 		end
 	end
 
@@ -103,7 +110,7 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 				end)
 			end
 
-			if FireRate.Enabled then
+			if FireRate.Enabled or Drop.Enabled then
 				olddecrement = hookfunction(jb.GunController.DecrementAmmo, function(...)
 					return FireRateHook(...)
 				end)
@@ -127,11 +134,6 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 			if oldBulletUpdate then
 				restorefunction(jb.BulletEmitter.Update)
 				oldBulletUpdate = nil
-			end
-
-			if oldhit then
-				restorefunction(jb.GunController.BulletEmitterOnLocalHitPlayer)
-				oldhit = nil
 			end
 
 			if oldequip then
@@ -197,6 +199,16 @@ DoubleTap = GunModifications:CreateToggle({
 	Tooltip = 'Change Fire Rate into a two shot burst fire.',
 	Visible = false,
 	Darker = true
+})
+Drop = GunModifications:CreateToggle({
+	Name = 'Drop Reload',
+	Function = function(callback)
+		if GunModifications.Enabled then
+			GunModifications:Toggle()
+			GunModifications:Toggle()
+		end
+	end,
+	Tooltip = 'Automatically drop the weapon after running out of bullets, use AutoPickup with this.'
 })
 Hitscan = GunModifications:CreateToggle({
 	Name = 'Hitscan Bullets',

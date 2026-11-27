@@ -1,4 +1,4 @@
-local AutoPickup
+local AutoLoadout
 local Lists = {}
 local Regions = {}
 local PickupList = {}
@@ -11,19 +11,19 @@ local function doesPlayerOwn(item)
 	return items and items:FindFirstChild(item) or false
 end
 
-AutoPickup = vape.Categories.Inventory:CreateModule({
-	Name = 'AutoPickup',
+AutoLoadout = vape.Categories.Inventory:CreateModule({
+	Name = 'AutoLoadout',
 	Function = function(callback)
 		if callback then
 			Regions = collectionService:GetTagged('GunShopRegion')
 			overlapParams.FilterDescendantsInstances = Regions
 
-			AutoPickup:Clean(collectionService:GetInstanceAddedSignal('GunShopRegion'):Connect(function(obj)
+			AutoLoadout:Clean(collectionService:GetInstanceAddedSignal('GunShopRegion'):Connect(function(obj)
 				table.insert(Regions, obj)
 				overlapParams.FilterDescendantsInstances = Regions
 			end))
 
-			AutoPickup:Clean(collectionService:GetInstanceRemovedSignal('GunShopRegion'):Connect(function(obj)
+			AutoLoadout:Clean(collectionService:GetInstanceRemovedSignal('GunShopRegion'):Connect(function(obj)
 				local index = table.find(Regions, obj)
 				if index then
 					table.remove(Regions, index)
@@ -45,16 +45,16 @@ AutoPickup = vape.Categories.Inventory:CreateModule({
 				end
 
 				task.wait(0.05)
-			until not AutoPickup.Enabled
+			until not AutoLoadout.Enabled
 		else
 			table.clear(Regions)
 		end
 	end,
-	Tooltip = 'Automatically grab item pickups'
+	Tooltip = 'Automatically equip guns when visting a gun shop.'
 })
 
 for _, team in {'Prisoner', 'Police'} do
-	PickupList[team] = AutoPickup:CreateTextList({
+	PickupList[team] = AutoLoadout:CreateTextList({
 		Name = team,
 		Default = team == 'Prisoner' and {'AK47', 'Shotgun', 'Pistol'} or {'AK47', 'Shotgun'},
 		Placeholder = 'item'

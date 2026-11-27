@@ -112,7 +112,7 @@ local function isIllegal(entity, teamCheck)
 
 	if entity.Player and entity.Player.Team == teams.Prisoner then
 		for tool in InvTracker.Inventories[entity.Player] do
-			if tool ~= 'MansionInvite' and tool ~= 'Donut' then
+			if tool ~= 'Donut' then
 				return true
 			end
 		end
@@ -689,6 +689,7 @@ run(function()
 		InventoryItemBinder = require(replicatedStorage.Inventory.InventoryItemBinder),
 		InventoryItemSystem = require(replicatedStorage.Inventory.InventoryItemSystem),
 		ItemSystemController = require(replicatedStorage.Game.ItemSystem.ItemSystem),
+		JetSki = require(replicatedStorage.Game.VehicleSystem.JetSki),
 		LightningUtils = require(replicatedStorage.Game.LightningUtils),
 		PlasmaController = require(replicatedStorage.Game.Item.PlasmaGun),
 		PlayerUtils = require(replicatedStorage.Game.PlayerUtils),
@@ -788,6 +789,10 @@ run(function()
 
 	local arrests = sessioninfo:AddItem('Arrested')
 	local moneymade = sessioninfo:AddItem('Money Made', 0, toMoney, true)
+	sessioninfo:AddItem('Mansion Invites', 0, function()
+		return lplr:GetAttribute('MansionInvites') or 0
+	end, false)
+
 	local bounty = sessioninfo:AddItem('Bounty List', '', function()
 		local text = ''
 
