@@ -17,39 +17,41 @@ local function FireRateHook(...)
 	local res = table.pack(olddecrement(...))
 	local self = ...
 
-	if FireRate.Enabled and not self.IsReloading and self.Config.IgnoreVerifyFireFreq and (1 / self.Config.FireFreq) > 0.25 then
-		local function doBypass()
-			local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
+	if self.Local then
+		if FireRate.Enabled and not self.IsReloading and self.Config.IgnoreVerifyFireFreq and (1 / self.Config.FireFreq) > 0.25 then
+			local function doBypass()
+				local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
 
-			if obj and not self.Destroyed then
-				local fireState = self.Config.FireAuto and self.IsShooting
+				if obj and not self.Destroyed then
+					local fireState = self.Config.FireAuto and self.IsShooting
 
-				obj:AttemptSelect()
-				obj:AttemptSelect()
+					obj:AttemptSelect()
+					obj:AttemptSelect()
 
-				if fireState then
-					local equipped = jb.ItemSystemController:GetLocalEquipped()
-					if equipped and equipped.BulletEmitter then
-						equipped.IsShooting = true
+					if fireState then
+						local equipped = jb.ItemSystemController:GetLocalEquipped()
+						if equipped and equipped.BulletEmitter then
+							equipped.IsShooting = true
+						end
 					end
 				end
 			end
-		end
 
-		if DoubleTap.Enabled then
-			if (os.clock() - lastShot) >= 0.5 then
-				task.defer(doBypass)
-				lastShot = os.clock()
+			if DoubleTap.Enabled then
+				if (os.clock() - lastShot) >= 0.5 then
+					task.defer(doBypass)
+					lastShot = os.clock()
+				end
+			else
+				task.delay(0.25, doBypass)
 			end
-		else
-			task.delay(0.25, doBypass)
 		end
-	end
 
-	if Drop.Enabled and self.IsReloading then
-		local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
-		if obj then
-			obj:AttemptDrop()
+		if Drop.Enabled and self.IsReloading then
+			local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
+			if obj then
+				obj:AttemptDrop()
+			end
 		end
 	end
 
