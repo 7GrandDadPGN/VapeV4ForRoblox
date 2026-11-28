@@ -8,10 +8,10 @@ local FireRate
 local DoubleTap
 local Drop
 local Hitscan
-local oldequip
-local olddecrement
+local oldequip, olddecrement, oldreload
 local olddata = {}
 local lastShot = os.clock()
+local shootAndReload
 
 local function FireRateHook(...)
 	local res = table.pack(olddecrement(...))
@@ -46,22 +46,35 @@ local function FireRateHook(...)
 				task.delay(0.25, doBypass)
 			end
 		end
-
-		if Drop.Enabled and self.IsReloading then
-			local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
-			if obj then
-				obj:AttemptDrop()
-			end
-		end
 	end
 
 	return unpack(res, 1, res.n)
+end
+
+local function ReloadHook(...)
+	local self = ...
+	if self.Local then
+		local obj = jb.InventoryItemBinder:Get(self.inventoryItemValue)
+		if obj then
+			shootAndReload = self.IsShooting and self.Config.FireAuto
+			obj:AttemptDrop()
+		end
+
+		return
+	end
+
+	return oldreload(...)
 end
 
 local function ModifyGun(gun)
 	if gun and gun.LastReplicateMousePosition then
 		if not olddata[gun.Config] then
 			olddata[gun.Config] = table.clone(gun.Config)
+		end
+
+		if shootAndReload then
+			gun.IsShooting = gun.IsShooting or inputService:IsMouseButtonPressed(0) or inputService:IsKeyDown(Enum.KeyCode.ButtonR2)
+			shootAndReload = false
 		end
 
 		gun.Config.CamShakeMagnitude = Recoil.Enabled and 0 or olddata[gun.Config].CamShakeMagnitude
@@ -112,9 +125,15 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 				end)
 			end
 
-			if FireRate.Enabled or Drop.Enabled then
+			if FireRate.Enabled then
 				olddecrement = hookfunction(jb.GunController.DecrementAmmo, function(...)
 					return FireRateHook(...)
+				end)
+			end
+
+			if Drop.Enabled then
+				oldreload = hookfunction(jb.GunController._reloadBroadcast, function(...)
+					return ReloadHook(...)
 				end)
 			end
 
@@ -148,12 +167,18 @@ GunModifications = vape.Categories.Blatant:CreateModule({
 				olddecrement = nil
 			end
 
+			if oldreload then
+				restorefunction(jb.GunController._reloadBroadcast)
+				oldreload = nil
+			end
+
 			for config, data in olddata do
 				for i, v in data do
 					config[i] = v
 				end
 			end
 
+			shootAndReload = false
 			table.clear(olddata)
 		end
 	end,

@@ -146,7 +146,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 	Tooltip = 'Attack players around you\nwithout aiming at them.'
 })
 Targets = Killaura:CreateTargets({Players = true})
-CPS = Killaura:CreateTwoSlider({
+CPS = Killaura:CreateRangeSlider({
 	Name = 'Attacks per Second',
 	Min = 1,
 	Max = 20,

@@ -31,7 +31,7 @@ Mode = AutoClicker:CreateDropdown({
 	List = {'Tool', 'Click', 'RightClick'},
 	Tooltip = 'Tool - Automatically uses roblox tools (eg. swords)\nClick - Left click\nRightClick - Right click'
 })
-CPS = AutoClicker:CreateTwoSlider({
+CPS = AutoClicker:CreateRangeSlider({
 	Name = 'CPS',
 	Min = 1,
 	Max = 20,

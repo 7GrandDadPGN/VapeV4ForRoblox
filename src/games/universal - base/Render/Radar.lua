@@ -1,6 +1,7 @@
 local Radar
 local Targets
 local DotStyle
+local Scale
 local PlayerColor
 local Clamp
 local Reference = {}
@@ -55,21 +56,24 @@ Radar = vape:CreateOverlay({
 				end
 				Added(entity)
 			end
+
 			Radar:Clean(entitylib.Events.EntityAdded:Connect(function(entity)
 				if Reference[entity] then
 					Removed(entity)
 				end
 				Added(entity)
 			end))
+
 			Radar:Clean(vape.Categories.Friends.ColorUpdate.Event:Connect(function()
 				for entity, dot in Reference do
 					dot.BackgroundColor3 = entitylib.getEntityColor(entity) or Color3.fromHSV(PlayerColor.Hue, PlayerColor.Sat, PlayerColor.Value)
 				end
 			end))
+
 			Radar:Clean(runService.RenderStepped:Connect(function()
 				for entity, dot in Reference do
 					if entitylib.isAlive then
-						local dt = CFrame.lookAlong(entitylib.character.RootPart.Position, gameCamera.CFrame.LookVector * Vector3.new(1, 0, 1)):PointToObjectSpace(entity.RootPart.Position)
+						local dt = CFrame.lookAlong(entitylib.character.RootPart.Position, gameCamera.CFrame.LookVector * Vector3.new(1, 0, 1)):PointToObjectSpace(entity.RootPart.Position) * Scale.Value
 						dot.Position = UDim2.fromOffset(Clamp.Enabled and math.clamp(108 + dt.X, 2, 214) or 108 + dt.X, Clamp.Enabled and math.clamp(108 + dt.Z, 8, 214) or 108 + dt.Z)
 					end
 				end
@@ -98,6 +102,13 @@ DotStyle = Radar:CreateDropdown({
 			dot.UICorner.CornerRadius = UDim.new(val == 'Circles' and 1 or 0, 0)
 		end
 	end
+})
+Scale = Radar:CreateSlider({
+	Name = 'Scale',
+	Min = 0,
+	Max = 2,
+	Default = 1,
+	Decimal = 10
 })
 PlayerColor = Radar:CreateColorSlider({
 	Name = 'Player Color',

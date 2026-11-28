@@ -531,7 +531,7 @@ Distance = ESP:CreateToggle({
 		DistanceLimit.Object.Visible = callback
 	end
 })
-DistanceLimit = ESP:CreateTwoSlider({
+DistanceLimit = ESP:CreateRangeSlider({
 	Name = 'Player Distance',
 	Min = 0,
 	Max = 256,

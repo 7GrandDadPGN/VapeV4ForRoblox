@@ -40,7 +40,7 @@ TriggerBot = vape.Categories.Combat:CreateModule({
 	end,
 	Tooltip = 'Automatically swings when hovering over a entity'
 })
-CPS = TriggerBot:CreateTwoSlider({
+CPS = TriggerBot:CreateRangeSlider({
 	Name = 'CPS',
 	Min = 1,
 	Max = 9,

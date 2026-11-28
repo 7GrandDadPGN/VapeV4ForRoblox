@@ -119,7 +119,7 @@ Killaura = vape.Categories.Blatant:CreateModule({
 Targets = Killaura:CreateTargets({
 	Players = true
 })
-CPS = Killaura:CreateTwoSlider({
+CPS = Killaura:CreateRangeSlider({
 	Name = 'Attacks per Second',
 	Min = 1,
 	Max = 20,

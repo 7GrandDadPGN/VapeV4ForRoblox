@@ -173,7 +173,7 @@ Distance = Tracers:CreateToggle({
 		DistanceLimit.Object.Visible = callback
 	end
 })
-DistanceLimit = Tracers:CreateTwoSlider({
+DistanceLimit = Tracers:CreateRangeSlider({
 	Name = 'Player Distance',
 	Min = 0,
 	Max = 256,

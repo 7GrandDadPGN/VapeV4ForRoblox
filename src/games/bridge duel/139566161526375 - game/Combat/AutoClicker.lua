@@ -17,7 +17,7 @@ AutoClicker = vape.Categories.Combat:CreateModule({
 	end,
 	Tooltip = 'Automatically clicks for you'
 })
-CPS = AutoClicker:CreateTwoSlider({
+CPS = AutoClicker:CreateRangeSlider({
 	Name = 'CPS',
 	Min = 1,
 	Max = 20,

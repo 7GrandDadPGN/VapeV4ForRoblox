@@ -112,7 +112,7 @@ AutoTaze = vape.Categories.Blatant:CreateModule({
 	end,
 	Tooltip = 'Immobilizes entities around you'
 })
-Range = AutoTaze:CreateTwoSlider({
+Range = AutoTaze:CreateRangeSlider({
 	Name = 'Taze Range',
 	Min = 0,
 	Max = 75,

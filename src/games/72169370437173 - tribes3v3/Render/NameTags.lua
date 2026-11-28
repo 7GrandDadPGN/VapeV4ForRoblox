@@ -533,7 +533,7 @@ DistanceCheck = NameTags:CreateToggle({
 		DistanceLimit.Object.Visible = callback
 	end
 })
-DistanceLimit = NameTags:CreateTwoSlider({
+DistanceLimit = NameTags:CreateRangeSlider({
 	Name = 'Player Distance',
 	Min = 0,
 	Max = 256,

@@ -1,7 +1,7 @@
 local component = {
 	Index = getTableSize(api.Options),
 	Max = props.Max,
-	Type = 'TwoSlider',
+	Type = 'RangeSlider',
 	ValueMin = props.DefaultMin or props.Min,
 	ValueMax = props.DefaultMax or 10
 }

@@ -126,7 +126,7 @@ Distance = Arrows:CreateToggle({
 		DistanceLimit.Object.Visible = callback
 	end
 })
-DistanceLimit = Arrows:CreateTwoSlider({
+DistanceLimit = Arrows:CreateRangeSlider({
 	Name = 'Player Distance',
 	Min = 0,
 	Max = 256,
